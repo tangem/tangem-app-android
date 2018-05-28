@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.tangem.wallet.MainActivity">
+
+    <!--<ImageView-->
+    <!--android:id="@+id/ivTap"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="match_parent"-->
+    <!--app:srcCompat="@drawable/tap" />-->
+
+    <LinearLayout
+        android:id="@+id/tvTapPrompt"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/actionbar_text"
+        android:gravity="center_vertical|center_horizontal"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:layout_width="400dp"
+            android:layout_height="250dp"
+            android:gravity="center_vertical|center_horizontal">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="100dp"
+                android:elevation="2dp"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/imSmartphone"
+                    android:layout_width="75dp"
+                    android:layout_height="150dp"
+                    app:srcCompat="@drawable/smartphone" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/llNFC"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="100dp"
+                android:elevation="1dp"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <com.skyfishjy.library.RippleBackground
+                    android:id="@+id/imNFC"
+                    android:layout_width="150dp"
+                    android:layout_height="150dp"
+                    android:layout_alignParentStart="false"
+                    android:layout_alignParentTop="false"
+                    android:layout_centerHorizontal="false"
+                    android:layout_centerInParent="false"
+                    app:rb_color="@color/fab"
+                    app:rb_duration="3000"
+                    app:rb_radius="16dp"
+                    app:rb_rippleAmount="4"
+                    app:rb_scale="4"
+                    app:rb_strokeWidth="8dp"
+                    app:rb_type="strokeRipple">
+
+                </com.skyfishjy.library.RippleBackground>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/llHand"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="25dp"
+                android:elevation="0dp"
+                android:gravity="center_vertical"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/imHand"
+                    android:layout_width="190dp"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/hand_card" />
+            </LinearLayout>
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/tvNFCHint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="24dp"
+            android:layout_marginRight="24dp"
+            android:layout_marginTop="24dp"
+            android:autoText="false"
+            android:fontFamily="@font/raleway_el"
+            android:gravity="top"
+            android:text="Tap Tangem card with your smartphone"
+            android:textAlignment="center"
+            android:textAllCaps="false"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textColor="@color/primary_dark"
+            android:textSize="18dp" />
+
+    </LinearLayout>
+
+    <include
+        android:id="@+id/include2"
+        layout="@layout/content_main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+
+    <FrameLayout
+        android:id="@+id/frameFAB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_margin="@dimen/fab_margin"
+        android:elevation="3dp"
+        android:visibility="visible">
+
+        <!--<android.support.design.widget.FloatingActionButton-->
+        <!--android:id="@+id/fab"-->
+        <!--android:layout_width="64dp"-->
+        <!--android:layout_height="64dp"-->
+        <!--android:layout_margin="8dp"-->
+        <!--android:src="@android:color/transparent"-->
+        <!--app:backgroundTint="@color/colorPrimary" />-->
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_margin="10dp"
+            android:src="@drawable/ic_show_menu"
+            app:backgroundTint="@color/colorPrimary" />
+
+        <!--<TextView-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_gravity="center"-->
+        <!--android:elevation="16dp"-->
+        <!--android:fontFamily="@font/raleway_r"-->
+        <!--android:text="CLEAN"-->
+        <!--android:textAppearance="?android:attr/textAppearanceSmall"-->
+        <!--android:textColor="@android:color/white" />-->
+    </FrameLayout>
+
+</android.support.design.widget.CoordinatorLayout>
