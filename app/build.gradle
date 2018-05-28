@@ -45,4 +45,5 @@ dependencies {
     implementation 'com.scottyab:rootbeer-lib:0.0.6'
     implementation 'com.skyfishjy.ripplebackground:library:1.0.1'
     implementation 'info.hoang8f:android-segmented:1.0.6'
+    implementation 'com.google.dagger:dagger:2.13'
 }
