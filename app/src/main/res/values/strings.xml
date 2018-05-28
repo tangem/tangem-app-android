@@ -1,0 +1,39 @@
+<resources>
+    <string name="app_name">Tangem Access</string>
+
+    <string name="in_msg_prefix">&lt;&#45;&#45;&#160;</string>
+    <string name="out_msg_prefix">&#45;&#45;&gt;&#160;</string>
+    <string name="okay_msg_prefix">**&#160;</string>
+    <string name="err_msg_prefix">!!&#160;</string>
+    <string name="action_msg_prefix">--&#160;</string>
+    <string name="wrong_tag_err">Not ISO tag!</string>
+    <string name="msgCardMustBeLoaded">Card must be loaded first!</string>
+    <string name="tag_lost_err">Tag lost!</string>
+    <string name="dialog_ok">OK</string>
+    <string name="dialog_quit">Quit</string>
+    <string name="nfc_disabled">Enable NFC?</string>
+    <string name="enable_nfc">This app is useless when NFC is disabled. Reader mode depends on it. Hit OK to go to Settings, where you can enable NFC.</string>
+    <string name="cmd_suffix">command</string>
+    <string name="rsp_suffix">response</string>
+    <string name="title_activity_main">Tangem Access</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_card_info">CardInfoActivity</string>
+    <string name="section_format">Hello World from section: %1$d</string>
+
+    <string name="fingerprint_authenticate_success">Successfully authenticated!</string>
+    <string name="pin_save_success">Successfully saved!</string>
+    <string name="prompt_pin">Enter PIN or use fingerprint scanner</string>
+    <string name="pin_save_fail">Saving pin failed</string>
+    <string name="error_empty_pin">PIN is empty</string>
+    <string name="error_pin_confirmation_failed">Please enter the PIN for confirmation!</string>
+    <string name="enter_pin_and_use_fingerprint_to_save_it">Enter PIN and save it</string>
+    <string name="enter_pin2_and_use_fingerprint_to_save_it">Enter PIN2 and save it</string>
+    <string name="bcBitcoin">Bitcoin</string>
+    <string name="bcEtherium">Etherium</string>
+    <array name="blockchains">
+        <item>@string/bcBitcoin</item>
+        <item>@string/bcEtherium</item>
+    </array>
+    <string name="title_activity_loaded_wallet">LoadedWalletActivity</string>
+    <string name="NoDataString">-- -- --</string>
+</resources>
