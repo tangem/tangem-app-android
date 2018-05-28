@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:title="Clean up"  android:id="@+id/cleanCards"/>
+    <item android:title="Manage user PIN1..." android:id="@+id/managePIN" android:enabled="false"/>
+    <item android:title="Manage user PIN2..." android:id="@+id/managePIN2" android:enabled="false"/>
+    <item android:title="Send logs..."  android:id="@+id/sendLogs" android:visible="false"/>
+    <!--<item android:title="Switch to another blockchain host"  android:id="@+id/switchToAnotherBitcoinHost" android:visible="false"/>-->
+    <item android:title="About..."  android:id="@+id/about"/>
+</menu>
