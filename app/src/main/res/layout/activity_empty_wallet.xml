@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical"
+    android:padding="0dp"
+    tools:context="com.tangem.wallet.EmptyWalletActivity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white"
+            android:gravity="center_vertical"
+            android:orientation="vertical"
+            android:layout_centerInParent="true"
+            android:padding="8dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/raleway_r"
+                android:gravity="center_vertical"
+                android:text="Wallet hasn’t been yet created"
+                android:textSize="@dimen/empty_wallet_font_normal"
+                android:textAlignment="center" />
+
+            <Button
+                android:id="@+id/btnNewWallet"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="32dp"
+                android:backgroundTint="@color/colorPrimary"
+                android:fontFamily="@font/raleway_r"
+                android:padding="16dp"
+                android:text="Create Wallet"
+                android:textColor="@color/white"
+                android:textSize="18dp"
+                android:textStyle="bold" />
+
+            <!--<LinearLayout-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:gravity="center_vertical"-->
+            <!--android:orientation="horizontal">-->
+
+            <!--<TextView-->
+            <!--android:layout_width="110dp"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_marginLeft="15dp"-->
+            <!--android:fontFamily="@font/raleway_r"-->
+            <!--android:text="This card is" />-->
+
+            <!--<TextView-->
+            <!--android:id="@+id/tvReusable"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:fontFamily="@font/montserrat_light"-->
+            <!--android:text="Reusable" />-->
+
+            <!--</LinearLayout>-->
+
+            <!--<LinearLayout-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:gravity="center_vertical"-->
+            <!--android:orientation="horizontal">-->
+
+            <!--<TextView-->
+            <!--android:layout_width="110dp"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_marginLeft="15dp"-->
+            <!--android:fontFamily="@font/raleway_r"-->
+            <!--android:text="Card identity" />-->
+
+            <!--<TextView-->
+            <!--android:id="@+id/tvIdentity"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:fontFamily="@font/montserrat_light"-->
+            <!--android:text="Attested" />-->
+            <!--</LinearLayout>-->
+
+            <!--<LinearLayout-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:gravity="center_vertical">-->
+
+            <!--<TextView-->
+            <!--android:layout_width="110dp"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_marginLeft="15dp"-->
+            <!--android:fontFamily="@font/raleway_r"-->
+            <!--android:text="Manufacturer" />-->
+
+            <!--<TextView-->
+            <!--android:id="@+id/tvManufacturerInfo"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:fontFamily="@font/montserrat_light"-->
+            <!--android:text="Smart Cash AG" />-->
+
+            <!--<ImageView-->
+            <!--android:id="@+id/imageView"-->
+            <!--android:layout_width="22dp"-->
+            <!--android:layout_height="match_parent"-->
+            <!--android:layout_gravity="right"-->
+            <!--android:layout_marginLeft="0dp"-->
+            <!--android:layout_marginRight="60dp"-->
+            <!--android:layout_weight="1"-->
+            <!--android:elevation="1dp"-->
+            <!--app:srcCompat="@drawable/tangem_logo_small_new" />-->
+            <!--</LinearLayout>-->
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="@dimen/empty_wallet_left_col_width"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/raleway_r"
+                    android:text="Blockchain"
+                    android:textSize="@dimen/empty_wallet_font_normal"
+                    android:layout_marginLeft="@dimen/empty_wallet_left_col_margin"
+                    android:textColor="@color/primary_dark" />
+
+                <TextView
+                    android:id="@+id/tvBlockchain"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/montserrat_light"
+                    android:text="                "
+                    android:textSize="@dimen/empty_wallet_font_normal"
+                    android:textColor="@color/primary_dark"
+                    android:textStyle="normal|bold" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="@dimen/empty_wallet_left_col_width"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/raleway_r"
+                    android:text="Issuer"
+                    android:layout_marginLeft="@dimen/empty_wallet_left_col_margin"
+                    android:textSize="@dimen/empty_wallet_font_normal"
+                    android:textColor="@color/primary_dark" />
+
+                <TextView
+                    android:id="@+id/tvIssuer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/montserrat_light"
+                    android:text="                "
+                    android:textSize="@dimen/empty_wallet_font_normal"
+                    android:textColor="@color/primary_dark"
+                    android:textStyle="normal|bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="@dimen/empty_wallet_left_col_width"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/raleway_r"
+                    android:layout_marginLeft="@dimen/empty_wallet_left_col_margin"
+                    android:text="" />
+
+                <TextView
+                    android:id="@+id/tvIssuerData"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/montserrat_light"
+                    android:text="                "
+                    android:textSize="@dimen/empty_wallet_font_normal"
+                    android:textStyle="normal|bold" />
+            </LinearLayout>
+
+            <!--<LinearLayout-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:gravity="center_vertical"-->
+                <!--android:orientation="horizontal">-->
+
+                <!--<TextView-->
+                    <!--android:layout_width="110dp"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:layout_marginLeft="15dp"-->
+                    <!--android:fontFamily="@font/raleway_r"-->
+                    <!--android:text="Card ID" />-->
+
+                <!--<TextView-->
+                    <!--android:id="@+id/tvCardID"-->
+                    <!--android:layout_width="wrap_content"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:layout_alignParentBottom="true"-->
+                    <!--android:layout_weight="1"-->
+                    <!--android:elevation="1dp"-->
+                    <!--android:fontFamily="@font/montserrat_light"-->
+                    <!--android:text="XXXX XXXX XXXX XXXX"-->
+                    <!--android:textAlignment="textStart" />-->
+
+            <!--</LinearLayout>-->
+
+            <!--<LinearLayout-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:gravity="center_vertical">-->
+
+            <!--<TextView-->
+            <!--android:layout_width="110dp"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_marginLeft="15dp"-->
+            <!--android:fontFamily="@font/raleway_r"-->
+            <!--android:text="Card registered" />-->
+
+            <!--<TextView-->
+            <!--android:id="@+id/tvCardRegistredDate"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:fontFamily="@font/montserrat_light"-->
+            <!--android:text="29/09/2017" />-->
+
+            <!--</LinearLayout>-->
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvCardID"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/textView5"
+                android:layout_alignParentStart="true"
+                android:layout_alignWithParentIfMissing="false"
+                android:fontFamily="@font/montserrat_light"
+                android:text="---- ---- ---- ----"
+                android:textAlignment="center"
+                android:textColor="@color/primary_dark"
+                android:textSize="@dimen/empty_wallet_font_normal"
+                android:textStyle="normal|bold" />
+
+            <TextView
+                android:id="@+id/textView5"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentStart="true"
+                android:fontFamily="@font/raleway_r"
+                android:text="Scan again to verify the card"
+                android:textAlignment="center"
+                android:textColor="@android:color/darker_gray"
+                android:textSize="@dimen/empty_wallet_font_small" />
+        </LinearLayout>
+        <ImageView
+            android:id="@+id/imgBlockchain"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginRight="8dp"
+            android:layout_marginTop="8dp"
+            android:src="@drawable/tangem_logo_small_new" />
+
+        <ImageView
+            android:id="@+id/imgPIN"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="false"
+            android:layout_margin="8dp"
+            android:layout_marginRight="4dp"
+            android:layout_toLeftOf="@+id/imgPIN2orSecurityDelay"
+            android:src="@drawable/unlock_pin1" />
+
+        <ImageView
+            android:id="@+id/imgPIN2orSecurityDelay"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="false"
+            android:layout_marginBottom="8dp"
+            android:layout_marginRight="8dp"
+            android:src="@drawable/unlock_pin2" />
+
+        <ImageView
+            android:id="@+id/imgDeveloperVersion"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginBottom="8dp"
+            android:layout_marginLeft="8dp"
+            android:src="@drawable/ic_developer_version" />
+
+    </RelativeLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_width="0dp"
+        android:layout_height="17dp"
+        android:alpha="0.5"
+        android:elevation="1dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
+
+</android.support.constraint.ConstraintLayout>
