@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/verify_card_fragment"
-    android:name="com.tangem.presentation.fragment.VerifyCardActivityFragment"
+    android:name="com.tangem.presentation.fragment.VerifyCardFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
