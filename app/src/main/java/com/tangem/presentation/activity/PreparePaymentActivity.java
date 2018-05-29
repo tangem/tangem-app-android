@@ -18,12 +18,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.tangem.domain.cardReader.NfcManager;
-import com.tangem.wallet.Blockchain;
-import com.tangem.wallet.CoinEngine;
-import com.tangem.wallet.CoinEngineFactory;
-import com.tangem.wallet.FormatUtil;
+import com.tangem.domain.wallet.Blockchain;
+import com.tangem.domain.wallet.CoinEngine;
+import com.tangem.domain.wallet.CoinEngineFactory;
+import com.tangem.domain.wallet.FormatUtil;
+import com.tangem.domain.wallet.TangemCard;
 import com.tangem.wallet.R;
-import com.tangem.wallet.Tangem_Card;
 
 import java.io.IOException;
 
@@ -38,7 +38,7 @@ public class PreparePaymentActivity extends AppCompatActivity implements NfcAdap
     TextView tvCardId, tvBalance, tvBalanceEquivalent, tvAmountEquivalent;
     ImageView ivCamera;
     boolean use_mCurrency;
-    Tangem_Card mCard;
+    TangemCard mCard;
     private NfcManager mNfcManager;
 
     @Override
@@ -50,7 +50,7 @@ public class PreparePaymentActivity extends AppCompatActivity implements NfcAdap
 
         mNfcManager = new NfcManager(this, this);
 
-        mCard = new Tangem_Card(getIntent().getStringExtra("UID"));
+        mCard = new TangemCard(getIntent().getStringExtra("UID"));
         mCard.LoadFromBundle(getIntent().getExtras().getBundle("Card"));
 
         btnVerify = (Button) findViewById(R.id.btnVerify);
