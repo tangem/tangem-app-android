@@ -17,7 +17,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.tangem.cardReader.NfcManager;
+import com.tangem.domain.cardReader.NfcManager;
 import com.tangem.wallet.Blockchain;
 import com.tangem.wallet.CoinEngine;
 import com.tangem.wallet.CoinEngineFactory;
