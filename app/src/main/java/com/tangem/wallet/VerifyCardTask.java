@@ -4,8 +4,8 @@ import android.content.Context;
 import android.nfc.tech.IsoDep;
 import android.util.Log;
 
-import com.tangem.cardReader.CardProtocol;
-import com.tangem.cardReader.NfcManager;
+import com.tangem.domain.cardReader.CardProtocol;
+import com.tangem.domain.cardReader.NfcManager;
 
 /**
  * Created by dvol on 04.02.2018.
