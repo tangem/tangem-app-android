@@ -53,7 +53,7 @@ public class CardUnspentListAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup viewGroup) {
         if (convertView == null) {
-            convertView = mLayoutInflater.inflate(R.layout.card_unspent_list_item, viewGroup,
+            convertView = mLayoutInflater.inflate(R.layout.item_list_card_unspent, viewGroup,
                     false);
         }
         TextView tvItem = (TextView) convertView.findViewById(R.id.tvItem);
