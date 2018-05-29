@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Base64;
 
-import com.tangem.cardReader.CardProtocol;
+import com.tangem.domain.cardReader.CardProtocol;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,7 @@ public class PINStorage {
     }
 
 
-    static List<String> getPINs() {
+    public static List<String> getPINs() {
         ArrayList<String> result = new ArrayList<>();
         if (mLastUsedPIN != null) result.add(mLastUsedPIN);
         if (mEncryptedPIN != null && !result.contains(mEncryptedPIN)) result.add(mEncryptedPIN);
@@ -41,7 +41,7 @@ public class PINStorage {
         return result;
     }
 
-    static void setLastUsedPIN(String PIN) {
+    public static void setLastUsedPIN(String PIN) {
         mLastUsedPIN = PIN;
     }
 
