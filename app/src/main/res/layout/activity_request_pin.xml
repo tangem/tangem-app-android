@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    tools:context="com.tangem.wallet.RequestPINActivity">
+    tools:context="com.tangem.wallet.com.tangem.presentation.activity.RequestPINActivity">
     <!--android:paddingBottom="@dimen/activity_vertical_margin"-->
     <!--android:paddingLeft="@dimen/activity_horizontal_margin"-->
     <!--android:paddingRight="@dimen/activity_horizontal_margin"-->
