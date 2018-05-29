@@ -1,5 +1,7 @@
 package com.tangem.domain.cardReader;
 
+import com.tangem.util.Util;
+
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 
