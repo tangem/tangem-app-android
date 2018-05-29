@@ -3,8 +3,8 @@ package com.tangem.wallet;
 import android.net.Uri;
 import android.util.Log;
 
-import com.tangem.cardReader.CardProtocol;
-import com.tangem.cardReader.TLV;
+import com.tangem.domain.cardReader.CardProtocol;
+import com.tangem.domain.cardReader.TLV;
 
 import org.bitcoinj.core.ECKey;
 
