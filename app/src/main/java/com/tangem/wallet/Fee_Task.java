@@ -15,7 +15,7 @@ import java.util.List;
 
 public class Fee_Task extends AsyncTask<Fee_Request, Void, List<Fee_Request>> {
 
-    SharedData sharedCounter = null;
+    public SharedData sharedCounter = null;
 
     public Fee_Task(SharedData sharedData)
     {
