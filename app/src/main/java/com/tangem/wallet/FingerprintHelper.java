@@ -35,7 +35,7 @@ public class FingerprintHelper extends FingerprintManager.AuthenticationCallback
             cancellationSignal.cancel();
     }
 
-    interface FingerprintHelperListener {
+    public interface FingerprintHelperListener {
         public void authenticationFailed(String error);
         public void authenticationSucceeded(FingerprintManager.AuthenticationResult result);
     }
