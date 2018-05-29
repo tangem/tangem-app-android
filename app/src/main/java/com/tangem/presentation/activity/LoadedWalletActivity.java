@@ -7,7 +7,7 @@ import android.nfc.Tag;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
-import com.tangem.wallet.LoadedWalletActivityFragment;
+import com.tangem.presentation.fragment.LoadedWalletActivityFragment;
 import com.tangem.wallet.R;
 
 
