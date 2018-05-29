@@ -35,7 +35,7 @@ import com.tangem.wallet.DeviceNFCAntennaLocation;
 import com.tangem.wallet.LastSignStorage;
 import com.tangem.wallet.LogFileProvider;
 import com.tangem.wallet.Logger;
-import com.tangem.wallet.MainActivityFragment;
+import com.tangem.presentation.fragment.MainActivityFragment;
 import com.tangem.wallet.PINStorage;
 import com.tangem.wallet.PhoneUtility;
 import com.tangem.wallet.R;
