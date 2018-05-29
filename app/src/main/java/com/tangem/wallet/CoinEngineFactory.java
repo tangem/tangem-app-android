@@ -5,16 +5,14 @@ package com.tangem.wallet;
  */
 
 public class CoinEngineFactory {
-    public static CoinEngine Create(Blockchain chain)
-    {
-        if(Blockchain.BitcoinCash == chain || Blockchain.BitcoinCashTestNet == chain) {
+    public static CoinEngine Create(Blockchain chain) {
+        if (Blockchain.BitcoinCash == chain || Blockchain.BitcoinCashTestNet == chain) {
             return new BtcCashEngine();
-        }else if(Blockchain.Bitcoin == chain || Blockchain.BitcoinTestNet == chain) {
+        } else if (Blockchain.Bitcoin == chain || Blockchain.BitcoinTestNet == chain) {
             return new BtcEngine(); //TODO: ВРЕМЕНГГО!!!!
-        }else if(Blockchain.Ethereum == chain || Blockchain.EthereumTestNet == chain) {
+        } else if (Blockchain.Ethereum == chain || Blockchain.EthereumTestNet == chain) {
             return new EthEngine();
-        }
-        else if(Blockchain.Token == chain) {
+        } else if (Blockchain.Token == chain) {
             return new TokenEngine();
         } else {
             return null;

@@ -6,7 +6,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
 import com.tangem.wallet.R;
-import com.tangem.wallet.VerifyCardActivityFragment;
+import com.tangem.presentation.fragment.VerifyCardActivityFragment;
 
 public class VerifyCardActivity extends AppCompatActivity {
 
