@@ -1,19 +1,6 @@
 package com.tangem.wallet;
 
-import android.net.Uri;
-
 import com.google.common.base.Strings;
-import com.tangem.cardReader.CardProtocol;
-import com.tangem.cardReader.Util;
-
-import org.bitcoinj.core.Base58;
-
-import java.nio.ByteBuffer;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 
 /**
  * Created by dvol on 06.08.2017.
