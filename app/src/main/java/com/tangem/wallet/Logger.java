@@ -3,7 +3,7 @@ package com.tangem.wallet;
 import android.content.Context;
 import android.util.Log;
 
-import com.tangem.cardReader.Util;
+import com.tangem.domain.cardReader.Util;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
