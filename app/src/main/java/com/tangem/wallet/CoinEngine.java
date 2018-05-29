@@ -2,7 +2,7 @@ package com.tangem.wallet;
 
 import android.net.Uri;
 
-import com.tangem.cardReader.CardProtocol;
+import com.tangem.domain.cardReader.CardProtocol;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;

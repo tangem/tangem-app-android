@@ -1,21 +1,16 @@
 package com.tangem.wallet;
 
 import android.os.Bundle;
-import android.util.Log;
 
 import com.google.common.base.Strings;
-import com.tangem.cardReader.SettingsMask;
-import com.tangem.cardReader.Util;
+import com.tangem.domain.cardReader.SettingsMask;
+import com.tangem.domain.cardReader.Util;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.StringJoiner;
 
 /**
  * Created by dvol on 16.07.2017.
