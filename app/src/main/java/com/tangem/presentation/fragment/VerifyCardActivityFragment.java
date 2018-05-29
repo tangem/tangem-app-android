@@ -44,7 +44,7 @@ public class VerifyCardActivityFragment extends Fragment implements SwipeRefresh
     public View onCreateView(final LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        View v = inflater.inflate(R.layout.fragment_verify_card, container, false);
+        View v = inflater.inflate(R.layout.fr_verify_card, container, false);
 
         mNfcManager = new NfcManager(this.getActivity(), this);
 
