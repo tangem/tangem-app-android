@@ -10,3 +10,4 @@
 .externalNativeBuild
 app/libs/
 .idea/vcs.xml
+.idea/caches
