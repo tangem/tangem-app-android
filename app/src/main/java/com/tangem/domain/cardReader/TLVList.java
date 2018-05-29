@@ -6,6 +6,8 @@ package com.tangem.domain.cardReader;
 
 import android.support.annotation.NonNull;
 
+import com.tangem.util.Util;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
