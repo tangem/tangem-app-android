@@ -21,7 +21,7 @@ public class VerifyCardTask extends Thread {
     private Tangem_Card mCard;
     private NfcManager mNfcManager;
 
-    VerifyCardTask(Context context, Tangem_Card card, NfcManager nfcManager, IsoDep isoDep, CardProtocol.Notifications notifications) {
+    public VerifyCardTask(Context context, Tangem_Card card, NfcManager nfcManager, IsoDep isoDep, CardProtocol.Notifications notifications) {
         mCard = card;
         mContext = context;
         mIsoDep = isoDep;
