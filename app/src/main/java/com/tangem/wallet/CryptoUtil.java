@@ -2,7 +2,7 @@ package com.tangem.wallet;
 
 import android.util.Log;
 
-import com.tangem.cardReader.Util;
+import com.tangem.domain.cardReader.Util;
 
 import org.spongycastle.asn1.ASN1EncodableVector;
 import org.spongycastle.asn1.ASN1Integer;
