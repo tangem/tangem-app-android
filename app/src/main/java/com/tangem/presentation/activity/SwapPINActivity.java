@@ -15,14 +15,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.tangem.cardReader.CardProtocol;
-import com.tangem.cardReader.NfcManager;
-import com.tangem.cardReader.Util;
-import com.tangem.wallet.NoExtendedLengthSupportDialog;
+import com.tangem.domain.cardReader.CardProtocol;
+import com.tangem.domain.cardReader.NfcManager;
+import com.tangem.domain.cardReader.Util;
+import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog;
 import com.tangem.wallet.PINStorage;
 import com.tangem.wallet.R;
 import com.tangem.wallet.Tangem_Card;
-import com.tangem.wallet.WaitSecurityDelayDialog;
+import com.tangem.presentation.dialog.WaitSecurityDelayDialog;
 
 public class SwapPINActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback, CardProtocol.Notifications {
 
