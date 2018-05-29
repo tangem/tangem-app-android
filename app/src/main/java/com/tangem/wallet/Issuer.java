@@ -1,14 +1,8 @@
 package com.tangem.wallet;
 
-import com.tangem.cardReader.CardCrypto;
+import com.tangem.domain.cardReader.CardCrypto;
 
-import org.spongycastle.jce.ECNamedCurveTable;
-import org.spongycastle.jce.spec.ECNamedCurveParameterSpec;
-
-import java.math.BigInteger;
 import java.util.Arrays;
-
-import static com.tangem.cardReader.CardCrypto.*;
 
 /**
  * Created by dvol on 14.11.2017.
