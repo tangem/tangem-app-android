@@ -26,7 +26,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.tangem.cardReader.NfcManager;
+import com.tangem.domain.cardReader.NfcManager;
 import com.tangem.wallet.FingerprintHelper;
 import com.tangem.wallet.PINStorage;
 import com.tangem.wallet.R;
