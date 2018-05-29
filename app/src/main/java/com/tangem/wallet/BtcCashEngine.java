@@ -2,9 +2,9 @@ package com.tangem.wallet;
 
 import android.net.Uri;
 
-import com.tangem.cardReader.CardProtocol;
-import com.tangem.cardReader.TLV;
-import com.tangem.cardReader.Util;
+import com.tangem.domain.cardReader.CardProtocol;
+import com.tangem.domain.cardReader.TLV;
+import com.tangem.domain.cardReader.Util;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
