@@ -7,7 +7,7 @@
     android:background="@color/white"
     android:orientation="vertical"
     android:padding="0dp"
-    tools:context="com.tangem.wallet.EmptyWalletActivity">
+    tools:context="com.tangem.wallet.com.tangem.presentation.activity.EmptyWalletActivity">
 
     <RelativeLayout
         android:layout_width="match_parent"
