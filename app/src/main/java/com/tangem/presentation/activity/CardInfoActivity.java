@@ -10,8 +10,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.tangem.domain.wallet.TangemCard;
 import com.tangem.wallet.R;
-import com.tangem.wallet.Tangem_Card;
 import com.tangem.presentation.fragment.WalletInfoFragment;
 
 public class CardInfoActivity extends AppCompatActivity implements WalletInfoFragment.OnFragmentInteractionListener {
@@ -32,7 +32,7 @@ public class CardInfoActivity extends AppCompatActivity implements WalletInfoFra
     private ViewPager mViewPager;
 
 
-    private Tangem_Card mCard;
+    private TangemCard mCard;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +51,7 @@ public class CardInfoActivity extends AppCompatActivity implements WalletInfoFra
         tabLayout.setupWithViewPager(mViewPager);
 
         String UID = getIntent().getStringExtra("UID");
-        mCard = new Tangem_Card(UID);
+        mCard = new TangemCard(UID);
         mCard.LoadFromBundle(getIntent().getBundleExtra("Card"));
 
     }
