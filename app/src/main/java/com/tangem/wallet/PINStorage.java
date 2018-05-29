@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Base64;
-import android.util.Log;
 
 import com.tangem.cardReader.CardProtocol;
 
@@ -18,11 +17,11 @@ import javax.crypto.Cipher;
  * Global PIN Storage
  */
 
-class PINStorage {
+public class PINStorage {
     private static String mSavedPIN, mUserPIN, mLastUsedPIN, mEncryptedPIN, mPIN2;
     private static SharedPreferences sharedPreferences=null;
 
-    static void Init(Context context) {
+    public static void Init(Context context) {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         mSavedPIN = sharedPreferences.getString("SavedPIN", null);
         mUserPIN = null;
@@ -46,15 +45,15 @@ class PINStorage {
         mLastUsedPIN = PIN;
     }
 
-    static void setUserPIN(String PIN) {
+    public static void setUserPIN(String PIN) {
         mUserPIN = PIN;
     }
 
-    static void setPIN2(String PIN) {
+    public static void setPIN2(String PIN) {
         mPIN2 = PIN;
     }
 
-    static void savePIN(String PIN) {
+    public static void savePIN(String PIN) {
         mSavedPIN = PIN;
         if (mSavedPIN != null && !mSavedPIN.isEmpty()) {
             SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -65,7 +64,7 @@ class PINStorage {
         }
     }
 
-    static void deletePIN() {
+    public static void deletePIN() {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         if (mSavedPIN != null && mLastUsedPIN != null && mSavedPIN.equals(mLastUsedPIN)) {
             mLastUsedPIN = null;
@@ -75,7 +74,7 @@ class PINStorage {
         editor.apply();
     }
 
-    static void saveEncryptedPIN(Cipher cipher, String PIN) {
+    public static void saveEncryptedPIN(Cipher cipher, String PIN) {
         try {
             byte[] iv = cipher.getIV();
             byte[] bytes = cipher.doFinal(PIN.getBytes());
@@ -93,14 +92,14 @@ class PINStorage {
         }
     }
 
-    static byte[] loadEncryptedIV() {
+    public static byte[] loadEncryptedIV() {
         String sIV = sharedPreferences.getString("EncryptedIV", "");
 //        Log.d("PINStorage", String.format("loadEncryptedIV: %s",sIV));
 
         return Base64.decode(sIV, Base64.NO_WRAP);
     }
 
-    static String loadEncryptedPIN(Cipher cipher) {
+    public static String loadEncryptedPIN(Cipher cipher) {
         String encryptedPIN = sharedPreferences.getString("EncryptedPIN", null);
 
         try {
@@ -114,11 +113,11 @@ class PINStorage {
         return mEncryptedPIN;
     }
 
-    static boolean haveEncryptedPIN() {
+    public static boolean haveEncryptedPIN() {
         return sharedPreferences.getString("EncryptedPIN", null) != null;
     }
 
-    static void deleteEncryptedPIN() {
+    public static void deleteEncryptedPIN() {
         if (mEncryptedPIN != null && mLastUsedPIN != null && mEncryptedPIN.equals(mLastUsedPIN)) {
             mLastUsedPIN = null;
         }
@@ -129,7 +128,7 @@ class PINStorage {
         editor.apply();
     }
 
-    static void saveEncryptedPIN2(Cipher cipher, String PIN) {
+    public static void saveEncryptedPIN2(Cipher cipher, String PIN) {
         try {
             byte[] iv = cipher.getIV();
             byte[] bytes = cipher.doFinal(PIN.getBytes());
@@ -147,14 +146,14 @@ class PINStorage {
         }
     }
 
-    static byte[] loadEncryptedIV2() {
+    public static byte[] loadEncryptedIV2() {
         String sIV = sharedPreferences.getString("EncryptedIV2", "");
 //        Log.d("PINStorage", String.format("loadEncryptedIV: %s",sIV));
 
         return Base64.decode(sIV, Base64.NO_WRAP);
     }
 
-    static String loadEncryptedPIN2(Cipher cipher) {
+    public static String loadEncryptedPIN2(Cipher cipher) {
         String encryptedPIN = sharedPreferences.getString("EncryptedPIN2", null);
 
         try {
@@ -168,11 +167,11 @@ class PINStorage {
         return mPIN2;
     }
 
-    static boolean haveEncryptedPIN2() {
+    public static boolean haveEncryptedPIN2() {
         return sharedPreferences.getString("EncryptedPIN2", null) != null;
     }
 
-    static void deleteEncryptedPIN2() {
+    public static void deleteEncryptedPIN2() {
         mPIN2 = null;
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.remove("EncryptedPIN2");
