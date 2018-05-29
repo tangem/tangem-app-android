@@ -12,7 +12,7 @@ import android.view.MenuItem;
 
 import com.tangem.wallet.R;
 import com.tangem.wallet.Tangem_Card;
-import com.tangem.wallet.WalletInfoFragment;
+import com.tangem.presentation.fragment.WalletInfoFragment;
 
 public class CardInfoActivity extends AppCompatActivity implements WalletInfoFragment.OnFragmentInteractionListener {
 
