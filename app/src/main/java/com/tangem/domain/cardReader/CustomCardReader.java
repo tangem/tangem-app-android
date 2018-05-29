@@ -4,6 +4,8 @@ import android.content.Context;
 import android.nfc.TagLostException;
 import android.nfc.tech.IsoDep;
 
+import com.tangem.util.Util;
+
 import java.io.IOException;
 
 public class CustomCardReader implements Runnable {

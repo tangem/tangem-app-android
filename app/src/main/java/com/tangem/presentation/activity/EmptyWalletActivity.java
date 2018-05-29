@@ -19,11 +19,11 @@ import android.widget.Toast;
 
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.NfcManager;
-import com.tangem.domain.cardReader.Util;
+import com.tangem.domain.wallet.TangemCard;
+import com.tangem.util.Util;
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog;
 import com.tangem.wallet.R;
-import com.tangem.wallet.Tangem_Card;
-import com.tangem.wallet.VerifyCardTask;
+import com.tangem.data.network.task.VerifyCardTask;
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog;
 
 public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback, CardProtocol.Notifications {
@@ -31,7 +31,7 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
     private static final int REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY = 2;
     private static final int REQUEST_CODE_REQUEST_PIN2 = 3;
     private static final int REQUEST_CODE_VERIFY_CARD = 4;
-    Tangem_Card mCard;
+    TangemCard mCard;
     TextView tvCardID, tvIssuer, tvIssuerData, tvBlockchain;
     ProgressBar progressBar;
     ImageView ivBlockchain, ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion;
@@ -51,7 +51,7 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
         MainActivity.commonInit(getApplicationContext());
         mNfcManager = new NfcManager(this, this);
 
-        mCard = new Tangem_Card(getIntent().getStringExtra("UID"));
+        mCard = new TangemCard(getIntent().getStringExtra("UID"));
         mCard.LoadFromBundle(getIntent().getExtras().getBundle("Card"));
 
         tvCardID = findViewById(R.id.tvCardID);
@@ -181,7 +181,7 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
                 finish();
             } else {
                 if (data != null && data.getExtras().containsKey("UID") && data.getExtras().containsKey("Card")) {
-                    Tangem_Card updatedCard = new Tangem_Card(data.getStringExtra("UID"));
+                    TangemCard updatedCard = new TangemCard(data.getStringExtra("UID"));
                     updatedCard.LoadFromBundle(data.getBundleExtra("Card"));
                     mCard = updatedCard;
                 }
