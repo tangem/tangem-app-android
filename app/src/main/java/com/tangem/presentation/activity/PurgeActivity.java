@@ -17,18 +17,18 @@ import android.widget.Toast;
 
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.NfcManager;
-import com.tangem.domain.cardReader.Util;
+import com.tangem.domain.wallet.TangemCard;
+import com.tangem.util.Util;
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog;
-import com.tangem.wallet.PINStorage;
+import com.tangem.domain.wallet.PINStorage;
 import com.tangem.wallet.R;
-import com.tangem.wallet.Tangem_Card;
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog;
 
 public class PurgeActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback, CardProtocol.Notifications {
 
     public static final int RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER;
 
-    private Tangem_Card mCard;
+    private TangemCard mCard;
     private TextView tvCardID;
     private NfcManager mNfcManager;
     private static final String logTag = "Purge";
@@ -42,7 +42,7 @@ public class PurgeActivity extends AppCompatActivity implements NfcAdapter.Reade
 
         MainActivity.commonInit(getApplicationContext());
 
-        mCard = new Tangem_Card(getIntent().getStringExtra("UID"));
+        mCard = new TangemCard(getIntent().getStringExtra("UID"));
         mCard.LoadFromBundle(getIntent().getExtras().getBundle("Card"));
 
         tvCardID = (TextView) findViewById(R.id.tvCardID);
