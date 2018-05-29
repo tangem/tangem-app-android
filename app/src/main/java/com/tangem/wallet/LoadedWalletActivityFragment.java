@@ -42,6 +42,12 @@ import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.tangem.cardReader.CardProtocol;
 import com.tangem.cardReader.NfcManager;
 import com.tangem.cardReader.Util;
+import com.tangem.presentation.activity.CreateNewWalletActivity;
+import com.tangem.presentation.activity.PreparePaymentActivity;
+import com.tangem.presentation.activity.PurgeActivity;
+import com.tangem.presentation.activity.RequestPINActivity;
+import com.tangem.presentation.activity.SwapPINActivity;
+import com.tangem.presentation.activity.VerifyCardActivity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
