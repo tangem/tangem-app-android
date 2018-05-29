@@ -30,14 +30,14 @@ import android.widget.TextView;
 
 import com.scottyab.rootbeer.RootBeer;
 import com.skyfishjy.library.RippleBackground;
+import com.tangem.LogFileProvider;
+import com.tangem.domain.wallet.DeviceNFCAntennaLocation;
+import com.tangem.domain.wallet.LastSignStorage;
+import com.tangem.domain.wallet.Logger;
+import com.tangem.domain.wallet.PINStorage;
+import com.tangem.util.PhoneUtility;
+import com.tangem.presentation.fragment.MainFragment;
 import com.tangem.wallet.BuildConfig;
-import com.tangem.wallet.DeviceNFCAntennaLocation;
-import com.tangem.wallet.LastSignStorage;
-import com.tangem.wallet.LogFileProvider;
-import com.tangem.wallet.Logger;
-import com.tangem.presentation.fragment.MainActivityFragment;
-import com.tangem.wallet.PINStorage;
-import com.tangem.wallet.PhoneUtility;
 import com.tangem.wallet.R;
 
 import java.io.BufferedInputStream;
@@ -165,8 +165,8 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
             }
         });
 
-        MainActivityFragment mainActivityFragment=(MainActivityFragment)getSupportFragmentManager().findFragmentById(R.id.fragmentMain);
-        if( mainActivityFragment.getCardListAdapter().getItemCount()>0 )
+        MainFragment mainFragment =(MainFragment)getSupportFragmentManager().findFragmentById(R.id.fragmentMain);
+        if( mainFragment.getCardListAdapter().getItemCount()>0 )
         {
             showCleanButton();
         }else {
