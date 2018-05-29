@@ -5,7 +5,7 @@
     android:background="#FFFFFF"
     android:gravity="bottom"
     android:orientation="vertical"
-    tools:context="com.tangem.wallet.LogoActivity">
+    tools:context="com.tangem.wallet.com.tangem.presentation.activity.LogoActivity">
 
     <ImageView
         android:id="@+id/imgLogo"
