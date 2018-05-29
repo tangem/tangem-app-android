@@ -27,10 +27,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.tangem.domain.cardReader.NfcManager;
-import com.tangem.wallet.FingerprintHelper;
-import com.tangem.wallet.PINStorage;
+import com.tangem.domain.wallet.FingerprintHelper;
+import com.tangem.domain.wallet.PINStorage;
+import com.tangem.domain.wallet.TangemCard;
 import com.tangem.wallet.R;
-import com.tangem.wallet.Tangem_Card;
 
 import java.io.IOException;
 import java.security.KeyStore;
@@ -149,10 +149,10 @@ public class RequestPINActivity extends AppCompatActivity implements NfcAdapter.
             tvPrompt.setText("Confirm new PIN2");
         } else if (mode == Mode.RequestPIN2) {
             String UID = getIntent().getStringExtra("UID");
-            Tangem_Card mCard = new Tangem_Card(UID);
+            TangemCard mCard = new TangemCard(UID);
             mCard.LoadFromBundle(getIntent().getBundleExtra("Card"));
 
-            if (mCard.PIN2 == Tangem_Card.PIN2_Mode.DefaultPIN2 || mCard.PIN2 == Tangem_Card.PIN2_Mode.Unchecked) {
+            if (mCard.PIN2 == TangemCard.PIN2_Mode.DefaultPIN2 || mCard.PIN2 == TangemCard.PIN2_Mode.Unchecked) {
                 // if we know PIN2 or not try default previously - use it
                 PINStorage.setPIN2(PINStorage.getDefaultPIN2());
                 setResult(Activity.RESULT_OK);

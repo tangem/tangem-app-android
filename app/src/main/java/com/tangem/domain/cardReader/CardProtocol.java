@@ -6,11 +6,12 @@ import android.nfc.TagLostException;
 import android.nfc.tech.IsoDep;
 import android.util.Log;
 
-import com.tangem.wallet.CoinEngine;
-import com.tangem.wallet.CoinEngineFactory;
-import com.tangem.wallet.Issuer;
-import com.tangem.wallet.Tangem_Card;
-import com.tangem.wallet.Manufacturer;
+import com.tangem.domain.wallet.CoinEngine;
+import com.tangem.domain.wallet.CoinEngineFactory;
+import com.tangem.domain.wallet.Issuer;
+import com.tangem.domain.wallet.TangemCard;
+import com.tangem.domain.wallet.Manufacturer;
+import com.tangem.util.Util;
 
 import org.spongycastle.jce.ECNamedCurveTable;
 import org.spongycastle.jce.interfaces.ECPublicKey;
@@ -58,7 +59,7 @@ public class CardProtocol {
         mError = error;
     }
 
-    public Tangem_Card getCard() {
+    public TangemCard getCard() {
         return mCard;
     }
 
@@ -88,7 +89,7 @@ public class CardProtocol {
         }
     }
 
-    protected Tangem_Card mCard;
+    protected TangemCard mCard;
     protected Exception mError;
     protected Context mContext;
 
@@ -101,10 +102,10 @@ public class CardProtocol {
         mIsoDep = isoDep;
         mNotifications = notifications;
         mPIN = null;
-        mCard = new Tangem_Card(Util.byteArrayToHexString(mIsoDep.getTag().getId()));
+        mCard = new TangemCard(Util.byteArrayToHexString(mIsoDep.getTag().getId()));
     }
 
-    public CardProtocol(Context context, IsoDep isoDep, Tangem_Card card, Notifications notifications) {
+    public CardProtocol(Context context, IsoDep isoDep, TangemCard card, Notifications notifications) {
         mContext = context;
         mIsoDep = isoDep;
         mNotifications = notifications;
@@ -164,7 +165,7 @@ public class CardProtocol {
 
     byte[] sessionKey = null;
 
-    public void run_OpenSession(Tangem_Card.EncryptionMode encryptionMode) throws Exception {
+    public void run_OpenSession(TangemCard.EncryptionMode encryptionMode) throws Exception {
         sessionKey = null;
         try {
             CommandApdu cmdApdu = new CommandApdu(CommandApdu.ISO_CLA, INS.OpenSession.Code, 0, encryptionMode.getP());
@@ -280,7 +281,7 @@ public class CardProtocol {
 
     // send command APDU, get response APDU, and display HEX data to user
     private ResponseApdu SendAndReceive(CommandApdu cmdApdu, boolean breakOnNeedPause) throws Exception {
-        if (mCard.encryptionMode != Tangem_Card.EncryptionMode.None) {
+        if (mCard.encryptionMode != TangemCard.EncryptionMode.None) {
             if (sessionKey == null) {
                 run_OpenSession(mCard.encryptionMode);
             }
@@ -307,7 +308,7 @@ public class CardProtocol {
                     }
                     throw e;
                 }
-                if (mCard.encryptionMode != Tangem_Card.EncryptionMode.None) {
+                if (mCard.encryptionMode != TangemCard.EncryptionMode.None) {
                     rspApdu = ResponseApdu.Decrypt(rsp, sessionKey);
                 } else {
                     rspApdu = new ResponseApdu(rsp);
@@ -388,7 +389,7 @@ public class CardProtocol {
                 tlvIssuerData = null;
             }
         }
-        if (mCard.getStatus() == Tangem_Card.Status.Loaded) {
+        if (mCard.getStatus() == TangemCard.Status.Loaded) {
             // try read offline balance data
             if (tlvIssuerData != null && tlvIssuerData.getTLV(TLV.Tag.TAG_Denomination) != null && mCard.getMaxSignatures() == mCard.getRemainingSignatures()) {
                 mCard.setOfflineBalance(tlvIssuerData.getTLV(TLV.Tag.TAG_Denomination).Value);
@@ -413,13 +414,13 @@ public class CardProtocol {
 
     public void parseReadResult() throws TangemException, NoSuchProviderException, NoSuchAlgorithmException {
         TLV tlvStatus = readResult.getTLV(TLV.Tag.TAG_Status);
-        mCard.setStatus(Tangem_Card.Status.fromCode(Util.byteArrayToInt(tlvStatus.Value)));
+        mCard.setStatus(TangemCard.Status.fromCode(Util.byteArrayToInt(tlvStatus.Value)));
         TLV tlvCID = readResult.getTLV(TLV.Tag.TAG_CardID);
         mCard.setCID(tlvCID.Value);
         mCard.setManufacturer(Manufacturer.FindManufacturer(readResult.getTLV(TLV.Tag.TAG_Manufacture_ID).getAsString()), true);
         mCard.setHealth(readResult.getTLV(TLV.Tag.TAG_Health).getAsInt());
 
-        if (mCard.getStatus() != Tangem_Card.Status.NotPersonalized) {
+        if (mCard.getStatus() != TangemCard.Status.NotPersonalized) {
             try {
                 TLV tlvCardPubkicKey = readResult.getTLV(TLV.Tag.TAG_CardPublicKey);
                 if (tlvCardPubkicKey == null)
@@ -514,7 +515,7 @@ public class CardProtocol {
         }
 
 
-        if (mCard.getStatus() == Tangem_Card.Status.Loaded) {
+        if (mCard.getStatus() == TangemCard.Status.Loaded) {
 
             TLV tlvPublicKey = readResult.getTLV(TLV.Tag.TAG_Wallet_PublicKey);
 
@@ -544,7 +545,7 @@ public class CardProtocol {
         if (mCard.getCardPublicKey() == null || readResult == null) {
             run_Read();
         }
-        if (mCard.getStatus() == Tangem_Card.Status.NotPersonalized) {
+        if (mCard.getStatus() == TangemCard.Status.NotPersonalized) {
             getCard().setManufacturer(Manufacturer.Unknown, false);
             return null;
         }
@@ -649,12 +650,12 @@ public class CardProtocol {
         if (mCard.getCardPublicKey() == null || readResult == null) {
             run_Read();
         }
-        if (mCard.getStatus() == Tangem_Card.Status.NotPersonalized) {
+        if (mCard.getStatus() == TangemCard.Status.NotPersonalized) {
             getCard().setManufacturer(Manufacturer.Unknown, false);
             return;
         }
 
-        if (readResult.getTagAsInt(TLV.Tag.TAG_Status) != Tangem_Card.Status.Loaded.getCode()) {
+        if (readResult.getTagAsInt(TLV.Tag.TAG_Status) != TangemCard.Status.Loaded.getCode()) {
             throw new TangemException("Card must be loaded");
         }
         TLVList checkResult = run_CheckWallet();
@@ -922,7 +923,7 @@ public class CardProtocol {
     }
 
     public void run_GetSupportedEncryption() throws Exception {
-        mCard.encryptionMode = Tangem_Card.EncryptionMode.None;
+        mCard.encryptionMode = TangemCard.EncryptionMode.None;
         do {
             CommandApdu rqApdu = StartPrepareCommand(INS.Read);
             Log.i(logTag, String.format("[%s]\n%s", rqApdu.getCommandName(), rqApdu.getTLVs().getParsedTLVs("  ")));
@@ -930,10 +931,10 @@ public class CardProtocol {
             ResponseApdu rspApdu = SendAndReceive(rqApdu, false);
 
             if (rspApdu.isStatus(SW.NEED_ENCRYPTION)) {
-                if (mCard.encryptionMode == Tangem_Card.EncryptionMode.None) {
-                    mCard.encryptionMode = Tangem_Card.EncryptionMode.Fast;
-                } else if (mCard.encryptionMode == Tangem_Card.EncryptionMode.Fast) {
-                    mCard.encryptionMode = Tangem_Card.EncryptionMode.Strong;
+                if (mCard.encryptionMode == TangemCard.EncryptionMode.None) {
+                    mCard.encryptionMode = TangemCard.EncryptionMode.Fast;
+                } else if (mCard.encryptionMode == TangemCard.EncryptionMode.Fast) {
+                    mCard.encryptionMode = TangemCard.EncryptionMode.Strong;
                 } else {
                     throw new Exception("Can't get supported encryption methods");
                 }
