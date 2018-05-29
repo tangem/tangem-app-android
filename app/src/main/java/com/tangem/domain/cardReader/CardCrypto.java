@@ -2,6 +2,8 @@ package com.tangem.domain.cardReader;
 
 import android.util.Log;
 
+import com.tangem.util.Util;
+
 import org.spongycastle.asn1.ASN1EncodableVector;
 import org.spongycastle.asn1.ASN1Integer;
 import org.spongycastle.asn1.DERSequence;
@@ -163,7 +165,7 @@ public class CardCrypto {
         } else {
             Log.e("cardCrypto","r-length:" + String.valueOf(rLength));
             Log.e("cardCrypto","s-length:" + String.valueOf(sLength));
-            Log.e("cardCrypto","enc:" +Util.bytesToHex(enc));
+            Log.e("cardCrypto","enc:" + Util.bytesToHex(enc));
             throw new Exception("unsupported r-length - r-length:" + String.valueOf(rLength)+",s-length:" + String.valueOf(sLength)+",enc:" +Util.bytesToHex(enc));
         }
         if (sLength <= 32) {
