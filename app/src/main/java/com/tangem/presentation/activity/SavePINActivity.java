@@ -23,8 +23,8 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.tangem.wallet.FingerprintHelper;
-import com.tangem.wallet.PINStorage;
+import com.tangem.domain.wallet.FingerprintHelper;
+import com.tangem.domain.wallet.PINStorage;
 import com.tangem.wallet.R;
 
 import java.io.IOException;

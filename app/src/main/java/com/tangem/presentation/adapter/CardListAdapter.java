@@ -12,11 +12,11 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.tangem.wallet.Blockchain;
-import com.tangem.wallet.CoinEngine;
-import com.tangem.wallet.CoinEngineFactory;
+import com.tangem.domain.wallet.Blockchain;
+import com.tangem.domain.wallet.CoinEngine;
+import com.tangem.domain.wallet.CoinEngineFactory;
+import com.tangem.domain.wallet.TangemCard;
 import com.tangem.wallet.R;
-import com.tangem.wallet.Tangem_Card;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.tangem.wallet.Tangem_Card.CountOurTx;
+import static com.tangem.domain.wallet.TangemCard.CountOurTx;
 
 public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardViewHolder> {
 
@@ -81,7 +81,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
     private LayoutInflater mLayoutInflater;
     private Context mContext;
     private UiCallbacks mUiCallbacks;
-    private List<Tangem_Card> mCards = new ArrayList<>(100);
+    private List<TangemCard> mCards = new ArrayList<>(100);
 
     public CardListAdapter(LayoutInflater layoutInflater, Bundle instate, UiCallbacks uiCallbacks) {
         mLayoutInflater = layoutInflater;
@@ -94,7 +94,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
 
             if( UIDs!=null ) {
                 for (String UID : UIDs) {
-                    Tangem_Card card = new Tangem_Card(UID);
+                    TangemCard card = new TangemCard(UID);
                     card.LoadFromBundle(instate.getBundle(String.format("card_%s", UID)));
                     mCards.add(card);
                 }
@@ -105,7 +105,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
 
     public void onSaveInstanceState(Bundle outstate) {
         ArrayList<String> UIDs = new ArrayList<String>(mCards.size());
-        for (Tangem_Card card : mCards) {
+        for (TangemCard card : mCards) {
             Bundle B = new Bundle();
             card.SaveToBundle(B);
             outstate.putBundle(String.format("card_%s", card.getUID()), B);
@@ -119,12 +119,12 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
         notifyDataSetChanged();
     }
 
-    public Tangem_Card getCard(int cardIndex) {
+    public TangemCard getCard(int cardIndex) {
         return mCards.get(cardIndex);
     }
 
-    public Tangem_Card getCardByWallet(String walletAddress) {
-        for (Tangem_Card c : mCards) {
+    public TangemCard getCardByWallet(String walletAddress) {
+        for (TangemCard c : mCards) {
             if (c.getWallet().equals(walletAddress)) {
                 return c;
             }
@@ -132,7 +132,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
         return null;
     }
 
-    public void addCard(Tangem_Card card) {
+    public void addCard(TangemCard card) {
         mCards.add(0,card);
         notifyDataSetChanged();
     }
@@ -142,7 +142,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
         notifyItemRemoved(cardIndex);
     }
 
-    public void removeCard(Tangem_Card card) {
+    public void removeCard(TangemCard card) {
         int i;
         for (i = 0; i < mCards.size(); i++) {
             if (Arrays.equals(mCards.get(i).getCID(), card.getCID())) {
@@ -156,7 +156,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
     }
 
 
-    public void updateCard(Tangem_Card card) {
+    public void updateCard(TangemCard card) {
         int i;
         for (i = 0; i < mCards.size(); i++) {
             if (Arrays.equals(mCards.get(i).getCID(), card.getCID())) {
@@ -174,7 +174,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
     }
 
     public void UpdateWalletBalance(String walletAddress, Long balanceConfirmed, Long balanceUnconfirmed, String validationNodeDescription) {
-        for (Tangem_Card c : mCards) {
+        for (TangemCard c : mCards) {
             if (c.getWallet().equals(walletAddress)) {
                 c.setBalanceConfirmed(balanceConfirmed);
                 c.setBalanceUnconfirmed(balanceUnconfirmed);
@@ -188,7 +188,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
 
 
     public void UpdateWalletCoutConfirmTx(String walletAddress, BigInteger nonce) {
-        for (Tangem_Card c : mCards) {
+        for (TangemCard c : mCards) {
             if (c.getWallet().equals(walletAddress)) {
                 c.SetConfirmTXCount(nonce);
                 notifyDataSetChanged();
@@ -198,7 +198,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
     }
 
     public void UpdateWalletBlockchain(String walletAddress, Blockchain blockchain) {
-        for (Tangem_Card c : mCards) {
+        for (TangemCard c : mCards) {
             if (c.getWallet().equals(walletAddress)) {
                 c.setBlockchainID(blockchain.getID());
                 notifyDataSetChanged();
@@ -208,7 +208,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
     }
 
     public void AddWalletBlockchainNameToken(String walletAddress) {
-        for (Tangem_Card c : mCards) {
+        for (TangemCard c : mCards) {
             if (c.getWallet().equals(walletAddress)) {
                 c.addTokenToBlockchainName();
                 notifyDataSetChanged();
@@ -218,7 +218,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
     }
 
     public void UpdateWalletBalance(String walletAddress, Long balanceConfirmed, String balanceString, String validationNodeDescription) {
-        for (Tangem_Card c : mCards) {
+        for (TangemCard c : mCards) {
             if (c.getWallet().equals(walletAddress)) {
                 c.setBalanceConfirmed(balanceConfirmed);
                 c.setBalanceUnconfirmed(0L);
@@ -231,7 +231,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
     }
 
     public void UpdateWalletBalanceOnlyAlter(String walletAddress, String balanceAlter) {
-        for (Tangem_Card c : mCards) {
+        for (TangemCard c : mCards) {
             if (c.getWallet().equals(walletAddress)) {
                 c.setDecimalBalanceAlter(balanceAlter);
                 notifyDataSetChanged();
@@ -241,13 +241,13 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
     }
 
     public void UpdateWalletUnspent(String walletAddress, JSONArray jsUnspentArray) {
-        for (Tangem_Card c : mCards) {
+        for (TangemCard c : mCards) {
             if (c.getWallet().equals(walletAddress)) {
                 try {
                     c.getUnspentTransactions().clear();
                     for (int i = 0; i < jsUnspentArray.length(); i++) {
                         JSONObject jsUnspent = jsUnspentArray.getJSONObject(i);
-                        Tangem_Card.UnspentTransaction trUnspent = new Tangem_Card.UnspentTransaction();
+                        TangemCard.UnspentTransaction trUnspent = new TangemCard.UnspentTransaction();
                         trUnspent.txID = jsUnspent.getString("tx_hash");
                         trUnspent.Amount = jsUnspent.getInt("value");
                         trUnspent.Height = jsUnspent.getInt("height");
@@ -263,13 +263,13 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
     }
 
     public void UpdateWalletHistory(String walletAddress, JSONArray jsHistoryArray) {
-        for (Tangem_Card c : mCards) {
+        for (TangemCard c : mCards) {
             if (c.getWallet().equals(walletAddress)) {
                 try {
                     c.getHistoryTransactions().clear();
                     for (int i = 0; i < jsHistoryArray.length(); i++) {
                         JSONObject jsUnspent = jsHistoryArray.getJSONObject(i);
-                        Tangem_Card.HistoryTransaction trHistory = new Tangem_Card.HistoryTransaction();
+                        TangemCard.HistoryTransaction trHistory = new TangemCard.HistoryTransaction();
                         trHistory.txID = jsUnspent.getString("tx_hash");
                         trHistory.Height = jsUnspent.getInt("height");
                         c.getHistoryTransactions().add(trHistory);
@@ -284,11 +284,11 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
     }
 
     public void UpdateWalletHeader(String walletAddress, JSONObject jsHeader) {
-        for (Tangem_Card c : mCards) {
+        for (TangemCard c : mCards) {
             if (c.getWallet().equals(walletAddress)) {
                 try {
                     c.getHaedersInfo();
-                    c.UpdateHeaderInfo(new Tangem_Card.HeaderInfo(
+                    c.UpdateHeaderInfo(new TangemCard.HeaderInfo(
                             jsHeader.getInt("block_height"),
                             jsHeader.getInt("timestamp")));
                 } catch (JSONException e) {
@@ -301,7 +301,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
     }
 
     public void UpdateRate(String walletAddress, float rate) {
-        for (Tangem_Card c : mCards) {
+        for (TangemCard c : mCards) {
             if (c.getWallet().equals(walletAddress)) {
                 c.setRate(rate);
                 notifyDataSetChanged();
@@ -311,7 +311,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
     }
 
     public void UpdateRateAlter(String walletAddress, float rate) {
-        for (Tangem_Card c : mCards) {
+        for (TangemCard c : mCards) {
             if (c.getWallet().equals(walletAddress)) {
                 c.setRateAlter(rate);
                 notifyDataSetChanged();
@@ -321,18 +321,18 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
     }
 
     public void UpdateTransaction(String walletAddress, String txHash, String raw) {
-        for (Tangem_Card c : mCards) {
+        for (TangemCard c : mCards) {
             if (c.getWallet().equals(walletAddress)) {
 
-                List<Tangem_Card.UnspentTransaction> listTx = c.getUnspentTransactions();
-                for (Tangem_Card.UnspentTransaction tx : listTx) {
+                List<TangemCard.UnspentTransaction> listTx = c.getUnspentTransactions();
+                for (TangemCard.UnspentTransaction tx : listTx) {
                     if (tx.txID.equals(txHash)) {
                         tx.Raw = raw;
                     }
                 }
 
-                List<Tangem_Card.HistoryTransaction> listHTx = c.getHistoryTransactions();
-                for (Tangem_Card.HistoryTransaction tx : listHTx) {
+                List<TangemCard.HistoryTransaction> listHTx = c.getHistoryTransactions();
+                for (TangemCard.HistoryTransaction tx : listHTx) {
                     if (tx.txID.equals(txHash)) {
                         tx.Raw = raw;
                         CountOurTx(listHTx);
@@ -345,7 +345,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
     }
 
     public void UpdateWalletError(String walletAddress, String error) {
-        for (Tangem_Card c : mCards) {
+        for (TangemCard c : mCards) {
             if (c.getWallet().equals(walletAddress)) {
                 c.setError(error);
                 notifyDataSetChanged();
@@ -370,7 +370,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
     public void onBindViewHolder(CardViewHolder holder, int position) {
 
         try {
-            Tangem_Card card = mCards.get(position);
+            TangemCard card = mCards.get(position);
             CoinEngine engine = CoinEngineFactory.Create(card.getBlockchain());
 
             int color = android.R.color.black;
@@ -583,7 +583,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
     }
 
     private class CardClickListener implements View.OnClickListener {
-        Tangem_Card card;
+        TangemCard card;
         int pos;
 
         CardClickListener(int position) {
