@@ -1,4 +1,4 @@
-package com.tangem.wallet;
+package com.tangem.presentation.activity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -27,6 +27,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.tangem.cardReader.NfcManager;
+import com.tangem.wallet.FingerprintHelper;
+import com.tangem.wallet.PINStorage;
+import com.tangem.wallet.R;
+import com.tangem.wallet.Tangem_Card;
 
 import java.io.IOException;
 import java.security.KeyStore;
