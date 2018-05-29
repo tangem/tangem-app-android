@@ -22,25 +22,25 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.tangem.data.network.request.ElectrumRequest;
 import com.tangem.domain.cardReader.NfcManager;
-import com.tangem.domain.cardReader.Util;
-import com.tangem.wallet.BTCUtils;
-import com.tangem.wallet.Blockchain;
-import com.tangem.wallet.CoinEngine;
-import com.tangem.wallet.CoinEngineFactory;
-import com.tangem.wallet.DerEncodingUtil;
-import com.tangem.data.network.request.Electrum_Request;
-import com.tangem.data.network.task.Electrum_Task;
-import com.tangem.wallet.Fee_Request;
-import com.tangem.data.network.task.Fee_Task;
-import com.tangem.wallet.FormatUtil;
-import com.tangem.wallet.Infura_Request;
-import com.tangem.data.network.task.Infura_Task;
+import com.tangem.domain.wallet.TangemCard;
+import com.tangem.util.Util;
+import com.tangem.domain.wallet.BTCUtils;
+import com.tangem.domain.wallet.Blockchain;
+import com.tangem.domain.wallet.CoinEngine;
+import com.tangem.domain.wallet.CoinEngineFactory;
+import com.tangem.domain.wallet.DerEncodingUtil;
+import com.tangem.data.network.task.ElectrumTask;
+import com.tangem.data.network.request.FeeRequest;
+import com.tangem.data.network.task.FeeTask;
+import com.tangem.domain.wallet.FormatUtil;
+import com.tangem.domain.wallet.Infura_Request;
+import com.tangem.data.network.task.InfuraTask;
 import com.tangem.wallet.R;
-import com.tangem.wallet.SharedData;
-import com.tangem.wallet.Tangem_Card;
-import com.tangem.wallet.Transaction;
-import com.tangem.wallet.UnspentOutputInfo;
+import com.tangem.domain.wallet.SharedData;
+import com.tangem.domain.wallet.Transaction;
+import com.tangem.domain.wallet.UnspentOutputInfo;
 
 import org.json.JSONException;
 
@@ -65,7 +65,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
     EditText etAmount;
     EditText etFee;
     ImageView ivCamera;
-    Tangem_Card mCard;
+    TangemCard mCard;
     RadioGroup rgFee;
     String minFee = null, maxFee = null, normalFee = null;
     Long minFeeInInternalUnits = 0L;
@@ -83,7 +83,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
         MainActivity.commonInit(getApplicationContext());
         mNfcManager = new NfcManager(this, this);
 
-        mCard = new Tangem_Card(getIntent().getStringExtra("UID"));
+        mCard = new TangemCard(getIntent().getStringExtra("UID"));
         mCard.LoadFromBundle(getIntent().getExtras().getBundle("Card"));
 
         progressBar = findViewById(R.id.progressBar);
@@ -269,8 +269,8 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
                 //ConnectTask connectTaskEx = new ConnectTask(Blockchain.getNextServiceHost(mCard), Blockchain.getNextServicePort(mCard), data);
                 ConnectTask connectTaskEx = new ConnectTask(nodeAddress, nodePort, data);
 
-                //connectTaskEx.execute(Electrum_Request.CheckBalance(mCard.getWallet()));
-                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, Electrum_Request.CheckBalance(mCard.getWallet()));
+                //connectTaskEx.execute(ElectrumRequest.CheckBalance(mCard.getWallet()));
+                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(mCard.getWallet()));
             }
 
             String nodeAddress = engineCoin.GetNode(mCard);
@@ -279,7 +279,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
 
             //ConnectTask connectTask = new ConnectTask(Blockchain.getServiceHost(mCard), Blockchain.getServicePort(mCard));
 
-            connectTask.execute(/*Electrum_Request.CheckBalance(mCard.getWallet()), */Electrum_Request.GetFee(mCard.getWallet()));
+            connectTask.execute(/*ElectrumRequest.CheckBalance(mCard.getWallet()), */ElectrumRequest.GetFee(mCard.getWallet()));
 
             int calcSize = 256;
             try {
@@ -295,9 +295,9 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
 
                 ConnectFeeTask feeTask = new ConnectFeeTask(sharedFee);
 
-                feeTask.execute(Fee_Request.GetFee(mCard.getWallet(), calcSize, Fee_Request.NORMAL),
-                        Fee_Request.GetFee(mCard.getWallet(), calcSize, Fee_Request.MINIMAL),
-                        Fee_Request.GetFee(mCard.getWallet(), calcSize, Fee_Request.PRIORITY));
+                feeTask.execute(FeeRequest.GetFee(mCard.getWallet(), calcSize, FeeRequest.NORMAL),
+                        FeeRequest.GetFee(mCard.getWallet(), calcSize, FeeRequest.MINIMAL),
+                        FeeRequest.GetFee(mCard.getWallet(), calcSize, FeeRequest.PRIORITY));
             }
         }
 
@@ -322,7 +322,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE_SIGN_PAYMENT) {
             if (data != null && data.getExtras().containsKey("UID") && data.getExtras().containsKey("Card")) {
-                Tangem_Card updatedCard = new Tangem_Card(data.getStringExtra("UID"));
+                TangemCard updatedCard = new TangemCard(data.getStringExtra("UID"));
                 updatedCard.LoadFromBundle(data.getBundleExtra("Card"));
                 mCard = updatedCard;
             }
@@ -377,7 +377,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
         byte[] pbComprKey = mCard.getWalletPublicKeyRar();
 
         // Build script for our address
-        List<Tangem_Card.UnspentTransaction> rawTxList = mCard.getUnspentTransactions();
+        List<TangemCard.UnspentTransaction> rawTxList = mCard.getUnspentTransactions();
         byte[] outputScriptWeAreAbleToSpend = Transaction.Script.buildOutput(myAddress).bytes;
 
         // Collect unspent
@@ -437,7 +437,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
         return realTX.length;
     }
 
-    private class ConnectTask extends Electrum_Task {
+    private class ConnectTask extends ElectrumTask {
         public ConnectTask(String host, int port) {
             super(host, port);
         }
@@ -452,12 +452,12 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
         }
 
         @Override
-        protected void onPostExecute(List<Electrum_Request> requests) {
+        protected void onPostExecute(List<ElectrumRequest> requests) {
             super.onPostExecute(requests);
-            for (Electrum_Request request : requests) {
+            for (ElectrumRequest request : requests) {
                 try {
                     if (request.error == null) {
-                        if (request.isMethod(Electrum_Request.METHOD_GetBalance)) {
+                        if (request.isMethod(ElectrumRequest.METHOD_GetBalance)) {
                             try {
                                 etFee.setText("--");
 
@@ -490,7 +490,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
                                     FinishActivityWithError(Activity.RESULT_CANCELED, "Cannot check balance! No connection with blockchain nodes");
                                 }
                             }
-                        } else if (request.isMethod(Electrum_Request.METHOD_GetFee)) {
+                        } else if (request.isMethod(ElectrumRequest.METHOD_GetFee)) {
                             if (request.getResultString() == "-1") {
                                 etFee.setText("3");
                             }
@@ -526,7 +526,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
         }
     }
 
-    private class ETHRequestTask extends Infura_Task {
+    private class ETHRequestTask extends InfuraTask {
         ETHRequestTask(Blockchain blockchain) {
             super(blockchain);
         }
@@ -577,15 +577,15 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
         }
     }
 
-    private class ConnectFeeTask extends Fee_Task {
+    private class ConnectFeeTask extends FeeTask {
         public ConnectFeeTask(SharedData sharedData) {
             super(sharedData);
         }
 
         @Override
-        protected void onPostExecute(List<Fee_Request> requests) {
+        protected void onPostExecute(List<FeeRequest> requests) {
             super.onPostExecute(requests);
-            for (Fee_Request request : requests) {
+            for (FeeRequest request : requests) {
                 if (request.error == null) {
                     long minFeeRate = 0;
 
@@ -651,12 +651,12 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
 
                     finalFee = Math.round(finalFee) / (float) 10000;
 
-                    if (request.getBlockCount() == Fee_Request.MINIMAL) {
+                    if (request.getBlockCount() == FeeRequest.MINIMAL) {
                         minFee = String.valueOf(finalFee);
                         minFeeInInternalUnits = mCard.InternalUnitsFromString(String.valueOf(finalFee));
-                    } else if (request.getBlockCount() == Fee_Request.NORMAL) {
+                    } else if (request.getBlockCount() == FeeRequest.NORMAL) {
                         normalFee = String.valueOf(finalFee);
-                    } else if (request.getBlockCount() == Fee_Request.PRIORITY) {
+                    } else if (request.getBlockCount() == FeeRequest.PRIORITY) {
                         maxFee = String.valueOf(finalFee);
                     }
 

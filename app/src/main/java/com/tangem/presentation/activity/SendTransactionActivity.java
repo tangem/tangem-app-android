@@ -8,17 +8,17 @@ import android.view.KeyEvent;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.tangem.wallet.Blockchain;
-import com.tangem.wallet.CoinEngine;
-import com.tangem.wallet.CoinEngineFactory;
-import com.tangem.data.network.request.Electrum_Request;
-import com.tangem.data.network.task.Electrum_Task;
-import com.tangem.wallet.Infura_Request;
-import com.tangem.data.network.task.Infura_Task;
-import com.tangem.wallet.LastSignStorage;
+import com.tangem.domain.wallet.Blockchain;
+import com.tangem.domain.wallet.CoinEngine;
+import com.tangem.domain.wallet.CoinEngineFactory;
+import com.tangem.data.network.request.ElectrumRequest;
+import com.tangem.data.network.task.ElectrumTask;
+import com.tangem.domain.wallet.Infura_Request;
+import com.tangem.data.network.task.InfuraTask;
+import com.tangem.domain.wallet.LastSignStorage;
+import com.tangem.domain.wallet.TangemCard;
 import com.tangem.wallet.R;
-import com.tangem.wallet.SharedData;
-import com.tangem.wallet.Tangem_Card;
+import com.tangem.domain.wallet.SharedData;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,7 +29,7 @@ import java.util.List;
 public class SendTransactionActivity extends AppCompatActivity {
 
     ProgressBar progressBar;
-    private Tangem_Card mCard;
+    private TangemCard mCard;
     private String tx;
 
     @Override
@@ -42,7 +42,7 @@ public class SendTransactionActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
 
         Intent intent = getIntent();
-        mCard = new Tangem_Card(getIntent().getStringExtra("UID"));
+        mCard = new TangemCard(getIntent().getStringExtra("UID"));
         mCard.LoadFromBundle(intent.getExtras().getBundle("Card"));
         tx = intent.getStringExtra("TX");
 
@@ -57,13 +57,13 @@ public class SendTransactionActivity extends AppCompatActivity {
             String nodeAddress = engine.GetNode(mCard);
             int nodePort = engine.GetNodePort(mCard);
             ConnectTask connectTask = new ConnectTask(nodeAddress, nodePort);
-            connectTask.execute(Electrum_Request.Broadcast(mCard.getWallet(), tx));
+            connectTask.execute(ElectrumRequest.Broadcast(mCard.getWallet(), tx));
         }
         else if (mCard.getBlockchain() == Blockchain.BitcoinCash || mCard.getBlockchain() == Blockchain.BitcoinCashTestNet ) {
             String nodeAddress = engine.GetNode(mCard);
             int nodePort = engine.GetNodePort(mCard);
             ConnectTask connectTask = new ConnectTask(nodeAddress, nodePort);
-            connectTask.execute(Electrum_Request.Broadcast(mCard.getWallet(), tx));
+            connectTask.execute(ElectrumRequest.Broadcast(mCard.getWallet(), tx));
         }
 
     }
@@ -93,7 +93,7 @@ public class SendTransactionActivity extends AppCompatActivity {
         finish();
     }
 
-    private class ETHRequestTask extends Infura_Task {
+    private class ETHRequestTask extends InfuraTask {
         ETHRequestTask(Blockchain blockchain){
             super(blockchain);
         }
@@ -152,7 +152,7 @@ public class SendTransactionActivity extends AppCompatActivity {
         }
     }
 
-    private class ConnectTask extends Electrum_Task {
+    private class ConnectTask extends ElectrumTask {
         public ConnectTask(String host, int port) {
             super(host, port);
         }
@@ -167,14 +167,14 @@ public class SendTransactionActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(List<Electrum_Request> requests) {
+        protected void onPostExecute(List<ElectrumRequest> requests) {
             super.onPostExecute(requests);
             CoinEngine engine = CoinEngineFactory.Create(Blockchain.Bitcoin);
 
-            for (Electrum_Request request : requests) {
+            for (ElectrumRequest request : requests) {
                 try {
                     if (request.error == null) {
-                        if (request.isMethod(Electrum_Request.METHOD_SendTransaction)) {
+                        if (request.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
                             try {
                                 String hashTX = request.getResultString();
 
