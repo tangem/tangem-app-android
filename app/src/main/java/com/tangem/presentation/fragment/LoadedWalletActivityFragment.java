@@ -254,7 +254,7 @@ public class LoadedWalletActivityFragment extends Fragment implements SwipeRefre
     @Override
     public View onCreateView(final LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.fragment_loaded_wallet, container, false);
+        View v = inflater.inflate(R.layout.fr_loaded_wallet, container, false);
 
         mNfcManager = new NfcManager(this.getActivity(), this);
 
