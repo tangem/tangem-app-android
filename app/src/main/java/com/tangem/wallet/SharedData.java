@@ -13,6 +13,7 @@ public class SharedData
     public AtomicInteger requestCounter;
     public int allRequest;
     public AtomicInteger errorRequest;
+
     public SharedData(int requstCount)
     {
         allRequest = requstCount;
