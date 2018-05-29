@@ -92,7 +92,7 @@ public class MainActivityFragment extends Fragment implements NfcAdapter.ReaderC
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View result = inflater.inflate(R.layout.fragment_main, container, false);
+        View result = inflater.inflate(R.layout.fr_main, container, false);
 
         mNfcManager = new NfcManager(this.getActivity(), this);
         verifyPermissions();
