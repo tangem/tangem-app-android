@@ -21,7 +21,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.tangem.wallet.R;
-import com.tangem.wallet.Tangem_Card;
+import com.tangem.domain.wallet.TangemCard;
 
 import java.util.Hashtable;
 
@@ -38,7 +38,7 @@ import static android.content.Context.CLIPBOARD_SERVICE;
 public class WalletInfoFragment extends Fragment {
 
     // TODO: Rename and change types of parameters
-    private Tangem_Card mCard;
+    private TangemCard mCard;
 
     private OnFragmentInteractionListener mListener;
 
@@ -53,7 +53,7 @@ public class WalletInfoFragment extends Fragment {
      * @return A new instance of fragment WalletInfoFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static WalletInfoFragment newInstance(Tangem_Card card) {
+    public static WalletInfoFragment newInstance(TangemCard card) {
         WalletInfoFragment fragment = new WalletInfoFragment();
         Bundle args = new Bundle();
         args.putString("UID",card.getUID());
@@ -66,7 +66,7 @@ public class WalletInfoFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mCard = new Tangem_Card(getArguments().getString("UID"));
+            mCard = new TangemCard(getArguments().getString("UID"));
             mCard.LoadFromBundle(getArguments());
         }
     }
