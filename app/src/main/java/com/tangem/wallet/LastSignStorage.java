@@ -6,7 +6,6 @@ import android.preference.PreferenceManager;
 import android.util.ArrayMap;
 import android.util.ArraySet;
 
-import java.lang.reflect.Array;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
@@ -24,7 +23,7 @@ public class LastSignStorage {
     private static Map<String, String> txCol = new ArrayMap<>();
     private static Map<String, String> txCompleteCol = new ArrayMap<>();
 
-    static void Init(Context context) {
+    public static void Init(Context context) {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         cards=sharedPreferences.getStringSet("LastSign_Cards", cards);
         for (int i = 0; i < cards.size(); i++) {
