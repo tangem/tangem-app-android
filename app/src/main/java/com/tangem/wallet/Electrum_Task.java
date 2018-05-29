@@ -27,7 +27,7 @@ public class Electrum_Task extends AsyncTask<Electrum_Request, Integer, List<Ele
     OutputStreamWriter out;
     BufferedReader in;
 
-    SharedData sharedCounter = null;
+    public SharedData sharedCounter = null;
 
 
     public Electrum_Task(String host, int port) {
