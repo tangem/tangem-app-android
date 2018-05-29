@@ -1,4 +1,4 @@
-package com.tangem.wallet;
+package com.tangem.presentation.activity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -22,6 +22,10 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.tangem.wallet.FingerprintHelper;
+import com.tangem.wallet.PINStorage;
+import com.tangem.wallet.R;
 
 import java.io.IOException;
 import java.security.KeyStore;
