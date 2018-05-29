@@ -75,7 +75,7 @@ public class WalletInfoFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View result=inflater.inflate(R.layout.fragment_wallet_info, container, false);
+        View result=inflater.inflate(R.layout.fr_wallet_info, container, false);
 
         ImageView mImage= (ImageView)result.findViewById(R.id.qrWallet);
         try {
