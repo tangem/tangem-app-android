@@ -27,6 +27,10 @@ import android.widget.Toast;
 import com.tangem.cardReader.CardProtocol;
 import com.tangem.cardReader.NfcManager;
 import com.tangem.cardReader.Util;
+import com.tangem.presentation.activity.EmptyWalletActivity;
+import com.tangem.presentation.activity.LoadedWalletActivity;
+import com.tangem.presentation.activity.MainActivity;
+import com.tangem.presentation.activity.RequestPINActivity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
