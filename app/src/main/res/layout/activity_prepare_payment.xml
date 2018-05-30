@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.tangem.wallet.com.tangem.presentation.activity.PreparePaymentActivity">
+    tools:context="com.tangem.presentation.activity.PreparePaymentActivity">
 
     <TextView
         android:id="@+id/textView"
@@ -19,7 +20,7 @@
         android:textSize="@dimen/font_large"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"/>
 
 
     <LinearLayout
@@ -44,7 +45,7 @@
             android:fontFamily="@font/raleway_r"
             android:text="From banknote"
             android:textColor="@color/primary"
-            android:textSize="@dimen/font_normal" />
+            android:textSize="@dimen/font_normal"/>
 
         <TextView
             android:id="@+id/tvCardID"
@@ -56,8 +57,7 @@
             android:text="    "
             android:textColor="@color/black"
             android:textSize="@dimen/font_normal"
-            android:textStyle="bold" />
-        />
+            android:textStyle="bold"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -67,7 +67,7 @@
             android:fontFamily="@font/raleway_r"
             android:text="with balance"
             android:textColor="@color/primary"
-            android:textSize="@dimen/font_normal" />
+            android:textSize="@dimen/font_normal"/>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -85,8 +85,7 @@
                 android:text="    "
                 android:textColor="@color/black"
                 android:textSize="@dimen/font_normal"
-                android:textStyle="bold" />
-            />
+                android:textStyle="bold"/>
 
             <TextView
                 android:id="@+id/tvBalanceEquivalent"
@@ -97,8 +96,8 @@
                 android:fontFamily="@font/montserrat_light"
                 android:text="  "
                 android:textColor="@android:color/darker_gray"
-                android:textSize="14dp" />
-            />
+                android:textSize="14dp"/>
+
         </LinearLayout>
 
     </LinearLayout>
@@ -131,7 +130,7 @@
                 android:textSize="@dimen/font_normal"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"/>
 
             <ImageView
                 android:id="@+id/ivCamera"
@@ -141,13 +140,12 @@
                 android:src="@drawable/qr_scan"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"/>
         </LinearLayout>
 
         <EditText
             android:id="@+id/etWallet"
             android:layout_width="match_parent"
-
             android:layout_height="wrap_content"
             android:layout_marginLeft="8dp"
             android:fontFamily="@font/montserrat_light"
@@ -160,7 +158,7 @@
             android:textSize="18dp"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toLeftOf="@+id/ivCamera"
-            tools:layout_editor_absoluteY="2dp" />
+            tools:layout_editor_absoluteY="2dp"/>
 
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
@@ -179,7 +177,7 @@
                 android:textSize="@dimen/font_normal"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"/>
 
             <TextView
                 android:id="@+id/textView13"
@@ -192,7 +190,7 @@
                 android:textColor="@color/primary"
                 android:textSize="14dp"
                 app:layout_constraintBottom_toBottomOf="@+id/textView3"
-                app:layout_constraintLeft_toRightOf="@+id/textView3" />
+                app:layout_constraintLeft_toRightOf="@+id/textView3"/>
         </android.support.constraint.ConstraintLayout>
 
         <android.support.constraint.ConstraintLayout
@@ -215,7 +213,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintWidth_min="150dp" />
+                app:layout_constraintWidth_min="150dp"/>
 
             <TextView
                 android:id="@+id/tvCurrency"
@@ -228,7 +226,7 @@
                 android:textColor="@color/primary"
                 android:textSize="24dp"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toRightOf="@+id/etAmount" />
+                app:layout_constraintLeft_toRightOf="@+id/etAmount"/>
 
             <TextView
                 android:id="@+id/tvAmountEquivalent"
@@ -241,9 +239,10 @@
                 android:textColor="@android:color/darker_gray"
                 android:textSize="14dp"
                 app:layout_constraintBottom_toBottomOf="@+id/tvCurrency"
-                app:layout_constraintLeft_toRightOf="@+id/tvCurrency" />
+                app:layout_constraintLeft_toRightOf="@+id/tvCurrency"/>
 
         </android.support.constraint.ConstraintLayout>
+
     </LinearLayout>
 
     <Button
@@ -260,5 +259,6 @@
         android:textSize="@dimen/font_large"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent" />
+        app:layout_constraintRight_toRightOf="parent"/>
+
 </android.support.constraint.ConstraintLayout>
