@@ -17,7 +17,7 @@ import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Date;
 
-import static com.tangem.domain.wallet.FormatUtil.GetDecimalFormat;
+import static com.tangem.util.FormatUtil.GetDecimalFormat;
 
 /**
  * Created by Ilia on 15.02.2018.
@@ -337,7 +337,7 @@ public class EthEngine extends CoinEngine {
         BigInteger nonce = nonceValue;
         BigInteger gasPrice = fee.divide(BigInteger.valueOf(21000));
         BigInteger gasLimit = BigInteger.valueOf(21000);
-        Integer chainId = mCard.getBlockchain() == Blockchain.Ethereum ? ETH_Transaction.ChainEnum.Mainnet.getValue() : ETH_Transaction.ChainEnum.Rinkeby.getValue();
+        Integer chainId = mCard.getBlockchain() == Blockchain.Ethereum ? EthTransaction.ChainEnum.Mainnet.getValue() : EthTransaction.ChainEnum.Rinkeby.getValue();
 
         Long multiplicator = 1000000000L;
         amount = amount.multiply(BigInteger.valueOf(multiplicator));
@@ -349,7 +349,7 @@ public class EthEngine extends CoinEngine {
             to = to.substring(2);
         }
 
-        ETH_Transaction tx = ETH_Transaction.create(to, amount, nonce, gasPrice, gasLimit, chainId);
+        EthTransaction tx = EthTransaction.create(to, amount, nonce, gasPrice, gasLimit, chainId);
 
         byte[][] hashesForSign = new byte[1][];
         byte[] for_hash = tx.getRawHash();
@@ -377,7 +377,7 @@ public class EthEngine extends CoinEngine {
             Log.e("ETH-CHECK", "Sign Failed.");
         }
 
-        tx.signature = new ECDSASignature_ETH(r, s);
+        tx.signature = new ECDSASignatureETH(r, s);
         int v = tx.BruteRecoveryID2(tx.signature, for_hash, pbKey);
         if (v != 27 && v != 28) {
             Log.e("ETH", "invalid v");
