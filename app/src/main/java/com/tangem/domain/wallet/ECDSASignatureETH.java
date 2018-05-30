@@ -6,7 +6,7 @@ import java.math.BigInteger;
  * Created by Ilia on 07.01.2018.
  */
 
-public class ECDSASignature_ETH {
+public class ECDSASignatureETH {
     /**
      * The two components of the signature.
      */
@@ -19,7 +19,7 @@ public class ECDSASignature_ETH {
      * @param r -
      * @param s -
      */
-    public ECDSASignature_ETH(BigInteger r, BigInteger s) {
+    public ECDSASignatureETH(BigInteger r, BigInteger s) {
         this.r = r;
         this.s = s;
     }
@@ -30,8 +30,8 @@ public class ECDSASignature_ETH {
      * @param s
      * @return -
      */
-    private static ECDSASignature_ETH fromComponents(byte[] r, byte[] s) {
-        return new ECDSASignature_ETH(new BigInteger(1, r), new BigInteger(1, s));
+    private static ECDSASignatureETH fromComponents(byte[] r, byte[] s) {
+        return new ECDSASignatureETH(new BigInteger(1, r), new BigInteger(1, s));
     }
 
     /**
@@ -41,8 +41,8 @@ public class ECDSASignature_ETH {
      * @param v -
      * @return -
      */
-    public static ECDSASignature_ETH fromComponents(byte[] r, byte[] s, byte v) {
-        ECDSASignature_ETH signature = fromComponents(r, s);
+    public static ECDSASignatureETH fromComponents(byte[] r, byte[] s, byte v) {
+        ECDSASignatureETH signature = fromComponents(r, s);
         signature.v = v;
         return signature;
     }
