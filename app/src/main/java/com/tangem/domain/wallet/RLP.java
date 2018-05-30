@@ -6,8 +6,8 @@ package com.tangem.domain.wallet;
 
 import java.util.Arrays;
 
-import static com.tangem.domain.wallet.ByteUtil.isNullOrZeroArray;
-import static com.tangem.domain.wallet.ByteUtil.isSingleZero;
+import static com.tangem.util.ByteUtil.isNullOrZeroArray;
+import static com.tangem.util.ByteUtil.isSingleZero;
 
 public class RLP {
     public static final byte[] EMPTY_ELEMENT_RLP = encodeElement(new byte[0]);
