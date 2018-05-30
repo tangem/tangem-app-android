@@ -21,7 +21,7 @@ import com.tangem.domain.cardReader.NfcManager;
 import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.CoinEngineFactory;
-import com.tangem.domain.wallet.FormatUtil;
+import com.tangem.util.FormatUtil;
 import com.tangem.domain.wallet.TangemCard;
 import com.tangem.wallet.R;
 

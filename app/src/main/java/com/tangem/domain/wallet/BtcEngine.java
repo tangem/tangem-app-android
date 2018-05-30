@@ -4,6 +4,7 @@ import android.net.Uri;
 
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.TLV;
+import com.tangem.util.FormatUtil;
 import com.tangem.util.Util;
 
 import java.io.ByteArrayOutputStream;
@@ -19,7 +20,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
-import static com.tangem.domain.wallet.FormatUtil.GetDecimalFormat;
+import static com.tangem.util.FormatUtil.GetDecimalFormat;
 
 /**
  * Created by Ilia on 15.02.2018.
