@@ -6,6 +6,7 @@ package com.tangem.domain.wallet;
 
 import android.util.Log;
 
+import com.tangem.util.FormatUtil;
 import com.tangem.util.Util;
 
 import java.io.ByteArrayOutputStream;

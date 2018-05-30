@@ -58,7 +58,7 @@ import com.tangem.domain.wallet.CoinEngineFactory;
 import com.tangem.data.network.task.ElectrumTask;
 import com.tangem.data.network.request.ExchangeRequest;
 import com.tangem.data.network.task.ExchangeTask;
-import com.tangem.domain.wallet.Infura_Request;
+import com.tangem.data.network.request.InfuraRequest;
 import com.tangem.data.network.task.InfuraTask;
 import com.tangem.domain.wallet.LastSignStorage;
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog;
@@ -174,11 +174,11 @@ public class LoadedWalletFragment extends Fragment implements SwipeRefreshLayout
         }
         else if (mCard.getBlockchain() == Blockchain.Ethereum || mCard.getBlockchain() == Blockchain.EthereumTestNet) {
             ETHRequestTask updateETH = new ETHRequestTask(mCard.getBlockchain());
-            Infura_Request reqETH = Infura_Request.GetBalance(mCard.getWallet());
+            InfuraRequest reqETH = InfuraRequest.GetBalance(mCard.getWallet());
             reqETH.setID(67);
             reqETH.setBlockchain(mCard.getBlockchain());
 
-            Infura_Request reqNonce = Infura_Request.GetOutTransactionCount(mCard.getWallet());
+            InfuraRequest reqNonce = InfuraRequest.GetOutTransactionCount(mCard.getWallet());
             reqNonce.setID(67);
             reqNonce.setBlockchain(mCard.getBlockchain());
 
@@ -191,15 +191,15 @@ public class LoadedWalletFragment extends Fragment implements SwipeRefreshLayout
 
         } else if (mCard.getBlockchain() == Blockchain.Token) {
             ETHRequestTask updateETH = new ETHRequestTask(mCard.getBlockchain());
-            Infura_Request reqETH = Infura_Request.GetTokenBalance(mCard.getWallet(), engine.GetContractAddress(mCard), engine.GetTokenDecimals(mCard));
+            InfuraRequest reqETH = InfuraRequest.GetTokenBalance(mCard.getWallet(), engine.GetContractAddress(mCard), engine.GetTokenDecimals(mCard));
             reqETH.setID(67);
             reqETH.setBlockchain(mCard.getBlockchain());
 
-            Infura_Request reqBalance = Infura_Request.GetBalance(mCard.getWallet());
+            InfuraRequest reqBalance = InfuraRequest.GetBalance(mCard.getWallet());
             reqBalance.setID(67);
             reqBalance.setBlockchain(mCard.getBlockchain());
 
-            Infura_Request reqNonce = Infura_Request.GetOutTransactionCount(mCard.getWallet());
+            InfuraRequest reqNonce = InfuraRequest.GetOutTransactionCount(mCard.getWallet());
             reqNonce.setID(67);
             reqNonce.setBlockchain(mCard.getBlockchain());
             updateETH.execute(reqETH, reqNonce, reqBalance);
@@ -775,7 +775,7 @@ public class LoadedWalletFragment extends Fragment implements SwipeRefreshLayout
         CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
         if (mCard.getBlockchain() == Blockchain.Ethereum || mCard.getBlockchain() == Blockchain.EthereumTestNet || mCard.getBlockchain() == Blockchain.Token) {
             ETHRequestTask task = new ETHRequestTask(mCard.getBlockchain());
-            Infura_Request req = Infura_Request.SendTransaction(mCard.getWallet(), tx);
+            InfuraRequest req = InfuraRequest.SendTransaction(mCard.getWallet(), tx);
             req.setID(67);
             req.setBlockchain(mCard.getBlockchain());
             task.execute(req);
@@ -1060,13 +1060,13 @@ public class LoadedWalletFragment extends Fragment implements SwipeRefreshLayout
         }
 
         @Override
-        protected void onPostExecute(List<Infura_Request> requests) {
+        protected void onPostExecute(List<InfuraRequest> requests) {
             super.onPostExecute(requests);
-            for (Infura_Request request : requests) {
+            for (InfuraRequest request : requests) {
                 try {
                     if (request.error == null) {
 
-                        if (request.isMethod(Infura_Request.METHOD_ETH_GetBalance)) {
+                        if (request.isMethod(InfuraRequest.METHOD_ETH_GetBalance)) {
                             try {
                                 String balanceCap = request.getResultString();
                                 balanceCap = balanceCap.substring(2);
@@ -1084,7 +1084,7 @@ public class LoadedWalletFragment extends Fragment implements SwipeRefreshLayout
                                 e.printStackTrace();
                                 ErrorOnUpdate(e.toString());
                             }
-                        } else if (request.isMethod(Infura_Request.METHOD_ETH_Call)) {
+                        } else if (request.isMethod(InfuraRequest.METHOD_ETH_Call)) {
                             try {
                                 String balanceCap = request.getResultString();
                                 balanceCap = balanceCap.substring(2);
@@ -1107,7 +1107,7 @@ public class LoadedWalletFragment extends Fragment implements SwipeRefreshLayout
                                 e.printStackTrace();
                                 ErrorOnUpdate(e.toString());
                             }
-                        } else if (request.isMethod(Infura_Request.METHOD_ETH_GetOutTransactionCount)) {
+                        } else if (request.isMethod(InfuraRequest.METHOD_ETH_GetOutTransactionCount)) {
                             try {
                                 String nonce = request.getResultString();
                                 nonce = nonce.substring(2);
@@ -1117,7 +1117,7 @@ public class LoadedWalletFragment extends Fragment implements SwipeRefreshLayout
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
-                        } else if (request.isMethod(Infura_Request.METHOD_ETH_SendRawTransaction)) {
+                        } else if (request.isMethod(InfuraRequest.METHOD_ETH_SendRawTransaction)) {
                             try {
                                 String hashTX = "";
 
