@@ -13,7 +13,7 @@ import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.CoinEngineFactory;
 import com.tangem.data.network.request.ElectrumRequest;
 import com.tangem.data.network.task.ElectrumTask;
-import com.tangem.domain.wallet.Infura_Request;
+import com.tangem.data.network.request.InfuraRequest;
 import com.tangem.data.network.task.InfuraTask;
 import com.tangem.domain.wallet.LastSignStorage;
 import com.tangem.domain.wallet.TangemCard;
@@ -49,7 +49,7 @@ public class SendTransactionActivity extends AppCompatActivity {
         CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
         if (mCard.getBlockchain() == Blockchain.Ethereum || mCard.getBlockchain() == Blockchain.EthereumTestNet || mCard.getBlockchain() == Blockchain.Token) {
             ETHRequestTask task = new ETHRequestTask(mCard.getBlockchain());
-            Infura_Request req = Infura_Request.SendTransaction(mCard.getWallet(), tx);
+            InfuraRequest req = InfuraRequest.SendTransaction(mCard.getWallet(), tx);
             req.setID(67);
             req.setBlockchain(mCard.getBlockchain());
             task.execute(req);
@@ -98,12 +98,12 @@ public class SendTransactionActivity extends AppCompatActivity {
             super(blockchain);
         }
         @Override
-        protected void onPostExecute(List<Infura_Request> requests) {
+        protected void onPostExecute(List<InfuraRequest> requests) {
             super.onPostExecute(requests);
-            for (Infura_Request request : requests) {
+            for (InfuraRequest request : requests) {
                 try {
                     if (request.error == null) {
-                        if (request.isMethod(Infura_Request.METHOD_ETH_SendRawTransaction)) {
+                        if (request.isMethod(InfuraRequest.METHOD_ETH_SendRawTransaction)) {
                             try {
                                 String hashTX = "";
                                 try {

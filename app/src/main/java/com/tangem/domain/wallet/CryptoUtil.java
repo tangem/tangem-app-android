@@ -81,7 +81,7 @@ public class CryptoUtil {
         return CURVE.getCurve().decodePoint(compEnc);
     }
 
-    public static byte[] recoverPubBytesFromSignature(int recId, ECDSASignature_ETH sig, byte[] messageHash) {
+    public static byte[] recoverPubBytesFromSignature(int recId, ECDSASignatureETH sig, byte[] messageHash) {
         // 1.0 For j from 0 to h   (h == recId here and the loop is outside this function)
         //   1.1 Let x = r + jn
 
