@@ -34,8 +34,8 @@ import com.tangem.domain.wallet.DerEncodingUtil;
 import com.tangem.data.network.task.ElectrumTask;
 import com.tangem.data.network.request.FeeRequest;
 import com.tangem.data.network.task.FeeTask;
-import com.tangem.domain.wallet.FormatUtil;
-import com.tangem.domain.wallet.Infura_Request;
+import com.tangem.util.FormatUtil;
+import com.tangem.data.network.request.InfuraRequest;
 import com.tangem.data.network.task.InfuraTask;
 import com.tangem.wallet.R;
 import com.tangem.domain.wallet.SharedData;
@@ -249,7 +249,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
 
         if (mCard.getBlockchain() == Blockchain.Ethereum || mCard.getBlockchain() == Blockchain.EthereumTestNet || mCard.getBlockchain() == Blockchain.Token) {
             ETHRequestTask task = new ETHRequestTask(mCard.getBlockchain());
-            Infura_Request req = Infura_Request.GetGasPrise(mCard.getWallet());
+            InfuraRequest req = InfuraRequest.GetGasPrise(mCard.getWallet());
             req.setID(67);
             req.setBlockchain(mCard.getBlockchain());
             rgFee.setEnabled(false);
@@ -532,14 +532,14 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
         }
 
         @Override
-        protected void onPostExecute(List<Infura_Request> requests) {
+        protected void onPostExecute(List<InfuraRequest> requests) {
             super.onPostExecute(requests);
-            for (Infura_Request request : requests) {
+            for (InfuraRequest request : requests) {
                 try {
                     Long price = 0L;
                     if (request.error == null) {
 
-                        if (request.isMethod(Infura_Request.METHOD_ETH_GetGasPrice)) {
+                        if (request.isMethod(InfuraRequest.METHOD_ETH_GetGasPrice)) {
                             try {
                                 String gasPrice = request.getResultString();
                                 gasPrice = gasPrice.substring(2);
