@@ -40,7 +40,7 @@ import com.tangem.domain.wallet.CoinEngineFactory;
 import com.tangem.data.network.task.ElectrumTask;
 import com.tangem.data.network.request.ExchangeRequest;
 import com.tangem.data.network.task.ExchangeTask;
-import com.tangem.domain.wallet.Infura_Request;
+import com.tangem.data.network.request.InfuraRequest;
 import com.tangem.data.network.task.InfuraTask;
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog;
 import com.tangem.domain.wallet.PINStorage;
@@ -241,10 +241,10 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
         CoinEngine engine = CoinEngineFactory.Create(card.getBlockchain());
         if (card.getBlockchain() == Blockchain.Ethereum || card.getBlockchain() == Blockchain.EthereumTestNet) {
             ETHRequestTask task = new ETHRequestTask(card.getBlockchain());
-            Infura_Request req = Infura_Request.GetBalance(card.getWallet());
+            InfuraRequest req = InfuraRequest.GetBalance(card.getWallet());
             req.setID(67);
             req.setBlockchain(card.getBlockchain());
-            Infura_Request reqNonce = Infura_Request.GetOutTransactionCount(card.getWallet());
+            InfuraRequest reqNonce = InfuraRequest.GetOutTransactionCount(card.getWallet());
             reqNonce.setID(67);
             reqNonce.setBlockchain(card.getBlockchain());
 
@@ -297,12 +297,12 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
 
         }else if (card.getBlockchain() == Blockchain.Token) {
             ETHRequestTask updateETH = new ETHRequestTask(card.getBlockchain());
-            Infura_Request reqETH = Infura_Request.GetTokenBalance(card.getWallet(), engine.GetContractAddress(card), engine.GetTokenDecimals(card));
+            InfuraRequest reqETH = InfuraRequest.GetTokenBalance(card.getWallet(), engine.GetContractAddress(card), engine.GetTokenDecimals(card));
             reqETH.setID(67);
             reqETH.setBlockchain(card.getBlockchain());
 
 
-            Infura_Request reqBalance = Infura_Request.GetBalance(card.getWallet());
+            InfuraRequest reqBalance = InfuraRequest.GetBalance(card.getWallet());
             reqBalance.setID(67);
             reqBalance.setBlockchain(card.getBlockchain());
 
@@ -311,7 +311,7 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
             ExchangeRequest rate = ExchangeRequest.GetRate(card.getWallet(), "basic-attention-token", "ethereum");
             taskRate.execute(rate);
 
-            Infura_Request reqNonce = Infura_Request.GetOutTransactionCount(card.getWallet());
+            InfuraRequest reqNonce = InfuraRequest.GetOutTransactionCount(card.getWallet());
             reqNonce.setID(67);
             reqNonce.setBlockchain(card.getBlockchain());
 
@@ -334,10 +334,10 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
 
                         if (card.getBlockchain() == Blockchain.Ethereum || card.getBlockchain() == Blockchain.EthereumTestNet) {
                             ETHRequestTask task = new ETHRequestTask(card.getBlockchain());
-                            Infura_Request req = Infura_Request.GetBalance(card.getWallet());
+                            InfuraRequest req = InfuraRequest.GetBalance(card.getWallet());
                             req.setID(67);
                             req.setBlockchain(card.getBlockchain());
-                            Infura_Request reqNonce = Infura_Request.GetOutTransactionCount(card.getWallet());
+                            InfuraRequest reqNonce = InfuraRequest.GetOutTransactionCount(card.getWallet());
                             reqNonce.setID(67);
                             reqNonce.setBlockchain(card.getBlockchain());
 
@@ -396,12 +396,12 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
                         }
                         else if (card.getBlockchain() == Blockchain.Token) {
                             ETHRequestTask updateETH = new ETHRequestTask(card.getBlockchain());
-                            Infura_Request reqETH = Infura_Request.GetTokenBalance(card.getWallet(), engine.GetContractAddress(card), engine.GetTokenDecimals(card));
+                            InfuraRequest reqETH = InfuraRequest.GetTokenBalance(card.getWallet(), engine.GetContractAddress(card), engine.GetTokenDecimals(card));
                             reqETH.setID(67);
                             reqETH.setBlockchain(card.getBlockchain());
 
 
-                            Infura_Request reqBalance = Infura_Request.GetBalance(card.getWallet());
+                            InfuraRequest reqBalance = InfuraRequest.GetBalance(card.getWallet());
                             reqBalance.setID(67);
                             reqBalance.setBlockchain(card.getBlockchain());
 
@@ -410,7 +410,7 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
                             ExchangeRequest rate = ExchangeRequest.GetRate(card.getWallet(), "basic-attention-token", "ethereum");
                             taskRate.execute(rate);
 
-                            Infura_Request reqNonce = Infura_Request.GetOutTransactionCount(card.getWallet());
+                            InfuraRequest reqNonce = InfuraRequest.GetOutTransactionCount(card.getWallet());
                             reqNonce.setID(67);
                             reqNonce.setBlockchain(card.getBlockchain());
 
@@ -936,13 +936,13 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
         }
 
         @Override
-        protected void onPostExecute(List<Infura_Request> requests) {
+        protected void onPostExecute(List<InfuraRequest> requests) {
             super.onPostExecute(requests);
-            for (Infura_Request request : requests) {
+            for (InfuraRequest request : requests) {
                 try {
                     if (request.error == null) {
 
-                        if (request.isMethod(Infura_Request.METHOD_ETH_GetBalance)) {
+                        if (request.isMethod(InfuraRequest.METHOD_ETH_GetBalance)) {
                             try {
                                 String mWalletAddress = request.getParams().getString(0);
 
@@ -958,7 +958,7 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
                                 e.printStackTrace();
                                 FinishWithError(request.WalletAddress, e.toString());
                             }
-                        } else if (request.isMethod(Infura_Request.METHOD_ETH_Call)) {
+                        } else if (request.isMethod(InfuraRequest.METHOD_ETH_Call)) {
                             try {
                                 String mWalletAddress = request.WalletAddress;
 
@@ -983,7 +983,7 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
                                 e.printStackTrace();
                                 FinishWithError(request.WalletAddress, e.toString());
                             }
-                        } else if (request.isMethod(Infura_Request.METHOD_ETH_GetOutTransactionCount)) {
+                        } else if (request.isMethod(InfuraRequest.METHOD_ETH_GetOutTransactionCount)) {
                             try {
                                 String mWalletAddress = request.getParams().getString(0);
 
