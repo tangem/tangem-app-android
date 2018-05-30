@@ -20,7 +20,7 @@ public class LogFileProvider extends ContentProvider {
     private static final String CLASS_NAME = "LogFileProvider";
 
     // The authority is the symbolic name for the provider class
-    public static final String AUTHORITY = "com.tangem.wallet.LogFileProvider";
+    public static final String AUTHORITY = "com.tangem.LogFileProvider";
 
     // UriMatcher used to match against incoming requests
     private UriMatcher uriMatcher;
