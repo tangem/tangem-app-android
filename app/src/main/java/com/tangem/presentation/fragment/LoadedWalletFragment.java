@@ -50,7 +50,7 @@ import com.tangem.presentation.activity.PurgeActivity;
 import com.tangem.presentation.activity.RequestPINActivity;
 import com.tangem.presentation.activity.SwapPINActivity;
 import com.tangem.presentation.activity.VerifyCardActivity;
-import com.tangem.domain.wallet.BTCUtils;
+import com.tangem.util.BTCUtils;
 import com.tangem.domain.wallet.BitcoinException;
 import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.CoinEngine;
