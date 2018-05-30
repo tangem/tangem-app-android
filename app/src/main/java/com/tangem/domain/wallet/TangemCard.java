@@ -4,6 +4,7 @@ import android.os.Bundle;
 
 import com.google.common.base.Strings;
 import com.tangem.domain.cardReader.SettingsMask;
+import com.tangem.util.FormatUtil;
 import com.tangem.util.Util;
 
 import java.math.BigInteger;
