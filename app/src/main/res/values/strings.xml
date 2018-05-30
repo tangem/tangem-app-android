@@ -1,11 +1,5 @@
 <resources>
-    <string name="app_name">Tangem Access</string>
 
-    <string name="in_msg_prefix">&lt;&#45;&#45;&#160;</string>
-    <string name="out_msg_prefix">&#45;&#45;&gt;&#160;</string>
-    <string name="okay_msg_prefix">**&#160;</string>
-    <string name="err_msg_prefix">!!&#160;</string>
-    <string name="action_msg_prefix">--&#160;</string>
     <string name="wrong_tag_err">Not ISO tag!</string>
     <string name="msgCardMustBeLoaded">Card must be loaded first!</string>
     <string name="tag_lost_err">Tag lost!</string>
@@ -19,7 +13,6 @@
     <string name="action_settings">Settings</string>
     <string name="title_activity_card_info">CardInfoActivity</string>
     <string name="section_format">Hello World from section: %1$d</string>
-
     <string name="fingerprint_authenticate_success">Successfully authenticated!</string>
     <string name="pin_save_success">Successfully saved!</string>
     <string name="prompt_pin">Enter PIN or use fingerprint scanner</string>
@@ -35,5 +28,5 @@
         <item>@string/bcEtherium</item>
     </array>
     <string name="title_activity_loaded_wallet">LoadedWalletActivity</string>
-    <string name="NoDataString">-- -- --</string>
+
 </resources>

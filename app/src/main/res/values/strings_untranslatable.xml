@@ -1,0 +1,10 @@
+<resources>
+
+    <string name="in_msg_prefix">&lt;&#45;&#45;&#160;</string>
+    <string name="out_msg_prefix">&#45;&#45;&gt;&#160;</string>
+    <string name="okay_msg_prefix">**&#160;</string>
+    <string name="err_msg_prefix">!!&#160;</string>
+    <string name="action_msg_prefix">--&#160;</string>
+    <string name="NoDataString">-- -- --</string>
+
+</resources>
