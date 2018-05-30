@@ -1,10 +1,11 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    tools:context="com.tangem.wallet.com.tangem.presentation.activity.SavePINActivity">
+    tools:context="com.tangem.presentation.activity.SavePINActivity">
     <!--android:paddingBottom="@dimen/activity_vertical_margin"-->
     <!--android:paddingLeft="@dimen/activity_horizontal_margin"-->
     <!--android:paddingRight="@dimen/activity_horizontal_margin"-->
@@ -40,7 +41,7 @@
             android:paddingBottom="8dp"
             android:singleLine="false"
             android:textAlignment="center"
-            android:textSize="36sp" />
+            android:textSize="36sp"/>
 
         <TextView
             android:id="@+id/pin_prompt"
@@ -52,7 +53,7 @@
             android:paddingTop="16dp"
             android:text="@string/enter_pin_and_use_fingerprint_to_save_it"
             android:textAlignment="center"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"/>
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -73,7 +74,7 @@
                     android:layout_marginTop="@dimen/pin_button_top_margin"
                     android:fontFamily="@font/montserrat_light"
                     android:text="1"
-                    android:textSize="32dp" />
+                    android:textSize="32dp"/>
 
                 <Button
                     android:id="@+id/btn2"
@@ -83,7 +84,7 @@
                     android:layout_marginTop="@dimen/pin_button_top_margin"
                     android:fontFamily="@font/montserrat_light"
                     android:text="2"
-                    android:textSize="32dp" />
+                    android:textSize="32dp"/>
 
                 <Button
                     android:id="@+id/btn3"
@@ -93,7 +94,7 @@
                     android:layout_marginTop="@dimen/pin_button_top_margin"
                     android:fontFamily="@font/montserrat_light"
                     android:text="3"
-                    android:textSize="32dp" />
+                    android:textSize="32dp"/>
 
                 <Button
                     android:id="@+id/btn4"
@@ -103,7 +104,7 @@
                     android:layout_marginTop="@dimen/pin_button_top_margin"
                     android:fontFamily="@font/montserrat_light"
                     android:text="4"
-                    android:textSize="32dp" />
+                    android:textSize="32dp"/>
 
                 <Button
                     android:id="@+id/btn5"
@@ -113,7 +114,7 @@
                     android:layout_marginTop="@dimen/pin_button_top_margin"
                     android:fontFamily="@font/montserrat_light"
                     android:text="5"
-                    android:textSize="32dp" />
+                    android:textSize="32dp"/>
 
                 <Button
                     android:id="@+id/btn6"
@@ -123,7 +124,7 @@
                     android:layout_marginTop="@dimen/pin_button_top_margin"
                     android:fontFamily="@font/montserrat_light"
                     android:text="6"
-                    android:textSize="32dp" />
+                    android:textSize="32dp"/>
 
                 <Button
                     android:id="@+id/btn7"
@@ -133,7 +134,7 @@
                     android:layout_marginTop="@dimen/pin_button_top_margin"
                     android:fontFamily="@font/montserrat_light"
                     android:text="7"
-                    android:textSize="32dp" />
+                    android:textSize="32dp"/>
 
                 <Button
                     android:id="@+id/btn8"
@@ -143,7 +144,7 @@
                     android:layout_marginTop="@dimen/pin_button_top_margin"
                     android:fontFamily="@font/montserrat_light"
                     android:text="8"
-                    android:textSize="32dp" />
+                    android:textSize="32dp"/>
 
                 <Button
                     android:id="@+id/btn9"
@@ -153,9 +154,9 @@
                     android:layout_marginTop="@dimen/pin_button_top_margin"
                     android:fontFamily="@font/montserrat_light"
                     android:text="9"
-                    android:textSize="32dp" />
+                    android:textSize="32dp"/>
 
-                <Space />
+                <Space/>
 
                 <Button
                     android:id="@+id/btn0"
@@ -165,7 +166,7 @@
                     android:layout_marginTop="@dimen/pin_button_top_margin"
                     android:fontFamily="@font/montserrat_light"
                     android:text="0"
-                    android:textSize="32dp" />
+                    android:textSize="32dp"/>
 
                 <Button
                     android:id="@+id/btnBackspace"
@@ -175,7 +176,7 @@
                     android:layout_marginTop="@dimen/pin_button_top_margin"
                     android:fontFamily="@font/montserrat_light"
                     android:text="&lt;"
-                    android:textSize="32dp" />
+                    android:textSize="32dp"/>
 
             </GridLayout>
 
@@ -196,7 +197,7 @@
                     android:layout_marginBottom="4dp"
                     android:drawableEnd="@mipmap/ic_fp"
                     android:drawablePadding="8dp"
-                    android:text="Protect with fingerprint" />
+                    android:text="Protect with fingerprint"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -214,7 +215,7 @@
                         android:fontFamily="@font/raleway_r"
                         android:text="Save"
                         android:textColor="@color/white"
-                        android:textSize="18dp" />
+                        android:textSize="18dp"/>
 
                     <Button
                         android:id="@+id/btnDeletePIN"
@@ -226,13 +227,14 @@
                         android:fontFamily="@font/raleway_r"
                         android:text="Delete"
                         android:textColor="@color/white"
-                        android:textSize="18dp" />
+                        android:textSize="18dp"/>
 
                 </LinearLayout>
+
             </LinearLayout>
+
         </RelativeLayout>
 
     </LinearLayout>
-
 
 </LinearLayout>
