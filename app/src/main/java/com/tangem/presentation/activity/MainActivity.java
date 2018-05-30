@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
 //    }
 
     OnCardsClean onCardsClean;
-//    OnCreateNFCDialog onCreateNFCDialog;
+    //    OnCreateNFCDialog onCreateNFCDialog;
     NfcAdapter.ReaderCallback onNFCReaderCallback;
     FloatingActionButton fab;
 
@@ -126,8 +126,7 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         commonInit(getApplicationContext());
 
         TextView tvNFCHint = findViewById(R.id.tvNFCHint);
-        if(tvNFCHint != null)
-        {
+        if (tvNFCHint != null) {
 //            tvNFCHint.setText("Scan a banknote with your\n" + PhoneUtility.GetPhoneName() + "\nas shown above");
             tvNFCHint.setText("Scan a banknote with your\n smartphone as shown above");
         }
@@ -139,16 +138,16 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         final RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) hand.getLayoutParams();
         final RelativeLayout.LayoutParams lp2 = (RelativeLayout.LayoutParams) nfc.getLayoutParams();
         final float dp = getResources().getDisplayMetrics().density;
-        final float lm = dp*(69 + antenna.X * 75);
-        lp.topMargin = (int) (dp*(-100 + antenna.Y * 250));
-        lp2.topMargin = (int) (dp*(-125 + antenna.Y * 250));
+        final float lm = dp * (69 + antenna.X * 75);
+        lp.topMargin = (int) (dp * (-100 + antenna.Y * 250));
+        lp2.topMargin = (int) (dp * (-125 + antenna.Y * 250));
         nfc.setLayoutParams(lp2);
 
         Animation a = new Animation() {
 
             @Override
             protected void applyTransformation(float interpolatedTime, Transformation t) {
-                lp.leftMargin = (int)(lm * interpolatedTime);
+                lp.leftMargin = (int) (lm * interpolatedTime);
                 hand.setLayoutParams(lp);
             }
         };
@@ -165,15 +164,14 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
             }
         });
 
-        MainFragment mainFragment =(MainFragment)getSupportFragmentManager().findFragmentById(R.id.fragmentMain);
-        if( mainFragment.getCardListAdapter().getItemCount()>0 )
-        {
+        MainFragment mainFragment = (MainFragment) getSupportFragmentManager().findFragmentById(R.id.fragmentMain);
+        if (mainFragment.getCardListAdapter().getItemCount() > 0) {
             showCleanButton();
-        }else {
+        } else {
             hideCleanButton();
         }
 
-        final RippleBackground rippleBackground=(RippleBackground)findViewById(R.id.imNFC);
+        final RippleBackground rippleBackground = findViewById(R.id.imNFC);
         rippleBackground.startRippleAnimation();
 
 
@@ -186,12 +184,11 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         }
     }
 
-    public static void commonInit(Context context)
-    {
-        if( PINStorage.needInit() ) {
+    public static void commonInit(Context context) {
+        if (PINStorage.needInit()) {
             PINStorage.Init(context);
         }
-        if( LastSignStorage.needInit() ) {
+        if (LastSignStorage.needInit()) {
             LastSignStorage.Init(context);
         }
     }
@@ -211,7 +208,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
                 onNFCReaderCallback.onTagDiscovered(tag);
             }
         }
-
     }
 
     @Override
@@ -230,8 +226,8 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        if( BuildConfig.DEBUG ) {
-            for(int i=0; i<menu.size(); i++ ) menu.getItem(i).setVisible(true);
+        if (BuildConfig.DEBUG) {
+            for (int i = 0; i < menu.size(); i++) menu.getItem(i).setVisible(true);
         }
         return true;
     }
@@ -333,8 +329,9 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         PopupMenu popup = new PopupMenu(this, v);
         MenuInflater inflater = popup.getMenuInflater();
         inflater.inflate(R.menu.menu_main, popup.getMenu());
-        if( BuildConfig.DEBUG ) {
-            for(int i=0; i<popup.getMenu().size(); i++ ) popup.getMenu().getItem(i).setVisible(true);
+        if (BuildConfig.DEBUG) {
+            for (int i = 0; i < popup.getMenu().size(); i++)
+                popup.getMenu().getItem(i).setVisible(true);
         }
         popup.setOnMenuItemClickListener(this);
         popup.show();
@@ -386,7 +383,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
             case R.id.about:
                 showLogoActivity();
                 return true;
-
         }
 
         return super.onOptionsItemSelected(item);
@@ -394,7 +390,7 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
 
     private void showLogoActivity() {
         Intent intent = new Intent(getBaseContext(), LogoActivity.class);
-        intent.putExtra("skipAutoHide",true);
+        intent.putExtra("skipAutoHide", true);
         startActivity(intent);
     }
 
@@ -410,4 +406,3 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         startActivity(intent);
     }
 }
-
