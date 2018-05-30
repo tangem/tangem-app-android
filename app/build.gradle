@@ -6,7 +6,7 @@ android {
     compileSdkVersion 27
     defaultConfig {
         applicationId "com.tangem.wallet"
-        minSdkVersion 23
+        minSdkVersion 21
         targetSdkVersion 27
         versionCode 26
         versionName "0.85.5.831.dev"
