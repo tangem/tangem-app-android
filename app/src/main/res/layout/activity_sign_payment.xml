@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.tangem.wallet.com.tangem.presentation.activity.SignPaymentActivity">
+    tools:context="com.tangem.presentation.activity.SignPaymentActivity">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:layout_centerVertical="true"
-        >
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/textView6"
@@ -19,7 +20,7 @@
             android:fontFamily="@font/raleway_r"
             android:text="Now touch the banknote with ID"
             android:textAlignment="center"
-            android:textSize="@dimen/font_normal" />
+            android:textSize="@dimen/font_normal"/>
 
         <TextView
             android:id="@+id/tvCardID"
@@ -31,7 +32,7 @@
             android:text="           "
             android:textAlignment="center"
             android:textColor="@color/black"
-            android:textSize="@dimen/font_large" />
+            android:textSize="@dimen/font_large"/>
 
         <TextView
             android:id="@+id/textView7"
@@ -40,7 +41,7 @@
             android:fontFamily="@font/raleway_r"
             android:text="to sign the payment"
             android:textAlignment="center"
-            android:textSize="@dimen/font_normal" />
+            android:textSize="@dimen/font_normal"/>
 
     </LinearLayout>
 
@@ -52,8 +53,6 @@
         android:layout_alignParentBottom="true"
         android:alpha="0.5"
         android:elevation="1dp"
-        app:layout_constraintBottom_toBottomOf="parent" />
-
-
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
 </RelativeLayout>
