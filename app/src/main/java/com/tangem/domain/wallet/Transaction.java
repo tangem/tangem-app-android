@@ -4,6 +4,9 @@ package com.tangem.domain.wallet;
  * Created by Ilia on 29.09.2017.
  */
 
+import com.tangem.util.BTCUtils;
+import com.tangem.util.CryptoUtil;
+
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
