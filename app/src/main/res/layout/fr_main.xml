@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.tangem.wallet.com.tangem.presentation.fragment.MainActivityFragment"
+    tools:context="com.tangem.presentation.fragment.MainFragment"
     tools:showIn="@layout/content_main">
 
     <!--<android.support.v4.widget.SwipeRefreshLayout-->
-        <!--android:id="@+id/swipe_container"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent">-->
+    <!--android:id="@+id/swipe_container"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="match_parent">-->
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/lvCards"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:foregroundGravity="center_vertical"
-            android:paddingTop="14dp" />
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/lvCards"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:foregroundGravity="center_vertical"
+        android:paddingTop="14dp"/>
     <!--</android.support.v4.widget.SwipeRefreshLayout>-->
 
     <ProgressBar
@@ -29,6 +30,6 @@
         android:layout_alignParentEnd="false"
         android:alpha="0.5"
         android:elevation="1dp"
-        android:visibility="invisible" />
+        android:visibility="invisible"/>
 
 </RelativeLayout>

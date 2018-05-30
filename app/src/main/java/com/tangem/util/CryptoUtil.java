@@ -1,8 +1,8 @@
-package com.tangem.domain.wallet;
+package com.tangem.util;
 
 import android.util.Log;
 
-import com.tangem.util.Util;
+import com.tangem.domain.wallet.ECDSASignatureETH;
 
 import org.spongycastle.asn1.ASN1EncodableVector;
 import org.spongycastle.asn1.ASN1Integer;
