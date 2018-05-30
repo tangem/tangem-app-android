@@ -4,6 +4,9 @@ import android.net.Uri;
 
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.TLV;
+import com.tangem.util.BTCUtils;
+import com.tangem.util.CryptoUtil;
+import com.tangem.util.DerEncodingUtil;
 import com.tangem.util.FormatUtil;
 import com.tangem.util.Util;
 
