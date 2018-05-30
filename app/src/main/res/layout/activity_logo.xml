@@ -1,4 +1,5 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -13,7 +14,7 @@
         android:layout_height="70dp"
         android:layout_gravity="center_vertical"
         android:baselineAligned="false"
-        android:src="@drawable/tangem_logo_full_new" />
+        android:src="@drawable/tangem_logo_full_new"/>
 
     <TextView
         android:id="@+id/AppVersion"
@@ -26,7 +27,7 @@
         android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         android:textColor="@android:color/holo_red_light"
-        android:textSize="12dp" />
+        android:textSize="12dp"/>
 
     <TextView
         android:id="@+id/textView9"
@@ -40,6 +41,6 @@
         android:text="Smart Cash AG"
         android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        android:textSize="12dp" />
+        android:textSize="12dp"/>
 
 </LinearLayout>
