@@ -5,6 +5,8 @@ import android.util.Log;
 
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.TLV;
+import com.tangem.util.BTCUtils;
+import com.tangem.util.CryptoUtil;
 
 import org.bitcoinj.core.ECKey;
 
