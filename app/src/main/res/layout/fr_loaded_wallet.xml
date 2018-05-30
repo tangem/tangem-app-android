@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,7 +8,7 @@
     android:background="@color/white"
     android:orientation="vertical"
     android:padding="0dp"
-    tools:context="com.tangem.wallet.com.tangem.presentation.fragment.LoadedWalletActivityFragment"
+    tools:context="com.tangem.presentation.fragment.LoadedWalletFragment"
     tools:showIn="@layout/activity_loaded_wallet">
 
     <android.support.v4.widget.SwipeRefreshLayout
@@ -35,7 +36,6 @@
                 android:paddingLeft="0dp"
                 android:paddingRight="0dp">
 
-
                 <TextView
                     android:id="@+id/tvHeader"
                     android:layout_width="match_parent"
@@ -45,7 +45,7 @@
                     android:text="BANKNOTE"
                     android:textAlignment="center"
                     android:textColor="@color/primary_dark"
-                    android:textSize="18dp" />
+                    android:textSize="18dp"/>
 
                 <TextView
                     android:id="@+id/tvCaution"
@@ -53,34 +53,33 @@
                     android:layout_height="20dp"
                     android:background="@color/msg_err"
                     android:fontFamily="@font/raleway_r"
+                    android:gravity="center_vertical"
                     android:text="DO NOT ACCEPT"
                     android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="14dp"
-                    android:gravity="center_vertical"/>
+                    android:textSize="14dp"/>
 
                 <android.support.constraint.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
+                    android:paddingBottom="2dp"
                     android:paddingLeft="8dp"
                     android:paddingRight="8dp"
-                    android:paddingTop="2dp"
-                    android:paddingBottom="2dp">
+                    android:paddingTop="2dp">
 
                     <TextView
                         android:id="@+id/tvBalanceLabel"
                         android:layout_width="110dp"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/raleway_r"
+                        android:gravity="center_vertical"
                         android:text="Balance"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/font_large"
-                        android:gravity="center_vertical"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        />
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"/>
 
                     <TextView
                         android:id="@+id/tvBalance"
@@ -94,21 +93,19 @@
                         android:textColor="@color/black"
                         android:textSize="@dimen/font_large"
                         android:textStyle="normal|bold"
+                        app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toStartOf="@id/imgBlockchain"
                         app:layout_constraintStart_toEndOf="@+id/tvBalanceLabel"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        />
+                        app:layout_constraintTop_toTopOf="parent"/>
 
                     <ImageView
                         android:id="@+id/imgBlockchain"
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:src="@drawable/tangem_logo_small_new"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        />
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"/>
 
                 </android.support.constraint.ConstraintLayout>
 
@@ -131,7 +128,7 @@
                         android:text="verified offline"
                         android:textAlignment="center"
                         android:textColor="@color/white"
-                        android:textSize="@dimen/font_small" />
+                        android:textSize="@dimen/font_small"/>
 
                     <TextView
                         android:id="@+id/tvBalanceEquivalent"
@@ -141,7 +138,7 @@
                         android:text="  "
                         android:textColor="@android:color/darker_gray"
                         android:textSize="18dp"
-                        android:textStyle="normal|bold" />
+                        android:textStyle="normal|bold"/>
 
                     <ImageView
                         android:id="@+id/ivRateSource"
@@ -151,7 +148,7 @@
                         android:layout_weight="1"
                         android:alpha="0.4"
                         android:paddingLeft="8dp"
-                        android:src="@drawable/coinmarketcap" />
+                        android:src="@drawable/coinmarketcap"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -167,7 +164,7 @@
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/raleway_r"
                         android:text="Blockchain"
-                        android:textColor="@color/primary_dark" />
+                        android:textColor="@color/primary_dark"/>
 
                     <TextView
                         android:id="@+id/tvBlockchain"
@@ -176,16 +173,16 @@
                         android:fontFamily="@font/montserrat_light"
                         android:text="Blockchain"
                         android:textColor="@color/primary_dark"
-                        android:textStyle="normal|bold" />
+                        android:textStyle="normal|bold"/>
                 </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:layout_marginTop="6dp"
-                    android:background="@android:color/darker_gray"
                     android:layout_marginLeft="4dp"
-                    android:layout_marginRight="4dp" />
+                    android:layout_marginRight="4dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@android:color/darker_gray"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -205,7 +202,7 @@
                         android:textAlignment="center"
                         android:textColor="@android:color/holo_orange_dark"
                         android:textSize="14dp"
-                        android:textStyle="normal|bold" />
+                        android:textStyle="normal|bold"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -223,7 +220,7 @@
 
                         android:layout_marginBottom="-12dp"
                         android:layout_marginTop="-12dp"
-                        app:srcCompat="@color/cardview_light_background" />
+                        app:srcCompat="@color/cardview_light_background"/>
 
                     <LinearLayout
                         android:layout_width="wrap_content"
@@ -242,7 +239,7 @@
                             android:layout_alignParentRight="false"
                             android:layout_marginTop="15dp"
                             android:baselineAlignBottom="false"
-                            android:src="@drawable/chain_lookup" />
+                            android:src="@drawable/chain_lookup"/>
 
                         <TextView
                             android:id="@+id/tvLookup"
@@ -254,16 +251,18 @@
                             android:textAlignment="center"
                             android:textColor="@color/primary_dark"
                             android:textSize="10dp"
-                            android:textStyle="normal|bold" />
+                            android:textStyle="normal|bold"/>
+
                     </LinearLayout>
+
                 </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="@android:color/darker_gray"
                     android:layout_marginLeft="4dp"
-                    android:layout_marginRight="4dp" />
+                    android:layout_marginRight="4dp"
+                    android:background="@android:color/darker_gray"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -280,7 +279,7 @@
                         android:fontFamily="@font/raleway_r"
                         android:text="Unspents"
                         android:textColor="@color/primary_dark"
-                        android:textSize="12dp" />
+                        android:textSize="12dp"/>
 
                     <TextView
                         android:id="@+id/tvInputs"
@@ -290,7 +289,7 @@
                         android:text="             "
                         android:textColor="@color/primary_dark"
                         android:textSize="12dp"
-                        android:textStyle="normal|bold" />
+                        android:textStyle="normal|bold"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -306,7 +305,7 @@
                         android:fontFamily="@font/raleway_r"
                         android:text="Last withdrawal"
                         android:textColor="@color/primary_dark"
-                        android:textSize="12dp" />
+                        android:textSize="12dp"/>
 
                     <TextView
                         android:id="@+id/tvLastOutput"
@@ -316,7 +315,7 @@
                         android:text="                "
                         android:textColor="@color/primary_dark"
                         android:textSize="12dp"
-                        android:textStyle="normal|bold" />
+                        android:textStyle="normal|bold"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -332,7 +331,7 @@
                         android:fontFamily="@font/raleway_r"
                         android:text="Issuer"
                         android:textColor="@color/primary_dark"
-                        android:textSize="12dp" />
+                        android:textSize="12dp"/>
 
                     <TextView
                         android:id="@+id/tvIssuer"
@@ -342,7 +341,7 @@
                         android:text="                "
                         android:textColor="@color/primary_dark"
                         android:textSize="12dp"
-                        android:textStyle="normal|bold" />
+                        android:textStyle="normal|bold"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -358,7 +357,7 @@
                         android:fontFamily="@font/raleway_r"
                         android:text="Validation node"
                         android:textColor="@color/primary_dark"
-                        android:textSize="12dp" />
+                        android:textSize="12dp"/>
 
                     <TextView
                         android:id="@+id/tvValidationNode"
@@ -368,7 +367,7 @@
                         android:text="Electrum"
                         android:textColor="@color/primary_dark"
                         android:textSize="12dp"
-                        android:textStyle="normal|bold" />
+                        android:textStyle="normal|bold"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -400,7 +399,7 @@
                         android:text="Swipe down to refresh data"
                         android:textAlignment="center"
                         android:textColor="@android:color/darker_gray"
-                        android:textSize="12dp" />
+                        android:textSize="12dp"/>
                 </LinearLayout>
 
             </LinearLayout>
@@ -426,7 +425,7 @@
             android:text="Message!"
             android:textAlignment="center"
             android:textColor="@color/black"
-            android:textStyle="normal|bold" />
+            android:textStyle="normal|bold"/>
 
         <TextView
             android:id="@+id/tvError"
@@ -442,7 +441,7 @@
             android:text="Error!"
             android:textAlignment="center"
             android:textColor="@color/white"
-            android:textStyle="bold" />
+            android:textStyle="bold"/>
     </RelativeLayout>
 
     <RelativeLayout
@@ -463,7 +462,7 @@
             android:layout_marginLeft="4dp"
             android:layout_toLeftOf="@+id/imgPIN2orSecurityDelay"
             android:elevation="0dp"
-            android:src="@drawable/unlock_pin1" />
+            android:src="@drawable/unlock_pin1"/>
 
         <ImageView
             android:id="@+id/imgPIN2orSecurityDelay"
@@ -475,7 +474,7 @@
             android:layout_marginBottom="8dp"
             android:layout_marginLeft="4dp"
             android:elevation="0dp"
-            android:src="@drawable/unlock_pin2" />
+            android:src="@drawable/unlock_pin2"/>
 
         <ImageView
             android:id="@+id/imgDeveloperVersion"
@@ -486,7 +485,7 @@
             android:layout_marginBottom="8dp"
             android:layout_marginLeft="4dp"
             android:elevation="0dp"
-            android:src="@drawable/ic_developer_version" />
+            android:src="@drawable/ic_developer_version"/>
 
         <TextView
             android:id="@+id/tvCardID"
@@ -501,7 +500,7 @@
             android:textAlignment="center"
             android:textColor="@color/primary_dark"
             android:textSize="@dimen/font_normal"
-            android:textStyle="normal|bold" />
+            android:textStyle="normal|bold"/>
 
         <TextView
             android:id="@+id/textView5"
@@ -513,7 +512,7 @@
             android:text="Scan again to verify the card"
             android:textAlignment="center"
             android:textColor="@android:color/darker_gray"
-            android:textSize="12dp" />
+            android:textSize="12dp"/>
 
     </RelativeLayout>
 
@@ -541,7 +540,7 @@
             android:text="SEND"
             android:textAlignment="center"
             android:textColor="@color/white"
-            android:textSize="18dp" />
+            android:textSize="18dp"/>
 
         <TextView
             android:id="@+id/tvPurge"
@@ -558,7 +557,7 @@
             android:padding="8dp"
             android:textAlignment="center"
             android:textColor="@color/white"
-            android:textSize="18dp" />
+            android:textSize="18dp"/>
 
     </RelativeLayout>
 
@@ -573,8 +572,6 @@
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent" />
-
+        app:layout_constraintRight_toRightOf="parent"/>
 
 </android.support.constraint.ConstraintLayout>
-
