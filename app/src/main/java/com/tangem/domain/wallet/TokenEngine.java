@@ -18,7 +18,7 @@ import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Date;
 
-import static com.tangem.domain.wallet.FormatUtil.GetDecimalFormat;
+import static com.tangem.util.FormatUtil.GetDecimalFormat;
 
 /**
  * Created by Ilia on 20.03.2018.
@@ -331,7 +331,7 @@ public class TokenEngine extends CoinEngine {
         BigInteger nonce = nonceValue;
         BigInteger gasPrice = fee.divide(BigInteger.valueOf(21000));
         BigInteger gasLimit = BigInteger.valueOf(60000);
-        Integer chainId = ETH_Transaction.ChainEnum.Mainnet.getValue();
+        Integer chainId = EthTransaction.ChainEnum.Mainnet.getValue();
         BigInteger amountZero = BigInteger.ZERO;
 
         Long multiplicator = 1000000000L;
@@ -363,7 +363,7 @@ public class TokenEngine extends CoinEngine {
 
 
         byte[] data = BTCUtils.fromHex(cmd);
-        ETH_Transaction tx = ETH_Transaction.create(contractAddress, amountZero, nonce, gasPrice, gasLimit, chainId, data);
+        EthTransaction tx = EthTransaction.create(contractAddress, amountZero, nonce, gasPrice, gasLimit, chainId, data);
 
         byte[][] hashesForSign = new byte[1][];
         byte[] for_hash = tx.getRawHash();
@@ -390,7 +390,7 @@ public class TokenEngine extends CoinEngine {
             Log.e("ETH-CHECK", "Sign Failed.");
         }
 
-        tx.signature = new ECDSASignature_ETH(r, s);
+        tx.signature = new ECDSASignatureETH(r, s);
         int v = tx.BruteRecoveryID2(tx.signature, for_hash, pbKey);
         if (v != 27 && v != 28) {
             Log.e("ETH", "invalid v");
