@@ -1,4 +1,4 @@
-package com.tangem.domain.wallet;
+package com.tangem.util;
 
 import com.tangem.domain.wallet.BitcoinOutputStream;
 
