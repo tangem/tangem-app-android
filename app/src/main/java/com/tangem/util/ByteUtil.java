@@ -1,4 +1,4 @@
-package com.tangem.domain.wallet;
+package com.tangem.util;
 
 public class ByteUtil {
 
