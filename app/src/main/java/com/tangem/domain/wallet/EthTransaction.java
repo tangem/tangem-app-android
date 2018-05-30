@@ -3,6 +3,8 @@ package com.tangem.domain.wallet;
 
 import android.util.Log;
 
+import com.tangem.util.ByteUtil;
+
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Sha256Hash;
 import org.spongycastle.util.BigIntegers;
@@ -11,13 +13,13 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import static com.tangem.domain.wallet.ByteUtil.EMPTY_BYTE_ARRAY;
+import static com.tangem.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
  * Created by Ilia on 07.01.2018.
  */
 
-public class ETH_Transaction {
+public class EthTransaction {
     byte[] nonce;
     byte[] gasPrice;
     byte[] gasLimit;
@@ -26,15 +28,15 @@ public class ETH_Transaction {
     byte[] data;
     Integer  chainId;
     byte[] rlpRaw;
-    public ECDSASignature_ETH signature;
+    public ECDSASignatureETH signature;
     byte[] rlpEncoded;
 
     private static final int CHAIN_ID_INC = 35;
     private static final int LOWER_REAL_V = 27;
 
-    public static ETH_Transaction create(String to, BigInteger amount, BigInteger nonce, BigInteger gasPrice,
-                                     BigInteger gasLimit, Integer chainId){
-        return new ETH_Transaction(BigIntegers.asUnsignedByteArray(nonce),
+    public static EthTransaction create(String to, BigInteger amount, BigInteger nonce, BigInteger gasPrice,
+                                        BigInteger gasLimit, Integer chainId){
+        return new EthTransaction(BigIntegers.asUnsignedByteArray(nonce),
                 BigIntegers.asUnsignedByteArray(gasPrice),
                 BigIntegers.asUnsignedByteArray(gasLimit),
                 Hex.decode(to),
@@ -44,9 +46,9 @@ public class ETH_Transaction {
     }
 
 
-    public static ETH_Transaction create(String to, BigInteger amount, BigInteger nonce, BigInteger gasPrice,
-                                         BigInteger gasLimit, Integer chainId, byte[] data){
-        return new ETH_Transaction(BigIntegers.asUnsignedByteArray(nonce),
+    public static EthTransaction create(String to, BigInteger amount, BigInteger nonce, BigInteger gasPrice,
+                                        BigInteger gasLimit, Integer chainId, byte[] data){
+        return new EthTransaction(BigIntegers.asUnsignedByteArray(nonce),
                 BigIntegers.asUnsignedByteArray(gasPrice),
                 BigIntegers.asUnsignedByteArray(gasLimit),
                 Hex.decode(to),
@@ -55,8 +57,8 @@ public class ETH_Transaction {
                 chainId);
     }
 
-    public ETH_Transaction(byte[] nonce, byte[] gasPrice, byte[] gasLimit, byte[] receiveAddress, byte[] value, byte[] data,
-                       Integer chainId) {
+    public EthTransaction(byte[] nonce, byte[] gasPrice, byte[] gasLimit, byte[] receiveAddress, byte[] value, byte[] data,
+                          Integer chainId) {
         this.nonce = nonce;
         this.gasPrice = gasPrice;
         this.gasLimit = gasLimit;
@@ -112,7 +114,7 @@ public class ETH_Transaction {
         return kec.digest(plainMsg);
     }
 
-    public int BruteRecoveryID2(ECDSASignature_ETH sig, byte[] messageHash, byte[] thisKey)
+    public int BruteRecoveryID2(ECDSASignatureETH sig, byte[] messageHash, byte[] thisKey)
     {
         Log.e("ETH_KZ", BTCUtils.toHex(thisKey));
         int recId = -1;
