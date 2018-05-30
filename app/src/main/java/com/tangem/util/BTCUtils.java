@@ -1,4 +1,4 @@
-package com.tangem.domain.wallet;
+package com.tangem.util;
 
 /**
  * Created by Ilia on 29.09.2017.
@@ -6,8 +6,12 @@ package com.tangem.domain.wallet;
 
 import android.util.Log;
 
-import com.tangem.util.FormatUtil;
-import com.tangem.util.Util;
+import com.tangem.domain.wallet.Base58;
+import com.tangem.domain.wallet.BitcoinException;
+import com.tangem.domain.wallet.BitcoinOutputStream;
+import com.tangem.domain.wallet.TangemCard;
+import com.tangem.domain.wallet.Transaction;
+import com.tangem.domain.wallet.UnspentOutputInfo;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
