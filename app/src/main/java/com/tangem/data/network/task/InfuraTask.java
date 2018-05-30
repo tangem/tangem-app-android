@@ -7,7 +7,7 @@ package com.tangem.data.network.task;
 import android.os.AsyncTask;
 
 import com.tangem.domain.wallet.Blockchain;
-import com.tangem.domain.wallet.Infura_Request;
+import com.tangem.data.network.request.InfuraRequest;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -25,7 +25,7 @@ import javax.net.ssl.HttpsURLConnection;
  * Created by Ilia on 04.12.2017.
  */
 
-public class InfuraTask extends AsyncTask<Infura_Request, Void, List<Infura_Request>> {
+public class InfuraTask extends AsyncTask<InfuraRequest, Void, List<InfuraRequest>> {
     private Exception exception;
     private Blockchain blockchain;
     public InfuraTask(Blockchain blockchainNet)
@@ -33,13 +33,13 @@ public class InfuraTask extends AsyncTask<Infura_Request, Void, List<Infura_Requ
         blockchain = blockchainNet;
     }
     boolean useOurNode = false;
-    protected List<Infura_Request> doInBackground(Infura_Request... requests) {
-        List<Infura_Request> result = new ArrayList<>();
+    protected List<InfuraRequest> doInBackground(InfuraRequest... requests) {
+        List<InfuraRequest> result = new ArrayList<>();
         for (int i = 0; i < requests.length; i++) {
             result.add(requests[i]);
         }
 
-        for (Infura_Request request: result)
+        for (InfuraRequest request: result)
         {
             HttpURLConnection httpcon = null;
 
