@@ -17,9 +17,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="@font/raleway_r"
-            android:text="Now touch the banknote with ID"
+            android:text="@string/now_touch_the_banknote_with_id"
             android:textAlignment="center"
-            android:textSize="@dimen/font_normal"/>
+            android:textSize="@dimen/text_size_medium"/>
 
         <TextView
             android:id="@+id/tvCardID"
@@ -28,18 +28,19 @@
             android:layout_marginBottom="10dp"
             android:layout_marginTop="10dp"
             android:fontFamily="@font/montserrat_light"
-            android:text="           "
             android:textAlignment="center"
             android:textColor="@color/black"
-            android:textSize="@dimen/font_large"/>
+            android:textSize="@dimen/text_size_large"
+            tools:text="3748378347"/>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="@font/raleway_r"
-            android:text="to create the wallet"
+            android:text="@string/to_create_the_wallet"
             android:textAlignment="center"
-            android:textSize="@dimen/font_normal"/>
+            android:textSize="@dimen/text_size_medium"/>
+
     </LinearLayout>
 
     <ProgressBar
