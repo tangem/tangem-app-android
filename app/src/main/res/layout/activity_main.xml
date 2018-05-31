@@ -7,12 +7,6 @@
     android:layout_height="match_parent"
     tools:context="com.tangem.presentation.activity.MainActivity">
 
-    <!--<ImageView-->
-    <!--android:id="@+id/ivTap"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="match_parent"-->
-    <!--app:srcCompat="@drawable/tap" />-->
-
     <LinearLayout
         android:id="@+id/tvTapPrompt"
         android:layout_width="match_parent"
@@ -30,6 +24,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginLeft="100dp"
+                android:layout_marginRight="100dp"
                 android:elevation="2dp"
                 android:gravity="center"
                 android:orientation="vertical">
@@ -47,6 +42,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginLeft="100dp"
+                android:layout_marginRight="100dp"
                 android:elevation="1dp"
                 android:gravity="center"
                 android:orientation="vertical">
@@ -55,10 +51,6 @@
                     android:id="@+id/imNFC"
                     android:layout_width="150dp"
                     android:layout_height="150dp"
-                    android:layout_alignParentStart="false"
-                    android:layout_alignParentTop="false"
-                    android:layout_centerHorizontal="false"
-                    android:layout_centerInParent="false"
                     app:rb_color="@color/fab"
                     app:rb_duration="3000"
                     app:rb_radius="16dp"
@@ -84,6 +76,7 @@
                     android:layout_width="190dp"
                     android:layout_height="wrap_content"
                     app:srcCompat="@drawable/hand_card"/>
+
             </LinearLayout>
 
         </RelativeLayout>
@@ -95,15 +88,14 @@
             android:layout_marginLeft="24dp"
             android:layout_marginRight="24dp"
             android:layout_marginTop="24dp"
-            android:autoText="false"
             android:fontFamily="@font/raleway_el"
             android:gravity="top"
-            android:text="Tap Tangem card with your smartphone"
+            android:text="@string/tap_tangem_card"
             android:textAlignment="center"
             android:textAllCaps="false"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textColor="@color/primary_dark"
-            android:textSize="18dp"/>
+            android:textSize="@dimen/text_size_medium"/>
 
     </LinearLayout>
 
@@ -112,7 +104,6 @@
         layout="@layout/content_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
-
 
     <FrameLayout
         android:id="@+id/frameFAB"
@@ -123,14 +114,6 @@
         android:elevation="3dp"
         android:visibility="visible">
 
-        <!--<android.support.design.widget.FloatingActionButton-->
-        <!--android:id="@+id/fab"-->
-        <!--android:layout_width="64dp"-->
-        <!--android:layout_height="64dp"-->
-        <!--android:layout_margin="8dp"-->
-        <!--android:src="@android:color/transparent"-->
-        <!--app:backgroundTint="@color/colorPrimary" />-->
-
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab"
             android:layout_width="64dp"
@@ -139,15 +122,6 @@
             android:src="@drawable/ic_show_menu"
             app:backgroundTint="@color/colorPrimary"/>
 
-        <!--<TextView-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_gravity="center"-->
-        <!--android:elevation="16dp"-->
-        <!--android:fontFamily="@font/raleway_r"-->
-        <!--android:text="CLEAN"-->
-        <!--android:textAppearance="?android:attr/textAppearanceSmall"-->
-        <!--android:textColor="@android:color/white" />-->
     </FrameLayout>
 
 </android.support.design.widget.CoordinatorLayout>
