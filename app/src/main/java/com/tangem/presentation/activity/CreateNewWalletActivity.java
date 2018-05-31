@@ -44,12 +44,12 @@ public class CreateNewWalletActivity extends AppCompatActivity implements NfcAda
         mCard = new TangemCard(getIntent().getStringExtra("UID"));
         mCard.LoadFromBundle(getIntent().getExtras().getBundle("Card"));
 
-        tvCardID = (TextView) findViewById(R.id.tvCardID);
+        tvCardID = findViewById(R.id.tvCardID);
         tvCardID.setText(mCard.getCIDDescription());
 
         mNfcManager = new NfcManager(this, this);
 
-        progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        progressBar = findViewById(R.id.progressBar);
         progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
         progressBar.setVisibility(View.INVISIBLE);
     }
