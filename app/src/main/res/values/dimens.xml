@@ -1,7 +1,9 @@
 <resources>
+
+    <dimen name="font_small">12dp</dimen>
     <dimen name="font_normal">18dp</dimen>
     <dimen name="font_large">24dp</dimen>
-    <dimen name="font_small">12dp</dimen>
+
     <dimen name="height_thin_separator">0.8dp</dimen>
     <dimen name="margin_separator">4dp</dimen>
     <dimen name="margin_window">8dp</dimen>
@@ -25,13 +27,11 @@
     <dimen name="empty_wallet_font_small">12dp</dimen>
     <dimen name="empty_wallet_left_col_margin">16dp</dimen>
 
-    <!-- Per the design guidelines, navigation drawers should be between 240dp and 320dp:
-         https://developer.android.com/design/patterns/navigation-drawer.html -->
-    <!-- Elevation when button is pressed -->
-    <!-- Z translation to apply when button is pressed -->
-    <!-- Default insets (outer padding) around buttons -->
-    <!-- Default inner padding within buttons -->
-    <!-- Default insets (outer padding) around controls -->
-    <!-- Default inner padding within controls -->
-    <!-- Default rounded corner for controls -->
+
+    <dimen name="text_size_small">12sp</dimen>
+    <dimen name="text_size_1_small">14sp</dimen>
+    <dimen name="text_size_medium">18sp</dimen>
+    <dimen name="text_size_large">24sp</dimen>
+    <dimen name="text_size_pin">32sp</dimen>
+
 </resources>
