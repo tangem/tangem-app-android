@@ -23,11 +23,11 @@
         android:layout_gravity="bottom"
         android:fontFamily="@font/raleway_r"
         android:gravity="center_horizontal"
-        android:text="BETA"
+        android:text="@string/beta"
         android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         android:textColor="@android:color/holo_red_light"
-        android:textSize="12dp"/>
+        android:textSize="@dimen/text_size_small"/>
 
     <TextView
         android:id="@+id/textView9"
@@ -38,9 +38,9 @@
         android:layout_marginTop="24dp"
         android:fontFamily="@font/raleway_el"
         android:gravity="bottom"
-        android:text="Smart Cash AG"
+        android:text="@string/smart_cash_ag"
         android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        android:textSize="12dp"/>
+        android:textSize="@dimen/text_size_small"/>
 
 </LinearLayout>
