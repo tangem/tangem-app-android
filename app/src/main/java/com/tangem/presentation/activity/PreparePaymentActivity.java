@@ -31,14 +31,14 @@ public class PreparePaymentActivity extends AppCompatActivity implements NfcAdap
 
     private static final int REQUEST_CODE_SCAN_QR = 1;
     private static final int REQUEST_CODE_SEND_PAYMENT = 2;
-    Button btnVerify;
-    EditText etWallet;
-    EditText etAmount;
-    TextView tvCurrency;
-    TextView tvCardId, tvBalance, tvBalanceEquivalent, tvAmountEquivalent;
-    ImageView ivCamera;
+    private Button btnVerify;
+    private EditText etWallet;
+    private EditText etAmount;
+    private TextView tvCurrency;
+    private TextView tvCardId, tvBalance, tvBalanceEquivalent, tvAmountEquivalent;
+    private ImageView ivCamera;
     boolean use_mCurrency;
-    TangemCard mCard;
+    private TangemCard mCard;
     private NfcManager mNfcManager;
 
     @Override
@@ -53,15 +53,15 @@ public class PreparePaymentActivity extends AppCompatActivity implements NfcAdap
         mCard = new TangemCard(getIntent().getStringExtra("UID"));
         mCard.LoadFromBundle(getIntent().getExtras().getBundle("Card"));
 
-        btnVerify = (Button) findViewById(R.id.btnVerify);
-        etWallet = (EditText) findViewById(R.id.etWallet);
-        etAmount = (EditText) findViewById(R.id.etAmount);
-        ivCamera = (ImageView) findViewById(R.id.ivCamera);
-        tvCurrency = (TextView) findViewById(R.id.tvCurrency);
-        tvCardId = (TextView) findViewById(R.id.tvCardID);
-        tvBalance = (TextView) findViewById(R.id.tvBalance);
-        tvBalanceEquivalent = (TextView) findViewById(R.id.tvBalanceEquivalent);
-        tvAmountEquivalent = (TextView) findViewById(R.id.tvAmountEquivalent);
+        btnVerify = findViewById(R.id.btnVerify);
+        etWallet = findViewById(R.id.etWallet);
+        etAmount = findViewById(R.id.etAmount);
+        ivCamera = findViewById(R.id.ivCamera);
+        tvCurrency = findViewById(R.id.tvCurrency);
+        tvCardId = findViewById(R.id.tvCardID);
+        tvBalance = findViewById(R.id.tvBalance);
+        tvBalanceEquivalent = findViewById(R.id.tvBalanceEquivalent);
+        tvAmountEquivalent = findViewById(R.id.tvAmountEquivalent);
 
         tvCardId.setText(mCard.getCIDDescription());
         CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());

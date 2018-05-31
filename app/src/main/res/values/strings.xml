@@ -1,5 +1,6 @@
 <resources>
 
+    <string name="ok">OK</string>
     <string name="wrong_tag_err">Not ISO tag!</string>
     <string name="msgCardMustBeLoaded">Card must be loaded first!</string>
     <string name="tag_lost_err">Tag lost!</string>
@@ -15,7 +16,7 @@
     <string name="section_format">Hello World from section: %1$d</string>
     <string name="fingerprint_authenticate_success">Successfully authenticated!</string>
     <string name="pin_save_success">Successfully saved!</string>
-    <string name="prompt_pin">Enter PIN or use fingerprint scanner</string>
+
     <string name="pin_save_fail">Saving pin failed</string>
     <string name="error_empty_pin">PIN is empty</string>
     <string name="error_pin_confirmation_failed">Please enter the PIN for confirmation!</string>
@@ -29,6 +30,45 @@
     </array>
     <string name="title_activity_loaded_wallet">LoadedWalletActivity</string>
     <string name="title_activity_settings_feature">Settings</string>
+
+
+    <!-- LogoActivity -->
+    <string name="beta">BETA</string>
+    <string name="smart_cash_ag">Smart Cash AG</string>
+
+    <!-- CreateNewWalletActivity, PurgeActivity, SignPaymentActivity -->
+    <string name="now_touch_the_banknote_with_id">Now touch the banknote with ID</string>
+    <string name="to_create_the_wallet">to create the wallet</string>
+    <string name="to_erase_the_wallet">to erase the wallet</string>
+    <string name="to_sign_the_payment">to sign the payment</string>
+    <string name="to_change_pin_codes">to change PIN/PIN2 codes</string>
+
+    <!-- MainActivity -->
+    <string name="tap_tangem_card">Tap Tangem card with your smartphone</string>
+
+    <!-- PreparePaymentActivity -->
+    <string name="send_payment">Send payment</string>
+    <string name="from_banknote">From banknote</string>
+    <string name="with_balance">with balance</string>
+    <string name="send_to_wallet">Send to wallet</string>
+    <string name="enter_wallet_address">enter wallet address</string>
+    <string name="amount">Amount</string>
+    <string name="including_fee">(including fee)</string>
+    <string name="enter_amount">enter amount</string>
+    <string name="m_btc">mBTC</string>
+    <string name="verify">Verify</string>
+
+    <!-- RequestPINActivity -->
+    <string name="prompt_pin">Enter PIN or use fingerprint scanner</string>
+
+    <!-- SendTransactionActivity -->
+    <string name="please_wait">Please wait while the payment is sent…</string>
+
+
+
+
+
+
 
 
 
@@ -97,12 +137,9 @@
 
     <!-- Example settings for Notifications -->
     <string name="pref_header_notifications">Notifications</string>
-
     <string name="pref_title_new_message_notifications">New message notifications</string>
-
     <string name="pref_title_ringtone">Ringtone</string>
     <string name="pref_ringtone_silent">Silent</string>
-
     <string name="pref_title_vibrate">Vibrate</string>
 
 </resources>
