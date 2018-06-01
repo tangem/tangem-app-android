@@ -24,8 +24,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <provider
-            android:name="com.tangem.LogFileProvider"
-            android:authorities="com.tangem.LogFileProvider"
+            android:name="com.tangem.data.LogFileProvider"
+            android:authorities="com.tangem.data.LogFileProvider"
             android:enabled="true"
             android:exported="false"
             android:grantUriPermissions="true"/>
