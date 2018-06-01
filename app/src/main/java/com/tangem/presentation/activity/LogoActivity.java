@@ -15,6 +15,7 @@ import com.tangem.wallet.R;
  * status bar and navigation/system bar) with user interaction.
  */
 public class LogoActivity extends AppCompatActivity {
+    public static final String TAG = LogoActivity.class.getSimpleName();
 
     private final Runnable mHideRunnable = new Runnable() {
         @Override
