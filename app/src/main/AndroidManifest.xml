@@ -25,7 +25,7 @@
         android:theme="@style/AppTheme">
         <provider
             android:name="com.tangem.data.LogFileProvider"
-            android:authorities="com.tangem.data.LogFileProvider"
+            android:authorities="@string/log_file_provider_authorities"
             android:enabled="true"
             android:exported="false"
             android:grantUriPermissions="true"/>
