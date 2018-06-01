@@ -171,8 +171,7 @@ public class LoadedWalletFragment extends Fragment implements SwipeRefreshLayout
             taskRate.execute(rate);
 
 
-        }
-        else if (mCard.getBlockchain() == Blockchain.Ethereum || mCard.getBlockchain() == Blockchain.EthereumTestNet) {
+        } else if (mCard.getBlockchain() == Blockchain.Ethereum || mCard.getBlockchain() == Blockchain.EthereumTestNet) {
             ETHRequestTask updateETH = new ETHRequestTask(mCard.getBlockchain());
             InfuraRequest reqETH = InfuraRequest.GetBalance(mCard.getWallet());
             reqETH.setID(67);
@@ -450,33 +449,36 @@ public class LoadedWalletFragment extends Fragment implements SwipeRefreshLayout
         popup.getMenu().findItem(R.id.action_reset_PIN2).setVisible(mCard.allowSwapPIN2() && !mCard.useDefaultPIN2());
         popup.getMenu().findItem(R.id.action_reset_PINs).setVisible(mCard.allowSwapPIN() && mCard.allowSwapPIN2() && !mCard.useDefaultPIN1() && !mCard.useDefaultPIN2());
 
-        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
+        popup.setOnMenuItemClickListener(item -> {
 
-                int id = item.getItemId();
-                switch (id) {
-                    case R.id.action_set_PIN1:
-                        doSetPin();
-                        return true;
-                    case R.id.action_reset_PIN1:
-                        doResetPin();
-                        return true;
-                    case R.id.action_set_PIN2:
-                        doSetPin2();
-                        return true;
-                    case R.id.action_reset_PIN2:
-                        doResetPin2();
-                        return true;
-                    case R.id.action_reset_PINs:
-                        doResetPins();
-                        return true;
-                    case R.id.action_purge:
-                        doPurge();
-                        return true;
-                    default:
-                        return false;
-                }
+            int id = item.getItemId();
+            switch (id) {
+                case R.id.action_set_PIN1:
+                    doSetPin();
+                    return true;
+
+                case R.id.action_reset_PIN1:
+                    doResetPin();
+                    return true;
+
+                case R.id.action_set_PIN2:
+                    doSetPin2();
+                    return true;
+
+                case R.id.action_reset_PIN2:
+                    doResetPin2();
+                    return true;
+
+                case R.id.action_reset_PINs:
+                    doResetPins();
+                    return true;
+
+                case R.id.action_purge:
+                    doPurge();
+                    return true;
+
+                default:
+                    return false;
             }
         });
         popup.show();
@@ -779,14 +781,13 @@ public class LoadedWalletFragment extends Fragment implements SwipeRefreshLayout
             req.setID(67);
             req.setBlockchain(mCard.getBlockchain());
             task.execute(req);
-        } else if (mCard.getBlockchain() == Blockchain.Bitcoin ||mCard.getBlockchain() == Blockchain.BitcoinTestNet) {
+        } else if (mCard.getBlockchain() == Blockchain.Bitcoin || mCard.getBlockchain() == Blockchain.BitcoinTestNet) {
             String nodeAddress = engine.GetNode(mCard);
             int nodePort = engine.GetNodePort(mCard);
 
             UpdateWalletInfoTask connectTask = new UpdateWalletInfoTask(nodeAddress, nodePort);
             connectTask.execute(ElectrumRequest.Broadcast(mCard.getWallet(), tx));
-        }
-        else if (mCard.getBlockchain() == Blockchain.BitcoinCash ||mCard.getBlockchain() == Blockchain.BitcoinCashTestNet) {
+        } else if (mCard.getBlockchain() == Blockchain.BitcoinCash || mCard.getBlockchain() == Blockchain.BitcoinCashTestNet) {
             String nodeAddress = engine.GetNode(mCard);
             int nodePort = engine.GetNodePort(mCard);
 
@@ -1372,7 +1373,7 @@ public class LoadedWalletFragment extends Fragment implements SwipeRefreshLayout
                                         e.printStackTrace();
                                         ErrorOnUpdate(e.toString());
                                         engine.SwitchNode(mCard);
-                                        }
+                                    }
                                 } else {
                                     e.printStackTrace();
                                     ErrorOnUpdate(e.toString());
@@ -1422,7 +1423,7 @@ public class LoadedWalletFragment extends Fragment implements SwipeRefreshLayout
                                     e.printStackTrace();
                                     ErrorOnUpdate(e.toString());
                                     engine.SwitchNode(mCard);
-                                    }
+                                }
 
                                 for (int i = 0; i < jsUnspentArray.length(); i++) {
                                     JSONObject jsUnspent = jsUnspentArray.getJSONObject(i);
