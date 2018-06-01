@@ -1,4 +1,4 @@
-package com.tangem;
+package com.tangem.data;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
