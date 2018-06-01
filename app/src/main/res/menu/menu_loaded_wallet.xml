@@ -1,41 +1,49 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.bitex.Wallet.LoadedWalletActivity">
+    tools:context="com.tangem.presentation.activity.LoadedWalletActivity">
+
     <item
         android:id="@+id/action_set_PIN1"
-        android:orderInCategory="100"
-        android:title="Set PIN1"
         android:enabled="false"
-        app:showAsAction="never" />
+        android:orderInCategory="100"
+        android:title="@string/set_pin_1"
+        app:showAsAction="never"/>
+
     <item
         android:id="@+id/action_set_PIN2"
-        android:orderInCategory="100"
-        android:title="Set PIN2"
         android:enabled="false"
-        app:showAsAction="never" />
+        android:orderInCategory="200"
+        android:title="@string/set_pin_2"
+        app:showAsAction="never"/>
+
     <item
         android:id="@+id/action_reset_PIN1"
-        android:orderInCategory="100"
-        android:title="Reset PIN1 to default"
         android:enabled="false"
-        app:showAsAction="never" />
+        android:orderInCategory="300"
+        android:title="@string/reset_pin_1_to_default"
+        app:showAsAction="never"/>
+
     <item
         android:id="@+id/action_reset_PIN2"
-        android:orderInCategory="100"
-        android:title="Reset PIN2 to default"
         android:enabled="false"
-        app:showAsAction="never" />
+        android:orderInCategory="400"
+        android:title="@string/reset_pin_2_to_default"
+        app:showAsAction="never"/>
+
     <item
         android:id="@+id/action_reset_PINs"
-        android:orderInCategory="100"
-        android:title="Reset PINs to default"
         android:enabled="false"
-        app:showAsAction="never" />
+        android:orderInCategory="500"
+        android:title="@string/reset_pins_to_default"
+        app:showAsAction="never"/>
+
     <item
         android:id="@+id/action_purge"
-        android:orderInCategory="100"
-        android:title="Erase wallet"
         android:enabled="true"
-        app:showAsAction="never" />
+        android:orderInCategory="600"
+        android:title="@string/erase_wallet"
+        app:showAsAction="never"/>
+
 </menu>
