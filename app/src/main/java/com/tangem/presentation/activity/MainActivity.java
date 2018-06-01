@@ -30,7 +30,6 @@ import android.widget.TextView;
 
 import com.scottyab.rootbeer.RootBeer;
 import com.skyfishjy.library.RippleBackground;
-import com.tangem.data.LogFileProvider;
 import com.tangem.domain.wallet.DeviceNFCAntennaLocation;
 import com.tangem.domain.wallet.LastSignStorage;
 import com.tangem.domain.wallet.Logger;
@@ -294,8 +293,7 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
                 Compress compress = new Compress(fileNames, zipFile.getAbsolutePath());
                 compress.zip();
                 Log.e(logTag, String.format("Send %d bytes zip with logs", zipFile.length()));
-                Uri attachment = Uri.parse("content://" + LogFileProvider.AUTHORITY + "/"
-                        + zipFile.getName());
+                Uri attachment = Uri.parse("content://" + getString(R.string.log_file_provider_authorities) + "/" + zipFile.getName());
 
                 intent.putExtra(Intent.EXTRA_STREAM, attachment);
                 zipFile.deleteOnExit();
