@@ -2,5 +2,6 @@
 <resources>
 
     <string name="app_name">Tangem Access</string>
+    <string name="log_file_provider_authorities">com.tangem.data.LogFileProvider</string>
 
 </resources>
