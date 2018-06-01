@@ -464,16 +464,26 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
                                 //String mWalletAddress = request.getParams().getString(0);
                                 if ((request.getResult().getInt("confirmed") + request.getResult().getInt("unconfirmed")) / mCard.getBlockchain().getMultiplier() * 1000000.0 < Float.parseFloat(etAmount.getText().toString())) {
                                     etFee.setError("Not enough funds");
-                                    balanceRequestSuccess = false;
-                                    btnSend.setVisibility(View.INVISIBLE);
-                                    dtVerifyed = null;
-                                    nodeCheck = false;
+                                    if (sharedCounter == null) {
+                                        balanceRequestSuccess = false;
+                                        btnSend.setVisibility(View.INVISIBLE);
+                                        dtVerifyed = null;
+                                        nodeCheck = false;
+                                    } else {
+                                        int errCounter = sharedCounter.errorRequest.incrementAndGet();
+                                        if (errCounter >= sharedCounter.allRequest) {
+                                            balanceRequestSuccess = false;
+                                            btnSend.setVisibility(View.INVISIBLE);
+                                            dtVerifyed = null;
+                                            nodeCheck = false;
+                                        }
+                                    }
+
                                 } else {
                                     etFee.setError(null);
                                     balanceRequestSuccess = true;
                                     if (feeRequestSuccess && balanceRequestSuccess) {
                                         btnSend.setVisibility(View.VISIBLE);
-
                                     }
                                     dtVerifyed = new Date();
                                     nodeCheck = true;
