@@ -1,5 +1,6 @@
 package com.tangem.presentation.activity;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -35,13 +36,19 @@ public class LogoActivity extends AppCompatActivity {
         imgLogo.setOnClickListener(view -> hide());
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
         // trigger the initial hide() shortly after the activity has been created, to briefly hint to the user that UI controls are available.
         TextView AppVersion = findViewById(R.id.AppVersion);
-        AppVersion.setText("BETA v." + BuildConfig.VERSION_NAME);
+
+        if (BuildConfig.DEBUG)
+            AppVersion.setText("BETA v." + BuildConfig.VERSION_NAME + "\n" + "dev" + "\n" + "build " + BuildConfig.VERSION_CODE);
+        else
+            AppVersion.setText("BETA v." + BuildConfig.VERSION_NAME);
+
         if (!getIntent().getBooleanExtra("skipAutoHide", false)) {
             delayedHide(1000);
         }
