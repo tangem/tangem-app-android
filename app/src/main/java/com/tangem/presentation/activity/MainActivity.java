@@ -72,7 +72,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
     //    OnCreateNFCDialog onCreateNFCDialog;
 
 
-
     public void setOnCardsClean(OnCardsClean onCardsClean) {
         this.onCardsClean = onCardsClean;
     }
@@ -125,7 +124,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         if (rootBeer.isRootedWithoutBusyBoxCheck()) {
             new RootFoundDialog().show(getFragmentManager(), "RootFoundDialog");
         }
-
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
 
@@ -207,7 +205,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
                 showMenu(fab);
                 return true;
         }
-
         return super.onKeyDown(keycode, e);
     }
 
@@ -260,7 +257,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
             }
 
         }
-
     }
 
     @Override
@@ -281,9 +277,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
@@ -338,7 +331,7 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
 
     private void showLogoActivity() {
         Intent intent = new Intent(getBaseContext(), LogoActivity.class);
-        intent.putExtra("skipAutoHide", true);
+        intent.putExtra(LogoActivity.TAG, true);
         startActivity(intent);
     }
 
@@ -358,10 +351,13 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         PopupMenu popup = new PopupMenu(this, v);
         MenuInflater inflater = popup.getMenuInflater();
         inflater.inflate(R.menu.menu_main, popup.getMenu());
+
         if (BuildConfig.DEBUG) {
-            for (int i = 0; i < popup.getMenu().size(); i++)
-                popup.getMenu().getItem(i).setVisible(true);
+            popup.getMenu().findItem(R.id.managePIN).setEnabled(true);
+            popup.getMenu().findItem(R.id.managePIN2).setEnabled(true);
+            popup.getMenu().findItem(R.id.sendLogs).setVisible(true);
         }
+
         popup.setOnMenuItemClickListener(this);
         popup.show();
     }
@@ -402,4 +398,5 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         }
 
     }
+
 }
