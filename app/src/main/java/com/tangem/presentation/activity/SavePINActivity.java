@@ -55,7 +55,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
     private FingerprintManager.CryptoObject cryptoObject;
     private FingerprintHelper fingerprintHelper;
 
-    private boolean UsePIN2=false;
+    private boolean UsePIN2 = false;
 
 
     @Override
@@ -65,28 +65,28 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
 
         MainActivity.commonInit(getApplicationContext());
 
-        UsePIN2=getIntent().getBooleanExtra("PIN2", false);
+        UsePIN2 = getIntent().getBooleanExtra("PIN2", false);
 
         tvPIN = findViewById(R.id.pin);
         OnClickListener onButtonNClick = new OnClickListener() {
             @Override
             public void onClick(View view) {
-                tvPIN.setText(String.format("%s%s", tvPIN.getText(),((Button) view).getText()));
+                tvPIN.setText(String.format("%s%s", tvPIN.getText(), ((Button) view).getText()));
             }
         };
 
-        if( UsePIN2 ) {
+        if (UsePIN2) {
             ((TextView) findViewById(R.id.pin_prompt)).setText(R.string.enter_pin2_and_use_fingerprint_to_save_it);
-        }else{
+        } else {
             ((TextView) findViewById(R.id.pin_prompt)).setText(R.string.enter_pin_and_use_fingerprint_to_save_it);
         }
 
         chkUseFingerprint = (CheckBox) findViewById(R.id.chkUseFingerprint);
 
-        if( UsePIN2 ) {
+        if (UsePIN2) {
             chkUseFingerprint.setChecked(true);
             chkUseFingerprint.setEnabled(false);
-        }else{
+        } else {
             chkUseFingerprint.setChecked(PINStorage.haveEncryptedPIN());
             chkUseFingerprint.setEnabled(true);
         }
@@ -164,6 +164,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
 
 
     private enum OnConfirmAction {Save, DeleteEncryptedAndSave, Delete}
+
     OnConfirmAction onConfirmAction;
 
     private void doSavePIN() {
@@ -188,8 +189,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
             focusView.requestFocus();
         } else {
 
-            if( UsePIN2 )
-            {
+            if (UsePIN2) {
                 if (!testFingerPrintSettings()) {
                     tvPIN.postDelayed(new Runnable() {
                         @Override
@@ -204,7 +204,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
 
                 mConfirmWithFingerprintTask = new ConfirmWithFingerprintTask();
                 mConfirmWithFingerprintTask.execute((Void) null);
-            }else {
+            } else {
                 if (chkUseFingerprint.isChecked() || PINStorage.haveEncryptedPIN()) {
                     if (!testFingerPrintSettings()) {
                         tvPIN.postDelayed(new Runnable() {
@@ -236,8 +236,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
     }
 
     private void doDeletePIN() {
-        if( UsePIN2 )
-        {
+        if (UsePIN2) {
             if (PINStorage.haveEncryptedPIN2()) {
                 if (!testFingerPrintSettings()) {
                     tvPIN.postDelayed(new Runnable() {
@@ -255,7 +254,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
                 tvPIN.setText("");
                 finish();
             }
-        }else {
+        } else {
             if (chkUseFingerprint.isChecked() || PINStorage.haveEncryptedPIN()) {
                 if (!testFingerPrintSettings()) {
                     tvPIN.postDelayed(new Runnable() {
@@ -292,30 +291,27 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
         switch (onConfirmAction) {
             case Save:
                 String textToEncrypt = tvPIN.getText().toString();
-                if( UsePIN2 )
-                {
+                if (UsePIN2) {
                     PINStorage.saveEncryptedPIN2(cipher, textToEncrypt);
-                }else {
+                } else {
                     PINStorage.saveEncryptedPIN(cipher, textToEncrypt);
                 }
                 print(R.string.pin_save_success);
                 break;
             case Delete:
-                if( UsePIN2 )
-                {
+                if (UsePIN2) {
                     PINStorage.deleteEncryptedPIN2();
-                }else {
+                } else {
                     PINStorage.deleteEncryptedPIN();
                     PINStorage.deletePIN();
                 }
                 tvPIN.setText("");
                 break;
             case DeleteEncryptedAndSave:
-                if( UsePIN2 )
-                {
+                if (UsePIN2) {
                     PINStorage.deleteEncryptedPIN2();
                     PINStorage.saveEncryptedPIN2(cipher, tvPIN.getText().toString());
-                }else {
+                } else {
                     PINStorage.deleteEncryptedPIN();
                     PINStorage.savePIN(tvPIN.getText().toString());
                 }
@@ -382,11 +378,11 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
         KeyguardManager keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
         fingerprintManager = (FingerprintManager) getSystemService(FINGERPRINT_SERVICE);
 
-            if (!keyguardManager.isKeyguardSecure()) {
-                print("User hasn't enabled Lock Screen");
-                Toast.makeText(getBaseContext(), "User hasn't enabled Lock Screen", Toast.LENGTH_LONG).show();
-                return false;
-            }
+        if (!keyguardManager.isKeyguardSecure()) {
+            print("User hasn't enabled Lock Screen");
+            Toast.makeText(getBaseContext(), "User hasn't enabled Lock Screen", Toast.LENGTH_LONG).show();
+            return false;
+        }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
             print("User hasn't granted permission to use Fingerprint");
