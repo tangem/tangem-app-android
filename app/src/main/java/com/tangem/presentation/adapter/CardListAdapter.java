@@ -31,7 +31,6 @@ import static com.tangem.domain.wallet.TangemCard.CountOurTx;
 
 public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardViewHolder> {
 
-
     public static class CardViewHolder extends RecyclerView.ViewHolder {
         CardView cv;
         TextView tvBalance, tvOffline, tvBalanceEquivalent, tvWallet, tvInputs, tvStatusInBlockchain, tvCardID, tvLastInput, lbLastInput, lbLastOutput, tvLastOutput, tvBlockchain;
@@ -92,7 +91,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
 
             ArrayList<String> UIDs = instate.getStringArrayList("card_UID");
 
-            if( UIDs!=null ) {
+            if (UIDs != null) {
                 for (String UID : UIDs) {
                     TangemCard card = new TangemCard(UID);
                     card.LoadFromBundle(instate.getBundle(String.format("card_%s", UID)));
@@ -133,7 +132,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
     }
 
     public void addCard(TangemCard card) {
-        mCards.add(0,card);
+        mCards.add(0, card);
         notifyDataSetChanged();
     }
 
@@ -416,10 +415,10 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
 
                     holder.tvType.setVisibility(View.VISIBLE);
                     holder.tvTypeBg.setVisibility(View.VISIBLE);
-                    if( card.isReusable() ) {
+                    if (card.isReusable()) {
                         holder.tvType.setText("   REUSABLE       REUSABLE   ");
                         holder.tvTypeBg.setBackgroundColor(mContext.getResources().getColor(R.color.type_wallet, mContext.getTheme()));
-                    }else{
+                    } else {
                         holder.tvType.setText("  BANKNOTE        BANKNOTE");
                         holder.tvTypeBg.setBackgroundColor(mContext.getResources().getColor(R.color.type_banknote, mContext.getTheme()));
                     }
@@ -487,7 +486,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
                         }
                     }
 
-                    if ( engine.HasBalanceInfo(card) || card.getOfflineBalance() == null) {
+                    if (engine.HasBalanceInfo(card) || card.getOfflineBalance() == null) {
                         String balance = engine.GetBalance(card);
                         holder.tvBalance.setText(balance);
                         holder.tvBalanceEquivalent.setText(engine.GetBalanceEquivalent(card));
@@ -549,17 +548,17 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
 
                     holder.tvType.setVisibility(View.VISIBLE);
                     holder.tvTypeBg.setVisibility(View.VISIBLE);
-                    if( card.isReusable() ) {
+                    if (card.isReusable()) {
                         holder.tvType.setText("   REUSABLE       REUSABLE   ");
                         holder.tvTypeBg.setBackgroundColor(mContext.getResources().getColor(R.color.type_wallet, mContext.getTheme()));
                         holder.tvVoid.setVisibility(View.INVISIBLE);
-                    }else{
+                    } else {
                         holder.tvType.setText("  BANKNOTE        BANKNOTE");
 
-                        if( card.getRemainingSignatures()!=card.getMaxSignatures() ) {
+                        if (card.getRemainingSignatures() != card.getMaxSignatures()) {
                             holder.tvVoid.setVisibility(View.VISIBLE);
                             holder.tvTypeBg.setBackgroundColor(mContext.getResources().getColor(R.color.msg_err, mContext.getTheme()));
-                        }else{
+                        } else {
                             holder.tvVoid.setVisibility(View.INVISIBLE);
                             holder.tvTypeBg.setBackgroundColor(mContext.getResources().getColor(R.color.type_banknote, mContext.getTheme()));
                         }
@@ -568,7 +567,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
                     break;
             }
 
-            if(card.useDevelopersFirmware()) {
+            if (card.useDevelopersFirmware()) {
                 holder.tvType.setText("           DEVELOPER     KIT     ");
                 holder.tvTypeBg.setBackgroundColor(mContext.getResources().getColor(R.color.fab, mContext.getTheme()));
                 holder.tvVoid.setVisibility(View.INVISIBLE);
@@ -588,7 +587,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
 
         CardClickListener(int position) {
             card = mCards.get(position);
-            pos=position;
+            pos = position;
         }
 
         @Override
