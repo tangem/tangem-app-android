@@ -110,7 +110,7 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
         // SwipeRefreshLayout
         mSwipeRefreshLayout = result.findViewById(R.id.swipe_container); //TODO: tmp
 
-        if( mSwipeRefreshLayout!=null ) {
+        if (mSwipeRefreshLayout != null) {
             SwipeRefreshLayout.OnRefreshListener onRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
 
                 @Override
@@ -127,7 +127,7 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
                     }
                 }
             };
-        mSwipeRefreshLayout.setOnRefreshListener(onRefreshListener); //TODO: tmp
+            mSwipeRefreshLayout.setOnRefreshListener(onRefreshListener); //TODO: tmp
         }
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
@@ -267,15 +267,14 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
             String nodeAddress = engine.GetNode(card);
             int nodePort = engine.GetNodePort(card);
             RequestWalletInfoTask task = new RequestWalletInfoTask(nodeAddress, nodePort);
-            if( mSwipeRefreshLayout!=null ) mSwipeRefreshLayout.setRefreshing(true); //TODO: tmp
+            if (mSwipeRefreshLayout != null) mSwipeRefreshLayout.setRefreshing(true); //TODO: tmp
             requestTasks.add(task);
             task.execute(ElectrumRequest.ListUnspent(card.getWallet()), ElectrumRequest.ListHistory(card.getWallet()));
             RateInfoTask taskRate = new RateInfoTask();
             ExchangeRequest rate = ExchangeRequest.GetRate(card.getWallet(), "bitcoin", "bitcoin");
             taskRate.execute(rate);
 
-        }
-        else if (card.getBlockchain() == Blockchain.BitcoinCashTestNet || card.getBlockchain() == Blockchain.BitcoinCash) {
+        } else if (card.getBlockchain() == Blockchain.BitcoinCashTestNet || card.getBlockchain() == Blockchain.BitcoinCash) {
             SharedData data = new SharedData(SharedData.COUNT_REQUEST);
             for (int i = 0; i < data.allRequest; ++i) {
 
@@ -288,14 +287,14 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
             String nodeAddress = engine.GetNode(card);
             int nodePort = engine.GetNodePort(card);
             RequestWalletInfoTask task = new RequestWalletInfoTask(nodeAddress, nodePort);
-            if( mSwipeRefreshLayout!=null ) mSwipeRefreshLayout.setRefreshing(true); //TODO: tmp
+            if (mSwipeRefreshLayout != null) mSwipeRefreshLayout.setRefreshing(true); //TODO: tmp
             requestTasks.add(task);
             task.execute(ElectrumRequest.ListUnspent(card.getWallet()), ElectrumRequest.ListHistory(card.getWallet()));
             RateInfoTask taskRate = new RateInfoTask();
             ExchangeRequest rate = ExchangeRequest.GetRate(card.getWallet(), "bitcoin-cash", "bitcoin-cash");
             taskRate.execute(rate);
 
-        }else if (card.getBlockchain() == Blockchain.Token) {
+        } else if (card.getBlockchain() == Blockchain.Token) {
             ETHRequestTask updateETH = new ETHRequestTask(card.getBlockchain());
             InfuraRequest reqETH = InfuraRequest.GetTokenBalance(card.getWallet(), engine.GetContractAddress(card), engine.GetTokenDecimals(card));
             reqETH.setID(67);
@@ -362,7 +361,8 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
                             int nodePort = engine.GetNodePort(card);
 
                             RequestWalletInfoTask task = new RequestWalletInfoTask(nodeAddress, nodePort);
-                            if( mSwipeRefreshLayout!=null ) mSwipeRefreshLayout.setRefreshing(true); //TODO: tmp
+                            if (mSwipeRefreshLayout != null)
+                                mSwipeRefreshLayout.setRefreshing(true); //TODO: tmp
 
                             requestTasks.add(task);
                             task.execute(ElectrumRequest.ListUnspent(card.getWallet()), ElectrumRequest.ListHistory(card.getWallet()));
@@ -370,7 +370,7 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
                             ExchangeRequest rate = ExchangeRequest.GetRate(card.getWallet(), "bitcoin", "bitcoin");
                             taskRate.execute(rate);
 
-                        }else if (card.getBlockchain() == Blockchain.BitcoinCashTestNet || card.getBlockchain() == Blockchain.BitcoinCash) {
+                        } else if (card.getBlockchain() == Blockchain.BitcoinCashTestNet || card.getBlockchain() == Blockchain.BitcoinCash) {
                             SharedData data = new SharedData(SharedData.COUNT_REQUEST);
 
                             for (int i = 0; i < data.allRequest; ++i) {
@@ -385,7 +385,8 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
                             int nodePort = engine.GetNodePort(card);
 
                             RequestWalletInfoTask task = new RequestWalletInfoTask(nodeAddress, nodePort);
-                            if( mSwipeRefreshLayout!=null ) mSwipeRefreshLayout.setRefreshing(true); //TODO: tmp
+                            if (mSwipeRefreshLayout != null)
+                                mSwipeRefreshLayout.setRefreshing(true); //TODO: tmp
 
                             requestTasks.add(task);
                             task.execute(ElectrumRequest.ListUnspent(card.getWallet()), ElectrumRequest.ListHistory(card.getWallet()));
@@ -393,8 +394,7 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
                             ExchangeRequest rate = ExchangeRequest.GetRate(card.getWallet(), "bitcoin-cash", "bitcoin-cash");
                             taskRate.execute(rate);
 
-                        }
-                        else if (card.getBlockchain() == Blockchain.Token) {
+                        } else if (card.getBlockchain() == Blockchain.Token) {
                             ETHRequestTask updateETH = new ETHRequestTask(card.getBlockchain());
                             InfuraRequest reqETH = InfuraRequest.GetTokenBalance(card.getWallet(), engine.GetContractAddress(card), engine.GetTokenDecimals(card));
                             reqETH.setID(67);
@@ -428,23 +428,32 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
     @Override
     public void onViewCard(Bundle cardInfo) {
 
-        if( mSwipeRefreshLayout!=null ) mSwipeRefreshLayout.setRefreshing(false); //TODO: tmp
+        if (mSwipeRefreshLayout != null)
+            mSwipeRefreshLayout.setRefreshing(false); //TODO: tmp
 
         String UID = cardInfo.getString("UID");
         TangemCard card = new TangemCard(UID);
         card.LoadFromBundle(cardInfo.getBundle("Card"));
 
-
         Intent intent;
-
         if (card.getStatus() == TangemCard.Status.Empty) {
             intent = new Intent(getActivity(), EmptyWalletActivity.class);
-        } else if (card.getStatus() == TangemCard.Status.Loaded) {
+//            Toast.makeText(getContext(), "1", Toast.LENGTH_SHORT).show();
+        }
+
+        else if (card.getStatus() == TangemCard.Status.Loaded) {
             intent = new Intent(getActivity(), LoadedWalletActivity.class);
-        } else if (card.getStatus() == TangemCard.Status.NotPersonalized || card.getStatus() == TangemCard.Status.Purged) {
+//            Toast.makeText(getContext(), "2", Toast.LENGTH_SHORT).show();
+        }
+
+        else if (card.getStatus() == TangemCard.Status.NotPersonalized || card.getStatus() == TangemCard.Status.Purged) {
+//            Toast.makeText(getContext(), "3", Toast.LENGTH_SHORT).show();
             return;
-        } else {
+        }
+
+        else {
             intent = new Intent(getActivity(), LoadedWalletActivity.class);
+//            Toast.makeText(getContext(), "4", Toast.LENGTH_SHORT).show();
         }
 
         intent.putExtras(cardInfo);
@@ -771,7 +780,8 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
         protected void onCancelled() {
             super.onCancelled();
             requestTasks.remove(this);
-            if ( mSwipeRefreshLayout!=null && requestTasks.size() == 0) mSwipeRefreshLayout.setRefreshing(false); //TODO: tmp
+            if (mSwipeRefreshLayout != null && requestTasks.size() == 0)
+                mSwipeRefreshLayout.setRefreshing(false); //TODO: tmp
 
         }
 
@@ -921,7 +931,8 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
                 }
             }
 
-            if ( mSwipeRefreshLayout!=null && requestTasks.size() == 0) mSwipeRefreshLayout.setRefreshing(false); //TODO: tmp
+            if (mSwipeRefreshLayout != null && requestTasks.size() == 0)
+                mSwipeRefreshLayout.setRefreshing(false); //TODO: tmp
         }
 
     }
