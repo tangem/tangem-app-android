@@ -55,6 +55,11 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
     private static final int REQUEST_CODE_SEND_EMAIL = 2;
     private String logTag = "MainActivity";
 
+    private File zipFile = null;
+    private NfcAdapter.ReaderCallback onNFCReaderCallback;
+    private OnCardsClean onCardsClean;
+    private FloatingActionButton fab;
+
     public interface OnCardsClean {
         void doClean();
     }
@@ -63,10 +68,9 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
 //        Dialog CreateNFCDialog(int id, AlertDialogWrapper.Builder builder, LayoutInflater li);
 //    }
 
-    OnCardsClean onCardsClean;
+
     //    OnCreateNFCDialog onCreateNFCDialog;
-    NfcAdapter.ReaderCallback onNFCReaderCallback;
-    FloatingActionButton fab;
+
 
 
     public void setOnCardsClean(OnCardsClean onCardsClean) {
@@ -82,7 +86,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
     }
 
     public void showCleanButton() {
-
         findViewById(R.id.tvTapPrompt).setVisibility(View.INVISIBLE);
     }
 
@@ -112,19 +115,22 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
+        TextView tvNFCHint = findViewById(R.id.tvNFCHint);
+        fab = findViewById(R.id.fab);
+
+        // check if device root
         RootBeer rootBeer = new RootBeer(this);
         if (rootBeer.isRootedWithoutBusyBoxCheck()) {
-            //we found indication of root
             new RootFoundDialog().show(getFragmentManager(), "RootFoundDialog");
         }
 
-        setContentView(R.layout.activity_main);
+
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
 
         commonInit(getApplicationContext());
 
-        TextView tvNFCHint = findViewById(R.id.tvNFCHint);
         if (tvNFCHint != null) {
 //            tvNFCHint.setText("Scan a banknote with your\n" + PhoneUtility.GetPhoneName() + "\nas shown above");
             tvNFCHint.setText("Scan a banknote with your\n smartphone as shown above");
@@ -143,7 +149,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         nfc.setLayoutParams(lp2);
 
         Animation a = new Animation() {
-
             @Override
             protected void applyTransformation(float interpolatedTime, Transformation t) {
                 lp.leftMargin = (int) (lm * interpolatedTime);
@@ -154,14 +159,8 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         a.setInterpolator(new DecelerateInterpolator());
         hand.startAnimation(a);
 
-        fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                showMenu(view);
-            }
-        });
+        // set listeners
+        fab.setOnClickListener(this::showMenu);
 
         MainFragment mainFragment = (MainFragment) getSupportFragmentManager().findFragmentById(R.id.fragmentMain);
         if (mainFragment.getCardListAdapter().getItemCount() > 0) {
@@ -180,15 +179,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
             if (tag != null && onNFCReaderCallback != null) {
                 onNFCReaderCallback.onTagDiscovered(tag);
             }
-        }
-    }
-
-    public static void commonInit(Context context) {
-        if (PINStorage.needInit()) {
-            PINStorage.Init(context);
-        }
-        if (LastSignStorage.needInit()) {
-            LastSignStorage.Init(context);
         }
     }
 
@@ -273,45 +263,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
 
     }
 
-    File zipFile = null;
-
-    private void sendEmail(String subject, String text, File[] filelocations) {
-        if (zipFile != null) return;
-        try {
-            Intent intent = new Intent(Intent.ACTION_SEND)
-                    //.setData(new Uri.Builder().scheme("mailto").build())
-                    .setType("text/plain")
-                    .putExtra(Intent.EXTRA_EMAIL, new String[]{"android@tangem.com"})
-                    .putExtra(Intent.EXTRA_SUBJECT, subject)
-                    .putExtra(Intent.EXTRA_TEXT, text);
-
-            if (filelocations != null && filelocations.length > 0) {
-                String[] fileNames = new String[filelocations.length];
-                for (int i = 0; i < filelocations.length; i++)
-                    fileNames[i] = filelocations[i].getAbsolutePath();
-                zipFile = File.createTempFile("tangemLogs", ".zip", filelocations[0].getParentFile());
-                Compress compress = new Compress(fileNames, zipFile.getAbsolutePath());
-                compress.zip();
-                Log.e(logTag, String.format("Send %d bytes zip with logs", zipFile.length()));
-                Uri attachment = Uri.parse("content://" + getString(R.string.log_file_provider_authorities) + "/" + zipFile.getName());
-
-                intent.putExtra(Intent.EXTRA_STREAM, attachment);
-                zipFile.deleteOnExit();
-            }
-
-            List<ResolveInfo> activities = getPackageManager().queryIntentActivities(intent, 0);
-            boolean isIntentSafe = activities.size() > 0;
-
-            if (isIntentSafe) {
-                startActivity(intent);
-                return;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CODE_SEND_EMAIL) {
@@ -322,19 +273,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
-
-    public void showMenu(View v) {
-        PopupMenu popup = new PopupMenu(this, v);
-        MenuInflater inflater = popup.getMenuInflater();
-        inflater.inflate(R.menu.menu_main, popup.getMenu());
-        if (BuildConfig.DEBUG) {
-            for (int i = 0; i < popup.getMenu().size(); i++)
-                popup.getMenu().getItem(i).setVisible(true);
-        }
-        popup.setOnMenuItemClickListener(this);
-        popup.show();
-    }
-
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
@@ -371,19 +309,31 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
             case R.id.managePIN:
                 showSavePinActivity();
                 return true;
+
             case R.id.managePIN2:
                 showSavePin2Activity();
                 return true;
+
             case R.id.cleanCards:
                 if (onCardsClean != null) onCardsClean.doClean();
                 hideCleanButton();
                 return true;
+
             case R.id.about:
                 showLogoActivity();
                 return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public static void commonInit(Context context) {
+        if (PINStorage.needInit()) {
+            PINStorage.Init(context);
+        }
+        if (LastSignStorage.needInit()) {
+            LastSignStorage.Init(context);
+        }
     }
 
     private void showLogoActivity() {
@@ -402,5 +352,54 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         Intent intent = new Intent(getBaseContext(), SavePINActivity.class);
         intent.putExtra("PIN2", true);
         startActivity(intent);
+    }
+
+    private void showMenu(View v) {
+        PopupMenu popup = new PopupMenu(this, v);
+        MenuInflater inflater = popup.getMenuInflater();
+        inflater.inflate(R.menu.menu_main, popup.getMenu());
+        if (BuildConfig.DEBUG) {
+            for (int i = 0; i < popup.getMenu().size(); i++)
+                popup.getMenu().getItem(i).setVisible(true);
+        }
+        popup.setOnMenuItemClickListener(this);
+        popup.show();
+    }
+
+    private void sendEmail(String subject, String text, File[] fileLocations) {
+        if (zipFile != null) return;
+        try {
+            Intent intent = new Intent(Intent.ACTION_SEND)
+                    //.setData(new Uri.Builder().scheme("mailto").build())
+                    .setType("text/plain")
+                    .putExtra(Intent.EXTRA_EMAIL, new String[]{"android@tangem.com"})
+                    .putExtra(Intent.EXTRA_SUBJECT, subject)
+                    .putExtra(Intent.EXTRA_TEXT, text);
+
+            if (fileLocations != null && fileLocations.length > 0) {
+                String[] fileNames = new String[fileLocations.length];
+                for (int i = 0; i < fileLocations.length; i++)
+                    fileNames[i] = fileLocations[i].getAbsolutePath();
+                zipFile = File.createTempFile("tangemLogs", ".zip", fileLocations[0].getParentFile());
+                Compress compress = new Compress(fileNames, zipFile.getAbsolutePath());
+                compress.zip();
+                Log.e(logTag, String.format("Send %d bytes zip with logs", zipFile.length()));
+                Uri attachment = Uri.parse("content://" + getString(R.string.log_file_provider_authorities) + "/" + zipFile.getName());
+
+                intent.putExtra(Intent.EXTRA_STREAM, attachment);
+                zipFile.deleteOnExit();
+            }
+
+            List<ResolveInfo> activities = getPackageManager().queryIntentActivities(intent, 0);
+            boolean isIntentSafe = activities.size() > 0;
+
+            if (isIntentSafe) {
+                startActivity(intent);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 }
