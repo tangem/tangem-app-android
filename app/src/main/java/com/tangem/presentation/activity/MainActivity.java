@@ -30,13 +30,13 @@ import android.widget.TextView;
 
 import com.scottyab.rootbeer.RootBeer;
 import com.skyfishjy.library.RippleBackground;
-import com.tangem.LogFileProvider;
+import com.tangem.data.LogFileProvider;
 import com.tangem.domain.wallet.DeviceNFCAntennaLocation;
 import com.tangem.domain.wallet.LastSignStorage;
 import com.tangem.domain.wallet.Logger;
 import com.tangem.domain.wallet.PINStorage;
-import com.tangem.util.PhoneUtility;
 import com.tangem.presentation.fragment.MainFragment;
+import com.tangem.util.PhoneUtility;
 import com.tangem.wallet.BuildConfig;
 import com.tangem.wallet.R;
 
