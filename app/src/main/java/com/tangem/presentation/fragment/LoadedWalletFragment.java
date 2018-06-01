@@ -63,6 +63,7 @@ import com.tangem.data.network.task.InfuraTask;
 import com.tangem.domain.wallet.LastSignStorage;
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog;
 import com.tangem.domain.wallet.PINStorage;
+import com.tangem.wallet.BuildConfig;
 import com.tangem.wallet.R;
 import com.tangem.domain.wallet.SharedData;
 import com.tangem.data.network.task.VerifyCardTask;
@@ -481,6 +482,12 @@ public class LoadedWalletFragment extends Fragment implements SwipeRefreshLayout
                     return false;
             }
         });
+
+        if (BuildConfig.DEBUG) {
+            popup.getMenu().findItem(R.id.action_set_PIN2).setEnabled(true);
+            popup.getMenu().findItem(R.id.action_reset_PIN2).setEnabled(true);
+        }
+
         popup.show();
     }
 
@@ -648,30 +655,15 @@ public class LoadedWalletFragment extends Fragment implements SwipeRefreshLayout
 
             if (mCard.useDefaultPIN1()) {
                 ivPIN.setImageResource(R.drawable.unlock_pin1);
-                ivPIN.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(getContext(), "This banknote is protected by default PIN1 code", Toast.LENGTH_LONG).show();
-                    }
-                });
+                ivPIN.setOnClickListener(v -> Toast.makeText(getContext(), "This banknote is protected by default PIN1 code", Toast.LENGTH_LONG).show());
             } else {
                 ivPIN.setImageResource(R.drawable.lock_pin1);
-                ivPIN.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(getContext(), "This banknote is protected by user's PIN1 code", Toast.LENGTH_LONG).show();
-                    }
-                });
+                ivPIN.setOnClickListener(v -> Toast.makeText(getContext(), "This banknote is protected by user's PIN1 code", Toast.LENGTH_LONG).show());
             }
 
             if (mCard.getPauseBeforePIN2() > 0 && (mCard.useDefaultPIN2() || !mCard.useSmartSecurityDelay())) {
                 ivPIN2orSecurityDelay.setImageResource(R.drawable.timer);
-                ivPIN2orSecurityDelay.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(getContext(), String.format("This banknote will enforce %.0f seconds security delay for all operations requiring PIN2 code", mCard.getPauseBeforePIN2() / 1000.0), Toast.LENGTH_LONG).show();
-                    }
-                });
+                ivPIN2orSecurityDelay.setOnClickListener(v -> Toast.makeText(getContext(), String.format("This banknote will enforce %.0f seconds security delay for all operations requiring PIN2 code", mCard.getPauseBeforePIN2() / 1000.0), Toast.LENGTH_LONG).show());
 
             } else if (mCard.useDefaultPIN2()) {
                 ivPIN2orSecurityDelay.setImageResource(R.drawable.unlock_pin2);
