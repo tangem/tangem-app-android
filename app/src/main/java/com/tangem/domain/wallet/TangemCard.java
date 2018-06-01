@@ -327,7 +327,7 @@ public class TangemCard {
 //                    }
 //                }
                 } else {
-                    result.append("None");
+                    result.append("-- -- --");
                 }
             } else {
                 result.append("-- -- --");
@@ -405,7 +405,7 @@ public class TangemCard {
                         result.append("\nawaiting confirmation...");
                     }
                 } else if (balanceUnconfirmed == 0) {
-                    result.append("None");
+                    result.append("-- -- --");
                 } else if (balanceUnconfirmed != 0) {
                     result.append("awaiting confirmation...");
                 }
@@ -432,7 +432,7 @@ public class TangemCard {
         if (hasUnspentInfo() && hasHistoryInfo() && mHistoryTransactions.size() - mUnspentTransactions.size() > 0) {
             return String.valueOf(mHistoryTransactions.size() - mUnspentTransactions.size());
         } else if (hasUnspentInfo() && hasHistoryInfo()) {
-            return "None";
+            return "-- -- --";
         } else {
             return "-- -- --";
         }
@@ -476,7 +476,7 @@ public class TangemCard {
                     if (balanceUnconfirmed != 0) {
                         return "awaiting confirmation...";
                     } else {
-                        return "None";
+                        return "-- -- --";
                     }
                 }
             }
@@ -505,13 +505,13 @@ public class TangemCard {
                 }
 
                 if (maxUDT == 0) {
-                    return "None";
+                    return "-- -- --";
                 } else {
                     return Util.formatDateTime(new Date(maxUDT));
                 }
 
             } else {
-                return "None";
+                return "-- -- --";
             }
         } else {
             return "-- -- --";
