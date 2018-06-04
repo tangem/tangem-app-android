@@ -11,6 +11,7 @@ import android.nfc.Tag;
 import android.nfc.tech.IsoDep;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -25,28 +26,28 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.tangem.data.network.request.ElectrumRequest;
+import com.tangem.data.network.request.ExchangeRequest;
+import com.tangem.data.network.request.InfuraRequest;
+import com.tangem.data.network.task.ElectrumTask;
+import com.tangem.data.network.task.ExchangeTask;
+import com.tangem.data.network.task.InfuraTask;
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.NfcManager;
+import com.tangem.domain.wallet.Blockchain;
+import com.tangem.domain.wallet.CoinEngine;
+import com.tangem.domain.wallet.CoinEngineFactory;
+import com.tangem.domain.wallet.PINStorage;
+import com.tangem.domain.wallet.SharedData;
 import com.tangem.domain.wallet.TangemCard;
-import com.tangem.util.Util;
 import com.tangem.presentation.activity.EmptyWalletActivity;
 import com.tangem.presentation.activity.LoadedWalletActivity;
 import com.tangem.presentation.activity.MainActivity;
 import com.tangem.presentation.activity.RequestPINActivity;
-import com.tangem.domain.wallet.Blockchain;
 import com.tangem.presentation.adapter.CardListAdapter;
-import com.tangem.domain.wallet.CoinEngine;
-import com.tangem.domain.wallet.CoinEngineFactory;
-import com.tangem.data.network.task.ElectrumTask;
-import com.tangem.data.network.request.ExchangeRequest;
-import com.tangem.data.network.task.ExchangeTask;
-import com.tangem.data.network.request.InfuraRequest;
-import com.tangem.data.network.task.InfuraTask;
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog;
-import com.tangem.domain.wallet.PINStorage;
-import com.tangem.wallet.R;
-import com.tangem.domain.wallet.SharedData;
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog;
+import com.tangem.util.Util;
+import com.tangem.wallet.R;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -55,8 +56,13 @@ import org.json.JSONObject;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-
+//@Component
+//interface NfcManagerComponent {
+//    NfcManager getNfcManager(Activity activity, NfcAdapter.ReaderCallback readerCallback);
+//
+//}
 /**
  * A placeholder fragment containing a simple view.
  */
@@ -83,18 +89,22 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
     public MainFragment() {
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        mCardListAdapter.onSaveInstanceState(outState);
-        outState.putStringArrayList("slCardUIDs", slCardUIDs);
-    }
+//    @Override
+//    public void onSaveInstanceState(Bundle outState) {
+//        super.onSaveInstanceState(outState);
+//        mCardListAdapter.onSaveInstanceState(outState);
+//        outState.putStringArrayList("slCardUIDs", slCardUIDs);
+//    }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View result = inflater.inflate(R.layout.fr_main, container, false);
 
-        mNfcManager = new NfcManager(this.getActivity(), this);
+        mNfcManager = new NfcManager(getActivity(), this);
+
+//        NfcManagerComponent component = DaggerNfcManagerComponent.create();
+//        mNfcManager = component.getNfcManager();
+
         verifyPermissions();
 
         progressBar = result.findViewById(R.id.progressBar);
@@ -111,20 +121,16 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
         mSwipeRefreshLayout = result.findViewById(R.id.swipe_container); //TODO: tmp
 
         if (mSwipeRefreshLayout != null) {
-            SwipeRefreshLayout.OnRefreshListener onRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
+            SwipeRefreshLayout.OnRefreshListener onRefreshListener = () -> {
+                //Update
+                // Showing refresh animation before making http call
 
-                @Override
-                public void onRefresh() {
-                    //Update
-                    // Showing refresh animation before making http call
+                if (requestTasks.size() > 0) return;
 
-                    if (requestTasks.size() > 0) return;
-
-                    if (requestTasks.size() > 0) { //TODO: tmp
-                        mSwipeRefreshLayout.setRefreshing(true);
-                    } else {
-                        mSwipeRefreshLayout.setRefreshing(false);
-                    }
+                if (requestTasks.size() > 0) { //TODO: tmp
+                    mSwipeRefreshLayout.setRefreshing(true);
+                } else {
+                    mSwipeRefreshLayout.setRefreshing(false);
                 }
             };
             mSwipeRefreshLayout.setOnRefreshListener(onRefreshListener); //TODO: tmp
@@ -320,106 +326,103 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
 
     public void addCard(final TangemCard card) {
         if (mCardListAdapter != null) {
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    unsuccessReadCount = 0;
-                    slCardUIDs.add(0, card.getUID());
-                    mCardListAdapter.addCard(card);
+            Objects.requireNonNull(getActivity()).runOnUiThread(() -> {
+                unsuccessReadCount = 0;
+                slCardUIDs.add(0, card.getUID());
+                mCardListAdapter.addCard(card);
 
-                    CoinEngine engine = CoinEngineFactory.Create(card.getBlockchain());
+                CoinEngine engine = CoinEngineFactory.Create(card.getBlockchain());
 
-                    if (card.getStatus() == TangemCard.Status.Loaded) {
+                if (card.getStatus() == TangemCard.Status.Loaded) {
 
-                        if (card.getBlockchain() == Blockchain.Ethereum || card.getBlockchain() == Blockchain.EthereumTestNet) {
-                            ETHRequestTask task = new ETHRequestTask(card.getBlockchain());
-                            InfuraRequest req = InfuraRequest.GetBalance(card.getWallet());
-                            req.setID(67);
-                            req.setBlockchain(card.getBlockchain());
-                            InfuraRequest reqNonce = InfuraRequest.GetOutTransactionCount(card.getWallet());
-                            reqNonce.setID(67);
-                            reqNonce.setBlockchain(card.getBlockchain());
+                    if (card.getBlockchain() == Blockchain.Ethereum || card.getBlockchain() == Blockchain.EthereumTestNet) {
+                        ETHRequestTask task = new ETHRequestTask(card.getBlockchain());
+                        InfuraRequest req = InfuraRequest.GetBalance(card.getWallet());
+                        req.setID(67);
+                        req.setBlockchain(card.getBlockchain());
+                        InfuraRequest reqNonce = InfuraRequest.GetOutTransactionCount(card.getWallet());
+                        reqNonce.setID(67);
+                        reqNonce.setBlockchain(card.getBlockchain());
 
-                            task.execute(req, reqNonce);
+                        task.execute(req, reqNonce);
 
-                            RateInfoTask taskRate = new RateInfoTask();
-                            ExchangeRequest rate = ExchangeRequest.GetRate(card.getWallet(), "ethereum", "ethereum");
-                            taskRate.execute(rate);
+                        RateInfoTask taskRate = new RateInfoTask();
+                        ExchangeRequest rate = ExchangeRequest.GetRate(card.getWallet(), "ethereum", "ethereum");
+                        taskRate.execute(rate);
 
-                        } else if (card.getBlockchain() == Blockchain.BitcoinTestNet || card.getBlockchain() == Blockchain.Bitcoin) {
-                            SharedData data = new SharedData(SharedData.COUNT_REQUEST);
+                    } else if (card.getBlockchain() == Blockchain.BitcoinTestNet || card.getBlockchain() == Blockchain.Bitcoin) {
+                        SharedData data = new SharedData(SharedData.COUNT_REQUEST);
 
-                            for (int i = 0; i < data.allRequest; ++i) {
-                                String nodeAddress = engine.GetNextNode(card);
-                                int nodePort = engine.GetNextNodePort(card);
+                        for (int i = 0; i < data.allRequest; ++i) {
+                            String nodeAddress = engine.GetNextNode(card);
+                            int nodePort = engine.GetNextNodePort(card);
 
-                                RequestWalletInfoTask connectTaskEx = new RequestWalletInfoTask(nodeAddress, nodePort, data);
-                                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(card.getWallet()));
-                            }
-
-                            String nodeAddress = engine.GetNode(card);
-                            int nodePort = engine.GetNodePort(card);
-
-                            RequestWalletInfoTask task = new RequestWalletInfoTask(nodeAddress, nodePort);
-                            if (mSwipeRefreshLayout != null)
-                                mSwipeRefreshLayout.setRefreshing(true); //TODO: tmp
-
-                            requestTasks.add(task);
-                            task.execute(ElectrumRequest.ListUnspent(card.getWallet()), ElectrumRequest.ListHistory(card.getWallet()));
-                            RateInfoTask taskRate = new RateInfoTask();
-                            ExchangeRequest rate = ExchangeRequest.GetRate(card.getWallet(), "bitcoin", "bitcoin");
-                            taskRate.execute(rate);
-
-                        } else if (card.getBlockchain() == Blockchain.BitcoinCashTestNet || card.getBlockchain() == Blockchain.BitcoinCash) {
-                            SharedData data = new SharedData(SharedData.COUNT_REQUEST);
-
-                            for (int i = 0; i < data.allRequest; ++i) {
-                                String nodeAddress = engine.GetNextNode(card);
-                                int nodePort = engine.GetNextNodePort(card);
-
-                                RequestWalletInfoTask connectTaskEx = new RequestWalletInfoTask(nodeAddress, nodePort, data);
-                                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(card.getWallet()));
-                            }
-
-                            String nodeAddress = engine.GetNode(card);
-                            int nodePort = engine.GetNodePort(card);
-
-                            RequestWalletInfoTask task = new RequestWalletInfoTask(nodeAddress, nodePort);
-                            if (mSwipeRefreshLayout != null)
-                                mSwipeRefreshLayout.setRefreshing(true); //TODO: tmp
-
-                            requestTasks.add(task);
-                            task.execute(ElectrumRequest.ListUnspent(card.getWallet()), ElectrumRequest.ListHistory(card.getWallet()));
-                            RateInfoTask taskRate = new RateInfoTask();
-                            ExchangeRequest rate = ExchangeRequest.GetRate(card.getWallet(), "bitcoin-cash", "bitcoin-cash");
-                            taskRate.execute(rate);
-
-                        } else if (card.getBlockchain() == Blockchain.Token) {
-                            ETHRequestTask updateETH = new ETHRequestTask(card.getBlockchain());
-                            InfuraRequest reqETH = InfuraRequest.GetTokenBalance(card.getWallet(), engine.GetContractAddress(card), engine.GetTokenDecimals(card));
-                            reqETH.setID(67);
-                            reqETH.setBlockchain(card.getBlockchain());
-
-
-                            InfuraRequest reqBalance = InfuraRequest.GetBalance(card.getWallet());
-                            reqBalance.setID(67);
-                            reqBalance.setBlockchain(card.getBlockchain());
-
-
-                            RateInfoTask taskRate = new RateInfoTask();
-                            ExchangeRequest rate = ExchangeRequest.GetRate(card.getWallet(), "basic-attention-token", "ethereum");
-                            taskRate.execute(rate);
-
-                            InfuraRequest reqNonce = InfuraRequest.GetOutTransactionCount(card.getWallet());
-                            reqNonce.setID(67);
-                            reqNonce.setBlockchain(card.getBlockchain());
-
-                            updateETH.execute(reqETH, reqNonce, reqBalance);
+                            RequestWalletInfoTask connectTaskEx = new RequestWalletInfoTask(nodeAddress, nodePort, data);
+                            connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(card.getWallet()));
                         }
+
+                        String nodeAddress = engine.GetNode(card);
+                        int nodePort = engine.GetNodePort(card);
+
+                        RequestWalletInfoTask task = new RequestWalletInfoTask(nodeAddress, nodePort);
+                        if (mSwipeRefreshLayout != null)
+                            mSwipeRefreshLayout.setRefreshing(true); //TODO: tmp
+
+                        requestTasks.add(task);
+                        task.execute(ElectrumRequest.ListUnspent(card.getWallet()), ElectrumRequest.ListHistory(card.getWallet()));
+                        RateInfoTask taskRate = new RateInfoTask();
+                        ExchangeRequest rate = ExchangeRequest.GetRate(card.getWallet(), "bitcoin", "bitcoin");
+                        taskRate.execute(rate);
+
+                    } else if (card.getBlockchain() == Blockchain.BitcoinCashTestNet || card.getBlockchain() == Blockchain.BitcoinCash) {
+                        SharedData data = new SharedData(SharedData.COUNT_REQUEST);
+
+                        for (int i = 0; i < data.allRequest; ++i) {
+                            String nodeAddress = engine.GetNextNode(card);
+                            int nodePort = engine.GetNextNodePort(card);
+
+                            RequestWalletInfoTask connectTaskEx = new RequestWalletInfoTask(nodeAddress, nodePort, data);
+                            connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(card.getWallet()));
+                        }
+
+                        String nodeAddress = engine.GetNode(card);
+                        int nodePort = engine.GetNodePort(card);
+
+                        RequestWalletInfoTask task = new RequestWalletInfoTask(nodeAddress, nodePort);
+                        if (mSwipeRefreshLayout != null)
+                            mSwipeRefreshLayout.setRefreshing(true); //TODO: tmp
+
+                        requestTasks.add(task);
+                        task.execute(ElectrumRequest.ListUnspent(card.getWallet()), ElectrumRequest.ListHistory(card.getWallet()));
+                        RateInfoTask taskRate = new RateInfoTask();
+                        ExchangeRequest rate = ExchangeRequest.GetRate(card.getWallet(), "bitcoin-cash", "bitcoin-cash");
+                        taskRate.execute(rate);
+
+                    } else if (card.getBlockchain() == Blockchain.Token) {
+                        ETHRequestTask updateETH = new ETHRequestTask(card.getBlockchain());
+                        InfuraRequest reqETH = InfuraRequest.GetTokenBalance(card.getWallet(), engine.GetContractAddress(card), engine.GetTokenDecimals(card));
+                        reqETH.setID(67);
+                        reqETH.setBlockchain(card.getBlockchain());
+
+
+                        InfuraRequest reqBalance = InfuraRequest.GetBalance(card.getWallet());
+                        reqBalance.setID(67);
+                        reqBalance.setBlockchain(card.getBlockchain());
+
+
+                        RateInfoTask taskRate = new RateInfoTask();
+                        ExchangeRequest rate = ExchangeRequest.GetRate(card.getWallet(), "basic-attention-token", "ethereum");
+                        taskRate.execute(rate);
+
+                        InfuraRequest reqNonce = InfuraRequest.GetOutTransactionCount(card.getWallet());
+                        reqNonce.setID(67);
+                        reqNonce.setBlockchain(card.getBlockchain());
+
+                        updateETH.execute(reqETH, reqNonce, reqBalance);
                     }
-                    if (getActivity().getClass() == MainActivity.class) {
-                        ((MainActivity) getActivity()).showCleanButton();
-                    }
+                }
+                if (getActivity().getClass() == MainActivity.class) {
+                    ((MainActivity) getActivity()).showCleanButton();
                 }
             });
         }
