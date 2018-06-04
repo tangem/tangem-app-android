@@ -332,6 +332,7 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
     private void showLogoActivity() {
         Intent intent = new Intent(getBaseContext(), LogoActivity.class);
         intent.putExtra(LogoActivity.TAG, true);
+        intent.putExtra(LogoActivity.EXTRA_AUTO_HIDE, false);
         startActivity(intent);
     }
 
