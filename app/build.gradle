@@ -2,6 +2,26 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
+//ext {
+//    git = org.ajoberstar.grgit.Grgit.open()
+//    gitVersionCode = git.tag.list().size()
+//    gitVersionName = "${git.describe()}"
+//}
+
+def getVersionCode = { ->
+    try {
+        def code = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'tag', '--list'
+            standardOutput = code
+        }
+        return code.toString().split("\n").size()
+    }
+    catch (ignored) {
+        return -1;
+    }
+}
+
 android {
     compileSdkVersion 27
     defaultConfig {
@@ -9,7 +29,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 27
         versionCode 26
-        versionName "0.85.5.831"
+        versionName "0.85.5.831 " + getVersionCode
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
