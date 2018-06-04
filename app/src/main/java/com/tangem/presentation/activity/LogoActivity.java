@@ -17,12 +17,10 @@ import com.tangem.wallet.R;
 public class LogoActivity extends AppCompatActivity {
     public static final String TAG = LogoActivity.class.getSimpleName();
 
-    private final Runnable mHideRunnable = new Runnable() {
-        @Override
-        public void run() {
-            hide();
-        }
-    };
+    public static final String EXTRA_AUTO_HIDE = "extra_auto_hide";
+    public static final int MILLIS_AUTO_HIDE = 1000;
+
+    private final Runnable mHideRunnable = this::hide;
 
     private ImageView imgLogo;
 
@@ -50,9 +48,9 @@ public class LogoActivity extends AppCompatActivity {
         else
             AppVersion.setText("BETA v." + BuildConfig.VERSION_NAME);
 
-        if (!getIntent().getBooleanExtra("skipAutoHide", false)) {
-            delayedHide(1000);
-        }
+
+        if (getIntent().getBooleanExtra(EXTRA_AUTO_HIDE, true))
+            delayedHide();
     }
 
     private void hide() {
@@ -61,12 +59,9 @@ public class LogoActivity extends AppCompatActivity {
         finish();
     }
 
-    /**
-     * Schedules a call to hide() in [delay] milliseconds, canceling any
-     * previously scheduled calls.
-     */
-    private void delayedHide(int delayMillis) {
-        //imgLogo.removeCallbacks(mHideRunnable);
-        imgLogo.postDelayed(mHideRunnable, delayMillis);
+    private void delayedHide() {
+//        imgLogo.removeCallbacks(mHideRunnable);
+        imgLogo.postDelayed(mHideRunnable, MILLIS_AUTO_HIDE);
     }
+
 }
