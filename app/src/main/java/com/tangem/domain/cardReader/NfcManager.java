@@ -24,7 +24,6 @@ public class NfcManager {
 
     private static final String TAG = "NfcManager";
 
-
     // reader mode flags: listen for type A (not B), skipping ndef check
     private static final int READER_FLAGS = NfcAdapter.FLAG_READER_NFC_A | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK | NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS;
 
@@ -36,6 +35,12 @@ public class NfcManager {
     private boolean broadcomWorkaround = false;
     private static final int DELAY_PRESENCE = 1500;
 
+//    @Inject
+//    public NfcManager() {
+//
+//    }
+
+//    @Inject
     public NfcManager(Activity activity, NfcAdapter.ReaderCallback readerCallback) {
         mActivity = activity;
         mReaderCallback = readerCallback;
@@ -56,8 +61,8 @@ public class NfcManager {
     }
 
     public void ShowNFCEnableDialog() {
-        mEnableNfcDialog=new NFCEnableDialog();
-        mEnableNfcDialog.show(mActivity.getFragmentManager(),"NFCEnableDialog");
+        mEnableNfcDialog = new NFCEnableDialog();
+        mEnableNfcDialog.show(mActivity.getFragmentManager(), "NFCEnableDialog");
     }
 
     public void onPause() {
@@ -131,14 +136,14 @@ public class NfcManager {
         }
     }
 
-        private static final int REQUEST_NFC_PERMISSIONS = 1;
+    private static final int REQUEST_NFC_PERMISSIONS = 1;
     private static String[] PERMISSIONS_NFC = {
             Manifest.permission.NFC
     };
 
     //Checks if the app has NFC permission
     //If the app does not has permission then the user will be prompted to grant permissions
-   public static void verifyPermissions(Activity activity) {
+    public static void verifyPermissions(Activity activity) {
         // Check if we have write permission
         int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.NFC);
 
