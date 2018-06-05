@@ -21,8 +21,7 @@ import com.tangem.presentation.dialog.NFCEnableDialog;
 import java.io.IOException;
 
 public class NfcManager {
-
-    private static final String TAG = "NfcManager";
+    public static final String TAG = NfcManager.class.getSimpleName();
 
     // reader mode flags: listen for type A (not B), skipping ndef check
     private static final int READER_FLAGS = NfcAdapter.FLAG_READER_NFC_A | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK | NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS;
@@ -40,7 +39,7 @@ public class NfcManager {
 //
 //    }
 
-//    @Inject
+    //    @Inject
     public NfcManager(Activity activity, NfcAdapter.ReaderCallback readerCallback) {
         mActivity = activity;
         mReaderCallback = readerCallback;
@@ -53,16 +52,11 @@ public class NfcManager {
         mActivity.registerReceiver(mBroadcastReceiver, filter);
 
         if (mNfcAdapter == null || !mNfcAdapter.isEnabled()) {
-            ShowNFCEnableDialog();
+            showNFCEnableDialog();
 
         } else {
             enableReaderMode();
         }
-    }
-
-    public void ShowNFCEnableDialog() {
-        mEnableNfcDialog = new NFCEnableDialog();
-        mEnableNfcDialog.show(mActivity.getFragmentManager(), "NFCEnableDialog");
     }
 
     public void onPause() {
@@ -76,7 +70,7 @@ public class NfcManager {
         }
     }
 
-    public void IgnoreTag(Tag tag) throws IOException {
+    public void ignoreTag(Tag tag) throws IOException {
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
 //            mNfcAdapter.ignore(tag, 500, null, null);
 //        }else{
@@ -87,6 +81,11 @@ public class NfcManager {
 //        }
     }
 
+    private void showNFCEnableDialog() {
+        mEnableNfcDialog = new NFCEnableDialog();
+        mEnableNfcDialog.show(mActivity.getFragmentManager(), NFCEnableDialog.TAG);
+    }
+
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @SuppressWarnings("deprecation")
         @Override
@@ -95,12 +94,9 @@ public class NfcManager {
             if (action == null)
                 return;
             if (action.equals(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED)) {
-                int state = intent.getIntExtra(NfcAdapter.EXTRA_ADAPTER_STATE,
-                        NfcAdapter.STATE_ON);
-                if (state == NfcAdapter.STATE_ON
-                        || state == NfcAdapter.STATE_TURNING_ON) {
-                    Log.d(TAG, "state: " + state + " , dialog: "
-                            + mEnableNfcDialog);
+                int state = intent.getIntExtra(NfcAdapter.EXTRA_ADAPTER_STATE, NfcAdapter.STATE_ON);
+                if (state == NfcAdapter.STATE_ON || state == NfcAdapter.STATE_TURNING_ON) {
+                    Log.d(TAG, "state: " + state + " , dialog: " + mEnableNfcDialog);
                     if (mEnableNfcDialog != null) {
                         mEnableNfcDialog.dismiss();
                     }
@@ -109,7 +105,7 @@ public class NfcManager {
                     }
                 } else {
                     if (mEnableNfcDialog == null || !mEnableNfcDialog.isVisible()) {
-                        ShowNFCEnableDialog();
+                        showNFCEnableDialog();
                     }
                 }
             }
