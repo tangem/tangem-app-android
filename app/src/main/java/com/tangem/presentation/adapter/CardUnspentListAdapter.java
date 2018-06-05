@@ -60,7 +60,7 @@ public class CardUnspentListAdapter extends BaseAdapter {
 
         TangemCard.UnspentTransaction unspentTransaction = (TangemCard.UnspentTransaction) getItem(position);
 
-        String html=String.format("<b>%d mBTC</b><br>%s", unspentTransaction.Amount, unspentTransaction.txID);
+        String html = String.format("<b>%d mBTC</b><br>%s", unspentTransaction.Amount, unspentTransaction.txID);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             tvItem.setText(Html.fromHtml(html, FROM_HTML_MODE_COMPACT));
@@ -76,11 +76,12 @@ public class CardUnspentListAdapter extends BaseAdapter {
     }
 
     public void UpdateUnspent(String tx_hash, int value, int height) {
-        TangemCard.UnspentTransaction newUT=new TangemCard.UnspentTransaction();
-        newUT.txID=tx_hash;
-        newUT.Amount=value;
-        newUT.Height=height;
+        TangemCard.UnspentTransaction newUT = new TangemCard.UnspentTransaction();
+        newUT.txID = tx_hash;
+        newUT.Amount = value;
+        newUT.Height = height;
         mCard.getUnspentTransactions().add(newUT);
         notifyDataSetChanged();
     }
+
 }
