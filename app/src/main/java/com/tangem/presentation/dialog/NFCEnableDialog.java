@@ -2,7 +2,6 @@ package com.tangem.presentation.dialog;
 
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -15,6 +14,7 @@ import com.tangem.wallet.R;
  */
 
 public class NFCEnableDialog extends DialogFragment {
+    public static final String TAG = NFCEnableDialog.class.getSimpleName();
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -25,21 +25,16 @@ public class NFCEnableDialog extends DialogFragment {
                 .setTitle(R.string.nfc_disabled)
                 .setMessage(R.string.enable_nfc)
                 .setPositiveButton(R.string.dialog_ok,
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog,
-                                                int id) {
-                                // take user to wireless settings
-                                getActivity().startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
-                            }
+                        (dialog, id) -> {
+                            // take user to wireless settings
+                            getActivity().startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
                         })
                 .setNegativeButton(R.string.dialog_quit,
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog,
-                                                int id) {
-                                dialog.cancel();
-                                getActivity().finish();
-                            }
+                        (dialog, id) -> {
+                            dialog.cancel();
+                            getActivity().finish();
                         });
         return builder.create();
     }
+
 }
