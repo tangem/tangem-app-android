@@ -216,7 +216,7 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
             String sUID = Util.byteArrayToHexString(UID);
             if (!mCard.getUID().equals(sUID)) {
                 Log.d(logTag, "Invalid UID: " + sUID);
-                mNfcManager.IgnoreTag(isoDep.getTag());
+                mNfcManager.ignoreTag(isoDep.getTag());
                 return;
             } else {
                 Log.v(logTag, "UID: " + sUID);
