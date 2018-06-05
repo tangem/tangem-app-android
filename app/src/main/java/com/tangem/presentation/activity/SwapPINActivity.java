@@ -76,7 +76,7 @@ public class SwapPINActivity extends AppCompatActivity implements NfcAdapter.Rea
                 swapPinTask.start();
             } else {
                 Log.d(logTag, "Mismatch card UID (" + sUID + " instead of " + mCard.getUID() + ")");
-                mNfcManager.IgnoreTag(isoDep.getTag());
+                mNfcManager.ignoreTag(isoDep.getTag());
             }
 
         } catch (Exception e) {
@@ -166,7 +166,7 @@ public class SwapPINActivity extends AppCompatActivity implements NfcAdapter.Rea
                     mNotifications.OnReadProgress(protocol, 100);
 
                 } finally {
-                    mNfcManager.IgnoreTag(mIsoDep.getTag());
+                    mNfcManager.ignoreTag(mIsoDep.getTag());
                 }
             } catch (Exception e) {
                 e.printStackTrace();
