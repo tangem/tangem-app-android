@@ -74,7 +74,7 @@ public class PurgeActivity extends AppCompatActivity implements NfcAdapter.Reade
                 purgeTask.start();
             } else {
                 Log.d(logTag, "Mismatch card UID (" + sUID + " instead of " + mCard.getUID() + ")");
-                mNfcManager.IgnoreTag(isoDep.getTag());
+                mNfcManager.ignoreTag(isoDep.getTag());
                 return;
             }
 
@@ -173,7 +173,7 @@ public class PurgeActivity extends AppCompatActivity implements NfcAdapter.Reade
                     if (isCancelled) return;
 
                 } finally {
-                    mNfcManager.IgnoreTag(mIsoDep.getTag());
+                    mNfcManager.ignoreTag(mIsoDep.getTag());
                 }
             } catch (Exception e) {
                 e.printStackTrace();
