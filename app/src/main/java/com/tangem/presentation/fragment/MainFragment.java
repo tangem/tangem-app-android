@@ -63,6 +63,7 @@ import java.util.Objects;
 //    NfcManager getNfcManager(Activity activity, NfcAdapter.ReaderCallback readerCallback);
 //
 //}
+
 /**
  * A placeholder fragment containing a simple view.
  */
@@ -442,19 +443,13 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
         if (card.getStatus() == TangemCard.Status.Empty) {
             intent = new Intent(getActivity(), EmptyWalletActivity.class);
 //            Toast.makeText(getContext(), "1", Toast.LENGTH_SHORT).show();
-        }
-
-        else if (card.getStatus() == TangemCard.Status.Loaded) {
+        } else if (card.getStatus() == TangemCard.Status.Loaded) {
             intent = new Intent(getActivity(), LoadedWalletActivity.class);
 //            Toast.makeText(getContext(), "2", Toast.LENGTH_SHORT).show();
-        }
-
-        else if (card.getStatus() == TangemCard.Status.NotPersonalized || card.getStatus() == TangemCard.Status.Purged) {
+        } else if (card.getStatus() == TangemCard.Status.NotPersonalized || card.getStatus() == TangemCard.Status.Purged) {
 //            Toast.makeText(getContext(), "3", Toast.LENGTH_SHORT).show();
             return;
-        }
-
-        else {
+        } else {
             intent = new Intent(getActivity(), LoadedWalletActivity.class);
 //            Toast.makeText(getContext(), "4", Toast.LENGTH_SHORT).show();
         }
@@ -676,20 +671,16 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
 
         if (cardProtocol != null) {
             if (cardProtocol.getError() == null) {
-                progressBar.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        progressBar.setProgress(100);
-                        progressBar.setProgressTintList(ColorStateList.valueOf(Color.GREEN));
-                        addCard(cardProtocol.getCard());
-                    }
+                progressBar.post(() -> {
+                    progressBar.setProgress(100);
+                    progressBar.setProgressTintList(ColorStateList.valueOf(Color.GREEN));
+                    addCard(cardProtocol.getCard());
                 });
             } else {
                 // remove last UIDs because of error and no card read
-                progressBar.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(getContext(), "Try to scan again", Toast.LENGTH_LONG).show();
+                progressBar.post(() -> {
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), R.string.try_to_scan_again, Toast.LENGTH_LONG).show();
                         unsuccessReadCount++;
                         progressBar.setProgress(100);
                         progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
@@ -698,7 +689,7 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
                             doEnterPIN();
                         } else if (cardProtocol.getError() instanceof CardProtocol.TangemException_ExtendedLengthNotSupported) {
                             if (!NoExtendedLengthSupportDialog.allreadyShowed) {
-                                new NoExtendedLengthSupportDialog().show(getActivity().getFragmentManager(), "NoExtendedLengthSupportDialog");
+                                new NoExtendedLengthSupportDialog().show(Objects.requireNonNull(getActivity()).getFragmentManager(), NoExtendedLengthSupportDialog.TAG);
                             }
                         } else {
                             lastTag = null;
@@ -708,16 +699,13 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
             }
         }
 
-        progressBar.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    progressBar.setProgress(0);
-                    progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
-                    progressBar.setVisibility(View.INVISIBLE);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        progressBar.postDelayed(() -> {
+            try {
+                progressBar.setProgress(0);
+                progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
+                progressBar.setVisibility(View.INVISIBLE);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }, 500);
     }
