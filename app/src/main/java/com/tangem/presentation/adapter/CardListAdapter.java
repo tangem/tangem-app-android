@@ -301,7 +301,6 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
                             holder.tvTypeBg.setBackgroundColor(ContextCompat.getColor(mContext, R.color.type_banknote));
                         }
                     }
-
                     break;
             }
 
