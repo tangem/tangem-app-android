@@ -113,7 +113,7 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
         RecyclerView rvCards = result.findViewById(R.id.lvCards);
 
         rvCards.setLayoutManager(new LinearLayoutManager(getContext()));
-        mCardListAdapter = new CardListAdapter(getActivity().getLayoutInflater(), savedInstanceState, this);
+        mCardListAdapter = new CardListAdapter(inflater, savedInstanceState, this);
         rvCards.setAdapter(mCardListAdapter);
         if (savedInstanceState != null && savedInstanceState.containsKey("slCardUIDs")) {
             slCardUIDs = savedInstanceState.getStringArrayList("slCardUIDs");
