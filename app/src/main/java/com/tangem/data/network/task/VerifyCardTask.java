@@ -86,7 +86,7 @@ public class VerifyCardTask extends Thread {
                     mNotifications.OnReadFinish(protocol);
                 }
             } finally {
-                mNfcManager.IgnoreTag(mIsoDep.getTag());
+                mNfcManager.ignoreTag(mIsoDep.getTag());
             }
         } catch (Exception e) {
             e.printStackTrace();
