@@ -65,9 +65,9 @@
     <string name="erased_wallet">ERASED WALLET</string>
     <string name="invalid_card">INVALID CARD</string>
     <string name="verified_offline">verified offline</string>
-    <string name="developer_kit">           DEVELOPER     KIT     </string>
-    <string name="banknote_banknote">  BANKNOTE        BANKNOTE</string>
-    <string name="reusable_reusable">   REUSABLE       REUSABLE   </string>
+    <string name="developer_kit">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;DEVELOPER&#160;&#160;&#160;&#160;&#160;KIT&#160;&#160;&#160;&#160;&#160;</string>
+    <string name="banknote_banknote">&#160;&#160;BANKNOTE&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;BANKNOTE</string>
+    <string name="reusable_reusable">&#160;&#160;&#160;REUSABLE&#160;&#160;&#160;&#160;&#160;&#160;&#160;REUSABLE&#160;&#160;&#160;</string>
 
     <!-- LogoActivity -->
     <string name="beta">BETA</string>
