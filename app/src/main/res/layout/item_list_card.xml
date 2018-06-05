@@ -6,7 +6,6 @@
     android:id="@+id/cvCard"
     android:layout_width="match_parent"
     android:layout_height="@dimen/card_height"
-    android:layout_gravity="center_vertical"
     android:layout_marginBottom="0dp"
     android:layout_marginEnd="8dp"
     android:layout_marginStart="8dp"
@@ -15,7 +14,8 @@
     card_view:cardCornerRadius="6dp"
     card_view:cardElevation="8dp"
     card_view:contentPaddingLeft="6dp"
-    card_view:contentPaddingRight="6dp">
+    card_view:contentPaddingRight="6dp"
+    tools:ignore="contentDescription">
 
     <RelativeLayout
         android:id="@+id/card_bg_layout"
@@ -35,19 +35,19 @@
             android:id="@+id/tvVoid"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginLeft="20dp"
+            android:layout_marginStart="20dp"
             android:alpha="0.33"
             android:fontFamily="@font/raleway_el"
             android:gravity="center"
             android:rotation="-25"
-            android:text="VOID"
             android:textColor="@color/msg_err"
-            android:textSize="96dp"/>
+            android:textSize="96sp"
+            tools:text="VOID"/>
 
         <FrameLayout
             android:layout_width="16dp"
             android:layout_height="match_parent"
-            android:layout_marginLeft="1dp"
+            android:layout_marginStart="1dp"
             android:foregroundGravity="center">
 
             <TextView
@@ -61,21 +61,21 @@
                 android:id="@+id/tvType"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginLeft="1dp"
+                android:layout_marginStart="1dp"
                 android:alpha="0.6"
                 android:fontFamily="@font/raleway_el"
                 android:gravity="bottom"
                 android:maxLines="1"
-                android:text="          DEVELOPER     KIT     "
                 android:textColor="@color/black"
-                android:textSize="12dp"/>
+                android:textSize="12sp"
+                tools:text="          DEVELOPER     KIT     "/>
 
         </FrameLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginLeft="20dp"
+            android:layout_marginStart="20dp"
             android:orientation="vertical">
 
             <LinearLayout
@@ -105,9 +105,9 @@
                             android:layout_height="wrap_content"
                             android:layout_margin="0dp"
                             android:fontFamily="@font/raleway_r"
-                            android:text="Balance  "
+                            android:text="@string/balance"
                             android:textColor="@color/primary_dark"
-                            android:textSize="@dimen/font_large"/>
+                            android:textSize="@dimen/text_size_large"/>
 
                         <TextView
                             android:id="@+id/tvBalance"
@@ -115,10 +115,11 @@
                             android:layout_height="wrap_content"
                             android:layout_margin="0dp"
                             android:fontFamily="@font/montserrat_light"
-                            android:text="0.0 mBTC"
                             android:textColor="@color/black"
-                            android:textSize="@dimen/font_large"
-                            android:textStyle="bold"/>
+                            android:textSize="@dimen/text_size_large"
+                            android:textStyle="bold"
+                            tools:text="0.0 mBTC"/>
+
                     </LinearLayout>
 
                     <LinearLayout
@@ -131,26 +132,27 @@
                             android:id="@+id/tvOffline"
                             android:layout_width="90dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginRight="20dp"
+                            android:layout_marginEnd="20dp"
                             android:background="@color/msg_okay"
                             android:fontFamily="@font/montserrat_light"
-                            android:text="verified offline"
+                            android:text="@string/verified_offline"
                             android:textAlignment="center"
                             android:textColor="@color/white"
-                            android:textSize="@dimen/font_small"
+                            android:textSize="@dimen/text_size_small"
                             android:visibility="visible"/>
 
                         <TextView
                             android:id="@+id/tvBalanceEquivalent"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginRight="48dp"
+                            android:layout_marginEnd="48dp"
                             android:layout_marginTop="2dp"
                             android:fontFamily="@font/montserrat_light"
-                            android:text="~ USD 0"
                             android:textColor="@color/black_overlay"
-                            android:textSize="14dp"
-                            android:textStyle="normal|bold"/>
+                            android:textSize="@dimen/text_size_1_small"
+                            android:textStyle="normal|bold"
+                            tools:text="~ USD 0"/>
+
                     </LinearLayout>
 
                     <LinearLayout
@@ -163,22 +165,22 @@
                             android:layout_width="110dp"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/raleway_r"
-                            android:text="Blockchain"
+                            android:text="@string/blockchain"
                             android:textColor="@color/primary_dark"
-                            android:textSize="14dp"/>
+                            android:textSize="@dimen/text_size_1_small"/>
 
                         <TextView
                             android:id="@+id/tvBlockchain"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:fontFamily="@font/montserrat_light"
                             android:lines="1"
                             android:maxLines="1"
-                            android:text="Blockchain"
                             android:textColor="@color/primary_dark"
-                            android:textSize="12dp"
-                            android:textStyle="bold"/>
+                            android:textSize="@dimen/text_size_small"
+                            android:textStyle="bold"
+                            tools:text="Bitcoin"/>
 
                     </LinearLayout>
 
@@ -191,9 +193,9 @@
                             android:layout_width="110dp"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/raleway_r"
-                            android:text="Wallet  "
+                            android:text="@string/wallet"
                             android:textColor="@color/primary_dark"
-                            android:textSize="14dp"/>
+                            android:textSize="@dimen/text_size_1_small"/>
 
                         <TextView
                             android:id="@+id/tvWallet"
@@ -202,10 +204,11 @@
                             android:fontFamily="@font/montserrat_light"
                             android:lines="1"
                             android:maxLines="1"
-                            android:text="           "
                             android:textColor="@color/primary_dark"
-                            android:textSize="12dp"
-                            android:textStyle="bold"/>
+                            android:textSize="@dimen/text_size_small"
+                            android:textStyle="bold"
+                            tools:text="1DoQdnSYshhZ5Tqt5Sk6svZt29jqoYVwQY"/>
+
                     </LinearLayout>
 
                     <LinearLayout
@@ -218,19 +221,19 @@
                             android:layout_width="110dp"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/raleway_r"
-                            android:text="Last unspent "
+                            android:text="@string/last_unspent"
                             android:textColor="@color/primary_dark"
-                            android:textSize="14dp"/>
+                            android:textSize="@dimen/text_size_1_small"/>
 
                         <TextView
                             android:id="@+id/tvLastInput"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/montserrat_light"
-                            android:text="           "
                             android:textColor="@color/primary_dark"
-                            android:textSize="12dp"
+                            android:textSize="@dimen/text_size_small"
                             android:textStyle="normal|bold"/>
+
                     </LinearLayout>
 
                     <LinearLayout
@@ -243,19 +246,19 @@
                             android:layout_width="110dp"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/raleway_r"
-                            android:text="Last withdrawal"
+                            android:text="@string/last_withdrawal"
                             android:textColor="@color/primary_dark"
-                            android:textSize="14dp"/>
+                            android:textSize="@dimen/text_size_1_small"/>
 
                         <TextView
                             android:id="@+id/tvLastOutput"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/montserrat_light"
-                            android:text="           "
                             android:textColor="@color/primary_dark"
-                            android:textSize="12dp"
+                            android:textSize="@dimen/text_size_small"
                             android:textStyle="normal|bold"/>
+
                     </LinearLayout>
 
                 </LinearLayout>
@@ -272,9 +275,9 @@
                         android:layout_gravity="center"
                         android:fontFamily="@font/raleway_r"
                         android:gravity="center"
-                        android:text="NO WALLET"
+                        android:text="@string/no_wallet"
                         android:textAlignment="center"
-                        android:textSize="@dimen/font_large"/>
+                        android:textSize="@dimen/text_size_large"/>
 
                 </LinearLayout>
 
@@ -290,9 +293,9 @@
                         android:layout_gravity="center"
                         android:fontFamily="@font/raleway_r"
                         android:gravity="center"
-                        android:text="ERASED WALLET"
+                        android:text="@string/erased_wallet"
                         android:textAlignment="center"
-                        android:textSize="@dimen/font_large"/>
+                        android:textSize="@dimen/text_size_large"/>
 
                 </LinearLayout>
 
@@ -309,11 +312,12 @@
                         android:layout_gravity="center"
                         android:fontFamily="@font/raleway_r"
                         android:gravity="center"
-                        android:text="INVALID CARD"
+                        android:text="@string/invalid_card"
                         android:textAlignment="center"
-                        android:textSize="@dimen/font_large"/>
+                        android:textSize="@dimen/text_size_large"/>
 
                 </LinearLayout>
+
             </LinearLayout>
 
             <TextView
@@ -328,10 +332,10 @@
                 android:focusableInTouchMode="true"
                 android:fontFamily="@font/montserrat_light"
                 android:paddingTop="6dp"
-                android:text="           "
                 android:textAlignment="center"
                 android:textColor="@color/primary_dark"
-                android:textSize="14dp"/>
+                android:textSize="@dimen/text_size_1_small"
+                tools:text="BB00 0000 0001 0022"/>
 
         </LinearLayout>
 
@@ -351,7 +355,7 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentStart="false"
             android:layout_marginBottom="6dp"
-            android:layout_marginLeft="24dp"
+            android:layout_marginStart="24dp"
             android:background="@drawable/ic_info"
             android:visibility="invisible"/>
     </RelativeLayout>
