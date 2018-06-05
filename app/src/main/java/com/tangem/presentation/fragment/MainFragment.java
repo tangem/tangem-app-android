@@ -111,6 +111,7 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
         progressBar = result.findViewById(R.id.progressBar);
         progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
         RecyclerView rvCards = result.findViewById(R.id.lvCards);
+
         rvCards.setLayoutManager(new LinearLayoutManager(getContext()));
         mCardListAdapter = new CardListAdapter(getActivity().getLayoutInflater(), savedInstanceState, this);
         rvCards.setAdapter(mCardListAdapter);
@@ -218,7 +219,6 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
     @Override
     public void onResume() {
         super.onResume();
-
         mNfcManager.onResume();
     }
 
