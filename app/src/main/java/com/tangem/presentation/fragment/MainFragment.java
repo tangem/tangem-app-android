@@ -164,7 +164,6 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
 
         if (getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).setOnCardsClean(this);
-//            ((MainActivity) getActivity()).setOnCreateNFCDialog(this);
             ((MainActivity) getActivity()).setNfcAdapterReaderCallback(this);
         }
 
@@ -195,7 +194,7 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
             String sUID = Util.byteArrayToHexString(UID);
             if (slCardUIDs.indexOf(sUID) != -1) {
                 Log.d(logTag, "Repeat UID: " + sUID);
-                mNfcManager.IgnoreTag(isoDep.getTag());
+                mNfcManager.ignoreTag(isoDep.getTag());
                 return;
             } else {
                 Log.v(logTag, "UID: " + sUID);
@@ -631,7 +630,7 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
                         mNotifications.OnReadFinish(protocol);
                     }
                 } finally {
-                    mNfcManager.IgnoreTag(mIsoDep.getTag());
+                    mNfcManager.ignoreTag(mIsoDep.getTag());
                 }
             } catch (Exception e) {
                 e.printStackTrace();
