@@ -9,23 +9,17 @@ import android.os.Bundle;
 import com.tangem.wallet.R;
 
 public class NoExtendedLengthSupportDialog extends DialogFragment {
+    public static final String TAG = NoExtendedLengthSupportDialog.class.getSimpleName();
 
-    public static boolean allreadyShowed=false;
+    public static boolean allreadyShowed = false;
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-
         return new AlertDialog.Builder(getActivity())
                 .setIcon(R.drawable.tangem_logo_small_new)
-                .setTitle("Warning")
-                .setMessage("The NFC adapter of the device does not support extended length APDU, it's possible that some functions will not work!")
-                .setPositiveButton("Got it",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                NoExtendedLengthSupportDialog.allreadyShowed=true;
-                            }
-                        }
-                )
+                .setTitle(R.string.warning)
+                .setMessage(R.string.the_nfc_adapter_length_apdu)
+                .setPositiveButton(R.string.got_it, (dialog, whichButton) -> NoExtendedLengthSupportDialog.allreadyShowed = true)
                 .create();
     }
 
@@ -33,4 +27,5 @@ public class NoExtendedLengthSupportDialog extends DialogFragment {
     public void onCancel(DialogInterface dialog) {
         super.onCancel(dialog);
     }
+
 }
