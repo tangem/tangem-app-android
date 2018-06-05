@@ -76,7 +76,7 @@ public class CreateNewWalletActivity extends AppCompatActivity implements NfcAda
                 createNewWalletTask.start();
             } else {
                 Log.d(logTag, "Mismatch card UID (" + sUID + " instead of " + mCard.getUID() + ")");
-                mNfcManager.IgnoreTag(isoDep.getTag());
+                mNfcManager.ignoreTag(isoDep.getTag());
                 return;
             }
 
@@ -169,7 +169,7 @@ public class CreateNewWalletActivity extends AppCompatActivity implements NfcAda
                     protocol.run_Read();
 
                 } finally {
-                    mNfcManager.IgnoreTag(mIsoDep.getTag());
+                    mNfcManager.ignoreTag(mIsoDep.getTag());
                 }
             } catch (Exception e) {
                 e.printStackTrace();
