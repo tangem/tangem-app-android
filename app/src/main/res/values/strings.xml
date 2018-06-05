@@ -1,6 +1,7 @@
 <resources>
 
     <string name="ok">OK</string>
+    <string name="not_found">Not found</string>
     <string name="wrong_tag_err">Not ISO tag!</string>
     <string name="msgCardMustBeLoaded">Card must be loaded first!</string>
     <string name="tag_lost_err">Tag lost!</string>
@@ -51,6 +52,22 @@
     <string name="reset_pins_to_default">Reset PINs to default</string>
     <string name="erase_wallet">Erase wallet</string>
 
+    <!-- MainActivity, MainFragment -->
+    <string name="tap_tangem_card">Tap Tangem card with your smartphone</string>
+    <string name="scan_banknote">Scan a banknote with your \n smartphone as shown above</string>
+    <string name="try_to_scan_again">Try to scan again</string>
+    <string name="balance">Balance</string>
+    <string name="wallet">Wallet</string>
+    <string name="last_unspent">Last unspent</string>
+    <string name="last_withdrawal">Last withdrawal</string>
+    <string name="blockchain">Blockchain</string>
+    <string name="no_wallet">NO WALLET</string>
+    <string name="erased_wallet">ERASED WALLET</string>
+    <string name="invalid_card">INVALID CARD</string>
+    <string name="verified_offline">verified offline</string>
+    <string name="developer_kit">           DEVELOPER     KIT     </string>
+    <string name="banknote_banknote">  BANKNOTE        BANKNOTE</string>
+    <string name="reusable_reusable">   REUSABLE       REUSABLE   </string>
 
     <!-- LogoActivity -->
     <string name="beta">BETA</string>
@@ -62,11 +79,6 @@
     <string name="to_erase_the_wallet">to erase the wallet</string>
     <string name="to_sign_the_payment">to sign the payment</string>
     <string name="to_change_pin_codes">to change PIN/PIN2 codes</string>
-
-    <!-- MainActivity -->
-    <string name="tap_tangem_card">Tap Tangem card with your smartphone</string>
-    <string name="scan_banknote">Scan a banknote with your \n smartphone as shown above</string>
-    <string name="try_to_scan_again">Try to scan again</string>
 
     <!-- PreparePaymentActivity -->
     <string name="send_payment">Send payment</string>
