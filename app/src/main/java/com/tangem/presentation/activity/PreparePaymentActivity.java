@@ -201,7 +201,7 @@ public class PreparePaymentActivity extends AppCompatActivity implements NfcAdap
     public void onTagDiscovered(Tag tag) {
         try {
             Log.w(getClass().getName(), "Ignore discovered tag!");
-            mNfcManager.IgnoreTag(tag);
+            mNfcManager.ignoreTag(tag);
         } catch (IOException e) {
             e.printStackTrace();
         }
