@@ -28,7 +28,7 @@ import com.tangem.domain.wallet.LastSignStorage;
 import com.tangem.domain.wallet.Logger;
 import com.tangem.domain.wallet.PINStorage;
 import com.tangem.presentation.dialog.RootFoundDialog;
-import com.tangem.presentation.fragment.MainFragment;
+import com.tangem.presentation.fragment.Main;
 import com.tangem.util.CommonUtil;
 import com.tangem.util.PhoneUtility;
 import com.tangem.wallet.BuildConfig;
@@ -106,8 +106,8 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         fab.setOnClickListener(this::showMenu);
 
         // add fragment
-        MainFragment mainFragment = (MainFragment) getSupportFragmentManager().findFragmentById(R.id.fragmentMain);
-        if (mainFragment.getCardListAdapter().getItemCount() > 0)
+        Main main = (Main) getSupportFragmentManager().findFragmentById(R.id.fragmentMain);
+        if (main.getCardListAdapter().getItemCount() > 0)
             showCleanButton();
         else
             hideCleanButton();
