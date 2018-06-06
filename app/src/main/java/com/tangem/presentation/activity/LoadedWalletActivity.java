@@ -7,7 +7,7 @@ import android.nfc.Tag;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
-import com.tangem.presentation.fragment.LoadedWalletFragment;
+import com.tangem.presentation.fragment.LoadedWallet;
 import com.tangem.wallet.R;
 
 import java.util.Objects;
@@ -23,7 +23,7 @@ public class LoadedWalletActivity extends AppCompatActivity {
         if (Objects.requireNonNull(getIntent().getExtras()).containsKey(NfcAdapter.EXTRA_TAG)) {
             Tag tag = getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
             if (tag != null) {
-                LoadedWalletFragment fragment = (LoadedWalletFragment) (getSupportFragmentManager().findFragmentById(R.id.loaded_wallet_fragment));
+                LoadedWallet fragment = (LoadedWallet) (getSupportFragmentManager().findFragmentById(R.id.loaded_wallet_fragment));
                 fragment.onTagDiscovered(tag);
             }
         }
@@ -31,8 +31,8 @@ public class LoadedWalletActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        LoadedWalletFragment loadedWalletFragment = (LoadedWalletFragment) getSupportFragmentManager().findFragmentById(R.id.loaded_wallet_fragment);
-        Intent data = loadedWalletFragment.prepareResultIntent();
+        LoadedWallet loadedWallet = (LoadedWallet) getSupportFragmentManager().findFragmentById(R.id.loaded_wallet_fragment);
+        Intent data = loadedWallet.prepareResultIntent();
         data.putExtra("modification", "update");
         setResult(Activity.RESULT_OK, data);
         finish();
