@@ -28,6 +28,7 @@
     <dimen name="empty_wallet_left_col_margin">16dp</dimen>
 
 
+    <dimen name="text_size_2_small">10sp</dimen>
     <dimen name="text_size_small">12sp</dimen>
     <dimen name="text_size_1_small">14sp</dimen>
     <dimen name="text_size_medium">18sp</dimen>
