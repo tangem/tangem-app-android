@@ -11,10 +11,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.tangem.domain.wallet.TangemCard;
+import com.tangem.presentation.fragment.WalletInfo;
 import com.tangem.wallet.R;
-import com.tangem.presentation.fragment.WalletInfoFragment;
 
-public class CardInfoActivity extends AppCompatActivity implements WalletInfoFragment.OnFragmentInteractionListener {
+public class CardInfoActivity extends AppCompatActivity implements WalletInfo.OnFragmentInteractionListener {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -44,10 +44,10 @@ public class CardInfoActivity extends AppCompatActivity implements WalletInfoFra
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
 
         // Set up the ViewPager with the sections adapter.
-        mViewPager = (ViewPager) findViewById(R.id.container);
+        mViewPager = findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
+        TabLayout tabLayout = findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
 
         String UID = getIntent().getStringExtra("UID");
@@ -95,7 +95,7 @@ public class CardInfoActivity extends AppCompatActivity implements WalletInfoFra
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
             if (position == 0) {
-                return WalletInfoFragment.newInstance(mCard);
+                return WalletInfo.newInstance(mCard);
             } /*else if (position == 1) {
                 return WalletUnspentFragment.newInstance(mCard);
             } else if (position == 2) {
