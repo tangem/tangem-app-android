@@ -32,17 +32,17 @@ import static android.content.Context.CLIPBOARD_SERVICE;
  * Activities that contain this fragment must implement the
  * {@link OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link WalletInfoFragment#newInstance} factory method to
+ * Use the {@link WalletInfo#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class WalletInfoFragment extends Fragment {
+public class WalletInfo extends Fragment {
 
     // TODO: Rename and change types of parameters
     private TangemCard mCard;
 
     private OnFragmentInteractionListener mListener;
 
-    public WalletInfoFragment() {
+    public WalletInfo() {
         // Required empty public constructor
     }
 
@@ -50,11 +50,11 @@ public class WalletInfoFragment extends Fragment {
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @return A new instance of fragment WalletInfoFragment.
+     * @return A new instance of fragment WalletInfo.
      */
     // TODO: Rename and change types and number of parameters
-    public static WalletInfoFragment newInstance(TangemCard card) {
-        WalletInfoFragment fragment = new WalletInfoFragment();
+    public static WalletInfo newInstance(TangemCard card) {
+        WalletInfo fragment = new WalletInfo();
         Bundle args = new Bundle();
         args.putString("UID",card.getUID());
         card.SaveToBundle(args);
