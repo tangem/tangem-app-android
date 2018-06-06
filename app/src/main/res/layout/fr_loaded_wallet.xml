@@ -8,7 +8,7 @@
     android:background="@color/white"
     android:orientation="vertical"
     android:padding="0dp"
-    tools:context="com.tangem.presentation.fragment.LoadedWalletFragment"
+    tools:context="com.tangem.presentation.fragment.LoadedWallet"
     tools:showIn="@layout/activity_loaded_wallet">
 
     <android.support.v4.widget.SwipeRefreshLayout
@@ -520,7 +520,6 @@
         android:id="@+id/rlToolButtons"
         android:layout_width="0dp"
         android:layout_height="40dp"
-
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent">
@@ -534,7 +533,6 @@
             android:layout_toLeftOf="@+id/tvPurge"
             android:layout_weight="1"
             android:background="@color/colorPrimary"
-            android:capitalize="none"
             android:fontFamily="@font/raleway_r"
             android:padding="8dp"
             android:text="SEND"
@@ -552,7 +550,6 @@
             android:layout_weight="12"
             android:background="@drawable/ic_show_menu"
             android:backgroundTint="@color/colorPrimaryDark"
-            android:capitalize="none"
             android:fontFamily="@font/raleway_r"
             android:padding="8dp"
             android:textAlignment="center"
