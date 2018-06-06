@@ -21,9 +21,7 @@
     <!--</android.support.design.widget.AppBarLayout>-->
 
     <include
-        layout="@layout/content_loaded_wallet"
-        android:layout_height="566dp"
-        tools:layout_editor_absoluteY="1dp"/>
+        layout="@layout/content_loaded_wallet"/>
 
     <!--<android.support.design.widget.FloatingActionButton-->
     <!--android:id="@+id/fab"-->
