@@ -52,7 +52,7 @@
     <string name="reset_pins_to_default">Reset PINs to default</string>
     <string name="erase_wallet">Erase wallet</string>
 
-    <!-- MainActivity, MainFragment -->
+    <!-- MainActivity, Main -->
     <string name="tap_tangem_card">Tap Tangem card with your smartphone</string>
     <string name="scan_banknote">Scan a banknote with your \n smartphone as shown above</string>
     <string name="try_to_scan_again">Try to scan again</string>
@@ -68,6 +68,13 @@
     <string name="developer_kit">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;DEVELOPER&#160;&#160;&#160;&#160;&#160;KIT&#160;&#160;&#160;&#160;&#160;</string>
     <string name="banknote_banknote">&#160;&#160;BANKNOTE&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;BANKNOTE</string>
     <string name="reusable_reusable">&#160;&#160;&#160;REUSABLE&#160;&#160;&#160;&#160;&#160;&#160;&#160;REUSABLE&#160;&#160;&#160;</string>
+
+    <!-- LoadedWalletActivity, LoadedWallet -->
+    <string name="wallet_empty">The wallet is empty</string>
+    <string name="not_enough_funds">Not enough funds for transaction fee (gas)!</string>
+    <string name="please_wait_while_previous">Please wait while previous transaction is confirmed in blockchain</string>
+    <string name="please_wait_for_confirmation">Please wait for confirmation of incoming transaction!</string>
+    <string name="card_hasn_t_remaining_signature">Card hasn\'t remaining signature!</string>
 
     <!-- LogoActivity -->
     <string name="beta">BETA</string>
