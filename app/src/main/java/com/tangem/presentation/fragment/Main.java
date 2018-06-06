@@ -67,14 +67,14 @@ import java.util.Objects;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback, CardListAdapter.UiCallbacks, CardProtocol.Notifications, MainActivity.OnCardsClean {
+public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardListAdapter.UiCallbacks, CardProtocol.Notifications, MainActivity.OnCardsClean {
 
     private static final int REQUEST_CODE_SHOW_CARD_ACTIVITY = 1;
     private static final int REQUEST_CODE_ENTER_PIN_ACTIVITY = 2;
     private static final int REQUEST_CODE_REQUEST_CAMERA_PERMISSIONS = 3;
     private NfcManager mNfcManager;
     private ArrayList<String> slCardUIDs = new ArrayList<>();
-    private static final String logTag = "MainFragment";
+    private static final String logTag = "Main";
     private ProgressBar progressBar;
 
     private CardListAdapter mCardListAdapter;
@@ -87,7 +87,7 @@ public class MainFragment extends Fragment implements NfcAdapter.ReaderCallback,
     private SwipeRefreshLayout mSwipeRefreshLayout; //TODO: tmp
     List<RequestWalletInfoTask> requestTasks = new ArrayList<>();
 
-    public MainFragment() {
+    public Main() {
     }
 
 //    @Override
