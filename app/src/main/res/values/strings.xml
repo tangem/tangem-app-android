@@ -30,6 +30,10 @@
     </array>
     <string name="title_activity_loaded_wallet">LoadedWalletActivity</string>
     <string name="title_activity_settings_feature">Settings</string>
+    <string name="balance">Balance</string>
+    <string name="verified_offline">verified offline</string>
+    <string name="blockchain">Blockchain</string>
+    <string name="last_withdrawal">Last withdrawal</string>
 
     <!-- dialogs -->
     <string name="device_is_rooted">Your Android device is rooted. Security at risk!</string>
@@ -56,15 +60,14 @@
     <string name="tap_tangem_card">Tap Tangem card with your smartphone</string>
     <string name="scan_banknote">Scan a banknote with your \n smartphone as shown above</string>
     <string name="try_to_scan_again">Try to scan again</string>
-    <string name="balance">Balance</string>
+
     <string name="wallet">Wallet</string>
     <string name="last_unspent">Last unspent</string>
-    <string name="last_withdrawal">Last withdrawal</string>
-    <string name="blockchain">Blockchain</string>
+
     <string name="no_wallet">NO WALLET</string>
     <string name="erased_wallet">ERASED WALLET</string>
     <string name="invalid_card">INVALID CARD</string>
-    <string name="verified_offline">verified offline</string>
+
     <string name="developer_kit">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;DEVELOPER&#160;&#160;&#160;&#160;&#160;KIT&#160;&#160;&#160;&#160;&#160;</string>
     <string name="banknote_banknote">&#160;&#160;BANKNOTE&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;BANKNOTE</string>
     <string name="reusable_reusable">&#160;&#160;&#160;REUSABLE&#160;&#160;&#160;&#160;&#160;&#160;&#160;REUSABLE&#160;&#160;&#160;</string>
@@ -75,6 +78,17 @@
     <string name="please_wait_while_previous">Please wait while previous transaction is confirmed in blockchain</string>
     <string name="please_wait_for_confirmation">Please wait for confirmation of incoming transaction!</string>
     <string name="card_hasn_t_remaining_signature">Card hasn\'t remaining signature!</string>
+    <string name="banknote">BANKNOTE</string>
+    <string name="do_not_accept">DO NOT ACCEPT</string>
+    <string name="explore_in_blockchain">EXPLORE IN \n BLOCKCHAIN \n ON WEB</string>
+    <string name="unspents">Unspents</string>
+    <string name="issuer">Issuer</string>
+    <string name="validation_node">Validation node</string>
+    <string name="swipe_down_to_refresh_data">Swipe down to refresh data</string>
+    <string name="message">Message!</string>
+    <string name="error">Error!</string>
+    <string name="scan_again_to_verify_the_card">Scan again to verify the card</string>
+    <string name="send">SEND</string>
 
     <!-- LogoActivity -->
     <string name="beta">BETA</string>
