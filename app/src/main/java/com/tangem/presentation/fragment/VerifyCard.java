@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class VerifyCardFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener, NfcAdapter.ReaderCallback {
+public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefreshListener, NfcAdapter.ReaderCallback {
 
     TangemCard mCard;
     TextView tvCardID, tvManufacturer, tvRegistrationDate, tvCardIdentity, tvLastSigned, tvRemainingSignatures, tvReusable, tvOk, tvError, tvMessage,
@@ -32,7 +32,7 @@ public class VerifyCardFragment extends Fragment implements SwipeRefreshLayout.O
     SwipeRefreshLayout mSwipeRefreshLayout;
     private NfcManager mNfcManager;
 
-    public VerifyCardFragment() {
+    public VerifyCard() {
 
     }
 
