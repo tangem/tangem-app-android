@@ -8,7 +8,7 @@
     android:background="@color/white"
     android:orientation="vertical"
     android:padding="0dp"
-    tools:context="com.tangem.presentation.fragment.VerifyCardFragment"
+    tools:context="com.tangem.presentation.fragment.VerifyCard"
     tools:showIn="@layout/activity_verify_card">
 
     <RelativeLayout
