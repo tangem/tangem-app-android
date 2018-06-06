@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.tangem.presentation.fragment.MainFragment"
+    tools:context="com.tangem.presentation.fragment.Main"
     tools:showIn="@layout/content_main">
 
     <!--<android.support.v4.widget.SwipeRefreshLayout-->
