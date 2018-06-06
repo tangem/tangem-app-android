@@ -68,7 +68,7 @@
                 android:maxLines="1"
                 android:textColor="@color/black"
                 android:textSize="12sp"
-                tools:text="          DEVELOPER     KIT     "/>
+                tools:text="@string/developer_kit"/>
 
         </FrameLayout>
 
