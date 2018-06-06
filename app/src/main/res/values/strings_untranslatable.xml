@@ -6,6 +6,7 @@
     <string name="err_msg_prefix">!!&#160;</string>
     <string name="action_msg_prefix">--&#160;</string>
     <string name="no_data_string">-- -- --</string>
+    <string name="no_data_string_1">---- ---- ---- ----</string>
     <string name="pin_back">&lt;</string>
 
 </resources>
