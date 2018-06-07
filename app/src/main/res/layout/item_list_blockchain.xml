@@ -16,7 +16,7 @@
         android:id="@+id/tvCurrency"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/font_large"
+        android:textSize="@dimen/text_size_large"
         android:fontFamily="@font/raleway_r"
         android:layout_margin="8dp"/>
 
