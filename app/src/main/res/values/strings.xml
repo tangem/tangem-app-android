@@ -1,6 +1,8 @@
 <resources>
 
     <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="contin">Continue</string>
     <string name="not_found">Not found</string>
     <string name="wrong_tag_err">Not ISO tag!</string>
     <string name="msgCardMustBeLoaded">Card must be loaded first!</string>
@@ -34,12 +36,15 @@
     <string name="verified_offline">verified offline</string>
     <string name="blockchain">Blockchain</string>
     <string name="last_withdrawal">Last withdrawal</string>
+    <string name="try_to_scan_again">Try to scan again</string>
+    <string name="cannot_erase_wallet_with_non_zero_balance">Cannot erase wallet with non-zero balance</string>
 
     <!-- dialogs -->
     <string name="device_is_rooted">Your Android device is rooted. Security at risk!</string>
     <string name="got_it">Got it</string>
     <string name="warning">Warning</string>
     <string name="the_nfc_adapter_length_apdu">The NFC adapter of the device does not support extended length APDU, it\'s possible that some functions will not work!</string>
+    <string name="your_money_is_at_risk">Your money is at risk!</string>
 
     <!-- menu main -->
     <string name="clean_up">Clean up</string>
@@ -59,7 +64,6 @@
     <!-- MainActivity, Main -->
     <string name="tap_tangem_card">Tap Tangem card with your smartphone</string>
     <string name="scan_banknote">Scan a banknote with your \n smartphone as shown above</string>
-    <string name="try_to_scan_again">Try to scan again</string>
 
     <string name="wallet">Wallet</string>
     <string name="last_unspent">Last unspent</string>
@@ -68,7 +72,7 @@
     <string name="erased_wallet">ERASED WALLET</string>
     <string name="invalid_card">INVALID CARD</string>
 
-    <string name="developer_kit">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;DEVELOPER&#160;&#160;&#160;&#160;&#160;KIT&#160;&#160;&#160;&#160;&#160;</string>
+    <string name="developer_kit_spaces">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;DEVELOPER&#160;&#160;&#160;&#160;&#160;KIT&#160;&#160;&#160;&#160;&#160;</string>
     <string name="banknote_banknote">&#160;&#160;BANKNOTE&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;BANKNOTE</string>
     <string name="reusable_reusable">&#160;&#160;&#160;REUSABLE&#160;&#160;&#160;&#160;&#160;&#160;&#160;REUSABLE&#160;&#160;&#160;</string>
 
@@ -78,7 +82,10 @@
     <string name="please_wait_while_previous">Please wait while previous transaction is confirmed in blockchain</string>
     <string name="please_wait_for_confirmation">Please wait for confirmation of incoming transaction!</string>
     <string name="card_hasn_t_remaining_signature">Card hasn\'t remaining signature!</string>
+    <string name="reusable_wallet">REUSABLE WALLET</string>
     <string name="banknote">BANKNOTE</string>
+    <string name="not_transferable_banknote">NON-TRANSFERABLE BANKNOTE</string>
+    <string name="developer_kit">DEVELOPER KIT</string>
     <string name="do_not_accept">DO NOT ACCEPT</string>
     <string name="explore_in_blockchain">EXPLORE IN \n BLOCKCHAIN \n ON WEB</string>
     <string name="unspents">Unspents</string>
@@ -89,6 +96,18 @@
     <string name="error">Error!</string>
     <string name="scan_again_to_verify_the_card">Scan again to verify the card</string>
     <string name="send">SEND</string>
+    <string name="if_you_forget">If you forget your new PIN you will lose your money forever!</string>
+    <string name="if_you_use_default">If you use default PIN someone can steal your money!</string>
+    <string name="cannot_obtain_data_from_blockchain">Cannot obtain data from blockchain</string>
+    <string name="sending_cached_transaction">Sending cached transaction…</string>
+    <string name="not_implemented">NOT IMPLEMENTED</string>
+    <string name="this_banknote_protected_default_PIN1_code">This banknote is protected by default PIN1 code</string>
+    <string name="this_banknote_protected_user_PIN1_code">This banknote is protected by user\'s PIN1 code</string>
+    <string name="this_banknote_protected_default_PIN2_code">This banknote is protected by default PIN2 code</string>
+    <string name="this_banknote_protected_user_PIN2_code">This banknote is protected by user\'s PIN2 code</string>
+    <string name="unlocked_banknote_only_development_use">Unlocked banknote, only for development use</string>
+    <string name="share_wallet_address_with">Share wallet address with:</string>
+    <string name="copied_clipboard">Copied to clipboard</string>
 
     <!-- LogoActivity -->
     <string name="beta">BETA</string>
@@ -118,6 +137,14 @@
 
     <!-- SendTransactionActivity -->
     <string name="please_wait">Please wait while the payment is sent…</string>
+
+    <!-- PurgeActivity -->
+    <string name="cannot_erase_wallet">Cannot erase wallet. Make sure you enter correct PIN2!</string>
+
+
+
+
+
 
 
     <!-- Strings related to Settings -->
