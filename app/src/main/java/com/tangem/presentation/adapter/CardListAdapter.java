@@ -305,7 +305,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
             }
 
             if (card.useDevelopersFirmware()) {
-                holder.tvType.setText(R.string.developer_kit);
+                holder.tvType.setText(R.string.developer_kit_spaces);
                 holder.tvTypeBg.setBackgroundColor(ContextCompat.getColor(mContext, R.color.fab));
                 holder.tvVoid.setVisibility(View.INVISIBLE);
             }
