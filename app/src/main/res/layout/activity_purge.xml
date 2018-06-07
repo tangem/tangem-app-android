@@ -14,7 +14,6 @@
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/textView6"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="@font/raleway_r"
@@ -32,15 +31,24 @@
             android:textAlignment="center"
             android:textColor="@color/black"
             android:textSize="@dimen/text_size_large"
-            tools:text="3748378347"/>
+            tools:text="CB02 0000 0002 5000"/>
 
         <TextView
-            android:id="@+id/textView7"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="@font/raleway_r"
             android:text="@string/to_erase_the_wallet"
             android:textAlignment="center"
+            android:textSize="@dimen/text_size_medium"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            android:fontFamily="@font/raleway_r"
+            android:text="@string/by_tapping_the_card"
+            android:textAlignment="center"
+            android:textColor="@android:color/holo_red_light"
             android:textSize="@dimen/text_size_medium"/>
 
     </LinearLayout>
