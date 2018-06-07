@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -29,10 +28,10 @@
             android:layout_marginBottom="10dp"
             android:layout_marginTop="10dp"
             android:fontFamily="@font/montserrat_light"
-            tools:text="24234234"
             android:textAlignment="center"
             android:textColor="@color/black"
-            android:textSize="@dimen/text_size_large"/>
+            android:textSize="@dimen/text_size_large"
+            tools:text="24234234"/>
 
         <TextView
             android:id="@+id/textView7"
@@ -45,13 +44,6 @@
 
     </LinearLayout>
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="16dp"
-        android:layout_alignParentBottom="true"
-        android:elevation="1dp"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+    <include layout="@layout/layout_progress_horizontal"/>
 
 </RelativeLayout>
