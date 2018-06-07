@@ -47,7 +47,6 @@
                 android:text="@string/prompt_pin"
                 android:textAlignment="center"
                 android:textSize="@dimen/text_size_medium"/>
-
         </LinearLayout>
 
 
