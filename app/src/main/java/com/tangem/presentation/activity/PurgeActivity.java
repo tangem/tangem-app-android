@@ -126,15 +126,15 @@ public class PurgeActivity extends AppCompatActivity implements NfcAdapter.Reade
 
         MainActivity.commonInit(getApplicationContext());
 
+        mCard = new TangemCard(getIntent().getStringExtra("UID"));
+        mCard.LoadFromBundle(getIntent().getExtras().getBundle("Card"));
+
         TextView tvCardID = findViewById(R.id.tvCardID);
         progressBar = findViewById(R.id.progressBar);
 
         tvCardID.setText(mCard.getCIDDescription());
         progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
         progressBar.setVisibility(View.INVISIBLE);
-
-        mCard = new TangemCard(getIntent().getStringExtra("UID"));
-        mCard.LoadFromBundle(getIntent().getExtras().getBundle("Card"));
     }
 
     @Override
