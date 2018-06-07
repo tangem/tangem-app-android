@@ -1,9 +1,5 @@
 <resources>
 
-    <dimen name="font_small">12dp</dimen>
-    <dimen name="font_normal">18dp</dimen>
-    <dimen name="font_large">24dp</dimen>
-
     <dimen name="height_thin_separator">0.8dp</dimen>
     <dimen name="margin_separator">4dp</dimen>
     <dimen name="margin_window">8dp</dimen>

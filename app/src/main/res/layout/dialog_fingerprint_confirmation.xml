@@ -19,7 +19,7 @@
         android:layout_margin="16dp"
         android:text="Touch fingerprint scanner to confirm"
         android:textAlignment="center"
-        android:textSize="@dimen/font_normal"/>
+        android:textSize="@dimen/text_size_medium"/>
 
     <ProgressBar
         android:id="@+id/login_progress"
