@@ -119,6 +119,7 @@
     <string name="to_erase_the_wallet">to erase the wallet</string>
     <string name="to_sign_the_payment">to sign the payment</string>
     <string name="to_change_pin_codes">to change PIN/PIN2 codes</string>
+    <string name="by_tapping_the_card">By tapping the card, you will permanently remove the blockchain wallet. Ensure there will be no further incoming transactions</string>
 
     <!-- PreparePaymentActivity -->
     <string name="send_payment">Send payment</string>
