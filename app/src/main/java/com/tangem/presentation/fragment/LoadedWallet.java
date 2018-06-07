@@ -544,6 +544,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     }
 
     public static class PINSwapWarningDialog extends DialogFragment {
+        public static final String TAG = PINSwapWarningDialog.class.getSimpleName();
 
         LoadedWallet activityFragment = null;
         String message;
@@ -553,21 +554,14 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
             return new AlertDialog.Builder(getActivity())
                     .setIcon(R.drawable.tangem_logo_small_new)
-                    .setTitle("Your money is at risk!")
+                    .setTitle(R.string.your_money_is_at_risk)
                     .setMessage(message)
                     .setCancelable(true)
-                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            PINSwapWarningDialog.this.dismiss();
-                        }
-                    })
-                    .setPositiveButton("Continue",
-                            new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int whichButton) {
-                                    if (activityFragment != null)
-                                        activityFragment.startSwapPINActivity();
-                                }
+                    .setNegativeButton(R.string.cancel, (dialog, which) -> PINSwapWarningDialog.this.dismiss())
+                    .setPositiveButton(R.string.contin,
+                            (dialog, whichButton) -> {
+                                if (activityFragment != null)
+                                    activityFragment.startSwapPINActivity();
                             }
                     )
                     .create();
@@ -650,7 +644,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         }
 
         try {
-            ivQR.setImageBitmap(generateQrCode(engine.getShareWalletURI(mCard).toString()));
+            ivQR.setImageBitmap(generateQrCode(Objects.requireNonNull(engine).getShareWalletURI(mCard).toString()));
         } catch (WriterException e) {
             e.printStackTrace();
         }
@@ -664,7 +658,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 }
                 CoinEngine engineClick = CoinEngineFactory.Create(mCard.getBlockchain());
 
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, engineClick.getShareWalletURIExplorer(mCard));
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Objects.requireNonNull(engineClick).getShareWalletURIExplorer(mCard));
                 startActivity(browserIntent);
             });
 
@@ -677,7 +671,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 }
                 CoinEngine engineClick = CoinEngineFactory.Create(mCard.getBlockchain());
 
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, engineClick.getShareWalletURIExplorer(mCard));
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Objects.requireNonNull(engineClick).getShareWalletURIExplorer(mCard));
                 startActivity(browserIntent);
             });
         }
@@ -686,7 +680,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             tvSend.setOnClickListener(v13 -> {
                 if (!mCard.hasBalanceInfo()) {
                     return;
-                } else if (!engine.IsBalanceNotZero(mCard)) {
+                } else if (!Objects.requireNonNull(engine).IsBalanceNotZero(mCard)) {
                     Toast.makeText(getContext(), R.string.wallet_empty, Toast.LENGTH_LONG).show();
                     return;
                 } else if (!engine.IsBalanceAlterNotZero(mCard)) {
@@ -710,9 +704,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             });
         }
 
-
         tvPurge.setOnClickListener(v16 -> showMenu(tvPurge));
-
 
         updateViews();
 
@@ -751,7 +743,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             case REQUEST_CODE_ENTER_NEW_PIN:
                 if (resultCode == Activity.RESULT_OK) {
                     if (data != null) {
-                        if (data.getExtras().containsKey("confirmPIN")) {
+                        if (Objects.requireNonNull(data.getExtras()).containsKey("confirmPIN")) {
                             Intent intent = new Intent(getContext(), RequestPINActivity.class);
                             intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
                             intent.putExtra("UID", mCard.getUID());
@@ -770,7 +762,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             case REQUEST_CODE_ENTER_NEW_PIN2:
                 if (resultCode == Activity.RESULT_OK) {
                     if (data != null) {
-                        if (data.getExtras().containsKey("confirmPIN2")) {
+                        if (Objects.requireNonNull(data.getExtras()).containsKey("confirmPIN2")) {
                             Intent intent = new Intent(getContext(), RequestPINActivity.class);
                             intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
                             intent.putExtra("UID", mCard.getUID());
@@ -788,21 +780,19 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 break;
             case REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN:
                 if (resultCode == Activity.RESULT_OK) {
-                    if (newPIN.equals("")) {
+                    if (newPIN.equals(""))
                         newPIN = mCard.getPIN();
-                    }
-                    if (newPIN2.equals("")) {
+
+                    if (newPIN2.equals(""))
                         newPIN2 = PINStorage.getPIN2();
-                    }
 
                     PINSwapWarningDialog dialog = (new PINSwapWarningDialog());
                     dialog.activityFragment = this;
-                    if (!PINStorage.isDefaultPIN(newPIN) || !PINStorage.isDefaultPIN2(newPIN2)) {
-                        dialog.message = "If you forget your new PIN you will lose your money forever!";
-                    } else {
-                        dialog.message = "If you use default PIN someone can steal your money!";
-                    }
-                    dialog.show(getActivity().getFragmentManager(), "PINSwapWarningDialog");
+                    if (!PINStorage.isDefaultPIN(newPIN) || !PINStorage.isDefaultPIN2(newPIN2))
+                        dialog.message = getString(R.string.if_you_forget);
+                    else
+                        dialog.message = getString(R.string.if_you_use_default);
+                    dialog.show(Objects.requireNonNull(getActivity()).getFragmentManager(), PINSwapWarningDialog.TAG);
                 }
                 break;
 
@@ -912,8 +902,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     }
 
     public void onRefresh() {
-        //Update
-        // Showing refresh animation before making http call
+        // update, showing refresh animation before making http call
         if (updateTasks.size() > 0) return;
 
         mSwipeRefreshLayout.setRefreshing(true);
@@ -1050,7 +1039,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     }
 
     public void ErrorOnUpdate(String message) {
-        mCard.setError("Cannot obtain data from blockchain");
+        mCard.setError(getString(R.string.cannot_obtain_data_from_blockchain));
         updateViews();
     }
 
@@ -1087,7 +1076,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                             new NoExtendedLengthSupportDialog().show(getActivity().getFragmentManager(), "NoExtendedLengthSupportDialog");
                         }
                     } else {
-                        Toast.makeText(getContext(), "Try to scan again", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), R.string.try_to_scan_again, Toast.LENGTH_LONG).show();
                     }
                     progressBar.setProgress(100);
                     progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
@@ -1251,7 +1240,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         if (!mCard.hasBalanceInfo()) {
             return;
         } else if (engine.IsBalanceNotZero(mCard)) {
-            Toast.makeText(getContext(), "Cannot erase wallet with non-zero balance", Toast.LENGTH_LONG).show();
+            Toast.makeText(getContext(), R.string.cannot_erase_wallet_with_non_zero_balance, Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -1285,7 +1274,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 tvMessage.setVisibility(View.GONE);
             } else {
                 if (needResendTX) {
-                    tvMessage.setText("Sending cached transaction...");
+                    tvMessage.setText(R.string.sending_cached_transaction);
                 } else {
                     tvMessage.setText(mCard.getMessage());
                 }
@@ -1307,7 +1296,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             } else {
                 String offlineAmount = engine.ConvertByteArrayToAmount(mCard, mCard.getOfflineBalance());
                 if (mCard.getBlockchain() == Blockchain.Token) {
-                    tvBalance.setText("NOT IMPLEMENTED");
+                    tvBalance.setText(R.string.not_implemented);
                 } else {
                     tvBalance.setText(engine.GetAmountDescription(mCard, offlineAmount));
                 }
@@ -1352,10 +1341,10 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
             if (mCard.useDefaultPIN1()) {
                 ivPIN.setImageResource(R.drawable.unlock_pin1);
-                ivPIN.setOnClickListener(v -> Toast.makeText(getContext(), "This banknote is protected by default PIN1 code", Toast.LENGTH_LONG).show());
+                ivPIN.setOnClickListener(v -> Toast.makeText(getContext(), R.string.this_banknote_protected_default_PIN1_code, Toast.LENGTH_LONG).show());
             } else {
                 ivPIN.setImageResource(R.drawable.lock_pin1);
-                ivPIN.setOnClickListener(v -> Toast.makeText(getContext(), "This banknote is protected by user's PIN1 code", Toast.LENGTH_LONG).show());
+                ivPIN.setOnClickListener(v -> Toast.makeText(getContext(), R.string.this_banknote_protected_user_PIN1_code, Toast.LENGTH_LONG).show());
             }
 
             if (mCard.getPauseBeforePIN2() > 0 && (mCard.useDefaultPIN2() || !mCard.useSmartSecurityDelay())) {
@@ -1364,56 +1353,35 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
             } else if (mCard.useDefaultPIN2()) {
                 ivPIN2orSecurityDelay.setImageResource(R.drawable.unlock_pin2);
-                ivPIN2orSecurityDelay.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(getContext(), "This banknote is protected by default PIN2 code", Toast.LENGTH_LONG).show();
-                    }
-                });
+                ivPIN2orSecurityDelay.setOnClickListener(v -> Toast.makeText(getContext(), R.string.this_banknote_protected_default_PIN2_code, Toast.LENGTH_LONG).show());
             } else {
                 ivPIN2orSecurityDelay.setImageResource(R.drawable.lock_pin2);
-                ivPIN2orSecurityDelay.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(getContext(), "This banknote is protected by user's PIN2 code", Toast.LENGTH_LONG).show();
-                    }
-                });
+                ivPIN2orSecurityDelay.setOnClickListener(v -> Toast.makeText(getContext(), R.string.this_banknote_protected_user_PIN2_code, Toast.LENGTH_LONG).show());
             }
-
 
             if (mCard.useDevelopersFirmware()) {
                 ivDeveloperVersion.setImageResource(R.drawable.ic_developer_version);
                 ivDeveloperVersion.setVisibility(View.VISIBLE);
-                ivDeveloperVersion.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(getContext(), "Unlocked banknote, only for development use", Toast.LENGTH_LONG).show();
-                    }
-                });
+                ivDeveloperVersion.setOnClickListener(v -> Toast.makeText(getContext(), R.string.unlocked_banknote_only_development_use, Toast.LENGTH_LONG).show());
             } else {
                 ivDeveloperVersion.setVisibility(View.INVISIBLE);
             }
 
-            if (tvSend != null) {
-                if (mCard.hasBalanceInfo()) {
+            if (tvSend != null)
+                if (mCard.hasBalanceInfo())
                     tvSend.setEnabled(true);
-                } else {
+                else
                     tvSend.setEnabled(false);
-                }
-            }
 
-            if (tvPurge != null) {
-                if (mCard.hasBalanceInfo()) {
+            if (tvPurge != null)
+                if (mCard.hasBalanceInfo())
                     tvPurge.setEnabled(true);
-                } else {
+                else
                     tvPurge.setEnabled(false);
-                }
-            }
 
             tvIssuer.setText(mCard.getIssuerDescription());
 
             timerHideErrorAndMessage = new Timer();
-
 
             timerHideErrorAndMessage.schedule(new TimerTask() {
                 @Override
@@ -1428,20 +1396,20 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             }, 5000);
 
             if (mCard.isReusable()) {
-                tvHeader.setText("REUSABLE WALLET");
+                tvHeader.setText(R.string.reusable_wallet);
                 tvCaution.setVisibility(View.GONE);
             } else {
                 if (mCard.getMaxSignatures() == mCard.getRemainingSignatures()) {
-                    tvHeader.setText("BANKNOTE");
+                    tvHeader.setText(R.string.banknote);
                     tvCaution.setVisibility(View.GONE);
                 } else {
-                    tvHeader.setText("NON-TRANSFERABLE BANKNOTE");
+                    tvHeader.setText(R.string.not_transferable_banknote);
                     tvCaution.setVisibility(View.VISIBLE);
                 }
             }
 
             if (mCard.useDevelopersFirmware()) {
-                tvHeader.setText("DEVELOPER KIT");
+                tvHeader.setText(R.string.developer_kit);
                 tvCaution.setVisibility(View.VISIBLE);
             }
 
@@ -1459,13 +1427,14 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             intent.putExtra(Intent.EXTRA_SUBJECT, "Wallet address");
             intent.putExtra(Intent.EXTRA_TEXT, txtShare);
 
-            PackageManager packageManager = getActivity().getPackageManager();
+            PackageManager packageManager = Objects.requireNonNull(getActivity()).getPackageManager();
             List activities = packageManager.queryIntentActivities(intent, PackageManager.MATCH_ALL);
             boolean isIntentSafe = activities.size() > 0;
 
             if (isIntentSafe) {
-                String title = "Share wallet address with:";
-                // Create intent to show chooser
+                String title = getString(R.string.share_wallet_address_with);
+
+                // create intent to show chooser
                 Intent chooser = Intent.createChooser(intent, title);
                 // Verify the intent will resolve to at least one activity
                 if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
@@ -1473,14 +1442,14 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 }
             } else {
                 ClipboardManager clipboard = (ClipboardManager) getActivity().getSystemService(CLIPBOARD_SERVICE);
-                clipboard.setPrimaryClip(ClipData.newPlainText(txtShare, txtShare));
-                Toast.makeText(getContext(), "Copied to clipboard", Toast.LENGTH_LONG).show();
+                Objects.requireNonNull(clipboard).setPrimaryClip(ClipData.newPlainText(txtShare, txtShare));
+                Toast.makeText(getContext(), R.string.copied_clipboard, Toast.LENGTH_LONG).show();
             }
         } else {
             String txtShare = mCard.getWallet();
-            ClipboardManager clipboard = (ClipboardManager) getActivity().getSystemService(CLIPBOARD_SERVICE);
-            clipboard.setPrimaryClip(ClipData.newPlainText(txtShare, txtShare));
-            Toast.makeText(getContext(), "Copied to clipboard", Toast.LENGTH_LONG).show();
+            ClipboardManager clipboard = (ClipboardManager) Objects.requireNonNull(getActivity()).getSystemService(CLIPBOARD_SERVICE);
+            Objects.requireNonNull(clipboard).setPrimaryClip(ClipData.newPlainText(txtShare, txtShare));
+            Toast.makeText(getContext(), R.string.copied_clipboard, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -1517,7 +1486,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     }
 
     private static Bitmap generateQrCode(String myCodeText) throws WriterException {
-        Hashtable<EncodeHintType, ErrorCorrectionLevel> hintMap = new Hashtable<EncodeHintType, ErrorCorrectionLevel>();
+        Hashtable<EncodeHintType, ErrorCorrectionLevel> hintMap = new Hashtable<>();
         hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H); // H = 30% damage
 
         QRCodeWriter qrCodeWriter = new QRCodeWriter();
