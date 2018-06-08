@@ -108,6 +108,8 @@
     <string name="unlocked_banknote_only_development_use">Unlocked banknote, only for development use</string>
     <string name="share_wallet_address_with">Share wallet address with:</string>
     <string name="copied_clipboard">Copied to clipboard</string>
+    <string name="extract">EXTRACT</string>
+    <string name="load">LOAD</string>
 
     <!-- LogoActivity -->
     <string name="beta">BETA</string>
