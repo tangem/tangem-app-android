@@ -405,7 +405,7 @@
         android:id="@+id/rlMessageAndError"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@id/rlCardIdAndIcons">
+        app:layout_constraintBottom_toTopOf="@+id/rlToolButtons">
 
         <TextView
             android:id="@+id/tvMessage"
@@ -438,13 +438,64 @@
 
     </RelativeLayout>
 
+    <LinearLayout
+        android:id="@+id/rlToolButtons"
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        app:layout_constraintBottom_toTopOf="@+id/rlCardIdAndIcons"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+
+        <TextView
+            android:id="@+id/tvLoad"
+            android:layout_width="120dp"
+            android:layout_height="36dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:background="@color/colorPrimary"
+            android:fontFamily="@font/raleway_r"
+            android:gravity="center_vertical"
+            android:text="@string/load"
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            android:textSize="@dimen/text_size_medium"/>
+
+        <TextView
+            android:id="@+id/tvPurge"
+            android:layout_width="40dp"
+            android:layout_height="36dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:background="@drawable/ic_show_menu"
+            android:backgroundTint="@color/colorPrimaryDark"
+            android:fontFamily="@font/raleway_r"
+            android:gravity="center_vertical"
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            android:textSize="@dimen/text_size_medium"/>
+
+        <TextView
+            android:id="@+id/tvSend"
+            android:layout_width="120dp"
+            android:layout_height="36dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:background="@color/colorPrimary"
+            android:fontFamily="@font/raleway_r"
+            android:gravity="center_vertical"
+            android:text="@string/extract"
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            android:textSize="@dimen/text_size_medium"/>
+
+    </LinearLayout>
+
     <RelativeLayout
         android:id="@+id/rlCardIdAndIcons"
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
-        app:layout_constraintBottom_toTopOf="@id/rlToolButtons">
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <ImageView
             android:id="@+id/imgPIN"
@@ -510,69 +561,23 @@
 
     </RelativeLayout>
 
-    <LinearLayout
-        android:id="@+id/rlToolButtons"
-        android:layout_width="0dp"
-        android:layout_height="40dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent">
-
-        <TextView
-            android:id="@+id/tvLoad"
-            android:layout_width="120dp"
-            android:layout_height="36dp"
-            android:layout_marginLeft="16dp"
-            android:layout_marginRight="16dp"
-            android:background="@color/colorPrimary"
-            android:fontFamily="@font/raleway_r"
-            android:gravity="center_vertical"
-            android:text="@string/load"
-            android:textAlignment="center"
-            android:textColor="@color/white"
-            android:textSize="@dimen/text_size_medium"/>
-
-        <TextView
-            android:id="@+id/tvPurge"
-            android:layout_width="40dp"
-            android:layout_height="36dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
-            android:background="@drawable/ic_show_menu"
-            android:backgroundTint="@color/colorPrimaryDark"
-            android:fontFamily="@font/raleway_r"
-            android:gravity="center_vertical"
-            android:textAlignment="center"
-            android:textColor="@color/white"
-            android:textSize="@dimen/text_size_medium"/>
-
-        <TextView
-            android:id="@+id/tvSend"
-            android:layout_width="120dp"
-            android:layout_height="36dp"
-            android:layout_marginLeft="16dp"
-            android:layout_marginRight="16dp"
-            android:background="@color/colorPrimary"
-            android:fontFamily="@font/raleway_r"
-            android:gravity="center_vertical"
-            android:text="@string/extract"
-            android:textAlignment="center"
-            android:textColor="@color/white"
-            android:textSize="@dimen/text_size_medium"/>
-
-    </LinearLayout>
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-        android:layout_width="0dp"
-        android:layout_height="16dp"
-        android:layout_marginBottom="36dp"
-        android:alpha="0.5"
-        android:elevation="1dp"
+    <include
         android:visibility="invisible"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"/>
+        layout="@layout/layout_progress_horizontal"/>
+
+    <!--<ProgressBar-->
+        <!--android:id="@+id/progressBar"-->
+        <!--style="@style/Widget.AppCompat.ProgressBar.Horizontal"-->
+        <!--android:layout_width="0dp"-->
+        <!--android:layout_height="16dp"-->
+        <!--android:layout_marginBottom="36dp"-->
+        <!--android:alpha="0.5"-->
+        <!--android:elevation="1dp"-->
+        <!--android:visibility="invisible"-->
+        <!--app:layout_constraintBottom_toBottomOf="parent"-->
+        <!--app:layout_constraintLeft_toLeftOf="parent"-->
+        <!--app:layout_constraintRight_toRightOf="parent"/>-->
+
+
 
 </android.support.constraint.ConstraintLayout>
