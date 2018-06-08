@@ -1122,6 +1122,19 @@ public class TangemCard {
         offlineBalance = null;
     }
 
+    private byte[] Denomination;
+
+    public void setDenomination(byte[] denomination) {
+        this.Denomination = denomination;
+    }
+
+    public byte[] getDenomination() {
+        return Denomination;
+    }
+
+    public void clearDenomination() {
+        Denomination = null;
+    }
     public void setError(String error) {
         this.error = error;
     }
@@ -1206,6 +1219,8 @@ public class TangemCard {
 
         if (getOfflineBalance() != null) B.putByteArray("OfflineBalance", getOfflineBalance());
 
+        if (getDenomination() != null) B.putByteArray("Denomination", getDenomination());
+
         if (getIssuerData() != null && getIssuerDataSignature() != null) {
             B.putByteArray("IssuerData", getIssuerData());
             B.putByteArray("IssuerDataSignature", getIssuerDataSignature());
@@ -1288,6 +1303,9 @@ public class TangemCard {
         if (B.containsKey("OfflineBalance")) setOfflineBalance(B.getByteArray("OfflineBalance"));
         else clearOfflineBalance();
 
+        if (B.containsKey("Denomination")) setDenomination(B.getByteArray("Denomination"));
+        else clearDenomination();
+
         if (B.containsKey("IssuerData"))
             setIssuerData(B.getByteArray("IssuerData"), B.getByteArray("IssuerDataSignature"));
         else setIssuerData(null, null);
@@ -1360,3 +1378,4 @@ public class TangemCard {
 
     public EncryptionMode encryptionMode = EncryptionMode.None;
 }
+
