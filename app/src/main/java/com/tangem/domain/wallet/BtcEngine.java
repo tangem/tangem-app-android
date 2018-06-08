@@ -319,8 +319,13 @@ public class BtcEngine extends CoinEngine {
     }
 
     public Uri getShareWalletURI(TangemCard mCard) {
-        return Uri.parse("bitcoin:" + mCard.getWallet());
+        if (mCard.getDenomination() != null) {
+            return Uri.parse("bitcoin:" + mCard.getWallet() + "?amount=" + BTCUtils.satoshiToBtc(mCard.getDenomination()));
+        } else {
+            return Uri.parse("bitcoin:" + mCard.getWallet());
+        }
     }
+
 
     public boolean CheckAmountValie(TangemCard mCard, String amountValue, String feeValue, Long minFeeInInternalUnits) {
         Long fee = null;
