@@ -15,9 +15,12 @@ import com.tangem.domain.wallet.UnspentOutputInfo;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -100,6 +103,20 @@ public final class BTCUtils {
         return new String(hexChars);
     }
 
+    public static String satoshiToBtc(byte[] satoshi)
+    {
+        satoshi = reverse(satoshi);
+
+        BigInteger num = new BigInteger(1, satoshi);
+        BigDecimal dec = new BigDecimal(num);
+        dec = dec.setScale(8, RoundingMode.DOWN);
+        dec = dec.divide(new BigDecimal("100000000"));
+
+        String pattern = "#0.00000000";
+        DecimalFormat myFormatter = new DecimalFormat(pattern);
+        String output = myFormatter.format(dec);
+        return output;
+    }
 
     public static byte[] buildTXForSign(String myAddress, String outputAddress, String changeAddress, ArrayList<UnspentOutputInfo> unspentOutputs, int currentInputPos, long amount, long change) throws BitcoinException, IOException {
         byte[] myScript = Transaction.Script.buildOutput(myAddress).bytes;
@@ -491,3 +508,4 @@ public final class BTCUtils {
 
     }
 }
+
