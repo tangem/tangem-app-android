@@ -510,7 +510,7 @@
 
     </RelativeLayout>
 
-    <RelativeLayout
+    <LinearLayout
         android:id="@+id/rlToolButtons"
         android:layout_width="0dp"
         android:layout_height="40dp"
@@ -519,16 +519,15 @@
         app:layout_constraintRight_toRightOf="parent">
 
         <TextView
-            android:id="@+id/tvSend"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="false"
-            android:layout_toStartOf="@+id/tvPurge"
+            android:id="@+id/tvLoad"
+            android:layout_width="120dp"
+            android:layout_height="36dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
             android:background="@color/colorPrimary"
             android:fontFamily="@font/raleway_r"
-            android:padding="8dp"
-            android:text="@string/send"
+            android:gravity="center_vertical"
+            android:text="@string/load"
             android:textAlignment="center"
             android:textColor="@color/white"
             android:textSize="@dimen/text_size_medium"/>
@@ -536,18 +535,32 @@
         <TextView
             android:id="@+id/tvPurge"
             android:layout_width="40dp"
-            android:layout_height="match_parent"
-            android:layout_alignParentEnd="true"
-            android:layout_marginStart="1dp"
+            android:layout_height="36dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
             android:background="@drawable/ic_show_menu"
             android:backgroundTint="@color/colorPrimaryDark"
             android:fontFamily="@font/raleway_r"
-            android:padding="8dp"
+            android:gravity="center_vertical"
             android:textAlignment="center"
             android:textColor="@color/white"
             android:textSize="@dimen/text_size_medium"/>
 
-    </RelativeLayout>
+        <TextView
+            android:id="@+id/tvSend"
+            android:layout_width="120dp"
+            android:layout_height="36dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:background="@color/colorPrimary"
+            android:fontFamily="@font/raleway_r"
+            android:gravity="center_vertical"
+            android:text="@string/extract"
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            android:textSize="@dimen/text_size_medium"/>
+
+    </LinearLayout>
 
     <ProgressBar
         android:id="@+id/progressBar"
