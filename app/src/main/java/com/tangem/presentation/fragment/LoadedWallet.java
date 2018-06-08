@@ -85,6 +85,7 @@ import java.util.TimerTask;
 import static android.content.Context.CLIPBOARD_SERVICE;
 
 public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefreshListener, NfcAdapter.ReaderCallback, CardProtocol.Notifications {
+    public static final String TAG = LoadedWallet.class.getSimpleName();
 
     private static final int REQUEST_CODE_SEND_PAYMENT = 1;
     private static final int REQUEST_CODE_PURGE = 2;
@@ -1372,11 +1373,11 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 else
                     tvSend.setEnabled(false);
 
-            if (tvPurge != null)
-                if (mCard.hasBalanceInfo())
-                    tvPurge.setEnabled(true);
-                else
-                    tvPurge.setEnabled(false);
+//            if (tvPurge != null)
+//                if (mCard.hasBalanceInfo())
+//                    tvPurge.setEnabled(true);
+//                else
+//                    tvPurge.setEnabled(false);
 
             tvIssuer.setText(mCard.getIssuerDescription());
 
