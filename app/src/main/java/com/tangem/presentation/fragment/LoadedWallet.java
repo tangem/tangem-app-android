@@ -96,7 +96,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     private static final int REQUEST_CODE_SWAP_PIN = 8;
 
     private TangemCard mCard;
-    private TextView tvCardID, tvBalance, tvOffline, tvBalanceEquivalent, tvWallet, tvInputs, lbInputs, tvOutputs, tvSend, tvPurge, tvError, tvMessage, tvIssuer, tvIssuerData, tvBlockchain, tvLastInput, tvLastOutput, lbLastOutput, tvValidationNode;
+    private TextView tvCardID, tvBalance, tvOffline, tvBalanceEquivalent, tvWallet, tvInputs, lbInputs, tvOutputs, tvLoad, tvSend, tvPurge, tvError, tvMessage, tvIssuer, tvIssuerData, tvBlockchain, tvLastInput, tvLastOutput, lbLastOutput, tvValidationNode;
     private TextView tvHeader, tvCaution;
     private ImageView imgLookup;
     private TextView tvLookup;
@@ -594,6 +594,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         tvIssuerData = v.findViewById(R.id.tvIssuerData);
         tvHeader = v.findViewById(R.id.tvHeader);
         tvCaution = v.findViewById(R.id.tvCaution);
+        tvLoad = v.findViewById(R.id.tvLoad);
         tvSend = v.findViewById(R.id.tvSend);
         imgLookup = v.findViewById(R.id.imgLookup);
         tvValidationNode = v.findViewById(R.id.tvValidationNode);
@@ -618,10 +619,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         }
 
         tvBalanceEquivalent = v.findViewById(R.id.tvBalanceEquivalent);
-
-
-        tvWallet.setOnClickListener(v12 -> doShareWallet(false));
-
 
         final CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
 
@@ -648,8 +645,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         } catch (WriterException e) {
             e.printStackTrace();
         }
-        ivQR.setOnClickListener(v1 -> doShareWallet(true));
-
 
         if (imgLookup != null) {
             imgLookup.setOnClickListener(v15 -> {
@@ -704,14 +699,18 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             });
         }
 
-        tvPurge.setOnClickListener(v16 -> showMenu(tvPurge));
-
         updateViews();
 
         if (!mCard.hasBalanceInfo()) {
             mSwipeRefreshLayout.setRefreshing(true);
             mSwipeRefreshLayout.postDelayed(this::onRefresh, 1000);
         }
+
+        tvWallet.setOnClickListener(v12 -> doShareWallet(false));
+        ivQR.setOnClickListener(v1 -> doShareWallet(true));
+        tvLoad.setOnClickListener(v1 -> doShareWallet(true));
+        tvPurge.setOnClickListener(v16 -> showMenu(tvPurge));
+
         return v;
     }
 
