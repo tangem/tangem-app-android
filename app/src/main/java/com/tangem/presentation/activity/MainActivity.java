@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.nfc.NfcAdapter;
+import android.nfc.Tag;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -113,13 +114,13 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
             hideCleanButton();
 
         // NFC
-//        Intent intent = getIntent();
-//        if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()) || NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction()))) {
-//            Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-//            if (tag != null && onNFCReaderCallback != null) {
-//                onNFCReaderCallback.onTagDiscovered(tag);
-//            }
-//        }
+        Intent intent = getIntent();
+        if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()) || NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction()))) {
+            Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+            if (tag != null && onNFCReaderCallback != null) {
+                onNFCReaderCallback.onTagDiscovered(tag);
+            }
+        }
 
         // check if device root
         RootBeer rootBeer = new RootBeer(this);
@@ -127,16 +128,16 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
             new RootFoundDialog().show(getFragmentManager(), RootFoundDialog.TAG);
     }
 
-//    @Override
-//    protected void onNewIntent(Intent intent) {
-//        super.onNewIntent(intent);
-//        if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()) || NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction()))) {
-//            Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-//            if (tag != null && onNFCReaderCallback != null) {
-//                onNFCReaderCallback.onTagDiscovered(tag);
-//            }
-//        }
-//    }
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()) || NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction()))) {
+            Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+            if (tag != null && onNFCReaderCallback != null) {
+                onNFCReaderCallback.onTagDiscovered(tag);
+            }
+        }
+    }
 
     @Override
     public boolean onKeyDown(int keycode, KeyEvent e) {
