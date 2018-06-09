@@ -41,17 +41,15 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
         <activity
             android:name="com.tangem.presentation.activity.MainActivity"
-
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.nfc.action.NDEF_DISCOVERED"/>
-
                 <category android:name="android.intent.category.DEFAULT"/>
-
                 <data
                     android:host="www.tangem.com"
                     android:scheme="http"/>
@@ -64,75 +62,73 @@
                 android:name="android.nfc.action.TECH_DISCOVERED"
                 android:resource="@xml/nfc_tech_filter"/>
         </activity>
+
         <activity
             android:name="com.tangem.presentation.activity.RequestPINActivity"
-
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"/>
+
         <activity
             android:name="com.tangem.presentation.activity.EmptyWalletActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"/>
-        <activity
-            android:name="com.tangem.presentation.activity.SelectBlockchainActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar"/>
+
         <activity
             android:name="com.tangem.presentation.activity.SavePINActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"/>
-        <activity
-            android:name="com.tangem.presentation.activity.CardInfoActivity"
-            android:label="@string/title_activity_card_info"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar"/>
+
         <activity
             android:name="com.tangem.presentation.activity.LoadedWalletActivity"
             android:label="@string/title_activity_loaded_wallet"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"/>
+
         <activity
             android:name="com.tangem.presentation.activity.VerifyCardActivity"
             android:label="@string/title_activity_loaded_wallet"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"/>
+
         <activity
             android:name="com.tangem.presentation.activity.CreateNewWalletActivity"
-
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"/>
+
         <activity
             android:name="com.tangem.presentation.activity.PreparePaymentActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"/>
+
         <activity
             android:name="com.tangem.presentation.activity.ConfirmPaymentActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"/>
+
         <activity
             android:name="com.tangem.presentation.activity.SignPaymentActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"/>
+
         <activity
             android:name="com.tangem.presentation.activity.PurgeActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"/>
+
         <activity
             android:name="com.tangem.presentation.activity.SwapPINActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"/>
+
         <activity
             android:name="com.tangem.presentation.activity.QRScanActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"/>
+
         <activity
             android:name="com.tangem.presentation.activity.SendTransactionActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"/>
-        <activity
-            android:name="com.tangem.presentation.activity.SettingsFeatureActivity"
-            android:label="@string/title_activity_settings_feature">
-        </activity>
 
     </application>
 
