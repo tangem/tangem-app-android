@@ -1,5 +1,6 @@
 package com.tangem.presentation.activity;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.nfc.NfcAdapter;
@@ -11,7 +12,6 @@ import android.text.Html;
 import android.text.Spanned;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -21,26 +21,25 @@ import com.tangem.domain.cardReader.NfcManager;
 import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.CoinEngineFactory;
-import com.tangem.util.FormatUtil;
 import com.tangem.domain.wallet.TangemCard;
+import com.tangem.util.FormatUtil;
 import com.tangem.wallet.R;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class PreparePaymentActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback {
 
     private static final int REQUEST_CODE_SCAN_QR = 1;
     private static final int REQUEST_CODE_SEND_PAYMENT = 2;
-    private Button btnVerify;
     private EditText etWallet;
     private EditText etAmount;
-    private TextView tvCurrency;
-    private TextView tvCardId, tvBalance, tvBalanceEquivalent, tvAmountEquivalent;
-    private ImageView ivCamera;
+    private TextView tvAmountEquivalent;
     boolean use_mCurrency;
     private TangemCard mCard;
     private NfcManager mNfcManager;
 
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,14 +52,14 @@ public class PreparePaymentActivity extends AppCompatActivity implements NfcAdap
         mCard = new TangemCard(getIntent().getStringExtra("UID"));
         mCard.LoadFromBundle(getIntent().getExtras().getBundle("Card"));
 
-        btnVerify = findViewById(R.id.btnVerify);
+        Button btnVerify = findViewById(R.id.btnVerify);
         etWallet = findViewById(R.id.etWallet);
         etAmount = findViewById(R.id.etAmount);
-        ivCamera = findViewById(R.id.ivCamera);
-        tvCurrency = findViewById(R.id.tvCurrency);
-        tvCardId = findViewById(R.id.tvCardID);
-        tvBalance = findViewById(R.id.tvBalance);
-        tvBalanceEquivalent = findViewById(R.id.tvBalanceEquivalent);
+        ImageView ivCamera = findViewById(R.id.ivCamera);
+        TextView tvCurrency = findViewById(R.id.tvCurrency);
+        TextView tvCardId = findViewById(R.id.tvCardID);
+        TextView tvBalance = findViewById(R.id.tvBalance);
+        TextView tvBalanceEquivalent = findViewById(R.id.tvBalanceEquivalent);
         tvAmountEquivalent = findViewById(R.id.tvAmountEquivalent);
 
         tvCardId.setText(mCard.getCIDDescription());
@@ -135,49 +134,60 @@ public class PreparePaymentActivity extends AppCompatActivity implements NfcAdap
             etAmount.setText(engine.GetBalanceValue(mCard));
         }
 
-        btnVerify.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String strAmount;
-                strAmount = etAmount.getText().toString();
-                CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
-                try {
-                    if (!engine.CheckAmount(mCard, etAmount.getText().toString())) {
-                        etAmount.setError("Not enough funds on your card");
-                    }
-                } catch (Exception e) {
-                    etAmount.setError("Unknown amount format");
-                    return;
+        btnVerify.setOnClickListener(v -> {
+            String strAmount;
+            strAmount = etAmount.getText().toString();
+            CoinEngine engine1 = CoinEngineFactory.Create(mCard.getBlockchain());
+            try {
+                if (!Objects.requireNonNull(engine1).CheckAmount(mCard, etAmount.getText().toString())) {
+                    etAmount.setError(getString(R.string.not_enough_funds_on_your_card));
                 }
-
-                boolean checkAddress = engine.ValdateAddress(etWallet.getText().toString(), mCard);
-                if (!checkAddress) {
-                    etWallet.setError("Incorrect destination wallet address");
-                    return;
-                }
-
-                if (etWallet.getText().toString().equals(mCard.getWallet())) {
-                    etWallet.setError("Destination wallet address equal source address");
-                    return;
-                }
-
-                Intent intent = new Intent(getBaseContext(), ConfirmPaymentActivity.class);
-                intent.putExtra("UID", mCard.getUID());
-                intent.putExtra("Card", mCard.getAsBundle());
-                intent.putExtra("Wallet", etWallet.getText().toString());
-                intent.putExtra("Amount", strAmount);
-                startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT);
+            } catch (Exception e) {
+                etAmount.setError(getString(R.string.unknown_amount_format));
+                return;
             }
+
+            boolean checkAddress = engine1.ValdateAddress(etWallet.getText().toString(), mCard);
+            if (!checkAddress) {
+                etWallet.setError(getString(R.string.incorrect_destination_wallet_address));
+                return;
+            }
+
+            if (etWallet.getText().toString().equals(mCard.getWallet())) {
+                etWallet.setError(getString(R.string.destination_wallet_address_equal_source_address));
+                return;
+            }
+
+            Intent intent = new Intent(getBaseContext(), ConfirmPaymentActivity.class);
+            intent.putExtra("UID", mCard.getUID());
+            intent.putExtra("Card", mCard.getAsBundle());
+            intent.putExtra("Wallet", etWallet.getText().toString());
+            intent.putExtra("Amount", strAmount);
+            startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT);
         });
 
-        ivCamera.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getBaseContext(), QRScanActivity.class);
-                startActivityForResult(intent, REQUEST_CODE_SCAN_QR);
-            }
+        ivCamera.setOnClickListener(v -> {
+            Intent intent = new Intent(getBaseContext(), QRScanActivity.class);
+            startActivityForResult(intent, REQUEST_CODE_SCAN_QR);
         });
+    }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        mNfcManager.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mNfcManager.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        mNfcManager.onStop();
     }
 
     @Override
@@ -207,21 +217,4 @@ public class PreparePaymentActivity extends AppCompatActivity implements NfcAdap
         }
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        mNfcManager.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        mNfcManager.onPause();
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        mNfcManager.onStop();
-    }
 }
