@@ -25,100 +25,20 @@ import com.tangem.wallet.R;
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog;
 
 public class CreateNewWalletActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback, CardProtocol.Notifications {
+    public static final String TAG = CreateNewWalletActivity.class.getSimpleName();
 
     public static final int RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER;
     private TangemCard mCard;
-    private TextView tvCardID;
     private NfcManager mNfcManager;
-    private static final String logTag = "CreateNewActivity";
+
     private ProgressBar progressBar;
     private CreateNewWalletTask createNewWalletTask;
     private boolean lastReadSuccess = true;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_create_new_wallet);
-
-        MainActivity.commonInit(getApplicationContext());
-        mCard = new TangemCard(getIntent().getStringExtra("UID"));
-        mCard.LoadFromBundle(getIntent().getExtras().getBundle("Card"));
-
-        tvCardID = findViewById(R.id.tvCardID);
-        tvCardID.setText(mCard.getCIDDescription());
-
-        mNfcManager = new NfcManager(this, this);
-
-        progressBar = findViewById(R.id.progressBar);
-        progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
-        progressBar.setVisibility(View.INVISIBLE);
-    }
-
-    @Override
-    public void onTagDiscovered(Tag tag) {
-        try {
-            // get IsoDep handle and run cardReader thread
-            final IsoDep isoDep = IsoDep.get(tag);
-            if (isoDep == null) {
-                throw new CardProtocol.TangemException(getString(R.string.wrong_tag_err));
-            }
-            byte UID[] = tag.getId();
-            String sUID = Util.byteArrayToHexString(UID);
-            Log.v(logTag, "UID: " + sUID);
-
-            if (sUID.equals(mCard.getUID())) {
-                if (lastReadSuccess) {
-                    isoDep.setTimeout(mCard.getPauseBeforePIN2() + 5000);
-                } else {
-                    isoDep.setTimeout(mCard.getPauseBeforePIN2() + 65000);
-                }
-                createNewWalletTask = new CreateNewWalletTask(isoDep, this);
-                createNewWalletTask.start();
-            } else {
-                Log.d(logTag, "Mismatch card UID (" + sUID + " instead of " + mCard.getUID() + ")");
-                mNfcManager.ignoreTag(isoDep.getTag());
-                return;
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        mNfcManager.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        mNfcManager.onPause();
-        if (createNewWalletTask != null) {
-            createNewWalletTask.cancel(true);
-        }
-        super.onPause();
-    }
-
-    @Override
-    public void onStop() {
-        // dismiss enable NFC dialog
-        mNfcManager.onStop();
-        if (createNewWalletTask != null) {
-            createNewWalletTask.cancel(true);
-        }
-        super.onStop();
-    }
-
-//    @Override
-//    public Dialog CreateNFCDialog(int id, AlertDialogWrapper.Builder builder, LayoutInflater li) {
-//        return mNfcManager.ShowNFCEnableDialog(); //onCreateDialog(id, builder, li);
-//    }
-
     private class CreateNewWalletTask extends Thread {
 
-        IsoDep mIsoDep;
-        CardProtocol.Notifications mNotifications;
+        private IsoDep mIsoDep;
+        private CardProtocol.Notifications mNotifications;
         private boolean isCancelled = false;
 
         public CreateNewWalletTask(IsoDep isoDep, CardProtocol.Notifications notifications) {
@@ -198,13 +118,85 @@ public class CreateNewWalletActivity extends AppCompatActivity implements NfcAda
 
     }
 
-    public void OnReadStart(CardProtocol cardProtocol) {
-        progressBar.post(new Runnable() {
-            @Override
-            public void run() {
-                progressBar.setVisibility(View.VISIBLE);
-                progressBar.setProgress(5);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_create_new_wallet);
+
+        MainActivity.commonInit(getApplicationContext());
+        mCard = new TangemCard(getIntent().getStringExtra("UID"));
+        mCard.LoadFromBundle(getIntent().getExtras().getBundle("Card"));
+
+        TextView tvCardID = findViewById(R.id.tvCardID);
+        tvCardID.setText(mCard.getCIDDescription());
+
+        mNfcManager = new NfcManager(this, this);
+
+        progressBar = findViewById(R.id.progressBar);
+        progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
+        progressBar.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void onTagDiscovered(Tag tag) {
+        try {
+            // get IsoDep handle and run cardReader thread
+            final IsoDep isoDep = IsoDep.get(tag);
+            if (isoDep == null) {
+                throw new CardProtocol.TangemException(getString(R.string.wrong_tag_err));
             }
+            byte UID[] = tag.getId();
+            String sUID = Util.byteArrayToHexString(UID);
+            Log.v(TAG, "UID: " + sUID);
+
+            if (sUID.equals(mCard.getUID())) {
+                if (lastReadSuccess) {
+                    isoDep.setTimeout(mCard.getPauseBeforePIN2() + 5000);
+                } else {
+                    isoDep.setTimeout(mCard.getPauseBeforePIN2() + 65000);
+                }
+                createNewWalletTask = new CreateNewWalletTask(isoDep, this);
+                createNewWalletTask.start();
+            } else {
+                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + mCard.getUID() + ")");
+                mNfcManager.ignoreTag(isoDep.getTag());
+                return;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mNfcManager.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        mNfcManager.onPause();
+        if (createNewWalletTask != null) {
+            createNewWalletTask.cancel(true);
+        }
+        super.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        // dismiss enable NFC dialog
+        mNfcManager.onStop();
+        if (createNewWalletTask != null) {
+            createNewWalletTask.cancel(true);
+        }
+        super.onStop();
+    }
+
+    public void OnReadStart(CardProtocol cardProtocol) {
+        progressBar.post(() -> {
+            progressBar.setVisibility(View.VISIBLE);
+            progressBar.setProgress(5);
         });
     }
 
@@ -214,104 +206,80 @@ public class CreateNewWalletActivity extends AppCompatActivity implements NfcAda
 
         if (cardProtocol != null) {
             if (cardProtocol.getError() == null) {
-                progressBar.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        progressBar.setProgress(100);
-                        progressBar.setProgressTintList(ColorStateList.valueOf(Color.GREEN));
-                        Intent intent = new Intent();
-                        intent.putExtra("UID", cardProtocol.getCard().getUID());
-                        intent.putExtra("Card", cardProtocol.getCard().getAsBundle());
-                        setResult(Activity.RESULT_OK, intent);
-                        finish();
-                    }
+                progressBar.post(() -> {
+                    progressBar.setProgress(100);
+                    progressBar.setProgressTintList(ColorStateList.valueOf(Color.GREEN));
+                    Intent intent = new Intent();
+                    intent.putExtra("UID", cardProtocol.getCard().getUID());
+                    intent.putExtra("Card", cardProtocol.getCard().getAsBundle());
+                    setResult(Activity.RESULT_OK, intent);
+                    finish();
                 });
             } else {
                 lastReadSuccess = false;
                 if (cardProtocol.getError() instanceof CardProtocol.TangemException_InvalidPIN) {
-                    progressBar.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            progressBar.setProgress(100);
-                            progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
-                        }
+                    progressBar.post(() -> {
+                        progressBar.setProgress(100);
+                        progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
                     });
-                    progressBar.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                progressBar.setProgress(0);
-                                progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
-                                progressBar.setVisibility(View.INVISIBLE);
-                                Intent intent = new Intent();
-                                intent.putExtra("message", "Cannot create wallet. Make sure you enter correct PIN2!");
-                                intent.putExtra("UID", cardProtocol.getCard().getUID());
-                                intent.putExtra("Card", cardProtocol.getCard().getAsBundle());
-                                setResult(RESULT_INVALID_PIN, intent);
-                                finish();
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
+                    progressBar.postDelayed(() -> {
+                        try {
+                            progressBar.setProgress(0);
+                            progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
+                            progressBar.setVisibility(View.INVISIBLE);
+                            Intent intent = new Intent();
+                            intent.putExtra("message", "Cannot create wallet. Make sure you enter correct PIN2!");
+                            intent.putExtra("UID", cardProtocol.getCard().getUID());
+                            intent.putExtra("Card", cardProtocol.getCard().getAsBundle());
+                            setResult(RESULT_INVALID_PIN, intent);
+                            finish();
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
                     }, 500);
                     return;
                 } else {
-                    progressBar.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (cardProtocol.getError() instanceof CardProtocol.TangemException_ExtendedLengthNotSupported) {
-                                if (!NoExtendedLengthSupportDialog.allreadyShowed) {
-                                    new NoExtendedLengthSupportDialog().show(getFragmentManager(), "NoExtendedLengthSupportDialog");
-                                }
-                            } else {
-                                Toast.makeText(getBaseContext(), "Try to scan again", Toast.LENGTH_LONG).show();
+                    progressBar.post(() -> {
+                        if (cardProtocol.getError() instanceof CardProtocol.TangemException_ExtendedLengthNotSupported) {
+                            if (!NoExtendedLengthSupportDialog.allreadyShowed) {
+                                new NoExtendedLengthSupportDialog().show(getFragmentManager(), NoExtendedLengthSupportDialog.TAG);
                             }
-                            progressBar.setProgress(100);
-                            progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
+                        } else {
+                            Toast.makeText(getBaseContext(), R.string.try_to_scan_again, Toast.LENGTH_LONG).show();
                         }
+                        progressBar.setProgress(100);
+                        progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
                     });
-
                 }
             }
         }
 
-        progressBar.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    progressBar.setProgress(0);
-                    progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
-                    progressBar.setVisibility(View.INVISIBLE);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        progressBar.postDelayed(() -> {
+            try {
+                progressBar.setProgress(0);
+                progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
+                progressBar.setVisibility(View.INVISIBLE);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }, 500);
     }
 
     public void OnReadProgress(CardProtocol protocol, final int progress) {
-        progressBar.post(new Runnable() {
-            @Override
-            public void run() {
-                progressBar.setProgress(progress);
-            }
-        });
+        progressBar.post(() -> progressBar.setProgress(progress));
     }
 
     public void OnReadCancel() {
 
         createNewWalletTask = null;
 
-        progressBar.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    progressBar.setProgress(0);
-                    progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
-                    progressBar.setVisibility(View.INVISIBLE);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        progressBar.postDelayed(() -> {
+            try {
+                progressBar.setProgress(0);
+                progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
+                progressBar.setVisibility(View.INVISIBLE);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }, 500);
     }
@@ -330,5 +298,5 @@ public class CreateNewWalletActivity extends AppCompatActivity implements NfcAda
     public void OnReadAfterRequest() {
         WaitSecurityDelayDialog.onReadAfterRequest(this);
     }
-}
 
+}
