@@ -709,7 +709,12 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
         tvWallet.setOnClickListener(v12 -> doShareWallet(false));
         ivQR.setOnClickListener(v1 -> doShareWallet(true));
-        tvLoad.setOnClickListener(v1 -> doShareWallet(true));
+        tvLoad.setOnClickListener(v1 -> {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Objects.requireNonNull(CoinEngineFactory.Create(mCard.getBlockchain())).getShareWalletURI(mCard));
+                    intent.addCategory(Intent.CATEGORY_DEFAULT);
+                    startActivity(intent);
+                }
+        );
         tvPurge.setOnClickListener(v16 -> showMenu(tvPurge));
 
         return v;
