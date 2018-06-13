@@ -14,7 +14,7 @@
         android:fontFamily="@font/raleway_r"
         android:paddingBottom="4dp"
         android:paddingTop="8dp"
-        android:text="Send payment"
+        android:text="@string/send_payment"
         android:textAlignment="center"
         android:textColor="@color/primary"
         android:textSize="@dimen/text_size_large"
@@ -38,9 +38,9 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="7dp"
+            android:layout_marginStart="7dp"
             android:fontFamily="@font/raleway_r"
-            android:text="From banknote"
+            android:text="@string/from_banknote"
             android:textColor="@color/primary"
             android:textSize="@dimen/text_size_medium"/>
 
@@ -48,74 +48,75 @@
             android:id="@+id/tvCardID"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
+            android:layout_marginStart="16dp"
             android:layout_marginTop="4dp"
             android:fontFamily="@font/montserrat_light"
-            android:text="    "
             android:textColor="@color/black"
             android:textSize="@dimen/text_size_medium"
-            android:textStyle="bold"/>
+            android:textStyle="bold"
+            tools:text="3434 7474 7474 8484"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="7dp"
+            android:layout_marginStart="7dp"
             android:layout_marginTop="6dp"
             android:fontFamily="@font/raleway_r"
-            android:text="with balance"
+            android:text="@string/with_balance"
             android:textColor="@color/primary"
             android:textSize="@dimen/text_size_medium"/>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
+            android:layout_marginStart="16dp"
             android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/tvBalance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="16dp"
+                android:layout_marginStart="16dp"
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/montserrat_light"
-                android:text="    "
                 android:textColor="@color/black"
                 android:textSize="@dimen/text_size_medium"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                tools:text="0.844"/>
 
             <TextView
                 android:id="@+id/tvBalanceEquivalent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/montserrat_light"
-                android:text="   "
                 android:textColor="@android:color/darker_gray"
-                android:textSize="14dp"/>
+                android:textSize="@dimen/text_size_1_small"
+                tools:text="343"/>
+
         </LinearLayout>
 
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-
             android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/textView2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="7dp"
+                android:layout_marginStart="7dp"
                 android:layout_marginTop="8dp"
                 android:fontFamily="@font/raleway_r"
-                android:text="Send to wallet"
+                android:text="@string/send_to_wallet"
                 android:textColor="@color/primary"
                 android:textSize="@dimen/text_size_medium"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toTopOf="parent"/>
+
         </android.support.constraint.ConstraintLayout>
 
         <EditText
@@ -126,11 +127,11 @@
             android:layout_marginRight="8dp"
             android:enabled="false"
             android:fontFamily="@font/montserrat_light"
-            android:hint="target wallet address"
+            android:hint="@string/target_wallet_address"
             android:inputType="text"
             android:padding="12dp"
             android:textColor="@color/black"
-            android:textSize="14dp"
+            android:textSize="@dimen/text_size_1_small"
             android:textStyle="bold"/>
 
         <android.support.constraint.ConstraintLayout
@@ -141,10 +142,10 @@
                 android:id="@+id/textView3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="7dp"
+                android:layout_marginStart="7dp"
                 android:layout_marginTop="16dp"
                 android:fontFamily="@font/raleway_r"
-                android:text="Amount"
+                android:text="@string/amount"
                 android:textColor="@color/primary"
                 android:textSize="@dimen/text_size_medium"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -156,9 +157,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="1dp"
-                android:layout_marginLeft="4dp"
+                android:layout_marginStart="4dp"
                 android:fontFamily="@font/raleway_r"
-                android:text="(including fee)"
+                android:text="@string/including_fee"
                 android:textColor="@color/primary"
                 android:textSize="14sp"
                 app:layout_constraintBottom_toBottomOf="@+id/textView3"
@@ -169,18 +170,17 @@
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp">
+            android:layout_marginStart="16dp">
 
             <EditText
                 android:id="@+id/etAmount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
-                android:layout_marginLeft="16dp"
-                android:editable="false"
+                android:layout_marginStart="16dp"
                 android:enabled="false"
                 android:fontFamily="@font/montserrat_light"
-                android:hint="payment amount"
+                android:hint="@string/payment_amount"
                 android:inputType="numberDecimal"
                 android:padding="12dp"
                 android:textColor="@color/black"
@@ -201,8 +201,8 @@
                 android:layout_marginEnd="8dp"
                 android:layout_marginTop="12dp"
                 android:fontFamily="@font/montserrat_light"
-                android:text="mBTC"
-                android:textSize="24dp"
+                android:text="@string/m_btc"
+                android:textSize="@dimen/text_size_large"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/tvAmountEquivalent"
                 app:layout_constraintTop_toTopOf="parent"/>
@@ -214,12 +214,12 @@
                 android:layout_marginEnd="12dp"
                 android:layout_marginTop="12dp"
                 android:fontFamily="@font/montserrat_light"
-                android:text="   "
                 android:textColor="@android:color/darker_gray"
-                android:textSize="14dp"
+                android:textSize="@dimen/text_size_1_small"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"/>
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="0000"/>
 
         </android.support.constraint.ConstraintLayout>
 
@@ -242,63 +242,28 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="4dp"
-                android:layout_marginLeft="7dp"
+                android:layout_marginStart="7dp"
                 android:layout_marginTop="16dp"
                 android:fontFamily="@font/raleway_r"
-                android:text="Fee"
+                android:text="@string/fee"
                 android:textColor="@color/primary"
                 android:textSize="@dimen/text_size_medium"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toTopOf="parent"/>
 
-            <!--<RadioGroup-->
-            <!--android:id="@+id/rgFee"-->
-            <!--android:layout_width="fill_parent"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:orientation="horizontal"-->
-            <!--android:checkedButton="@id/rbNormalFee"-->
-            <!--&gt;-->
-            <!--<RadioButton android:id="@+id/rbMinimalFee"-->
-            <!--android:layout_width="0dp"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:text="Minimal"-->
-            <!--android:layout_weight="1"-->
-            <!--android:fontFamily="@font/raleway_r"-->
-            <!--android:textColor="@color/black"-->
-            <!--android:textSize="@dimen/font_normal"-->
-            <!--/>-->
-            <!--<RadioButton android:id="@+id/rbNormalFee"-->
-            <!--android:layout_width="0dp"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:text="Normal"-->
-            <!--android:layout_weight="1"-->
-            <!--android:fontFamily="@font/raleway_r"-->
-            <!--android:textColor="@color/black"-->
-            <!--android:textSize="@dimen/font_normal"-->
-            <!--/>-->
-            <!--<RadioButton android:id="@+id/rbMaximumFee"-->
-            <!--android:layout_width="0dp"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:text="Maximum"-->
-            <!--android:layout_weight="1"-->
-            <!--android:fontFamily="@font/raleway_r"-->
-            <!--android:textColor="@color/black"-->
-            <!--android:textSize="@dimen/font_normal"-->
-            <!--/>-->
-
-            <!--</RadioGroup>-->
-            <info.hoang8f.android.segmented.SegmentedGroup xmlns:app="http://schemas.android.com/apk/res-auto"
-                                                           android:id="@+id/rgFee"
-                                                           android:layout_width="match_parent"
-                                                           android:layout_height="wrap_content"
-                                                           android:layout_margin="10dp"
-                                                           android:checkedButton="@+id/rbNormalFee"
-                                                           android:gravity="center"
-                                                           android:orientation="horizontal"
-                                                           app:sc_border_width="2dp"
-                                                           app:sc_corner_radius="10dp"
-                                                           app:sc_tint_color="@color/colorPrimary">
+            <info.hoang8f.android.segmented.SegmentedGroup
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/rgFee"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:checkedButton="@+id/rbNormalFee"
+                android:gravity="center"
+                android:orientation="horizontal"
+                app:sc_border_width="2dp"
+                app:sc_corner_radius="10dp"
+                app:sc_tint_color="@color/colorPrimary">
 
                 <RadioButton
                     android:id="@+id/rbMinimalFee"
@@ -306,8 +271,8 @@
                     android:layout_width="100dp"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/raleway_r"
-                    android:text="Minimal"
-                    android:textSize="18dp"/>
+                    android:text="@string/minimal"
+                    android:textSize="@dimen/text_size_medium"/>
 
                 <RadioButton
                     android:id="@+id/rbNormalFee"
@@ -315,8 +280,8 @@
                     android:layout_width="100dp"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/raleway_r"
-                    android:text="Normal"
-                    android:textSize="18dp"/>
+                    android:text="@string/normal"
+                    android:textSize="@dimen/text_size_medium"/>
 
                 <RadioButton
                     android:id="@+id/rbMaximumFee"
@@ -324,8 +289,9 @@
                     android:layout_width="100dp"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/raleway_r"
-                    android:text="Priority"
-                    android:textSize="18dp"/>
+                    android:text="@string/priority"
+                    android:textSize="@dimen/text_size_medium"/>
+
             </info.hoang8f.android.segmented.SegmentedGroup>
 
         </LinearLayout>
@@ -334,21 +300,20 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-
             <EditText
                 android:id="@+id/etFee"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="4dp"
-                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
                 android:enabled="false"
                 android:fontFamily="@font/raleway_r"
-                android:hint="fee"
+                android:hint="@string/fee"
                 android:inputType="numberDecimal"
                 android:padding="12dp"
                 android:textColor="@color/black"
                 android:textColorLink="@android:color/holo_blue_dark"
-                android:textSize="18dp"
+                android:textSize="@dimen/text_size_medium"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
@@ -360,11 +325,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
-                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:fontFamily="@font/montserrat_light"
-                android:text="mBTC"
-                android:textSize="18dp"
+                android:text="@string/m_btc"
+                android:textSize="@dimen/text_size_medium"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toRightOf="@+id/etFee"
                 app:layout_constraintTop_toTopOf="parent"/>
@@ -373,15 +338,14 @@
                 android:id="@+id/tvFeeEquivalent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
                 android:fontFamily="@font/montserrat_light"
-                android:text="   "
                 android:textColor="@android:color/darker_gray"
-                android:textSize="14dp"
+                android:textSize="@dimen/text_size_1_small"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toRightOf="@+id/tvCurrency2"
-                app:layout_constraintTop_toTopOf="parent"/>
-
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="000"/>
 
         </android.support.constraint.ConstraintLayout>
 
@@ -396,7 +360,7 @@
         android:backgroundTint="@color/colorPrimary"
         android:fontFamily="@font/raleway_r"
         android:includeFontPadding="false"
-        android:text="Send"
+        android:text="@string/send_1"
         android:textColor="@color/white"
         android:textSize="@dimen/text_size_large"
         app:layout_constraintBottom_toBottomOf="parent"
