@@ -27,17 +27,18 @@ import com.tangem.data.network.task.VerifyCardTask;
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog;
 
 public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback, CardProtocol.Notifications {
+    public static final String TAG = EmptyWalletActivity.class.getSimpleName();
 
     private static final int REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY = 2;
     private static final int REQUEST_CODE_REQUEST_PIN2 = 3;
     private static final int REQUEST_CODE_VERIFY_CARD = 4;
-    TangemCard mCard;
-    TextView tvCardID, tvIssuer, tvIssuerData, tvBlockchain;
-    ProgressBar progressBar;
-    ImageView ivBlockchain, ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion;
+
+    private TangemCard mCard;
+    private TextView tvCardID, tvIssuer, tvIssuerData, tvBlockchain;
+    private ProgressBar progressBar;
+    private ImageView ivBlockchain, ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion;
 
     private NfcManager mNfcManager;
-    private final String logTag = "EmptyWalletActivity";
     private boolean lastReadSuccess = true;
     private VerifyCardTask verifyCardTask = null;
     private int requestPIN2Count = 0;
@@ -156,16 +157,22 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        mNfcManager.onResume();
+    }
 
-    private void doCreateNewWallet() {
-        Intent intent = new Intent(this, CreateNewWalletActivity.class);
+    @Override
+    public void onPause() {
+        super.onPause();
+        mNfcManager.onPause();
+    }
 
-        intent.putExtra("UID", mCard.getUID());
-        intent.putExtra("Card", mCard.getAsBundle());
-
-//        intent.putExtra("newPIN",mCard.getPIN());
-//        intent.putExtra("newPIN2","12345678");
-        startActivityForResult(intent, REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY);
+    @Override
+    public void onStop() {
+        super.onStop();
+        mNfcManager.onStop();
     }
 
     @Override
@@ -215,11 +222,11 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
             byte UID[] = tag.getId();
             String sUID = Util.byteArrayToHexString(UID);
             if (!mCard.getUID().equals(sUID)) {
-                Log.d(logTag, "Invalid UID: " + sUID);
+                Log.d(TAG, "Invalid UID: " + sUID);
                 mNfcManager.ignoreTag(isoDep.getTag());
                 return;
             } else {
-                Log.v(logTag, "UID: " + sUID);
+                Log.v(TAG, "UID: " + sUID);
             }
 
             if (lastReadSuccess) {
@@ -341,21 +348,16 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
     }
 
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        mNfcManager.onResume();
+    private void doCreateNewWallet() {
+        Intent intent = new Intent(this, CreateNewWalletActivity.class);
+
+        intent.putExtra("UID", mCard.getUID());
+        intent.putExtra("Card", mCard.getAsBundle());
+
+//        intent.putExtra("newPIN",mCard.getPIN());
+//        intent.putExtra("newPIN2","12345678");
+        startActivityForResult(intent, REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY);
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        mNfcManager.onPause();
-    }
 
-    @Override
-    public void onStop() {
-        super.onStop();
-        mNfcManager.onStop();
-    }
 }
