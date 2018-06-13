@@ -562,22 +562,7 @@
     </RelativeLayout>
 
     <include
-        android:visibility="invisible"
-        layout="@layout/layout_progress_horizontal"/>
-
-    <!--<ProgressBar-->
-        <!--android:id="@+id/progressBar"-->
-        <!--style="@style/Widget.AppCompat.ProgressBar.Horizontal"-->
-        <!--android:layout_width="0dp"-->
-        <!--android:layout_height="16dp"-->
-        <!--android:layout_marginBottom="36dp"-->
-        <!--android:alpha="0.5"-->
-        <!--android:elevation="1dp"-->
-        <!--android:visibility="invisible"-->
-        <!--app:layout_constraintBottom_toBottomOf="parent"-->
-        <!--app:layout_constraintLeft_toLeftOf="parent"-->
-        <!--app:layout_constraintRight_toRightOf="parent"/>-->
-
-
+        layout="@layout/layout_progress_horizontal"
+        android:visibility="invisible"/>
 
 </android.support.constraint.ConstraintLayout>
