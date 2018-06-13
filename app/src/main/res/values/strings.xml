@@ -35,6 +35,13 @@
     <string name="last_withdrawal">Last withdrawal</string>
     <string name="try_to_scan_again">Try to scan again</string>
     <string name="cannot_erase_wallet_with_non_zero_balance">Cannot erase wallet with non-zero balance</string>
+    <string name="send_payment">Send payment</string>
+    <string name="from_banknote">From banknote</string>
+    <string name="with_balance">with balance</string>
+    <string name="send_to_wallet">Send to wallet</string>
+    <string name="amount">Amount</string>
+    <string name="including_fee">(including fee)</string>
+    <string name="m_btc">mBTC</string>
 
     <!-- dialogs -->
     <string name="device_is_rooted">Your Android device is rooted. Security at risk!</string>
@@ -118,15 +125,8 @@
     <string name="by_tapping_the_card">By tapping the card, you will permanently remove the blockchain wallet. Ensure there will be no further incoming transactions</string>
 
     <!-- PreparePaymentActivity -->
-    <string name="send_payment">Send payment</string>
-    <string name="from_banknote">From banknote</string>
-    <string name="with_balance">with balance</string>
-    <string name="send_to_wallet">Send to wallet</string>
     <string name="enter_wallet_address">enter wallet address</string>
-    <string name="amount">Amount</string>
-    <string name="including_fee">(including fee)</string>
     <string name="enter_amount">enter amount</string>
-    <string name="m_btc">mBTC</string>
     <string name="verify">Verify</string>
 
     <!-- RequestPINActivity -->
@@ -143,5 +143,15 @@
     <string name="unknown_amount_format">Unknown amount format</string>
     <string name="incorrect_destination_wallet_address">Incorrect destination wallet address</string>
     <string name="destination_wallet_address_equal_source_address">Destination wallet address equal source address</string>
+
+    <!-- ConfirmPaymentActivity -->
+    <string name="target_wallet_address">target wallet address</string>
+    <string name="payment_amount">payment amount</string>
+    <string name="fee">Fee</string>
+    <string name="send_1">Send</string>
+
+    <string name="minimal">Minimal</string>
+    <string name="normal">Normal</string>
+    <string name="priority">Priority</string>
 
 </resources>
