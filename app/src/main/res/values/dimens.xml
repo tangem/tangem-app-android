@@ -18,9 +18,9 @@
     <dimen name="verify_card_font_small">14dp</dimen>
 
     <dimen name="empty_wallet_left_col_width">140dp</dimen>
-    <dimen name="empty_wallet_font_large">24dp</dimen>
-    <dimen name="empty_wallet_font_normal">14dp</dimen>
-    <dimen name="empty_wallet_font_small">12dp</dimen>
+    <!--<dimen name="empty_wallet_font_large">24dp</dimen>-->
+    <!--<dimen name="empty_wallet_font_normal">14dp</dimen>-->
+    <!--<dimen name="empty_wallet_font_small">12dp</dimen>-->
     <dimen name="empty_wallet_left_col_margin">16dp</dimen>
 
 
