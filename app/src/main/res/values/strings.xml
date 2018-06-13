@@ -42,6 +42,7 @@
     <string name="amount">Amount</string>
     <string name="including_fee">(including fee)</string>
     <string name="m_btc">mBTC</string>
+    <string name="scan_again_to_verify_the_card">Scan again to verify the card</string>
 
     <!-- dialogs -->
     <string name="device_is_rooted">Your Android device is rooted. Security at risk!</string>
@@ -95,7 +96,6 @@
     <string name="swipe_down_to_refresh_data">Swipe down to refresh data</string>
     <string name="message">Message!</string>
     <string name="error">Error!</string>
-    <string name="scan_again_to_verify_the_card">Scan again to verify the card</string>
     <string name="send">SEND</string>
     <string name="if_you_forget">If you forget your new PIN you will lose your money forever!</string>
     <string name="if_you_use_default">If you use default PIN someone can steal your money!</string>
@@ -153,5 +153,10 @@
     <string name="minimal">Minimal</string>
     <string name="normal">Normal</string>
     <string name="priority">Priority</string>
+
+
+    <!-- EmptyWalletActivity -->
+    <string name="wallet_has_not_been_yet_created">Wallet hasn\'t been yet created</string>
+    <string name="create_wallet">Create Wallet</string>
 
 </resources>
