@@ -451,15 +451,8 @@
             android:id="@+id/btnLoad"
             style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="120dp"
-            android:layout_height="36dp"
-            android:layout_marginLeft="16dp"
-            android:layout_marginRight="16dp"
-            android:fontFamily="@font/raleway_r"
             android:gravity="center_vertical"
-            android:text="@string/load"
-            android:textAlignment="center"
-            android:textColor="@color/white"
-            android:textSize="@dimen/text_size_medium"/>
+            android:text="@string/load"/>
 
         <TextView
             android:id="@+id/tvPurge"
@@ -476,18 +469,11 @@
             android:textSize="@dimen/text_size_medium"/>
 
         <android.support.v7.widget.AppCompatButton
-            style="@style/AppTheme.RoundedCornerMaterialButton"
             android:id="@+id/btnExtract"
+            style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="120dp"
-            android:layout_height="36dp"
-            android:layout_marginLeft="16dp"
-            android:layout_marginRight="16dp"
-            android:fontFamily="@font/raleway_r"
             android:gravity="center_vertical"
-            android:text="@string/extract"
-            android:textAlignment="center"
-            android:textColor="@color/white"
-            android:textSize="@dimen/text_size_medium"/>
+            android:text="@string/extract"/>
 
     </LinearLayout>
 
