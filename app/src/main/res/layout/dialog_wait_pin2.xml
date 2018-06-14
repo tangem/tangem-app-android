@@ -2,7 +2,6 @@
 <android.support.constraint.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -14,10 +13,10 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
         android:fontFamily="@font/raleway_r"
-        android:text="This banknote has enforced security delay"
+        android:text="@string/this_banknote_has_enforced_security_delay"
         android:textAlignment="center"
         android:textColor="@color/primary"
-        android:textSize="14dp"
+        android:textSize="@dimen/text_size_1_small"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
@@ -30,7 +29,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
         android:fontFamily="@font/raleway_r"
-        android:text="Please hold the banknote firmly\n until the operation is completed..."
+        android:text="@string/please_hold_banknote"
         android:textAlignment="center"
         android:textColor="@color/black"
         android:textSize="@dimen/text_size_medium"
@@ -64,10 +63,10 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
         android:fontFamily="@font/raleway_r"
-        android:text="You may be required to repeat this operation a few times depending on the NFC performance of your smartphone.\n This is made for safety of your funds."
+        android:text="@string/you_may_be_required_to_repeat"
         android:textAlignment="center"
         android:textColor="@color/primary"
-        android:textSize="12dp"
+        android:textSize="@dimen/text_size_small"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
