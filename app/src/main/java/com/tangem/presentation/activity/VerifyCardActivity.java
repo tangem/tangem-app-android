@@ -27,4 +27,5 @@ public class VerifyCardActivity extends AppCompatActivity {
         setResult(Activity.RESULT_OK, data);
         finish();
     }
+
 }
