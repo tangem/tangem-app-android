@@ -178,20 +178,16 @@
 
             </GridLayout>
 
-            <Button
+            <android.support.v7.widget.AppCompatButton
                 android:id="@+id/btnContinue"
-                style="@style/Widget.AppCompat.Button.Borderless"
+                style="@style/AppTheme.RoundedCornerMaterialButton"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentStart="true"
                 android:layout_gravity="bottom"
-                android:background="@color/colorPrimary"
-                android:fontFamily="@font/raleway_r"
-                android:text="@string/ok"
-                android:textColor="@color/white"
-                android:textSize="@dimen/text_size_large"
-                android:textStyle="bold"/>
+                android:layout_marginBottom="16dp"
+                android:text="@string/ok"/>
+
         </RelativeLayout>
 
     </LinearLayout>
