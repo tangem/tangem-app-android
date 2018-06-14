@@ -43,6 +43,8 @@
     <string name="including_fee">(including fee)</string>
     <string name="m_btc">mBTC</string>
     <string name="scan_again_to_verify_the_card">Scan again to verify the card</string>
+    <string name="smart_cash_ag">Smart Cash AG</string>
+    <string name="wallet">Wallet</string>
 
     <!-- dialogs -->
     <string name="device_is_rooted">Your Android device is rooted. Security at risk!</string>
@@ -50,6 +52,9 @@
     <string name="warning">Warning</string>
     <string name="the_nfc_adapter_length_apdu">The NFC adapter of the device does not support extended length APDU, it\'s possible that some functions will not work!</string>
     <string name="your_money_is_at_risk">Your money is at risk!</string>
+    <string name="this_banknote_has_enforced_security_delay">This banknote has enforced security delay</string>
+    <string name="please_hold_banknote">Please hold the banknote firmly\n until the operation is completed…</string>
+    <string name="you_may_be_required_to_repeat">You may be required to repeat this operation a few times depending on the NFC performance of your smartphone.\n This is made for safety of your funds.</string>
 
     <!-- menu main -->
     <string name="clean_up">Clean up</string>
@@ -69,7 +74,6 @@
     <!-- MainActivity, Main -->
     <string name="tap_tangem_card">Tap Tangem card with your smartphone</string>
     <string name="scan_banknote">Scan a banknote with your \n smartphone as shown above</string>
-    <string name="wallet">Wallet</string>
     <string name="last_unspent">Last unspent</string>
     <string name="no_wallet">NO WALLET</string>
     <string name="erased_wallet">ERASED WALLET</string>
@@ -114,7 +118,6 @@
 
     <!-- LogoActivity -->
     <string name="beta">BETA</string>
-    <string name="smart_cash_ag">Smart Cash AG</string>
 
     <!-- CreateNewWalletActivity, PurgeActivity, SignPaymentActivity -->
     <string name="now_touch_the_banknote_with_id">Now touch the banknote with ID</string>
@@ -149,14 +152,27 @@
     <string name="payment_amount">payment amount</string>
     <string name="fee">Fee</string>
     <string name="send_1">Send</string>
-
     <string name="minimal">Minimal</string>
     <string name="normal">Normal</string>
     <string name="priority">Priority</string>
 
-
     <!-- EmptyWalletActivity -->
     <string name="wallet_has_not_been_yet_created">Wallet hasn\'t been yet created</string>
     <string name="create_wallet">Create Wallet</string>
+
+    <!-- VerifyCardActivity -->
+    <string name="card_id">Card ID</string>
+    <string name="signing_method">Signing method</string>
+    <string name="this_card_is">This card is</string>
+    <string name="signed_transactions">Signed transactions</string>
+    <string name="remaining_signatures">Remaining signatures</string>
+    <string name="time_of_last_signing">Time of last signing</string>
+    <string name="features">Features</string>
+    <string name="allows_change_pin1_and_pin2">Allows change PIN1 and PIN2\nNeed CVC\nDynamic NDEF\nRecoverable\nBlockable\nAtomic command mode</string>
+    <string name="manufacturer">Manufacturer</string>
+    <string name="card_identity">Card identity</string>
+    <string name="attested">Attested</string>
+    <string name="firmware">Firmware</string>
+    <string name="registration_date">Registration date</string>
 
 </resources>
