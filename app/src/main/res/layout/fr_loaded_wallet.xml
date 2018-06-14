@@ -447,13 +447,13 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent">
 
-        <TextView
-            android:id="@+id/tvLoad"
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/btnLoad"
+            style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="120dp"
             android:layout_height="36dp"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
-            android:background="@color/colorPrimary"
             android:fontFamily="@font/raleway_r"
             android:gravity="center_vertical"
             android:text="@string/load"
@@ -475,13 +475,13 @@
             android:textColor="@color/white"
             android:textSize="@dimen/text_size_medium"/>
 
-        <TextView
-            android:id="@+id/tvSend"
+        <android.support.v7.widget.AppCompatButton
+            style="@style/AppTheme.RoundedCornerMaterialButton"
+            android:id="@+id/btnExtract"
             android:layout_width="120dp"
             android:layout_height="36dp"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
-            android:background="@color/colorPrimary"
             android:fontFamily="@font/raleway_r"
             android:gravity="center_vertical"
             android:text="@string/extract"
