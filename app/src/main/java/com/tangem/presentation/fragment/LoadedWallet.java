@@ -21,6 +21,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.AppCompatButton;
 import android.text.Html;
 import android.text.Spanned;
 import android.util.Log;
@@ -97,7 +98,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     private static final int REQUEST_CODE_SWAP_PIN = 8;
 
     private TangemCard mCard;
-    private TextView tvCardID, tvBalance, tvOffline, tvBalanceEquivalent, tvWallet, tvInputs, lbInputs, tvOutputs, tvLoad, tvSend, tvPurge, tvError, tvMessage, tvIssuer, tvIssuerData, tvBlockchain, tvLastInput, tvLastOutput, lbLastOutput, tvValidationNode;
+    private TextView tvCardID, tvBalance, tvOffline, tvBalanceEquivalent, tvWallet, tvInputs, lbInputs, tvPurge, tvError, tvMessage, tvIssuer, tvIssuerData, tvBlockchain, tvLastInput, tvLastOutput, lbLastOutput, tvValidationNode;
     private TextView tvHeader, tvCaution;
     private ImageView imgLookup;
     private TextView tvLookup;
@@ -113,6 +114,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
     private Timer timerHideErrorAndMessage = null;
     private String newPIN = "", newPIN2 = "";
+    private AppCompatButton btnLoad, btnExtract;
 
     public LoadedWallet() {
 
@@ -595,8 +597,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         tvIssuerData = v.findViewById(R.id.tvIssuerData);
         tvHeader = v.findViewById(R.id.tvHeader);
         tvCaution = v.findViewById(R.id.tvCaution);
-        tvLoad = v.findViewById(R.id.tvLoad);
-        tvSend = v.findViewById(R.id.tvSend);
         imgLookup = v.findViewById(R.id.imgLookup);
         tvValidationNode = v.findViewById(R.id.tvValidationNode);
         progressBar = v.findViewById(R.id.progressBar);
@@ -608,6 +608,8 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         ivQR = v.findViewById(R.id.qrWallet);
         tvLookup = v.findViewById(R.id.tvLookup);
         tvPurge = v.findViewById(R.id.tvPurge);
+        btnLoad = v.findViewById(R.id.btnLoad);
+        btnExtract = v.findViewById(R.id.btnExtract);
 
         mSwipeRefreshLayout.setOnRefreshListener(this);
 
@@ -672,33 +674,32 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             });
         }
 
-        if (tvSend != null) {
-            tvSend.setOnClickListener(v13 -> {
-                if (!mCard.hasBalanceInfo()) {
-                    return;
-                } else if (!Objects.requireNonNull(engine).IsBalanceNotZero(mCard)) {
-                    Toast.makeText(getContext(), R.string.wallet_empty, Toast.LENGTH_LONG).show();
-                    return;
-                } else if (!engine.IsBalanceAlterNotZero(mCard)) {
-                    Toast.makeText(getContext(), R.string.not_enough_funds, Toast.LENGTH_LONG).show();
-                    return;
-                } else if (engine.AwaitingConfirmation(mCard)) {
-                    Toast.makeText(getContext(), R.string.please_wait_while_previous, Toast.LENGTH_LONG).show();
-                    return;
-                } else if (!engine.CheckUnspentTransaction(mCard)) {
-                    Toast.makeText(getContext(), R.string.please_wait_for_confirmation, Toast.LENGTH_LONG).show();
-                    return;
-                } else if (mCard.getRemainingSignatures() == 0) {
-                    Toast.makeText(getContext(), R.string.card_hasn_t_remaining_signature, Toast.LENGTH_LONG).show();
-                    return;
-                }
 
-                Intent intent = new Intent(getContext(), PreparePaymentActivity.class);
-                intent.putExtra("UID", mCard.getUID());
-                intent.putExtra("Card", mCard.getAsBundle());
-                startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT);
-            });
-        }
+        btnExtract.setOnClickListener(v13 -> {
+            if (!mCard.hasBalanceInfo()) {
+                return;
+            } else if (!Objects.requireNonNull(engine).IsBalanceNotZero(mCard)) {
+                Toast.makeText(getContext(), R.string.wallet_empty, Toast.LENGTH_LONG).show();
+                return;
+            } else if (!engine.IsBalanceAlterNotZero(mCard)) {
+                Toast.makeText(getContext(), R.string.not_enough_funds, Toast.LENGTH_LONG).show();
+                return;
+            } else if (engine.AwaitingConfirmation(mCard)) {
+                Toast.makeText(getContext(), R.string.please_wait_while_previous, Toast.LENGTH_LONG).show();
+                return;
+            } else if (!engine.CheckUnspentTransaction(mCard)) {
+                Toast.makeText(getContext(), R.string.please_wait_for_confirmation, Toast.LENGTH_LONG).show();
+                return;
+            } else if (mCard.getRemainingSignatures() == 0) {
+                Toast.makeText(getContext(), R.string.card_hasn_t_remaining_signature, Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            Intent intent = new Intent(getContext(), PreparePaymentActivity.class);
+            intent.putExtra("UID", mCard.getUID());
+            intent.putExtra("Card", mCard.getAsBundle());
+            startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT);
+        });
 
         updateViews();
 
@@ -709,7 +710,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
         tvWallet.setOnClickListener(v12 -> doShareWallet(false));
         ivQR.setOnClickListener(v1 -> doShareWallet(true));
-        tvLoad.setOnClickListener(v1 -> {
+        btnLoad.setOnClickListener(v1 -> {
                     Intent intent = new Intent(Intent.ACTION_VIEW, Objects.requireNonNull(CoinEngineFactory.Create(mCard.getBlockchain())).getShareWalletURI(mCard));
                     intent.addCategory(Intent.CATEGORY_DEFAULT);
                     startActivity(intent);
@@ -1326,9 +1327,9 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             else
                 tvInputs.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getContext()), R.color.confirmed));
 
-            if (tvOutputs != null) {
-                tvOutputs.setText(mCard.getOutputsDescription());
-            }
+//            if (btnSend != null) {
+//                btnSend.setText(mCard.getOutputsDescription());
+//            }
 
             if (tvLastInput != null) {
                 tvLastInput.setText(mCard.getLastInputDescription());
@@ -1372,11 +1373,11 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 ivDeveloperVersion.setVisibility(View.INVISIBLE);
             }
 
-            if (tvSend != null)
-                if (mCard.hasBalanceInfo())
-                    tvSend.setEnabled(true);
-                else
-                    tvSend.setEnabled(false);
+
+            if (mCard.hasBalanceInfo())
+                btnExtract.setEnabled(true);
+            else
+                btnExtract.setEnabled(false);
 
 //            if (tvPurge != null)
 //                if (mCard.hasBalanceInfo())
