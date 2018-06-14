@@ -28,15 +28,15 @@
 
             <TextView
                 android:id="@+id/tvOk"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:fontFamily="@font/raleway_r"
                 android:padding="8dp"
-                android:text="OK"
+                android:text="@string/ok"
                 android:textAlignment="center"
                 android:textColor="@color/white"
-                android:textSize="18dp"/>
+                android:textSize="@dimen/text_size_medium"/>
 
         </LinearLayout>
 
@@ -82,9 +82,9 @@
                         android:layout_marginBottom="24dp"
                         android:layout_marginTop="8dp"
                         android:fontFamily="@font/raleway_r"
-                        android:text="Card ID"
+                        android:text="@string/card_id"
                         android:textAlignment="center"
-                        android:textSize="@dimen/verify_card_font_normal"/>
+                        android:textSize="@dimen/text_size_medium"/>
 
                     <TextView
                         android:id="@+id/tvCardID"
@@ -95,10 +95,10 @@
                         android:layout_marginBottom="4dp"
                         android:layout_marginTop="32dp"
                         android:fontFamily="@font/montserrat_light"
-                        android:text="---- ---- ---- ----"
+                        android:text="@string/no_data_string_1"
                         android:textAlignment="center"
                         android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/verify_card_font_normal"
+                        android:textSize="@dimen/text_size_medium"
                         android:textStyle="normal|bold"/>
                 </RelativeLayout>
 
@@ -120,18 +120,19 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/raleway_r"
-                        android:text="Issuer"
-                        android:textSize="@dimen/verify_card_font_normal"/>
+                        android:text="@string/issuer"
+                        android:textSize="@dimen/text_size_medium"/>
 
                     <TextView
                         android:id="@+id/tvIssuer"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/montserrat_light"
-                        android:text="Smart Cash AG"
+                        android:text="@string/smart_cash_ag"
                         android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/verify_card_font_normal"
+                        android:textSize="@dimen/text_size_medium"
                         android:textStyle="normal|bold"/>
+
                 </LinearLayout>
 
                 <android.support.constraint.ConstraintLayout
@@ -144,8 +145,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
                         android:fontFamily="@font/montserrat_light"
-                        android:text="Blockchain"
-                        android:textSize="14dp"
+                        android:text="@string/blockchain"
+                        android:textSize="@dimen/text_size_1_small"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"/>
@@ -155,9 +156,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/montserrat_light"
-                        android:text="Blockchain"
+                        android:text="@string/blockchain"
                         android:textColor="@color/primary_dark"
-                        android:textSize="14dp"
+                        android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"
                         app:layout_constraintLeft_toRightOf="@+id/tvBlockchainHeader"
                         app:layout_constraintTop_toTopOf="@+id/tvBlockchainHeader"/>
@@ -180,10 +181,10 @@
                     <TextView
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="20dp"
+                        android:layout_marginStart="20dp"
                         android:fontFamily="@font/raleway_r"
-                        android:text="Signing method"
-                        android:textSize="@dimen/verify_card_font_small"/>
+                        android:text="@string/signing_method"
+                        android:textSize="@dimen/text_size_1_small"/>
 
                     <TextView
                         android:id="@+id/tvSigningMethod"
@@ -192,8 +193,9 @@
                         android:fontFamily="@font/montserrat_light"
                         android:text="Sign hash"
                         android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/verify_card_font_small"
+                        android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"/>
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -204,10 +206,10 @@
                     <TextView
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="20dp"
+                        android:layout_marginStart="20dp"
                         android:fontFamily="@font/raleway_r"
-                        android:text="This card is"
-                        android:textSize="@dimen/verify_card_font_small"/>
+                        android:text="@string/this_card_is"
+                        android:textSize="@dimen/text_size_1_small"/>
 
                     <TextView
                         android:id="@+id/tvReusable"
@@ -216,8 +218,9 @@
                         android:fontFamily="@font/montserrat_light"
                         android:text="Reusable"
                         android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/verify_card_font_small"
+                        android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"/>
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -228,20 +231,21 @@
                     <TextView
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="20dp"
+                        android:layout_marginStart="20dp"
                         android:fontFamily="@font/raleway_r"
-                        android:text="Signed transactions"
-                        android:textSize="@dimen/verify_card_font_small"/>
+                        android:text="@string/signed_transactions"
+                        android:textSize="@dimen/text_size_1_small"/>
 
                     <TextView
                         android:id="@+id/tvSignedTx"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/montserrat_light"
-                        android:text="100"
                         android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/verify_card_font_small"
-                        android:textStyle="normal|bold"/>
+                        android:textSize="@dimen/text_size_1_small"
+                        android:textStyle="normal|bold"
+                        tools:text="100"/>
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -252,20 +256,21 @@
                     <TextView
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="20dp"
+                        android:layout_marginStart="20dp"
                         android:fontFamily="@font/raleway_r"
-                        android:text="Remaining signatures"
-                        android:textSize="@dimen/verify_card_font_small"/>
+                        android:text="@string/remaining_signatures"
+                        android:textSize="@dimen/text_size_1_small"/>
 
                     <TextView
                         android:id="@+id/tvRemainingSignatures"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/montserrat_light"
-                        android:text="0"
                         android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/verify_card_font_small"
-                        android:textStyle="normal|bold"/>
+                        android:textSize="@dimen/text_size_1_small"
+                        android:textStyle="normal|bold"
+                        tools:text="0"/>
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -276,10 +281,10 @@
                     <TextView
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="20dp"
+                        android:layout_marginStart="20dp"
                         android:fontFamily="@font/raleway_r"
-                        android:text="Time of last signing"
-                        android:textSize="@dimen/verify_card_font_small"/>
+                        android:text="@string/time_of_last_signing"
+                        android:textSize="@dimen/text_size_1_small"/>
 
                     <TextView
                         android:id="@+id/tvLastSigned"
@@ -288,8 +293,9 @@
                         android:fontFamily="@font/montserrat_light"
                         android:text=""
                         android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/verify_card_font_small"
+                        android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"/>
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -300,20 +306,21 @@
                     <TextView
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="20dp"
+                        android:layout_marginStart="20dp"
                         android:fontFamily="@font/raleway_r"
-                        android:text="Features"
-                        android:textSize="@dimen/verify_card_font_small"/>
+                        android:text="@string/features"
+                        android:textSize="@dimen/text_size_1_small"/>
 
                     <TextView
                         android:id="@+id/tvFeatures"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/montserrat_light"
-                        android:text="Allows change PIN1 and PIN2\nNeed CVC\nDynamic NDEF\nRecoverable\nBlockable\nAtomic command mode"
+                        android:text="@string/allows_change_pin1_and_pin2"
                         android:textColor="@color/primary_dark"
-                        android:textSize="10dp"
+                        android:textSize="@dimen/text_size_2_small"
                         android:textStyle="normal|bold"/>
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -326,16 +333,16 @@
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/raleway_r"
                         android:text=""
-                        android:textSize="12dp"/>
+                        android:textSize="@dimen/text_size_small"/>
 
                     <TextView
                         android:id="@+id/tvIssuerData"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/montserrat_light"
-                        android:text="                "
-                        android:textSize="@dimen/verify_card_font_small"
+                        android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"/>
+
                 </LinearLayout>
 
                 <View
@@ -356,17 +363,17 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/raleway_r"
-                        android:text="Manufacturer"
-                        android:textSize="@dimen/verify_card_font_normal"/>
+                        android:text="@string/manufacturer"
+                        android:textSize="@dimen/text_size_medium"/>
 
                     <TextView
                         android:id="@+id/tvManufacturerInfo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/montserrat_light"
-                        android:text="Smart Cash AG"
+                        android:text="@string/smart_cash_ag"
                         android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/verify_card_font_normal"
+                        android:textSize="@dimen/text_size_medium"
                         android:textStyle="normal|bold"/>
 
                     <ImageView
@@ -374,8 +381,9 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginLeft="12dp"
+                        android:layout_marginStart="12dp"
                         android:src="@drawable/tangem_logo_small_new"/>
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -386,20 +394,21 @@
                     <TextView
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="20dp"
+                        android:layout_marginStart="20dp"
                         android:fontFamily="@font/raleway_r"
-                        android:text="Card identity"
-                        android:textSize="14dp"/>
+                        android:text="@string/card_identity"
+                        android:textSize="@dimen/text_size_1_small"/>
 
                     <TextView
                         android:id="@+id/tvCardIdentity"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/montserrat_light"
-                        android:text="Attested"
+                        android:text="@string/attested"
                         android:textColor="@color/confirmed"
-                        android:textSize="14dp"
+                        android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"/>
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -410,20 +419,21 @@
                     <TextView
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="20dp"
+                        android:layout_marginStart="20dp"
                         android:fontFamily="@font/raleway_r"
-                        android:text="Firmware"
-                        android:textSize="@dimen/verify_card_font_small"/>
+                        android:text="@string/firmware"
+                        android:textSize="@dimen/text_size_1_small"/>
 
                     <TextView
                         android:id="@+id/tvFirmware"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/montserrat_light"
-                        android:text="1.05"
                         android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/verify_card_font_small"
-                        android:textStyle="normal|bold"/>
+                        android:textSize="@dimen/text_size_1_small"
+                        android:textStyle="normal|bold"
+                        tools:text="1.05"/>
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -433,22 +443,22 @@
                     <TextView
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="20dp"
+                        android:layout_marginStart="20dp"
                         android:fontFamily="@font/raleway_r"
-                        android:text="Registration date"
-                        android:textSize="@dimen/verify_card_font_small"/>
+                        android:text="@string/registration_date"
+                        android:textSize="@dimen/text_size_1_small"/>
 
                     <TextView
                         android:id="@+id/tvCardRegistredDate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/montserrat_light"
-                        android:text="29/09/2017"
                         android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/verify_card_font_small"
-                        android:textStyle="normal|bold"/>
-                </LinearLayout>
+                        android:textSize="@dimen/text_size_1_small"
+                        android:textStyle="normal|bold"
+                        tools:text="29/09/2017"/>
 
+                </LinearLayout>
 
                 <View
                     android:id="@+id/view3"
@@ -468,21 +478,21 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/raleway_r"
-                        android:text="Wallet"
-                        android:textSize="@dimen/verify_card_font_normal"/>
+                        android:text="@string/wallet"
+                        android:textSize="@dimen/text_size_medium"/>
 
                     <TextView
                         android:id="@+id/tvWallet"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:fontFamily="@font/montserrat_light"
-                        android:gravity="left|center_vertical"
+                        android:gravity="start|center_vertical"
                         android:text="address"
                         android:textColor="@color/primary_dark"
-                        android:textSize="12dp"
+                        android:textSize="@dimen/text_size_small"
                         android:textStyle="normal|bold"/>
-                </LinearLayout>
 
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -493,10 +503,10 @@
                         android:id="@+id/tvWalletIdentityLabel"
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="20dp"
+                        android:layout_marginStart="20dp"
                         android:fontFamily="@font/raleway_r"
                         android:text="Private key"
-                        android:textSize="14dp"/>
+                        android:textSize="@dimen/text_size_1_small"/>
 
                     <TextView
                         android:id="@+id/tvWalletIdentity"
@@ -505,8 +515,9 @@
                         android:fontFamily="@font/montserrat_light"
                         android:text="Possession proved"
                         android:textColor="@color/confirmed"
-                        android:textSize="14dp"
+                        android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"/>
+
                 </LinearLayout>
 
                 <TextView
@@ -546,7 +557,7 @@
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentEnd="false"
                 android:layout_alignParentStart="false"
-                android:layout_toLeftOf="@+id/imgPIN2orSecurityDelay"
+                android:layout_toStartOf="@+id/imgPIN2orSecurityDelay"
                 android:src="@drawable/unlock_pin1"/>
 
             <ImageView
@@ -556,7 +567,7 @@
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentStart="false"
-                android:layout_marginLeft="4dp"
+                android:layout_marginStart="4dp"
                 android:src="@drawable/unlock_pin2"/>
 
             <ImageView
@@ -565,13 +576,11 @@
                 android:layout_height="24dp"
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentStart="true"
-                android:layout_marginLeft="4dp"
+                android:layout_marginStart="4dp"
                 android:src="@drawable/ic_developer_version"/>
-
 
         </RelativeLayout>
 
     </android.support.v4.widget.SwipeRefreshLayout>
 
 </android.support.constraint.ConstraintLayout>
-
