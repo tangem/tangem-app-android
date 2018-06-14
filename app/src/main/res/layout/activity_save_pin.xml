@@ -22,7 +22,8 @@
             android:paddingBottom="8dp"
             android:singleLine="false"
             android:textAlignment="center"
-            android:textSize="36sp"/>
+            android:textSize="36sp"
+            tools:ignore="TextViewEdits"/>
 
         <TextView
             android:id="@+id/pin_prompt"
