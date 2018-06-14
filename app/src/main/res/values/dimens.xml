@@ -13,16 +13,9 @@
     <dimen name="card_info_height">132dp</dimen>
 
     <dimen name="verify_card_left_col_width">144dp</dimen>
-    <dimen name="verify_card_font_large">24dp</dimen>
-    <dimen name="verify_card_font_normal">18dp</dimen>
-    <dimen name="verify_card_font_small">14dp</dimen>
 
     <dimen name="empty_wallet_left_col_width">140dp</dimen>
-    <!--<dimen name="empty_wallet_font_large">24dp</dimen>-->
-    <!--<dimen name="empty_wallet_font_normal">14dp</dimen>-->
-    <!--<dimen name="empty_wallet_font_small">12dp</dimen>-->
     <dimen name="empty_wallet_left_col_margin">16dp</dimen>
-
 
     <dimen name="text_size_2_small">10sp</dimen>
     <dimen name="text_size_small">12sp</dimen>
