@@ -23,6 +23,7 @@
             android:singleLine="false"
             android:textAlignment="center"
             android:textSize="36sp"
+            tools:ignore="TextViewEdits"
             tools:text="12345"/>
 
         <LinearLayout
