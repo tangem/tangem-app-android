@@ -68,12 +68,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
         UsePIN2 = getIntent().getBooleanExtra("PIN2", false);
 
         tvPIN = findViewById(R.id.pin);
-        OnClickListener onButtonNClick = new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                tvPIN.setText(String.format("%s%s", tvPIN.getText(), ((Button) view).getText()));
-            }
-        };
+        OnClickListener onButtonNClick = view -> tvPIN.setText(String.format("%s%s", tvPIN.getText(), ((Button) view).getText()));
 
         if (UsePIN2) {
             ((TextView) findViewById(R.id.pin_prompt)).setText(R.string.enter_pin2_and_use_fingerprint_to_save_it);
@@ -81,7 +76,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
             ((TextView) findViewById(R.id.pin_prompt)).setText(R.string.enter_pin_and_use_fingerprint_to_save_it);
         }
 
-        chkUseFingerprint = (CheckBox) findViewById(R.id.chkUseFingerprint);
+        chkUseFingerprint = findViewById(R.id.chkUseFingerprint);
 
         if (UsePIN2) {
             chkUseFingerprint.setChecked(true);
@@ -113,31 +108,19 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
         Button btn9 = findViewById(R.id.btn9);
         btn9.setOnClickListener(onButtonNClick);
         Button btnBS = findViewById(R.id.btnBackspace);
-        btnBS.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String S = tvPIN.getText().toString();
-                if (S.length() > 0) {
-                    tvPIN.setText(S.substring(0, S.length() - 1));
-                }
+
+        btnBS.setOnClickListener(view -> {
+            String S = tvPIN.getText().toString();
+            if (S.length() > 0) {
+                tvPIN.setText(S.substring(0, S.length() - 1));
             }
         });
 
         Button btnSave = findViewById(R.id.btnSavePIN);
-        btnSave.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                doSavePIN();
-            }
-        });
+        btnSave.setOnClickListener(view -> doSavePIN());
 
         Button btnDelete = findViewById(R.id.btnDeletePIN);
-        btnDelete.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                doDeletePIN();
-            }
-        });
+        btnDelete.setOnClickListener(view -> doDeletePIN());
 
     }
 
@@ -191,12 +174,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
 
             if (UsePIN2) {
                 if (!testFingerPrintSettings()) {
-                    tvPIN.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            finish();
-                        }
-                    }, 2000);
+                    tvPIN.postDelayed(this::finish, 2000);
                     return;
                 }
 
@@ -207,12 +185,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
             } else {
                 if (chkUseFingerprint.isChecked() || PINStorage.haveEncryptedPIN()) {
                     if (!testFingerPrintSettings()) {
-                        tvPIN.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                finish();
-                            }
-                        }, 2000);
+                        tvPIN.postDelayed(this::finish, 2000);
                         return;
                     }
 
