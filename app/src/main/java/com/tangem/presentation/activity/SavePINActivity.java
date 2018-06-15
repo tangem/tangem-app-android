@@ -39,8 +39,6 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 
-//import com.afollestad.materialdialogs.AlertDialogWrapper;
-
 public class SavePINActivity extends AppCompatActivity implements FingerprintHelper.FingerprintHelperListener {
 
     private TextView tvPIN;
@@ -212,12 +210,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
         if (UsePIN2) {
             if (PINStorage.haveEncryptedPIN2()) {
                 if (!testFingerPrintSettings()) {
-                    tvPIN.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            finish();
-                        }
-                    }, 2000);
+                    tvPIN.postDelayed(this::finish, 2000);
                     return;
                 }
                 onConfirmAction = OnConfirmAction.Delete;
@@ -230,12 +223,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
         } else {
             if (chkUseFingerprint.isChecked() || PINStorage.haveEncryptedPIN()) {
                 if (!testFingerPrintSettings()) {
-                    tvPIN.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            finish();
-                        }
-                    }, 2000);
+                    tvPIN.postDelayed(this::finish, 2000);
                     return;
                 }
                 onConfirmAction = OnConfirmAction.Delete;
@@ -248,7 +236,6 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
             }
         }
     }
-
 
     @Override
     public void authenticationFailed(String error) {
