@@ -15,8 +15,8 @@
         android:id="@+id/rlToolButtons"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/btn_light"
-        android:backgroundTint="@color/colorPrimary"
+
+
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent">
@@ -26,17 +26,11 @@
             android:layout_height="40dp"
             android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/tvOk"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:fontFamily="@font/raleway_r"
-                android:padding="8dp"
-                android:text="@string/ok"
-                android:textAlignment="center"
-                android:textColor="@color/white"
-                android:textSize="@dimen/text_size_medium"/>
+            <Button
+                android:id="@+id/btnOk"
+                style="@style/AppTheme.RoundedCornerMaterialButton"
+                android:layout_width="match_parent"
+                android:text="@string/ok"/>
 
         </LinearLayout>
 
