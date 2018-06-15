@@ -35,18 +35,12 @@
                 android:textAlignment="center"
                 android:textSize="@dimen/text_size_1_small"/>
 
-            <Button
+            <android.support.v7.widget.AppCompatButton
                 android:id="@+id/btnNewWallet"
+                style="@style/AppTheme.RoundedCornerMaterialButton"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
                 android:layout_margin="32dp"
-                android:backgroundTint="@color/colorPrimary"
-                android:fontFamily="@font/raleway_r"
-                android:padding="16dp"
-                android:text="@string/create_wallet"
-                android:textColor="@color/white"
-                android:textSize="@dimen/text_size_medium"
-                android:textStyle="bold"/>
+                android:text="@string/create_wallet"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
