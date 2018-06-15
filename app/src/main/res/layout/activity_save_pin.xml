@@ -174,12 +174,11 @@
                     android:id="@+id/chkUseFingerprint"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignBottom="@id/btnContinue"
                     android:layout_gravity="center_horizontal"
                     android:layout_marginBottom="4dp"
                     android:drawableEnd="@mipmap/ic_fp"
                     android:drawablePadding="8dp"
-                    android:text="Protect with fingerprint"/>
+                    android:text="@string/protect_with_fingerprint"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -189,27 +188,19 @@
 
                     <Button
                         android:id="@+id/btnSavePIN"
-                        style="@style/Widget.AppCompat.Button.Borderless"
+                        style="@style/AppTheme.RoundedCornerMaterialButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:background="@color/colorPrimary"
-                        android:fontFamily="@font/raleway_r"
-                        android:text="Save"
-                        android:textColor="@color/white"
-                        android:textSize="18dp"/>
+                        android:text="@string/save"
+                        android:textColor="@color/white"/>
 
                     <Button
                         android:id="@+id/btnDeletePIN"
-                        style="@style/Widget.AppCompat.Button.Borderless"
+                        style="@style/AppTheme.RoundedCornerMaterialButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:background="@color/colorPrimary"
-                        android:fontFamily="@font/raleway_r"
-                        android:text="Delete"
-                        android:textColor="@color/white"
-                        android:textSize="18dp"/>
+                        android:text="@string/delete"
+                        android:textColor="@color/white"/>
 
                 </LinearLayout>
 
