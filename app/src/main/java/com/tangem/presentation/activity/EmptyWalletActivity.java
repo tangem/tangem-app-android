@@ -34,9 +34,7 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
     private static final int REQUEST_CODE_VERIFY_CARD = 4;
 
     private TangemCard mCard;
-    private TextView tvCardID, tvIssuer, tvIssuerData, tvBlockchain;
     private ProgressBar progressBar;
-    private ImageView ivBlockchain, ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion;
 
     private NfcManager mNfcManager;
     private boolean lastReadSuccess = true;
@@ -55,12 +53,12 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
         mCard = new TangemCard(getIntent().getStringExtra("UID"));
         mCard.LoadFromBundle(getIntent().getExtras().getBundle("Card"));
 
-        tvCardID = findViewById(R.id.tvCardID);
+        TextView tvCardID = findViewById(R.id.tvCardID);
         tvCardID.setText(mCard.getCIDDescription());
 
-        tvIssuer = findViewById(R.id.tvIssuer);
-        tvIssuerData = findViewById(R.id.tvIssuerData);
-        tvBlockchain = findViewById(R.id.tvBlockchain);
+        TextView tvIssuer = findViewById(R.id.tvIssuer);
+        TextView tvIssuerData = findViewById(R.id.tvIssuerData);
+        TextView tvBlockchain = findViewById(R.id.tvBlockchain);
 
         tvIssuer.setText(mCard.getIssuerDescription());
         tvIssuerData.setText(mCard.getIssuerDataDescription());
@@ -69,84 +67,50 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
         tvBlockchain.setText(mCard.getBlockchainName());
         progressBar = findViewById(R.id.progressBar);
 
-        ivBlockchain = findViewById(R.id.imgBlockchain);
-        ivPIN = findViewById(R.id.imgPIN);
-        ivPIN2orSecurityDelay = findViewById(R.id.imgPIN2orSecurityDelay);
-        ivDeveloperVersion = findViewById(R.id.imgDeveloperVersion);
+        ImageView ivBlockchain = findViewById(R.id.imgBlockchain);
+        ImageView ivPIN = findViewById(R.id.imgPIN);
+        ImageView ivPIN2orSecurityDelay = findViewById(R.id.imgPIN2orSecurityDelay);
+        ImageView ivDeveloperVersion = findViewById(R.id.imgDeveloperVersion);
+        Button btnNewWallet = findViewById(R.id.btnNewWallet);
 
         ivBlockchain.setImageResource(mCard.getBlockchain().getImageResource(this, mCard.getTokenSymbol()));
 
         if (mCard.useDefaultPIN1()) {
             ivPIN.setImageResource(R.drawable.unlock_pin1);
-            ivPIN.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Toast.makeText(EmptyWalletActivity.this, "This banknote is protected by default PIN1 code", Toast.LENGTH_LONG).show();
-                }
-            });
+            ivPIN.setOnClickListener(v -> Toast.makeText(EmptyWalletActivity.this, R.string.this_banknote_protected_default_PIN1_code, Toast.LENGTH_LONG).show());
         } else {
             ivPIN.setImageResource(R.drawable.lock_pin1);
-            ivPIN.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Toast.makeText(EmptyWalletActivity.this, "This banknote is protected by user's PIN1 code", Toast.LENGTH_LONG).show();
-                }
-            });
+            ivPIN.setOnClickListener(v -> Toast.makeText(EmptyWalletActivity.this, R.string.this_banknote_protected_user_PIN1_code, Toast.LENGTH_LONG).show());
         }
 
         if (mCard.getPauseBeforePIN2() > 0 && (mCard.useDefaultPIN2() || !mCard.useSmartSecurityDelay())) {
             ivPIN2orSecurityDelay.setImageResource(R.drawable.timer);
-            ivPIN2orSecurityDelay.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Toast.makeText(EmptyWalletActivity.this, String.format("This banknote will enforce %.0f seconds security delay for all operations requiring PIN2 code", mCard.getPauseBeforePIN2() / 1000.0), Toast.LENGTH_LONG).show();
-                }
-            });
+            ivPIN2orSecurityDelay.setOnClickListener(v -> Toast.makeText(EmptyWalletActivity.this, String.format("This banknote will enforce %.0f seconds security delay for all operations requiring PIN2 code", mCard.getPauseBeforePIN2() / 1000.0), Toast.LENGTH_LONG).show());
 
         } else if (mCard.useDefaultPIN2()) {
             ivPIN2orSecurityDelay.setImageResource(R.drawable.unlock_pin2);
-            ivPIN2orSecurityDelay.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Toast.makeText(EmptyWalletActivity.this, "This banknote is protected by default PIN2 code", Toast.LENGTH_LONG).show();
-                }
-            });
+            ivPIN2orSecurityDelay.setOnClickListener(v -> Toast.makeText(EmptyWalletActivity.this, R.string.this_banknote_protected_default_PIN2_code, Toast.LENGTH_LONG).show());
         } else {
             ivPIN2orSecurityDelay.setImageResource(R.drawable.lock_pin2);
-            ivPIN2orSecurityDelay.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Toast.makeText(EmptyWalletActivity.this, "This banknote is protected by user's PIN2 code", Toast.LENGTH_LONG).show();
-                }
-            });
+            ivPIN2orSecurityDelay.setOnClickListener(v -> Toast.makeText(EmptyWalletActivity.this, R.string.this_banknote_protected_user_PIN2_code, Toast.LENGTH_LONG).show());
         }
-
 
         if (mCard.useDevelopersFirmware()) {
             ivDeveloperVersion.setImageResource(R.drawable.ic_developer_version);
             ivDeveloperVersion.setVisibility(View.VISIBLE);
-            ivDeveloperVersion.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Toast.makeText(EmptyWalletActivity.this, "Unlocked banknote, only for development use", Toast.LENGTH_LONG).show();
-                }
-            });
+            ivDeveloperVersion.setOnClickListener(v -> Toast.makeText(EmptyWalletActivity.this, R.string.unlocked_banknote_only_development_use, Toast.LENGTH_LONG).show());
         } else {
             ivDeveloperVersion.setVisibility(View.INVISIBLE);
         }
 
-        Button btnNewWallet = findViewById(R.id.btnNewWallet);
-        btnNewWallet.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //CreateSelectBlockchainDialog();
-                requestPIN2Count = 0;
-                Intent intent = new Intent(getBaseContext(), RequestPINActivity.class);
-                intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
-                intent.putExtra("UID", mCard.getUID());
-                intent.putExtra("Card", mCard.getAsBundle());
-                startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2);
-            }
+        btnNewWallet.setOnClickListener(v -> {
+            //CreateSelectBlockchainDialog();
+            requestPIN2Count = 0;
+            Intent intent = new Intent(getBaseContext(), RequestPINActivity.class);
+            intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
+            intent.putExtra("UID", mCard.getUID());
+            intent.putExtra("Card", mCard.getAsBundle());
+            startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2);
         });
 
         if (getIntent().getExtras().containsKey(NfcAdapter.EXTRA_TAG)) {
@@ -209,7 +173,6 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
                 doCreateNewWallet();
             }
         }
-
     }
 
     @Override
@@ -243,12 +206,9 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
     }
 
     public void OnReadStart(CardProtocol cardProtocol) {
-        progressBar.post(new Runnable() {
-            @Override
-            public void run() {
-                progressBar.setVisibility(View.VISIBLE);
-                progressBar.setProgress(5);
-            }
+        progressBar.post(() -> {
+            progressBar.setVisibility(View.VISIBLE);
+            progressBar.setProgress(5);
         });
     }
 
@@ -258,76 +218,59 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
 
         if (cardProtocol != null) {
             if (cardProtocol.getError() == null) {
-                progressBar.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        progressBar.setProgress(100);
-                        progressBar.setProgressTintList(ColorStateList.valueOf(Color.GREEN));
-                        Intent intent = new Intent(EmptyWalletActivity.this, VerifyCardActivity.class);
-                        // TODO обновить карту mCard
-                        intent.putExtra("UID", cardProtocol.getCard().getUID());
-                        intent.putExtra("Card", cardProtocol.getCard().getAsBundle());
-                        startActivityForResult(intent, REQUEST_CODE_VERIFY_CARD);
-                        //addCard(cardProtocol.getCard());
-                    }
+                progressBar.post(() -> {
+                    progressBar.setProgress(100);
+                    progressBar.setProgressTintList(ColorStateList.valueOf(Color.GREEN));
+                    Intent intent = new Intent(EmptyWalletActivity.this, VerifyCardActivity.class);
+                    // TODO обновить карту mCard
+                    intent.putExtra("UID", cardProtocol.getCard().getUID());
+                    intent.putExtra("Card", cardProtocol.getCard().getAsBundle());
+                    startActivityForResult(intent, REQUEST_CODE_VERIFY_CARD);
+                    //addCard(cardProtocol.getCard());
                 });
             } else {
                 // remove last UIDs because of error and no card read
-                progressBar.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        lastReadSuccess = false;
-                        if (cardProtocol.getError() instanceof CardProtocol.TangemException_ExtendedLengthNotSupported) {
-                            if (!NoExtendedLengthSupportDialog.allreadyShowed) {
-                                new NoExtendedLengthSupportDialog().show(getFragmentManager(), "NoExtendedLengthSupportDialog");
-                            }
-                        } else {
-                            Toast.makeText(EmptyWalletActivity.this, "Try to scan again", Toast.LENGTH_LONG).show();
+                progressBar.post(() -> {
+                    lastReadSuccess = false;
+                    if (cardProtocol.getError() instanceof CardProtocol.TangemException_ExtendedLengthNotSupported) {
+                        if (!NoExtendedLengthSupportDialog.allreadyShowed) {
+                            new NoExtendedLengthSupportDialog().show(getFragmentManager(), NoExtendedLengthSupportDialog.TAG);
                         }
-                        progressBar.setProgress(100);
-                        progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
+                    } else {
+                        Toast.makeText(EmptyWalletActivity.this, "Try to scan again", Toast.LENGTH_LONG).show();
                     }
+                    progressBar.setProgress(100);
+                    progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
                 });
             }
         }
 
-        progressBar.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    progressBar.setProgress(0);
-                    progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
-                    progressBar.setVisibility(View.INVISIBLE);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        progressBar.postDelayed(() -> {
+            try {
+                progressBar.setProgress(0);
+                progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
+                progressBar.setVisibility(View.INVISIBLE);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }, 500);
     }
 
     public void OnReadProgress(CardProtocol protocol, final int progress) {
-        progressBar.post(new Runnable() {
-            @Override
-            public void run() {
-                progressBar.setProgress(progress);
-            }
-        });
+        progressBar.post(() -> progressBar.setProgress(progress));
     }
 
     public void OnReadCancel() {
 
         verifyCardTask = null;
 
-        progressBar.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    progressBar.setProgress(0);
-                    progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
-                    progressBar.setVisibility(View.INVISIBLE);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        progressBar.postDelayed(() -> {
+            try {
+                progressBar.setProgress(0);
+                progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
+                progressBar.setVisibility(View.INVISIBLE);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }, 500);
     }
@@ -358,6 +301,5 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
 //        intent.putExtra("newPIN2","12345678");
         startActivityForResult(intent, REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY);
     }
-
 
 }
