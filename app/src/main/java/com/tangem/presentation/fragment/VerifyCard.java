@@ -5,12 +5,15 @@ import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -20,16 +23,17 @@ import com.tangem.domain.wallet.TangemCard;
 import com.tangem.wallet.R;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefreshListener, NfcAdapter.ReaderCallback {
 
-    TangemCard mCard;
-    TextView tvCardID, tvManufacturer, tvRegistrationDate, tvCardIdentity, tvLastSigned, tvRemainingSignatures, tvReusable, tvOk, tvError, tvMessage,
+    private TangemCard mCard;
+    private TextView tvCardID, tvManufacturer, tvRegistrationDate, tvCardIdentity, tvLastSigned, tvRemainingSignatures, tvReusable, tvError, tvMessage,
             tvIssuer, tvIssuerData, tvFeatures, tvBlockchain, tvSignedTx, tvSigningMethod, tvFirmware, tvWalletIdentity, tvWallet;
-    ImageView ivBlockchain, ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion;
-    SwipeRefreshLayout mSwipeRefreshLayout;
+    private ImageView ivBlockchain, ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
     private NfcManager mNfcManager;
 
     public VerifyCard() {
@@ -41,15 +45,12 @@ public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefresh
     }
 
     @Override
-    public View onCreateView(final LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(@NonNull final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View v = inflater.inflate(R.layout.fr_verify_card, container, false);
 
         mNfcManager = new NfcManager(this.getActivity(), this);
 
-
-        // SwipeRefreshLayout
         mSwipeRefreshLayout = v.findViewById(R.id.swipe_container);
         mSwipeRefreshLayout.setOnRefreshListener(this);
 
@@ -86,23 +87,20 @@ public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefresh
         tvSignedTx = v.findViewById(R.id.tvSignedTx);
         tvSigningMethod = v.findViewById(R.id.tvSigningMethod);
 
-        tvOk = v.findViewById(R.id.tvOk);
-        if (tvOk != null) {
-            tvOk.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent data = prepareResultIntent();
-                    data.putExtra("modification", "update");
-                    getActivity().setResult(Activity.RESULT_OK, data);
-                    getActivity().finish();
-                }
-            });
-        }
+        Button btnOk = v.findViewById(R.id.btnOk);
+
+        btnOk.setOnClickListener(v1 -> {
+            Intent data = prepareResultIntent();
+            data.putExtra("modification", "update");
+            getActivity().setResult(Activity.RESULT_OK, data);
+            getActivity().finish();
+        });
+
 
         tvWallet = v.findViewById(R.id.tvWallet);
         tvWalletIdentity = v.findViewById(R.id.tvWalletIdentity);
 
-        UpdateViews();
+        updateViews();
 
 //        if (NeedUpdate) {
 //            mSwipeRefreshLayout.setRefreshing(true);
@@ -116,7 +114,25 @@ public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefresh
         return v;
     }
 
-    void UpdateViews() {
+    @Override
+    public void onResume() {
+        super.onResume();
+        mNfcManager.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mNfcManager.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        mNfcManager.onStop();
+    }
+
+    void updateViews() {
         try {
             if (timerHideErrorAndMessage != null) {
                 timerHideErrorAndMessage.cancel();
@@ -142,11 +158,12 @@ public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefresh
             tvManufacturer.setText(mCard.getManufacturer().getOfficialName());
 
             if (mCard.isManufacturerConfirmed() && mCard.isCardPublicKeyValid()) {
-                tvCardIdentity.setText("Attested");
-                tvCardIdentity.setTextColor(getResources().getColor(R.color.confirmed, getActivity().getTheme()));
+                tvCardIdentity.setText(R.string.attested);
+                tvCardIdentity.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getContext()), R.color.confirmed));
+
             } else {
-                tvCardIdentity.setText("Not confirmed");
-                tvCardIdentity.setTextColor(getResources().getColor(R.color.not_confirmed, getActivity().getTheme()));
+                tvCardIdentity.setText(R.string.not_confirmed);
+                tvCardIdentity.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getContext()), R.color.not_confirmed));
             }
 
             tvIssuer.setText(mCard.getIssuerDescription());
@@ -158,11 +175,10 @@ public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefresh
             tvBlockchain.setText(mCard.getBlockchainName());
             ivBlockchain.setImageResource(mCard.getBlockchain().getImageResource(this.getContext(), mCard.getTokenSymbol()));
 
-            if (mCard.isReusable()) {
-                tvReusable.setText("Reusable");
-            } else {
-                tvReusable.setText("One-off banknote");
-            }
+            if (mCard.isReusable())
+                tvReusable.setText(R.string.reusable);
+            else
+                tvReusable.setText(R.string.one_off_banknote);
 
             tvSigningMethod.setText(mCard.getSigningMethod().getDescription());
 
@@ -170,16 +186,16 @@ public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefresh
 
                 tvLastSigned.setText(mCard.getLastSignedDescription());
                 if (mCard.getRemainingSignatures() == 0) {
-                    tvRemainingSignatures.setTextColor(getResources().getColor(R.color.not_confirmed, getActivity().getTheme()));
-                    tvRemainingSignatures.setText("None");
+                    tvRemainingSignatures.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getContext()), R.color.not_confirmed));
+                    tvRemainingSignatures.setText(R.string.none);
                 } else if (mCard.getRemainingSignatures() == 1) {
-                    tvRemainingSignatures.setTextColor(getResources().getColor(R.color.not_confirmed, getActivity().getTheme()));
-                    tvRemainingSignatures.setText("Last one!");
+                    tvRemainingSignatures.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getContext()), R.color.not_confirmed));
+                    tvRemainingSignatures.setText(R.string.last_one);
                 } else if (mCard.getRemainingSignatures() > 1000) {
-                    tvRemainingSignatures.setTextColor(getResources().getColor(R.color.confirmed, getActivity().getTheme()));
-                    tvRemainingSignatures.setText("Unlimited");
+                    tvRemainingSignatures.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getContext()), R.color.confirmed));
+                    tvRemainingSignatures.setText(R.string.unlimited);
                 } else {
-                    tvRemainingSignatures.setTextColor(getResources().getColor(R.color.confirmed, getActivity().getTheme()));
+                    tvRemainingSignatures.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getContext()), R.color.confirmed));
                     tvRemainingSignatures.setText(String.valueOf(mCard.getRemainingSignatures()));
                 }
                 tvSignedTx.setText(String.valueOf(mCard.getMaxSignatures() - mCard.getRemainingSignatures()));
@@ -228,59 +244,28 @@ public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefresh
 
             if (mCard.useDefaultPIN1()) {
                 ivPIN.setImageResource(R.drawable.unlock_pin1);
-                ivPIN.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(getContext(), "This banknote is protected by default PIN1 code", Toast.LENGTH_LONG).show();
-                    }
-                });
+                ivPIN.setOnClickListener(v -> Toast.makeText(getContext(), R.string.this_banknote_protected_default_PIN1_code, Toast.LENGTH_LONG).show());
             } else {
                 ivPIN.setImageResource(R.drawable.lock_pin1);
-                ivPIN.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(getContext(), "This banknote is protected by user's PIN1 code", Toast.LENGTH_LONG).show();
-                    }
-                });
+                ivPIN.setOnClickListener(v -> Toast.makeText(getContext(), R.string.this_banknote_protected_user_PIN1_code, Toast.LENGTH_LONG).show());
             }
 
             if (mCard.getPauseBeforePIN2() > 0 && (mCard.useDefaultPIN2() || !mCard.useSmartSecurityDelay())) {
                 ivPIN2orSecurityDelay.setImageResource(R.drawable.timer);
-                ivPIN2orSecurityDelay.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(getContext(), String.format("This banknote will enforce %.0f seconds security delay for all operations requiring PIN2 code", mCard.getPauseBeforePIN2() / 1000.0), Toast.LENGTH_LONG).show();
-                    }
-                });
+                ivPIN2orSecurityDelay.setOnClickListener(v -> Toast.makeText(getContext(), String.format("This banknote will enforce %.0f seconds security delay for all operations requiring PIN2 code", mCard.getPauseBeforePIN2() / 1000.0), Toast.LENGTH_LONG).show());
 
             } else if (mCard.useDefaultPIN2()) {
                 ivPIN2orSecurityDelay.setImageResource(R.drawable.unlock_pin2);
-                ivPIN2orSecurityDelay.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(getContext(), "This banknote is protected by default PIN2 code", Toast.LENGTH_LONG).show();
-                    }
-                });
+                ivPIN2orSecurityDelay.setOnClickListener(v -> Toast.makeText(getContext(), R.string.this_banknote_protected_default_PIN2_code, Toast.LENGTH_LONG).show());
             } else {
                 ivPIN2orSecurityDelay.setImageResource(R.drawable.lock_pin2);
-                ivPIN2orSecurityDelay.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(getContext(), "This banknote is protected by user's PIN2 code", Toast.LENGTH_LONG).show();
-                    }
-                });
+                ivPIN2orSecurityDelay.setOnClickListener(v -> Toast.makeText(getContext(), R.string.this_banknote_protected_user_PIN2_code, Toast.LENGTH_LONG).show());
             }
-
 
             if (mCard.useDevelopersFirmware()) {
                 ivDeveloperVersion.setImageResource(R.drawable.ic_developer_version);
                 ivDeveloperVersion.setVisibility(View.VISIBLE);
-                ivDeveloperVersion.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(getContext(), "Unlocked banknote, only for development use", Toast.LENGTH_LONG).show();
-                    }
-                });
+                ivDeveloperVersion.setOnClickListener(v -> Toast.makeText(getContext(), R.string.unlocked_banknote_only_development_use, Toast.LENGTH_LONG).show());
             } else {
                 ivDeveloperVersion.setVisibility(View.INVISIBLE);
             }
@@ -288,29 +273,26 @@ public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefresh
             if (mCard.getStatus() == TangemCard.Status.Loaded) {
                 tvWallet.setText(mCard.getShortWalletString());
                 if (mCard.isWalletPublicKeyValid()) {
-                    tvWalletIdentity.setText("Possession proved");
-                    tvWalletIdentity.setTextColor(getResources().getColor(R.color.confirmed, getActivity().getTheme()));
+                    tvWalletIdentity.setText(R.string.possession_proved);
+                    tvWalletIdentity.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getContext()), R.color.confirmed));
                 } else {
-                    tvWalletIdentity.setText("Possession NOT proved");
-                    tvWalletIdentity.setTextColor(getResources().getColor(R.color.not_confirmed, getActivity().getTheme()));
+                    tvWalletIdentity.setText(R.string.possession_not_proved);
+                    tvWalletIdentity.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getContext()), R.color.not_confirmed));
                 }
             } else {
-                tvWallet.setText("not available");
-                tvWalletIdentity.setText("-- -- --");
+                tvWallet.setText(R.string.not_available);
+                tvWalletIdentity.setText(R.string.no_data_string);
             }
 
             timerHideErrorAndMessage = new Timer();
             timerHideErrorAndMessage.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    tvError.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            tvMessage.setVisibility(View.GONE);
-                            tvError.setVisibility(View.GONE);
-                            mCard.setError(null);
-                            mCard.setMessage(null);
-                        }
+                    tvError.post(() -> {
+                        tvMessage.setVisibility(View.GONE);
+                        tvError.setVisibility(View.GONE);
+                        mCard.setError(null);
+                        mCard.setMessage(null);
                     });
                 }
             }, 5000);
@@ -328,25 +310,6 @@ public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefresh
         data.putExtra("UID", mCard.getUID());
         data.putExtra("Card", mCard.getAsBundle());
         return data;
-    }
-
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        mNfcManager.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        mNfcManager.onPause();
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        mNfcManager.onStop();
     }
 
     @Override
