@@ -18,6 +18,7 @@ import android.nfc.tech.IsoDep;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -59,6 +60,7 @@ import com.tangem.domain.wallet.PINStorage;
 import com.tangem.domain.wallet.SharedData;
 import com.tangem.domain.wallet.TangemCard;
 import com.tangem.presentation.activity.CreateNewWalletActivity;
+import com.tangem.presentation.activity.MainActivity;
 import com.tangem.presentation.activity.PreparePaymentActivity;
 import com.tangem.presentation.activity.PurgeActivity;
 import com.tangem.presentation.activity.RequestPINActivity;
@@ -98,12 +100,27 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     private static final int REQUEST_CODE_SWAP_PIN = 8;
 
     private TangemCard mCard;
-    private TextView tvCardID, tvBalance, tvOffline, tvBalanceEquivalent, tvWallet, tvInputs, lbInputs, tvPurge, tvError, tvMessage, tvIssuer, tvIssuerData, tvBlockchain, tvLastInput, tvLastOutput, lbLastOutput, tvValidationNode;
+    private TextView tvCardID;
+    private TextView tvBalance;
+    private TextView tvOffline;
+    private TextView tvBalanceEquivalent;
+    private TextView tvWallet;
+    private TextView tvInputs;
+    private TextView tvError;
+    private TextView tvMessage;
+    private TextView tvIssuer;
+    private TextView tvIssuerData;
+    private TextView tvBlockchain;
+    private TextView tvLastInput;
+    private TextView tvLastOutput;
+    private TextView lbLastOutput;
+    private TextView tvValidationNode;
     private TextView tvHeader, tvCaution;
-    private ImageView imgLookup;
-    private TextView tvLookup;
     private ProgressBar progressBar;
-    private ImageView ivBlockchain, ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion, ivQR;
+    private ImageView ivBlockchain;
+    private ImageView ivPIN;
+    private ImageView ivPIN2orSecurityDelay;
+    private ImageView ivDeveloperVersion;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private List<UpdateWalletInfoTask> updateTasks = new ArrayList<>();
     private NfcManager mNfcManager;
@@ -115,6 +132,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     private Timer timerHideErrorAndMessage = null;
     private String newPIN = "", newPIN2 = "";
     private AppCompatButton btnLoad, btnExtract;
+    private FloatingActionButton fabPurge, fabNFC;
 
     public LoadedWallet() {
 
@@ -580,7 +598,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     public View onCreateView(@NonNull final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fr_loaded_wallet, container, false);
 
-        mNfcManager = new NfcManager(this.getActivity(), this);
+        mNfcManager = new NfcManager(getActivity(), this);
 
         mSwipeRefreshLayout = v.findViewById(R.id.swipe_container);
         tvBalance = v.findViewById(R.id.tvBalance);
@@ -588,16 +606,15 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         tvCardID = v.findViewById(R.id.tvCardID);
         tvWallet = v.findViewById(R.id.tvWallet);
         tvInputs = v.findViewById(R.id.tvInputs);
-        lbInputs = v.findViewById(R.id.lbInputs);
+        TextView lbInputs = v.findViewById(R.id.lbInputs);
         tvLastOutput = v.findViewById(R.id.tvLastOutput);
-        lbLastOutput = v.findViewById(R.id.lbLastOutput);
         tvError = v.findViewById(R.id.tvError);
         tvMessage = v.findViewById(R.id.tvMessage);
         tvIssuer = v.findViewById(R.id.tvIssuer);
         tvIssuerData = v.findViewById(R.id.tvIssuerData);
         tvHeader = v.findViewById(R.id.tvHeader);
         tvCaution = v.findViewById(R.id.tvCaution);
-        imgLookup = v.findViewById(R.id.imgLookup);
+        ImageView imgLookup = v.findViewById(R.id.imgLookup);
         tvValidationNode = v.findViewById(R.id.tvValidationNode);
         progressBar = v.findViewById(R.id.progressBar);
         tvBlockchain = v.findViewById(R.id.tvBlockchain);
@@ -605,43 +622,30 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         ivPIN = v.findViewById(R.id.imgPIN);
         ivPIN2orSecurityDelay = v.findViewById(R.id.imgPIN2orSecurityDelay);
         ivDeveloperVersion = v.findViewById(R.id.imgDeveloperVersion);
-        ivQR = v.findViewById(R.id.qrWallet);
-        tvLookup = v.findViewById(R.id.tvLookup);
-        tvPurge = v.findViewById(R.id.tvPurge);
+        ImageView ivQR = v.findViewById(R.id.qrWallet);
+        TextView tvLookup = v.findViewById(R.id.tvLookup);
+        fabPurge = v.findViewById(R.id.fabPurge);
+        fabNFC = v.findViewById(R.id.fabNFC);
         btnLoad = v.findViewById(R.id.btnLoad);
         btnExtract = v.findViewById(R.id.btnExtract);
+        tvBalanceEquivalent = v.findViewById(R.id.tvBalanceEquivalent);
 
         mSwipeRefreshLayout.setOnRefreshListener(this);
 
-        mCard = new TangemCard(getActivity().getIntent().getStringExtra("UID"));
-        mCard.LoadFromBundle(getActivity().getIntent().getExtras().getBundle("Card"));
+        mCard = new TangemCard(Objects.requireNonNull(getActivity()).getIntent().getStringExtra(TangemCard.EXTRA_CARD));
+        mCard.LoadFromBundle(Objects.requireNonNull(getActivity().getIntent().getExtras()).getBundle(TangemCard.EXTRA_CARD));
 
-        if (mCard.getBlockchain() == Blockchain.Token) {
-            //tvBalance.setLines(2);
+        if (mCard.getBlockchain() == Blockchain.Token)
             tvBalance.setSingleLine(false);
-        }
 
-        tvBalanceEquivalent = v.findViewById(R.id.tvBalanceEquivalent);
 
         final CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
-
         boolean visibleFlag = engine != null ? engine.InOutPutVisible() : true;
         int visibleIOPuts = visibleFlag ? View.VISIBLE : View.GONE;
-        if (tvInputs != null) {
-            tvInputs.setVisibility(visibleIOPuts);
-        }
 
-        if (lbInputs != null) {
-            lbInputs.setVisibility(visibleIOPuts);
-        }
-
-        if (tvLastOutput != null) {
-            tvLastOutput.setVisibility(visibleIOPuts);
-        }
-
-        if (lbLastOutput != null) {
-            lbLastOutput.setVisibility(visibleIOPuts);
-        }
+        tvInputs.setVisibility(visibleIOPuts);
+        lbInputs.setVisibility(visibleIOPuts);
+        tvLastOutput.setVisibility(visibleIOPuts);
 
         try {
             ivQR.setImageBitmap(generateQrCode(Objects.requireNonNull(engine).getShareWalletURI(mCard).toString()));
@@ -649,31 +653,44 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             e.printStackTrace();
         }
 
-        if (imgLookup != null) {
-            imgLookup.setOnClickListener(v15 -> {
-                if (!mCard.hasBalanceInfo()) {
-                    return;
-                }
-                CoinEngine engineClick = CoinEngineFactory.Create(mCard.getBlockchain());
+        updateViews();
 
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Objects.requireNonNull(engineClick).getShareWalletURIExplorer(mCard));
-                startActivity(browserIntent);
-            });
-
+        if (!mCard.hasBalanceInfo()) {
+            mSwipeRefreshLayout.setRefreshing(true);
+            mSwipeRefreshLayout.postDelayed(this::onRefresh, 1000);
         }
 
-        if (tvLookup != null) {
-            tvLookup.setOnClickListener(v14 -> {
-                if (!mCard.hasBalanceInfo()) {
-                    return;
+        imgLookup.setOnClickListener(v15 -> {
+            if (!mCard.hasBalanceInfo()) return;
+            CoinEngine engineClick = CoinEngineFactory.Create(mCard.getBlockchain());
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Objects.requireNonNull(engineClick).getShareWalletURIExplorer(mCard));
+            startActivity(browserIntent);
+        });
+
+        tvLookup.setOnClickListener(v14 -> {
+            if (!mCard.hasBalanceInfo()) return;
+            CoinEngine engineClick = CoinEngineFactory.Create(mCard.getBlockchain());
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Objects.requireNonNull(engineClick).getShareWalletURIExplorer(mCard));
+            startActivity(browserIntent);
+        });
+
+        tvWallet.setOnClickListener(v12 -> doShareWallet(false));
+
+        ivQR.setOnClickListener(v1 -> doShareWallet(true));
+
+        btnLoad.setOnClickListener(v1 -> {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Objects.requireNonNull(CoinEngineFactory.Create(mCard.getBlockchain())).getShareWalletURI(mCard));
+                    intent.addCategory(Intent.CATEGORY_DEFAULT);
+                    startActivity(intent);
                 }
-                CoinEngine engineClick = CoinEngineFactory.Create(mCard.getBlockchain());
+        );
 
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Objects.requireNonNull(engineClick).getShareWalletURIExplorer(mCard));
-                startActivity(browserIntent);
-            });
-        }
+        fabPurge.setOnClickListener(v16 -> showMenu(fabPurge));
 
+        fabNFC.setOnClickListener(view -> {
+            Intent intent = new Intent(getContext(), MainActivity.class);
+            startActivity(intent);
+        });
 
         btnExtract.setOnClickListener(v13 -> {
             if (!mCard.hasBalanceInfo()) {
@@ -700,23 +717,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             intent.putExtra("Card", mCard.getAsBundle());
             startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT);
         });
-
-        updateViews();
-
-        if (!mCard.hasBalanceInfo()) {
-            mSwipeRefreshLayout.setRefreshing(true);
-            mSwipeRefreshLayout.postDelayed(this::onRefresh, 1000);
-        }
-
-        tvWallet.setOnClickListener(v12 -> doShareWallet(false));
-        ivQR.setOnClickListener(v1 -> doShareWallet(true));
-        btnLoad.setOnClickListener(v1 -> {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Objects.requireNonNull(CoinEngineFactory.Create(mCard.getBlockchain())).getShareWalletURI(mCard));
-                    intent.addCategory(Intent.CATEGORY_DEFAULT);
-                    startActivity(intent);
-                }
-        );
-        tvPurge.setOnClickListener(v16 -> showMenu(tvPurge));
 
         return v;
     }
