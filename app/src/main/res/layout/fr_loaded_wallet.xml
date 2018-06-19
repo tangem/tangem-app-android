@@ -215,8 +215,7 @@
                     android:gravity="top|center"
                     android:orientation="horizontal"
                     android:paddingLeft="8dp"
-                    android:paddingRight="8dp"
-                    >
+                    android:paddingRight="8dp">
 
                     <ImageView
                         android:id="@+id/qrWallet"
@@ -441,7 +440,8 @@
     <LinearLayout
         android:id="@+id/rlToolButtons"
         android:layout_width="0dp"
-        android:layout_height="40dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
         app:layout_constraintBottom_toTopOf="@+id/rlCardIdAndIcons"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -450,29 +450,29 @@
         <android.support.v7.widget.AppCompatButton
             android:id="@+id/btnLoad"
             style="@style/AppTheme.RoundedCornerMaterialButton"
-            android:layout_width="120dp"
-            android:gravity="center_vertical"
+            android:layout_width="wrap_content"
             android:text="@string/load"/>
 
-        <TextView
-            android:id="@+id/tvPurge"
-            android:layout_width="40dp"
-            android:layout_height="36dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
-            android:background="@drawable/ic_show_menu"
-            android:backgroundTint="@color/colorPrimaryDark"
-            android:fontFamily="@font/raleway_r"
-            android:gravity="center_vertical"
-            android:textAlignment="center"
-            android:textColor="@color/white"
-            android:textSize="@dimen/text_size_medium"/>
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fabPurge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="5dp"
+            app:fabSize="mini"
+            app:srcCompat="@drawable/ic_wrench_white_24dp"/>
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fabNFC"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            app:fabSize="mini"
+            app:srcCompat="@drawable/ic_nfc_white_24dp"/>
 
         <android.support.v7.widget.AppCompatButton
             android:id="@+id/btnExtract"
             style="@style/AppTheme.RoundedCornerMaterialButton"
-            android:layout_width="120dp"
-            android:gravity="center_vertical"
+            android:layout_width="wrap_content"
             android:text="@string/extract"/>
 
     </LinearLayout>
