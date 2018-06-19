@@ -28,44 +28,41 @@ import javax.net.ssl.HttpsURLConnection;
 public class InfuraTask extends AsyncTask<InfuraRequest, Void, List<InfuraRequest>> {
     private Exception exception;
     private Blockchain blockchain;
-    public InfuraTask(Blockchain blockchainNet)
-    {
+
+    public InfuraTask(Blockchain blockchainNet) {
         blockchain = blockchainNet;
     }
+
     boolean useOurNode = false;
+
     protected List<InfuraRequest> doInBackground(InfuraRequest... requests) {
         List<InfuraRequest> result = new ArrayList<>();
         for (int i = 0; i < requests.length; i++) {
             result.add(requests[i]);
         }
 
-        for (InfuraRequest request: result)
-        {
+        for (InfuraRequest request : result) {
             HttpURLConnection httpcon = null;
 
             try {
                 URL url = new URL("https://rinkeby.infura.io/AfWg0tmYEX5Kukn2UkKV");
 
-                if(blockchain == Blockchain.Ethereum || blockchain == Blockchain.Token){
-                    if(useOurNode) {
+                if (blockchain == Blockchain.Ethereum || blockchain == Blockchain.Token) {
+                    if (useOurNode) {
                         URL tmp = new URL("http://52.230.23.88");
                         url = new URL(tmp.getProtocol(), tmp.getHost(), 27172, tmp.getFile());
-                    }else
+                    } else
                         url = new URL("https://mainnet.infura.io/AfWg0tmYEX5Kukn2UkKV");
 
                 }
 
-                if(useOurNode)
-                {
-                    httpcon = (HttpURLConnection)url.openConnection();
-                }
-                else
-                {
-                    httpcon = (HttpsURLConnection)url.openConnection();
+                if (useOurNode) {
+                    httpcon = (HttpURLConnection) url.openConnection();
+                } else {
+                    httpcon = (HttpsURLConnection) url.openConnection();
                 }
 
-                if(httpcon == null)
-                {
+                if (httpcon == null) {
                     request.error = String.format("Cann't connect to %s", url.getHost());
                     return result;
                 }
@@ -75,15 +72,13 @@ public class InfuraTask extends AsyncTask<InfuraRequest, Void, List<InfuraReques
                 String params = request.getAsString();
 
                 OutputStream os = httpcon.getOutputStream();
-                if(os == null)
-                {
+                if (os == null) {
                     request.error = String.format("Cann't recieve data from %s", url.getHost());
                     return result;
                 }
                 BufferedWriter writer = new BufferedWriter(
                         new OutputStreamWriter(os, "UTF-8"));
-                if(writer == null)
-                {
+                if (writer == null) {
                     request.error = String.format("Cann't send data to %s", url.getHost());
 
                 }
@@ -95,7 +90,7 @@ public class InfuraTask extends AsyncTask<InfuraRequest, Void, List<InfuraReques
 
                 httpcon.connect();
                 request.getParams();
-                System.out.println("code:"+httpcon.getResponseCode());
+                System.out.println("code:" + httpcon.getResponseCode());
                 int code = httpcon.getResponseCode();
 
                 BufferedReader in = new BufferedReader(
@@ -122,9 +117,8 @@ public class InfuraTask extends AsyncTask<InfuraRequest, Void, List<InfuraReques
     }
 
     public String getValidationNodeDescription() {
-        if(blockchain == Blockchain.Ethereum || blockchain == Blockchain.Token)
-        {
-            if(useOurNode)
+        if (blockchain == Blockchain.Ethereum || blockchain == Blockchain.Token) {
+            if (useOurNode)
                 return "52.230.23.88:27172";
             else
                 return "Infura, infura.io";
