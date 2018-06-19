@@ -129,6 +129,17 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_CODE_SEND_EMAIL) {
+            if (zipFile != null) {
+                zipFile.delete();
+                zipFile = null;
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()) || NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction()))) {
@@ -207,17 +218,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_CODE_SEND_EMAIL) {
-            if (zipFile != null) {
-                zipFile.delete();
-                zipFile = null;
-            }
-        }
-        super.onActivityResult(requestCode, resultCode, data);
     }
 
     public static void commonInit(Context context) {
