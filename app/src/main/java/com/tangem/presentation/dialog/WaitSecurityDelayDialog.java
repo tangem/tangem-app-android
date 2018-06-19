@@ -40,13 +40,10 @@ public class WaitSecurityDelayDialog extends DialogFragment {
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                progressBar.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        int progress = WaitSecurityDelayDialog.this.progressBar.getProgress();
-                        if (progress < WaitSecurityDelayDialog.this.progressBar.getMax()) {
-                            WaitSecurityDelayDialog.this.progressBar.setProgress(progress + 1000);
-                        }
+                progressBar.post(() -> {
+                    int progress = WaitSecurityDelayDialog.this.progressBar.getProgress();
+                    if (progress < WaitSecurityDelayDialog.this.progressBar.getMax()) {
+                        WaitSecurityDelayDialog.this.progressBar.setProgress(progress + 1000);
                     }
                 });
             }
@@ -70,22 +67,19 @@ public class WaitSecurityDelayDialog extends DialogFragment {
     }
 
     public void setRemainingTimeout(final int msec) {
-        progressBar.post(new Runnable() {
-            @Override
-            public void run() {
-                int progress = WaitSecurityDelayDialog.this.progressBar.getProgress();
-                if (timer != null) {
-                    // we get delay latency from card for first time - don't change progress by timer, only by card answer
-                    progressBar.setMax(progress + msec);
-                    timer.cancel();
-                    timer = null;
+        progressBar.post(() -> {
+            int progress = WaitSecurityDelayDialog.this.progressBar.getProgress();
+            if (timer != null) {
+                // we get delay latency from card for first time - don't change progress by timer, only by card answer
+                progressBar.setMax(progress + msec);
+                timer.cancel();
+                timer = null;
+            } else {
+                int newProgress = progressBar.getMax() - msec;
+                if (newProgress > progress) {
+                    progressBar.setProgress(newProgress);
                 } else {
-                    int newProgress = progressBar.getMax() - msec;
-                    if (newProgress > progress) {
-                        progressBar.setProgress(newProgress);
-                    } else {
-                        progressBar.setMax(progress + msec);
-                    }
+                    progressBar.setMax(progress + msec);
                 }
             }
         });
@@ -101,68 +95,61 @@ public class WaitSecurityDelayDialog extends DialogFragment {
         return instance;
     }
 
-    private final static int MinRemainingDelayToShowDialog=1000;
-    private final static int DelayBeforeShowDialog=5000;
+    private final static int MinRemainingDelayToShowDialog = 1000;
+    private final static int DelayBeforeShowDialog = 5000;
 
     public static void onReadBeforeRequest(final Activity activity, final int timeout) {
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (timerToShowDelayDialog != null || timeout < DelayBeforeShowDialog+MinRemainingDelayToShowDialog) return;
-                timerToShowDelayDialog = new Timer();
-                timerToShowDelayDialog.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        if (WaitSecurityDelayDialog.instance != null) return;
-                        instance = new WaitSecurityDelayDialog();
-                        instance.setup(timeout, DelayBeforeShowDialog);
-                        instance.setCancelable(false);
-                        instance.show(activity.getFragmentManager(), "WaitSecurityDelayDialog");
-                    }
-                }, DelayBeforeShowDialog);
-            }
+        activity.runOnUiThread(() -> {
+            if (timerToShowDelayDialog != null || timeout < DelayBeforeShowDialog + MinRemainingDelayToShowDialog)
+                return;
+            timerToShowDelayDialog = new Timer();
+            timerToShowDelayDialog.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if (WaitSecurityDelayDialog.instance != null) return;
+                    instance = new WaitSecurityDelayDialog();
+                    instance.setup(timeout, DelayBeforeShowDialog);
+                    instance.setCancelable(false);
+                    instance.show(activity.getFragmentManager(), "WaitSecurityDelayDialog");
+                }
+            }, DelayBeforeShowDialog);
         });
     }
 
     public static void onReadAfterRequest(final Activity activity) {
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (timerToShowDelayDialog == null) return;
-                timerToShowDelayDialog.cancel();
-                timerToShowDelayDialog = null;
-            }
+        activity.runOnUiThread(() -> {
+            if (timerToShowDelayDialog == null) return;
+            timerToShowDelayDialog.cancel();
+            timerToShowDelayDialog = null;
         });
     }
 
     public static void OnReadWait(final Activity activity, final int msec) {
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (timerToShowDelayDialog != null) {
-                    timerToShowDelayDialog.cancel();
-                    timerToShowDelayDialog = null;
-                }
+        activity.runOnUiThread(() -> {
+            if (timerToShowDelayDialog != null) {
+                timerToShowDelayDialog.cancel();
+                timerToShowDelayDialog = null;
+            }
 
-                if (msec == 0) {
-                    if (instance != null) {
-                        instance.dismiss();
-                        instance = null;
-                    }
-                    return;
+            if (msec == 0) {
+                if (instance != null) {
+                    instance.dismiss();
+                    instance = null;
                 }
-                if (instance == null) {
-                    if( msec>MinRemainingDelayToShowDialog ) {
-                        instance = new WaitSecurityDelayDialog();
-                        // 1000ms - card delay notification interval
-                        instance.setup(msec + 1000, 1000);
-                        instance.setCancelable(false);
-                        instance.show(activity.getFragmentManager(), "WaitSecurityDelayDialog");
-                    }
-                } else {
-                    instance.setRemainingTimeout(msec);
+                return;
+            }
+            if (instance == null) {
+                if (msec > MinRemainingDelayToShowDialog) {
+                    instance = new WaitSecurityDelayDialog();
+                    // 1000ms - card delay notification interval
+                    instance.setup(msec + 1000, 1000);
+                    instance.setCancelable(false);
+                    instance.show(activity.getFragmentManager(), "WaitSecurityDelayDialog");
                 }
+            } else {
+                instance.setRemainingTimeout(msec);
             }
         });
     }
+
 }
