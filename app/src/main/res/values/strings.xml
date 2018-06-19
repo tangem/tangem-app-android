@@ -93,7 +93,7 @@
     <string name="not_transferable_banknote">NON-TRANSFERABLE BANKNOTE</string>
     <string name="developer_kit">DEVELOPER KIT</string>
     <string name="do_not_accept">DO NOT ACCEPT</string>
-    <string name="explore_in_blockchain">EXPLORE IN \n BLOCKCHAIN \n ON WEB</string>
+    <string name="explore_in_blockchain">EXPLORE</string>
     <string name="unspents">Unspents</string>
     <string name="issuer">Issuer</string>
     <string name="validation_node">Validation node</string>
