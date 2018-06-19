@@ -643,8 +643,8 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         int visibleIOPuts = visibleFlag ? View.VISIBLE : View.GONE;
 
         tvInputs.setVisibility(visibleIOPuts);
-        lbInputs.setVisibility(visibleIOPuts);
-        tvLastOutput.setVisibility(visibleIOPuts);
+//        lbInputs.setVisibility(visibleIOPuts);
+//        tvLastOutput.setVisibility(visibleIOPuts);
 
         try {
             ivQR.setImageBitmap(generateQrCode(Objects.requireNonNull(engine).getShareWalletURI(mCard).toString()));
@@ -1330,12 +1330,12 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 //                btnSend.setText(mCard.getOutputsDescription());
 //            }
 
-            if (tvLastInput != null) {
-                tvLastInput.setText(mCard.getLastInputDescription());
-            }
-            if (tvLastOutput != null) {
-                tvLastOutput.setText(mCard.getLastOutputDescription());
-            }
+
+            tvLastInput.setText(mCard.getLastInputDescription());
+
+
+//            tvLastOutput.setText(mCard.getLastOutputDescription());
+
 
             tvBlockchain.setText(mCard.getBlockchainName());
             ivBlockchain.setImageResource(mCard.getBlockchain().getImageResource(this.getContext(), mCard.getTokenSymbol()));
