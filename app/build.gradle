@@ -22,14 +22,14 @@ android {
 
     buildTypes {
         release {
-//            debuggable false
-//            minifyEnabled false
+            debuggable false
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.debug
         }
         debug {
-//            debuggable true
-//            minifyEnabled false
+            debuggable true
+            minifyEnabled false
             applicationIdSuffix ".debug"
             signingConfig signingConfigs.debug
         }
