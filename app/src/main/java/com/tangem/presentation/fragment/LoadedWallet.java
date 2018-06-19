@@ -124,14 +124,13 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private List<UpdateWalletInfoTask> updateTasks = new ArrayList<>();
     private NfcManager mNfcManager;
-    private final String logTag = "LoadedWallet";
     private boolean lastReadSuccess = true;
     private VerifyCardTask verifyCardTask = null;
     private int requestPIN2Count = 0;
 
     private Timer timerHideErrorAndMessage = null;
     private String newPIN = "", newPIN2 = "";
-    private AppCompatButton btnLoad, btnExtract;
+    private AppCompatButton btnExtract;
     private FloatingActionButton fabPurge, fabNFC;
 
     public LoadedWallet() {
@@ -626,7 +625,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         TextView tvLookup = v.findViewById(R.id.tvLookup);
         fabPurge = v.findViewById(R.id.fabPurge);
         fabNFC = v.findViewById(R.id.fabNFC);
-        btnLoad = v.findViewById(R.id.btnLoad);
+        AppCompatButton btnLoad = v.findViewById(R.id.btnLoad);
         btnExtract = v.findViewById(R.id.btnExtract);
         tvBalanceEquivalent = v.findViewById(R.id.tvBalanceEquivalent);
 
@@ -1016,11 +1015,11 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             byte UID[] = tag.getId();
             String sUID = Util.byteArrayToHexString(UID);
             if (!mCard.getUID().equals(sUID)) {
-                Log.d(logTag, "Invalid UID: " + sUID);
+                Log.d(TAG, "Invalid UID: " + sUID);
                 mNfcManager.ignoreTag(isoDep.getTag());
                 return;
             } else {
-                Log.v(logTag, "UID: " + sUID);
+                Log.v(TAG, "UID: " + sUID);
             }
 
             if (lastReadSuccess) {
