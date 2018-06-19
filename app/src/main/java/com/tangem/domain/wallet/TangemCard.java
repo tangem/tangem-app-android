@@ -19,6 +19,10 @@ import java.util.List;
  */
 
 public class TangemCard {
+
+    public static final String EXTRA_CARD = "Card";
+    public static final String EXTRA_UID = "UID";
+
     private byte[] CID;
     private Status status;
     private String wallet;
@@ -174,7 +178,6 @@ public class TangemCard {
         return walletPublicKeyValid;
     }
 
-
     public void setCardPublicKey(byte[] publicKey) {
         pbCardKey = publicKey;
     }
@@ -209,7 +212,6 @@ public class TangemCard {
             return null;
         }
     }
-
 
     public String getAmountDescription(Double amount) {
         if (amount < 10) {
@@ -615,7 +617,6 @@ public class TangemCard {
         return tokensDecimal;
     }
 
-
     public Issuer getIssuer() {
         return issuer;
     }
@@ -652,7 +653,6 @@ public class TangemCard {
     public String getIssuerDataDescription() {
         return "";
     }
-
 
     private int pauseBeforePIN2 = 0;
 
@@ -696,7 +696,8 @@ public class TangemCard {
 
     public Boolean useSmartSecurityDelay() {
         if (settingsMask == null) return null;
-        return (settingsMask.intValue() & SettingsMask.SmartSecurityDelay) != 0;    }
+        return (settingsMask.intValue() & SettingsMask.SmartSecurityDelay) != 0;
+    }
 
     public enum PIN2_Mode {Unchecked, DefaultPIN2, CustomPIN2}
 
@@ -1004,7 +1005,7 @@ public class TangemCard {
     }
 
     public int GetTimestamp(int height) {
-        if(mHeaders == null)
+        if (mHeaders == null)
             return 0;
         for (int i = 0; i < mHeaders.size(); ++i) {
             if (mHeaders.get(i).Height == height) {
@@ -1135,6 +1136,7 @@ public class TangemCard {
     public void clearDenomination() {
         Denomination = null;
     }
+
     public void setError(String error) {
         this.error = error;
     }
@@ -1378,4 +1380,3 @@ public class TangemCard {
 
     public EncryptionMode encryptionMode = EncryptionMode.None;
 }
-
