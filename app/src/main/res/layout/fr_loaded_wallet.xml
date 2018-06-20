@@ -179,99 +179,65 @@
                         tools:text="Bitcoin"/>
                 </LinearLayout>
 
-                <!--<View-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="1dp"-->
-                    <!--android:layout_marginLeft="4dp"-->
-                    <!--android:layout_marginRight="4dp"-->
-                    <!--android:layout_marginTop="6dp"-->
-                    <!--android:background="@android:color/darker_gray"/>-->
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:orientation="horizontal"
-                    android:paddingLeft="8dp"
-                    android:paddingRight="8dp">
-
-                    <TextView
-                        android:id="@+id/tvWallet"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:fontFamily="@font/montserrat_light"
-                        android:textAlignment="center"
-                        android:textColor="@android:color/holo_orange_dark"
-                        android:textSize="@dimen/text_size_1_small"
-                        android:textStyle="normal|bold"
-                        tools:text="1DoQdnSYshhZ5Tqt5Sk6svZt29jqoYVwQY"/>
-
-                </LinearLayout>
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:gravity="top|center"
+                    android:gravity="center"
                     android:orientation="horizontal"
                     android:paddingLeft="8dp"
                     android:paddingRight="8dp">
 
                     <ImageView
                         android:id="@+id/qrWallet"
-                        android:layout_width="242dp"
-                        android:layout_height="242dp"
-                        android:layout_marginBottom="-12dp"
-                        android:layout_marginTop="-12dp"
-                        app:srcCompat="@color/cardview_light_background"/>
+                        android:layout_width="@dimen/size_qr_image"
+                        android:layout_height="@dimen/size_qr_image"/>
 
                     <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginStart="15dp"
-                        android:elevation="1dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         android:gravity="center_vertical|center_horizontal"
                         android:orientation="vertical">
 
+                        <TextView
+                            android:id="@+id/tvWallet"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/montserrat_light"
+                            android:textAlignment="center"
+                            android:textColor="@android:color/black"
+                            android:textSize="@dimen/text_size_1_small"
+                            android:textStyle="normal|bold"
+                            tools:text="1DoQdnSYshhZ5Tqt5Sk6svZt29jqoYVwQY"/>
+
                         <ImageView
                             android:id="@+id/imgLookup"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
+                            android:layout_width="@dimen/size_explore_image"
+                            android:layout_height="@dimen/size_explore_image"
                             android:layout_marginTop="15dp"
                             android:baselineAlignBottom="false"
                             android:src="@drawable/chain_lookup"/>
 
-                        <TextView
-                            android:id="@+id/tvLookup"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:fontFamily="@font/raleway_el"
-                            android:text="@string/explore_in_blockchain"
-                            android:textAlignment="center"
-                            android:textColor="@color/primary_dark"
-                            android:textSize="@dimen/text_size_2_small"
-                            android:textStyle="normal|bold"/>
+                        <ImageView
+                            android:id="@+id/ivCopy"
+                            android:layout_width="@dimen/size_explore_image"
+                            android:layout_height="@dimen/size_explore_image"
+                            android:layout_marginTop="15dp"
+                            android:baselineAlignBottom="false"
+                            android:src="@drawable/ic_content_copy_black_24dp"/>
 
                     </LinearLayout>
 
                 </LinearLayout>
 
-                <!--<View-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="1dp"-->
-                    <!--android:layout_marginLeft="4dp"-->
-                    <!--android:layout_marginRight="4dp"-->
-                    <!--android:background="@android:color/darker_gray"/>-->
 
                 <LinearLayout
-                    android:visibility="gone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:orientation="horizontal"
                     android:paddingLeft="8dp"
-                    android:paddingRight="8dp">
+                    android:paddingRight="8dp"
+                    android:visibility="gone">
 
                     <TextView
                         android:id="@+id/lbInputs"
@@ -295,12 +261,12 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:visibility="gone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:paddingLeft="8dp"
-                    android:paddingRight="8dp">
+                    android:paddingRight="8dp"
+                    android:visibility="gone">
 
                     <TextView
                         android:layout_width="110dp"
@@ -323,12 +289,12 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:visibility="gone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:paddingLeft="8dp"
-                    android:paddingRight="8dp">
+                    android:paddingRight="8dp"
+                    android:visibility="gone">
 
                     <TextView
                         android:layout_width="110dp"
@@ -350,12 +316,12 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:visibility="gone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:paddingLeft="8dp"
-                    android:paddingRight="8dp">
+                    android:paddingRight="8dp"
+                    android:visibility="gone">
 
                     <TextView
                         android:layout_width="110dp"
@@ -378,12 +344,12 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:visibility="gone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:paddingLeft="8dp"
-                    android:paddingRight="8dp">
+                    android:paddingRight="8dp"
+                    android:visibility="gone">
 
                     <TextView
                         android:layout_width="0dp"
@@ -442,10 +408,10 @@
     </RelativeLayout>
 
     <LinearLayout
-        android:layout_marginBottom="20dp"
         android:id="@+id/rlToolButtons"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
         android:gravity="center"
         app:layout_constraintBottom_toTopOf="@+id/rlCardIdAndIcons"
         app:layout_constraintHorizontal_bias="0.0"
@@ -476,18 +442,18 @@
 
         <android.support.v7.widget.AppCompatButton
             android:id="@+id/btnExtract"
-            android:width="100dp"
             style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="wrap_content"
+            android:width="100dp"
             android:text="@string/extract"/>
 
     </LinearLayout>
 
     <RelativeLayout
-        android:visibility="gone"
         android:id="@+id/rlCardIdAndIcons"
         android:layout_width="match_parent"
         android:layout_height="40dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <ImageView
