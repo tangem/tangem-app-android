@@ -179,13 +179,13 @@
                         tools:text="Bitcoin"/>
                 </LinearLayout>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginLeft="4dp"
-                    android:layout_marginRight="4dp"
-                    android:layout_marginTop="6dp"
-                    android:background="@android:color/darker_gray"/>
+                <!--<View-->
+                    <!--android:layout_width="match_parent"-->
+                    <!--android:layout_height="1dp"-->
+                    <!--android:layout_marginLeft="4dp"-->
+                    <!--android:layout_marginRight="4dp"-->
+                    <!--android:layout_marginTop="6dp"-->
+                    <!--android:background="@android:color/darker_gray"/>-->
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -257,12 +257,12 @@
 
                 </LinearLayout>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginLeft="4dp"
-                    android:layout_marginRight="4dp"
-                    android:background="@android:color/darker_gray"/>
+                <!--<View-->
+                    <!--android:layout_width="match_parent"-->
+                    <!--android:layout_height="1dp"-->
+                    <!--android:layout_marginLeft="4dp"-->
+                    <!--android:layout_marginRight="4dp"-->
+                    <!--android:background="@android:color/darker_gray"/>-->
 
                 <LinearLayout
                     android:visibility="gone"
@@ -323,6 +323,7 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:visibility="gone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
@@ -349,6 +350,7 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:visibility="gone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
@@ -376,6 +378,7 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:visibility="gone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
@@ -383,7 +386,6 @@
                     android:paddingRight="8dp">
 
                     <TextView
-                        android:id="@+id/textView15"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
@@ -440,6 +442,7 @@
     </RelativeLayout>
 
     <LinearLayout
+        android:layout_marginBottom="20dp"
         android:id="@+id/rlToolButtons"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -473,6 +476,7 @@
 
         <android.support.v7.widget.AppCompatButton
             android:id="@+id/btnExtract"
+            android:width="100dp"
             style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="wrap_content"
             android:text="@string/extract"/>
@@ -480,6 +484,7 @@
     </LinearLayout>
 
     <RelativeLayout
+        android:visibility="gone"
         android:id="@+id/rlCardIdAndIcons"
         android:layout_width="match_parent"
         android:layout_height="40dp"
