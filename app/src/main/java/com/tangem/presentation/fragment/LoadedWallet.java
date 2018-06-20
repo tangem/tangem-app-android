@@ -614,6 +614,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         tvHeader = v.findViewById(R.id.tvHeader);
         tvCaution = v.findViewById(R.id.tvCaution);
         ImageView imgLookup = v.findViewById(R.id.imgLookup);
+        ImageView ivCopy = v.findViewById(R.id.ivCopy);
         tvValidationNode = v.findViewById(R.id.tvValidationNode);
         progressBar = v.findViewById(R.id.progressBar);
         tvBlockchain = v.findViewById(R.id.tvBlockchain);
@@ -622,7 +623,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         ivPIN2orSecurityDelay = v.findViewById(R.id.imgPIN2orSecurityDelay);
         ivDeveloperVersion = v.findViewById(R.id.imgDeveloperVersion);
         ImageView ivQR = v.findViewById(R.id.qrWallet);
-        TextView tvLookup = v.findViewById(R.id.tvLookup);
+
         fabPurge = v.findViewById(R.id.fabPurge);
         fabNFC = v.findViewById(R.id.fabNFC);
         AppCompatButton btnLoad = v.findViewById(R.id.btnLoad);
@@ -666,12 +667,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             startActivity(browserIntent);
         });
 
-        tvLookup.setOnClickListener(v14 -> {
-            if (!mCard.hasBalanceInfo()) return;
-            CoinEngine engineClick = CoinEngineFactory.Create(mCard.getBlockchain());
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Objects.requireNonNull(engineClick).getShareWalletURIExplorer(mCard));
-            startActivity(browserIntent);
-        });
+        ivCopy.setOnClickListener(v14 -> doShareWallet(false));
 
         tvWallet.setOnClickListener(v12 -> doShareWallet(false));
 
