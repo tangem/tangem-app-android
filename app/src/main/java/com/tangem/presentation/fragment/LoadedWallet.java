@@ -924,13 +924,13 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         if (mCard.getBlockchain() == Blockchain.Bitcoin || mCard.getBlockchain() == Blockchain.BitcoinTestNet) {
             SharedData data = new SharedData(SharedData.COUNT_REQUEST);
             for (int i = 0; i < data.allRequest; ++i) {
-                String nodeAddress = engine.GetNextNode(mCard);
+                String nodeAddress = Objects.requireNonNull(engine).GetNextNode(mCard);
                 int nodePort = engine.GetNextNodePort(mCard);
                 UpdateWalletInfoTask connectTaskEx = new UpdateWalletInfoTask(nodeAddress, nodePort, data);
                 connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(mCard.getWallet()));
             }
 
-            String nodeAddress = engine.GetNode(mCard);
+            String nodeAddress = Objects.requireNonNull(engine).GetNode(mCard);
             int nodePort = engine.GetNodePort(mCard);
             UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(nodeAddress, nodePort, data);
             updateTasks.add(updateWalletInfoTask);
@@ -944,13 +944,13 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         } else if (mCard.getBlockchain() == Blockchain.BitcoinCash || mCard.getBlockchain() == Blockchain.BitcoinCashTestNet) {
             SharedData data = new SharedData(SharedData.COUNT_REQUEST);
             for (int i = 0; i < data.allRequest; ++i) {
-                String nodeAddress = engine.GetNextNode(mCard);
+                String nodeAddress = Objects.requireNonNull(engine).GetNextNode(mCard);
                 int nodePort = engine.GetNextNodePort(mCard);
                 UpdateWalletInfoTask connectTaskEx = new UpdateWalletInfoTask(nodeAddress, nodePort, data);
                 connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(mCard.getWallet()));
             }
 
-            String nodeAddress = engine.GetNode(mCard);
+            String nodeAddress = Objects.requireNonNull(engine).GetNode(mCard);
             int nodePort = engine.GetNodePort(mCard);
             UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(nodeAddress, nodePort, data);
 
@@ -981,7 +981,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
         } else if (mCard.getBlockchain() == Blockchain.Token) {
             ETHRequestTask updateETH = new ETHRequestTask(mCard.getBlockchain());
-            InfuraRequest reqETH = InfuraRequest.GetTokenBalance(mCard.getWallet(), engine.GetContractAddress(mCard), engine.GetTokenDecimals(mCard));
+            InfuraRequest reqETH = InfuraRequest.GetTokenBalance(mCard.getWallet(), Objects.requireNonNull(engine).GetContractAddress(mCard), engine.GetTokenDecimals(mCard));
             reqETH.setID(67);
             reqETH.setBlockchain(mCard.getBlockchain());
 
@@ -1078,7 +1078,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                     lastReadSuccess = false;
                     if (cardProtocol.getError() instanceof CardProtocol.TangemException_ExtendedLengthNotSupported) {
                         if (!NoExtendedLengthSupportDialog.allreadyShowed) {
-                            new NoExtendedLengthSupportDialog().show(getActivity().getFragmentManager(), "NoExtendedLengthSupportDialog");
+                            new NoExtendedLengthSupportDialog().show(Objects.requireNonNull(getActivity()).getFragmentManager(), NoExtendedLengthSupportDialog.TAG);
                         }
                     } else {
                         Toast.makeText(getContext(), R.string.try_to_scan_again, Toast.LENGTH_LONG).show();
