@@ -29,11 +29,11 @@
             android:layout_height="match_parent">
 
             <LinearLayout
-                android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="false"
                 android:background="@color/white"
+                android:gravity="center"
                 android:orientation="vertical">
 
                 <TextView
@@ -53,21 +53,52 @@
                     android:layout_width="325dp"
                     android:layout_height="0dp"
                     android:layout_weight="1"
-                    android:src="@drawable/tangem_card_2"
-                    />
+                    android:src="@drawable/tangem_card_2"/>
 
-                <ImageView
-                    android:visibility="gone"
-                    android:id="@+id/imgBlockchain"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:src="@drawable/tangem_logo_small_new"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"/>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="10dp"
+                    android:layout_marginStart="10dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/textView15"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Verified balance"
+                        android:textColor="@color/black"
+                        android:textSize="@dimen/text_size_large"
+                        tools:text="Verified balance"/>
+
+                    <TextView
+                        android:id="@+id/tvBalance"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="0.05 BTC (Bitcoin)"
+                        android:textColor="@color/black"
+                        android:textSize="@dimen/text_size_large"/>
+
+                    <TextView
+                        android:id="@+id/textView10"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="99.99% safe. Authorized merchant loading in progress. Complete in 4:57"/>
+
+                </LinearLayout>
+
+                <!--<ImageView-->
+                <!--android:visibility="gone"-->
+                <!--android:id="@+id/imgBlockchain"-->
+                <!--android:layout_width="32dp"-->
+                <!--android:layout_height="32dp"-->
+                <!--android:src="@drawable/tangem_logo_small_new"-->
+                <!--app:layout_constraintBottom_toBottomOf="parent"-->
+                <!--app:layout_constraintEnd_toEndOf="parent"-->
+                <!--app:layout_constraintTop_toTopOf="parent"/>-->
 
                 <TextView
-                    android:visibility="gone"
                     android:id="@+id/tvHeader"
                     android:layout_width="match_parent"
                     android:layout_height="35dp"
@@ -76,7 +107,8 @@
                     android:text="@string/banknote"
                     android:textAlignment="center"
                     android:textColor="@color/primary_dark"
-                    android:textSize="@dimen/text_size_medium"/>
+                    android:textSize="@dimen/text_size_medium"
+                    android:visibility="gone"/>
 
                 <android.support.constraint.ConstraintLayout
                     android:layout_width="match_parent"
@@ -85,7 +117,8 @@
                     android:paddingBottom="2dp"
                     android:paddingLeft="8dp"
                     android:paddingRight="8dp"
-                    android:paddingTop="2dp">
+                    android:paddingTop="2dp"
+                    android:visibility="gone">
 
                     <TextView
                         android:id="@+id/tvBalanceLabel"
@@ -100,24 +133,21 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"/>
 
-                    <TextView
-                        android:id="@+id/tvBalance"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="0dp"
-                        android:fontFamily="@font/montserrat_light"
-                        android:lines="1"
-                        android:maxLines="1"
-                        android:textColor="@color/black"
-                        android:textSize="@dimen/text_size_large"
-                        android:textStyle="normal|bold"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@id/imgBlockchain"
-                        app:layout_constraintStart_toEndOf="@+id/tvBalanceLabel"
-                        app:layout_constraintTop_toTopOf="parent"
-                        tools:text="0 mBTC"/>
-
-
+                    <!--<TextView-->
+                    <!--android:id="@+id/tvBalance"-->
+                    <!--android:layout_width="0dp"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:layout_marginStart="0dp"-->
+                    <!--android:fontFamily="@font/montserrat_light"-->
+                    <!--android:lines="1"-->
+                    <!--android:maxLines="1"-->
+                    <!--android:textColor="@color/black"-->
+                    <!--android:textSize="@dimen/text_size_large"-->
+                    <!--android:textStyle="normal|bold"-->
+                    <!--app:layout_constraintBottom_toBottomOf="parent"-->
+                    <!--app:layout_constraintStart_toEndOf="@+id/tvBalanceLabel"-->
+                    <!--app:layout_constraintTop_toTopOf="parent"-->
+                    <!--tools:text="0 mBTC"/>-->
 
                 </android.support.constraint.ConstraintLayout>
 
@@ -127,7 +157,8 @@
                     android:gravity="start"
                     android:orientation="horizontal"
                     android:paddingLeft="8dp"
-                    android:paddingRight="8dp">
+                    android:paddingRight="8dp"
+                    android:visibility="gone">
 
                     <TextView
                         android:id="@+id/tvOffline"
