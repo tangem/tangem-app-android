@@ -2,7 +2,7 @@ package com.tangem.domain.wallet;
 
 import android.net.Uri;
 
-import com.tangem.domain.TestNode;
+import com.tangem.domain.BitcoinTestNetNode;
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.TLV;
 import com.tangem.util.BTCUtils;
@@ -61,20 +61,20 @@ public class BtcEngine extends CoinEngine {
 
 
 //    public static String[] GetBitcoinTestNetServiceHosts() {
-//        return new String[]{/*"testnetnode.arihanc.com"*/TestNode.hsmiths_com.getHost(), TestNode.qtornado_com.getHost(), TestNode.bauerj_eu.getHost()};
+//        return new String[]{/*"testnetnode.arihanc.com"*/BitcoinTestNetNode.hsmiths_com.getHost(), BitcoinTestNetNode.qtornado_com.getHost(), BitcoinTestNetNode.bauerj_eu.getHost()};
 //    }
 //
 //    public static Integer[] GetBitcoinTestNetServicePorts() {
-//        return new Integer[]{/*51001*/TestNode.hsmiths_com.getPort(), TestNode.qtornado_com.getPort(), TestNode.bauerj_eu.getPort()};
+//        return new Integer[]{/*51001*/BitcoinTestNetNode.hsmiths_com.getPort(), BitcoinTestNetNode.qtornado_com.getPort(), BitcoinTestNetNode.bauerj_eu.getPort()};
 //    }
 
 
     public static String[] GetBitcoinTestNetServiceHosts() {
-        return new String[]{TestNode.bauerj_eu.getHost()};
+        return new String[]{BitcoinTestNetNode.bauerj_eu.getHost()};
     }
 
     public static Integer[] GetBitcoinTestNetServicePorts() {
-        return new Integer[]{TestNode.bauerj_eu.getPort()};
+        return new Integer[]{BitcoinTestNetNode.bauerj_eu.getPort()};
     }
 
 
