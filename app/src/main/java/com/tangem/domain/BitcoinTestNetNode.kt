@@ -1,6 +1,6 @@
 package com.tangem.domain
 
-enum class TestNode(val host: String, val port: Int) {
+enum class BitcoinTestNetNode(val host: String, val port: Int) {
     arihanc_com("testnetnode.arihanc.com", 51001),
     hsmiths_com("testnet.hsmiths.com", 53011),
     qtornado_com("testnet.qtornado.com", 51001),
