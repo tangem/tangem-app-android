@@ -2,6 +2,7 @@ package com.tangem.domain.wallet;
 
 import android.net.Uri;
 
+import com.tangem.domain.TestNode;
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.TLV;
 import com.tangem.util.BTCUtils;
@@ -54,28 +55,38 @@ public class BtcEngine extends CoinEngine {
         return new String[]{"vps.hsmiths.com", "tardis.bauerj.eu" /*"arihancckjge66iv.onion"*/, "electrumx.bot.nu", "electrumx.hopto.org"/* "btc.asis.io"*/, "e-x.not.fyi", "electrum.backplanedns.org", "helicarrier.bauerj.eu", "electrum.vom-stausee.de", "electrum0.snel.it", "kirsche.emzy.de"};
     }
 
+    public static Integer[] GetBitcoinServicePorts() {
+        return new Integer[]{8080, 50001/* 8080*/, 50001, 50001, 50001, 50001, 50001, 50001, 50001, 50001};
+    }
+
+
 //    public static String[] GetBitcoinTestNetServiceHosts() {
-//        return new String[]{/*"testnetnode.arihanc.com"*/"testnet.hsmiths.com", "testnet.qtornado.com", "testnet1.bauerj.eu"};
+//        return new String[]{/*"testnetnode.arihanc.com"*/TestNode.hsmiths_com.getHost(), TestNode.qtornado_com.getHost(), TestNode.bauerj_eu.getHost()};
 //    }
 //
 //    public static Integer[] GetBitcoinTestNetServicePorts() {
-//        return new Integer[]{/*51001*/53011, 51001, 50001};
+//        return new Integer[]{/*51001*/TestNode.hsmiths_com.getPort(), TestNode.qtornado_com.getPort(), TestNode.bauerj_eu.getPort()};
 //    }
 
 
     public static String[] GetBitcoinTestNetServiceHosts() {
-        return new String[]{"electrum.akinbo.org"/*, "testnet.hsmiths.com", "testnet.qtornado.com", "testnet1.bauerj.eu"*/};
+        return new String[]{TestNode.bauerj_eu.getHost()};
     }
 
     public static Integer[] GetBitcoinTestNetServicePorts() {
-        return new Integer[]{51001/*53011, 51001, 50001*/};
+        return new Integer[]{TestNode.bauerj_eu.getPort()};
     }
 
 
 
-    public static Integer[] GetBitcoinServicePorts() {
-        return new Integer[]{8080, 50001/* 8080*/, 50001, 50001, 50001, 50001, 50001, 50001, 50001, 50001};
-    }
+//    public static String[] GetBitcoinTestNetServiceHosts() {
+//        return new String[]{"electrum.akinbo.org"/*, "testnet.hsmiths.com", "testnet.qtornado.com", "testnet1.bauerj.eu"*/};
+//    }
+//
+//    public static Integer[] GetBitcoinTestNetServicePorts() {
+//        return new Integer[]{51001/*53011, 51001, 50001*/};
+//    }
+
 
     static int serviceIndex = GetNextBitconMainNetServiceIndex();
 
