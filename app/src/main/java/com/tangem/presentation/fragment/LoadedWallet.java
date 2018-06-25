@@ -1,12 +1,8 @@
 package com.tangem.presentation.fragment;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.ClipData;
 import android.content.ClipboardManager;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
@@ -67,6 +63,7 @@ import com.tangem.presentation.activity.RequestPINActivity;
 import com.tangem.presentation.activity.SwapPINActivity;
 import com.tangem.presentation.activity.VerifyCardActivity;
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog;
+import com.tangem.presentation.dialog.PINSwapWarningDialog;
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog;
 import com.tangem.util.BTCUtils;
 import com.tangem.util.Util;
@@ -563,36 +560,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         }
     }
 
-    public static class PINSwapWarningDialog extends DialogFragment {
-        public static final String TAG = PINSwapWarningDialog.class.getSimpleName();
-
-        LoadedWallet activityFragment = null;
-        String message;
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-
-            return new AlertDialog.Builder(getActivity())
-                    .setIcon(R.drawable.tangem_logo_small_new)
-                    .setTitle(R.string.your_money_is_at_risk)
-                    .setMessage(message)
-                    .setCancelable(true)
-                    .setNegativeButton(R.string.cancel, (dialog, which) -> PINSwapWarningDialog.this.dismiss())
-                    .setPositiveButton(R.string.contin,
-                            (dialog, whichButton) -> {
-                                if (activityFragment != null)
-                                    activityFragment.startSwapPINActivity();
-                            }
-                    )
-                    .create();
-        }
-
-        @Override
-        public void onCancel(DialogInterface dialog) {
-            super.onCancel(dialog);
-        }
-    }
-
     @Override
     public View onCreateView(@NonNull final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fr_loaded_wallet, container, false);
@@ -781,19 +748,19 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 break;
             case REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN:
                 if (resultCode == Activity.RESULT_OK) {
-                    if (newPIN.equals(""))
-                        newPIN = mCard.getPIN();
+                    if (newPIN.equals("")) newPIN = mCard.getPIN();
 
-                    if (newPIN2.equals(""))
-                        newPIN2 = PINStorage.getPIN2();
+                    if (newPIN2.equals("")) newPIN2 = PINStorage.getPIN2();
 
-                    PINSwapWarningDialog dialog = (new PINSwapWarningDialog());
-                    dialog.activityFragment = this;
+                    PINSwapWarningDialog pinSwapWarningDialog = new PINSwapWarningDialog();
+                    pinSwapWarningDialog.setOnRefreshPage(this::startSwapPINActivity);
+                    Bundle bundle = new Bundle();
                     if (!PINStorage.isDefaultPIN(newPIN) || !PINStorage.isDefaultPIN2(newPIN2))
-                        dialog.message = getString(R.string.if_you_forget);
+                        bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_forget));
                     else
-                        dialog.message = getString(R.string.if_you_use_default);
-                    dialog.show(Objects.requireNonNull(getActivity()).getFragmentManager(), PINSwapWarningDialog.TAG);
+                        bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_use_default));
+                    pinSwapWarningDialog.setArguments(bundle);
+                    pinSwapWarningDialog.show(Objects.requireNonNull(getActivity()).getFragmentManager(), PINSwapWarningDialog.TAG);
                 }
                 break;
 
@@ -808,7 +775,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                     } else {
                         data.putExtra("modification", "update");
                     }
-                    getActivity().setResult(Activity.RESULT_OK, data);
+                    Objects.requireNonNull(getActivity()).setResult(Activity.RESULT_OK, data);
                     getActivity().finish();
                 } else {
                     if (data != null && data.getExtras().containsKey("UID") && data.getExtras().containsKey("Card")) {
