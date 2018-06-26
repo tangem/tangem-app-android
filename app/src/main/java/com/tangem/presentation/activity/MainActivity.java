@@ -10,7 +10,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.PopupMenu;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -45,7 +44,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
     private File zipFile = null;
     private NfcAdapter.ReaderCallback onNFCReaderCallback;
     private OnCardsClean onCardsClean;
-    private FloatingActionButton fab;
     private LinearLayout llTapPrompt;
 
     public interface OnCardsClean {
@@ -57,7 +55,18 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
     }
 
     public void setNfcAdapterReaderCallback(NfcAdapter.ReaderCallback callback) {
-        this.onNFCReaderCallback = callback;
+        onNFCReaderCallback = callback;
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()) || NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction()))) {
+            Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+            if (tag != null && onNFCReaderCallback != null) {
+                onNFCReaderCallback.onTagDiscovered(tag);
+            }
+        }
     }
 
     @Override
@@ -70,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         LinearLayout hand = findViewById(R.id.llHand);
         LinearLayout nfc = findViewById(R.id.llNFC);
         RippleBackground rippleBackground = findViewById(R.id.imNFC);
-        fab = findViewById(R.id.fab);
+        FloatingActionButton fab = findViewById(R.id.fab);
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
 
@@ -78,8 +87,10 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
 
         rippleBackground.startRippleAnimation();
 
-//        tvNFCHint.setText("Scan a banknote with your\n" + PhoneUtility.GetPhoneName() + "\nas shown above");
-        tvNFCHint.setText(R.string.scan_banknote);
+        if (BuildConfig.DEBUG)
+            tvNFCHint.setText("Scan a banknote with your\n" + PhoneUtility.GetPhoneName() + "\nas shown above");
+        else
+            tvNFCHint.setText(R.string.scan_banknote);
 
         DeviceNFCAntennaLocation antenna = new DeviceNFCAntennaLocation();
         antenna.getAntennaLocation();
@@ -122,9 +133,9 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
             }
         }
 
-        // check if device root
+        // check if root device
         RootBeer rootBeer = new RootBeer(this);
-        if (rootBeer.isRootedWithoutBusyBoxCheck())
+        if (rootBeer.isRootedWithoutBusyBoxCheck() && !BuildConfig.DEBUG)
             new RootFoundDialog().show(getFragmentManager(), RootFoundDialog.TAG);
     }
 
@@ -137,28 +148,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()) || NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction()))) {
-            Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-            if (tag != null && onNFCReaderCallback != null) {
-                onNFCReaderCallback.onTagDiscovered(tag);
-            }
-        }
-    }
-
-    @Override
-    public boolean onKeyDown(int keycode, KeyEvent e) {
-        switch (keycode) {
-            case KeyEvent.KEYCODE_MENU:
-                fab.requestFocus();
-                showMenu(fab);
-                return true;
-        }
-        return super.onKeyDown(keycode, e);
     }
 
     @Override
