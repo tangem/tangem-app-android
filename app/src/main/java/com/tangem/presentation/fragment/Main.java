@@ -30,12 +30,12 @@ import com.tangem.data.network.request.InfuraRequest;
 import com.tangem.data.network.task.ElectrumTask;
 import com.tangem.data.network.task.ExchangeTask;
 import com.tangem.data.network.task.InfuraTask;
+import com.tangem.data.task.ReadCardInfoTask;
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.NfcManager;
 import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.CoinEngineFactory;
-import com.tangem.domain.wallet.PINStorage;
 import com.tangem.domain.wallet.SharedData;
 import com.tangem.domain.wallet.TangemCard;
 import com.tangem.presentation.activity.EmptyWalletActivity;
@@ -46,6 +46,7 @@ import com.tangem.presentation.adapter.CardListAdapter;
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog;
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog;
 import com.tangem.util.Util;
+import com.tangem.wallet.BuildConfig;
 import com.tangem.wallet.R;
 
 import org.json.JSONArray;
@@ -67,6 +68,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
     private static final int REQUEST_CODE_SHOW_CARD_ACTIVITY = 1;
     private static final int REQUEST_CODE_ENTER_PIN_ACTIVITY = 2;
     private static final int REQUEST_CODE_REQUEST_CAMERA_PERMISSIONS = 3;
+
     private NfcManager mNfcManager;
     private ArrayList<String> slCardUIDs = new ArrayList<>();
     private ProgressBar progressBar;
@@ -76,155 +78,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
 
     private int unsuccessReadCount = 0;
     private Tag lastTag = null;
-
-
-    private static String lastRead_UID = "";
-    private static ArrayList<String> lastRead_UnsuccessfullPINs = new ArrayList<>();
-    private static TangemCard.EncryptionMode lastRead_Encryption = null;
-
-    private class ReadCardInfoTask extends Thread {
-
-        IsoDep mIsoDep;
-        CardProtocol.Notifications mNotifications;
-        private boolean isCancelled = false;
-
-        ReadCardInfoTask(IsoDep isoDep, CardProtocol.Notifications notifications) {
-            mIsoDep = isoDep;
-            mNotifications = notifications;
-        }
-
-        @Override
-        public void run() {
-            if (mIsoDep == null) {
-                return;
-            }
-            try {
-                // for Samsung's bugs -
-                // Workaround for the Samsung Galaxy S5 (since the
-                // first connection always hangs on transceive).
-                int timeout = mIsoDep.getTimeout();
-                mIsoDep.connect();
-                mIsoDep.close();
-                mIsoDep.connect();
-                mIsoDep.setTimeout(timeout);
-                try {
-                    CardProtocol protocol = new CardProtocol(getContext(), mIsoDep, mNotifications);
-                    mNotifications.OnReadStart(protocol);
-                    try {
-                        mNotifications.OnReadProgress(protocol, 5);
-
-                        byte[] UID = mIsoDep.getTag().getId();
-                        String sUID = Util.byteArrayToHexString(UID);
-                        if (!lastRead_UID.equals(sUID)) {
-                            lastRead_UID = sUID;
-                            lastRead_UnsuccessfullPINs.clear();
-                            lastRead_Encryption = null;
-                        }
-
-                        Log.i("ReadCardInfoTask", "[-- Start read card info --]");
-
-                        if (isCancelled) return;
-
-                        protocol.setPIN(PINStorage.getDefaultPIN());
-                        protocol.clearReadResult();
-
-                        if (lastRead_Encryption == null) {
-                            Log.i("ReadCardInfoTask", "Try get supported encryption mode");
-                            protocol.run_GetSupportedEncryption();
-                        } else {
-                            Log.i("ReadCardInfoTask", "Use already defined encryption mode: " + lastRead_Encryption.name());
-                            protocol.getCard().encryptionMode = lastRead_Encryption;
-                        }
-
-                        if (protocol.haveReadResult()) {
-                            //already have read result (obtained while get supported encryption), only read issuer data and define offline balance
-                            protocol.parseReadResult();
-                            protocol.run_ReadOrWriteIssuerDataAndDefineOfflineBalance();
-                            mNotifications.OnReadProgress(protocol, 60);
-                            PINStorage.setLastUsedPIN(protocol.getCard().getPIN());
-                        } else {
-                            //don't have read result - may be don't get supported encryption on this try, need encryption or need another PIN
-                            if (lastRead_Encryption == null) {
-                                // we try get supported encryption on this time
-                                lastRead_Encryption = protocol.getCard().encryptionMode;
-                                if (protocol.getCard().encryptionMode == TangemCard.EncryptionMode.None) {
-                                    // default pin not accepted
-                                    lastRead_UnsuccessfullPINs.add(PINStorage.getDefaultPIN());
-                                }
-                            }
-
-                            boolean pinFound = false;
-                            for (String PIN : PINStorage.getPINs()) {
-                                Log.e("ReadCardInfoTask", "PIN: " + PIN);
-
-                                boolean skipPin = false;
-                                for (int i = 0; i < lastRead_UnsuccessfullPINs.size(); i++) {
-                                    if (lastRead_UnsuccessfullPINs.get(i).equals(PIN)) {
-                                        skipPin = true;
-                                        break;
-                                    }
-                                }
-
-                                if (skipPin) {
-                                    Log.e("ReadCardInfoTask", "Skip PIN - already checked before");
-                                    continue;
-                                }
-
-                                try {
-                                    protocol.setPIN(PIN);
-                                    if (protocol.getCard().encryptionMode != TangemCard.EncryptionMode.None) {
-                                        protocol.CreateProtocolKey();
-                                    }
-                                    protocol.run_Read();
-                                    mNotifications.OnReadProgress(protocol, 60);
-                                    PINStorage.setLastUsedPIN(PIN);
-                                    pinFound = true;
-                                    protocol.getCard().setPIN(PIN);
-                                    break;
-                                } catch (CardProtocol.TangemException_InvalidPIN e) {
-                                    Log.e(TAG, e.getMessage());
-                                    lastRead_UnsuccessfullPINs.add(PIN);
-                                }
-                            }
-                            if (!pinFound) {
-                                throw new CardProtocol.TangemException_InvalidPIN("No valid PIN found!");
-                            }
-                        }
-
-                        protocol.run_CheckPIN2isDefault();
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        protocol.setError(e);
-
-                    } finally {
-                        Log.i("ReadCardInfoTask", "[-- Finish read card info --]");
-                        mNotifications.OnReadFinish(protocol);
-                    }
-                } finally {
-                    mNfcManager.ignoreTag(mIsoDep.getTag());
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        void cancel(Boolean AllowInterrupt) {
-            try {
-                if (this.isAlive()) {
-                    isCancelled = true;
-                    join(500);
-                }
-                if (this.isAlive() && AllowInterrupt) {
-                    interrupt();
-                    mNotifications.OnReadCancel();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
+    private String lastRead_UID = "";
 
     private class RateInfoTask extends ExchangeTask {
         protected void onPostExecute(List<ExchangeRequest> requests) {
@@ -653,6 +507,8 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
             }
         } else if (resultCode == Activity.RESULT_OK && requestCode == REQUEST_CODE_ENTER_PIN_ACTIVITY) {
             if (lastTag != null) onTagDiscovered(lastTag);
+            if (BuildConfig.DEBUG)
+                Toast.makeText(getContext(), "onNFCReaderCallback 3", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -683,7 +539,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
             }
             lastTag = tag;
 
-            readCardInfoTask = new ReadCardInfoTask(isoDep, this);
+            readCardInfoTask = new ReadCardInfoTask(getActivity(), mNfcManager, lastRead_UID, isoDep, this);
             readCardInfoTask.start();
 
             Log.i(TAG, "onTagDiscovered " + Arrays.toString(tag.getId()));
@@ -721,17 +577,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
         startActivityForResult(intent, REQUEST_CODE_SHOW_CARD_ACTIVITY);
     }
 
-
     @Override
-    public void doClean() {
-        mCardListAdapter.clearCards();
-        slCardUIDs.clear();
-        for (RequestWalletInfoTask rt : requestTasks) {
-            rt.cancel(true);
-        }
-        lastRead_UID = "";
-    }
-
     public void OnReadStart(CardProtocol cardProtocol) {
         progressBar.post(() -> {
             progressBar.setVisibility(View.VISIBLE);
@@ -739,10 +585,12 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
         });
     }
 
+    @Override
     public void OnReadProgress(CardProtocol protocol, final int progress) {
         progressBar.post(() -> progressBar.setProgress(progress));
     }
 
+    @Override
     public void OnReadFinish(final CardProtocol cardProtocol) {
         readCardInfoTask = null;
         if (cardProtocol != null) {
@@ -750,8 +598,8 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
                 progressBar.post(() -> {
                     progressBar.setProgress(100);
                     progressBar.setProgressTintList(ColorStateList.valueOf(Color.GREEN));
-//                    addCard(cardProtocol.getCard());
 
+//                    addCard(cardProtocol.getCard());
 
                     Bundle cardInfo = new Bundle();
                     cardInfo.putString("UID", cardProtocol.getCard().getUID());
@@ -855,6 +703,16 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
     @Override
     public void OnReadAfterRequest() {
         WaitSecurityDelayDialog.onReadAfterRequest(Objects.requireNonNull(getActivity()));
+    }
+
+    @Override
+    public void doClean() {
+        mCardListAdapter.clearCards();
+        slCardUIDs.clear();
+        for (RequestWalletInfoTask rt : requestTasks) {
+            rt.cancel(true);
+        }
+        lastRead_UID = "";
     }
 
     private void addCard(final TangemCard card) {
