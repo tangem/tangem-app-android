@@ -19,9 +19,9 @@ import java.util.TimerTask;
  * Created by dvol on 06.03.2018.
  */
 public class WaitSecurityDelayDialog extends DialogFragment {
-    ProgressBar progressBar;
-    int msTimeout = 60000, msProgress = 0;
-    Timer timer;
+    private ProgressBar progressBar;
+    private int msTimeout = 60000, msProgress = 0;
+    private Timer timer;
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -50,7 +50,7 @@ public class WaitSecurityDelayDialog extends DialogFragment {
         }, 1000, 1000);
         return new AlertDialog.Builder(getActivity())
                 .setIcon(R.drawable.tangem_logo_small_new)
-                .setTitle("Security delay")
+                .setTitle(R.string.security_delay)
                 .setView(v)
                 .setCancelable(false)
                 .create();
