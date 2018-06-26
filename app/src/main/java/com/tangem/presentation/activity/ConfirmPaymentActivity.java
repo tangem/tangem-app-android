@@ -61,8 +61,8 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
     private boolean feeRequestSuccess = false;
     private boolean balanceRequestSuccess = false;
     private EditText etWallet;
-    private TextView tvAmountEquivalent;
-    private TextView tvFeeEquivalent;
+//    private TextView tvAmountEquivalent;
+//    private TextView tvFeeEquivalent;
     private EditText etAmount;
     private EditText etFee;
     private ImageView ivCamera;
@@ -353,9 +353,9 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
         TextView tvCurrency2 = findViewById(R.id.tvCurrency2);
         etAmount = findViewById(R.id.etAmount);
         etFee = findViewById(R.id.etFee);
-        TextView tvBalanceEquivalent = findViewById(R.id.tvBalanceEquivalent);
-        tvAmountEquivalent = findViewById(R.id.tvAmountEquivalent);
-        tvFeeEquivalent = findViewById(R.id.tvFeeEquivalent);
+//        TextView tvBalanceEquivalent = findViewById(R.id.tvBalanceEquivalent);
+//        tvAmountEquivalent = findViewById(R.id.tvAmountEquivalent);
+//        tvFeeEquivalent = findViewById(R.id.tvFeeEquivalent);
         ivCamera = findViewById(R.id.ivCamera);
         rgFee = findViewById(R.id.rgFee);
 
@@ -369,19 +369,19 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                try {
-
-                    CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
-                    tvAmountEquivalent.setText(engine.GetAmountEqualentDescriptor(mCard, etAmount.getText().toString()));
-                    if (!mCard.getAmountEquivalentDescriptionAvailable()) {
-                        tvAmountEquivalent.setError("Service unavailable");
-                    } else {
-                        tvAmountEquivalent.setError(null);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    tvAmountEquivalent.setText("");
-                }
+//                try {
+//
+//                    CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
+//                    tvAmountEquivalent.setText(engine.GetAmountEqualentDescriptor(mCard, etAmount.getText().toString()));
+//                    if (!mCard.getAmountEquivalentDescriptionAvailable()) {
+//                        tvAmountEquivalent.setError("Service unavailable");
+//                    } else {
+//                        tvAmountEquivalent.setError(null);
+//                    }
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    tvAmountEquivalent.setText("");
+//                }
             }
 
             @Override
@@ -398,21 +398,21 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                try {
-
-                    CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
-                    String eqFee = engine.EvaluteFeeEquivalent(mCard, etFee.getText().toString());
-                    tvFeeEquivalent.setText(eqFee);
-
-                    if (!mCard.getAmountEquivalentDescriptionAvailable()) {
-                        tvFeeEquivalent.setError("Service unavailable");
-                    } else {
-                        tvFeeEquivalent.setError(null);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    tvFeeEquivalent.setText("");
-                }
+//                try {
+//
+//                    CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
+//                    String eqFee = engine.EvaluteFeeEquivalent(mCard, etFee.getText().toString());
+//                    tvFeeEquivalent.setText(eqFee);
+//
+//                    if (!mCard.getAmountEquivalentDescriptionAvailable()) {
+//                        tvFeeEquivalent.setError("Service unavailable");
+//                    } else {
+//                        tvFeeEquivalent.setError(null);
+//                    }
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    tvFeeEquivalent.setText("");
+//                }
             }
 
             @Override
@@ -436,12 +436,12 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
         tvCardID.setText(mCard.getCIDDescription());
 
         //tvBalanceEquivalent.setText(mCard.getBalanceEquivalentDescription());
-        tvBalanceEquivalent.setText(engine.GetBalanceEquivalent(mCard));
-        if (!mCard.getAmountEquivalentDescriptionAvailable()) {
-            tvBalanceEquivalent.setError("Service unavailable");
-        } else {
-            tvBalanceEquivalent.setError(null);
-        }
+//        tvBalanceEquivalent.setText(engine.GetBalanceEquivalent(mCard));
+//        if (!mCard.getAmountEquivalentDescriptionAvailable()) {
+//            tvBalanceEquivalent.setError("Service unavailable");
+//        } else {
+//            tvBalanceEquivalent.setError(null);
+//        }
 
         etWallet.setText(getIntent().getStringExtra("Wallet"));
 

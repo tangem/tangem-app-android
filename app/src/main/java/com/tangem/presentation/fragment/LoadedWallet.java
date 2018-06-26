@@ -666,6 +666,8 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             } else if (engine.AwaitingConfirmation(mCard)) {
                 Toast.makeText(getContext(), R.string.please_wait_while_previous, Toast.LENGTH_LONG).show();
                 return;
+
+
             } else if (!engine.CheckUnspentTransaction(mCard)) {
                 Toast.makeText(getContext(), R.string.please_wait_for_confirmation, Toast.LENGTH_LONG).show();
                 return;
