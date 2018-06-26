@@ -2,7 +2,7 @@ package com.tangem.domain.wallet;
 
 import android.net.Uri;
 
-import com.tangem.domain.BitcoinTestNetNode;
+import com.tangem.domain.BitcoinNodeTestNet;
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.TLV;
 import com.tangem.util.BTCUtils;
@@ -61,11 +61,11 @@ public class BtcEngine extends CoinEngine {
 
 
     public static String[] GetBitcoinTestNetServiceHosts() {
-        return new String[]{/*"testnetnode.arihanc.com"*/BitcoinTestNetNode.hsmiths_com.getHost(), BitcoinTestNetNode.qtornado_com.getHost(), BitcoinTestNetNode.bauerj_eu.getHost()};
+        return new String[]{/*"testnetnode.arihanc.com"*/BitcoinNodeTestNet.hsmiths_com.getHost(), BitcoinNodeTestNet.qtornado_com.getHost(), BitcoinNodeTestNet.bauerj_eu.getHost()};
     }
 
     public static Integer[] GetBitcoinTestNetServicePorts() {
-        return new Integer[]{/*51001*/BitcoinTestNetNode.hsmiths_com.getPort(), BitcoinTestNetNode.qtornado_com.getPort(), BitcoinTestNetNode.bauerj_eu.getPort()};
+        return new Integer[]{/*51001*/BitcoinNodeTestNet.hsmiths_com.getPort(), BitcoinNodeTestNet.qtornado_com.getPort(), BitcoinNodeTestNet.bauerj_eu.getPort()};
     }
 
 
