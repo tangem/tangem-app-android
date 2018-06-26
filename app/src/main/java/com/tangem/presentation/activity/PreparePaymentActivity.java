@@ -34,7 +34,7 @@ public class PreparePaymentActivity extends AppCompatActivity implements NfcAdap
     private static final int REQUEST_CODE_SEND_PAYMENT = 2;
     private EditText etWallet;
     private EditText etAmount;
-    private TextView tvAmountEquivalent;
+//    private TextView tvAmountEquivalent;
     boolean use_mCurrency;
     private TangemCard mCard;
     private NfcManager mNfcManager;
@@ -59,8 +59,8 @@ public class PreparePaymentActivity extends AppCompatActivity implements NfcAdap
         TextView tvCurrency = findViewById(R.id.tvCurrency);
         TextView tvCardId = findViewById(R.id.tvCardID);
         TextView tvBalance = findViewById(R.id.tvBalance);
-        TextView tvBalanceEquivalent = findViewById(R.id.tvBalanceEquivalent);
-        tvAmountEquivalent = findViewById(R.id.tvAmountEquivalent);
+//        TextView tvBalanceEquivalent = findViewById(R.id.tvBalanceEquivalent);
+//        tvAmountEquivalent = findViewById(R.id.tvAmountEquivalent);
 
         tvCardId.setText(mCard.getCIDDescription());
         CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
@@ -72,17 +72,17 @@ public class PreparePaymentActivity extends AppCompatActivity implements NfcAdap
             tvBalance.setText(engine.GetBalanceWithAlter(mCard));
         }
 
-        tvBalanceEquivalent.setText(engine.GetBalanceEquivalent(mCard));
+//        tvBalanceEquivalent.setText(engine.GetBalanceEquivalent(mCard));
 
         if (etAmount != null && mCard.getRemainingSignatures() < 2) {
             etAmount.setEnabled(false);
         }
 
-        if (!mCard.getAmountEquivalentDescriptionAvailable()) {
-            tvBalanceEquivalent.setError("Service unavailable");
-        } else {
-            tvBalanceEquivalent.setError(null);
-        }
+//        if (!mCard.getAmountEquivalentDescriptionAvailable()) {
+//            tvBalanceEquivalent.setError("Service unavailable");
+//        } else {
+//            tvBalanceEquivalent.setError(null);
+//        }
 
         etAmount.addTextChangedListener(new TextWatcher() {
             @Override
@@ -92,18 +92,18 @@ public class PreparePaymentActivity extends AppCompatActivity implements NfcAdap
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                try {
-                    CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
-                    tvAmountEquivalent.setText(engine.GetAmountEqualentDescriptor(mCard, etAmount.getText().toString()));
-                    if (!mCard.getAmountEquivalentDescriptionAvailable()) {
-                        tvAmountEquivalent.setError("Service unavailable");
-                    } else {
-                        tvAmountEquivalent.setError(null);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    tvAmountEquivalent.setText("");
-                }
+//                try {
+//                    CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
+//                    tvAmountEquivalent.setText(engine.GetAmountEqualentDescriptor(mCard, etAmount.getText().toString()));
+//                    if (!mCard.getAmountEquivalentDescriptionAvailable()) {
+//                        tvAmountEquivalent.setError("Service unavailable");
+//                    } else {
+//                        tvAmountEquivalent.setError(null);
+//                    }
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    tvAmountEquivalent.setText("");
+//                }
             }
 
             @Override
