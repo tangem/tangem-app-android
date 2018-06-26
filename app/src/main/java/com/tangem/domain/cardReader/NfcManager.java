@@ -34,12 +34,7 @@ public class NfcManager {
     private boolean broadcomWorkaround = false;
     private static final int DELAY_PRESENCE = 1500;
 
-//    @Inject
-//    public NfcManager() {
-//
-//    }
 
-    //    @Inject
     public NfcManager(Activity activity, NfcAdapter.ReaderCallback readerCallback) {
         mActivity = activity;
         mReaderCallback = readerCallback;
