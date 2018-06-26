@@ -60,22 +60,22 @@ public class BtcEngine extends CoinEngine {
     }
 
 
-//    public static String[] GetBitcoinTestNetServiceHosts() {
-//        return new String[]{/*"testnetnode.arihanc.com"*/BitcoinTestNetNode.hsmiths_com.getHost(), BitcoinTestNetNode.qtornado_com.getHost(), BitcoinTestNetNode.bauerj_eu.getHost()};
-//    }
-//
-//    public static Integer[] GetBitcoinTestNetServicePorts() {
-//        return new Integer[]{/*51001*/BitcoinTestNetNode.hsmiths_com.getPort(), BitcoinTestNetNode.qtornado_com.getPort(), BitcoinTestNetNode.bauerj_eu.getPort()};
-//    }
-
-
     public static String[] GetBitcoinTestNetServiceHosts() {
-        return new String[]{BitcoinTestNetNode.bauerj_eu.getHost()};
+        return new String[]{/*"testnetnode.arihanc.com"*/BitcoinTestNetNode.hsmiths_com.getHost(), BitcoinTestNetNode.qtornado_com.getHost(), BitcoinTestNetNode.bauerj_eu.getHost()};
     }
 
     public static Integer[] GetBitcoinTestNetServicePorts() {
-        return new Integer[]{BitcoinTestNetNode.bauerj_eu.getPort()};
+        return new Integer[]{/*51001*/BitcoinTestNetNode.hsmiths_com.getPort(), BitcoinTestNetNode.qtornado_com.getPort(), BitcoinTestNetNode.bauerj_eu.getPort()};
     }
+
+
+//    public static String[] GetBitcoinTestNetServiceHosts() {
+//        return new String[]{BitcoinTestNetNode.bauerj_eu.getHost()};
+//    }
+//
+//    public static Integer[] GetBitcoinTestNetServicePorts() {
+//        return new Integer[]{BitcoinTestNetNode.bauerj_eu.getPort()};
+//    }
 
 
 
