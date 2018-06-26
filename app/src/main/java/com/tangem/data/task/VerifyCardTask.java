@@ -1,4 +1,4 @@
-package com.tangem.data.network.task;
+package com.tangem.data.task;
 
 import android.content.Context;
 import android.nfc.tech.IsoDep;
@@ -14,10 +14,10 @@ import com.tangem.domain.wallet.TangemCard;
  */
 
 public class VerifyCardTask extends Thread {
+    public static final String TAG = VerifyCardTask.class.getSimpleName();
 
-    IsoDep mIsoDep;
-    CardProtocol.Notifications mNotifications;
-    private final String logTag = "VerifyCardTask";
+    private IsoDep mIsoDep;
+    private CardProtocol.Notifications mNotifications;
     private boolean isCancelled = false;
     private Context mContext;
     private TangemCard mCard;
@@ -51,7 +51,7 @@ public class VerifyCardTask extends Thread {
                 try {
                     mNotifications.OnReadProgress(protocol, 5);
 
-                    Log.i("VerifyCardTask", "[-- Start verify card --]");
+                    Log.i(TAG, "[-- Start verify card --]");
 
                     if (isCancelled) return;
 
@@ -63,13 +63,12 @@ public class VerifyCardTask extends Thread {
                     if (isCancelled) return;
                     protocol.run_VerifyCard();
                     mNotifications.OnReadProgress(protocol, 60);
-                    Log.i("VerifyCardTask", "Manufacturer: " + protocol.getCard().getManufacturer().getOfficialName());
+                    Log.i(TAG, "Manufacturer: " + protocol.getCard().getManufacturer().getOfficialName());
                     if (isCancelled) return;
                     if (protocol.getCard().getStatus() == TangemCard.Status.Loaded) {
                         protocol.run_CheckWalletWithSignatureVerify();
                         mNotifications.OnReadProgress(protocol, 90);
                     }
-
 
 
 //                        if (isCancelled) return;
@@ -82,7 +81,7 @@ public class VerifyCardTask extends Thread {
                     protocol.setError(e);
 
                 } finally {
-                    Log.i("VerifyCardTask", "[-- Finish verify card --]");
+                    Log.i(TAG, "[-- Finish verify card --]");
                     mNotifications.OnReadFinish(protocol);
                 }
             } finally {
@@ -93,7 +92,7 @@ public class VerifyCardTask extends Thread {
         }
     }
 
-    void cancel(Boolean AllowInterrupt) {
+    public void cancel(Boolean AllowInterrupt) {
         try {
             if (this.isAlive()) {
                 isCancelled = true;
