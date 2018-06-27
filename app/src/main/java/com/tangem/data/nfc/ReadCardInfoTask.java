@@ -1,4 +1,4 @@
-package com.tangem.data.task;
+package com.tangem.data.nfc;
 
 import android.content.Context;
 import android.nfc.tech.IsoDep;
@@ -151,11 +151,11 @@ public class ReadCardInfoTask extends Thread {
 
     public void cancel(Boolean AllowInterrupt) {
         try {
-            if (this.isAlive()) {
+            if (isAlive()) {
                 isCancelled = true;
                 join(500);
             }
-            if (this.isAlive() && AllowInterrupt) {
+            if (isAlive() && AllowInterrupt) {
                 interrupt();
                 mNotifications.OnReadCancel();
             }
