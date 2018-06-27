@@ -15,14 +15,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.tangem.data.nfc.SwapPINTask;
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.NfcManager;
 import com.tangem.domain.wallet.TangemCard;
-import com.tangem.util.Util;
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog;
-import com.tangem.domain.wallet.PINStorage;
-import com.tangem.wallet.R;
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog;
+import com.tangem.util.Util;
+import com.tangem.wallet.R;
 
 public class SwapPINActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback, CardProtocol.Notifications {
 
@@ -72,7 +72,7 @@ public class SwapPINActivity extends AppCompatActivity implements NfcAdapter.Rea
 
             if (sUID.equals(mCard.getUID())) {
                 isoDep.setTimeout(mCard.getPauseBeforePIN2() + 65000);
-                swapPinTask = new SwapPINTask(isoDep, this);
+                swapPinTask = new SwapPINTask(this, mCard, mNfcManager, newPIN, newPIN2, isoDep, this);
                 swapPinTask.start();
             } else {
                 Log.d(logTag, "Mismatch card UID (" + sUID + " instead of " + mCard.getUID() + ")");
@@ -110,99 +110,95 @@ public class SwapPINActivity extends AppCompatActivity implements NfcAdapter.Rea
         super.onStop();
     }
 
-    private class SwapPINTask extends Thread {
-
-        IsoDep mIsoDep;
-        CardProtocol.Notifications mNotifications;
-        private boolean isCancelled = false;
-
-        SwapPINTask(IsoDep isoDep, CardProtocol.Notifications notifications) {
-            mIsoDep = isoDep;
-            mNotifications = notifications;
-        }
-
-        @Override
-        public void run() {
-            if (mIsoDep == null) {
-                return;
-            }
-            CardProtocol protocol = new CardProtocol(getBaseContext(), mIsoDep, mCard, mNotifications);
-
-            mNotifications.OnReadStart(protocol);
-            try {
-
-                // for Samsung's bugs -
-                // Workaround for the Samsung Galaxy S5 (since the
-                // first connection always hangs on transceive).
-                int timeout = mIsoDep.getTimeout();
-                mIsoDep.connect();
-                mIsoDep.close();
-                mIsoDep.connect();
-                mIsoDep.setTimeout(timeout);
-                try {
-
-                    mNotifications.OnReadProgress(protocol, 5);
-
-                    Log.i("SwapTask", "[-- Start swap pin --]");
-
-                    if (isCancelled) return;
-
-                    if (mCard.getPauseBeforePIN2() > 0) {
-                        mNotifications.OnReadWait(mCard.getPauseBeforePIN2());
-                    }
-
-//                    try {
-                    protocol.run_SwapPIN(PINStorage.getPIN2(), newPIN, newPIN2, false);
-                    protocol.setPIN(newPIN);
-                    mCard.setPIN(newPIN);
-//                    } finally {
-//                        mNotifications.OnReadWait(0);
+//    private class SwapPINTask extends Thread {
+//
+//        IsoDep mIsoDep;
+//        CardProtocol.Notifications mNotifications;
+//        private boolean isCancelled = false;
+//
+//        SwapPINTask(IsoDep isoDep, CardProtocol.Notifications notifications) {
+//            mIsoDep = isoDep;
+//            mNotifications = notifications;
+//        }
+//
+//        @Override
+//        public void run() {
+//            if (mIsoDep == null) {
+//                return;
+//            }
+//            CardProtocol protocol = new CardProtocol(getBaseContext(), mIsoDep, mCard, mNotifications);
+//
+//            mNotifications.OnReadStart(protocol);
+//            try {
+//
+//                // for Samsung's bugs -
+//                // Workaround for the Samsung Galaxy S5 (since the
+//                // first connection always hangs on transceive).
+//                int timeout = mIsoDep.getTimeout();
+//                mIsoDep.connect();
+//                mIsoDep.close();
+//                mIsoDep.connect();
+//                mIsoDep.setTimeout(timeout);
+//                try {
+//
+//                    mNotifications.OnReadProgress(protocol, 5);
+//
+//                    Log.i("SwapTask", "[-- Start swap pin --]");
+//
+//                    if (isCancelled) return;
+//
+//                    if (mCard.getPauseBeforePIN2() > 0) {
+//                        mNotifications.OnReadWait(mCard.getPauseBeforePIN2());
 //                    }
-
-                    mNotifications.OnReadProgress(protocol, 50);
-
-                    protocol.run_Read();
-
-                    mNotifications.OnReadProgress(protocol, 100);
-
-                } finally {
-                    mNfcManager.ignoreTag(mIsoDep.getTag());
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                protocol.setError(e);
-
-            } finally {
-                Log.i("SwapPINTask", "[-- Finish purge --]");
-                mNotifications.OnReadFinish(protocol);
-            }
-        }
-
-        public void cancel(Boolean AllowInterrupt) {
-            try {
-                if (this.isAlive()) {
-                    isCancelled = true;
-                    join(500);
-                }
-                if (this.isAlive() && AllowInterrupt) {
-                    interrupt();
-                    mNotifications.OnReadCancel();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
-
+//
+////                    try {
+//                    protocol.run_SwapPIN(PINStorage.getPIN2(), newPIN, newPIN2, false);
+//                    protocol.setPIN(newPIN);
+//                    mCard.setPIN(newPIN);
+////                    } finally {
+////                        mNotifications.OnReadWait(0);
+////                    }
+//
+//                    mNotifications.OnReadProgress(protocol, 50);
+//
+//                    protocol.run_Read();
+//
+//                    mNotifications.OnReadProgress(protocol, 100);
+//
+//                } finally {
+//                    mNfcManager.ignoreTag(mIsoDep.getTag());
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                protocol.setError(e);
+//
+//            } finally {
+//                Log.i("SwapPINTask", "[-- Finish purge --]");
+//                mNotifications.OnReadFinish(protocol);
+//            }
+//        }
+//
+//        public void cancel(Boolean AllowInterrupt) {
+//            try {
+//                if (this.isAlive()) {
+//                    isCancelled = true;
+//                    join(500);
+//                }
+//                if (this.isAlive() && AllowInterrupt) {
+//                    interrupt();
+//                    mNotifications.OnReadCancel();
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//    }
 
     public void OnReadStart(CardProtocol cardProtocol) {
-        progressBar.post(new Runnable() {
-            @Override
-            public void run() {
-                progressBar.setVisibility(View.VISIBLE);
-                progressBar.setProgress(5);
-            }
+        progressBar.post(() -> {
+            progressBar.setVisibility(View.VISIBLE);
+            progressBar.setProgress(5);
         });
     }
 
@@ -212,95 +208,53 @@ public class SwapPINActivity extends AppCompatActivity implements NfcAdapter.Rea
 
         if (cardProtocol != null) {
             if (cardProtocol.getError() == null) {
-                progressBar.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        progressBar.setProgress(100);
-                        progressBar.setProgressTintList(ColorStateList.valueOf(Color.GREEN));
-                        Intent intent = new Intent();
-                        intent.putExtra("UID", cardProtocol.getCard().getUID());
-                        intent.putExtra("Card", cardProtocol.getCard().getAsBundle());
-                        setResult(Activity.RESULT_OK, intent);
-                        finish();
-                    }
+                progressBar.post(() -> {
+                    progressBar.setProgress(100);
+                    progressBar.setProgressTintList(ColorStateList.valueOf(Color.GREEN));
+                    Intent intent = new Intent();
+                    intent.putExtra("UID", cardProtocol.getCard().getUID());
+                    intent.putExtra("Card", cardProtocol.getCard().getAsBundle());
+                    setResult(Activity.RESULT_OK, intent);
+                    finish();
                 });
             } else if (cardProtocol.getError() instanceof CardProtocol.TangemException_InvalidPIN) {
-                progressBar.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        progressBar.setProgress(100);
-                        progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
-                    }
+                progressBar.post(() -> {
+                    progressBar.setProgress(100);
+                    progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
                 });
-                progressBar.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            progressBar.setProgress(0);
-                            progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
-                            progressBar.setVisibility(View.INVISIBLE);
-                            Intent intent = new Intent();
-                            intent.putExtra("message", "Cannot change PIN(s). Make sure you enter correct PIN2!");
-                            intent.putExtra("UID", cardProtocol.getCard().getUID());
-                            intent.putExtra("Card", cardProtocol.getCard().getAsBundle());
-                            setResult(RESULT_INVALID_PIN, intent);
-                            finish();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                progressBar.postDelayed(() -> {
+                    try {
+                        progressBar.setProgress(0);
+                        progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
+                        progressBar.setVisibility(View.INVISIBLE);
+                        Intent intent = new Intent();
+                        intent.putExtra("message", "Cannot change PIN(s). Make sure you enter correct PIN2!");
+                        intent.putExtra("UID", cardProtocol.getCard().getUID());
+                        intent.putExtra("Card", cardProtocol.getCard().getAsBundle());
+                        setResult(RESULT_INVALID_PIN, intent);
+                        finish();
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }, 500);
                 return;
             } else {
 
-                progressBar.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (cardProtocol.getError() instanceof CardProtocol.TangemException_ExtendedLengthNotSupported) {
-                            if (!NoExtendedLengthSupportDialog.allreadyShowed) {
-                                new NoExtendedLengthSupportDialog().show(getFragmentManager(), "NoExtendedLengthSupportDialog");
-                            }
-                        } else {
-                            Toast.makeText(getBaseContext(), "Try to scan again", Toast.LENGTH_LONG).show();
+                progressBar.post(() -> {
+                    if (cardProtocol.getError() instanceof CardProtocol.TangemException_ExtendedLengthNotSupported) {
+                        if (!NoExtendedLengthSupportDialog.allreadyShowed) {
+                            new NoExtendedLengthSupportDialog().show(getFragmentManager(), NoExtendedLengthSupportDialog.TAG);
                         }
-                        progressBar.setProgress(100);
-                        progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
+                    } else {
+                        Toast.makeText(getBaseContext(), R.string.try_to_scan_again, Toast.LENGTH_LONG).show();
                     }
+                    progressBar.setProgress(100);
+                    progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
                 });
 
             }
 
-            progressBar.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        progressBar.setProgress(0);
-                        progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
-                        progressBar.setVisibility(View.INVISIBLE);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }, 500);
-        }
-    }
-
-    public void OnReadProgress(CardProtocol protocol, final int progress) {
-        progressBar.post(new Runnable() {
-            @Override
-            public void run() {
-                progressBar.setProgress(progress);
-            }
-        });
-    }
-
-    public void OnReadCancel() {
-
-        swapPinTask = null;
-
-        progressBar.postDelayed(new Runnable() {
-            @Override
-            public void run() {
+            progressBar.postDelayed(() -> {
                 try {
                     progressBar.setProgress(0);
                     progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
@@ -308,6 +262,24 @@ public class SwapPINActivity extends AppCompatActivity implements NfcAdapter.Rea
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+            }, 500);
+        }
+    }
+
+    public void OnReadProgress(CardProtocol protocol, final int progress) {
+        progressBar.post(() -> progressBar.setProgress(progress));
+    }
+
+    public void OnReadCancel() {
+        swapPinTask = null;
+
+        progressBar.postDelayed(() -> {
+            try {
+                progressBar.setProgress(0);
+                progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
+                progressBar.setVisibility(View.INVISIBLE);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }, 500);
     }
@@ -328,4 +300,3 @@ public class SwapPINActivity extends AppCompatActivity implements NfcAdapter.Rea
     }
 
 }
-
