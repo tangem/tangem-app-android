@@ -15,9 +15,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.tangem.data.nfc.PurgeTask;
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.NfcManager;
-import com.tangem.domain.wallet.PINStorage;
 import com.tangem.domain.wallet.TangemCard;
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog;
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog;
@@ -34,88 +34,88 @@ public class PurgeActivity extends AppCompatActivity implements NfcAdapter.Reade
     private ProgressBar progressBar;
     private PurgeTask purgeTask;
 
-    private class PurgeTask extends Thread {
-        private String txOutAddress;
-
-        IsoDep mIsoDep;
-        CardProtocol.Notifications mNotifications;
-        private boolean isCancelled = false;
-
-        PurgeTask(IsoDep isoDep, CardProtocol.Notifications notifications) {
-            mIsoDep = isoDep;
-            mNotifications = notifications;
-        }
-
-        @Override
-        public void run() {
-            if (mIsoDep == null) {
-                return;
-            }
-            CardProtocol protocol = new CardProtocol(getBaseContext(), mIsoDep, mCard, mNotifications);
-
-            mNotifications.OnReadStart(protocol);
-            try {
-
-                // for Samsung's bugs - Workaround for the Samsung Galaxy S5 (since the first connection always hangs on transceive).
-                int timeout = mIsoDep.getTimeout();
-                mIsoDep.connect();
-                mIsoDep.close();
-                mIsoDep.connect();
-                mIsoDep.setTimeout(timeout);
-                try {
-                    mNotifications.OnReadProgress(protocol, 5);
-
-                    Log.i(TAG, "[-- Start purge --]");
-
-                    if (isCancelled) return;
-
-                    if (mCard.getPauseBeforePIN2() > 0) {
-                        mNotifications.OnReadWait(mCard.getPauseBeforePIN2());
-                    }
-
-//                    try {
-                    protocol.run_PurgeWallet(PINStorage.getPIN2());
-//                    } finally {
-//                        mNotifications.OnReadWait(0);
+//    private class PurgeTask extends Thread {
+//        private String txOutAddress;
+//
+//        IsoDep mIsoDep;
+//        CardProtocol.Notifications mNotifications;
+//        private boolean isCancelled = false;
+//
+//        PurgeTask(IsoDep isoDep, CardProtocol.Notifications notifications) {
+//            mIsoDep = isoDep;
+//            mNotifications = notifications;
+//        }
+//
+//        @Override
+//        public void run() {
+//            if (mIsoDep == null) {
+//                return;
+//            }
+//            CardProtocol protocol = new CardProtocol(getBaseContext(), mIsoDep, mCard, mNotifications);
+//
+//            mNotifications.OnReadStart(protocol);
+//            try {
+//
+//                // for Samsung's bugs - Workaround for the Samsung Galaxy S5 (since the first connection always hangs on transceive).
+//                int timeout = mIsoDep.getTimeout();
+//                mIsoDep.connect();
+//                mIsoDep.close();
+//                mIsoDep.connect();
+//                mIsoDep.setTimeout(timeout);
+//                try {
+//                    mNotifications.OnReadProgress(protocol, 5);
+//
+//                    Log.i(TAG, "[-- Start purge --]");
+//
+//                    if (isCancelled) return;
+//
+//                    if (mCard.getPauseBeforePIN2() > 0) {
+//                        mNotifications.OnReadWait(mCard.getPauseBeforePIN2());
 //                    }
-
-                    mNotifications.OnReadProgress(protocol, 50);
-
-                    protocol.run_Read();
-
-                    mNotifications.OnReadProgress(protocol, 100);
-
-                    if (isCancelled) return;
-
-                } finally {
-                    mNfcManager.ignoreTag(mIsoDep.getTag());
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                protocol.setError(e);
-
-            } finally {
-                Log.i(TAG, "[-- Finish purge --]");
-                mNotifications.OnReadFinish(protocol);
-            }
-        }
-
-        public void cancel(Boolean AllowInterrupt) {
-            try {
-                if (this.isAlive()) {
-                    isCancelled = true;
-                    join(500);
-                }
-                if (this.isAlive() && AllowInterrupt) {
-                    interrupt();
-                    mNotifications.OnReadCancel();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
+//
+////                    try {
+//                    protocol.run_PurgeWallet(PINStorage.getPIN2());
+////                    } finally {
+////                        mNotifications.OnReadWait(0);
+////                    }
+//
+//                    mNotifications.OnReadProgress(protocol, 50);
+//
+//                    protocol.run_Read();
+//
+//                    mNotifications.OnReadProgress(protocol, 100);
+//
+//                    if (isCancelled) return;
+//
+//                } finally {
+//                    mNfcManager.ignoreTag(mIsoDep.getTag());
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                protocol.setError(e);
+//
+//            } finally {
+//                Log.i(TAG, "[-- Finish purge --]");
+//                mNotifications.OnReadFinish(protocol);
+//            }
+//        }
+//
+//        public void cancel(Boolean AllowInterrupt) {
+//            try {
+//                if (this.isAlive()) {
+//                    isCancelled = true;
+//                    join(500);
+//                }
+//                if (this.isAlive() && AllowInterrupt) {
+//                    interrupt();
+//                    mNotifications.OnReadCancel();
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -176,8 +176,7 @@ public class PurgeActivity extends AppCompatActivity implements NfcAdapter.Reade
 
             if (sUID.equals(mCard.getUID())) {
                 isoDep.setTimeout(mCard.getPauseBeforePIN2() + 65000);
-                purgeTask = new PurgeTask(isoDep, this);
-
+                purgeTask = new PurgeTask(this, mCard, mNfcManager, isoDep, this);
                 purgeTask.start();
             } else {
                 Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + mCard.getUID() + ")");
