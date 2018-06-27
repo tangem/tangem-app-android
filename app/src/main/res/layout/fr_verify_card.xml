@@ -552,7 +552,7 @@
 
     </android.support.v4.widget.SwipeRefreshLayout>
 
-    <RelativeLayout
+    <LinearLayout
         android:id="@+id/rlToolButtons"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -560,13 +560,22 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent">
 
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fabMenu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            app:fabSize="mini"
+            app:srcCompat="@drawable/ic_wrench_white_24dp"/>
+
         <Button
             android:id="@+id/btnOk"
             style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="match_parent"
-            android:layout_marginBottom="8dp"
+            android:layout_margin="10dp"
             android:text="@string/ok"/>
 
-    </RelativeLayout>
+    </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>
