@@ -15,14 +15,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.tangem.data.nfc.CreateNewWalletTask;
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.NfcManager;
 import com.tangem.domain.wallet.TangemCard;
-import com.tangem.util.Util;
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog;
-import com.tangem.domain.wallet.PINStorage;
-import com.tangem.wallet.R;
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog;
+import com.tangem.util.Util;
+import com.tangem.wallet.R;
 
 public class CreateNewWalletActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback, CardProtocol.Notifications {
     public static final String TAG = CreateNewWalletActivity.class.getSimpleName();
@@ -35,88 +35,88 @@ public class CreateNewWalletActivity extends AppCompatActivity implements NfcAda
     private CreateNewWalletTask createNewWalletTask;
     private boolean lastReadSuccess = true;
 
-    private class CreateNewWalletTask extends Thread {
-
-        private IsoDep mIsoDep;
-        private CardProtocol.Notifications mNotifications;
-        private boolean isCancelled = false;
-
-        public CreateNewWalletTask(IsoDep isoDep, CardProtocol.Notifications notifications) {
-            mIsoDep = isoDep;
-            mNotifications = notifications;
-        }
-
-        @Override
-        public void run() {
-            if (mIsoDep == null) {
-                return;
-            }
-            CardProtocol protocol = new CardProtocol(getBaseContext(), mIsoDep, mCard, mNotifications);
-            mNotifications.OnReadStart(protocol);
-            try {
-                // for Samsung's bugs -
-                // Workaround for the Samsung Galaxy S5 (since the
-                // first connection always hangs on transceive).
-                int timeout = mIsoDep.getTimeout();
-                mIsoDep.connect();
-                mIsoDep.close();
-                mIsoDep.connect();
-                mIsoDep.setTimeout(timeout);
-                try {
-                    mNotifications.OnReadProgress(protocol, 5);
-
-                    Log.i("CreateNewWalletTask", "[-- Start create new wallet --]");
-
-                    if (isCancelled) return;
-                    protocol.run_VerifyCard();
-
-                    Log.i("CreateNewWalletTask", "Manufacturer: " + protocol.getCard().getManufacturer().getOfficialName());
-
-                    mNotifications.OnReadProgress(protocol, 30);
-                    if (isCancelled) return;
-
-//                    if (mCard.getPauseBeforePIN2() > 0) {
-//                        mNotifications.OnReadWait(mCard.getPauseBeforePIN2());
-//                    }
-//                    try {
-                    protocol.run_CreateWallet(PINStorage.getPIN2());
-//                    } finally {
-//                        mNotifications.OnReadWait(0);
-//                    }
-                    mNotifications.OnReadProgress(protocol, 60);
-                    if (isCancelled) return;
-
-                    protocol.run_Read();
-
-                } finally {
-                    mNfcManager.ignoreTag(mIsoDep.getTag());
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                protocol.setError(e);
-
-            } finally {
-                Log.i("CreateNewWalletTask", "[-- Finish create new wallet --]");
-                mNotifications.OnReadFinish(protocol);
-            }
-        }
-
-        public void cancel(Boolean AllowInterrupt) {
-            try {
-                if (this.isAlive()) {
-                    isCancelled = true;
-                    join(500);
-                }
-                if (this.isAlive() && AllowInterrupt) {
-                    interrupt();
-                    mNotifications.OnReadCancel();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
+//    private class CreateNewWalletTask extends Thread {
+//
+//        private IsoDep mIsoDep;
+//        private CardProtocol.Notifications mNotifications;
+//        private boolean isCancelled = false;
+//
+//        public CreateNewWalletTask(IsoDep isoDep, CardProtocol.Notifications notifications) {
+//            mIsoDep = isoDep;
+//            mNotifications = notifications;
+//        }
+//
+//        @Override
+//        public void run() {
+//            if (mIsoDep == null) {
+//                return;
+//            }
+//            CardProtocol protocol = new CardProtocol(getBaseContext(), mIsoDep, mCard, mNotifications);
+//            mNotifications.OnReadStart(protocol);
+//            try {
+//                // for Samsung's bugs -
+//                // Workaround for the Samsung Galaxy S5 (since the
+//                // first connection always hangs on transceive).
+//                int timeout = mIsoDep.getTimeout();
+//                mIsoDep.connect();
+//                mIsoDep.close();
+//                mIsoDep.connect();
+//                mIsoDep.setTimeout(timeout);
+//                try {
+//                    mNotifications.OnReadProgress(protocol, 5);
+//
+//                    Log.i("CreateNewWalletTask", "[-- Start create new wallet --]");
+//
+//                    if (isCancelled) return;
+//                    protocol.run_VerifyCard();
+//
+//                    Log.i("CreateNewWalletTask", "Manufacturer: " + protocol.getCard().getManufacturer().getOfficialName());
+//
+//                    mNotifications.OnReadProgress(protocol, 30);
+//                    if (isCancelled) return;
+//
+////                    if (mCard.getPauseBeforePIN2() > 0) {
+////                        mNotifications.OnReadWait(mCard.getPauseBeforePIN2());
+////                    }
+////                    try {
+//                    protocol.run_CreateWallet(PINStorage.getPIN2());
+////                    } finally {
+////                        mNotifications.OnReadWait(0);
+////                    }
+//                    mNotifications.OnReadProgress(protocol, 60);
+//                    if (isCancelled) return;
+//
+//                    protocol.run_Read();
+//
+//                } finally {
+//                    mNfcManager.ignoreTag(mIsoDep.getTag());
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                protocol.setError(e);
+//
+//            } finally {
+//                Log.i("CreateNewWalletTask", "[-- Finish create new wallet --]");
+//                mNotifications.OnReadFinish(protocol);
+//            }
+//        }
+//
+//        public void cancel(Boolean AllowInterrupt) {
+//            try {
+//                if (this.isAlive()) {
+//                    isCancelled = true;
+//                    join(500);
+//                }
+//                if (this.isAlive() && AllowInterrupt) {
+//                    interrupt();
+//                    mNotifications.OnReadCancel();
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -155,7 +155,7 @@ public class CreateNewWalletActivity extends AppCompatActivity implements NfcAda
                 } else {
                     isoDep.setTimeout(mCard.getPauseBeforePIN2() + 65000);
                 }
-                createNewWalletTask = new CreateNewWalletTask(isoDep, this);
+                createNewWalletTask = new CreateNewWalletTask(this, mCard, mNfcManager, isoDep, this);
                 createNewWalletTask.start();
             } else {
                 Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + mCard.getUID() + ")");
