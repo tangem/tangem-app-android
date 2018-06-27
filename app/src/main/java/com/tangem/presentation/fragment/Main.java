@@ -30,7 +30,7 @@ import com.tangem.data.network.request.InfuraRequest;
 import com.tangem.data.network.task.ElectrumTask;
 import com.tangem.data.network.task.ExchangeTask;
 import com.tangem.data.network.task.InfuraTask;
-import com.tangem.data.task.ReadCardInfoTask;
+import com.tangem.data.nfc.ReadCardInfoTask;
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.NfcManager;
 import com.tangem.domain.wallet.Blockchain;
