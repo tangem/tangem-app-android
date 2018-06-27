@@ -6,6 +6,7 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -49,7 +50,7 @@ public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefresh
 
         View v = inflater.inflate(R.layout.fr_verify_card, container, false);
 
-        mNfcManager = new NfcManager(this.getActivity(), this);
+        mNfcManager = new NfcManager(getActivity(), this);
 
         mSwipeRefreshLayout = v.findViewById(R.id.swipe_container);
         mSwipeRefreshLayout.setOnRefreshListener(this);
@@ -97,6 +98,9 @@ public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefresh
         });
 
 
+        FloatingActionButton fabMenu = v.findViewById(R.id.fabMenu);
+
+
         tvWallet = v.findViewById(R.id.tvWallet);
         tvWalletIdentity = v.findViewById(R.id.tvWalletIdentity);
 
@@ -111,6 +115,7 @@ public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefresh
 //                }
 //            }, 1000);
 //        }
+
         return v;
     }
 
