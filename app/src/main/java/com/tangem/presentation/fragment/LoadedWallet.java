@@ -44,7 +44,7 @@ import com.tangem.data.network.request.InfuraRequest;
 import com.tangem.data.network.task.ElectrumTask;
 import com.tangem.data.network.task.ExchangeTask;
 import com.tangem.data.network.task.InfuraTask;
-import com.tangem.data.task.VerifyCardTask;
+import com.tangem.data.nfc.VerifyCardTask;
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.NfcManager;
 import com.tangem.domain.wallet.BitcoinException;
