@@ -23,7 +23,7 @@ import com.tangem.domain.wallet.TangemCard;
 import com.tangem.util.Util;
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog;
 import com.tangem.wallet.R;
-import com.tangem.data.task.VerifyCardTask;
+import com.tangem.data.nfc.VerifyCardTask;
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog;
 
 public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback, CardProtocol.Notifications {
