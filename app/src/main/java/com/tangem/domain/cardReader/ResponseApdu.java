@@ -34,10 +34,20 @@ public class ResponseApdu {
                 parseError = e.getMessage();
             }
 
+        }else{
+            tlvList=new TLVList();
+            parseError=null;
         }
         mSw1 = 0x00FF & respApdu[respApdu.length - 2];
         mSw2 = 0x00FF & respApdu[respApdu.length - 1];
         mBytes = respApdu;
+    }
+
+    public static boolean isStatusWord(byte[] respApdu, int SW)
+    {
+        int mSw1 = 0x00FF & respApdu[respApdu.length - 2];
+        int mSw2 = 0x00FF & respApdu[respApdu.length - 1];
+        return ((mSw1 << 8) | mSw2)==SW;
     }
 
     public static ResponseApdu Decrypt(byte[] data, byte[] key) throws Exception{
