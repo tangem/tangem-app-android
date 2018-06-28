@@ -97,6 +97,8 @@ public class TangemCard {
     }
 
     public void setBlockchainID(String blockchainID) {
+
+
         this.blockchainID = blockchainID;
     }
 
