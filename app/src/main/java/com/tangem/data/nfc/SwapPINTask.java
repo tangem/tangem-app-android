@@ -76,6 +76,7 @@ public class SwapPINTask extends Thread {
 
             } finally {
                 mNfcManager.ignoreTag(mIsoDep.getTag());
+                mNotifications.OnReadWait(0);
             }
         } catch (Exception e) {
             e.printStackTrace();
