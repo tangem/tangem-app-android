@@ -25,7 +25,8 @@ public class FormatUtil {
         symbols.setDecimalSeparator('.');
 
         String pattern = "#0.######";
-        DecimalFormat myFormatter = new DecimalFormat(pattern, symbols);
+//        DecimalFormat myFormatter = new DecimalFormat(pattern, symbols);
+        DecimalFormat myFormatter = new DecimalFormat(pattern);
 
         myFormatter.setParseBigDecimal(true);
 
