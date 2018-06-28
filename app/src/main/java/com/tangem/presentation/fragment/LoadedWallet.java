@@ -171,7 +171,12 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                                 BigInteger l = new BigInteger(balanceCap, 16);
                                 Long balance = l.longValue();
 
+//                                Log.i(TAG, " dvddvdv  BigInteger.ZERO");
+
                                 if (l.compareTo(BigInteger.ZERO) == 0) {
+
+//                                    Log.i(TAG, "BigInteger.ZERO");
+
                                     mCard.setBlockchainID(Blockchain.Ethereum.getID());
                                     mCard.addTokenToBlockchainName();
                                     mSwipeRefreshLayout.setRefreshing(false);
@@ -666,7 +671,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             } else if (engine.AwaitingConfirmation(mCard)) {
                 Toast.makeText(getContext(), R.string.please_wait_while_previous, Toast.LENGTH_LONG).show();
                 return;
-
 
             } else if (!engine.CheckUnspentTransaction(mCard)) {
                 Toast.makeText(getContext(), R.string.please_wait_for_confirmation, Toast.LENGTH_LONG).show();
