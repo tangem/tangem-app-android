@@ -22,4 +22,6 @@ public class SettingsMask {
     public static final int Protocol_AllowUnencrypted = 0x1000;
     public static final int Protocol_AllowStaticEncryption = 0x2000;
 
+    public static final int ProtectIssuerDataAgainstReplay = 0x4000;
+
 }
