@@ -909,7 +909,9 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             int nodePort = engine.GetNodePort(mCard);
             UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(nodeAddress, nodePort, data);
             updateTasks.add(updateWalletInfoTask);
-            updateWalletInfoTask.execute(ElectrumRequest.ListUnspent(mCard.getWallet()), ElectrumRequest.ListHistory(mCard.getWallet()));
+            updateWalletInfoTask.execute(ElectrumRequest.ListUnspent(mCard.getWallet())
+//                    ElectrumRequest.ListHistory(mCard.getWallet())
+            );
 
             RateInfoTask taskRate = new RateInfoTask();
             ExchangeRequest rate = ExchangeRequest.GetRate(mCard.getWallet(), "bitcoin", "bitcoin");
@@ -930,7 +932,9 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(nodeAddress, nodePort, data);
 
             updateTasks.add(updateWalletInfoTask);
-            updateWalletInfoTask.execute(ElectrumRequest.ListUnspent(mCard.getWallet()), ElectrumRequest.ListHistory(mCard.getWallet()));
+            updateWalletInfoTask.execute(ElectrumRequest.ListUnspent(mCard.getWallet())
+//                    ElectrumRequest.ListHistory(mCard.getWallet())
+            );
 
             RateInfoTask taskRate = new RateInfoTask();
             ExchangeRequest rate = ExchangeRequest.GetRate(mCard.getWallet(), "bitcoin-cash", "bitcoin-cash");
