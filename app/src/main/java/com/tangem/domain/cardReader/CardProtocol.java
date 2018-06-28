@@ -280,6 +280,62 @@ public class CardProtocol {
 
 
     // send command APDU, get response APDU, and display HEX data to user
+//    private ResponseApdu SendAndReceive(CommandApdu cmdApdu, boolean breakOnNeedPause) throws Exception {
+//        if (mCard.encryptionMode != TangemCard.EncryptionMode.None) {
+//            if (sessionKey == null) {
+//                run_OpenSession(mCard.encryptionMode);
+//            }
+//            cmdApdu.Crypt(sessionKey);
+//        }
+//        cmdApdu.setP1(mCard.encryptionMode.getP());
+//        byte[] cmdBytes = cmdApdu.toBytes();
+//        String cmdStr = CommandApdu.toString(cmdBytes, cmdApdu.getLc());
+//        Log.v("NFC", String.format("<< [%s]: %s", cmdApdu.getCommandName(), cmdStr));
+//        byte[] rsp;
+//        ResponseApdu rspApdu;
+//        try {
+//            do {
+//                try {
+//                    mNotifications.OnReadBeforeRequest(mIsoDep.getTimeout());
+//                    try {
+//                        rsp = mIsoDep.transceive(cmdBytes);
+//                    } finally {
+//                        mNotifications.OnReadAfterRequest();
+//                    }
+//                } catch (IOException e) {
+//                    if (e.getMessage().contains("length exceeds supported maximum") && mIsoDep.isExtendedLengthApduSupported()) {
+//                        throw new TangemException_ExtendedLengthNotSupported(e.getMessage());
+//                    }
+//                    throw e;
+//                }
+//                if (mCard.encryptionMode != TangemCard.EncryptionMode.None) {
+//                    rspApdu = ResponseApdu.Decrypt(rsp, sessionKey);
+//                } else {
+//                    rspApdu = new ResponseApdu(rsp);
+//                }
+//
+//                if (rspApdu.isParsedWithError()) {
+//                    Log.v("NFC", String.format(">> [%s]: %s", cmdApdu.getCommandName(), Util.bytesToHex(rsp)));
+//                    throw new TangemException(rspApdu.getParseErroMessage());
+//                } else if (rspApdu.getSW1SW2() == SW.NEED_PAUSE && mNotifications != null) {
+//                    int remainingPause = rspApdu.getTLVs().getTagAsInt(TLV.Tag.TAG_Pause) * 10;
+//                    Log.v("NFC", String.format(">> Security delay, remaining %f s", remainingPause / 1000.0));
+//                    if (breakOnNeedPause) {
+//                        break;
+//                    } else {
+//                        mNotifications.OnReadWait(remainingPause);
+//                    }
+//                } else {
+//                    Log.v("NFC", String.format(">> [%s]: %s", cmdApdu.getCommandName(), Util.bytesToHex(rsp)));
+//                }
+//            } while (rspApdu.getSW1SW2() == SW.NEED_PAUSE);
+//        } finally {
+//            mNotifications.OnReadWait(0);
+//        }
+//
+//        return rspApdu;
+//    }
+
     private ResponseApdu SendAndReceive(CommandApdu cmdApdu, boolean breakOnNeedPause) throws Exception {
         if (mCard.encryptionMode != TangemCard.EncryptionMode.None) {
             if (sessionKey == null) {
@@ -308,7 +364,7 @@ public class CardProtocol {
                     }
                     throw e;
                 }
-                if (mCard.encryptionMode != TangemCard.EncryptionMode.None) {
+                if (mCard.encryptionMode != TangemCard.EncryptionMode.None && !ResponseApdu.isStatusWord(rsp, SW.NEED_PAUSE)) {
                     rspApdu = ResponseApdu.Decrypt(rsp, sessionKey);
                 } else {
                     rspApdu = new ResponseApdu(rsp);
@@ -318,7 +374,12 @@ public class CardProtocol {
                     Log.v("NFC", String.format(">> [%s]: %s", cmdApdu.getCommandName(), Util.bytesToHex(rsp)));
                     throw new TangemException(rspApdu.getParseErroMessage());
                 } else if (rspApdu.getSW1SW2() == SW.NEED_PAUSE && mNotifications != null) {
-                    int remainingPause = rspApdu.getTLVs().getTagAsInt(TLV.Tag.TAG_Pause) * 10;
+                    int remainingPause = 60000;
+                    TLV tlvPause = rspApdu.getTLVs().getTLV(TLV.Tag.TAG_Pause);
+                    if (tlvPause != null) {
+                        remainingPause = rspApdu.getTLVs().getTagAsInt(TLV.Tag.TAG_Pause) * 10;
+                    }
+
                     Log.v("NFC", String.format(">> Security delay, remaining %f s", remainingPause / 1000.0));
                     if (breakOnNeedPause) {
                         break;
