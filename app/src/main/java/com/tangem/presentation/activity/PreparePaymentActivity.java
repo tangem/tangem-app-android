@@ -26,15 +26,15 @@ import com.tangem.util.FormatUtil;
 import com.tangem.wallet.R;
 
 import java.io.IOException;
-import java.util.Objects;
 
 public class PreparePaymentActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback {
+    public static final String TAG = PreparePaymentActivity.class.getSimpleName();
 
     private static final int REQUEST_CODE_SCAN_QR = 1;
     private static final int REQUEST_CODE_SEND_PAYMENT = 2;
     private EditText etWallet;
     private EditText etAmount;
-//    private TextView tvAmountEquivalent;
+    //    private TextView tvAmountEquivalent;
     boolean use_mCurrency;
     private TangemCard mCard;
     private NfcManager mNfcManager;
@@ -138,8 +138,11 @@ public class PreparePaymentActivity extends AppCompatActivity implements NfcAdap
             String strAmount;
             strAmount = etAmount.getText().toString();
             CoinEngine engine1 = CoinEngineFactory.Create(mCard.getBlockchain());
+
+            Log.i(TAG, mCard.getBlockchain().getOfficialName());
+
             try {
-                if (!Objects.requireNonNull(engine1).CheckAmount(mCard, etAmount.getText().toString())) {
+                if (!engine.CheckAmount(mCard, etAmount.getText().toString())) {
                     etAmount.setError(getString(R.string.not_enough_funds_on_your_card));
                 }
             } catch (Exception e) {
