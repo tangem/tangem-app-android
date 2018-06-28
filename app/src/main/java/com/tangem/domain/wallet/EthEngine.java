@@ -27,57 +27,46 @@ import static com.tangem.util.FormatUtil.GetDecimalFormat;
 
 public class EthEngine extends CoinEngine {
 
-    public String GetNextNode(TangemCard mCard)
-    {
+    public String GetNextNode(TangemCard mCard) {
         return "abc1.hsmiths.com";
     }
 
-    public int GetNextNodePort(TangemCard mCard)
-    {
+    public int GetNextNodePort(TangemCard mCard) {
         return 60001;
     }
 
-    public String GetNode(TangemCard mCard)
-    {
+    public String GetNode(TangemCard mCard) {
         return "abc1.hsmiths.com";
     }
 
-    public int GetNodePort(TangemCard mCard)
-    {
+    public int GetNodePort(TangemCard mCard) {
         return 60001;
     }
 
-    public void SwitchNode(TangemCard mCard)
-    {
+    public void SwitchNode(TangemCard mCard) {
     }
 
-    public boolean InOutPutVisible()
-    {
+    public boolean InOutPutVisible() {
         return false;
     }
 
-    public String GetBalanceCurrency(TangemCard card)
-    {
+    public String GetBalanceCurrency(TangemCard card) {
         return "ETH";
     }
 
-    public boolean AwaitingConfirmation(TangemCard card)
-    {
+    public boolean AwaitingConfirmation(TangemCard card) {
         return false;
     }
 
-    public String GetFeeCurrency()
-    {
+    public String GetFeeCurrency() {
         return "Gwei";
     }
 
-    public boolean IsNeedCheckNode()
-    {
+    public boolean IsNeedCheckNode() {
         return false;
     }
 
-    BigDecimal convertToEth(String value)
-    {
+    BigDecimal convertToEth(String value) {
         BigInteger m = new BigInteger(value, 10);
         BigDecimal n = new BigDecimal(m);
         BigDecimal d = n.divide(new BigDecimal("1000000000000000000"));
@@ -85,37 +74,32 @@ public class EthEngine extends CoinEngine {
         return d;
     }
 
-    public int GetTokenDecimals(TangemCard card)
-    {
+    public int GetTokenDecimals(TangemCard card) {
         return 0;
     }
 
-    public String GetContractAddress(TangemCard card)
-    {
+    public String GetContractAddress(TangemCard card) {
         return "";
     }
 
     public boolean ValdateAddress(String address, TangemCard card) {
 
-        if (address == null || address.isEmpty())
-        {
+        if (address == null || address.isEmpty()) {
             return false;
         }
 
-        if(!address.startsWith("0x")&&!address.startsWith("0X"))
-        {
+        if (!address.startsWith("0x") && !address.startsWith("0X")) {
             return false;
         }
 
-        if(address.length()!=42)
-        {
+        if (address.length() != 42) {
             return false;
         }
 
         return true;
     }
-    public String GetBalanceValue(TangemCard mCard)
-    {
+
+    public String GetBalanceValue(TangemCard mCard) {
         String dec = mCard.getDecimalBalance();
         BigDecimal d = convertToEth(dec);
         String s = d.toString();
@@ -152,7 +136,6 @@ public class EthEngine extends CoinEngine {
     }
 
 
-
     @Override
     public String GetBalanceEquivalent(TangemCard mCard) {
         String dec = mCard.getDecimalBalance();
@@ -162,7 +145,7 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public String GetBalance(TangemCard mCard) {
-        if(!HasBalanceInfo(mCard)){
+        if (!HasBalanceInfo(mCard)) {
             return "-- -- -- " + GetBalanceCurrency(mCard);
         }
 
@@ -171,25 +154,21 @@ public class EthEngine extends CoinEngine {
         return s;
     }
 
-    public Long GetBalanceLong(TangemCard mCard)
-    {
+    public Long GetBalanceLong(TangemCard mCard) {
         return mCard.getBalance();
     }
 
-    public String GetBalanceWithAlter(TangemCard mCard)
-    {
+    public String GetBalanceWithAlter(TangemCard mCard) {
         return GetBalance(mCard);
     }
 
-    public boolean IsBalanceAlterNotZero(TangemCard card)
-    {
+    public boolean IsBalanceAlterNotZero(TangemCard card) {
         return true;
     }
 
-    public boolean IsBalanceNotZero(TangemCard card)
-    {
+    public boolean IsBalanceNotZero(TangemCard card) {
         String balance = card.getDecimalBalance();
-        if(balance == null || balance == "")
+        if (balance == null || balance == "")
             return false;
 
         BigDecimal bi = new BigDecimal(balance);
@@ -215,51 +194,55 @@ public class EthEngine extends CoinEngine {
         throw new Exception("Not implemented");
     }
 
-    public String GetAmountEqualentDescriptor(TangemCard mCard, String value)
-    {
+    public String GetAmountEqualentDescriptor(TangemCard mCard, String value) {
         BigDecimal d = new BigDecimal(value);
         return getAmountEquivalentDescriptionETH(d, mCard.getRate());
     }
 
-    public boolean CheckAmount(TangemCard card, String amount) throws Exception
-    {
+    public BigDecimal GetBalanceAlterValueBigDecimal(TangemCard mCard) {
+        String dec = mCard.getDecimalBalanceAlter();
+        BigDecimal d = convertToEth(dec);
+//        String s = d.toString();
+
+//        String pattern = "#0.000"; // If you like 4 zeros
+//        DecimalFormat myFormatter = new DecimalFormat(pattern);
+//        String output = myFormatter.format(d);
+        return d;
+    }
+
+    public boolean CheckAmount(TangemCard card, String amount) throws Exception {
         DecimalFormat decimalFormat = GetDecimalFormat();
         BigDecimal amountValue = (BigDecimal) decimalFormat.parse(amount); //new BigDecimal(strAmount);
-        BigDecimal maxValue = new BigDecimal(GetBalanceValue(card));
-        if(amountValue.compareTo(maxValue) > 0 )
-        {
+//        BigDecimal maxValue = new BigDecimal(GetBalanceValue(card));
+        BigDecimal maxValue = GetBalanceAlterValueBigDecimal(card);
+        if (amountValue.compareTo(maxValue) > 0) {
             return false;
         }
 
         return true;
     }
 
-    public boolean HasBalanceInfo(TangemCard card)
-    {
+    public boolean HasBalanceInfo(TangemCard card) {
         return card.hasBalanceInfo();
     }
 
-    public Uri getShareWalletURI(TangemCard mCard)
-    {
+    public Uri getShareWalletURI(TangemCard mCard) {
         return Uri.parse("" + mCard.getWallet());
     }
 
-    public Uri getShareWalletURIExplorer(TangemCard mCard)
-    {
-        if(mCard.getBlockchain() == Blockchain.EthereumTestNet)
+    public Uri getShareWalletURIExplorer(TangemCard mCard) {
+        if (mCard.getBlockchain() == Blockchain.EthereumTestNet)
             return Uri.parse("https://rinkeby.etherscan.io/address/" + mCard.getWallet());
         else
             return Uri.parse("https://etherscan.io/address/" + mCard.getWallet());
     }
 
-    public boolean CheckUnspentTransaction(TangemCard mCard)
-    {
+    public boolean CheckUnspentTransaction(TangemCard mCard) {
         return true;
     }
 
 
-    public boolean CheckAmountValie(TangemCard mCard, String amountValue, String feeValue, Long minFeeInInternalUnits)
-    {
+    public boolean CheckAmountValie(TangemCard mCard, String amountValue, String feeValue, Long minFeeInInternalUnits) {
         Long fee = null;
         Long amount = null;
         try {
@@ -270,14 +253,14 @@ public class EthEngine extends CoinEngine {
             return false;
         }
 
-        if(fee == null || amount == null)
+        if (fee == null || amount == null)
             return false;
 
-        if(fee == 0 || amount ==0)
+        if (fee == 0 || amount == 0)
             return false;
 
 
-        if(fee < minFeeInInternalUnits)
+        if (fee < minFeeInInternalUnits)
             return false;
 
 
@@ -291,15 +274,14 @@ public class EthEngine extends CoinEngine {
         return true;
     }
 
-    public String EvaluteFeeEquivalent(TangemCard mCard, String fee)
-    {
+    public String EvaluteFeeEquivalent(TangemCard mCard, String fee) {
         BigDecimal gweFee = new BigDecimal(fee);
         gweFee = gweFee.divide(new BigDecimal("1000000000"));
         gweFee = gweFee.setScale(18, RoundingMode.DOWN);
         return GetAmountEqualentDescriptor(mCard, gweFee.toString());
     }
 
-    public  String calculateAddress(TangemCard mCard, byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException {
+    public String calculateAddress(TangemCard mCard, byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException {
         Keccak256 kec = new Keccak256();
         int lenPk = pkUncompressed.length;
         if (lenPk < 2) {
@@ -323,7 +305,7 @@ public class EthEngine extends CoinEngine {
 
         BigInteger nonceValue = mCard.GetConfirmTXCount();
         byte[] pbKey = mCard.getWalletPublicKey();
-        boolean flag = (mCard.getSigningMethod()== TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer);
+        boolean flag = (mCard.getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer);
         Issuer issuer = mCard.getIssuer();
 
 
@@ -374,8 +356,7 @@ public class EthEngine extends CoinEngine {
 
         boolean f = ECKey.verify(for_hash, new ECKey.ECDSASignature(r, s), pbKey);
 
-        if(!f)
-        {
+        if (!f) {
             Log.e("ETH-CHECK", "Sign Failed.");
         }
 
