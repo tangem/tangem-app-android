@@ -450,6 +450,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
         btnSend.setVisibility(View.INVISIBLE);
         feeRequestSuccess = false;
         balanceRequestSuccess = false;
+
         btnSend.setOnClickListener(v -> {
             Calendar calendar = Calendar.getInstance();
             calendar.add(Calendar.MINUTE, -1);
