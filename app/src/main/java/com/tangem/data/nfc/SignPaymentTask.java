@@ -118,6 +118,7 @@ public class SignPaymentTask extends Thread {
 
             } finally {
                 mNfcManager.ignoreTag(mIsoDep.getTag());
+                mNotifications.OnReadWait(0);
             }
         } catch (CardProtocol.TangemException_InvalidPIN e) {
             e.printStackTrace();
