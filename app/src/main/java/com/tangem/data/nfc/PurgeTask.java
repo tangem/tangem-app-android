@@ -72,6 +72,7 @@ public class PurgeTask extends Thread {
 
             } finally {
                 mNfcManager.ignoreTag(mIsoDep.getTag());
+                mNotifications.OnReadWait(0);
             }
         } catch (Exception e) {
             e.printStackTrace();
