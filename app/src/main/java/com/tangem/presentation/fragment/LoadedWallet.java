@@ -1,6 +1,7 @@
 package com.tangem.presentation.fragment;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
@@ -646,9 +647,14 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         ivQR.setOnClickListener(v1 -> doShareWallet(true));
 
         btnLoad.setOnClickListener(v1 -> {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Objects.requireNonNull(CoinEngineFactory.Create(mCard.getBlockchain())).getShareWalletURI(mCard));
-                    intent.addCategory(Intent.CATEGORY_DEFAULT);
-                    startActivity(intent);
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Objects.requireNonNull(CoinEngineFactory.Create(mCard.getBlockchain())).getShareWalletURI(mCard));
+                        intent.addCategory(Intent.CATEGORY_DEFAULT);
+                        startActivity(intent);
+                    } catch (ActivityNotFoundException e) {
+                        e.printStackTrace();
+                    }
+
                 }
         );
 
