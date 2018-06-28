@@ -53,6 +53,7 @@ public class TLV {
         TAG_Issuer_Data(0x32),
         TAG_Issuer_Data_Signature(0x33),
         TAG_Issuer_Transaction_Signature(0x34),
+        TAG_Issuer_Data_Counter(0x35),
 
         TAG_IsActivated(0x3A),
         TAG_ActivationSeed(0x3B),
@@ -213,6 +214,49 @@ public class TLV {
                 } else {
                     return String.format("%s[]: [[NULL]]", tag.name());
                 }
+            case TAG_SettingsMask: {
+                StringBuilder sb=new StringBuilder();
+                if( Value!=null ) {
+                    try {
+                        int iValue = Util.byteArrayToInt(Value);
+                        sb.append("[");
+                        if ((iValue & SettingsMask.AllowSwapPIN) != 0) sb.append("AllowSwapPIN, ");
+                        if ((iValue & SettingsMask.AllowSwapPIN2) != 0)
+                            sb.append("AllowSwapPIN2, ");
+                        if ((iValue & SettingsMask.ForbidDefaultPIN) != 0)
+                            sb.append("ForbidDefaultPIN, ");
+                        if ((iValue & SettingsMask.IsReusable) != 0) sb.append("IsReusable, ");
+                        if ((iValue & SettingsMask.Protocol_AllowStaticEncryption) != 0)
+                            sb.append("Protocol_AllowStaticEncryption, ");
+                        if ((iValue & SettingsMask.Protocol_AllowUnencrypted) != 0)
+                            sb.append("Protocol_AllowUnencrypted, ");
+                        if ((iValue & SettingsMask.SmartSecurityDelay) != 0)
+                            sb.append("SmartSecurityDelay, ");
+                        if ((iValue & SettingsMask.UseActivation) != 0)
+                            sb.append("UseActivation, ");
+                        if ((iValue & SettingsMask.UseBlock) != 0) sb.append("UseBlock, ");
+                        if ((iValue & SettingsMask.UseCVC) != 0) sb.append("UseCVC, ");
+                        if ((iValue & SettingsMask.UseDynamicNDEF) != 0)
+                            sb.append("UseDynamicNDEF, ");
+                        if ((iValue & SettingsMask.UseNDEF) != 0) sb.append("UseNDEF, ");
+                        if ((iValue & SettingsMask.UseOneCommandAtTime) != 0)
+                            sb.append("UseOneCommandAtTime, ");
+                        if ((iValue & SettingsMask.ProtectIssuerDataAgainstReplay) != 0)
+                            sb.append("ProtectIssuerDataAgainstReplay, ");
+
+                        if (sb.length() > 1) sb.delete(sb.length() - 2, sb.length());
+                        sb.append("]");
+                        return String.format("%s[%d]: %s (%s)", tag.name(), Value.length, Util.bytesToHex(Value), sb.toString());
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                        return String.format("%s[%d]: %s", tag.name(), Value.length, Util.bytesToHex(Value));
+                    }
+                }else{
+                    return String.format("%s[]: [[NULL]]", tag.name());
+                }
+            }
             default:
                 if (Value != null) {
                     return String.format("%s[%d]: %s", tag.name(), Value.length, Util.bytesToHex(Value));
