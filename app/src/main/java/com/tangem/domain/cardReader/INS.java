@@ -20,12 +20,7 @@ public enum INS {
     Sign(0xFB),
     PurgeWallet(0xFC),
     Activate(0xFE),
-    OpenSession(0xFF),
-    ReadBlockedData(0xE4),
-    CreateTestWallet(0xE0),
-    ExtractWalletKey(0xE1),
-    Test(0xE2),
-    Depersonalize(0xE3);
+    OpenSession(0xFF);
 
     INS(int Code) {
         this.Code = Code;
