@@ -113,6 +113,17 @@ public class TokenEngine extends CoinEngine {
         return output;
     }
 
+    public BigDecimal GetBalanceAlterValueBigDecimal(TangemCard mCard) {
+        String dec = mCard.getDecimalBalanceAlter();
+        BigDecimal d = convertToEth(dec);
+//        String s = d.toString();
+
+//        String pattern = "#0.000"; // If you like 4 zeros
+//        DecimalFormat myFormatter = new DecimalFormat(pattern);
+//        String output = myFormatter.format(d);
+        return d;
+    }
+
     public String GetBalanceValue(TangemCard mCard) {
         if (!HasBalanceInfo(mCard))
             return "-- -- -- " + GetBalanceCurrency(mCard);
@@ -129,10 +140,21 @@ public class TokenEngine extends CoinEngine {
         return output;
     }
 
+    public BigDecimal GetBalanceValueBigDecimal(TangemCard mCard) {
+
+        String dec = mCard.getDecimalBalance();
+        BigDecimal d = new BigDecimal(dec);
+        BigDecimal p = new BigDecimal(10);
+        p = p.pow(GetTokenDecimals(mCard));
+        BigDecimal l = d.divide(p);
+
+        return l;
+    }
+
     public boolean CheckAmount(TangemCard card, String amount) throws Exception {
         DecimalFormat decimalFormat = GetDecimalFormat();
         BigDecimal amountValue = (BigDecimal) decimalFormat.parse(amount); //new BigDecimal(strAmount);
-        BigDecimal maxValue = new BigDecimal(GetBalanceValue(card));
+        BigDecimal maxValue = GetBalanceValueBigDecimal(card);
         if (amountValue.compareTo(maxValue) > 0) {
             return false;
         }
@@ -270,7 +292,7 @@ public class TokenEngine extends CoinEngine {
         Long fee = null;
         BigDecimal amount = null;
         try {
-            amount = new BigDecimal(GetBalanceAlterValue(mCard));//mCard.InternalUnitsFromString(amountValue);
+            amount = GetBalanceAlterValueBigDecimal(mCard);//mCard.InternalUnitsFromString(amountValue);
             fee = mCard.InternalUnitsFromString(feeValue);
         } catch (Exception e) {
             e.printStackTrace();
