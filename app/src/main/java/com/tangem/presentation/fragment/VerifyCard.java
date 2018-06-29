@@ -6,21 +6,33 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.tangem.domain.cardReader.NfcManager;
+import com.tangem.domain.wallet.CoinEngine;
+import com.tangem.domain.wallet.CoinEngineFactory;
+import com.tangem.domain.wallet.PINStorage;
 import com.tangem.domain.wallet.TangemCard;
+import com.tangem.presentation.activity.CreateNewWalletActivity;
+import com.tangem.presentation.activity.PurgeActivity;
+import com.tangem.presentation.activity.RequestPINActivity;
+import com.tangem.presentation.activity.SwapPINActivity;
+import com.tangem.presentation.dialog.PINSwapWarningDialog;
+import com.tangem.wallet.BuildConfig;
 import com.tangem.wallet.R;
 
 import java.io.IOException;
@@ -28,21 +40,47 @@ import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefreshListener, NfcAdapter.ReaderCallback {
+public class VerifyCard extends Fragment implements NfcAdapter.ReaderCallback {
 
+    private static final int REQUEST_CODE_SEND_PAYMENT = 1;
+    private static final int REQUEST_CODE_PURGE = 2;
+    private static final int REQUEST_CODE_REQUEST_PIN2_FOR_PURGE = 3;
+    private static final int REQUEST_CODE_VERIFY_CARD = 4;
+    private static final int REQUEST_CODE_ENTER_NEW_PIN = 5;
+    private static final int REQUEST_CODE_ENTER_NEW_PIN2 = 6;
+    private static final int REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN = 7;
+    private static final int REQUEST_CODE_SWAP_PIN = 8;
+
+    private String newPIN = "", newPIN2 = "";
+
+    private NfcManager mNfcManager;
     private TangemCard mCard;
+
+    private int requestPIN2Count = 0;
+
+    private Timer timerHideErrorAndMessage = null;
+
     private TextView tvCardID, tvManufacturer, tvRegistrationDate, tvCardIdentity, tvLastSigned, tvRemainingSignatures, tvReusable, tvError, tvMessage,
             tvIssuer, tvIssuerData, tvFeatures, tvBlockchain, tvSignedTx, tvSigningMethod, tvFirmware, tvWalletIdentity, tvWallet;
     private ImageView ivBlockchain, ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private NfcManager mNfcManager;
+    private Tag lastTag;
+
 
     public VerifyCard() {
 
     }
 
-    public void onRefresh() {
-        mSwipeRefreshLayout.setRefreshing(false);
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mNfcManager = new NfcManager(getActivity(), this);
+
+        mCard = new TangemCard(Objects.requireNonNull(getActivity()).getIntent().getStringExtra("UID"));
+        mCard.LoadFromBundle(Objects.requireNonNull(getActivity().getIntent().getExtras()).getBundle("Card"));
+
+
+//        LoadedWallet.needOpenVerify = true;
     }
 
     @Override
@@ -50,13 +88,8 @@ public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefresh
 
         View v = inflater.inflate(R.layout.fr_verify_card, container, false);
 
-        mNfcManager = new NfcManager(getActivity(), this);
-
         mSwipeRefreshLayout = v.findViewById(R.id.swipe_container);
-        mSwipeRefreshLayout.setOnRefreshListener(this);
 
-        mCard = new TangemCard(getActivity().getIntent().getStringExtra("UID"));
-        mCard.LoadFromBundle(getActivity().getIntent().getExtras().getBundle("Card"));
         tvCardID = v.findViewById(R.id.tvCardID);
 
         tvLastSigned = v.findViewById(R.id.tvLastSigned);
@@ -90,31 +123,29 @@ public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefresh
 
         Button btnOk = v.findViewById(R.id.btnOk);
 
-        btnOk.setOnClickListener(v1 -> {
-            Intent data = prepareResultIntent();
-            data.putExtra("modification", "update");
-            getActivity().setResult(Activity.RESULT_OK, data);
-            getActivity().finish();
-        });
-
-
         FloatingActionButton fabMenu = v.findViewById(R.id.fabMenu);
-
 
         tvWallet = v.findViewById(R.id.tvWallet);
         tvWalletIdentity = v.findViewById(R.id.tvWalletIdentity);
 
-        updateViews();
+        btnOk.setOnClickListener(v1 -> {
+            Intent data = prepareResultIntent();
+            data.putExtra("modification", "update");
+            Objects.requireNonNull(getActivity()).setResult(Activity.RESULT_OK, data);
+            getActivity().finish();
+        });
 
-//        if (NeedUpdate) {
-//            mSwipeRefreshLayout.setRefreshing(true);
-//            mSwipeRefreshLayout.postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//                    onRefresh();
-//                }
-//            }, 1000);
-//        }
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        });
+
+        fabMenu.setOnClickListener(v16 -> showMenu(fabMenu));
+
+
+        updateViews();
 
         return v;
     }
@@ -137,7 +168,182 @@ public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefresh
         mNfcManager.onStop();
     }
 
-    void updateViews() {
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case REQUEST_CODE_ENTER_NEW_PIN:
+                if (resultCode == Activity.RESULT_OK) {
+                    if (data != null) {
+                        if (Objects.requireNonNull(data.getExtras()).containsKey("confirmPIN")) {
+                            Intent intent = new Intent(getContext(), RequestPINActivity.class);
+                            intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
+                            intent.putExtra("UID", mCard.getUID());
+                            intent.putExtra("Card", mCard.getAsBundle());
+                            newPIN = data.getStringExtra("newPIN");
+                            startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN);
+                        } else {
+                            Intent intent = new Intent(getContext(), RequestPINActivity.class);
+                            intent.putExtra("newPIN", data.getStringExtra("newPIN"));
+                            intent.putExtra("mode", RequestPINActivity.Mode.ConfirmNewPIN.toString());
+                            startActivityForResult(intent, REQUEST_CODE_ENTER_NEW_PIN);
+                        }
+                    }
+                }
+                break;
+            case REQUEST_CODE_ENTER_NEW_PIN2:
+                if (resultCode == Activity.RESULT_OK) {
+                    if (data != null) {
+                        if (Objects.requireNonNull(data.getExtras()).containsKey("confirmPIN2")) {
+                            Intent intent = new Intent(getContext(), RequestPINActivity.class);
+                            intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
+                            intent.putExtra("UID", mCard.getUID());
+                            intent.putExtra("Card", mCard.getAsBundle());
+                            newPIN2 = data.getStringExtra("newPIN2");
+                            startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN);
+                        } else {
+                            Intent intent = new Intent(getContext(), RequestPINActivity.class);
+                            intent.putExtra("newPIN2", data.getStringExtra("newPIN2"));
+                            intent.putExtra("mode", RequestPINActivity.Mode.ConfirmNewPIN2.toString());
+                            startActivityForResult(intent, REQUEST_CODE_ENTER_NEW_PIN2);
+                        }
+                    }
+                }
+                break;
+            case REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN:
+                if (resultCode == Activity.RESULT_OK) {
+                    if (newPIN.equals("")) newPIN = mCard.getPIN();
+
+                    if (newPIN2.equals("")) newPIN2 = PINStorage.getPIN2();
+
+                    PINSwapWarningDialog pinSwapWarningDialog = new PINSwapWarningDialog();
+                    pinSwapWarningDialog.setOnRefreshPage(this::startSwapPINActivity);
+                    Bundle bundle = new Bundle();
+                    if (!PINStorage.isDefaultPIN(newPIN) || !PINStorage.isDefaultPIN2(newPIN2))
+                        bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_forget));
+                    else
+                        bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_use_default));
+                    pinSwapWarningDialog.setArguments(bundle);
+                    pinSwapWarningDialog.show(Objects.requireNonNull(getActivity()).getFragmentManager(), PINSwapWarningDialog.TAG);
+                }
+                break;
+
+            case REQUEST_CODE_SWAP_PIN:
+                if (resultCode == Activity.RESULT_OK) {
+                    if (data == null) {
+                        data = new Intent();
+
+                        data.putExtra("UID", mCard.getUID());
+                        data.putExtra("Card", mCard.getAsBundle());
+                        data.putExtra("modification", "delete");
+                    } else {
+                        data.putExtra("modification", "update");
+                    }
+                    Objects.requireNonNull(getActivity()).setResult(Activity.RESULT_OK, data);
+                    getActivity().finish();
+                } else {
+                    if (data != null && data.getExtras().containsKey("UID") && data.getExtras().containsKey("Card")) {
+                        TangemCard updatedCard = new TangemCard(data.getStringExtra("UID"));
+                        updatedCard.LoadFromBundle(data.getBundleExtra("Card"));
+                        mCard = updatedCard;
+                    }
+                    if (resultCode == CreateNewWalletActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
+                        requestPIN2Count++;
+                        Intent intent = new Intent(getContext(), RequestPINActivity.class);
+                        intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
+                        intent.putExtra("UID", mCard.getUID());
+                        intent.putExtra("Card", mCard.getAsBundle());
+                        startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN);
+                        return;
+                    } else {
+                        if (data != null && data.getExtras().containsKey("message")) {
+                            mCard.setError(data.getStringExtra("message"));
+                        }
+                    }
+                }
+                break;
+            case REQUEST_CODE_REQUEST_PIN2_FOR_PURGE:
+                if (resultCode == Activity.RESULT_OK) {
+                    Intent intent = new Intent(getContext(), PurgeActivity.class);
+                    intent.putExtra("UID", mCard.getUID());
+                    intent.putExtra("Card", mCard.getAsBundle());
+                    startActivityForResult(intent, REQUEST_CODE_PURGE);
+                }
+                break;
+            case REQUEST_CODE_PURGE:
+                if (resultCode == Activity.RESULT_OK) {
+                    if (data == null) {
+                        data = new Intent();
+
+                        data.putExtra("UID", mCard.getUID());
+                        data.putExtra("Card", mCard.getAsBundle());
+                        data.putExtra("modification", "delete");
+                    } else {
+                        data.putExtra("modification", "update");
+                    }
+                    Objects.requireNonNull(getActivity()).setResult(Activity.RESULT_OK, data);
+                    getActivity().finish();
+                } else {
+                    if (data != null && data.getExtras().containsKey("UID") && data.getExtras().containsKey("Card")) {
+                        TangemCard updatedCard = new TangemCard(data.getStringExtra("UID"));
+                        updatedCard.LoadFromBundle(data.getBundleExtra("Card"));
+                        mCard = updatedCard;
+                    }
+                    if (resultCode == CreateNewWalletActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
+                        requestPIN2Count++;
+                        Intent intent = new Intent(getContext(), RequestPINActivity.class);
+                        intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
+                        intent.putExtra("UID", mCard.getUID());
+                        intent.putExtra("Card", mCard.getAsBundle());
+                        startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_PURGE);
+                        return;
+                    } else {
+                        if (data != null && data.getExtras().containsKey("message")) {
+                            mCard.setError(data.getStringExtra("message"));
+                        }
+                    }
+                    updateViews();
+                }
+                break;
+            case REQUEST_CODE_SEND_PAYMENT:
+                if (resultCode == Activity.RESULT_OK) {
+//                    mSwipeRefreshLayout.postDelayed(this::onRefresh, 10000);
+                    mSwipeRefreshLayout.setRefreshing(true);
+                    mCard.clearInfo();
+                    updateViews();
+                }
+
+                if (data != null) {
+                    if (data.getExtras().containsKey("UID") && data.getExtras().containsKey("Card")) {
+                        TangemCard updatedCard = new TangemCard(data.getStringExtra("UID"));
+                        updatedCard.LoadFromBundle(data.getBundleExtra("Card"));
+                        mCard = updatedCard;
+                    }
+                    if (data.getExtras().containsKey("message")) {
+                        if (resultCode == Activity.RESULT_OK) {
+                            mCard.setMessage(data.getStringExtra("message"));
+                        } else {
+                            mCard.setError(data.getStringExtra("message"));
+                        }
+                    }
+                    updateViews();
+                }
+
+                break;
+        }
+    }
+
+    @Override
+    public void onTagDiscovered(Tag tag) {
+        try {
+            Log.w(getClass().getName(), "Ignore discovered tag!");
+            mNfcManager.ignoreTag(tag);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateViews() {
         try {
             if (timerHideErrorAndMessage != null) {
                 timerHideErrorAndMessage.cancel();
@@ -308,7 +514,82 @@ public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefresh
         }
     }
 
-    Timer timerHideErrorAndMessage = null;
+    private void doSetPin() {
+        requestPIN2Count = 0;
+        Intent intent = new Intent(getContext(), RequestPINActivity.class);
+        intent.putExtra("mode", RequestPINActivity.Mode.RequestNewPIN.toString());
+        newPIN = "";
+        newPIN2 = "";
+        startActivityForResult(intent, REQUEST_CODE_ENTER_NEW_PIN);
+    }
+
+    private void doResetPin() {
+        requestPIN2Count = 0;
+        Intent intent = new Intent(getContext(), RequestPINActivity.class);
+        intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
+        intent.putExtra("UID", mCard.getUID());
+        intent.putExtra("Card", mCard.getAsBundle());
+        newPIN = PINStorage.getDefaultPIN();
+        newPIN2 = "";
+        startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN);
+    }
+
+    private void doResetPin2() {
+        requestPIN2Count = 0;
+        Intent intent = new Intent(getContext(), RequestPINActivity.class);
+        intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
+        intent.putExtra("UID", mCard.getUID());
+        intent.putExtra("Card", mCard.getAsBundle());
+        newPIN = "";
+        newPIN2 = PINStorage.getDefaultPIN2();
+        startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN);
+    }
+
+    private void doResetPins() {
+        requestPIN2Count = 0;
+        Intent intent = new Intent(getContext(), RequestPINActivity.class);
+        intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
+        intent.putExtra("UID", mCard.getUID());
+        intent.putExtra("Card", mCard.getAsBundle());
+        newPIN = PINStorage.getDefaultPIN();
+        newPIN2 = PINStorage.getDefaultPIN2();
+        startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN);
+    }
+
+    private void doSetPin2() {
+        requestPIN2Count = 0;
+        Intent intent = new Intent(getContext(), RequestPINActivity.class);
+        intent.putExtra("mode", RequestPINActivity.Mode.RequestNewPIN2.toString());
+        newPIN = "";
+        newPIN2 = "";
+        startActivityForResult(intent, REQUEST_CODE_ENTER_NEW_PIN2);
+    }
+
+    private void doPurge() {
+        requestPIN2Count = 0;
+        final CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
+        if (!mCard.hasBalanceInfo()) {
+            return;
+        } else if (engine.IsBalanceNotZero(mCard)) {
+            Toast.makeText(getContext(), R.string.cannot_erase_wallet_with_non_zero_balance, Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        Intent intent = new Intent(getContext(), RequestPINActivity.class);
+        intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
+        intent.putExtra("UID", mCard.getUID());
+        intent.putExtra("Card", mCard.getAsBundle());
+        startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_PURGE);
+    }
+
+    private void startSwapPINActivity() {
+        Intent intent = new Intent(getContext(), SwapPINActivity.class);
+        intent.putExtra("UID", mCard.getUID());
+        intent.putExtra("Card", mCard.getAsBundle());
+        intent.putExtra("newPIN", newPIN);
+        intent.putExtra("newPIN2", newPIN2);
+        startActivityForResult(intent, REQUEST_CODE_SWAP_PIN);
+    }
 
     public Intent prepareResultIntent() {
         Intent data = new Intent();
@@ -317,14 +598,58 @@ public class VerifyCard extends Fragment implements SwipeRefreshLayout.OnRefresh
         return data;
     }
 
-    @Override
-    public void onTagDiscovered(Tag tag) {
-        try {
-            Log.w(getClass().getName(), "Ignore discovered tag!");
-            mNfcManager.ignoreTag(tag);
-        } catch (IOException e) {
-            e.printStackTrace();
+    private void showMenu(View v) {
+        final PopupMenu popup = new PopupMenu(getActivity(), v);
+        MenuInflater inflater = popup.getMenuInflater();
+        inflater.inflate(R.menu.menu_loaded_wallet, popup.getMenu());
+
+        popup.getMenu().findItem(R.id.action_set_PIN1).setVisible(mCard.allowSwapPIN());
+        popup.getMenu().findItem(R.id.action_reset_PIN1).setVisible(mCard.allowSwapPIN() && !mCard.useDefaultPIN1());
+        popup.getMenu().findItem(R.id.action_set_PIN2).setVisible(mCard.allowSwapPIN2());
+        popup.getMenu().findItem(R.id.action_reset_PIN2).setVisible(mCard.allowSwapPIN2() && !mCard.useDefaultPIN2());
+        popup.getMenu().findItem(R.id.action_reset_PINs).setVisible(mCard.allowSwapPIN() && mCard.allowSwapPIN2() && !mCard.useDefaultPIN1() && !mCard.useDefaultPIN2());
+        if (!mCard.isReusable())
+            popup.getMenu().findItem(R.id.action_purge).setVisible(false);
+
+        popup.setOnMenuItemClickListener(item -> {
+
+            int id = item.getItemId();
+            switch (id) {
+                case R.id.action_set_PIN1:
+                    doSetPin();
+                    return true;
+
+                case R.id.action_reset_PIN1:
+                    doResetPin();
+                    return true;
+
+                case R.id.action_set_PIN2:
+                    doSetPin2();
+                    return true;
+
+                case R.id.action_reset_PIN2:
+                    doResetPin2();
+                    return true;
+
+                case R.id.action_reset_PINs:
+                    doResetPins();
+                    return true;
+
+                case R.id.action_purge:
+                    doPurge();
+                    return true;
+
+                default:
+                    return false;
+            }
+        });
+
+        if (BuildConfig.DEBUG) {
+            popup.getMenu().findItem(R.id.action_set_PIN2).setEnabled(true);
+            popup.getMenu().findItem(R.id.action_reset_PIN2).setEnabled(true);
         }
+
+        popup.show();
     }
 
 }
