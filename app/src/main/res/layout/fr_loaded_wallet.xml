@@ -446,10 +446,10 @@
             android:text="@string/load"/>
 
         <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fabPurge"
-            android:layout_margin="10dp"
+            android:id="@+id/fabInfo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_margin="10dp"
             android:layout_marginEnd="5dp"
             app:fabSize="mini"
             app:srcCompat="@drawable/ic_information_variant_white_24dp"/>
