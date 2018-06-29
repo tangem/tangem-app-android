@@ -6,10 +6,8 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.widget.Toast;
 
 import com.tangem.presentation.fragment.LoadedWallet;
-import com.tangem.wallet.BuildConfig;
 import com.tangem.wallet.R;
 
 import java.util.Objects;
@@ -27,8 +25,6 @@ public class LoadedWalletActivity extends AppCompatActivity {
             if (tag != null) {
                 LoadedWallet fragment = (LoadedWallet) (getSupportFragmentManager().findFragmentById(R.id.loaded_wallet_fragment));
                 fragment.onTagDiscovered(tag);
-                if (BuildConfig.DEBUG)
-                    Toast.makeText(this, "onNFCReaderCallback 4", Toast.LENGTH_SHORT).show();
             }
         }
     }
