@@ -46,7 +46,6 @@ import com.tangem.presentation.adapter.CardListAdapter;
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog;
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog;
 import com.tangem.util.Util;
-import com.tangem.wallet.BuildConfig;
 import com.tangem.wallet.R;
 
 import org.json.JSONArray;
@@ -507,8 +506,6 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
             }
         } else if (resultCode == Activity.RESULT_OK && requestCode == REQUEST_CODE_ENTER_PIN_ACTIVITY) {
             if (lastTag != null) onTagDiscovered(lastTag);
-            if (BuildConfig.DEBUG)
-                Toast.makeText(getContext(), "onNFCReaderCallback 3", Toast.LENGTH_SHORT).show();
         }
     }
 
