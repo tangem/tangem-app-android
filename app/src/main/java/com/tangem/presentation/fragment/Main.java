@@ -62,7 +62,7 @@ import java.util.Objects;
  * A placeholder fragment containing a simple view.
  */
 public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardListAdapter.UiCallbacks, CardProtocol.Notifications, MainActivity.OnCardsClean {
-    public static final String TAG = LoadedWallet.class.getSimpleName();
+    public static final String TAG = Main.class.getSimpleName();
 
     private static final int REQUEST_CODE_SHOW_CARD_ACTIVITY = 1;
     private static final int REQUEST_CODE_ENTER_PIN_ACTIVITY = 2;
@@ -626,6 +626,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
                         Log.i(TAG, "onViewCard " + "else");
                     }
 
+                    intent.putExtra("lastTag123", lastTag);
                     intent.putExtras(cardInfo);
                     startActivityForResult(intent, REQUEST_CODE_SHOW_CARD_ACTIVITY);
 
@@ -643,7 +644,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
                 // remove last UIDs because of error and no card read
                 progressBar.post(() -> {
                     if (getContext() != null) {
-                        Toast.makeText(getContext(), R.string.try_to_scan_again, Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), R.string.try_to_scan_again, Toast.LENGTH_SHORT).show();
                         unsuccessReadCount++;
                         progressBar.setProgress(100);
                         progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
