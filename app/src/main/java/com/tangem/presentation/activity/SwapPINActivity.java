@@ -246,7 +246,7 @@ public class SwapPINActivity extends AppCompatActivity implements NfcAdapter.Rea
                             new NoExtendedLengthSupportDialog().show(getFragmentManager(), NoExtendedLengthSupportDialog.TAG);
                         }
                     } else {
-                        Toast.makeText(getBaseContext(), R.string.try_to_scan_again, Toast.LENGTH_LONG).show();
+                        Toast.makeText(getBaseContext(), R.string.try_to_scan_again, Toast.LENGTH_SHORT).show();
                     }
                     progressBar.setProgress(100);
                     progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
