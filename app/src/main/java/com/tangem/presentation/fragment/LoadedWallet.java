@@ -7,7 +7,6 @@ import android.content.ClipboardManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
@@ -15,6 +14,7 @@ import android.nfc.tech.IsoDep;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -24,21 +24,14 @@ import android.text.Html;
 import android.text.Spanned;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
-import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.tangem.data.network.request.ElectrumRequest;
 import com.tangem.data.network.request.ExchangeRequest;
 import com.tangem.data.network.request.InfuraRequest;
@@ -68,7 +61,7 @@ import com.tangem.presentation.dialog.PINSwapWarningDialog;
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog;
 import com.tangem.util.BTCUtils;
 import com.tangem.util.Util;
-import com.tangem.wallet.BuildConfig;
+import com.tangem.util.UtilHelper;
 import com.tangem.wallet.R;
 
 import org.json.JSONArray;
@@ -77,7 +70,7 @@ import org.json.JSONObject;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
@@ -89,9 +82,10 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     public static final String TAG = LoadedWallet.class.getSimpleName();
 
     private static final int REQUEST_CODE_SEND_PAYMENT = 1;
+    private static final int REQUEST_CODE_VERIFY_CARD = 4;
+
     private static final int REQUEST_CODE_PURGE = 2;
     private static final int REQUEST_CODE_REQUEST_PIN2_FOR_PURGE = 3;
-    private static final int REQUEST_CODE_VERIFY_CARD = 4;
     private static final int REQUEST_CODE_ENTER_NEW_PIN = 5;
     private static final int REQUEST_CODE_ENTER_NEW_PIN2 = 6;
     private static final int REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN = 7;
@@ -129,7 +123,8 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     private Timer timerHideErrorAndMessage = null;
     private String newPIN = "", newPIN2 = "";
     private AppCompatButton btnExtract;
-    private FloatingActionButton fabPurge, fabNFC;
+    private FloatingActionButton fabInfo;
+    private Tag lastTag;
 
     public LoadedWallet() {
 
@@ -163,7 +158,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
-                                ErrorOnUpdate(e.toString());
+                                errorOnUpdate(e.toString());
                             }
                         } else if (request.isMethod(InfuraRequest.METHOD_ETH_Call)) {
                             try {
@@ -191,7 +186,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
-                                ErrorOnUpdate(e.toString());
+                                errorOnUpdate(e.toString());
                             }
                         } else if (request.isMethod(InfuraRequest.METHOD_ETH_GetOutTransactionCount)) {
                             try {
@@ -215,7 +210,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                                     JSONObject err = msg.getJSONObject("error");
                                     hashTX = err.getString("message");
                                     LastSignStorage.setLastMessage(mCard.getWallet(), hashTX);
-                                    ErrorOnUpdate("Failed to send transaction. Try again");
+                                    errorOnUpdate("Failed to send transaction. Try again");
                                     return;
                                 }
 
@@ -235,16 +230,16 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                ErrorOnUpdate("Failed to send transaction. Try again");
+                                errorOnUpdate("Failed to send transaction. Try again");
                             }
                         }
                         updateViews();
                     } else {
-                        ErrorOnUpdate(request.error);
+                        errorOnUpdate(request.error);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
-                    ErrorOnUpdate(e.toString());
+                    errorOnUpdate(e.toString());
                 }
             }
 
@@ -351,12 +346,12 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                                     int errCounter = sharedCounter.errorRequest.incrementAndGet();
                                     if (errCounter >= sharedCounter.allRequest) {
                                         e.printStackTrace();
-                                        ErrorOnUpdate(e.toString());
+                                        errorOnUpdate(e.toString());
                                         engine.SwitchNode(mCard);
                                     }
                                 } else {
                                     e.printStackTrace();
-                                    ErrorOnUpdate(e.toString());
+                                    errorOnUpdate(e.toString());
                                     engine.SwitchNode(mCard);
                                 }
                             }
@@ -376,12 +371,12 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
                                 } catch (Exception e) {
                                     engine.SwitchNode(mCard);
-                                    ErrorOnUpdate("Failed to send transaction. Try again.");
+                                    errorOnUpdate("Failed to send transaction. Try again.");
                                 }
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
-                                ErrorOnUpdate("Failed to send transaction. Try again.");
+                                errorOnUpdate("Failed to send transaction. Try again.");
                                 engine.SwitchNode(mCard);
                             }
                         } else if (request.isMethod(ElectrumRequest.METHOD_ListUnspent)) {
@@ -401,7 +396,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                                     }
                                 } catch (JSONException e) {
                                     e.printStackTrace();
-                                    ErrorOnUpdate(e.toString());
+                                    errorOnUpdate(e.toString());
                                     engine.SwitchNode(mCard);
                                 }
 
@@ -422,7 +417,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
-                                ErrorOnUpdate(e.toString());
+                                errorOnUpdate(e.toString());
                                 engine.SwitchNode(mCard);
                             }
                         } else if (request.isMethod(ElectrumRequest.METHOD_GetHistory)) {
@@ -441,7 +436,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                                     }
                                 } catch (JSONException e) {
                                     e.printStackTrace();
-                                    ErrorOnUpdate(e.toString());
+                                    errorOnUpdate(e.toString());
                                     engine.SwitchNode(mCard);
                                 }
 
@@ -463,7 +458,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
-                                ErrorOnUpdate(e.toString());
+                                errorOnUpdate(e.toString());
                                 engine.SwitchNode(mCard);
                             }
                         } else if (request.isMethod(ElectrumRequest.METHOD_GetHeader)) {
@@ -476,14 +471,14 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                                             jsHeader.getInt("timestamp")));
                                 } catch (JSONException e) {
                                     e.printStackTrace();
-                                    ErrorOnUpdate(e.toString());
+                                    errorOnUpdate(e.toString());
                                     engine.SwitchNode(mCard);
 
                                 }
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
-                                ErrorOnUpdate(e.toString());
+                                errorOnUpdate(e.toString());
                                 engine.SwitchNode(mCard);
 
                             }
@@ -520,7 +515,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                                             tx.isInput = !isOur;
                                         } catch (BitcoinException e) {
                                             e.printStackTrace();
-                                            ErrorOnUpdate(e.toString());
+                                            errorOnUpdate(e.toString());
                                         }
                                         Log.e("TX", raw);
                                     }
@@ -528,7 +523,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
-                                ErrorOnUpdate(e.toString());
+                                errorOnUpdate(e.toString());
                                 engine.SwitchNode(mCard);
                             }
                         }
@@ -537,12 +532,12 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                         if (sharedCounter != null) {
                             int errCounter = sharedCounter.errorRequest.incrementAndGet();
                             if (errCounter >= sharedCounter.allRequest) {
-                                ErrorOnUpdate(request.error);
+                                errorOnUpdate(request.error);
                                 engine.SwitchNode(mCard);
 
                             }
                         } else {
-                            ErrorOnUpdate(request.error);
+                            errorOnUpdate(request.error);
                             engine.SwitchNode(mCard);
 
                         }
@@ -553,11 +548,11 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                         int errCounter = sharedCounter.errorRequest.incrementAndGet();
                         if (errCounter >= sharedCounter.allRequest) {
                             e.printStackTrace();
-                            ErrorOnUpdate(e.toString());
+                            errorOnUpdate(e.toString());
                         }
                     } else {
                         e.printStackTrace();
-                        ErrorOnUpdate(e.toString());
+                        errorOnUpdate(e.toString());
                     }
                 }
             }
@@ -566,11 +561,21 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         }
     }
 
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mNfcManager = new NfcManager(getActivity(), this);
+
+        mCard = new TangemCard(Objects.requireNonNull(getActivity()).getIntent().getStringExtra(TangemCard.EXTRA_CARD));
+        mCard.LoadFromBundle(Objects.requireNonNull(getActivity().getIntent().getExtras()).getBundle(TangemCard.EXTRA_CARD));
+
+        lastTag = getActivity().getIntent().getParcelableExtra("lastTag123");
+    }
+
     @Override
     public View onCreateView(@NonNull final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fr_loaded_wallet, container, false);
-
-        mNfcManager = new NfcManager(getActivity(), this);
 
         mSwipeRefreshLayout = v.findViewById(R.id.swipe_container);
         tvBalance = v.findViewById(R.id.tvBalance);
@@ -596,17 +601,13 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         ivPIN2orSecurityDelay = v.findViewById(R.id.imgPIN2orSecurityDelay);
         ivDeveloperVersion = v.findViewById(R.id.imgDeveloperVersion);
         ImageView ivQR = v.findViewById(R.id.qrWallet);
-
-        fabPurge = v.findViewById(R.id.fabPurge);
-        fabNFC = v.findViewById(R.id.fabNFC);
+        fabInfo = v.findViewById(R.id.fabInfo);
+        FloatingActionButton fabNFC = v.findViewById(R.id.fabNFC);
         AppCompatButton btnLoad = v.findViewById(R.id.btnLoad);
         btnExtract = v.findViewById(R.id.btnExtract);
         tvBalanceEquivalent = v.findViewById(R.id.tvBalanceEquivalent);
 
         mSwipeRefreshLayout.setOnRefreshListener(this);
-
-        mCard = new TangemCard(Objects.requireNonNull(getActivity()).getIntent().getStringExtra(TangemCard.EXTRA_CARD));
-        mCard.LoadFromBundle(Objects.requireNonNull(getActivity().getIntent().getExtras()).getBundle(TangemCard.EXTRA_CARD));
 
         if (mCard.getBlockchain() == Blockchain.Token)
             tvBalance.setSingleLine(false);
@@ -621,7 +622,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 //        tvLastOutput.setVisibility(visibleIOPuts);
 
         try {
-            ivQR.setImageBitmap(generateQrCode(Objects.requireNonNull(engine).getShareWalletURI(mCard).toString()));
+            ivQR.setImageBitmap(UtilHelper.INSTANCE.generateQrCode(Objects.requireNonNull(engine).getShareWalletURI(mCard).toString()));
         } catch (WriterException e) {
             e.printStackTrace();
         }
@@ -658,7 +659,16 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 }
         );
 
-        fabPurge.setOnClickListener(v16 -> showMenu(fabPurge));
+        fabInfo.setOnClickListener(v16 -> {
+            if (mCardProtocol != null)
+                openVerifyCard(mCardProtocol);
+            else {
+                scanTimes++;
+                Toast.makeText(getContext(), R.string.need_attach_card_again, Toast.LENGTH_LONG).show();
+            }
+        });
+
+        startVerify(lastTag);
 
         fabNFC.setOnClickListener(view -> {
             Intent intent = new Intent(getContext(), MainActivity.class);
@@ -693,6 +703,14 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         });
 
         return v;
+    }
+
+    private void openVerifyCard(CardProtocol cardProtocol) {
+        Intent intent = new Intent(getContext(), VerifyCardActivity.class);
+//                    // TODO обновить карту mCard
+        intent.putExtra("UID", cardProtocol.getCard().getUID());
+        intent.putExtra("Card", cardProtocol.getCard().getAsBundle());
+        startActivityForResult(intent, REQUEST_CODE_VERIFY_CARD);
     }
 
     @Override
@@ -829,7 +847,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                     } else {
                         data.putExtra("modification", "update");
                     }
-                    getActivity().setResult(Activity.RESULT_OK, data);
+                    Objects.requireNonNull(getActivity()).setResult(Activity.RESULT_OK, data);
                     getActivity().finish();
                 } else {
                     if (data != null && data.getExtras().containsKey("UID") && data.getExtras().containsKey("Card")) {
@@ -855,7 +873,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 break;
             case REQUEST_CODE_SEND_PAYMENT:
                 if (resultCode == Activity.RESULT_OK) {
-                    mSwipeRefreshLayout.postDelayed(this::onRefresh, 10000);
+//                    mSwipeRefreshLayout.postDelayed(this::onRefresh, 10000);
                     mSwipeRefreshLayout.setRefreshing(true);
                     mCard.clearInfo();
                     updateViews();
@@ -881,6 +899,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         }
     }
 
+    @Override
     public void onRefresh() {
         // update, showing refresh animation before making http call
         if (updateTasks.size() > 0) return;
@@ -910,7 +929,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(nodeAddress, nodePort, data);
             updateTasks.add(updateWalletInfoTask);
             updateWalletInfoTask.execute(ElectrumRequest.ListUnspent(mCard.getWallet())
-                    ,ElectrumRequest.ListHistory(mCard.getWallet())
+                    , ElectrumRequest.ListHistory(mCard.getWallet())
             );
 
             RateInfoTask taskRate = new RateInfoTask();
@@ -933,7 +952,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
             updateTasks.add(updateWalletInfoTask);
             updateWalletInfoTask.execute(ElectrumRequest.ListUnspent(mCard.getWallet())
-                    ,ElectrumRequest.ListHistory(mCard.getWallet())
+                    , ElectrumRequest.ListHistory(mCard.getWallet())
             );
 
             RateInfoTask taskRate = new RateInfoTask();
@@ -986,6 +1005,10 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
     @Override
     public void onTagDiscovered(Tag tag) {
+        startVerify(tag);
+    }
+
+    private void startVerify(Tag tag) {
         try {
             final IsoDep isoDep = IsoDep.get(tag);
             if (isoDep == null) {
@@ -1010,6 +1033,8 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             verifyCardTask = new VerifyCardTask(getContext(), mCard, mNfcManager, isoDep, this);
             verifyCardTask.start();
 
+            Log.i(TAG, "onTagDiscovered " + Arrays.toString(tag.getId()));
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1022,12 +1047,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         return data;
     }
 
-    public void ErrorOnUpdate(String message) {
-        mCard.setError(getString(R.string.cannot_obtain_data_from_blockchain));
-        updateViews();
-    }
-
-
+    @Override
     public void OnReadStart(CardProtocol cardProtocol) {
         progressBar.post(() -> {
             progressBar.setVisibility(View.VISIBLE);
@@ -1035,8 +1055,13 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         });
     }
 
-    public void OnReadFinish(final CardProtocol cardProtocol) {
+    private CardProtocol mCardProtocol;
 
+    //    private boolean needOpenVerify;
+    private int scanTimes = 0;
+
+    @Override
+    public void OnReadFinish(final CardProtocol cardProtocol) {
         verifyCardTask = null;
 
         if (cardProtocol != null) {
@@ -1044,11 +1069,16 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 progressBar.post(() -> {
                     progressBar.setProgress(100);
                     progressBar.setProgressTintList(ColorStateList.valueOf(Color.GREEN));
-                    Intent intent = new Intent(getContext(), VerifyCardActivity.class);
-                    // TODO обновить карту mCard
-                    intent.putExtra("UID", cardProtocol.getCard().getUID());
-                    intent.putExtra("Card", cardProtocol.getCard().getAsBundle());
-                    startActivityForResult(intent, REQUEST_CODE_VERIFY_CARD);
+
+                    mCardProtocol = cardProtocol;
+
+                    Log.i(TAG, "scanTimes " + scanTimes);
+                    if (scanTimes > 0)
+                        openVerifyCard(mCardProtocol);
+
+                    scanTimes++;
+
+
                     //addCard(cardProtocol.getCard());
                 });
             } else {
@@ -1060,7 +1090,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                             new NoExtendedLengthSupportDialog().show(Objects.requireNonNull(getActivity()).getFragmentManager(), NoExtendedLengthSupportDialog.TAG);
                         }
                     } else {
-                        Toast.makeText(getContext(), R.string.try_to_scan_again, Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), R.string.try_to_scan_again, Toast.LENGTH_SHORT).show();
                     }
                     progressBar.setProgress(100);
                     progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
@@ -1079,14 +1109,14 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         }, 500);
     }
 
+    @Override
     public void OnReadProgress(CardProtocol protocol, final int progress) {
         progressBar.post(() -> progressBar.setProgress(progress));
     }
 
+    @Override
     public void OnReadCancel() {
-
         verifyCardTask = null;
-
         progressBar.postDelayed(() -> {
             try {
                 progressBar.setProgress(0);
@@ -1098,141 +1128,19 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         }, 500);
     }
 
+    @Override
     public void OnReadWait(int msec) {
-        WaitSecurityDelayDialog.OnReadWait(getActivity(), msec);
+        WaitSecurityDelayDialog.OnReadWait(Objects.requireNonNull(getActivity()), msec);
     }
 
     @Override
     public void OnReadBeforeRequest(int timeout) {
-        WaitSecurityDelayDialog.onReadBeforeRequest(getActivity(), timeout);
+        WaitSecurityDelayDialog.onReadBeforeRequest(Objects.requireNonNull(getActivity()), timeout);
     }
 
     @Override
     public void OnReadAfterRequest() {
-        WaitSecurityDelayDialog.onReadAfterRequest(getActivity());
-    }
-
-    private void showMenu(View v) {
-        final PopupMenu popup = new PopupMenu(getActivity(), v);
-        MenuInflater inflater = popup.getMenuInflater();
-        inflater.inflate(R.menu.menu_loaded_wallet, popup.getMenu());
-
-        popup.getMenu().findItem(R.id.action_set_PIN1).setVisible(mCard.allowSwapPIN());
-        popup.getMenu().findItem(R.id.action_reset_PIN1).setVisible(mCard.allowSwapPIN() && !mCard.useDefaultPIN1());
-        popup.getMenu().findItem(R.id.action_set_PIN2).setVisible(mCard.allowSwapPIN2());
-        popup.getMenu().findItem(R.id.action_reset_PIN2).setVisible(mCard.allowSwapPIN2() && !mCard.useDefaultPIN2());
-        popup.getMenu().findItem(R.id.action_reset_PINs).setVisible(mCard.allowSwapPIN() && mCard.allowSwapPIN2() && !mCard.useDefaultPIN1() && !mCard.useDefaultPIN2());
-        if (!mCard.isReusable())
-            popup.getMenu().findItem(R.id.action_purge).setVisible(false);
-
-        popup.setOnMenuItemClickListener(item -> {
-
-            int id = item.getItemId();
-            switch (id) {
-                case R.id.action_set_PIN1:
-                    doSetPin();
-                    return true;
-
-                case R.id.action_reset_PIN1:
-                    doResetPin();
-                    return true;
-
-                case R.id.action_set_PIN2:
-                    doSetPin2();
-                    return true;
-
-                case R.id.action_reset_PIN2:
-                    doResetPin2();
-                    return true;
-
-                case R.id.action_reset_PINs:
-                    doResetPins();
-                    return true;
-
-                case R.id.action_purge:
-                    doPurge();
-                    return true;
-
-                default:
-                    return false;
-            }
-        });
-
-        if (BuildConfig.DEBUG) {
-            popup.getMenu().findItem(R.id.action_set_PIN2).setEnabled(true);
-            popup.getMenu().findItem(R.id.action_reset_PIN2).setEnabled(true);
-        }
-
-        popup.show();
-    }
-
-    private void doSetPin() {
-        requestPIN2Count = 0;
-        Intent intent = new Intent(getContext(), RequestPINActivity.class);
-        intent.putExtra("mode", RequestPINActivity.Mode.RequestNewPIN.toString());
-        newPIN = "";
-        newPIN2 = "";
-        startActivityForResult(intent, REQUEST_CODE_ENTER_NEW_PIN);
-    }
-
-    private void doResetPin() {
-        requestPIN2Count = 0;
-        Intent intent = new Intent(getContext(), RequestPINActivity.class);
-        intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
-        intent.putExtra("UID", mCard.getUID());
-        intent.putExtra("Card", mCard.getAsBundle());
-        newPIN = PINStorage.getDefaultPIN();
-        newPIN2 = "";
-        startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN);
-    }
-
-    private void doResetPin2() {
-        requestPIN2Count = 0;
-        Intent intent = new Intent(getContext(), RequestPINActivity.class);
-        intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
-        intent.putExtra("UID", mCard.getUID());
-        intent.putExtra("Card", mCard.getAsBundle());
-        newPIN = "";
-        newPIN2 = PINStorage.getDefaultPIN2();
-        startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN);
-    }
-
-    private void doResetPins() {
-        requestPIN2Count = 0;
-        Intent intent = new Intent(getContext(), RequestPINActivity.class);
-        intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
-        intent.putExtra("UID", mCard.getUID());
-        intent.putExtra("Card", mCard.getAsBundle());
-        newPIN = PINStorage.getDefaultPIN();
-        newPIN2 = PINStorage.getDefaultPIN2();
-        startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN);
-    }
-
-
-    private void doSetPin2() {
-        requestPIN2Count = 0;
-        Intent intent = new Intent(getContext(), RequestPINActivity.class);
-        intent.putExtra("mode", RequestPINActivity.Mode.RequestNewPIN2.toString());
-        newPIN = "";
-        newPIN2 = "";
-        startActivityForResult(intent, REQUEST_CODE_ENTER_NEW_PIN2);
-    }
-
-    private void doPurge() {
-        requestPIN2Count = 0;
-        final CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
-        if (!mCard.hasBalanceInfo()) {
-            return;
-        } else if (engine.IsBalanceNotZero(mCard)) {
-            Toast.makeText(getContext(), R.string.cannot_erase_wallet_with_non_zero_balance, Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        Intent intent = new Intent(getContext(), RequestPINActivity.class);
-        intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
-        intent.putExtra("UID", mCard.getUID());
-        intent.putExtra("Card", mCard.getAsBundle());
-        startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_PURGE);
+        WaitSecurityDelayDialog.onReadAfterRequest(Objects.requireNonNull(getActivity()));
     }
 
     private void updateViews() {
@@ -1309,12 +1217,8 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 //                btnSend.setText(mCard.getOutputsDescription());
 //            }
 
-
             tvLastInput.setText(mCard.getLastInputDescription());
-
-
 //            tvLastOutput.setText(mCard.getLastOutputDescription());
-
 
             tvBlockchain.setText(mCard.getBlockchainName());
             ivBlockchain.setImageResource(mCard.getBlockchain().getImageResource(this.getContext(), mCard.getTokenSymbol()));
@@ -1402,6 +1306,11 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         }
     }
 
+    private void errorOnUpdate(String message) {
+        mCard.setError(getString(R.string.cannot_obtain_data_from_blockchain));
+        updateViews();
+    }
+
     private void doShareWallet(boolean useURI) {
         if (useURI) {
             String txtShare = CoinEngineFactory.Create(mCard.getBlockchain()).getShareWalletURI(mCard).toString();
@@ -1420,7 +1329,8 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
                 // create intent to show chooser
                 Intent chooser = Intent.createChooser(intent, title);
-                // Verify the intent will resolve to at least one activity
+
+                // verify the intent will resolve to at least one activity
                 if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
                     startActivity(chooser);
                 }
@@ -1467,25 +1377,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         intent.putExtra("newPIN", newPIN);
         intent.putExtra("newPIN2", newPIN2);
         startActivityForResult(intent, REQUEST_CODE_SWAP_PIN);
-    }
-
-    private static Bitmap generateQrCode(String myCodeText) throws WriterException {
-        Hashtable<EncodeHintType, ErrorCorrectionLevel> hintMap = new Hashtable<>();
-        hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H); // H = 30% damage
-
-        QRCodeWriter qrCodeWriter = new QRCodeWriter();
-
-        int size = 256;
-
-        BitMatrix bitMatrix = qrCodeWriter.encode(myCodeText, BarcodeFormat.QR_CODE, size, size, hintMap);
-        int width = bitMatrix.getWidth();
-        Bitmap bmp = Bitmap.createBitmap(width, width, Bitmap.Config.RGB_565);
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < width; y++) {
-                bmp.setPixel(y, x, bitMatrix.get(x, y) ? Color.BLACK : Color.WHITE);
-            }
-        }
-        return bmp;
     }
 
 }
