@@ -20,7 +20,6 @@ import android.view.animation.Transformation;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.scottyab.rootbeer.RootBeer;
 import com.skyfishjy.library.RippleBackground;
@@ -66,8 +65,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
             Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
             if (tag != null && onNFCReaderCallback != null) {
                 onNFCReaderCallback.onTagDiscovered(tag);
-                if (BuildConfig.DEBUG)
-                    Toast.makeText(this, "onNFCReaderCallback 1", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -133,8 +130,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
             Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
             if (tag != null && onNFCReaderCallback != null) {
                 onNFCReaderCallback.onTagDiscovered(tag);
-                if (BuildConfig.DEBUG)
-                    Toast.makeText(this, "onNFCReaderCallback 2", Toast.LENGTH_SHORT).show();
             }
         }
 
