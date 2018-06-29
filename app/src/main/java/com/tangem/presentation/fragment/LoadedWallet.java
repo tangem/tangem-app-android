@@ -910,7 +910,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(nodeAddress, nodePort, data);
             updateTasks.add(updateWalletInfoTask);
             updateWalletInfoTask.execute(ElectrumRequest.ListUnspent(mCard.getWallet())
-//                    ElectrumRequest.ListHistory(mCard.getWallet())
+                    ,ElectrumRequest.ListHistory(mCard.getWallet())
             );
 
             RateInfoTask taskRate = new RateInfoTask();
@@ -933,7 +933,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
             updateTasks.add(updateWalletInfoTask);
             updateWalletInfoTask.execute(ElectrumRequest.ListUnspent(mCard.getWallet())
-//                    ElectrumRequest.ListHistory(mCard.getWallet())
+                    ,ElectrumRequest.ListHistory(mCard.getWallet())
             );
 
             RateInfoTask taskRate = new RateInfoTask();
