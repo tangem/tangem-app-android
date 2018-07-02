@@ -7,14 +7,19 @@ import com.tangem.data.network.request.ElectrumRequest;
 import com.tangem.domain.wallet.SharedData;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Created by dvol on 16.07.2017.
@@ -56,8 +61,11 @@ public class ElectrumTask extends AsyncTask<ElectrumRequest, Integer, List<Elect
 
             InetAddress serverAddress = InetAddress.getByName(Host);
             Log.v(logTag, "Connecting..."+Host);
-            Socket socket = new Socket(serverAddress, Port);
+//            Socket socket = new Socket(serverAddress, Port);
+            Socket socket = new Socket();
             socket.setSoTimeout(5000);
+            socket.bind(new InetSocketAddress(0));
+            socket.connect(new InetSocketAddress(serverAddress, Port));
             try {
                 OutputStream os = socket.getOutputStream();
                 out = new OutputStreamWriter(os, "UTF-8");
