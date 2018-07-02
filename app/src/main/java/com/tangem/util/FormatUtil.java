@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 /**
  * Created by Ilia on 15.02.2018.
@@ -33,8 +34,49 @@ public class FormatUtil {
         return myFormatter;
     }
 
+    public static BigDecimal stringToBigDecimal(final String formattedString,
+                                                 final Locale locale)
+    {
+        final DecimalFormatSymbols symbols;
+        final char                 groupSeparatorChar;
+        final String               groupSeparator;
+        final char                 decimalSeparatorChar;
+        final String               decimalSeparator;
+        String                     fixedString;
+        final BigDecimal           number;
+
+        symbols              = new DecimalFormatSymbols(locale);
+        groupSeparatorChar   = symbols.getGroupingSeparator();
+        decimalSeparatorChar = symbols.getDecimalSeparator();
+
+        if(groupSeparatorChar == '.')
+        {
+            groupSeparator = "\\" + groupSeparatorChar;
+        }
+        else
+        {
+            groupSeparator = Character.toString(groupSeparatorChar);
+        }
+
+        if(decimalSeparatorChar == '.')
+        {
+            decimalSeparator = "\\" + decimalSeparatorChar;
+        }
+        else
+        {
+            decimalSeparator = Character.toString(decimalSeparatorChar);
+        }
+
+        fixedString = formattedString.replaceAll(groupSeparator , "");
+        fixedString = fixedString.replaceAll(decimalSeparator , ".");
+        number      = new BigDecimal(fixedString);
+
+        return (number);
+    }
+
     public static long ConvertStringToLong(String caption) throws Exception {
-        BigDecimal d = new BigDecimal(caption);
+//        BigDecimal d = new BigDecimal(caption);
+        BigDecimal d = stringToBigDecimal(caption,Locale.US);
         d = d.multiply(new BigDecimal(100000));
         d = d.setScale(5);
         BigInteger b = d.toBigInteger();
