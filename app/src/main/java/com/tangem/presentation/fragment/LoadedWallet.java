@@ -130,7 +130,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
     }
 
-
     private class ETHRequestTask extends InfuraTask {
         ETHRequestTask(Blockchain blockchain) {
             super(blockchain);
@@ -1304,8 +1303,8 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     }
 
     private void errorOnUpdate(String message) {
-        mCard.setError(getString(R.string.cannot_obtain_data_from_blockchain));
-        updateViews();
+//        mCard.setError(getString(R.string.cannot_obtain_data_from_blockchain));
+//        updateViews();
     }
 
     private void doShareWallet(boolean useURI) {
