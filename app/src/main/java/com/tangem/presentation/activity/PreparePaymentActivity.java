@@ -136,7 +136,7 @@ public class PreparePaymentActivity extends AppCompatActivity implements NfcAdap
 
         btnVerify.setOnClickListener(v -> {
             String strAmount;
-            strAmount = etAmount.getText().toString();
+            strAmount = etAmount.getText().toString().replace(",",".");
             CoinEngine engine1 = CoinEngineFactory.Create(mCard.getBlockchain());
 
             Log.i(TAG, mCard.getBlockchain().getOfficialName());
