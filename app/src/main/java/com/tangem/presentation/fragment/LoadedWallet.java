@@ -130,6 +130,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
     }
 
+
     private class ETHRequestTask extends InfuraTask {
         ETHRequestTask(Blockchain blockchain) {
             super(blockchain);
@@ -411,7 +412,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
                                         updateTasks.add(updateWalletInfoTask);
 
-                                        updateWalletInfoTask.execute(ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
+                                        updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
                                                 ElectrumRequest.GetTransaction(mWalletAddress, hash));
                                     }
                                 }
@@ -451,7 +452,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                                         UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(nodeAddress, nodePort);
                                         updateTasks.add(updateWalletInfoTask);
 
-                                        updateWalletInfoTask.execute(ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
+                                        updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
                                                 ElectrumRequest.GetTransaction(mWalletAddress, hash));
                                     }
 
@@ -922,15 +923,11 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 int nodePort = engine.GetNextNodePort(mCard);
                 UpdateWalletInfoTask connectTaskEx = new UpdateWalletInfoTask(nodeAddress, nodePort, data);
                 connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(mCard.getWallet()));
-            }
 
-            String nodeAddress = Objects.requireNonNull(engine).GetNode(mCard);
-            int nodePort = engine.GetNodePort(mCard);
-            UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(nodeAddress, nodePort, data);
-            updateTasks.add(updateWalletInfoTask);
-            updateWalletInfoTask.execute(ElectrumRequest.ListUnspent(mCard.getWallet())
-                    , ElectrumRequest.ListHistory(mCard.getWallet())
-            );
+                UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(nodeAddress, nodePort, data);
+                updateTasks.add(updateWalletInfoTask);
+                updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(mCard.getWallet()));
+            }
 
             RateInfoTask taskRate = new RateInfoTask();
             ExchangeRequest rate = ExchangeRequest.GetRate(mCard.getWallet(), "bitcoin", "bitcoin");
@@ -951,8 +948,8 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(nodeAddress, nodePort, data);
 
             updateTasks.add(updateWalletInfoTask);
-            updateWalletInfoTask.execute(ElectrumRequest.ListUnspent(mCard.getWallet())
-                    , ElectrumRequest.ListHistory(mCard.getWallet())
+            updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(mCard.getWallet())
+//                    ElectrumRequest.ListHistory(mCard.getWallet())
             );
 
             RateInfoTask taskRate = new RateInfoTask();
@@ -1360,13 +1357,13 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             int nodePort = engine.GetNodePort(mCard);
 
             UpdateWalletInfoTask connectTask = new UpdateWalletInfoTask(nodeAddress, nodePort);
-            connectTask.execute(ElectrumRequest.Broadcast(mCard.getWallet(), tx));
+            connectTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.Broadcast(mCard.getWallet(), tx));
         } else if (mCard.getBlockchain() == Blockchain.BitcoinCash || mCard.getBlockchain() == Blockchain.BitcoinCashTestNet) {
             String nodeAddress = engine.GetNode(mCard);
             int nodePort = engine.GetNodePort(mCard);
 
             UpdateWalletInfoTask connectTask = new UpdateWalletInfoTask(nodeAddress, nodePort);
-            connectTask.execute(ElectrumRequest.Broadcast(mCard.getWallet(), tx));
+            connectTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.Broadcast(mCard.getWallet(), tx));
         }
     }
 
