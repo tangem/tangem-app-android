@@ -18,13 +18,16 @@ import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 import static com.tangem.util.FormatUtil.GetDecimalFormat;
+import static com.tangem.util.FormatUtil.stringToBigDecimal;
 
 /**
  * Created by Ilia on 15.02.2018.
@@ -232,21 +235,13 @@ public class BtcEngine extends CoinEngine {
     }
 
     public boolean CheckAmount(TangemCard card, String amount) throws Exception {
-        DecimalFormat decimalFormat = GetDecimalFormat();
-        BigDecimal amountValue = (BigDecimal) decimalFormat.parse(amount);
-
-        // Convert Balance to BigDecimal
-        BigDecimal maxValue = new BigDecimal(GetBalanceValue(card));
-        maxValue = maxValue.divide(new BigDecimal(1000));
-
-        //if (use_mCurrency) {
-        amountValue = amountValue.divide(new BigDecimal(1000));
-        //}
-
+//        DecimalFormat decimalFormat = GetDecimalFormat();
+//        BigDecimal amountValue = (BigDecimal) decimalFormat.parse(amount);
+        BigDecimal amountValue = stringToBigDecimal(amount,Locale.US);
+        BigDecimal maxValue =  stringToBigDecimal(GetBalanceValue(card),Locale.US);
         if (amountValue.compareTo(maxValue) > 0) {
             return false;
         }
-
         return true;
     }
 
