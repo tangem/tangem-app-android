@@ -298,12 +298,12 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
 
                     finalFee = Math.round(finalFee) / (float) 10000;
 
-                    if (request.getBlockCount() == FeeRequest.MINIMAL) {
+                    if ((request.getBlockCount() == FeeRequest.MINIMAL) && (minFee == null)) {
                         minFee = String.valueOf(finalFee);
                         minFeeInInternalUnits = mCard.InternalUnitsFromString(String.valueOf(finalFee));
-                    } else if (request.getBlockCount() == FeeRequest.NORMAL) {
+                    } else if ((request.getBlockCount() == FeeRequest.NORMAL) && (normalFee == null)) {
                         normalFee = String.valueOf(finalFee);
-                    } else if (request.getBlockCount() == FeeRequest.PRIORITY) {
+                    } else if ((request.getBlockCount() == FeeRequest.PRIORITY) && (maxFee == null)) {
                         maxFee = String.valueOf(finalFee);
                     }
 
@@ -514,20 +514,16 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
 
                 String nodeAddress = engineCoin.GetNextNode(mCard);
                 int nodePort = engineCoin.GetNextNodePort(mCard);
-                //ConnectTask connectTaskEx = new ConnectTask(Blockchain.getNextServiceHost(mCard), Blockchain.getNextServicePort(mCard), data);
                 ConnectTask connectTaskEx = new ConnectTask(nodeAddress, nodePort, data);
-
-                //connectTaskEx.execute(ElectrumRequest.CheckBalance(mCard.getWallet()));
                 connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(mCard.getWallet()));
             }
 
-            String nodeAddress = engineCoin.GetNode(mCard);
-            int nodePort = engineCoin.GetNodePort(mCard);
-            ConnectTask connectTask = new ConnectTask(nodeAddress, nodePort, data);
-
-            //ConnectTask connectTask = new ConnectTask(Blockchain.getServiceHost(mCard), Blockchain.getServicePort(mCard));
-
-            connectTask.execute(/*ElectrumRequest.CheckBalance(mCard.getWallet()), */ElectrumRequest.GetFee(mCard.getWallet()));
+//            String nodeAddress = engineCoin.GetNode(mCard);
+//            int nodePort = engineCoin.GetNodePort(mCard);
+//            ConnectTask connectTask = new ConnectTask(nodeAddress, nodePort, data);
+//
+//
+//            connectTask.execute(ElectrumRequest.GetFee(mCard.getWallet()));
 
             int calcSize = 256;
             try {
@@ -543,7 +539,8 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
 
                 ConnectFeeTask feeTask = new ConnectFeeTask(sharedFee);
 
-                feeTask.execute(FeeRequest.GetFee(mCard.getWallet(), calcSize, FeeRequest.NORMAL),
+                feeTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
+                        FeeRequest.GetFee(mCard.getWallet(), calcSize, FeeRequest.NORMAL),
                         FeeRequest.GetFee(mCard.getWallet(), calcSize, FeeRequest.MINIMAL),
                         FeeRequest.GetFee(mCard.getWallet(), calcSize, FeeRequest.PRIORITY));
             }
@@ -608,7 +605,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
                 Intent intent = new Intent();
-                intent.putExtra("message", "Operation canceled");
+//                intent.putExtra("message", "Operation canceled");
                 setResult(Activity.RESULT_CANCELED, intent);
                 finish();
                 return true;
