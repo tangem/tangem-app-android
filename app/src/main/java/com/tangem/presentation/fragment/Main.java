@@ -201,7 +201,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
                                     if (height != -1) {
                                         RequestWalletInfoTask task = new RequestWalletInfoTask(request.Host, request.Port);
                                         requestTasks.add(task);
-                                        task.execute(ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
+                                        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
                                                 ElectrumRequest.GetTransaction(mWalletAddress, hash));
                                     }
                                 }
@@ -225,7 +225,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
                                         RequestWalletInfoTask task = new RequestWalletInfoTask(request.Host, request.Port);
                                         requestTasks.add(task);
 
-                                        task.execute(ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
+                                        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
                                                 ElectrumRequest.GetTransaction(mWalletAddress, hash));
                                     }
                                 }
@@ -755,9 +755,9 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
 
                         RequestWalletInfoTask task = new RequestWalletInfoTask(nodeAddress, nodePort);
 
-
                         requestTasks.add(task);
-                        task.execute(ElectrumRequest.ListUnspent(card.getWallet()), ElectrumRequest.ListHistory(card.getWallet()));
+//                        task.execute(ElectrumRequest.ListUnspent(card.getWallet()));//, ElectrumRequest.ListHistory(card.getWallet()));
+                        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(card.getWallet()));//, ElectrumRequest.ListHistory(card.getWallet()));
                         RateInfoTask taskRate = new RateInfoTask();
                         ExchangeRequest rate = ExchangeRequest.GetRate(card.getWallet(), "bitcoin", "bitcoin");
                         taskRate.execute(rate);
@@ -779,7 +779,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
                         RequestWalletInfoTask task = new RequestWalletInfoTask(nodeAddress, nodePort);
 
                         requestTasks.add(task);
-                        task.execute(ElectrumRequest.ListUnspent(card.getWallet()), ElectrumRequest.ListHistory(card.getWallet()));
+                        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(card.getWallet()));//, ElectrumRequest.ListHistory(card.getWallet()));
                         RateInfoTask taskRate = new RateInfoTask();
                         ExchangeRequest rate = ExchangeRequest.GetRate(card.getWallet(), "bitcoin-cash", "bitcoin-cash");
                         taskRate.execute(rate);
@@ -839,17 +839,11 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
                 int nodePort = engine.GetNextNodePort(card);
                 RequestWalletInfoTask connectTaskEx = new RequestWalletInfoTask(nodeAddress, nodePort, data);
                 connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(card.getWallet()));
+
+                RequestWalletInfoTask task = new RequestWalletInfoTask(nodeAddress, nodePort);
+                requestTasks.add(task);
+                task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(card.getWallet()));//, ElectrumRequest.ListHistory(card.getWallet()));
             }
-
-            String nodeAddress = engine.GetNode(card);
-            int nodePort = engine.GetNodePort(card);
-            RequestWalletInfoTask task = new RequestWalletInfoTask(nodeAddress, nodePort);
-
-            requestTasks.add(task);
-            task.execute(ElectrumRequest.ListUnspent(card.getWallet()), ElectrumRequest.ListHistory(card.getWallet()));
-            RateInfoTask taskRate = new RateInfoTask();
-            ExchangeRequest rate = ExchangeRequest.GetRate(card.getWallet(), "bitcoin", "bitcoin");
-            taskRate.execute(rate);
 
         } else if (card.getBlockchain() == Blockchain.BitcoinCashTestNet || card.getBlockchain() == Blockchain.BitcoinCash) {
             SharedData data = new SharedData(SharedData.COUNT_REQUEST);
@@ -866,7 +860,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
             RequestWalletInfoTask task = new RequestWalletInfoTask(nodeAddress, nodePort);
 
             requestTasks.add(task);
-            task.execute(ElectrumRequest.ListUnspent(card.getWallet()), ElectrumRequest.ListHistory(card.getWallet()));
+            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(card.getWallet()));//, ElectrumRequest.ListHistory(card.getWallet()));
             RateInfoTask taskRate = new RateInfoTask();
             ExchangeRequest rate = ExchangeRequest.GetRate(card.getWallet(), "bitcoin-cash", "bitcoin-cash");
             taskRate.execute(rate);
