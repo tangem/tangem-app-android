@@ -873,13 +873,13 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 break;
             case REQUEST_CODE_SEND_PAYMENT:
                 if (resultCode == Activity.RESULT_OK) {
-//                    mSwipeRefreshLayout.postDelayed(this::onRefresh, 10000);
+                    mSwipeRefreshLayout.postDelayed(this::onRefresh, 10000);
                     mSwipeRefreshLayout.setRefreshing(true);
                     mCard.clearInfo();
                     updateViews();
                 }
 
-                if (data != null) {
+                if (data != null && data.getExtras() != null) {
                     if (data.getExtras().containsKey("UID") && data.getExtras().containsKey("Card")) {
                         TangemCard updatedCard = new TangemCard(data.getStringExtra("UID"));
                         updatedCard.LoadFromBundle(data.getBundleExtra("Card"));
@@ -894,7 +894,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                     }
                     updateViews();
                 }
-
                 break;
         }
     }
