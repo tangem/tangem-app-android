@@ -61,7 +61,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
     private boolean feeRequestSuccess = false;
     private boolean balanceRequestSuccess = false;
     private EditText etWallet;
-//    private TextView tvAmountEquivalent;
+    //    private TextView tvAmountEquivalent;
 //    private TextView tvFeeEquivalent;
     private EditText etAmount;
     private EditText etFee;
@@ -569,10 +569,12 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE_SIGN_PAYMENT) {
-            if (data != null && data.getExtras().containsKey("UID") && data.getExtras().containsKey("Card")) {
-                TangemCard updatedCard = new TangemCard(data.getStringExtra("UID"));
-                updatedCard.LoadFromBundle(data.getBundleExtra("Card"));
-                mCard = updatedCard;
+            if (data != null && data.getExtras() != null) {
+                if (data.getExtras().containsKey("UID") && data.getExtras().containsKey("Card")) {
+                    TangemCard updatedCard = new TangemCard(data.getStringExtra("UID"));
+                    updatedCard.LoadFromBundle(data.getBundleExtra("Card"));
+                    mCard = updatedCard;
+                }
             }
             if (resultCode == SignPaymentActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                 requestPIN2Count++;
