@@ -429,7 +429,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
         } else {
             tvBalance.setText(engine.GetBalanceWithAlter(mCard));
         }
-        etAmount.setText(getIntent().getStringExtra("Amount"));
+        etAmount.setText(getIntent().getStringExtra(SignPaymentActivity.EXTRA_AMOUNT));
         tvCurrency.setText(engine.GetBalanceCurrency(mCard));
         tvCurrency2.setText(engine.GetFeeCurrency());
 
@@ -593,7 +593,11 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
                 intent.putExtra("UID", mCard.getUID());
                 intent.putExtra("Card", mCard.getAsBundle());
                 intent.putExtra("Wallet", etWallet.getText().toString());
-                intent.putExtra("Amount", etAmount.getText().toString());
+                intent.putExtra(SignPaymentActivity.EXTRA_AMOUNT, etAmount.getText().toString());
+
+//                if (BuildConfig.DEBUG)
+//                    Toast.makeText(this, etAmount.getText().toString(), Toast.LENGTH_LONG).show();
+
                 intent.putExtra("Fee", etFee.getText().toString());
                 startActivityForResult(intent, REQUEST_CODE_SIGN_PAYMENT);
             } else {
