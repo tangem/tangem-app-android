@@ -16,7 +16,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.tangem.domain.cardReader.NfcManager;
 import com.tangem.domain.wallet.Blockchain;
@@ -24,7 +23,6 @@ import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.CoinEngineFactory;
 import com.tangem.domain.wallet.TangemCard;
 import com.tangem.util.FormatUtil;
-import com.tangem.wallet.BuildConfig;
 import com.tangem.wallet.R;
 
 import java.io.IOException;
@@ -140,9 +138,6 @@ public class PreparePaymentActivity extends AppCompatActivity implements NfcAdap
         btnVerify.setOnClickListener(v -> {
             String strAmount;
             strAmount = etAmount.getText().toString().replace(",", ".");
-
-            if (BuildConfig.DEBUG)
-                Toast.makeText(this, strAmount, Toast.LENGTH_LONG).show();
 
             CoinEngine engine1 = CoinEngineFactory.Create(mCard.getBlockchain());
 
