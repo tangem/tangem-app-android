@@ -594,10 +594,6 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
                 intent.putExtra("Card", mCard.getAsBundle());
                 intent.putExtra("Wallet", etWallet.getText().toString());
                 intent.putExtra(SignPaymentActivity.EXTRA_AMOUNT, etAmount.getText().toString());
-
-//                if (BuildConfig.DEBUG)
-//                    Toast.makeText(this, etAmount.getText().toString(), Toast.LENGTH_LONG).show();
-
                 intent.putExtra("Fee", etFee.getText().toString());
                 startActivityForResult(intent, REQUEST_CODE_SIGN_PAYMENT);
             } else {
