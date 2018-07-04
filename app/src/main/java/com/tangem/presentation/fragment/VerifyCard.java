@@ -66,7 +66,6 @@ public class VerifyCard extends Fragment implements NfcAdapter.ReaderCallback {
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private Tag lastTag;
 
-
     public VerifyCard() {
 
     }
@@ -78,9 +77,6 @@ public class VerifyCard extends Fragment implements NfcAdapter.ReaderCallback {
 
         mCard = new TangemCard(Objects.requireNonNull(getActivity()).getIntent().getStringExtra("UID"));
         mCard.LoadFromBundle(Objects.requireNonNull(getActivity().getIntent().getExtras()).getBundle("Card"));
-
-
-//        LoadedWallet.needOpenVerify = true;
     }
 
     @Override
@@ -384,7 +380,8 @@ public class VerifyCard extends Fragment implements NfcAdapter.ReaderCallback {
 
             //tvBlockchain.setText(mCard.getBlockchain().getOfficialName());
             tvBlockchain.setText(mCard.getBlockchainName());
-            ivBlockchain.setImageResource(mCard.getBlockchain().getImageResource(this.getContext(), mCard.getTokenSymbol()));
+
+            ivBlockchain.setImageResource(mCard.getBlockchain().getImageResource(getContext(), mCard.getTokenSymbol()));
 
             if (mCard.isReusable())
                 tvReusable.setText(R.string.reusable);
