@@ -561,7 +561,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         }
     }
 
-
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -701,6 +700,8 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             intent.putExtra("Card", mCard.getAsBundle());
             startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT);
         });
+
+        tvWallet.setText(mCard.getWallet());
 
         return v;
     }
