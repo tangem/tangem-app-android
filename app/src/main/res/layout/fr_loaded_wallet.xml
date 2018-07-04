@@ -37,7 +37,6 @@
                 android:orientation="vertical">
 
                 <TextView
-                    android:visibility="gone"
                     android:id="@+id/tvCaution"
                     android:layout_width="match_parent"
                     android:layout_height="20dp"
@@ -47,7 +46,8 @@
                     android:text="@string/do_not_accept"
                     android:textAlignment="center"
                     android:textColor="@color/white"
-                    android:textSize="@dimen/text_size_1_small"/>
+                    android:textSize="@dimen/text_size_1_small"
+                    android:visibility="gone"/>
 
                 <ImageView
                     android:id="@+id/ivTangemCard"
@@ -71,16 +71,17 @@
                         android:text="Verified balance"
                         android:textColor="@color/black"
                         android:textSize="@dimen/text_size_large"
-                        tools:text="Verified balance" />
+                        tools:text="Verified balance"/>
 
                     <TextView
                         android:id="@+id/tvBalance"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/montserrat_light"
+                        android:text="@string/no_data_string"
                         android:textColor="@color/black"
                         android:textSize="@dimen/text_size_large"
-                        tools:text="0.05 BTC (Bitcoin)" />
+                        tools:text="0.05 BTC (Bitcoin)"/>
 
                     <TextView
                         android:id="@+id/tvBalanceLine2"
@@ -88,7 +89,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:fontFamily="@font/montserrat_light"
-                        android:text="100% safe. Confirmed balance and banknote identity" />
+                        android:text="100% safe. Confirmed balance and banknote identity"/>
 
                 </LinearLayout>
 
@@ -411,7 +412,7 @@
             android:text="@string/message"
             android:textAlignment="center"
             android:textColor="@color/black"
-            android:textStyle="normal|bold" />
+            android:textStyle="normal|bold"/>
 
         <TextView
             android:id="@+id/tvError"
@@ -460,18 +461,18 @@
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fabNFC"
 
-            android:layout_margin="10dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_margin="10dp"
             android:layout_marginStart="5dp"
             app:fabSize="mini"
             app:srcCompat="@drawable/ic_nfc_white_24dp"/>
 
         <android.support.v7.widget.AppCompatButton
             android:id="@+id/btnExtract"
-            android:layout_margin="10dp"
             style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="wrap_content"
+            android:layout_margin="10dp"
             android:width="100dp"
             android:text="@string/extract"/>
 
