@@ -4,7 +4,7 @@ apply plugin: 'kotlin-android-extensions'
 
 static def generateVersionName() {
     def gitCount = "git rev-list HEAD --count".execute().text.trim()
-//    def gitBranch = "git branch".execute().text.trim()
+    def gitBranch = "git branch".execute().text.trim()
 //    return gitCount.toInteger() + 831 + " " + gitBranch
     return gitCount.toInteger() + 831
 }
