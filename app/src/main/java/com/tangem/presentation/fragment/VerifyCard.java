@@ -127,16 +127,10 @@ public class VerifyCard extends Fragment implements NfcAdapter.ReaderCallback {
         btnOk.setOnClickListener(v1 -> {
             Intent data = prepareResultIntent();
             data.putExtra("modification", "update");
-            Objects.requireNonNull(getActivity()).setResult(Activity.RESULT_OK, data);
             getActivity().finish();
         });
 
-        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                mSwipeRefreshLayout.setRefreshing(false);
-            }
-        });
+        mSwipeRefreshLayout.setOnRefreshListener(() -> mSwipeRefreshLayout.setRefreshing(false));
 
         fabMenu.setOnClickListener(v16 -> showMenu(fabMenu));
 
