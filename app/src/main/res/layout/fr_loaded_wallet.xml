@@ -54,7 +54,8 @@
                     android:layout_width="325dp"
                     android:layout_height="0dp"
                     android:layout_weight="1"
-                    android:src="@drawable/tangem_card_2"/>
+                    tools:src="@drawable/card_btc001"
+                  />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -127,7 +128,6 @@
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"/>
-
 
                 </android.support.constraint.ConstraintLayout>
 
@@ -264,14 +264,14 @@
                     android:paddingRight="8dp"
                     android:visibility="gone">
 
-                    <TextView
-                        android:id="@+id/lbInputs"
-                        android:layout_width="110dp"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/raleway_r"
-                        android:text="@string/unspents"
-                        android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/text_size_small"/>
+                    <!--<TextView-->
+                        <!--android:id="@+id/lbInputs"-->
+                        <!--android:layout_width="110dp"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:fontFamily="@font/raleway_r"-->
+                        <!--android:text="@string/unspents"-->
+                        <!--android:textColor="@color/primary_dark"-->
+                        <!--android:textSize="@dimen/text_size_small"/>-->
 
                     <TextView
                         android:id="@+id/tvInputs"
