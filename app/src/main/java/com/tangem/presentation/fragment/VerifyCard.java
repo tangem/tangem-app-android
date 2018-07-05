@@ -41,6 +41,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class VerifyCard extends Fragment implements NfcAdapter.ReaderCallback {
+    public static final String TAG = VerifyCard.class.getSimpleName();
 
     private static final int REQUEST_CODE_SEND_PAYMENT = 1;
     private static final int REQUEST_CODE_PURGE = 2;
@@ -64,7 +65,6 @@ public class VerifyCard extends Fragment implements NfcAdapter.ReaderCallback {
             tvIssuer, tvIssuerData, tvFeatures, tvBlockchain, tvSignedTx, tvSigningMethod, tvFirmware, tvWalletIdentity, tvWallet;
     private ImageView ivBlockchain, ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private Tag lastTag;
 
     public VerifyCard() {
 
@@ -382,6 +382,8 @@ public class VerifyCard extends Fragment implements NfcAdapter.ReaderCallback {
             tvBlockchain.setText(mCard.getBlockchainName());
 
             ivBlockchain.setImageResource(mCard.getBlockchain().getImageResource(getContext(), mCard.getTokenSymbol()));
+
+            Log.i(TAG, "getTokenSymbol " + mCard.getTokenSymbol());
 
             if (mCard.isReusable())
                 tvReusable.setText(R.string.reusable);
