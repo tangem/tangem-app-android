@@ -615,7 +615,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         ivTangemCard.setImageResource(mCard.getCardImageResource());
 
 //        Log.i(TAG, "sxnnnnnnnnnnn " + mCard.getBlockchainID());
-//        Log.i(TAG, "sxnnnnnnnnnnn " + mCard.getTokenSymbol());
+        Log.i(TAG, "sxnnnnnnnnnnn " + mCard.getTokenSymbol());
 //        Log.i(TAG, "getDenomination " + Arrays.toString(mCard.getDenomination()));
 
         final CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
@@ -714,7 +714,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
     private void openVerifyCard(CardProtocol cardProtocol) {
         Intent intent = new Intent(getContext(), VerifyCardActivity.class);
-//                    // TODO обновить карту mCard
         intent.putExtra("UID", cardProtocol.getCard().getUID());
         intent.putExtra("Card", cardProtocol.getCard().getAsBundle());
         startActivityForResult(intent, REQUEST_CODE_VERIFY_CARD);
@@ -745,6 +744,14 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
+            case REQUEST_CODE_VERIFY_CARD:
+                // action when erase wallet
+                if (resultCode == Activity.RESULT_OK) {
+                    if (getActivity() != null)
+                        getActivity().finish();
+                }
+                break;
+
             case REQUEST_CODE_ENTER_NEW_PIN:
                 if (resultCode == Activity.RESULT_OK) {
                     if (data != null) {
