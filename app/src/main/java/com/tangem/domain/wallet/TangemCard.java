@@ -7,6 +7,7 @@ import com.tangem.domain.cardReader.SettingsMask;
 import com.tangem.util.BTCUtils;
 import com.tangem.util.FormatUtil;
 import com.tangem.util.Util;
+import com.tangem.wallet.R;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -97,8 +98,6 @@ public class TangemCard {
     }
 
     public void setBlockchainID(String blockchainID) {
-
-
         this.blockchainID = blockchainID;
     }
 
@@ -1364,6 +1363,20 @@ public class TangemCard {
             rateAlter = B.getFloat("rateAlter");
         if (B.containsKey("confirmTx"))
             countConfirmTX = new BigInteger(B.getString("confirmTx"), 16);
+    }
+
+    public int getCardImageResource() {
+        switch (getBlockchainID()) {
+            case "BTC":
+                return R.drawable.card_btc001;
+
+            case "ETH\\XTZ":
+                return R.drawable.card_seed;
+
+            default:
+                return R.drawable.card_btc001;
+        }
+
     }
 
     public enum EncryptionMode {

@@ -70,7 +70,6 @@ import org.json.JSONObject;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
@@ -125,6 +124,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     private AppCompatButton btnExtract;
     private FloatingActionButton fabInfo;
     private Tag lastTag;
+    private ImageView ivTangemCard;
 
     public LoadedWallet() {
 
@@ -577,12 +577,13 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         View v = inflater.inflate(R.layout.fr_loaded_wallet, container, false);
 
         mSwipeRefreshLayout = v.findViewById(R.id.swipe_container);
+        ivTangemCard = v.findViewById(R.id.ivTangemCard);
         tvBalance = v.findViewById(R.id.tvBalance);
         tvOffline = v.findViewById(R.id.tvOffline);
         tvCardID = v.findViewById(R.id.tvCardID);
         tvWallet = v.findViewById(R.id.tvWallet);
         tvInputs = v.findViewById(R.id.tvInputs);
-        TextView lbInputs = v.findViewById(R.id.lbInputs);
+//        TextView lbInputs = v.findViewById(R.id.lbInputs);
         tvLastOutput = v.findViewById(R.id.tvLastOutput);
         tvError = v.findViewById(R.id.tvError);
         tvMessage = v.findViewById(R.id.tvMessage);
@@ -611,6 +612,11 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         if (mCard.getBlockchain() == Blockchain.Token)
             tvBalance.setSingleLine(false);
 
+        ivTangemCard.setImageResource(mCard.getCardImageResource());
+
+//        Log.i(TAG, "sxnnnnnnnnnnn " + mCard.getBlockchainID());
+//        Log.i(TAG, "sxnnnnnnnnnnn " + mCard.getTokenSymbol());
+//        Log.i(TAG, "getDenomination " + Arrays.toString(mCard.getDenomination()));
 
         final CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
         boolean visibleFlag = engine != null ? engine.InOutPutVisible() : true;
@@ -1029,7 +1035,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             verifyCardTask = new VerifyCardTask(getContext(), mCard, mNfcManager, isoDep, this);
             verifyCardTask.start();
 
-            Log.i(TAG, "onTagDiscovered " + Arrays.toString(tag.getId()));
+//            Log.i(TAG, "onTagDiscovered " + Arrays.toString(tag.getId()));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -1068,7 +1074,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
                     mCardProtocol = cardProtocol;
 
-                    Log.i(TAG, "scanTimes " + scanTimes);
+//                    Log.i(TAG, "scanTimes " + scanTimes);
                     if (scanTimes > 0)
                         openVerifyCard(mCardProtocol);
 
