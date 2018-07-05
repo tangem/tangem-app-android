@@ -84,4 +84,19 @@ public enum Blockchain {
             return R.drawable.ethereum;
         return resourceId;
     }
+
+    public int getLogoImageResource(String tokenSymbol) {
+        if (Strings.isNullOrEmpty(tokenSymbol))
+            return getImageResource();
+
+        switch (tokenSymbol) {
+            case "SEED":
+                return R.drawable.bitcoins;
+            case "SEEDq":
+                return R.drawable.bitcoins;
+            case "SEEDqq":
+                return R.drawable.bitcoins;
+        }
+        return R.drawable.tangem2;
+    }
 }
