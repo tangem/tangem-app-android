@@ -65,6 +65,8 @@ import java.util.Objects;
 public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardListAdapter.UiCallbacks, CardProtocol.Notifications, MainActivity.OnCardsClean {
     public static final String TAG = Main.class.getSimpleName();
 
+    public static final String EXTRA_LAST_DISCOVERED_TAG = "extra_last_tag";
+
     private static final int REQUEST_CODE_SHOW_CARD_ACTIVITY = 1;
     private static final int REQUEST_CODE_ENTER_PIN_ACTIVITY = 2;
     private static final int REQUEST_CODE_REQUEST_CAMERA_PERMISSIONS = 3;
@@ -624,10 +626,9 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
                         Log.i(TAG, "onViewCard " + "else");
                     }
 
-                    intent.putExtra("lastTag123", lastTag);
+                    intent.putExtra(EXTRA_LAST_DISCOVERED_TAG, lastTag);
                     intent.putExtras(cardInfo);
                     startActivityForResult(intent, REQUEST_CODE_SHOW_CARD_ACTIVITY);
-
 
                     mCardListAdapter.clearCards();
                     slCardUIDs.clear();
