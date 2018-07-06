@@ -32,5 +32,39 @@
       {"block":11501,"count":1,"digest":"FF77"},
       {"block":0,"count":0,"digest":"D07B"}
     ]
+  },
+  {
+    "fw":"1.24d SDK",
+    "challenge":"00000000000000000000000000000001",
+    "sha-256":[
+      {"block":0,"count":1,"digest":"6B360B47FFB16641EF9CC778746FE6B1010AB60C69281CE431A46ECC29A72304"},
+      {"block":1,"count":1,"digest":"648F50D44E9A31CB4C2682EAD7B8E2E570E5F252035849CD9B08BD4F9106B432"},
+      {"block":2,"count":1,"digest":"BAA31588F599E2DBC8AC06CFBF4E710B9B0E3FEA0201AE67E5A9E605DB50D1ED"},
+      {"block":3,"count":1,"digest":"48CFA13758F0B8018A97831C11BB1668A39CC76B141C90038551D950F83A43BA"},
+      {"block":4,"count":1,"digest":"8932B8E9D93A28EEEAC8FD3477F38A8A384AC895B06E09B8396A7806C3DCFC09"},
+      {"block":5,"count":1,"digest":"A3E7F2911AB380B366E47EB9E7DCC0C3D8667EEE3CF355FCCD5B113918873EFC"},
+      {"block":6,"count":1,"digest":"32CFCDC12C3AAA6C8FE4935C76B795A81206141AE7C7AB941A4B5F74EB02D844"},
+      {"block":7,"count":1,"digest":"1BA7B6ED5F28A0744E177843F2A960CB757B27FF6052C17F9E57B266AEC4F564"},
+      {"block":8,"count":1,"digest":"7C1A2C88529DA038C3A124CC049B9A5CD73089C2CD9C66B15DF91020E981B94B"},
+      {"block":9,"count":1,"digest":"5F14E10CBE14230EEF9B8896C84998197E56738952A1ECF22202801B9AE64340"},
+      {"block":10,"count":1,"digest":"8FF4F496E7C68A654E574F13517EFA4F2058FDFC9E949421DA5ACC855C876F63"},
+      {"block":11491,"count":1,"digest":"E45CFEA35B1C4C217A55B78B0D78C841978F1008C3C1917D228EECB0324A0942"},
+      {"block":0,"count":0,"digest":"F4199A74F2D4BAF2E282A670989A50B9186665D8EC453D1CED02F4E4019E1C0F"}
+    ],
+    "crc-16":[
+      {"block":0,"count":1,"digest":"22C3"},
+      {"block":1,"count":1,"digest":"ECB2"},
+      {"block":2,"count":1,"digest":"4701"},
+      {"block":3,"count":1,"digest":"2DD5"},
+      {"block":4,"count":1,"digest":"3870"},
+      {"block":5,"count":1,"digest":"66CF"},
+      {"block":6,"count":1,"digest":"4405"},
+      {"block":7,"count":1,"digest":"4913"},
+      {"block":8,"count":1,"digest":"F51D"},
+      {"block":9,"count":1,"digest":"0013"},
+      {"block":10,"count":1,"digest":"5E68"},
+      {"block":11491,"count":1,"digest":"4078"},
+      {"block":0,"count":0,"digest":"75C3"}
+    ]
   }
 ]
