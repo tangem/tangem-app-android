@@ -263,15 +263,6 @@
                     android:paddingRight="8dp"
                     android:visibility="gone">
 
-                    <!--<TextView-->
-                    <!--android:id="@+id/lbInputs"-->
-                    <!--android:layout_width="110dp"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:fontFamily="@font/raleway_r"-->
-                    <!--android:text="@string/unspents"-->
-                    <!--android:textColor="@color/primary_dark"-->
-                    <!--android:textSize="@dimen/text_size_small"/>-->
-
                     <TextView
                         android:id="@+id/tvInputs"
                         android:layout_width="wrap_content"
@@ -281,34 +272,6 @@
                         android:textSize="@dimen/text_size_small"
                         android:textStyle="normal|bold"
                         tools:text="@string/no_data_string"/>
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingLeft="8dp"
-                    android:paddingRight="8dp"
-                    android:visibility="gone">
-
-                    <TextView
-                        android:layout_width="110dp"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/raleway_r"
-                        android:text="@string/last_withdrawal"
-                        android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/text_size_small"/>
-
-                    <TextView
-                        android:id="@+id/tvLastOutput"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_light"
-                        android:text="@string/no_data_string"
-                        android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/text_size_small"
-                        android:textStyle="normal|bold"/>
 
                 </LinearLayout>
 
@@ -337,6 +300,7 @@
                         android:textSize="@dimen/text_size_small"
                         android:textStyle="normal|bold"
                         tools:text="TANGEM"/>
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -391,12 +355,12 @@
             </LinearLayout>
 
             <RelativeLayout
-                android:visibility="gone"
                 android:id="@+id/rlProgressBar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
-                android:layout_marginTop="215dp">
+                android:layout_marginTop="215dp"
+                android:visibility="gone">
 
                 <TextView
                     android:layout_width="wrap_content"
