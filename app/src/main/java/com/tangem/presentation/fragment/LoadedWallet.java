@@ -83,7 +83,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
     private static final int REQUEST_CODE_SEND_PAYMENT = 1;
     private static final int REQUEST_CODE_VERIFY_CARD = 4;
-
     private static final int REQUEST_CODE_PURGE = 2;
     private static final int REQUEST_CODE_REQUEST_PIN2_FOR_PURGE = 3;
     private static final int REQUEST_CODE_ENTER_NEW_PIN = 5;
@@ -91,39 +90,25 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     private static final int REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN = 7;
     private static final int REQUEST_CODE_SWAP_PIN = 8;
 
+    private NfcManager mNfcManager;
     private TangemCard mCard;
-    private TextView tvCardID;
-    private TextView tvBalance;
-    private TextView tvOffline;
-    private TextView tvBalanceEquivalent;
-    private TextView tvWallet;
-    private TextView tvInputs;
-    private TextView tvError;
-    private TextView tvMessage;
-    private TextView tvIssuer;
-    private TextView tvIssuerData;
-    private TextView tvBlockchain;
-    private TextView tvLastInput;
-    private TextView tvLastOutput;
-    private TextView lbLastOutput;
-    private TextView tvValidationNode;
-    private TextView tvHeader, tvCaution;
+    private Tag lastTag;
+
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private RelativeLayout rlProgressBar;
+    private TextView tvCardID, tvBalance, tvOffline, tvBalanceEquivalent, tvWallet, tvInputs, tvError, tvMessage, tvIssuer, tvBlockchain, tvValidationNode, tvHeader, tvCaution;
     private ProgressBar progressBar;
     private ImageView ivBlockchain, ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion;
-    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private AppCompatButton btnExtract;
+
     private List<UpdateWalletInfoTask> updateTasks = new ArrayList<>();
-    private NfcManager mNfcManager;
     private boolean lastReadSuccess = true;
     private VerifyCardTask verifyCardTask = null;
     private int requestPIN2Count = 0;
-
     private Timer timerHideErrorAndMessage = null;
     private String newPIN = "", newPIN2 = "";
-    private AppCompatButton btnExtract;
-    private FloatingActionButton fabInfo;
-    private Tag lastTag;
-    private ImageView ivTangemCard;
-    private RelativeLayout rlProgressBar;
+    private CardProtocol mCardProtocol;
+    private int scanTimes = 0;
 
     public LoadedWallet() {
 
@@ -242,7 +227,8 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 }
             }
 
-            if (updateTasks.size() == 0) mSwipeRefreshLayout.setRefreshing(false);
+            if (updateTasks.size() == 0)
+                mSwipeRefreshLayout.setRefreshing(false);
         }
     }
 
@@ -578,17 +564,15 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         mSwipeRefreshLayout = v.findViewById(R.id.swipe_container);
         progressBar = v.findViewById(R.id.progressBar);
         rlProgressBar = v.findViewById(R.id.rlProgressBar);
-        ivTangemCard = v.findViewById(R.id.ivTangemCard);
+        ImageView ivTangemCard = v.findViewById(R.id.ivTangemCard);
         tvBalance = v.findViewById(R.id.tvBalance);
         tvOffline = v.findViewById(R.id.tvOffline);
         tvCardID = v.findViewById(R.id.tvCardID);
         tvWallet = v.findViewById(R.id.tvWallet);
         tvInputs = v.findViewById(R.id.tvInputs);
-        tvLastOutput = v.findViewById(R.id.tvLastOutput);
         tvError = v.findViewById(R.id.tvError);
         tvMessage = v.findViewById(R.id.tvMessage);
         tvIssuer = v.findViewById(R.id.tvIssuer);
-        tvIssuerData = v.findViewById(R.id.tvIssuerData);
         tvHeader = v.findViewById(R.id.tvHeader);
         tvCaution = v.findViewById(R.id.tvCaution);
         ImageView imgLookup = v.findViewById(R.id.imgLookup);
@@ -600,7 +584,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         ivPIN2orSecurityDelay = v.findViewById(R.id.imgPIN2orSecurityDelay);
         ivDeveloperVersion = v.findViewById(R.id.imgDeveloperVersion);
         ImageView ivQR = v.findViewById(R.id.qrWallet);
-        fabInfo = v.findViewById(R.id.fabInfo);
+        FloatingActionButton fabInfo = v.findViewById(R.id.fabInfo);
         FloatingActionButton fabNFC = v.findViewById(R.id.fabNFC);
         AppCompatButton btnLoad = v.findViewById(R.id.btnLoad);
         btnExtract = v.findViewById(R.id.btnExtract);
@@ -632,6 +616,11 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             mSwipeRefreshLayout.postDelayed(this::onRefresh, 1000);
         }
 
+        startVerify(lastTag);
+
+        tvWallet.setText(mCard.getWallet());
+
+        // set listeners
         imgLookup.setOnClickListener(v15 -> {
             if (!mCard.hasBalanceInfo()) return;
             CoinEngine engineClick = CoinEngineFactory.Create(mCard.getBlockchain());
@@ -653,7 +642,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                     } catch (ActivityNotFoundException e) {
                         e.printStackTrace();
                     }
-
                 }
         );
 
@@ -666,7 +654,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             }
         });
 
-        startVerify(lastTag);
 
         fabNFC.setOnClickListener(view -> {
             Intent intent = new Intent(getContext(), MainActivity.class);
@@ -699,8 +686,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             intent.putExtra("Card", mCard.getAsBundle());
             startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT);
         });
-
-        tvWallet.setText(mCard.getWallet());
 
         return v;
     }
@@ -748,7 +733,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             case REQUEST_CODE_ENTER_NEW_PIN:
                 if (resultCode == Activity.RESULT_OK) {
                     if (data != null) {
-                        if (Objects.requireNonNull(data.getExtras()).containsKey("confirmPIN")) {
+                        if (data.getExtras() != null && data.getExtras().containsKey("confirmPIN")) {
                             Intent intent = new Intent(getContext(), RequestPINActivity.class);
                             intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
                             intent.putExtra("UID", mCard.getUID());
@@ -767,7 +752,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             case REQUEST_CODE_ENTER_NEW_PIN2:
                 if (resultCode == Activity.RESULT_OK) {
                     if (data != null) {
-                        if (Objects.requireNonNull(data.getExtras()).containsKey("confirmPIN2")) {
+                        if (data.getExtras() != null && data.getExtras().containsKey("confirmPIN2")) {
                             Intent intent = new Intent(getContext(), RequestPINActivity.class);
                             intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
                             intent.putExtra("UID", mCard.getUID());
@@ -785,9 +770,11 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 break;
             case REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN:
                 if (resultCode == Activity.RESULT_OK) {
-                    if (newPIN.equals("")) newPIN = mCard.getPIN();
+                    if (newPIN.equals(""))
+                        newPIN = mCard.getPIN();
 
-                    if (newPIN2.equals("")) newPIN2 = PINStorage.getPIN2();
+                    if (newPIN2.equals(""))
+                        newPIN2 = PINStorage.getPIN2();
 
                     PINSwapWarningDialog pinSwapWarningDialog = new PINSwapWarningDialog();
                     pinSwapWarningDialog.setOnRefreshPage(this::startSwapPINActivity);
@@ -805,17 +792,18 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 if (resultCode == Activity.RESULT_OK) {
                     if (data == null) {
                         data = new Intent();
-
                         data.putExtra("UID", mCard.getUID());
                         data.putExtra("Card", mCard.getAsBundle());
                         data.putExtra("modification", "delete");
-                    } else {
+                    } else
                         data.putExtra("modification", "update");
+
+                    if (getActivity() != null) {
+                        getActivity().setResult(Activity.RESULT_OK, data);
+                        getActivity().finish();
                     }
-                    Objects.requireNonNull(getActivity()).setResult(Activity.RESULT_OK, data);
-                    getActivity().finish();
                 } else {
-                    if (data != null && data.getExtras().containsKey("UID") && data.getExtras().containsKey("Card")) {
+                    if (data != null && data.getExtras() != null && data.getExtras().containsKey("UID") && data.getExtras().containsKey("Card")) {
                         TangemCard updatedCard = new TangemCard(data.getStringExtra("UID"));
                         updatedCard.LoadFromBundle(data.getBundleExtra("Card"));
                         mCard = updatedCard;
@@ -847,17 +835,18 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 if (resultCode == Activity.RESULT_OK) {
                     if (data == null) {
                         data = new Intent();
-
                         data.putExtra("UID", mCard.getUID());
                         data.putExtra("Card", mCard.getAsBundle());
                         data.putExtra("modification", "delete");
                     } else {
                         data.putExtra("modification", "update");
                     }
-                    Objects.requireNonNull(getActivity()).setResult(Activity.RESULT_OK, data);
-                    getActivity().finish();
+                    if (getActivity() != null) {
+                        getActivity().setResult(Activity.RESULT_OK, data);
+                        getActivity().finish();
+                    }
                 } else {
-                    if (data != null && data.getExtras().containsKey("UID") && data.getExtras().containsKey("Card")) {
+                    if (data != null && data.getExtras() != null && data.getExtras().containsKey("UID") && data.getExtras().containsKey("Card")) {
                         TangemCard updatedCard = new TangemCard(data.getStringExtra("UID"));
                         updatedCard.LoadFromBundle(data.getBundleExtra("Card"));
                         mCard = updatedCard;
@@ -976,7 +965,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
 
             RateInfoTask taskRate = new RateInfoTask();
-            ExchangeRequest rate = ExchangeRequest.GetRate(mCard.getWallet(), "ethereum", "ethereum");
+            ExchangeRequest rate = ExchangeRequest.GetRate(mCard.getWallet(), "ic_logo_ethereum", "ic_logo_ethereum");
             taskRate.execute(rate);
 
         } else if (mCard.getBlockchain() == Blockchain.Token) {
@@ -996,7 +985,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
 
             RateInfoTask taskRate = new RateInfoTask();
-            ExchangeRequest rate = ExchangeRequest.GetRate(mCard.getWallet(), "basic-attention-token", "ethereum");
+            ExchangeRequest rate = ExchangeRequest.GetRate(mCard.getWallet(), "basic-attention-token", "ic_logo_ethereum");
             taskRate.execute(rate);
         }
 
@@ -1031,7 +1020,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             } else {
                 isoDep.setTimeout(65000);
             }
-            //lastTag = tag;
+
             verifyCardTask = new VerifyCardTask(getContext(), mCard, mNfcManager, isoDep, this);
             verifyCardTask.start();
 
@@ -1057,11 +1046,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             progressBar.setProgress(5);
         });
     }
-
-    private CardProtocol mCardProtocol;
-
-    //    private boolean needOpenVerify;
-    private int scanTimes = 0;
 
     @Override
     public void OnReadFinish(final CardProtocol cardProtocol) {
@@ -1219,15 +1203,8 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             else
                 tvInputs.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getContext()), R.color.confirmed));
 
-//            if (btnSend != null) {
-//                btnSend.setText(mCard.getOutputsDescription());
-//            }
-
-            tvLastInput.setText(mCard.getLastInputDescription());
-//            tvLastOutput.setText(mCard.getLastOutputDescription());
-
             tvBlockchain.setText(mCard.getBlockchainName());
-            ivBlockchain.setImageResource(mCard.getBlockchain().getImageResource(this.getContext(), mCard.getTokenSymbol()));
+            ivBlockchain.setImageResource(mCard.getBlockchain().getImageResource(getContext(), mCard.getTokenSymbol()));
 
             if (tvValidationNode != null) {
                 tvValidationNode.setText(mCard.getValidationNodeDescription());
@@ -1266,12 +1243,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 btnExtract.setEnabled(true);
             else
                 btnExtract.setEnabled(false);
-
-//            if (tvPurge != null)
-//                if (mCard.hasBalanceInfo())
-//                    tvPurge.setEnabled(true);
-//                else
-//                    tvPurge.setEnabled(false);
 
             tvIssuer.setText(mCard.getIssuerDescription());
 
