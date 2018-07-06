@@ -578,7 +578,7 @@ public class TangemCard {
         return health == 0;
     }
 
-    private Issuer issuer = Issuer.Unknown;
+    private Issuer issuer = Issuer.Unknown();
 
     public void setIssuer(Issuer issuer) {
         this.issuer = issuer;
@@ -1202,7 +1202,7 @@ public class TangemCard {
         if (signingMethod != null) B.putString("signingMethod", signingMethod.name());
         if (manufacturer != null) B.putString("Manufacturer", manufacturer.name());
         if (encryptionMode != null) B.putString("EncryptionMode", encryptionMode.name());
-        if (issuer != null) B.putString("Issuer", issuer.name());
+        if (issuer != null) B.putString("Issuer", issuer.getID());
         if (firmwareVersion != null) B.putString("FirmwareVersion", firmwareVersion);
         B.putString("BalanceDecimal", balanceDecimal);
         B.putString("BalanceDecimalAlter", balanceDecimalAlter);
@@ -1291,7 +1291,7 @@ public class TangemCard {
         else
             encryptionMode = null;
 
-        if (B.containsKey("Issuer")) issuer = Issuer.valueOf(B.getString("Issuer"));
+        if (B.containsKey("Issuer")) issuer = Issuer.FindIssuer(B.getString("Issuer"));
         if (B.containsKey("FirmwareVersion")) firmwareVersion = B.getString("FirmwareVersion");
 
         cardPublicKeyValid = B.getBoolean("CardPublicKeyValid");
