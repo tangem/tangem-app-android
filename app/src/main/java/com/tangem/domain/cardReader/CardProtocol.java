@@ -887,7 +887,7 @@ public class CardProtocol {
         }
     }
 
-    private byte[] run_VerifyCode(String hashAlgID, int codePageAddress, int codePageCount, byte[] challenge) throws Exception {
+    public byte[] run_VerifyCode(String hashAlgID, int codePageAddress, int codePageCount, byte[] challenge) throws Exception {
         if (readResult == null) run_Read();
         CommandApdu rqApdu = StartPrepareCommand(INS.VerifyCode);
         rqApdu.addTLV(TLV.Tag.TAG_HashAlgID, hashAlgID.getBytes("US-ASCII"));
