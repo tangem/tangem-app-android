@@ -1,0 +1,36 @@
+[
+  {
+    "fw":"1.24r",
+    "challenge":"00000000000000000000000000000001",
+    "sha-256":[
+      {"block":0,"count":1,"digest":"9B091DF443FE951D27AA8843517096DC421433F5603EBC566B11891F867E3D18"},
+      {"block":1,"count":1,"digest":"B4F723EE79075C8C00FA17D037BF10528BB0C7CF421539EE15F4A397204C87AF"},
+      {"block":2,"count":1,"digest":"1258585B438B6BC8F41FC22AFF383C86690E984E84E96AA752C9A54954DF731A"},
+      {"block":3,"count":1,"digest":"14082C75D6AA533A06E9B764642F97B5783FED91BD1173EFADC3CF57D8769AAE"},
+      {"block":4,"count":1,"digest":"A8F6CB02D56933361127072BB0D89999020CE196AE9718E9CF019DCCC9437E85"},
+      {"block":5,"count":1,"digest":"491604BA2A2F6EE03A2B4812958F0356D745678FB0ABABF0109A9E8F59099D9D"},
+      {"block":6,"count":1,"digest":"B2F057FF8B83343BC40058CA459F3C63B9670ABCD059730BE70223AEBDC88D77"},
+      {"block":7,"count":1,"digest":"73F4391010345E27745A1AFEC93C02B2CA460D9EAB437605F82A18281DF17DCE"},
+      {"block":8,"count":1,"digest":"74588EBB6704DD3DB9ECDFE6B85EC2872BD6A1F7C73E080E57697D3FF8DDD470"},
+      {"block":9,"count":1,"digest":"3B382C35ADBBF206B0A6B216EE95AF2321EE34148E93BBFECCF275AB13ED08A2"},
+      {"block":11500,"count":1,"digest":"21DDEC9788E3EA04663297AD0208F2714F139434E3540EBB7C96150EE1D320C9"},
+      {"block":11501,"count":1,"digest":"C545C5D092D1EBC4BA266C139CE0F2A399E4D23E74EB4EBD0E53019AB58CB486"},
+      {"block":0,"count":0,"digest":"C689C50352E9F6E41BF2E6EC852D8466814A51018F40BE32BAADEE9C2A9E6B6D"}
+    ],
+    "crc-16":[
+      {"block":0,"count":1,"digest":"1BFC"},
+      {"block":1,"count":1,"digest":"D58D"},
+      {"block":2,"count":1,"digest":"7E3E"},
+      {"block":3,"count":1,"digest":"14EA"},
+      {"block":4,"count":1,"digest":"014F"},
+      {"block":5,"count":1,"digest":"5FF0"},
+      {"block":6,"count":1,"digest":"7D3A"},
+      {"block":7,"count":1,"digest":"702C"},
+      {"block":8,"count":1,"digest":"CC22"},
+      {"block":9,"count":1,"digest":"392C"},
+      {"block":11500,"count":1,"digest":"5FCB"},
+      {"block":11501,"count":1,"digest":"FF77"},
+      {"block":0,"count":0,"digest":"D07B"}
+    ]
+  }
+]
