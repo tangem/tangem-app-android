@@ -12,6 +12,39 @@
     tools:ignore="contentDescription"
     tools:showIn="@layout/activity_loaded_wallet">
 
+    <RelativeLayout
+        android:visibility="gone"
+        android:id="@+id/rlProgressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:elevation="10dp"
+        app:layout_constraintBottom_toBottomOf="@+id/include"
+        app:layout_constraintEnd_toEndOf="@+id/swipe_container"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/swipe_container">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:alpha="0.5"
+            android:text="@string/verifying"
+            android:textColor="@color/colorPrimary"
+            android:textStyle="bold"/>
+
+        <ProgressBar
+            android:layout_width="@dimen/size_progress_bar_big"
+            android:layout_height="@dimen/size_progress_bar_big"
+            android:alpha="0.5"
+            android:elevation="1dp"/>
+
+    </RelativeLayout>
+
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipe_container"
         android:layout_width="0dp"
@@ -55,7 +88,7 @@
                     android:layout_height="0dp"
                     android:layout_weight="1"
                     tools:src="@drawable/card_btc001"
-                  />
+                    />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -265,13 +298,13 @@
                     android:visibility="gone">
 
                     <!--<TextView-->
-                        <!--android:id="@+id/lbInputs"-->
-                        <!--android:layout_width="110dp"-->
-                        <!--android:layout_height="wrap_content"-->
-                        <!--android:fontFamily="@font/raleway_r"-->
-                        <!--android:text="@string/unspents"-->
-                        <!--android:textColor="@color/primary_dark"-->
-                        <!--android:textSize="@dimen/text_size_small"/>-->
+                    <!--android:id="@+id/lbInputs"-->
+                    <!--android:layout_width="110dp"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:fontFamily="@font/raleway_r"-->
+                    <!--android:text="@string/unspents"-->
+                    <!--android:textColor="@color/primary_dark"-->
+                    <!--android:textSize="@dimen/text_size_small"/>-->
 
                     <TextView
                         android:id="@+id/tvInputs"
@@ -550,7 +583,9 @@
     </RelativeLayout>
 
     <include
+        android:id="@+id/include"
         layout="@layout/layout_progress_horizontal"
-        android:visibility="invisible"/>
+        android:visibility="invisible"
+        tools:layout_editor_absoluteY="495dp"/>
 
 </android.support.constraint.ConstraintLayout>
