@@ -4,10 +4,17 @@ import android.content.Context;
 import android.nfc.tech.IsoDep;
 import android.util.Log;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.tangem.domain.cardReader.CardProtocol;
+import com.tangem.domain.cardReader.FW;
 import com.tangem.domain.cardReader.NfcManager;
 import com.tangem.domain.wallet.PINStorage;
 import com.tangem.domain.wallet.TangemCard;
+import com.tangem.util.Util;
+
+import java.util.Arrays;
 
 /**
  * Created by dvol on 04.02.2018.
@@ -59,23 +66,26 @@ public class VerifyCardTask extends Thread {
                     protocol.setPIN(PIN);
                     protocol.run_Read();
                     PINStorage.setLastUsedPIN(PIN);
-                    mNotifications.OnReadProgress(protocol, 30);
+                    mNotifications.OnReadProgress(protocol, 20);
                     if (isCancelled) return;
                     protocol.run_VerifyCard();
-                    mNotifications.OnReadProgress(protocol, 60);
+                    mNotifications.OnReadProgress(protocol, 50);
                     Log.i(TAG, "Manufacturer: " + protocol.getCard().getManufacturer().getOfficialName());
                     if (isCancelled) return;
                     if (protocol.getCard().getStatus() == TangemCard.Status.Loaded) {
                         protocol.run_CheckWalletWithSignatureVerify();
-                        mNotifications.OnReadProgress(protocol, 90);
+                        mNotifications.OnReadProgress(protocol, 80);
                     }
-
-
-//                        if (isCancelled) return;
-//                    if (protocol.getCard().getStatus() == TangemCard.Status.Loaded) {
-//                        protocol.run_CheckWithSignatureVerify();
-//                    }
-
+                    if (isCancelled) return;
+                    FW.VerifyCodeRecord record=FW.selectRandomVerifyCodeBlock(mCard.getFirmwareVersion());
+                    if (isCancelled) return;
+                    if( record!=null ) {
+                        byte[] returnedDigest = protocol.run_VerifyCode(record.hashAlg, record.blockIndex, record.blockCount, record.challenge);
+                        mCard.setCodeConfirmed(Arrays.equals(returnedDigest, record.digest));
+                    }else{
+                        mCard.setCodeConfirmed(null);
+                    }
+                    mNotifications.OnReadProgress(protocol, 90);
                 } catch (Exception e) {
                     e.printStackTrace();
                     protocol.setError(e);
