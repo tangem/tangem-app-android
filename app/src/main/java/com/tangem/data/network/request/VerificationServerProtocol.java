@@ -44,7 +44,7 @@ public class VerificationServerProtocol {
                 http.setRequestMethod("POST"); // PUT is another valid option
                 http.setDoOutput(true);
 
-                String sRequestBody = getGson().toJson(this);
+                String sRequestBody = getGson().toJson(this.command);
 
                 byte[] out = sRequestBody.getBytes(StandardCharsets.UTF_8);
                 int length = out.length;
@@ -107,7 +107,7 @@ public class VerificationServerProtocol {
             }
         }
 
-        static class ResultItem {
+        public static class ResultItem {
             public ResultItem(RequestItem request) {
                 CID = request.CID;
             }
@@ -117,15 +117,16 @@ public class VerificationServerProtocol {
             public Boolean passed;
         }
 
-        static class Answer extends CustomAnswer {
+        public static class Answer extends CustomAnswer {
             public ResultItem[] results;
         }
 
-        public Request prepare(TangemCard card)
+        public static Request prepare(TangemCard card)
         {
             Command c=new Command();
             c.requests=new RequestItem[1];
-            c.requests[0].CID= Util.bytesToHex(card.getCID());
+            c.requests[0]=new RequestItem();
+            c.requests[0].CID=Util.bytesToHex(card.getCID());
             c.requests[0].publicKey=Util.bytesToHex(card.getCardPublicKey());
 
             return new Request(c,Answer.class);
