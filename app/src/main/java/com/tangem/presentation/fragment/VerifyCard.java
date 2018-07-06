@@ -88,7 +88,7 @@ public class VerifyCard extends Fragment implements NfcAdapter.ReaderCallback {
         tvManufacturer = v.findViewById(R.id.tvManufacturerInfo);
         tvCardIdentity = v.findViewById(R.id.tvCardIdentity);
         tvRegistrationDate = v.findViewById(R.id.tvCardRegistredDate);
-        ivBlockchain = v.findViewById(R.id.imgBlockchain);
+        ivBlockchain = v.findViewById(R.id.ivBlockchain);
         ivPIN = v.findViewById(R.id.imgPIN);
         ivPIN2orSecurityDelay = v.findViewById(R.id.imgPIN2orSecurityDelay);
         ivDeveloperVersion = v.findViewById(R.id.imgDeveloperVersion);
@@ -356,8 +356,7 @@ public class VerifyCard extends Fragment implements NfcAdapter.ReaderCallback {
 
             tvBlockchain.setText(mCard.getBlockchainName());
 
-            ivBlockchain.setImageResource(mCard.getBlockchain().getImageResource(getContext(), mCard.getTokenSymbol()));
-
+            ivBlockchain.setImageResource(mCard.getBlockchain().getLogoImageResource(mCard.getBlockchainID(), mCard.getTokenSymbol()));
 
             if (mCard.isReusable())
                 tvReusable.setText(R.string.reusable);
