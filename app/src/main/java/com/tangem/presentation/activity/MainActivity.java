@@ -3,6 +3,7 @@ package com.tangem.presentation.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.res.AssetManager;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
@@ -23,6 +24,7 @@ import android.widget.TextView;
 
 import com.scottyab.rootbeer.RootBeer;
 import com.skyfishjy.library.RippleBackground;
+import com.tangem.domain.cardReader.FW;
 import com.tangem.domain.wallet.DeviceNFCAntennaLocation;
 import com.tangem.domain.wallet.Issuer;
 import com.tangem.domain.wallet.LastSignStorage;
@@ -217,10 +219,8 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         if (LastSignStorage.needInit()) {
             LastSignStorage.Init(context);
         }
-        if(Issuer.needInit())
-        {
-            Issuer.Init(context);
-        }
+        if( Issuer.needInit() ) Issuer.Init(context);
+        if( FW.needInit() ) FW.Init(context);
     }
 
     public void showCleanButton() {
