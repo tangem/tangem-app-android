@@ -28,7 +28,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -113,15 +112,12 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     private ImageView ivPIN;
     private ImageView ivPIN2orSecurityDelay;
     private ImageView ivDeveloperVersion;
-    private RelativeLayout rlProgressBar;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private List<UpdateWalletInfoTask> updateTasks = new ArrayList<>();
     private NfcManager mNfcManager;
     private boolean lastReadSuccess = true;
     private VerifyCardTask verifyCardTask = null;
     private int requestPIN2Count = 0;
-    private CardProtocol mCardProtocol;
-    private int scanTimes = 0;
 
     private Timer timerHideErrorAndMessage = null;
     private String newPIN = "", newPIN2 = "";
@@ -321,7 +317,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         @Override
         protected void onPostExecute(List<ElectrumRequest> requests) {
             super.onPostExecute(requests);
-//            Log.i("RequestWalletInfoTask", "onPostExecute[" + String.valueOf(updateTasks.size()) + "]");
+            Log.i("RequestWalletInfoTask", "onPostExecute[" + String.valueOf(updateTasks.size()) + "]");
             updateTasks.remove(this);
 
             CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
@@ -581,14 +577,13 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         View v = inflater.inflate(R.layout.fr_loaded_wallet, container, false);
 
         mSwipeRefreshLayout = v.findViewById(R.id.swipe_container);
-        rlProgressBar = v.findViewById(R.id.rlProgressBar);
-        progressBar = v.findViewById(R.id.progressBar);
         ivTangemCard = v.findViewById(R.id.ivTangemCard);
         tvBalance = v.findViewById(R.id.tvBalance);
         tvOffline = v.findViewById(R.id.tvOffline);
         tvCardID = v.findViewById(R.id.tvCardID);
         tvWallet = v.findViewById(R.id.tvWallet);
         tvInputs = v.findViewById(R.id.tvInputs);
+//        TextView lbInputs = v.findViewById(R.id.lbInputs);
         tvLastOutput = v.findViewById(R.id.tvLastOutput);
         tvError = v.findViewById(R.id.tvError);
         tvMessage = v.findViewById(R.id.tvMessage);
@@ -599,6 +594,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         ImageView imgLookup = v.findViewById(R.id.imgLookup);
         ImageView ivCopy = v.findViewById(R.id.ivCopy);
         tvValidationNode = v.findViewById(R.id.tvValidationNode);
+        progressBar = v.findViewById(R.id.progressBar);
         tvBlockchain = v.findViewById(R.id.tvBlockchain);
         ivBlockchain = v.findViewById(R.id.imgBlockchain);
         ivPIN = v.findViewById(R.id.imgPIN);
@@ -618,11 +614,17 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
         ivTangemCard.setImageResource(mCard.getCardImageResource());
 
+//        Log.i(TAG, "sxnnnnnnnnnnn " + mCard.getBlockchainID());
+        Log.i(TAG, "sxnnnnnnnnnnn " + mCard.getTokenSymbol());
+//        Log.i(TAG, "getDenomination " + Arrays.toString(mCard.getDenomination()));
+
         final CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
         boolean visibleFlag = engine != null ? engine.InOutPutVisible() : true;
         int visibleIOPuts = visibleFlag ? View.VISIBLE : View.GONE;
 
         tvInputs.setVisibility(visibleIOPuts);
+//        lbInputs.setVisibility(visibleIOPuts);
+//        tvLastOutput.setVisibility(visibleIOPuts);
 
         try {
             ivQR.setImageBitmap(UtilHelper.INSTANCE.generateQrCode(Objects.requireNonNull(engine).getShareWalletURI(mCard).toString()));
@@ -1057,11 +1059,15 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     @Override
     public void OnReadStart(CardProtocol cardProtocol) {
         progressBar.post(() -> {
-            rlProgressBar.setVisibility(View.VISIBLE);
             progressBar.setVisibility(View.VISIBLE);
             progressBar.setProgress(5);
         });
     }
+
+    private CardProtocol mCardProtocol;
+
+    //    private boolean needOpenVerify;
+    private int scanTimes = 0;
 
     @Override
     public void OnReadFinish(final CardProtocol cardProtocol) {
@@ -1070,7 +1076,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         if (cardProtocol != null) {
             if (cardProtocol.getError() == null) {
                 progressBar.post(() -> {
-                    rlProgressBar.setVisibility(View.GONE);
                     progressBar.setProgress(100);
                     progressBar.setProgressTintList(ColorStateList.valueOf(Color.GREEN));
 
@@ -1104,7 +1109,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
         progressBar.postDelayed(() -> {
             try {
-                rlProgressBar.setVisibility(View.GONE);
                 progressBar.setProgress(0);
                 progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
                 progressBar.setVisibility(View.INVISIBLE);
@@ -1124,7 +1128,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         verifyCardTask = null;
         progressBar.postDelayed(() -> {
             try {
-                rlProgressBar.setVisibility(View.GONE);
                 progressBar.setProgress(0);
                 progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
                 progressBar.setVisibility(View.INVISIBLE);
@@ -1219,7 +1222,12 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             else
                 tvInputs.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getContext()), R.color.confirmed));
 
+//            if (btnSend != null) {
+//                btnSend.setText(mCard.getOutputsDescription());
+//            }
+
             tvLastInput.setText(mCard.getLastInputDescription());
+//            tvLastOutput.setText(mCard.getLastOutputDescription());
 
             tvBlockchain.setText(mCard.getBlockchainName());
             ivBlockchain.setImageResource(mCard.getBlockchain().getImageResource(this.getContext(), mCard.getTokenSymbol()));
@@ -1261,6 +1269,12 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 btnExtract.setEnabled(true);
             else
                 btnExtract.setEnabled(false);
+
+//            if (tvPurge != null)
+//                if (mCard.hasBalanceInfo())
+//                    tvPurge.setEnabled(true);
+//                else
+//                    tvPurge.setEnabled(false);
 
             tvIssuer.setText(mCard.getIssuerDescription());
 
