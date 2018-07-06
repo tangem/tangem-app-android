@@ -7,6 +7,30 @@
     tools:context="com.tangem.presentation.fragment.Main"
     tools:showIn="@layout/content_main">
 
+    <RelativeLayout
+        android:id="@+id/rlProgressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone">
+
+        <TextView
+            android:textStyle="bold"
+            android:alpha="0.5"
+            android:textColor="@color/colorPrimary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="@string/reading"/>
+
+        <ProgressBar
+            android:layout_width="@dimen/size_progress_bar_big"
+            android:layout_height="@dimen/size_progress_bar_big"
+            android:alpha="0.5"
+            android:elevation="1dp"/>
+
+    </RelativeLayout>
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/lvCards"
         android:layout_width="match_parent"
