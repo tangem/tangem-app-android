@@ -22,6 +22,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.tangem.data.network.request.ElectrumRequest;
@@ -70,6 +71,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
 
     private NfcManager mNfcManager;
     private ArrayList<String> slCardUIDs = new ArrayList<>();
+    private RelativeLayout rlProgressBar;
     private ProgressBar progressBar;
     private CardListAdapter mCardListAdapter;
     private ReadCardInfoTask readCardInfoTask;
@@ -382,24 +384,18 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
         return mCardListAdapter;
     }
 
-//    @Override
-//    public void onSaveInstanceState(Bundle outState) {
-//        super.onSaveInstanceState(outState);
-//        mCardListAdapter.onSaveInstanceState(outState);
-//        outState.putStringArrayList("slCardUIDs", slCardUIDs);
-//    }
-
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View result = inflater.inflate(R.layout.fr_main, container, false);
+        View v = inflater.inflate(R.layout.fr_main, container, false);
 
         mNfcManager = new NfcManager(getActivity(), this);
 
         verifyPermissions();
 
-        progressBar = result.findViewById(R.id.progressBar);
+        rlProgressBar = v.findViewById(R.id.rlProgressBar);
+        progressBar = v.findViewById(R.id.progressBar);
         progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
-        RecyclerView rvCards = result.findViewById(R.id.lvCards);
+        RecyclerView rvCards = v.findViewById(R.id.lvCards);
         rvCards.setVisibility(View.GONE);
 
         rvCards.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -439,7 +435,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
             ((MainActivity) getActivity()).setNfcAdapterReaderCallback(this);
         }
 
-        return result;
+        return v;
     }
 
     @Override
@@ -577,6 +573,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
     @Override
     public void OnReadStart(CardProtocol cardProtocol) {
         progressBar.post(() -> {
+            rlProgressBar.setVisibility(View.VISIBLE);
             progressBar.setVisibility(View.VISIBLE);
             progressBar.setProgress(5);
         });
@@ -593,6 +590,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
         if (cardProtocol != null) {
             if (cardProtocol.getError() == null) {
                 progressBar.post(() -> {
+                    rlProgressBar.setVisibility(View.GONE);
                     progressBar.setProgress(100);
                     progressBar.setProgressTintList(ColorStateList.valueOf(Color.GREEN));
 
@@ -665,6 +663,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
 
         progressBar.postDelayed(() -> {
             try {
+                rlProgressBar.setVisibility(View.GONE);
                 progressBar.setProgress(0);
                 progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
                 progressBar.setVisibility(View.INVISIBLE);
@@ -679,6 +678,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
         readCardInfoTask = null;
         progressBar.postDelayed(() -> {
             try {
+                rlProgressBar.setVisibility(View.GONE);
                 progressBar.setProgress(0);
                 progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
                 progressBar.setVisibility(View.INVISIBLE);
