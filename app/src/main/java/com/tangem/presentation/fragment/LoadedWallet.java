@@ -35,9 +35,11 @@ import com.google.zxing.WriterException;
 import com.tangem.data.network.request.ElectrumRequest;
 import com.tangem.data.network.request.ExchangeRequest;
 import com.tangem.data.network.request.InfuraRequest;
+import com.tangem.data.network.request.VerificationServerProtocol;
 import com.tangem.data.network.task.ElectrumTask;
 import com.tangem.data.network.task.ExchangeTask;
 import com.tangem.data.network.task.InfuraTask;
+import com.tangem.data.network.task.VerificationServerTask;
 import com.tangem.data.nfc.VerifyCardTask;
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.NfcManager;
@@ -113,7 +115,8 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     private ImageView ivPIN2orSecurityDelay;
     private ImageView ivDeveloperVersion;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private List<UpdateWalletInfoTask> updateTasks = new ArrayList<>();
+    private List<AsyncTask> updateTasks = new ArrayList<>();
+    OnlineVerifyTask onlineVerifyTask;
     private NfcManager mNfcManager;
     private boolean lastReadSuccess = true;
     private VerifyCardTask verifyCardTask = null;
@@ -561,6 +564,42 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         }
     }
 
+    private class OnlineVerifyTask extends VerificationServerTask {
+
+        @Override
+        protected void onCancelled() {
+            super.onCancelled();
+            updateTasks.remove(this);
+            onlineVerifyTask=null;
+            if (updateTasks.size() == 0) mSwipeRefreshLayout.setRefreshing(false);
+        }
+
+        @Override
+        protected void onPostExecute(List<VerificationServerProtocol.Request> requests) {
+            super.onPostExecute(requests);
+            Log.i("OnlineVerifyTask", "onPostExecute[" + String.valueOf(updateTasks.size()) + "]");
+            updateTasks.remove(this);
+            onlineVerifyTask=null;
+
+            for (VerificationServerProtocol.Request request : requests) {
+                if (request.error == null) {
+                    VerificationServerProtocol.Verify.Answer answer = (VerificationServerProtocol.Verify.Answer) request.answer;
+                    if (answer.error == null) {
+                        mCard.setOnlineVerified(answer.results[0].passed);
+                    } else {
+                        mCard.setOnlineVerified(null);
+                        errorOnUpdate(request.error);
+                    }
+                } else {
+                    mCard.setOnlineVerified(null);
+                    errorOnUpdate(request.error);
+                }
+            }
+            if (updateTasks.size() == 0) mSwipeRefreshLayout.setRefreshing(false);
+        }
+    }
+
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -637,6 +676,12 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         if (!mCard.hasBalanceInfo()) {
             mSwipeRefreshLayout.setRefreshing(true);
             mSwipeRefreshLayout.postDelayed(this::onRefresh, 1000);
+        }
+
+        if ( (mCard.isOnlineVerified()==null || !mCard.isOnlineVerified()) && onlineVerifyTask ==null) {
+            onlineVerifyTask = new OnlineVerifyTask();
+            updateTasks.add(onlineVerifyTask);
+            onlineVerifyTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, VerificationServerProtocol.Verify.prepare(mCard));
         }
 
         imgLookup.setOnClickListener(v15 -> {
@@ -734,7 +779,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     @Override
     public void onStop() {
         super.onStop();
-        for (UpdateWalletInfoTask ut : updateTasks) {
+        for (AsyncTask ut : updateTasks) {
             ut.cancel(true);
         }
         mNfcManager.onStop();
@@ -925,6 +970,12 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         boolean needResendTX = LastSignStorage.getNeedTxSend(mCard.getWallet());
 
         updateViews();
+
+        if ( (mCard.isOnlineVerified()==null || !mCard.isOnlineVerified()) && onlineVerifyTask ==null) {
+            onlineVerifyTask = new OnlineVerifyTask();
+            updateTasks.add(onlineVerifyTask);
+            onlineVerifyTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, VerificationServerProtocol.Verify.prepare(mCard));
+        }
 
         CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
 
