@@ -11,7 +11,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.View;
@@ -52,19 +51,16 @@ public class VerifyCard extends Fragment implements NfcAdapter.ReaderCallback {
     private static final int REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN = 7;
     private static final int REQUEST_CODE_SWAP_PIN = 8;
 
-    private String newPIN = "", newPIN2 = "";
-
     private NfcManager mNfcManager;
     private TangemCard mCard;
 
-    private int requestPIN2Count = 0;
-
-    private Timer timerHideErrorAndMessage = null;
-
-    private TextView tvCardID, tvManufacturer, tvRegistrationDate, tvCardIdentity, tvLastSigned, tvRemainingSignatures, tvReusable, tvError, tvMessage,
-            tvIssuer, tvIssuerData, tvFeatures, tvBlockchain, tvSignedTx, tvSigningMethod, tvFirmware, tvWalletIdentity, tvWallet;
-    private ImageView ivBlockchain, ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion;
     private SwipeRefreshLayout mSwipeRefreshLayout;
+    private TextView tvCardID, tvManufacturer, tvRegistrationDate, tvCardIdentity, tvLastSigned, tvRemainingSignatures, tvReusable, tvError, tvMessage, tvIssuer, tvIssuerData, tvFeatures, tvBlockchain, tvSignedTx, tvSigningMethod, tvFirmware, tvWalletIdentity, tvWallet;
+    private ImageView ivBlockchain, ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion;
+
+    private int requestPIN2Count = 0;
+    private Timer timerHideErrorAndMessage = null;
+    private String newPIN = "", newPIN2 = "";
 
     public VerifyCard() {
 
@@ -85,57 +81,43 @@ public class VerifyCard extends Fragment implements NfcAdapter.ReaderCallback {
         View v = inflater.inflate(R.layout.fr_verify_card, container, false);
 
         mSwipeRefreshLayout = v.findViewById(R.id.swipe_container);
-
         tvCardID = v.findViewById(R.id.tvCardID);
-
         tvLastSigned = v.findViewById(R.id.tvLastSigned);
         tvRemainingSignatures = v.findViewById(R.id.tvRemainingSignatures);
-
         tvReusable = v.findViewById(R.id.tvReusable);
-
         tvManufacturer = v.findViewById(R.id.tvManufacturerInfo);
-
         tvCardIdentity = v.findViewById(R.id.tvCardIdentity);
-
         tvRegistrationDate = v.findViewById(R.id.tvCardRegistredDate);
-
         ivBlockchain = v.findViewById(R.id.imgBlockchain);
         ivPIN = v.findViewById(R.id.imgPIN);
         ivPIN2orSecurityDelay = v.findViewById(R.id.imgPIN2orSecurityDelay);
         ivDeveloperVersion = v.findViewById(R.id.imgDeveloperVersion);
-
         tvError = v.findViewById(R.id.tvError);
         tvMessage = v.findViewById(R.id.tvMessage);
-
         tvIssuer = v.findViewById(R.id.tvIssuer);
         tvIssuerData = v.findViewById(R.id.tvIssuerData);
-
         tvFirmware = v.findViewById(R.id.tvFirmware);
         tvFeatures = v.findViewById(R.id.tvFeatures);
         tvBlockchain = v.findViewById(R.id.tvBlockchain);
-
         tvSignedTx = v.findViewById(R.id.tvSignedTx);
         tvSigningMethod = v.findViewById(R.id.tvSigningMethod);
-
         Button btnOk = v.findViewById(R.id.btnOk);
-
         FloatingActionButton fabMenu = v.findViewById(R.id.fabMenu);
-
         tvWallet = v.findViewById(R.id.tvWallet);
         tvWalletIdentity = v.findViewById(R.id.tvWalletIdentity);
+
+        updateViews();
 
         btnOk.setOnClickListener(v1 -> {
             Intent data = prepareResultIntent();
             data.putExtra("modification", "update");
-            getActivity().finish();
+            if (getActivity() != null)
+                getActivity().finish();
         });
 
         mSwipeRefreshLayout.setOnRefreshListener(() -> mSwipeRefreshLayout.setRefreshing(false));
 
         fabMenu.setOnClickListener(v16 -> showMenu(fabMenu));
-
-
-        updateViews();
 
         return v;
     }
@@ -326,7 +308,7 @@ public class VerifyCard extends Fragment implements NfcAdapter.ReaderCallback {
     @Override
     public void onTagDiscovered(Tag tag) {
         try {
-            Log.w(getClass().getName(), "Ignore discovered tag!");
+//            Log.w(getClass().getName(), "Ignore discovered tag!");
             mNfcManager.ignoreTag(tag);
         } catch (IOException e) {
             e.printStackTrace();
@@ -372,12 +354,10 @@ public class VerifyCard extends Fragment implements NfcAdapter.ReaderCallback {
 
             tvRegistrationDate.setText(mCard.getPersonalizationDateTimeDescription());
 
-            //tvBlockchain.setText(mCard.getBlockchain().getOfficialName());
             tvBlockchain.setText(mCard.getBlockchainName());
 
             ivBlockchain.setImageResource(mCard.getBlockchain().getImageResource(getContext(), mCard.getTokenSymbol()));
 
-            Log.i(TAG, "getTokenSymbol " + mCard.getTokenSymbol());
 
             if (mCard.isReusable())
                 tvReusable.setText(R.string.reusable);
@@ -454,10 +434,10 @@ public class VerifyCard extends Fragment implements NfcAdapter.ReaderCallback {
                 ivPIN.setOnClickListener(v -> Toast.makeText(getContext(), R.string.this_banknote_protected_user_PIN1_code, Toast.LENGTH_LONG).show());
             }
 
+
             if (mCard.getPauseBeforePIN2() > 0 && (mCard.useDefaultPIN2() || !mCard.useSmartSecurityDelay())) {
                 ivPIN2orSecurityDelay.setImageResource(R.drawable.timer);
                 ivPIN2orSecurityDelay.setOnClickListener(v -> Toast.makeText(getContext(), String.format("This banknote will enforce %.0f seconds security delay for all operations requiring PIN2 code", mCard.getPauseBeforePIN2() / 1000.0), Toast.LENGTH_LONG).show());
-
             } else if (mCard.useDefaultPIN2()) {
                 ivPIN2orSecurityDelay.setImageResource(R.drawable.unlock_pin2);
                 ivPIN2orSecurityDelay.setOnClickListener(v -> Toast.makeText(getContext(), R.string.this_banknote_protected_default_PIN2_code, Toast.LENGTH_LONG).show());
@@ -563,7 +543,7 @@ public class VerifyCard extends Fragment implements NfcAdapter.ReaderCallback {
         final CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
         if (!mCard.hasBalanceInfo()) {
             return;
-        } else if (engine.IsBalanceNotZero(mCard)) {
+        } else if (engine != null && engine.IsBalanceNotZero(mCard)) {
             Toast.makeText(getContext(), R.string.cannot_erase_wallet_with_non_zero_balance, Toast.LENGTH_LONG).show();
             return;
         }
