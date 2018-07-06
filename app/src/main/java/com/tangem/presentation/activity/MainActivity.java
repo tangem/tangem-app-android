@@ -24,6 +24,7 @@ import android.widget.TextView;
 import com.scottyab.rootbeer.RootBeer;
 import com.skyfishjy.library.RippleBackground;
 import com.tangem.domain.wallet.DeviceNFCAntennaLocation;
+import com.tangem.domain.wallet.Issuer;
 import com.tangem.domain.wallet.LastSignStorage;
 import com.tangem.domain.wallet.Logger;
 import com.tangem.domain.wallet.PINStorage;
@@ -215,6 +216,10 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         }
         if (LastSignStorage.needInit()) {
             LastSignStorage.Init(context);
+        }
+        if(Issuer.needInit())
+        {
+            Issuer.Init(context);
         }
     }
 
