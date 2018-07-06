@@ -133,7 +133,7 @@
                         app:layout_constraintTop_toTopOf="@+id/tvBlockchainHeader"/>
 
                     <ImageView
-                        android:id="@+id/imgBlockchain"
+                        android:id="@+id/ivBlockchain"
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:layout_marginEnd="8dp"
