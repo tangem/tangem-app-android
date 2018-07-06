@@ -109,10 +109,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     private TextView tvValidationNode;
     private TextView tvHeader, tvCaution;
     private ProgressBar progressBar;
-    private ImageView ivBlockchain;
-    private ImageView ivPIN;
-    private ImageView ivPIN2orSecurityDelay;
-    private ImageView ivDeveloperVersion;
+    private ImageView ivBlockchain, ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private List<UpdateWalletInfoTask> updateTasks = new ArrayList<>();
     private NfcManager mNfcManager;
@@ -571,7 +568,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         mCard = new TangemCard(Objects.requireNonNull(getActivity()).getIntent().getStringExtra(TangemCard.EXTRA_CARD));
         mCard.LoadFromBundle(Objects.requireNonNull(getActivity().getIntent().getExtras()).getBundle(TangemCard.EXTRA_CARD));
 
-        lastTag = getActivity().getIntent().getParcelableExtra("lastTag123");
+        lastTag = getActivity().getIntent().getParcelableExtra(Main.EXTRA_LAST_DISCOVERED_TAG);
     }
 
     @Override
