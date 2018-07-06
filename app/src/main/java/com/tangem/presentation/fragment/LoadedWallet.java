@@ -28,6 +28,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -125,6 +126,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     private FloatingActionButton fabInfo;
     private Tag lastTag;
     private ImageView ivTangemCard;
+    private RelativeLayout rlProgressBar;
 
     public LoadedWallet() {
 
@@ -577,13 +579,14 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         View v = inflater.inflate(R.layout.fr_loaded_wallet, container, false);
 
         mSwipeRefreshLayout = v.findViewById(R.id.swipe_container);
+        progressBar = v.findViewById(R.id.progressBar);
+        rlProgressBar = v.findViewById(R.id.rlProgressBar);
         ivTangemCard = v.findViewById(R.id.ivTangemCard);
         tvBalance = v.findViewById(R.id.tvBalance);
         tvOffline = v.findViewById(R.id.tvOffline);
         tvCardID = v.findViewById(R.id.tvCardID);
         tvWallet = v.findViewById(R.id.tvWallet);
         tvInputs = v.findViewById(R.id.tvInputs);
-//        TextView lbInputs = v.findViewById(R.id.lbInputs);
         tvLastOutput = v.findViewById(R.id.tvLastOutput);
         tvError = v.findViewById(R.id.tvError);
         tvMessage = v.findViewById(R.id.tvMessage);
@@ -594,7 +597,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         ImageView imgLookup = v.findViewById(R.id.imgLookup);
         ImageView ivCopy = v.findViewById(R.id.ivCopy);
         tvValidationNode = v.findViewById(R.id.tvValidationNode);
-        progressBar = v.findViewById(R.id.progressBar);
         tvBlockchain = v.findViewById(R.id.tvBlockchain);
         ivBlockchain = v.findViewById(R.id.imgBlockchain);
         ivPIN = v.findViewById(R.id.imgPIN);
@@ -614,17 +616,11 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
         ivTangemCard.setImageResource(mCard.getCardImageResource());
 
-//        Log.i(TAG, "sxnnnnnnnnnnn " + mCard.getBlockchainID());
-        Log.i(TAG, "sxnnnnnnnnnnn " + mCard.getTokenSymbol());
-//        Log.i(TAG, "getDenomination " + Arrays.toString(mCard.getDenomination()));
-
         final CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
         boolean visibleFlag = engine != null ? engine.InOutPutVisible() : true;
         int visibleIOPuts = visibleFlag ? View.VISIBLE : View.GONE;
 
         tvInputs.setVisibility(visibleIOPuts);
-//        lbInputs.setVisibility(visibleIOPuts);
-//        tvLastOutput.setVisibility(visibleIOPuts);
 
         try {
             ivQR.setImageBitmap(UtilHelper.INSTANCE.generateQrCode(Objects.requireNonNull(engine).getShareWalletURI(mCard).toString()));
@@ -1059,6 +1055,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     @Override
     public void OnReadStart(CardProtocol cardProtocol) {
         progressBar.post(() -> {
+            rlProgressBar.setVisibility(View.VISIBLE);
             progressBar.setVisibility(View.VISIBLE);
             progressBar.setProgress(5);
         });
@@ -1076,6 +1073,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         if (cardProtocol != null) {
             if (cardProtocol.getError() == null) {
                 progressBar.post(() -> {
+                    rlProgressBar.setVisibility(View.GONE);
                     progressBar.setProgress(100);
                     progressBar.setProgressTintList(ColorStateList.valueOf(Color.GREEN));
 
@@ -1109,6 +1107,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
         progressBar.postDelayed(() -> {
             try {
+                rlProgressBar.setVisibility(View.GONE);
                 progressBar.setProgress(0);
                 progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
                 progressBar.setVisibility(View.INVISIBLE);
@@ -1128,6 +1127,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         verifyCardTask = null;
         progressBar.postDelayed(() -> {
             try {
+                rlProgressBar.setVisibility(View.GONE);
                 progressBar.setProgress(0);
                 progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
                 progressBar.setVisibility(View.INVISIBLE);
