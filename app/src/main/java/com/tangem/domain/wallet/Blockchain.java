@@ -7,21 +7,20 @@ import com.tangem.wallet.R;
  * Created by dvol on 06.08.2017.
  */
 public enum Blockchain {
-    Unknown("", "", 1.0, R.drawable.ic_logo_small, ""),
-    Bitcoin("BTC", "BTC", 100000000.0, R.drawable.bitcoins, "Bitcoin"),
-    BitcoinTestNet("BTC/test", "BTC", 100000000.0, R.drawable.bitcoins_testnet, "Bitcoin Testnet"),
-    Ethereum("ETH", "ETH", 1.0, R.drawable.ethereum, "Ethereum"),
-    EthereumTestNet("ETH/test", "ETH", 1.0, R.drawable.ethereum_testnet, "Ethereum Testnet"),
-    Token("ETH\\XTZ", "BAT", 1.0, R.drawable.bat_token, "Ethereum"),
-    BitcoinCash("BCH", "BCH", 100000000.0, R.drawable.bitcoin_cash, "Bitcoin Cash"),
-    BitcoinCashTestNet("BCH/test", "BTC", 100000000.0, R.drawable.bitcoin_cash, "Bitcoin Cash Testnet");
+    Unknown("", "", 1.0, R.drawable.ic_logo_unknown, ""),
+    Bitcoin("BTC", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin, "Bitcoin"),
+    BitcoinTestNet("BTC/test", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin_testnet, "Bitcoin Testnet"),
+    Ethereum("ETH", "ETH", 1.0, R.drawable.ic_logo_ethereum, "Ethereum"),
+    EthereumTestNet("ETH/test", "ETH", 1.0, R.drawable.ic_logo_ethereum_testnet, "Ethereum Testnet"),
+    Token("ETH\\XTZ", "BAT", 1.0, R.drawable.ic_logo_bat_token, "Ethereum"),
+    BitcoinCash("BCH", "BCH", 100000000.0, R.drawable.ic_logo_bitcoin_cash, "Bitcoin Cash"),
+    BitcoinCashTestNet("BCH/test", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin_cash, "Bitcoin Cash Testnet");
 
-
-    Blockchain(String ID, String Currency, double Multiplier, int ImageResource, String officialName) {
+    Blockchain(String ID, String currency, double multiplier, int imageResource, String officialName) {
         mID = ID;
-        mCurrency = Currency;
-        mMultiplier = Multiplier;
-        mImageResource = ImageResource;
+        mCurrency = currency;
+        mMultiplier = multiplier;
+        mImageResource = imageResource;
         mOfficialName = officialName;
     }
 
@@ -68,7 +67,7 @@ public enum Blockchain {
         return result;
     }
 
-    public int getImageResource() {
+    private int getImageResource() {
         return mImageResource;
     }
 
@@ -81,22 +80,25 @@ public enum Blockchain {
         int resourceId = context.getResources().getIdentifier(name + "_token", "drawable", context.getPackageName());
 
         if (resourceId <= 0)
-            return R.drawable.ethereum;
+            return R.drawable.ic_logo_ethereum;
         return resourceId;
     }
 
-    public int getLogoImageResource(String tokenSymbol) {
-        if (Strings.isNullOrEmpty(tokenSymbol))
-            return getImageResource();
+    public int getLogoImageResource(String blockchainID, String symbolName) {
+        switch (blockchainID) {
+            case "BTC":
+                return R.drawable.ic_logo_bitcoin;
 
-        switch (tokenSymbol) {
-            case "SEED":
-                return R.drawable.bitcoins;
-            case "SEEDq":
-                return R.drawable.bitcoins;
-            case "SEEDqq":
-                return R.drawable.bitcoins;
+            case "ETH\\XTZ":
+                if (symbolName.equals("SEED"))
+                    return R.drawable.ic_logo_seed;
+                else
+                    return R.drawable.ic_logo_ethereum;
+
+            case "ETH":
+                return R.drawable.ic_logo_ethereum;
         }
         return R.drawable.tangem2;
     }
+
 }
