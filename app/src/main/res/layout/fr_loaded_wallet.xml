@@ -54,8 +54,7 @@
                     android:layout_width="325dp"
                     android:layout_height="0dp"
                     android:layout_weight="1"
-                    tools:src="@drawable/card_btc001"
-                  />
+                    tools:src="@drawable/card_btc001"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -265,13 +264,13 @@
                     android:visibility="gone">
 
                     <!--<TextView-->
-                        <!--android:id="@+id/lbInputs"-->
-                        <!--android:layout_width="110dp"-->
-                        <!--android:layout_height="wrap_content"-->
-                        <!--android:fontFamily="@font/raleway_r"-->
-                        <!--android:text="@string/unspents"-->
-                        <!--android:textColor="@color/primary_dark"-->
-                        <!--android:textSize="@dimen/text_size_small"/>-->
+                    <!--android:id="@+id/lbInputs"-->
+                    <!--android:layout_width="110dp"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:fontFamily="@font/raleway_r"-->
+                    <!--android:text="@string/unspents"-->
+                    <!--android:textColor="@color/primary_dark"-->
+                    <!--android:textSize="@dimen/text_size_small"/>-->
 
                     <TextView
                         android:id="@+id/tvInputs"
@@ -390,6 +389,31 @@
                 </LinearLayout>
 
             </LinearLayout>
+
+            <RelativeLayout
+                android:id="@+id/rlProgressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="215dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:alpha="0.5"
+                    android:text="@string/verifying"
+                    android:textColor="@color/colorPrimary"
+                    android:textStyle="bold"/>
+
+                <ProgressBar
+                    android:layout_width="@dimen/size_progress_bar_big"
+                    android:layout_height="@dimen/size_progress_bar_big"
+                    android:layout_centerInParent="true"
+                    android:alpha="0.5"
+                    android:elevation="1dp"/>
+
+            </RelativeLayout>
 
         </RelativeLayout>
 
