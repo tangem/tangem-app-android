@@ -26,5 +26,6 @@
 
     <dimen name="size_qr_image">220dp</dimen>
     <dimen name="size_explore_image">30dp</dimen>
+    <dimen name="size_progress_bar_big">135dp</dimen>
 
 </resources>
