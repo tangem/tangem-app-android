@@ -269,6 +269,33 @@ public class TangemCard {
         }
     }
 
+    private Boolean codeConfirmed;
+    public void setCodeConfirmed(Boolean codeConfirmed) {
+        this.codeConfirmed = codeConfirmed;
+    }
+
+    public Boolean isCodeConfirmed() {
+        return codeConfirmed;
+    }
+
+    private Boolean onlineVerified;
+    public void setOnlineVerified(Boolean verified) {
+        this.onlineVerified = verified;
+    }
+
+    public Boolean isOnlineVerified() {
+        return onlineVerified;
+    }
+
+    private Boolean onlineValidated;
+    public void setOnlineValidated(Boolean validated) {
+        this.onlineValidated = validated;
+    }
+
+    public Boolean isOnlineValidated() {
+        return onlineValidated;
+    }
+
     public int getRemainingSignatures() {
         return remainingSignatures;
     }
@@ -1254,6 +1281,19 @@ public class TangemCard {
         B.putFloat("rate", rate);
         B.putFloat("rateAlter", rateAlter);
         B.putString("confirmTx", GetConfirmTXCount().toString(16));
+
+        if( codeConfirmed!=null )
+            B.putBoolean("codeConfirmed", codeConfirmed);
+
+        if( codeConfirmed!=null )
+            B.putBoolean("codeConfirmed", codeConfirmed);
+
+        if( onlineVerified!=null )
+            B.putBoolean("onlineVerified", onlineVerified);
+
+        if( onlineValidated!=null )
+            B.putBoolean("onlineValidated", onlineValidated);
+
     }
 
     public void LoadFromBundle(Bundle B) {
@@ -1363,6 +1403,15 @@ public class TangemCard {
             rateAlter = B.getFloat("rateAlter");
         if (B.containsKey("confirmTx"))
             countConfirmTX = new BigInteger(B.getString("confirmTx"), 16);
+
+        if( B.containsKey("codeConfirmed") )
+            codeConfirmed=B.getBoolean("codeConfirmed");
+
+        if( B.containsKey("onlineVerified") )
+            onlineVerified=B.getBoolean("onlineVerified");
+
+        if( B.containsKey("onlineValidated") )
+            onlineValidated=B.getBoolean("onlineValidated");
     }
 
     public int getCardImageResource() {
