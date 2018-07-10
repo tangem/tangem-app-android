@@ -12,7 +12,7 @@ public enum Blockchain {
     BitcoinTestNet("BTC/test", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin_testnet, "Bitcoin Testnet"),
     Ethereum("ETH", "ETH", 1.0, R.drawable.ic_logo_ethereum, "Ethereum"),
     EthereumTestNet("ETH/test", "ETH", 1.0, R.drawable.ic_logo_ethereum_testnet, "Ethereum Testnet"),
-    Token("ETH\\XTZ", "BAT", 1.0, R.drawable.ic_logo_bat_token, "Ethereum"),
+    Token("Token", "ERC20", 1.0, R.drawable.ic_logo_bat_token, "Ethereum"),
     BitcoinCash("BCH", "BCH", 100000000.0, R.drawable.ic_logo_bitcoin_cash, "Bitcoin Cash"),
     BitcoinCashTestNet("BCH/test", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin_cash, "Bitcoin Cash Testnet");
 
@@ -89,7 +89,7 @@ public enum Blockchain {
             case "BTC":
                 return R.drawable.ic_logo_bitcoin;
 
-            case "ETH\\XTZ":
+            case "Token":
                 if (symbolName.equals("SEED"))
                     return R.drawable.ic_logo_seed;
                 else
