@@ -50,11 +50,8 @@ public class RequestPINActivity extends AppCompatActivity implements NfcAdapter.
 
     Mode mode;
     boolean allowFingerprint = false;
-
     private NfcManager mNfcManager;
-
     private TextView tvPIN;
-
     private StartFingerprintReaderTask mStartFingerprintReaderTask;
 
     public static final String KEY_ALIAS = "pinKey";
@@ -102,23 +99,15 @@ public class RequestPINActivity extends AppCompatActivity implements NfcAdapter.
         Button btn9 = findViewById(R.id.btn9);
         btn9.setOnClickListener(onButtonNClick);
         Button btnBS = findViewById(R.id.btnBackspace);
-        btnBS.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String S = tvPIN.getText().toString();
-                if (S.length() > 0) {
-                    tvPIN.setText(S.substring(0, S.length() - 1));
-                }
+        btnBS.setOnClickListener(view -> {
+            String S = tvPIN.getText().toString();
+            if (S.length() > 0) {
+                tvPIN.setText(S.substring(0, S.length() - 1));
             }
         });
 
         Button btnContinue = findViewById(R.id.btnContinue);
-        btnContinue.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                doContinue();
-            }
-        });
+        btnContinue.setOnClickListener(view -> doContinue());
 
         mode = Mode.valueOf(getIntent().getStringExtra("mode"));
         TextView tvPrompt = findViewById(R.id.pin_prompt);
@@ -530,6 +519,4 @@ public class RequestPINActivity extends AppCompatActivity implements NfcAdapter.
         return true;
     }
 
-
 }
-
