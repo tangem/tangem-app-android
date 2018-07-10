@@ -423,7 +423,7 @@ public class CardProtocol {
 
             parseReadResult();
 
-            run_ReadOrWriteIssuerDataAndDefineOfflineBalance();
+            run_ReadWriteIssuerData();
 
         } else if (rspApdu.isStatus(SW_PIN_ERROR)) {
             throw new TangemException_InvalidPIN(String.format("FAILED: [%04X] - Possible PIN is invalid!\n", rspApdu.getSW1SW2()));
@@ -432,7 +432,7 @@ public class CardProtocol {
         }
     }
 
-    public void run_ReadOrWriteIssuerDataAndDefineOfflineBalance() throws Exception {
+    public void run_ReadWriteIssuerData() throws Exception {
         TLVList tlvIssuerData;
         if (mCard.getNeedWriteIssuerData()) {
             run_WriteIssuerData(mCard.getIssuerData(), mCard.getIssuerDataSignature());
@@ -450,15 +450,23 @@ public class CardProtocol {
                 tlvIssuerData = null;
             }
         }
+
+        // try read offline balance data
         if (mCard.getStatus() == TangemCard.Status.Loaded) {
-            // try read offline balance data
-            if (tlvIssuerData != null && tlvIssuerData.getTLV(TLV.Tag.TAG_Denomination) != null && mCard.getMaxSignatures() == mCard.getRemainingSignatures()) {
-                mCard.setOfflineBalance(tlvIssuerData.getTLV(TLV.Tag.TAG_Denomination).Value);
+            if (tlvIssuerData != null && tlvIssuerData.getTLV(TLV.Tag.TAG_ValidatedBalance) != null && mCard.getMaxSignatures() == mCard.getRemainingSignatures()) {
+                mCard.setOfflineBalance(tlvIssuerData.getTLV(TLV.Tag.TAG_ValidatedBalance).Value);
             } else {
                 mCard.clearOfflineBalance();
             }
         } else {
             mCard.clearOfflineBalance();
+        }
+
+        // try read denomination
+        if (tlvIssuerData != null && tlvIssuerData.getTLV(TLV.Tag.TAG_Denomination) != null) {
+            mCard.setDenomination(tlvIssuerData.getTLV(TLV.Tag.TAG_Denomination).Value);
+        } else {
+            mCard.clearDenomination();
         }
     }
 
