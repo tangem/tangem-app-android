@@ -107,7 +107,7 @@ public class TokenEngine extends CoinEngine {
         BigDecimal d = convertToEth(dec);
         String s = d.toString();
 
-        String pattern = "#0.000"; // If you like 4 zeros
+        String pattern = "#0.000###############"; // If you like 4 zeros
         DecimalFormat myFormatter = new DecimalFormat(pattern);
         String output = myFormatter.format(d);
         return output;
@@ -134,7 +134,7 @@ public class TokenEngine extends CoinEngine {
         p = p.pow(GetTokenDecimals(mCard));
         BigDecimal l = d.divide(p);
 
-        String pattern = "#0.000"; // If you like 4 zeros
+        String pattern = "#0.000###############"; // If you like 4 zeros
         DecimalFormat myFormatter = new DecimalFormat(pattern);
         String output = myFormatter.format(l);
         return output;
