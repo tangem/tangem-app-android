@@ -7,7 +7,6 @@ import android.app.Dialog;
 import android.app.KeyguardManager;
 import android.content.pm.PackageManager;
 import android.hardware.fingerprint.FingerprintManager;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.security.keystore.KeyGenParameterSpec;
@@ -23,6 +22,7 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.tangem.data.network.task.save_pin.ConfirmWithFingerprintTask;
 import com.tangem.domain.wallet.FingerprintHelper;
 import com.tangem.domain.wallet.PINStorage;
 import com.tangem.wallet.R;
@@ -44,17 +44,19 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
     private TextView tvPIN;
     private CheckBox chkUseFingerprint;
 
-    private ConfirmWithFingerprintTask mConfirmWithFingerprintTask;
-
+    public ConfirmWithFingerprintTask mConfirmWithFingerprintTask;
 
     private KeyStore keyStore;
     private Cipher cipher;
-    private FingerprintManager fingerprintManager;
-    private FingerprintManager.CryptoObject cryptoObject;
-    private FingerprintHelper fingerprintHelper;
+    public FingerprintManager fingerprintManager;
+    public FingerprintManager.CryptoObject cryptoObject;
+    public FingerprintHelper fingerprintHelper;
 
     private boolean UsePIN2 = false;
 
+    private enum OnConfirmAction {Save, DeleteEncryptedAndSave, Delete}
+
+    private OnConfirmAction onConfirmAction;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -143,11 +145,6 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
             mConfirmWithFingerprintTask.cancel(true);
     }
 
-
-    private enum OnConfirmAction {Save, DeleteEncryptedAndSave, Delete}
-
-    OnConfirmAction onConfirmAction;
-
     private void doSavePIN() {
         if (mConfirmWithFingerprintTask != null) {
             return;
@@ -178,7 +175,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
 
                 onConfirmAction = OnConfirmAction.Save;
 
-                mConfirmWithFingerprintTask = new ConfirmWithFingerprintTask();
+                mConfirmWithFingerprintTask = new ConfirmWithFingerprintTask(SavePINActivity.this);
                 mConfirmWithFingerprintTask.execute((Void) null);
             } else {
                 if (chkUseFingerprint.isChecked() || PINStorage.haveEncryptedPIN()) {
@@ -196,7 +193,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
                     // Show a progress spinner, and kick off a background task to
                     // perform the user login attempt.
                     //showProgress(true);
-                    mConfirmWithFingerprintTask = new ConfirmWithFingerprintTask();
+                    mConfirmWithFingerprintTask = new ConfirmWithFingerprintTask(SavePINActivity.this);
                     mConfirmWithFingerprintTask.execute((Void) null);
                 } else {
                     PINStorage.savePIN(tvPIN.getText().toString());
@@ -214,7 +211,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
                     return;
                 }
                 onConfirmAction = OnConfirmAction.Delete;
-                mConfirmWithFingerprintTask = new ConfirmWithFingerprintTask();
+                mConfirmWithFingerprintTask = new ConfirmWithFingerprintTask(SavePINActivity.this);
                 mConfirmWithFingerprintTask.execute((Void) null);
             } else {
                 tvPIN.setText("");
@@ -227,7 +224,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
                     return;
                 }
                 onConfirmAction = OnConfirmAction.Delete;
-                mConfirmWithFingerprintTask = new ConfirmWithFingerprintTask();
+                mConfirmWithFingerprintTask = new ConfirmWithFingerprintTask(SavePINActivity.this);
                 mConfirmWithFingerprintTask.execute((Void) null);
             } else {
                 tvPIN.setText("");
@@ -281,48 +278,6 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
         finish();
     }
 
-    private class ConfirmWithFingerprintTask extends AsyncTask<Void, Void, Boolean> {
-        ConfirmWithFingerprintTask() {
-            fingerprintHelper = new FingerprintHelper(SavePINActivity.this);
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            if (!getKeyStore())
-                return false;
-
-            if (!createNewKey(false))
-                return false;
-
-            if (!getCipher())
-                return false;
-
-            return initCipher(Cipher.ENCRYPT_MODE) && initCryptObject();
-
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            onCancelled();
-
-            if (!success) {
-                Toast.makeText(getBaseContext(), R.string.pin_save_fail, Toast.LENGTH_LONG).show();
-            } else {
-                print("Confirm PIN action using fingerprint!");
-                fingerprintHelper.startAuth(fingerprintManager, cryptoObject);
-                CreateFingerPrintConfirmationDialog();
-            }
-        }
-
-        @Override
-        protected void onCancelled() {
-            mConfirmWithFingerprintTask = null;
-            if (dFingerPrintConfirmation != null) {
-                dFingerPrintConfirmation.cancel();
-            }
-        }
-    }
-
     public void print(String text) {
 //        Log.e("FP", text);
     }
@@ -361,7 +316,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
         return true;
     }
 
-    private boolean getKeyStore() {
+    public boolean getKeyStore() {
         print("Getting keystore...");
         try {
             keyStore = KeyStore.getInstance(RequestPINActivity.KEYSTORE);
@@ -405,7 +360,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
         return false;
     }
 
-    private boolean getCipher() {
+    public boolean getCipher() {
         print("Getting cipher...");
         try {
             cipher = Cipher.getInstance(
@@ -422,7 +377,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
     }
 
     @TargetApi(Build.VERSION_CODES.M)
-    private boolean initCipher(int mode) {
+    public boolean initCipher(int mode) {
         print("Initializing cipher...");
         try {
             keyStore.load(null);
@@ -448,7 +403,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
     }
 
     @TargetApi(Build.VERSION_CODES.M)
-    private boolean initCryptObject() {
+    public boolean initCryptObject() {
         print("Initializing crypt object...");
         try {
             cryptoObject = new FingerprintManager.CryptoObject(cipher);
@@ -459,9 +414,9 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
         return false;
     }
 
-    Dialog dFingerPrintConfirmation = null;
+    public Dialog dFingerPrintConfirmation = null;
 
-    private void CreateFingerPrintConfirmationDialog() {
+    public void CreateFingerPrintConfirmationDialog() {
 //        final AlertDialogWrapper.Builder b = new AlertDialogWrapper.Builder(this);
 //        switch (onConfirmAction)
 //        {
