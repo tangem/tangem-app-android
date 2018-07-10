@@ -10,7 +10,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-
 public class InfuraRequest {
     public static final String METHOD_ETH_GetBalance = "eth_getBalance";
     public static final String METHOD_ETH_GetOutTransactionCount = "eth_getTransactionCount";
