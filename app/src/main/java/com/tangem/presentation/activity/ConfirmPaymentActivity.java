@@ -25,9 +25,9 @@ import android.widget.Toast;
 import com.tangem.data.network.request.ElectrumRequest;
 import com.tangem.data.network.request.FeeRequest;
 import com.tangem.data.network.request.InfuraRequest;
-import com.tangem.data.network.task.ElectrumTask;
-import com.tangem.data.network.task.FeeTask;
-import com.tangem.data.network.task.InfuraTask;
+import com.tangem.data.network.task.confirm_payment.ConnectFeeTask;
+import com.tangem.data.network.task.confirm_payment.ConnectTask;
+import com.tangem.data.network.task.confirm_payment.ETHRequestTask;
 import com.tangem.domain.cardReader.NfcManager;
 import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.CoinEngine;
@@ -42,10 +42,7 @@ import com.tangem.util.FormatUtil;
 import com.tangem.util.Util;
 import com.tangem.wallet.R;
 
-import org.json.JSONException;
-
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,281 +54,24 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
 
     private static final int REQUEST_CODE_SIGN_PAYMENT = 1;
     private static final int REQUEST_CODE_REQUEST_PIN2 = 2;
-    private Button btnSend;
-    private boolean feeRequestSuccess = false;
-    private boolean balanceRequestSuccess = false;
+    public Button btnSend;
+    public boolean feeRequestSuccess = false;
+    public boolean balanceRequestSuccess = false;
     private EditText etWallet;
     //    private TextView tvAmountEquivalent;
 //    private TextView tvFeeEquivalent;
-    private EditText etAmount;
-    private EditText etFee;
+    public EditText etAmount;
+    public EditText etFee;
     private ImageView ivCamera;
-    private TangemCard mCard;
-    private RadioGroup rgFee;
-    private String minFee = null, maxFee = null, normalFee = null;
-    private Long minFeeInInternalUnits = 0L;
+    public TangemCard mCard;
+    public RadioGroup rgFee;
+    public String minFee = null, maxFee = null, normalFee = null;
+    public Long minFeeInInternalUnits = 0L;
     private NfcManager mNfcManager;
     private int requestPIN2Count = 0;
-    private ProgressBar progressBar;
-    private boolean nodeCheck = false;
-    private Date dtVerifyed = null;
-
-    private class ConnectTask extends ElectrumTask {
-        public ConnectTask(String host, int port) {
-            super(host, port);
-        }
-
-        ConnectTask(String host, int port, SharedData sharedData) {
-            super(host, port, sharedData);
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-        }
-
-        @Override
-        protected void onPostExecute(List<ElectrumRequest> requests) {
-            super.onPostExecute(requests);
-            for (ElectrumRequest request : requests) {
-                try {
-                    if (request.error == null) {
-                        if (request.isMethod(ElectrumRequest.METHOD_GetBalance)) {
-                            try {
-                                etFee.setText("--");
-
-                                //String mWalletAddress = request.getParams().getString(0);
-                                if ((request.getResult().getInt("confirmed") + request.getResult().getInt("unconfirmed")) / mCard.getBlockchain().getMultiplier() * 1000000.0 < Float.parseFloat(etAmount.getText().toString())) {
-                                    etFee.setError("Not enough funds");
-                                    if (sharedCounter == null) {
-                                        balanceRequestSuccess = false;
-                                        btnSend.setVisibility(View.INVISIBLE);
-                                        dtVerifyed = null;
-                                        nodeCheck = false;
-                                    } else {
-                                        int errCounter = sharedCounter.errorRequest.incrementAndGet();
-                                        if (errCounter >= sharedCounter.allRequest) {
-                                            balanceRequestSuccess = false;
-                                            btnSend.setVisibility(View.INVISIBLE);
-                                            dtVerifyed = null;
-                                            nodeCheck = false;
-                                        }
-                                    }
-
-                                } else {
-                                    etFee.setError(null);
-                                    balanceRequestSuccess = true;
-                                    if (feeRequestSuccess && balanceRequestSuccess) {
-                                        btnSend.setVisibility(View.VISIBLE);
-                                    }
-                                    dtVerifyed = new Date();
-                                    nodeCheck = true;
-                                }
-                            } catch (JSONException e) {
-                                if (sharedCounter != null) {
-                                    int errCounter = sharedCounter.errorRequest.incrementAndGet();
-                                    if (errCounter >= sharedCounter.allRequest) {
-                                        e.printStackTrace();
-                                        FinishActivityWithError(Activity.RESULT_CANCELED, "Cannot check balance! No connection with blockchain nodes");
-                                    }
-                                } else {
-                                    e.printStackTrace();
-                                    FinishActivityWithError(Activity.RESULT_CANCELED, "Cannot check balance! No connection with blockchain nodes");
-                                }
-                            }
-                        } else if (request.isMethod(ElectrumRequest.METHOD_GetFee)) {
-                            if (request.getResultString() == "-1") {
-                                etFee.setText("3");
-                            }
-                        }
-                    } else {
-//                        etFee.setError(request.error);
-//                        btnSend.setVisibility(View.INVISIBLE);
-                        if (sharedCounter != null) {
-                            int errCounter = sharedCounter.errorRequest.incrementAndGet();
-                            if (errCounter >= sharedCounter.allRequest) {
-                                FinishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! No connection with blockchain nodes");
-                            }
-                        } else {
-                            FinishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! No connection with blockchain nodes");
-                        }
-                        return;
-                    }
-                } catch (JSONException e) {
-                    if (sharedCounter != null) {
-                        int errCounter = sharedCounter.errorRequest.incrementAndGet();
-                        if (errCounter >= sharedCounter.allRequest) {
-                            e.printStackTrace();
-                            FinishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! No connection with blockchain nodes");
-
-                        }
-                    } else {
-                        e.printStackTrace();
-                        FinishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! No connection with blockchain nodes");
-                    }
-                }
-            }
-
-        }
-    }
-
-    private class ETHRequestTask extends InfuraTask {
-        ETHRequestTask(Blockchain blockchain) {
-            super(blockchain);
-        }
-
-        @Override
-        protected void onPostExecute(List<InfuraRequest> requests) {
-            super.onPostExecute(requests);
-            for (InfuraRequest request : requests) {
-                try {
-                    Long price = 0L;
-                    if (request.error == null) {
-
-                        if (request.isMethod(InfuraRequest.METHOD_ETH_GetGasPrice)) {
-                            try {
-                                String gasPrice = request.getResultString();
-                                gasPrice = gasPrice.substring(2);
-                                BigInteger l = new BigInteger(gasPrice, 16);
-
-                                BigInteger m = mCard.getBlockchain() == Blockchain.Token ? BigInteger.valueOf(55000) : BigInteger.valueOf(21000);
-                                l = l.multiply(m);
-                                String feeInGwei = mCard.getAmountInGwei(String.valueOf(l));
-
-                                minFee = feeInGwei;
-                                maxFee = feeInGwei;
-                                normalFee = feeInGwei;
-                                etFee.setText(feeInGwei);
-                                etFee.setError(null);
-                                btnSend.setVisibility(View.VISIBLE);
-                                feeRequestSuccess = true;
-                                balanceRequestSuccess = true;
-
-                                dtVerifyed = new Date();
-                                minFeeInInternalUnits = mCard.InternalUnitsFromString(feeInGwei);
-
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                                FinishActivityWithError(Activity.RESULT_CANCELED, "Can't calculate fee! No connection with blockchain nodes");
-                            }
-                        }
-                    } else {
-                        FinishActivityWithError(Activity.RESULT_CANCELED, "Can't calculate fee! No connection with blockchain nodes");
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    FinishActivityWithError(Activity.RESULT_CANCELED, "Can't calculate fee! No connection with blockchain nodes");
-                }
-            }
-        }
-    }
-
-    private class ConnectFeeTask extends FeeTask {
-        ConnectFeeTask(SharedData sharedData) {
-            super(sharedData);
-        }
-
-        @Override
-        protected void onPostExecute(List<FeeRequest> requests) {
-            super.onPostExecute(requests);
-            for (FeeRequest request : requests) {
-                if (request.error == null) {
-                    long minFeeRate = 0;
-                    try {
-                        try {
-                            String tmpAnswer = request.getAsString();
-                            BigDecimal minFeeBD = new BigDecimal(tmpAnswer);
-                            BigDecimal multiplicator = new BigDecimal("100000000");
-                            minFeeBD = minFeeBD.multiply(multiplicator);
-                            BigInteger minFeeBI = minFeeBD.toBigInteger();
-                            minFeeRate = minFeeBI.longValue();
-                        } catch (Exception e) {
-
-                            if (sharedCounter != null) {
-                                int errCounter = sharedCounter.errorRequest.incrementAndGet();
-
-
-                                if (errCounter >= sharedCounter.allRequest) {
-                                    progressBar.setVisibility(View.INVISIBLE);
-                                    FinishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! No connection with blockchain nodes");
-                                }
-                            } else {
-                                progressBar.setVisibility(View.INVISIBLE);
-                                FinishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! No connection with blockchain nodes");
-                            }
-
-                            //FinishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! No connection with blockchain nodes");
-                            return;
-                        }
-
-                        if (minFeeRate == 0) {
-                            progressBar.setVisibility(View.INVISIBLE);
-                            FinishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! Wrong data received from the node");
-                            return;
-                        }
-
-                        long inputCount = request.txSize;
-
-                        if (inputCount != 0) {
-                            minFeeRate = minFeeRate * inputCount;
-                        } else {
-                            minFeeRate = minFeeRate * 256;
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        if (sharedCounter != null) {
-                            int errCounter = sharedCounter.errorRequest.incrementAndGet();
-                            if (errCounter >= sharedCounter.allRequest) {
-                                progressBar.setVisibility(View.INVISIBLE);
-                                FinishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! No connection with blockchain nodes");
-                            }
-                        } else {
-                            progressBar.setVisibility(View.INVISIBLE);
-                            FinishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! No connection with blockchain nodes");
-                        }
-                        return;
-                    }
-
-                    progressBar.setVisibility(View.INVISIBLE);
-
-                    float finalFee = (float) minFeeRate / (float) 10000;
-
-                    finalFee = Math.round(finalFee) / (float) 10000;
-
-                    if ((request.getBlockCount() == FeeRequest.MINIMAL) && (minFee == null)) {
-                        minFee = String.valueOf(finalFee);
-                        minFeeInInternalUnits = mCard.InternalUnitsFromString(String.valueOf(finalFee));
-                    } else if ((request.getBlockCount() == FeeRequest.NORMAL) && (normalFee == null)) {
-                        normalFee = String.valueOf(finalFee);
-                    } else if ((request.getBlockCount() == FeeRequest.PRIORITY) && (maxFee == null)) {
-                        maxFee = String.valueOf(finalFee);
-                    }
-
-                    doSetFee(rgFee.getCheckedRadioButtonId());
-
-                    etFee.setError(null);
-                    feeRequestSuccess = true;
-                    if (feeRequestSuccess && balanceRequestSuccess) {
-                        btnSend.setVisibility(View.VISIBLE);
-                    }
-                    dtVerifyed = new Date();
-
-                } else {
-
-                    if (sharedCounter != null) {
-                        int errCounter = sharedCounter.errorRequest.incrementAndGet();
-                        if (errCounter >= sharedCounter.allRequest) {
-                            progressBar.setVisibility(View.INVISIBLE);
-                            FinishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! No connection with blockchain nodes");
-                        }
-                    } else {
-                        progressBar.setVisibility(View.INVISIBLE);
-                        FinishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! No connection with blockchain nodes");
-                    }
-                }
-            }
-        }
-    }
+    public ProgressBar progressBar;
+    public boolean nodeCheck = false;
+    public Date dtVerifyed = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -456,7 +196,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
             calendar.add(Calendar.MINUTE, -1);
 
             if (dtVerifyed == null || dtVerifyed.before(calendar.getTime())) {
-                FinishActivityWithError(Activity.RESULT_CANCELED, "The obtained data is outdated! Try again");
+                finishActivityWithError(Activity.RESULT_CANCELED, "The obtained data is outdated! Try again");
                 return;
             }
 
@@ -471,19 +211,19 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
 
 
             if (!engineCoin.HasBalanceInfo(mCard)) {
-                FinishActivityWithError(Activity.RESULT_CANCELED, "Cannot check balance! No connection with blockchain nodes");
+                finishActivityWithError(Activity.RESULT_CANCELED, "Cannot check balance! No connection with blockchain nodes");
                 return;
             } else if (!engineCoin.IsBalanceNotZero(mCard)) {
-                FinishActivityWithError(Activity.RESULT_CANCELED, "The wallet is empty");
+                finishActivityWithError(Activity.RESULT_CANCELED, "The wallet is empty");
                 return;
             } else if (!engineCoin.CheckUnspentTransaction(mCard)) {
                 //else if (mCard.getUnspentTransactions().size() == 0 && mCard.getBlockchain() != Blockchain.Ethereum) {
-                FinishActivityWithError(Activity.RESULT_CANCELED, "Please wait for confirmation of incoming transaction");
+                finishActivityWithError(Activity.RESULT_CANCELED, "Please wait for confirmation of incoming transaction");
                 return;
             }
 
             if (!engineCoin.CheckAmountValie(mCard, txAmount, txFee, minFeeInInternalUnits)) {
-                FinishActivityWithError(Activity.RESULT_CANCELED, "Fee exceeds payment amount. Enter correct value and repeat sending.");
+                finishActivityWithError(Activity.RESULT_CANCELED, "Fee exceeds payment amount. Enter correct value and repeat sending.");
                 return;
             }
 
@@ -496,7 +236,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
         });
 
         if (mCard.getBlockchain() == Blockchain.Ethereum || mCard.getBlockchain() == Blockchain.EthereumTestNet || mCard.getBlockchain() == Blockchain.Token) {
-            ETHRequestTask task = new ETHRequestTask(mCard.getBlockchain());
+            ETHRequestTask task = new ETHRequestTask(ConfirmPaymentActivity.this, mCard.getBlockchain());
             InfuraRequest req = InfuraRequest.GetGasPrise(mCard.getWallet());
             req.setID(67);
             req.setBlockchain(mCard.getBlockchain());
@@ -514,7 +254,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
 
                 String nodeAddress = engineCoin.GetNextNode(mCard);
                 int nodePort = engineCoin.GetNextNodePort(mCard);
-                ConnectTask connectTaskEx = new ConnectTask(nodeAddress, nodePort, data);
+                ConnectTask connectTaskEx = new ConnectTask(ConfirmPaymentActivity.this, nodeAddress, nodePort, data);
                 connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(mCard.getWallet()));
             }
 
@@ -537,7 +277,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
             progressBar.setVisibility(View.VISIBLE);
             for (int i = 0; i < SharedData.COUNT_REQUEST; ++i) {
 
-                ConnectFeeTask feeTask = new ConnectFeeTask(sharedFee);
+                ConnectFeeTask feeTask = new ConnectFeeTask(ConfirmPaymentActivity.this, sharedFee);
 
                 feeTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
                         FeeRequest.GetFee(mCard.getWallet(), calcSize, FeeRequest.NORMAL),
@@ -615,7 +355,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
         return super.onKeyDown(keyCode, event);
     }
 
-    void FinishActivityWithError(int errorCode, String message) {
+    public void finishActivityWithError(int errorCode, String message) {
         //Snackbar.make(etFee, message, Snackbar.LENGTH_LONG).show();
         Intent intent = new Intent();
         intent.putExtra("message", message);
@@ -700,7 +440,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
         return realTX.length;
     }
 
-    private void doSetFee(int checkedRadioButtonId) {
+    public void doSetFee(int checkedRadioButtonId) {
         switch (checkedRadioButtonId) {
             case R.id.rbMinimalFee:
                 if (minFee != null) etFee.setText(minFee);
