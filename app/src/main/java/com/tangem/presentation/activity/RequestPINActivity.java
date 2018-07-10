@@ -10,12 +10,8 @@ import android.content.pm.PackageManager;
 import android.hardware.fingerprint.FingerprintManager;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.security.keystore.KeyGenParameterSpec;
-import android.security.keystore.KeyPermanentlyInvalidatedException;
-import android.security.keystore.KeyProperties;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -26,6 +22,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.tangem.data.network.task.request_pin.StartFingerprintReaderTask;
 import com.tangem.domain.cardReader.NfcManager;
 import com.tangem.domain.wallet.FingerprintHelper;
 import com.tangem.domain.wallet.PINStorage;
@@ -33,26 +30,18 @@ import com.tangem.domain.wallet.TangemCard;
 import com.tangem.wallet.R;
 
 import java.io.IOException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
 
 public class RequestPINActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback, FingerprintHelper.FingerprintHelperListener {
 
     public enum Mode {RequestPIN, RequestPIN2, RequestNewPIN, RequestNewPIN2, ConfirmNewPIN, ConfirmNewPIN2}
 
-    Mode mode;
+    public Mode mode;
     boolean allowFingerprint = false;
     private NfcManager mNfcManager;
     private TextView tvPIN;
-    private StartFingerprintReaderTask mStartFingerprintReaderTask;
+    public StartFingerprintReaderTask mStartFingerprintReaderTask;
 
     public static final String KEY_ALIAS = "pinKey";
     public static final String KEYSTORE = "AndroidKeyStore";
@@ -71,12 +60,7 @@ public class RequestPINActivity extends AppCompatActivity implements NfcAdapter.
 
         tvPIN = findViewById(R.id.pin);
 
-        OnClickListener onButtonNClick = new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                tvPIN.setText(tvPIN.getText() + (String) ((Button) view).getText());
-            }
-        };
+        OnClickListener onButtonNClick = view -> tvPIN.setText(tvPIN.getText() + (String) ((Button) view).getText());
 
         Button btn0 = findViewById(R.id.btn0);
         btn0.setOnClickListener(onButtonNClick);
@@ -267,7 +251,6 @@ public class RequestPINActivity extends AppCompatActivity implements NfcAdapter.
                 finish();
             }
         }
-
     }
 
     @Override
@@ -328,166 +311,7 @@ public class RequestPINActivity extends AppCompatActivity implements NfcAdapter.
         }
     }
 
-
-    public static class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
-        private KeyStore keyStore;
-        private Cipher cipher;
-
-        private FingerprintManager.CryptoObject cryptoObject;
-
-        FingerprintManager fingerprintManager;
-        FingerprintHelper fingerprintHelper;
-
-        RequestPINActivity activity;
-
-        StartFingerprintReaderTask(RequestPINActivity activity, FingerprintManager fingerprintManager, FingerprintHelper fingerprintHelper) {
-            this.fingerprintManager = fingerprintManager;
-            this.fingerprintHelper = fingerprintHelper;
-            this.activity = activity;
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            if (!getKeyStore())
-                return false;
-
-            if (!createNewKey(false))
-                return false;
-
-            if (!getCipher())
-                return false;
-
-            if (!initCipher(Cipher.DECRYPT_MODE))
-                return false;
-
-            return initCryptObject();
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            onCancelled();
-
-            if (!success) {
-                doLog("Authentication failed!");
-            } else {
-                fingerprintHelper.startAuth(fingerprintManager, cryptoObject);
-                doLog("Authenticate using fingerprint!");
-
-            }
-        }
-
-        @Override
-        protected void onCancelled() {
-            activity.mStartFingerprintReaderTask = null;
-        }
-
-        private boolean getKeyStore() {
-            doLog("Getting keystore...");
-            try {
-                keyStore = KeyStore.getInstance(KEYSTORE);
-                keyStore.load(null); // Create empty keystore
-                return true;
-            } catch (KeyStoreException | CertificateException | NoSuchAlgorithmException | IOException e) {
-                e.printStackTrace();
-            }
-
-            return false;
-        }
-
-        @TargetApi(Build.VERSION_CODES.M)
-        public boolean createNewKey(boolean forceCreate) {
-            doLog("Creating new key...");
-            try {
-                if (forceCreate)
-                    keyStore.deleteEntry(KEY_ALIAS);
-
-                if (!keyStore.containsAlias(KEY_ALIAS)) {
-                    KeyGenerator generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE);
-
-                    generator.init(new KeyGenParameterSpec.Builder(KEY_ALIAS,
-                            KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
-                            .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
-                            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
-                            .setUserAuthenticationRequired(true)
-                            .build()
-                    );
-
-                    generator.generateKey();
-                    doLog("Key created.");
-                } else
-                    doLog("Key exists.");
-
-                return true;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            return false;
-        }
-
-        private boolean getCipher() {
-            doLog("Getting cipher...");
-            try {
-                cipher = Cipher.getInstance(
-                        KeyProperties.KEY_ALGORITHM_AES + "/"
-                                + KeyProperties.BLOCK_MODE_CBC + "/"
-                                + KeyProperties.ENCRYPTION_PADDING_PKCS7);
-
-                return true;
-            } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
-                e.printStackTrace();
-            }
-
-            return false;
-        }
-
-        @TargetApi(Build.VERSION_CODES.M)
-        private boolean initCipher(int mode) {
-            doLog("Initializing cipher...");
-            try {
-                keyStore.load(null);
-                SecretKey keyspec = (SecretKey) keyStore.getKey(KEY_ALIAS, null);
-
-                if (mode == Cipher.ENCRYPT_MODE) {
-                    cipher.init(mode, keyspec);
-                } else {
-                    byte[] iv = null;
-                    if (activity.mode == Mode.RequestPIN || activity.mode == Mode.RequestNewPIN || activity.mode == Mode.ConfirmNewPIN) {
-                        iv = PINStorage.loadEncryptedIV();
-                    } else if (activity.mode == Mode.RequestPIN2 || activity.mode == Mode.RequestNewPIN2 || activity.mode == Mode.ConfirmNewPIN2) {
-                        iv = PINStorage.loadEncryptedIV2();
-                    }
-                    IvParameterSpec ivspec = new IvParameterSpec(iv);
-                    cipher.init(mode, keyspec, ivspec);
-                }
-
-                return true;
-            } catch (KeyPermanentlyInvalidatedException e) {
-                e.printStackTrace();
-                createNewKey(true); // Retry after clearing entry
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            return false;
-        }
-
-        @TargetApi(Build.VERSION_CODES.M)
-        private boolean initCryptObject() {
-            doLog("Initializing crypt object...");
-            try {
-                cryptoObject = new FingerprintManager.CryptoObject(cipher);
-                return true;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return false;
-        }
-
-
-    }
-
-    public static void doLog(String text) {
+    public void doLog(String text) {
 //        Log.e("FP", text);
     }
 
