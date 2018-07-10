@@ -36,13 +36,12 @@ import com.google.zxing.WriterException;
 import com.tangem.data.network.request.ElectrumRequest;
 import com.tangem.data.network.request.ExchangeRequest;
 import com.tangem.data.network.request.InfuraRequest;
-import com.tangem.data.network.task.ElectrumTask;
-import com.tangem.data.network.task.ExchangeTask;
-import com.tangem.data.network.task.InfuraTask;
+import com.tangem.data.network.task.loaded_wallet.ETHRequestTask;
+import com.tangem.data.network.task.loaded_wallet.RateInfoTask;
+import com.tangem.data.network.task.loaded_wallet.UpdateWalletInfoTask;
 import com.tangem.data.nfc.VerifyCardTask;
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.NfcManager;
-import com.tangem.domain.wallet.BitcoinException;
 import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.CoinEngineFactory;
@@ -60,16 +59,10 @@ import com.tangem.presentation.activity.VerifyCardActivity;
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog;
 import com.tangem.presentation.dialog.PINSwapWarningDialog;
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog;
-import com.tangem.util.BTCUtils;
 import com.tangem.util.Util;
 import com.tangem.util.UtilHelper;
 import com.tangem.wallet.R;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -91,17 +84,17 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     private static final int REQUEST_CODE_SWAP_PIN = 8;
 
     private NfcManager mNfcManager;
-    private TangemCard mCard;
+    public TangemCard mCard;
     private Tag lastTag;
 
-    private SwipeRefreshLayout mSwipeRefreshLayout;
+    public SwipeRefreshLayout mSwipeRefreshLayout;
     private RelativeLayout rlProgressBar;
     private TextView tvCardID, tvBalance, tvOffline, tvBalanceEquivalent, tvWallet, tvInputs, tvError, tvMessage, tvIssuer, tvBlockchain, tvValidationNode, tvHeader, tvCaution;
     private ProgressBar progressBar;
     private ImageView ivBlockchain, ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion;
     private AppCompatButton btnExtract;
 
-    private List<UpdateWalletInfoTask> updateTasks = new ArrayList<>();
+    public List<UpdateWalletInfoTask> updateTasks = new ArrayList<>();
     private boolean lastReadSuccess = true;
     private VerifyCardTask verifyCardTask = null;
     private int requestPIN2Count = 0;
@@ -112,438 +105,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
     public LoadedWallet() {
 
-    }
-
-    private class ETHRequestTask extends InfuraTask {
-        ETHRequestTask(Blockchain blockchain) {
-            super(blockchain);
-        }
-
-        @Override
-        protected void onPostExecute(List<InfuraRequest> requests) {
-            super.onPostExecute(requests);
-            for (InfuraRequest request : requests) {
-                try {
-                    if (request.error == null) {
-
-                        if (request.isMethod(InfuraRequest.METHOD_ETH_GetBalance)) {
-                            try {
-                                String balanceCap = request.getResultString();
-                                balanceCap = balanceCap.substring(2);
-                                BigInteger l = new BigInteger(balanceCap, 16);
-                                BigInteger d = l.divide(new BigInteger("1000000000000000000", 10));
-                                Long balance = d.longValue();
-
-                                mCard.setBalanceConfirmed(balance);
-                                mCard.setBalanceUnconfirmed(0L);
-                                if (mCard.getBlockchain() != Blockchain.Token)
-                                    mCard.setDecimalBalance(l.toString(10));
-                                mCard.setDecimalBalanceAlter(l.toString(10));
-
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                                errorOnUpdate(e.toString());
-                            }
-                        } else if (request.isMethod(InfuraRequest.METHOD_ETH_Call)) {
-                            try {
-                                String balanceCap = request.getResultString();
-                                balanceCap = balanceCap.substring(2);
-                                BigInteger l = new BigInteger(balanceCap, 16);
-                                Long balance = l.longValue();
-
-//                                Log.i(TAG, " dvddvdv  BigInteger.ZERO");
-
-                                if (l.compareTo(BigInteger.ZERO) == 0) {
-
-//                                    Log.i(TAG, "BigInteger.ZERO");
-
-                                    mCard.setBlockchainID(Blockchain.Ethereum.getID());
-                                    mCard.addTokenToBlockchainName();
-                                    mSwipeRefreshLayout.setRefreshing(false);
-                                    onRefresh();
-                                    return;
-                                }
-
-                                mCard.setBalanceConfirmed(balance);
-                                mCard.setBalanceUnconfirmed(0L);
-                                mCard.setDecimalBalance(l.toString(10));
-
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                                errorOnUpdate(e.toString());
-                            }
-                        } else if (request.isMethod(InfuraRequest.METHOD_ETH_GetOutTransactionCount)) {
-                            try {
-                                String nonce = request.getResultString();
-                                nonce = nonce.substring(2);
-                                BigInteger count = new BigInteger(nonce, 16);
-
-                                mCard.SetConfirmTXCount(count);
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        } else if (request.isMethod(InfuraRequest.METHOD_ETH_SendRawTransaction)) {
-                            try {
-                                String hashTX = "";
-
-                                try {
-                                    String tmp = request.getResultString();
-                                    hashTX = tmp;
-                                } catch (JSONException e) {
-                                    JSONObject msg = request.getAnswer();
-                                    JSONObject err = msg.getJSONObject("error");
-                                    hashTX = err.getString("message");
-                                    LastSignStorage.setLastMessage(mCard.getWallet(), hashTX);
-                                    errorOnUpdate("Failed to send transaction. Try again");
-                                    return;
-                                }
-
-                                if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
-                                    hashTX = hashTX.substring(2);
-                                }
-                                BigInteger bigInt = new BigInteger(hashTX, 16); //TODO: очень плохой способ
-                                LastSignStorage.setTxWasSend(mCard.getWallet());
-                                LastSignStorage.setLastMessage(mCard.getWallet(), "");
-                                Log.e("TX_RESULT", hashTX);
-
-
-                                BigInteger nonce = mCard.GetConfirmTXCount();
-                                nonce.add(BigInteger.valueOf(1));
-                                mCard.SetConfirmTXCount(nonce);
-                                Log.e("TX_RESULT", hashTX);
-
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                errorOnUpdate("Failed to send transaction. Try again");
-                            }
-                        }
-                        updateViews();
-                    } else {
-                        errorOnUpdate(request.error);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    errorOnUpdate(e.toString());
-                }
-            }
-
-            if (updateTasks.size() == 0)
-                mSwipeRefreshLayout.setRefreshing(false);
-        }
-    }
-
-    private class RateInfoTask extends ExchangeTask {
-        protected void onPostExecute(List<ExchangeRequest> requests) {
-            super.onPostExecute(requests);
-            for (ExchangeRequest request : requests) {
-                if (request.error == null) {
-                    try {
-
-                        JSONArray arr = request.getAnswerList();
-                        for (int i = 0; i < arr.length(); ++i) {
-                            JSONObject obj = arr.getJSONObject(i);
-                            String currency = obj.getString("id");
-
-                            boolean stop = false;
-                            boolean stopAlter = false;
-                            if (currency.equals(request.currency)) {
-                                String usd = obj.getString("price_usd");
-
-                                Float rate = Float.valueOf(usd);
-                                mCard.setRate(rate);
-                                updateViews();
-                                stop = true;
-                            }
-
-                            if (currency.equals(request.currencyAlter)) {
-                                String usd = obj.getString("price_usd");
-
-                                Float rate = Float.valueOf(usd);
-                                mCard.setRateAlter(rate);
-                                updateViews();
-                                stopAlter = true;
-                            }
-
-                            if (stop && stopAlter) {
-                                break;
-                            }
-
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-    }
-
-    private class UpdateWalletInfoTask extends ElectrumTask {
-        public UpdateWalletInfoTask(String host, int port) {
-            super(host, port);
-        }
-
-
-        public UpdateWalletInfoTask(String host, int port, SharedData sharedData) {
-            super(host, port, sharedData);
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-        }
-
-        @Override
-        protected void onCancelled() {
-            super.onCancelled();
-            updateTasks.remove(this);
-            if (updateTasks.size() == 0) mSwipeRefreshLayout.setRefreshing(false);
-        }
-
-        @Override
-        protected void onPostExecute(List<ElectrumRequest> requests) {
-            super.onPostExecute(requests);
-            Log.i("RequestWalletInfoTask", "onPostExecute[" + String.valueOf(updateTasks.size()) + "]");
-            updateTasks.remove(this);
-
-            CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
-
-            for (ElectrumRequest request : requests) {
-                try {
-                    if (request.error == null) {
-                        if (request.isMethod(ElectrumRequest.METHOD_GetBalance)) {
-                            try {
-                                String mWalletAddress = request.getParams().getString(0);
-                                Long confBalance = request.getResult().getLong("confirmed");
-                                Long unconf = request.getResult().getLong("unconfirmed");
-                                if (sharedCounter != null) {
-                                    int counter = sharedCounter.requestCounter.incrementAndGet();
-                                    if (counter != 1) {
-                                        continue;
-                                    }
-                                }
-
-                                mCard.setBalanceConfirmed(confBalance);
-                                mCard.setBalanceUnconfirmed(unconf);
-                                mCard.setDecimalBalance(String.valueOf(confBalance));
-                                mCard.setValidationNodeDescription(getValidationNodeDescription());
-                            } catch (JSONException e) {
-                                if (sharedCounter != null) {
-                                    int errCounter = sharedCounter.errorRequest.incrementAndGet();
-                                    if (errCounter >= sharedCounter.allRequest) {
-                                        e.printStackTrace();
-                                        errorOnUpdate(e.toString());
-                                        engine.SwitchNode(mCard);
-                                    }
-                                } else {
-                                    e.printStackTrace();
-                                    errorOnUpdate(e.toString());
-                                    engine.SwitchNode(mCard);
-                                }
-                            }
-                        } else if (request.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
-                            try {
-                                String hashTX = request.getResultString();
-
-                                try {
-                                    LastSignStorage.setLastMessage(mCard.getWallet(), hashTX);
-                                    if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
-                                        hashTX = hashTX.substring(2);
-                                    }
-                                    BigInteger bigInt = new BigInteger(hashTX, 16); //TODO: очень плохой способ
-                                    LastSignStorage.setTxWasSend(mCard.getWallet());
-                                    LastSignStorage.setLastMessage(mCard.getWallet(), "");
-                                    Log.e("TX_RESULT", hashTX);
-
-                                } catch (Exception e) {
-                                    engine.SwitchNode(mCard);
-                                    errorOnUpdate("Failed to send transaction. Try again.");
-                                }
-
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                                errorOnUpdate("Failed to send transaction. Try again.");
-                                engine.SwitchNode(mCard);
-                            }
-                        } else if (request.isMethod(ElectrumRequest.METHOD_ListUnspent)) {
-                            try {
-                                String mWalletAddress = request.getParams().getString(0);
-
-                                JSONArray jsUnspentArray = request.getResultArray();
-                                try {
-                                    mCard.getUnspentTransactions().clear();
-                                    for (int i = 0; i < jsUnspentArray.length(); i++) {
-                                        JSONObject jsUnspent = jsUnspentArray.getJSONObject(i);
-                                        TangemCard.UnspentTransaction trUnspent = new TangemCard.UnspentTransaction();
-                                        trUnspent.txID = jsUnspent.getString("tx_hash");
-                                        trUnspent.Amount = jsUnspent.getInt("value");
-                                        trUnspent.Height = jsUnspent.getInt("height");
-                                        mCard.getUnspentTransactions().add(trUnspent);
-                                    }
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                    errorOnUpdate(e.toString());
-                                    engine.SwitchNode(mCard);
-                                }
-
-                                for (int i = 0; i < jsUnspentArray.length(); i++) {
-                                    JSONObject jsUnspent = jsUnspentArray.getJSONObject(i);
-                                    Integer height = jsUnspent.getInt("height");
-                                    String hash = jsUnspent.getString("tx_hash");
-                                    if (height != -1) {
-                                        String nodeAddress = engine.GetNextNode(mCard);
-                                        int nodePort = engine.GetNextNodePort(mCard);
-                                        UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(nodeAddress, nodePort);
-
-                                        updateTasks.add(updateWalletInfoTask);
-
-                                        updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
-                                                ElectrumRequest.GetTransaction(mWalletAddress, hash));
-                                    }
-                                }
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                                errorOnUpdate(e.toString());
-                                engine.SwitchNode(mCard);
-                            }
-                        } else if (request.isMethod(ElectrumRequest.METHOD_GetHistory)) {
-                            try {
-                                String mWalletAddress = request.getParams().getString(0);
-
-                                JSONArray jsHistoryArray = request.getResultArray();
-                                try {
-                                    mCard.getHistoryTransactions().clear();
-                                    for (int i = 0; i < jsHistoryArray.length(); i++) {
-                                        JSONObject jsUnspent = jsHistoryArray.getJSONObject(i);
-                                        TangemCard.HistoryTransaction trHistory = new TangemCard.HistoryTransaction();
-                                        trHistory.txID = jsUnspent.getString("tx_hash");
-                                        trHistory.Height = jsUnspent.getInt("height");
-                                        mCard.getHistoryTransactions().add(trHistory);
-                                    }
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                    errorOnUpdate(e.toString());
-                                    engine.SwitchNode(mCard);
-                                }
-
-                                for (int i = 0; i < jsHistoryArray.length(); i++) {
-                                    JSONObject jsUnspent = jsHistoryArray.getJSONObject(i);
-                                    Integer height = jsUnspent.getInt("height");
-                                    String hash = jsUnspent.getString("tx_hash");
-                                    if (height != -1) {
-
-                                        String nodeAddress = engine.GetNode(mCard);
-                                        int nodePort = engine.GetNodePort(mCard);
-                                        UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(nodeAddress, nodePort);
-                                        updateTasks.add(updateWalletInfoTask);
-
-                                        updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
-                                                ElectrumRequest.GetTransaction(mWalletAddress, hash));
-                                    }
-
-                                }
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                                errorOnUpdate(e.toString());
-                                engine.SwitchNode(mCard);
-                            }
-                        } else if (request.isMethod(ElectrumRequest.METHOD_GetHeader)) {
-                            try {
-                                JSONObject jsHeader = request.getResult();
-                                try {
-                                    mCard.getHaedersInfo();
-                                    mCard.UpdateHeaderInfo(new TangemCard.HeaderInfo(
-                                            jsHeader.getInt("block_height"),
-                                            jsHeader.getInt("timestamp")));
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                    errorOnUpdate(e.toString());
-                                    engine.SwitchNode(mCard);
-
-                                }
-
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                                errorOnUpdate(e.toString());
-                                engine.SwitchNode(mCard);
-
-                            }
-                        } else if (request.isMethod(ElectrumRequest.METHOD_GetTransaction)) {
-                            try {
-
-                                String txHash = request.TxHash;
-                                String raw = request.getResultString();
-
-                                List<TangemCard.UnspentTransaction> listTx = mCard.getUnspentTransactions();
-                                for (TangemCard.UnspentTransaction tx : listTx) {
-                                    if (tx.txID.equals(txHash)) {
-                                        tx.Raw = raw;
-                                    }
-                                }
-
-                                List<TangemCard.HistoryTransaction> listHTx = mCard.getHistoryTransactions();
-                                for (TangemCard.HistoryTransaction tx : listHTx) {
-                                    if (tx.txID.equals(txHash)) {
-                                        tx.Raw = raw;
-                                        try {
-                                            ArrayList<byte[]> prevHashes = BTCUtils.getPrevTX(raw);
-
-                                            boolean isOur = false;
-                                            for (byte[] hash : prevHashes) {
-                                                String checkID = BTCUtils.toHex(hash);
-                                                for (TangemCard.HistoryTransaction txForCheck : listHTx) {
-                                                    if (txForCheck.txID == checkID) {
-                                                        isOur = true;
-                                                    }
-                                                }
-                                            }
-
-                                            tx.isInput = !isOur;
-                                        } catch (BitcoinException e) {
-                                            e.printStackTrace();
-                                            errorOnUpdate(e.toString());
-                                        }
-                                        Log.e("TX", raw);
-                                    }
-                                }
-
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                                errorOnUpdate(e.toString());
-                                engine.SwitchNode(mCard);
-                            }
-                        }
-                        updateViews();
-                    } else {
-                        if (sharedCounter != null) {
-                            int errCounter = sharedCounter.errorRequest.incrementAndGet();
-                            if (errCounter >= sharedCounter.allRequest) {
-                                errorOnUpdate(request.error);
-                                engine.SwitchNode(mCard);
-
-                            }
-                        } else {
-                            errorOnUpdate(request.error);
-                            engine.SwitchNode(mCard);
-
-                        }
-
-                    }
-                } catch (JSONException e) {
-                    if (sharedCounter != null) {
-                        int errCounter = sharedCounter.errorRequest.incrementAndGet();
-                        if (errCounter >= sharedCounter.allRequest) {
-                            e.printStackTrace();
-                            errorOnUpdate(e.toString());
-                        }
-                    } else {
-                        e.printStackTrace();
-                        errorOnUpdate(e.toString());
-                    }
-                }
-            }
-            if (updateTasks.size() == 0) mSwipeRefreshLayout.setRefreshing(false);
-
-        }
     }
 
     @Override
@@ -688,13 +249,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         });
 
         return v;
-    }
-
-    private void openVerifyCard(CardProtocol cardProtocol) {
-        Intent intent = new Intent(getContext(), VerifyCardActivity.class);
-        intent.putExtra("UID", cardProtocol.getCard().getUID());
-        intent.putExtra("Card", cardProtocol.getCard().getAsBundle());
-        startActivityForResult(intent, REQUEST_CODE_VERIFY_CARD);
     }
 
     @Override
@@ -915,15 +469,15 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             for (int i = 0; i < data.allRequest; ++i) {
                 String nodeAddress = Objects.requireNonNull(engine).GetNextNode(mCard);
                 int nodePort = engine.GetNextNodePort(mCard);
-                UpdateWalletInfoTask connectTaskEx = new UpdateWalletInfoTask(nodeAddress, nodePort, data);
+                UpdateWalletInfoTask connectTaskEx = new UpdateWalletInfoTask(LoadedWallet.this, nodeAddress, nodePort, data);
                 connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(mCard.getWallet()));
 
-                UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(nodeAddress, nodePort, data);
+                UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(LoadedWallet.this, nodeAddress, nodePort, data);
                 updateTasks.add(updateWalletInfoTask);
                 updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(mCard.getWallet()));
             }
 
-            RateInfoTask taskRate = new RateInfoTask();
+            RateInfoTask taskRate = new RateInfoTask(LoadedWallet.this);
             ExchangeRequest rate = ExchangeRequest.GetRate(mCard.getWallet(), "bitcoin", "bitcoin");
             taskRate.execute(rate);
 
@@ -933,26 +487,26 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             for (int i = 0; i < data.allRequest; ++i) {
                 String nodeAddress = Objects.requireNonNull(engine).GetNextNode(mCard);
                 int nodePort = engine.GetNextNodePort(mCard);
-                UpdateWalletInfoTask connectTaskEx = new UpdateWalletInfoTask(nodeAddress, nodePort, data);
+                UpdateWalletInfoTask connectTaskEx = new UpdateWalletInfoTask(LoadedWallet.this, nodeAddress, nodePort, data);
                 connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(mCard.getWallet()));
             }
 
             String nodeAddress = Objects.requireNonNull(engine).GetNode(mCard);
             int nodePort = engine.GetNodePort(mCard);
-            UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(nodeAddress, nodePort, data);
+            UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(LoadedWallet.this,nodeAddress, nodePort, data);
 
             updateTasks.add(updateWalletInfoTask);
             updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(mCard.getWallet())
 //                    ElectrumRequest.ListHistory(mCard.getWallet())
             );
 
-            RateInfoTask taskRate = new RateInfoTask();
+            RateInfoTask taskRate = new RateInfoTask(LoadedWallet.this);
             ExchangeRequest rate = ExchangeRequest.GetRate(mCard.getWallet(), "bitcoin-cash", "bitcoin-cash");
             taskRate.execute(rate);
 
 
         } else if (mCard.getBlockchain() == Blockchain.Ethereum || mCard.getBlockchain() == Blockchain.EthereumTestNet) {
-            ETHRequestTask updateETH = new ETHRequestTask(mCard.getBlockchain());
+            ETHRequestTask updateETH = new ETHRequestTask(LoadedWallet.this, mCard.getBlockchain());
             InfuraRequest reqETH = InfuraRequest.GetBalance(mCard.getWallet());
             reqETH.setID(67);
             reqETH.setBlockchain(mCard.getBlockchain());
@@ -964,12 +518,12 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             updateETH.execute(reqETH, reqNonce);
 
 
-            RateInfoTask taskRate = new RateInfoTask();
+            RateInfoTask taskRate = new RateInfoTask(LoadedWallet.this);
             ExchangeRequest rate = ExchangeRequest.GetRate(mCard.getWallet(), "ic_logo_ethereum", "ic_logo_ethereum");
             taskRate.execute(rate);
 
         } else if (mCard.getBlockchain() == Blockchain.Token) {
-            ETHRequestTask updateETH = new ETHRequestTask(mCard.getBlockchain());
+            ETHRequestTask updateETH = new ETHRequestTask(LoadedWallet.this, mCard.getBlockchain());
             InfuraRequest reqETH = InfuraRequest.GetTokenBalance(mCard.getWallet(), Objects.requireNonNull(engine).GetContractAddress(mCard), engine.GetTokenDecimals(mCard));
             reqETH.setID(67);
             reqETH.setBlockchain(mCard.getBlockchain());
@@ -984,7 +538,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             updateETH.execute(reqETH, reqNonce, reqBalance);
 
 
-            RateInfoTask taskRate = new RateInfoTask();
+            RateInfoTask taskRate = new RateInfoTask(LoadedWallet.this);
             ExchangeRequest rate = ExchangeRequest.GetRate(mCard.getWallet(), "basic-attention-token", "ic_logo_ethereum");
             taskRate.execute(rate);
         }
@@ -999,37 +553,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         startVerify(tag);
     }
 
-    private void startVerify(Tag tag) {
-        try {
-            final IsoDep isoDep = IsoDep.get(tag);
-            if (isoDep == null) {
-                throw new CardProtocol.TangemException(getString(R.string.wrong_tag_err));
-            }
-            byte UID[] = tag.getId();
-            String sUID = Util.byteArrayToHexString(UID);
-            if (!mCard.getUID().equals(sUID)) {
-                Log.d(TAG, "Invalid UID: " + sUID);
-                mNfcManager.ignoreTag(isoDep.getTag());
-                return;
-            } else {
-                Log.v(TAG, "UID: " + sUID);
-            }
 
-            if (lastReadSuccess) {
-                isoDep.setTimeout(1000);
-            } else {
-                isoDep.setTimeout(65000);
-            }
-
-            verifyCardTask = new VerifyCardTask(getContext(), mCard, mNfcManager, isoDep, this);
-            verifyCardTask.start();
-
-//            Log.i(TAG, "onTagDiscovered " + Arrays.toString(tag.getId()));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     public Intent prepareResultIntent() {
         Intent data = new Intent();
@@ -1133,7 +657,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         WaitSecurityDelayDialog.onReadAfterRequest(Objects.requireNonNull(getActivity()));
     }
 
-    private void updateViews() {
+    public void updateViews() {
         try {
             if (timerHideErrorAndMessage != null) {
                 timerHideErrorAndMessage.cancel();
@@ -1283,9 +807,48 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         }
     }
 
-    private void errorOnUpdate(String message) {
+    public void errorOnUpdate(String message) {
 //        mCard.setError(getString(R.string.cannot_obtain_data_from_blockchain));
 //        updateViews();
+    }
+
+    private void openVerifyCard(CardProtocol cardProtocol) {
+        Intent intent = new Intent(getContext(), VerifyCardActivity.class);
+        intent.putExtra("UID", cardProtocol.getCard().getUID());
+        intent.putExtra("Card", cardProtocol.getCard().getAsBundle());
+        startActivityForResult(intent, REQUEST_CODE_VERIFY_CARD);
+    }
+
+    private void startVerify(Tag tag) {
+        try {
+            final IsoDep isoDep = IsoDep.get(tag);
+            if (isoDep == null) {
+                throw new CardProtocol.TangemException(getString(R.string.wrong_tag_err));
+            }
+            byte UID[] = tag.getId();
+            String sUID = Util.byteArrayToHexString(UID);
+            if (!mCard.getUID().equals(sUID)) {
+                Log.d(TAG, "Invalid UID: " + sUID);
+                mNfcManager.ignoreTag(isoDep.getTag());
+                return;
+            } else {
+                Log.v(TAG, "UID: " + sUID);
+            }
+
+            if (lastReadSuccess) {
+                isoDep.setTimeout(1000);
+            } else {
+                isoDep.setTimeout(65000);
+            }
+
+            verifyCardTask = new VerifyCardTask(getContext(), mCard, mNfcManager, isoDep, this);
+            verifyCardTask.start();
+
+//            Log.i(TAG, "onTagDiscovered " + Arrays.toString(tag.getId()));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void doShareWallet(boolean useURI) {
@@ -1327,7 +890,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     private void sendTransaction(String tx) {
         CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
         if (mCard.getBlockchain() == Blockchain.Ethereum || mCard.getBlockchain() == Blockchain.EthereumTestNet || mCard.getBlockchain() == Blockchain.Token) {
-            ETHRequestTask task = new ETHRequestTask(mCard.getBlockchain());
+            ETHRequestTask task = new ETHRequestTask(LoadedWallet.this, mCard.getBlockchain());
             InfuraRequest req = InfuraRequest.SendTransaction(mCard.getWallet(), tx);
             req.setID(67);
             req.setBlockchain(mCard.getBlockchain());
@@ -1336,13 +899,13 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             String nodeAddress = engine.GetNode(mCard);
             int nodePort = engine.GetNodePort(mCard);
 
-            UpdateWalletInfoTask connectTask = new UpdateWalletInfoTask(nodeAddress, nodePort);
+            UpdateWalletInfoTask connectTask = new UpdateWalletInfoTask(LoadedWallet.this, nodeAddress, nodePort);
             connectTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.Broadcast(mCard.getWallet(), tx));
         } else if (mCard.getBlockchain() == Blockchain.BitcoinCash || mCard.getBlockchain() == Blockchain.BitcoinCashTestNet) {
             String nodeAddress = engine.GetNode(mCard);
             int nodePort = engine.GetNodePort(mCard);
 
-            UpdateWalletInfoTask connectTask = new UpdateWalletInfoTask(nodeAddress, nodePort);
+            UpdateWalletInfoTask connectTask = new UpdateWalletInfoTask(LoadedWallet.this, nodeAddress, nodePort);
             connectTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.Broadcast(mCard.getWallet(), tx));
         }
     }
