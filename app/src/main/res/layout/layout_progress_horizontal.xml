@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ProgressBar
+<ProgressBar xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/progressBar"
     style="@style/Widget.AppCompat.ProgressBar.Horizontal"
@@ -10,4 +9,4 @@
     android:layout_alignParentBottom="true"
     android:elevation="1dp"
     app:layout_constraintBottom_toBottomOf="parent"
-    tools:showIn="@layout/activity_swap_pin"/>
+    tools:showIn="@layout/activity_swap_pin" />
