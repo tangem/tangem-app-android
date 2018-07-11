@@ -88,7 +88,7 @@ public class TLV {
         TAG_Token_Symbol(0xA0),
         TAG_Token_Contract_Address(0xA1),
         TAG_Token_Decimal(0xA2),
-        TAG_Denomination(/*0xC0*/0xee), //TODO: quick fix
+        TAG_Denomination(0xC0),
         TAG_ValidatedBalance(0xC1),
         TAG_LastSign_Date(0xC2);
 
