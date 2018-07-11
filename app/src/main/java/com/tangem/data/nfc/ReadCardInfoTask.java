@@ -79,7 +79,7 @@ public class ReadCardInfoTask extends Thread {
                     if (protocol.haveReadResult()) {
                         //already have read result (obtained while get supported encryption), only read issuer data and define offline balance
                         protocol.parseReadResult();
-                        protocol.run_ReadOrWriteIssuerDataAndDefineOfflineBalance();
+                        protocol.run_ReadWriteIssuerData();
                         mNotifications.OnReadProgress(protocol, 60);
                         PINStorage.setLastUsedPIN(protocol.getCard().getPIN());
                     } else {
