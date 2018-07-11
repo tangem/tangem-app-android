@@ -11,6 +11,7 @@ import com.tangem.wallet.R;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -1365,16 +1366,36 @@ public class TangemCard {
             countConfirmTX = new BigInteger(B.getString("confirmTx"), 16);
     }
 
+    private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
+    public static String bytesToHex(byte[] bytes) {
+        if (bytes == null) return "";
+        char[] hexChars = new char[bytes.length * 2];
+        for ( int j = 0; j < bytes.length; j++ ) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+        }
+        return new String(hexChars);
+    }
+
     public int getCardImageResource() {
         switch (getBlockchainID()) {
             case "BTC":
-                return R.drawable.card_btc001;
+                if ( bytesToHex(getDenomination()).equals("40420F0000000000") )
+                    return R.drawable.card_btc001;
+                else if (bytesToHex(getDenomination()).equals("404B4C0000000000") )
+                    return R.drawable.card_btc005;
+                else
+                    return R.drawable.card_default;
 
-            case "ETH\\XTZ":
-                return R.drawable.card_seed;
+            case "Token":
+                if (getTokenSymbol().equals("SEED"))
+                    return R.drawable.card_seed;
+                else
+                    return R.drawable.card_default;
 
             default:
-                return R.drawable.card_btc001;
+                return R.drawable.card_default;
         }
 
     }
