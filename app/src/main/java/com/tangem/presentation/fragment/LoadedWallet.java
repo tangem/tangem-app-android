@@ -566,7 +566,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     public void OnReadStart(CardProtocol cardProtocol) {
         progressBar.post(() -> {
             rlProgressBar.setVisibility(View.VISIBLE);
-            progressBar.setVisibility(View.VISIBLE);
+            //progressBar.setVisibility(View.VISIBLE);
             progressBar.setProgress(5);
         });
     }
