@@ -275,7 +275,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
     public void OnReadStart(CardProtocol cardProtocol) {
         progressBar.post(() -> {
             rlProgressBar.setVisibility(View.VISIBLE);
-            progressBar.setVisibility(View.VISIBLE);
+            //progressBar.setVisibility(View.VISIBLE);
             progressBar.setProgress(5);
         });
     }
