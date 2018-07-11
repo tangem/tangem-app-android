@@ -15,19 +15,19 @@
         android:visibility="gone">
 
         <TextView
-            android:textStyle="bold"
-            android:alpha="0.5"
-            android:textColor="@color/colorPrimary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="@string/reading"/>
+            android:alpha="0.8"
+            android:text="@string/reading"
+            android:textColor="@color/colorPrimary"
+            android:textStyle="bold" />
 
         <ProgressBar
             android:layout_width="@dimen/size_progress_bar_big"
             android:layout_height="@dimen/size_progress_bar_big"
-            android:alpha="0.5"
-            android:elevation="1dp"/>
+            android:alpha="0.8"
+            android:elevation="1dp" />
 
     </RelativeLayout>
 
