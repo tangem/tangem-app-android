@@ -77,7 +77,7 @@
 
     <!-- MainActivity, Main -->
     <string name="tap_tangem_card">Tap Tangem card with your smartphone</string>
-    <!--<string name="scan_banknote">Scan a banknote with your \n smartphone as shown above</string>-->
+    <string name="scan_banknote">Scan a banknote with your \n %1$s \n as shown above</string>
     <string name="phone">phone</string>
     <string name="last_unspent">Last unspent</string>
     <string name="no_wallet">NO WALLET</string>
