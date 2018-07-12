@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Transformation;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -77,6 +78,8 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         TextView tvNFCHint = findViewById(R.id.tvNFCHint);
         llTapPrompt = findViewById(R.id.llTapPrompt);
         LinearLayout hand = findViewById(R.id.llHand);
+        ImageView ivHandCardHorizontal = findViewById(R.id.ivHandCardHorizontal);
+        ImageView ivHandCardVertical = findViewById(R.id.ivHandCardVertical);
         LinearLayout nfc = findViewById(R.id.llNFC);
         RippleBackground rippleBackground = findViewById(R.id.imNFC);
         FloatingActionButton fab = findViewById(R.id.fab);
@@ -90,11 +93,34 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         DeviceNFCAntennaLocation antenna = new DeviceNFCAntennaLocation();
         antenna.getAntennaLocation();
 
+        // set card orientation
+        switch (antenna.getOrientation()) {
+            case DeviceNFCAntennaLocation.CARD_ORIENTATION_HORIZONTAL:
+                ivHandCardHorizontal.setVisibility(View.VISIBLE);
+                ivHandCardVertical.setVisibility(View.GONE);
+                break;
+
+            case DeviceNFCAntennaLocation.CARD_ORIENTATION_VERTICAL:
+                ivHandCardVertical.setVisibility(View.VISIBLE);
+                ivHandCardHorizontal.setVisibility(View.GONE);
+                break;
+        }
+
+        switch (antenna.getZ()) {
+            case DeviceNFCAntennaLocation.CARD_ON_BACK:
+
+                break;
+
+            case DeviceNFCAntennaLocation.CARD_ON_FRONT:
+
+                break;
+        }
+
         // set phone name
         if (!antenna.getFullName().equals(""))
-            tvNFCHint.setText("Scan a banknote with your\n" + antenna.getFullName() + "\n as shown above");
+            tvNFCHint.setText(String.format(getString(R.string.scan_banknote), antenna.getFullName()));
         else
-            tvNFCHint.setText("Scan a banknote with your\n" + getString(R.string.phone) + "\n as shown above");
+            tvNFCHint.setText(String.format(getString(R.string.scan_banknote), getString(R.string.phone)));
 
         // animate
         final RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) hand.getLayoutParams();
