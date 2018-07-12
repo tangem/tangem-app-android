@@ -408,6 +408,9 @@ public class CardProtocol {
     }
 
     public void run_Read() throws Exception {
+        run_Read(true);
+    }
+    public void run_Read(boolean parseResult) throws Exception {
         CommandApdu rqApdu = StartPrepareCommand(INS.Read);
         Log.i(logTag, String.format("[%s]\n%s", rqApdu.getCommandName(), rqApdu.getTLVs().getParsedTLVs("  ")));
 
@@ -421,9 +424,12 @@ public class CardProtocol {
 
             readResult = rspApdu.getTLVs();
 
-            parseReadResult();
-
-            run_ReadWriteIssuerData();
+            if( parseResult ){
+                parseReadResult();
+                run_ReadWriteIssuerData();
+            }else{
+                //TODO: проверить что карта та же
+            }
 
         } else if (rspApdu.isStatus(SW_PIN_ERROR)) {
             throw new TangemException_InvalidPIN(String.format("FAILED: [%04X] - Possible PIN is invalid!\n", rspApdu.getSW1SW2()));
