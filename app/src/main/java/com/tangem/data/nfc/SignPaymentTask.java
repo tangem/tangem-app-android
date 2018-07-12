@@ -69,6 +69,7 @@ public class SignPaymentTask extends Thread {
                 Log.i(TAG, "[-- Start sign payment --]");
 
                 if (isCancelled) return;
+                protocol.run_Read(false);
                 protocol.run_VerifyCard();
 
                 Log.i(TAG, "Manufacturer: " + protocol.getCard().getManufacturer().getOfficialName());
@@ -102,7 +103,7 @@ public class SignPaymentTask extends Thread {
                             txStr = String.format("0x%s", txStr);
                         }
 
-                        LastSignStorage.setLastTX(mCard.getWallet(), txStr);
+                        //LastSignStorage.setLastTX(mCard.getWallet(), txStr);
 
                         Intent intent = new Intent(mContext, SendTransactionActivity.class);
                         intent.putExtra("UID", mCard.getUID());
