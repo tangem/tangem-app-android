@@ -4,15 +4,18 @@ import android.os.Build
 import com.tangem.domain.NFCLocation
 
 class DeviceNFCAntennaLocation {
-    val TAG: String = DeviceNFCAntennaLocation::class.java.simpleName
+    companion object {
+        const val CARD_ON_BACK = 0
+        const val CARD_ON_FRONT = 1
+        const val CARD_ORIENTATION_HORIZONTAL = 0
+        const val CARD_ORIENTATION_VERTICAL = 1
+    }
 
     var orientation: Int = 0
     var fullName: String = ""
     var x: Float = 0.toFloat()
     var y: Float = 0.toFloat()
-    var z: Float = 0.toFloat()
-    var onBackSide: Boolean = false
-    var strength: Float = 0.toFloat()
+    var z: Int = 0
 
     fun getAntennaLocation() {
         val codename = Build.DEVICE
@@ -22,9 +25,7 @@ class DeviceNFCAntennaLocation {
         this.fullName = ""
         this.x = 0.5f
         this.y = 0.35f
-        this.z = 0f
-        this.onBackSide = true
-        this.strength = 1.0f
+        this.z = 0
 
         for (nfcLocation in NFCLocation.values()) {
             if (codename == nfcLocation.codename) {
@@ -32,7 +33,7 @@ class DeviceNFCAntennaLocation {
                 this.orientation = nfcLocation.orientation
                 this.x = nfcLocation.x / 100f
                 this.y = nfcLocation.y / 100f
-                this.z = nfcLocation.z / 100f
+                this.z = nfcLocation.z
             }
         }
     }
