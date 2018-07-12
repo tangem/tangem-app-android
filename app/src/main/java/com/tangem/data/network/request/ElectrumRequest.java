@@ -22,6 +22,7 @@ public class ElectrumRequest {
     public String error;
     public String WalletAddress;
     public String TxHash;
+    public String TX;
     public String Host;
     public int Port;
 
@@ -125,6 +126,7 @@ public class ElectrumRequest {
         ElectrumRequest request = new ElectrumRequest();
         try {
             request.WalletAddress=wallet;
+            request.TX=tx;
             request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_SendTransaction + "\", \"params\":[\"" + tx + "\"] }");
         } catch (JSONException e) {
             e.printStackTrace();

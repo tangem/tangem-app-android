@@ -90,7 +90,7 @@
     <string name="wallet_empty">The wallet is empty</string>
     <string name="not_enough_funds">Not enough funds for transaction fee (gas)!</string>
     <string name="please_wait_while_previous">Please wait while previous transaction is confirmed in blockchain</string>
-    <string name="please_wait_for_confirmation">Please wait for confirmation of incoming transaction!</string>
+    <string name="please_wait_for_confirmation">Could not obtain all inputs. Swipe down to refresh.</string>
     <string name="card_hasn_t_remaining_signature">Card hasn\'t remaining signature!</string>
     <string name="reusable_wallet">REUSABLE WALLET</string>
     <string name="banknote">BANKNOTE</string>
