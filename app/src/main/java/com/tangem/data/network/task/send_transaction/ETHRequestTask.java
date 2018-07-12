@@ -42,6 +42,7 @@ public class ETHRequestTask extends InfuraTask {
                                 JSONObject err = msg.getJSONObject("error");
                                 hashTX = err.getString("message");
                                 LastSignStorage.setLastMessage(sendTransactionActivity.mCard.getWallet(), hashTX);
+                                Log.e("Send_TX_Error:", hashTX);
                                 sendTransactionActivity.finishWithError(hashTX);
                                 return;
                             }
