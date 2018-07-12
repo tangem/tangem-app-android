@@ -106,13 +106,14 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
                 break;
         }
 
+        // set card z position
         switch (antenna.getZ()) {
             case DeviceNFCAntennaLocation.CARD_ON_BACK:
-
+                hand.setElevation(0.0f);
                 break;
 
             case DeviceNFCAntennaLocation.CARD_ON_FRONT:
-
+                hand.setElevation(30.0f);
                 break;
         }
 
