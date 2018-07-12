@@ -680,7 +680,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 tvMessage.setVisibility(View.GONE);
             } else {
                 if (needResendTX) {
-                    tvMessage.setText(R.string.sending_cached_transaction);
+                    //tvMessage.setText(R.string.sending_cached_transaction);
                 } else {
                     tvMessage.setText(mCard.getMessage());
                 }
