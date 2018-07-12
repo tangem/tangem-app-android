@@ -47,12 +47,12 @@ public class SendTransactionActivity extends AppCompatActivity {
         } else if (mCard.getBlockchain() == Blockchain.Bitcoin || mCard.getBlockchain() == Blockchain.BitcoinTestNet) {
             String nodeAddress = engine.GetNode(mCard);
             int nodePort = engine.GetNodePort(mCard);
-            ConnectTask connectTask = new ConnectTask(SendTransactionActivity.this, nodeAddress, nodePort);
+            ConnectTask connectTask = new ConnectTask(SendTransactionActivity.this, nodeAddress, nodePort,3);
             connectTask.execute(ElectrumRequest.Broadcast(mCard.getWallet(), tx));
         } else if (mCard.getBlockchain() == Blockchain.BitcoinCash || mCard.getBlockchain() == Blockchain.BitcoinCashTestNet) {
             String nodeAddress = engine.GetNode(mCard);
             int nodePort = engine.GetNodePort(mCard);
-            ConnectTask connectTask = new ConnectTask(SendTransactionActivity.this, nodeAddress, nodePort);
+            ConnectTask connectTask = new ConnectTask(SendTransactionActivity.this, nodeAddress, nodePort,3);
             connectTask.execute(ElectrumRequest.Broadcast(mCard.getWallet(), tx));
         }
 
@@ -70,7 +70,7 @@ public class SendTransactionActivity extends AppCompatActivity {
 
     public void finishWithError(String Message) {
         Intent intent = new Intent();
-        intent.putExtra("message", "Failed to send transaction. Try again.");
+        intent.putExtra("message", "Try again. Failed to send transaction (" + Message + ")");
         setResult(MainActivity.RESULT_CANCELED, intent);
         finish();
     }
