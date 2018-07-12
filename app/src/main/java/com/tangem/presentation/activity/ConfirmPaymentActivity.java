@@ -59,7 +59,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
     public boolean balanceRequestSuccess = false;
     private EditText etWallet;
     //    private TextView tvAmountEquivalent;
-//    private TextView tvFeeEquivalent;
+    private TextView tvFeeEquivalent;
     public EditText etAmount;
     public EditText etFee;
     private ImageView ivCamera;
@@ -95,7 +95,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
         etFee = findViewById(R.id.etFee);
 //        TextView tvBalanceEquivalent = findViewById(R.id.tvBalanceEquivalent);
 //        tvAmountEquivalent = findViewById(R.id.tvAmountEquivalent);
-//        tvFeeEquivalent = findViewById(R.id.tvFeeEquivalent);
+        tvFeeEquivalent = findViewById(R.id.tvFeeEquivalent);
         ivCamera = findViewById(R.id.ivCamera);
         rgFee = findViewById(R.id.rgFee);
 
@@ -138,21 +138,21 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-//                try {
-//
-//                    CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
-//                    String eqFee = engine.EvaluteFeeEquivalent(mCard, etFee.getText().toString());
-//                    tvFeeEquivalent.setText(eqFee);
-//
-//                    if (!mCard.getAmountEquivalentDescriptionAvailable()) {
-//                        tvFeeEquivalent.setError("Service unavailable");
-//                    } else {
-//                        tvFeeEquivalent.setError(null);
-//                    }
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                    tvFeeEquivalent.setText("");
-//                }
+                try {
+
+                    CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
+                    String eqFee = engine.EvaluteFeeEquivalent(mCard, etFee.getText().toString());
+                    tvFeeEquivalent.setText(eqFee);
+
+                    if (!mCard.getAmountEquivalentDescriptionAvailable()) {
+                        tvFeeEquivalent.setError("Service unavailable");
+                    } else {
+                        tvFeeEquivalent.setError(null);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    tvFeeEquivalent.setText("");
+                }
             }
 
             @Override
