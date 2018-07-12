@@ -2,6 +2,7 @@ package com.tangem.domain.wallet;
 
 import android.net.Uri;
 
+import com.tangem.domain.BitcoinNode;
 import com.tangem.domain.BitcoinNodeTestNet;
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.TLV;
@@ -55,20 +56,22 @@ public class BtcEngine extends CoinEngine {
     }
 
     public static String[] GetBitcoinServiceHosts() {
-        return new String[]{"vps.hsmiths.com", "tardis.bauerj.eu" /*"arihancckjge66iv.onion"*/, "electrumx.bot.nu", "electrumx.hopto.org"/* "btc.asis.io"*/, "e-x.not.fyi", "electrum.backplanedns.org", "helicarrier.bauerj.eu", "electrum.vom-stausee.de", "electrum0.snel.it", "kirsche.emzy.de"};
+//        return new String[]{"vps.hsmiths.com", "tardis.bauerj.eu" /*"arihancckjge66iv.onion"*/, "electrumx.bot.nu", "electrumx.hopto.org"/* "btc.asis.io"*/, "e-x.not.fyi", "electrum.backplanedns.org", "helicarrier.bauerj.eu", "electrum.vom-stausee.de", "electrum0.snel.it", "kirsche.emzy.de"};
+        return new String[]{BitcoinNode.n1.getHost(), BitcoinNode.n2.getHost(),BitcoinNode.n3.getHost(),BitcoinNode.n4.getHost(),BitcoinNode.n5.getHost(),BitcoinNode.n6.getHost(),BitcoinNode.n7.getHost(),BitcoinNode.n8.getHost(),BitcoinNode.n9.getHost(),BitcoinNode.n10.getHost(),BitcoinNode.n11.getHost(),BitcoinNode.n12.getHost(),};
     }
 
     public static Integer[] GetBitcoinServicePorts() {
-        return new Integer[]{8080, 50001/* 8080*/, 50001, 50001, 50001, 50001, 50001, 50001, 50001, 50001};
+//        return new Integer[]{8080, 50001/* 8080*/, 50001, 50001, 50001, 50001, 50001, 50001, 50001, 50001};
+        return new Integer[]{BitcoinNode.n1.getPort(), BitcoinNode.n2.getPort(),BitcoinNode.n3.getPort(),BitcoinNode.n4.getPort(),BitcoinNode.n5.getPort(),BitcoinNode.n6.getPort(),BitcoinNode.n7.getPort(),BitcoinNode.n8.getPort(),BitcoinNode.n9.getPort(),BitcoinNode.n10.getPort(),BitcoinNode.n11.getPort(),BitcoinNode.n12.getPort(),};
     }
 
 
     public static String[] GetBitcoinTestNetServiceHosts() {
-        return new String[]{/*"testnetnode.arihanc.com"*/BitcoinNodeTestNet.hsmiths_com.getHost(), BitcoinNodeTestNet.qtornado_com.getHost(), BitcoinNodeTestNet.bauerj_eu.getHost()};
+        return new String[]{BitcoinNodeTestNet.n1.getHost(), BitcoinNodeTestNet.n2.getHost(), BitcoinNodeTestNet.n3.getHost(), BitcoinNodeTestNet.n4.getHost()};
     }
 
     public static Integer[] GetBitcoinTestNetServicePorts() {
-        return new Integer[]{/*51001*/BitcoinNodeTestNet.hsmiths_com.getPort(), BitcoinNodeTestNet.qtornado_com.getPort(), BitcoinNodeTestNet.bauerj_eu.getPort()};
+        return new Integer[]{BitcoinNodeTestNet.n1.getPort(), BitcoinNodeTestNet.n2.getPort(), BitcoinNodeTestNet.n3.getPort(), BitcoinNodeTestNet.n4.getPort()};
     }
 
 

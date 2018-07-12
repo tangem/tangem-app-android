@@ -57,7 +57,7 @@ public class VerifyCardTask extends Thread {
 
                     String PIN = mCard.getPIN();
                     protocol.setPIN(PIN);
-                    protocol.run_Read();
+                    protocol.run_Read(false);
                     PINStorage.setLastUsedPIN(PIN);
                     mNotifications.OnReadProgress(protocol, 30);
                     if (isCancelled) return;
