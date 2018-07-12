@@ -9,6 +9,7 @@ import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.CoinEngineFactory;
 import com.tangem.domain.wallet.LastSignStorage;
 import com.tangem.domain.wallet.SharedData;
+import com.tangem.domain.wallet.TangemCard;
 import com.tangem.presentation.activity.SendTransactionActivity;
 
 import org.json.JSONException;
@@ -19,15 +20,46 @@ import java.util.List;
 
 public class ConnectTask extends ElectrumTask {
     private WeakReference<SendTransactionActivity> reference;
+    private int remaining_attempts;
 
-    public ConnectTask(SendTransactionActivity context, String host, int port) {
-        super(host, port);
-        reference = new WeakReference<>(context);
+
+    private void CreateChildTask (TangemCard mCard, String tx, String error_message) {
+
+        if (remaining_attempts > 0) {
+
+            remaining_attempts--;
+
+            CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
+
+            if (mCard.getBlockchain() == Blockchain.Bitcoin || mCard.getBlockchain() == Blockchain.BitcoinTestNet) {
+                String nodeAddress = engine.GetNode(mCard);
+                int nodePort = engine.GetNodePort(mCard);
+                ConnectTask connectTask = new ConnectTask(reference.get(), nodeAddress, nodePort, remaining_attempts);
+                connectTask.execute(ElectrumRequest.Broadcast(mCard.getWallet(), tx));
+            } else if (mCard.getBlockchain() == Blockchain.BitcoinCash || mCard.getBlockchain() == Blockchain.BitcoinCashTestNet) {
+                String nodeAddress = engine.GetNode(mCard);
+                int nodePort = engine.GetNodePort(mCard);
+                ConnectTask connectTask = new ConnectTask(reference.get(), nodeAddress, nodePort,remaining_attempts);
+                connectTask.execute(ElectrumRequest.Broadcast(mCard.getWallet(), tx));
+            }
+
+        } else {
+            reference.get().finishWithError(error_message);
+        }
     }
 
-    public ConnectTask(SendTransactionActivity context, String host, int port, SharedData sharedData) {
+
+
+    public ConnectTask(SendTransactionActivity context, String host, int port, int attempts) {
+        super(host, port);
+        reference = new WeakReference<>(context);
+        remaining_attempts = attempts;
+    }
+
+    public ConnectTask(SendTransactionActivity context, String host, int port, int attempts, SharedData sharedData) {
         super(host, port, sharedData);
         reference = new WeakReference<>(context);
+        remaining_attempts = attempts;
     }
 
     @Override
@@ -61,24 +93,27 @@ public class ConnectTask extends ElectrumTask {
                                 sendTransactionActivity.finishWithSuccess();
                             } catch (Exception e) {
                                 engine.SwitchNode(null);
-                                sendTransactionActivity.finishWithError(hashTX);
-                                return;
+//                                sendTransactionActivity.finishWithError(hashTX);
+                                CreateChildTask(sendTransactionActivity.mCard, request.TX, hashTX);
                             }
 
                         } catch (JSONException e) {
                             e.printStackTrace();
                             engine.SwitchNode(null);
-                            sendTransactionActivity.finishWithError(e.toString());
+//                            sendTransactionActivity.finishWithError(e.toString());
+                            CreateChildTask(sendTransactionActivity.mCard, request.TX, e.toString());
                         }
                     }
-                } else if (request.error != null) {
+                } else {
                     engine.SwitchNode(null);
-                    sendTransactionActivity.finishWithError(request.error);
+//                    sendTransactionActivity.finishWithError(request.error);
+                    CreateChildTask(sendTransactionActivity.mCard, request.TX, request.error);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
                 engine.SwitchNode(null);
-                sendTransactionActivity.finishWithError(e.toString());
+//                sendTransactionActivity.finishWithError(e.toString());
+                CreateChildTask(sendTransactionActivity.mCard, request.TX, e.toString());
             }
         }
     }
