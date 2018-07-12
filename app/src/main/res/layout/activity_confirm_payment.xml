@@ -330,18 +330,18 @@
                 app:layout_constraintLeft_toRightOf="@+id/etFee"
                 app:layout_constraintTop_toTopOf="parent"/>
 
-            <!--<TextView-->
-            <!--android:id="@+id/tvFeeEquivalent"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_marginStart="8dp"-->
-            <!--android:fontFamily="@font/montserrat_light"-->
-            <!--android:textColor="@android:color/darker_gray"-->
-            <!--android:textSize="@dimen/text_size_1_small"-->
-            <!--app:layout_constraintBottom_toBottomOf="parent"-->
-            <!--app:layout_constraintLeft_toRightOf="@+id/tvCurrency2"-->
-            <!--app:layout_constraintTop_toTopOf="parent"-->
-            <!--tools:text="000"/>-->
+            <TextView
+                android:id="@+id/tvFeeEquivalent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:fontFamily="@font/montserrat_light"
+                android:paddingLeft="10dp"
+                android:textColor="@android:color/darker_gray"
+                android:textSize="@dimen/text_size_1_small"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@+id/tvCurrency2"
+                app:layout_constraintTop_toTopOf="parent" />
 
         </android.support.constraint.ConstraintLayout>
 
