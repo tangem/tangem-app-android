@@ -87,21 +87,22 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
 
         rippleBackground.startRippleAnimation();
 
-        if (BuildConfig.DEBUG)
-            tvNFCHint.setText("Scan a banknote with your\n" + PhoneUtility.GetPhoneName() + "\nas shown above");
-        else
-            tvNFCHint.setText(R.string.scan_banknote);
-
         DeviceNFCAntennaLocation antenna = new DeviceNFCAntennaLocation();
         antenna.getAntennaLocation();
+
+        // set phone name
+        if (!antenna.getFullName().equals(""))
+            tvNFCHint.setText("Scan a banknote with your\n" + antenna.getFullName() + "\n as shown above");
+        else
+            tvNFCHint.setText("Scan a banknote with your\n" + getString(R.string.phone) + "\n as shown above");
 
         // animate
         final RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) hand.getLayoutParams();
         final RelativeLayout.LayoutParams lp2 = (RelativeLayout.LayoutParams) nfc.getLayoutParams();
         final float dp = getResources().getDisplayMetrics().density;
-        final float lm = dp * (69 + antenna.X * 75);
-        lp.topMargin = (int) (dp * (-100 + antenna.Y * 250));
-        lp2.topMargin = (int) (dp * (-125 + antenna.Y * 250));
+        final float lm = dp * (69 + antenna.getX() * 75);
+        lp.topMargin = (int) (dp * (-100 + antenna.getY() * 250));
+        lp2.topMargin = (int) (dp * (-125 + antenna.getY() * 250));
         nfc.setLayoutParams(lp2);
         Animation a = new Animation() {
             @Override
