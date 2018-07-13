@@ -76,7 +76,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
 
     private int unsuccessReadCount = 0;
     private Tag lastTag = null;
-    private String lastRead_UID = "";
+//    private String lastRead_UID = "";
 
     public Main() {
     }
@@ -119,9 +119,9 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
                 int cardIndex = viewHolder.getAdapterPosition();
                 if (cardIndex < 0 || cardIndex >= mCardListAdapter.getItemCount()) return;
                 slCardUIDs.remove(mCardListAdapter.getCard(cardIndex).getUID());
-                if (mCardListAdapter.getCard(cardIndex).getUID() == lastRead_UID) {
-                    lastRead_UID = "";
-                }
+//                if (mCardListAdapter.getCard(cardIndex).getUID() == lastRead_UID) {
+//                    lastRead_UID = "";
+//                }
                 mCardListAdapter.removeCard(cardIndex);
                 if (mCardListAdapter.getItemCount() == 0 && getActivity().getClass() == MainActivity.class) {
                     ((MainActivity) getActivity()).hideCleanButton();
@@ -142,6 +142,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
     @Override
     public void onResume() {
         super.onResume();
+        ReadCardInfoTask.resetLastReadInfo();
         mNfcManager.onResume();
     }
 
@@ -201,8 +202,13 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
                 }
 
             }
-        } else if (resultCode == Activity.RESULT_OK && requestCode == REQUEST_CODE_ENTER_PIN_ACTIVITY) {
-            if (lastTag != null) onTagDiscovered(lastTag);
+        } else if (requestCode == REQUEST_CODE_ENTER_PIN_ACTIVITY) {
+            if( resultCode == Activity.RESULT_OK && lastTag != null)
+            {
+                onTagDiscovered(lastTag);
+            }else{
+                ReadCardInfoTask.resetLastReadInfo();
+            }
         }
     }
 
@@ -233,13 +239,14 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
             }
             lastTag = tag;
 
-            readCardInfoTask = new ReadCardInfoTask(getActivity(), mNfcManager, lastRead_UID, isoDep, this);
+            readCardInfoTask = new ReadCardInfoTask(getActivity(), mNfcManager, isoDep, this);
             readCardInfoTask.start();
 
             Log.i(TAG, "onTagDiscovered " + Arrays.toString(tag.getId()));
 
         } catch (Exception e) {
             e.printStackTrace();
+            mNfcManager.notifyReadResult(false);
         }
 
     }
@@ -290,6 +297,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
         readCardInfoTask = null;
         if (cardProtocol != null) {
             if (cardProtocol.getError() == null) {
+                mNfcManager.notifyReadResult(true);
                 progressBar.post(() -> {
                     rlProgressBar.setVisibility(View.GONE);
                     progressBar.setProgress(100);
@@ -334,7 +342,6 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
                     for (RequestWalletInfoTask rt : requestTasks) {
                         rt.cancel(true);
                     }
-                    lastRead_UID = "";
 
 
                 });
@@ -349,12 +356,15 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
                         slCardUIDs.remove(cardProtocol.getCard().getUID());
                         if (cardProtocol.getError() instanceof CardProtocol.TangemException_InvalidPIN) {
                             doEnterPIN();
-                        } else if (cardProtocol.getError() instanceof CardProtocol.TangemException_ExtendedLengthNotSupported) {
-                            if (!NoExtendedLengthSupportDialog.allreadyShowed) {
-                                new NoExtendedLengthSupportDialog().show(Objects.requireNonNull(getActivity()).getFragmentManager(), NoExtendedLengthSupportDialog.TAG);
-                            }
                         } else {
+                            if (cardProtocol.getError() instanceof CardProtocol.TangemException_ExtendedLengthNotSupported) {
+                                if (!NoExtendedLengthSupportDialog.allreadyShowed) {
+                                    new NoExtendedLengthSupportDialog().show(Objects.requireNonNull(getActivity()).getFragmentManager(), NoExtendedLengthSupportDialog.TAG);
+                                }
+                            }
                             lastTag = null;
+                            ReadCardInfoTask.resetLastReadInfo();
+                            mNfcManager.notifyReadResult(false);
                         }
                     }
                 });
@@ -376,6 +386,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
 
     public void OnReadCancel() {
         readCardInfoTask = null;
+        ReadCardInfoTask.resetLastReadInfo();
         progressBar.postDelayed(() -> {
             try {
                 rlProgressBar.setVisibility(View.GONE);
@@ -410,7 +421,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
         for (RequestWalletInfoTask rt : requestTasks) {
             rt.cancel(true);
         }
-        lastRead_UID = "";
+        ReadCardInfoTask.resetLastReadInfo();
     }
 
     public void refreshCard(TangemCard card) {
