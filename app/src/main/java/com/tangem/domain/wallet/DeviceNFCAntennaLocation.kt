@@ -28,7 +28,7 @@ class DeviceNFCAntennaLocation {
         this.z = 0
 
         for (nfcLocation in NFCLocation.values()) {
-            if (codename == nfcLocation.codename) {
+            if (codename.startsWith(nfcLocation.codename)) {
                 this.fullName = nfcLocation.fullName
                 this.orientation = nfcLocation.orientation
                 this.x = nfcLocation.x / 100f
