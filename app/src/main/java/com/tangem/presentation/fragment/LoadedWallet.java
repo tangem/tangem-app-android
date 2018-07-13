@@ -519,7 +519,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
 
             RateInfoTask taskRate = new RateInfoTask(LoadedWallet.this);
-            ExchangeRequest rate = ExchangeRequest.GetRate(mCard.getWallet(), "ic_logo_ethereum", "ic_logo_ethereum");
+            ExchangeRequest rate = ExchangeRequest.GetRate(mCard.getWallet(), "ethereum", "ethereum");
             taskRate.execute(rate);
 
         } else if (mCard.getBlockchain() == Blockchain.Token) {
@@ -539,7 +539,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
 
             RateInfoTask taskRate = new RateInfoTask(LoadedWallet.this);
-            ExchangeRequest rate = ExchangeRequest.GetRate(mCard.getWallet(), "basic-attention-token", "ic_logo_ethereum");
+            ExchangeRequest rate = ExchangeRequest.GetRate(mCard.getWallet(), "ethereum", "ethereum");
             taskRate.execute(rate);
         }
 
