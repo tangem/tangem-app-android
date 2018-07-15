@@ -553,7 +553,7 @@ public class CardProtocol {
                     } catch (Exception ee) {
                         ee.printStackTrace();
                         Log.e(logTag, "Cannot get issuer");
-                        mCard.setIssuer(Issuer.Unknown);
+                        mCard.setIssuer(Issuer.Unknown());
                     }
                 }
 
@@ -844,7 +844,7 @@ public class CardProtocol {
             rqApdu.addTLV(TLV.Tag.TAG_Issuer_Transaction_Signature, issuerSignature);
         }
         if (issuerData != null) {
-            if (issuer == null || issuer == Issuer.Unknown)
+            if (issuer == null || issuer == Issuer.Unknown())
                 throw new Exception("Need known Issuer to write issuer Data");
             rqApdu.addTLV(TLV.Tag.TAG_Issuer_Data, issuerData);
             byte[] issuerSignature = CardCrypto.Signature(issuer.getPrivateTransactionKey(), issuerData);
@@ -901,7 +901,7 @@ public class CardProtocol {
         }
     }
 
-    private byte[] run_VerifyCode(String hashAlgID, int codePageAddress, int codePageCount, byte[] challenge) throws Exception {
+    public byte[] run_VerifyCode(String hashAlgID, int codePageAddress, int codePageCount, byte[] challenge) throws Exception {
         if (readResult == null) run_Read();
         CommandApdu rqApdu = StartPrepareCommand(INS.VerifyCode);
         rqApdu.addTLV(TLV.Tag.TAG_HashAlgID, hashAlgID.getBytes("US-ASCII"));
