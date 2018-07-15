@@ -179,12 +179,12 @@ public class CardCrypto {
             Log.e("cardCrypto","enc:" +Util.bytesToHex(enc));
             throw new Exception("unsupported s-length - r-length:" + String.valueOf(rLength)+",s-length:" + String.valueOf(sLength)+",enc:" +Util.bytesToHex(enc));
         }
-        
+
         if(!VerifySignature(GeneratePublicKey(privateKeyArray), data, res))
         {
         	throw new Exception("Signature self verify failed - r-length:" + String.valueOf(rLength)+",s-length:" + String.valueOf(sLength)+",enc:" +Util.bytesToHex(enc)+",res:"+Util.bytesToHex(res));
         }
-        
+
         return res;
     }
 
@@ -206,7 +206,7 @@ public class CardCrypto {
      * @return              the PBDKF2 hash of the password
      */
     public static byte[] pbkdf2(byte[] password, byte[] salt, int iterations)
-            throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException {
+            throws InvalidKeyException {
         return PBKDF2.deriveKey(password, salt, iterations);
     }
 
@@ -219,22 +219,20 @@ public class CardCrypto {
         return mEncryptedData;
     }
 
-    public static byte[] Decrypt(byte[] key, byte[] data) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-        try {
+    public static byte[] Decrypt(byte[] key, byte[] data, boolean UsePKCS7)
+            throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException {
+        if (UsePKCS7) {
             SecretKeySpec skeySpec = new SecretKeySpec(key, "AES/CBC/PKCS7PADDING");
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7PADDING");
             cipher.init(Cipher.DECRYPT_MODE, skeySpec, new IvParameterSpec(new byte[16]));
-            byte[] decryptedData = cipher.doFinal(Arrays.copyOfRange(data, 0, data.length ));
+            byte[] decryptedData = cipher.doFinal(Arrays.copyOfRange(data, 0, data.length));
             return decryptedData;
-        }
-        catch (Exception e)
-        {
+        } else {
             SecretKeySpec skeySpec = new SecretKeySpec(key, "AES/CBC/NOPADDING");
             Cipher cipher = Cipher.getInstance("AES/CBC/NOPADDING");
             cipher.init(Cipher.DECRYPT_MODE, skeySpec, new IvParameterSpec(new byte[16]));
-            byte[] decryptedData = cipher.doFinal(Arrays.copyOfRange(data, 0, data.length ));
-            Log.e("decrypt",Util.bytesToHex(decryptedData));
-            throw e;
+            byte[] decryptedData = cipher.doFinal(Arrays.copyOfRange(data, 0, data.length));
+            return decryptedData;
         }
     }
 }
