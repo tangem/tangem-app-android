@@ -270,6 +270,33 @@ public class TangemCard {
         }
     }
 
+    private Boolean codeConfirmed;
+    public void setCodeConfirmed(Boolean codeConfirmed) {
+        this.codeConfirmed = codeConfirmed;
+    }
+
+    public Boolean isCodeConfirmed() {
+        return codeConfirmed;
+    }
+
+    private Boolean onlineVerified;
+    public void setOnlineVerified(Boolean verified) {
+        this.onlineVerified = verified;
+    }
+
+    public Boolean isOnlineVerified() {
+        return onlineVerified;
+    }
+
+    private Boolean onlineValidated;
+    public void setOnlineValidated(Boolean validated) {
+        this.onlineValidated = validated;
+    }
+
+    public Boolean isOnlineValidated() {
+        return onlineValidated;
+    }
+
     public int getRemainingSignatures() {
         return remainingSignatures;
     }
@@ -579,7 +606,7 @@ public class TangemCard {
         return health == 0;
     }
 
-    private Issuer issuer = Issuer.Unknown;
+    private Issuer issuer = Issuer.Unknown();
 
     public void setIssuer(Issuer issuer) {
         this.issuer = issuer;
@@ -1203,7 +1230,7 @@ public class TangemCard {
         if (signingMethod != null) B.putString("signingMethod", signingMethod.name());
         if (manufacturer != null) B.putString("Manufacturer", manufacturer.name());
         if (encryptionMode != null) B.putString("EncryptionMode", encryptionMode.name());
-        if (issuer != null) B.putString("Issuer", issuer.name());
+        if (issuer != null) B.putString("Issuer", issuer.getID());
         if (firmwareVersion != null) B.putString("FirmwareVersion", firmwareVersion);
         B.putString("BalanceDecimal", balanceDecimal);
         B.putString("BalanceDecimalAlter", balanceDecimalAlter);
@@ -1255,6 +1282,19 @@ public class TangemCard {
         B.putFloat("rate", rate);
         B.putFloat("rateAlter", rateAlter);
         B.putString("confirmTx", GetConfirmTXCount().toString(16));
+
+        if( codeConfirmed!=null )
+            B.putBoolean("codeConfirmed", codeConfirmed);
+
+        if( codeConfirmed!=null )
+            B.putBoolean("codeConfirmed", codeConfirmed);
+
+        if( onlineVerified!=null )
+            B.putBoolean("onlineVerified", onlineVerified);
+
+        if( onlineValidated!=null )
+            B.putBoolean("onlineValidated", onlineValidated);
+
     }
 
     public void LoadFromBundle(Bundle B) {
@@ -1292,7 +1332,7 @@ public class TangemCard {
         else
             encryptionMode = null;
 
-        if (B.containsKey("Issuer")) issuer = Issuer.valueOf(B.getString("Issuer"));
+        if (B.containsKey("Issuer")) issuer = Issuer.FindIssuer(B.getString("Issuer"));
         if (B.containsKey("FirmwareVersion")) firmwareVersion = B.getString("FirmwareVersion");
 
         cardPublicKeyValid = B.getBoolean("CardPublicKeyValid");
@@ -1364,6 +1404,15 @@ public class TangemCard {
             rateAlter = B.getFloat("rateAlter");
         if (B.containsKey("confirmTx"))
             countConfirmTX = new BigInteger(B.getString("confirmTx"), 16);
+
+        if( B.containsKey("codeConfirmed") )
+            codeConfirmed=B.getBoolean("codeConfirmed");
+
+        if( B.containsKey("onlineVerified") )
+            onlineVerified=B.getBoolean("onlineVerified");
+
+        if( B.containsKey("onlineValidated") )
+            onlineValidated=B.getBoolean("onlineValidated");
     }
 
     private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
