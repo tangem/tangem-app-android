@@ -21,6 +21,9 @@ public class BalanceValidator {
         String defaultFirstLine = "Unknown balance.";
         String successFirstLine = "Verified balance.";
 
+        firstLine = successFirstLine;
+        secondLine = "";
+
         // rule 1
         if(!CheckOfflineBalance(card) && !CheckOnlineBalance(card)) {
             score = 0;
