@@ -141,11 +141,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="5dp"
                         android:fontFamily="@font/montserrat_light"
-                        android:text="Verified balance"
                         android:textAlignment="center"
                         android:textColor="@color/msg_okay"
-                        android:textSize="18sp"
-                        tools:text="Verified balance" />
+                        android:textSize="18sp" />
 
                     <TextView
                         android:id="@+id/tvBalanceLine2"
@@ -153,7 +151,6 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="5dp"
                         android:fontFamily="@font/montserrat_light"
-                        android:text="100% safe\nConfirmed balance and banknote identity"
                         android:textAlignment="center" />
 
                 </LinearLayout>
@@ -431,7 +428,8 @@
             android:text="@string/message"
             android:textAlignment="center"
             android:textColor="@color/black"
-            android:textStyle="normal|bold"/>
+            android:textStyle="normal|bold"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/tvError"
@@ -447,7 +445,8 @@
             android:text="@string/error"
             android:textAlignment="center"
             android:textColor="@color/white"
-            android:textStyle="bold"/>
+            android:textStyle="bold"
+            android:visibility="gone" />
 
     </RelativeLayout>
 
