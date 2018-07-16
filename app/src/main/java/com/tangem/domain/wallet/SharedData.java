@@ -22,10 +22,12 @@ public class SharedData
         if(payload == null || payload.compareTo(value)!=0)
         {
             boolean isChange = true;
-            if(payload == null)
+            if(payload == null || payload == BigDecimal.ZERO)
                 isChange = false;
             if(value!=BigDecimal.ZERO)
                 payload = value;
+            else
+                isChange = false;
 
             return isChange;
         }
