@@ -470,7 +470,11 @@ public class CardProtocol {
 
         // try read denomination
         if (tlvIssuerData != null && tlvIssuerData.getTLV(TLV.Tag.TAG_Denomination) != null) {
-            mCard.setDenomination(tlvIssuerData.getTLV(TLV.Tag.TAG_Denomination).Value);
+            if(tlvIssuerData.getTLV(TLV.Tag.TAG_DenominationText) != null) {
+                mCard.setDenomination(tlvIssuerData.getTLV(TLV.Tag.TAG_Denomination).Value, tlvIssuerData.getTLV(TLV.Tag.TAG_DenominationText).getAsString());
+            }else{
+                mCard.setDenomination(tlvIssuerData.getTLV(TLV.Tag.TAG_Denomination).Value);
+            }
         } else {
             mCard.clearDenomination();
         }
@@ -503,6 +507,8 @@ public class CardProtocol {
                 mCard.setCardPublicKey(tlvCardPubkicKey.Value);
 
                 TLVList tlvCardData = TLVList.fromBytes(readResult.getTLV(TLV.Tag.TAG_CardData).Value);
+
+                mCard.setBatch(tlvCardData.getTLV(TLV.Tag.TAG_Batch).getAsHexString());
 
                 TLV tokenSymbol = tlvCardData.getTLV(TLV.Tag.TAG_Token_Symbol);
                 TLV contractAddress = tlvCardData.getTLV(TLV.Tag.TAG_Token_Contract_Address);
@@ -974,6 +980,9 @@ public class CardProtocol {
             Log.i(logTag, String.format("OK: [%04X]\n%s", rspApdu.getSW1SW2(), rspApdu.getTLVs().getParsedTLVs("  ")));
             TLV issuerData = rspApdu.getTLVs().getTLV(TLV.Tag.TAG_Issuer_Data);
             TLV issuerDataSignature = rspApdu.getTLVs().getTLV(TLV.Tag.TAG_Issuer_Data_Signature);
+            TLV issuerDataCounter = rspApdu.getTLVs().getTLV(TLV.Tag.TAG_Issuer_Data_Counter);
+
+            boolean protectIssuerDataAgainstReplay=(readResult.getTagAsInt(TLV.Tag.TAG_SettingsMask)&SettingsMask.ProtectIssuerDataAgainstReplay)!=0;
 
             if (issuerData == null || issuerDataSignature == null)
                 throw new TangemException("Invalid answer format (GetIssuerData)");
@@ -981,6 +990,9 @@ public class CardProtocol {
             ByteArrayOutputStream bsDataToVerify = new ByteArrayOutputStream();
             bsDataToVerify.write(mCard.getCID());
             bsDataToVerify.write(issuerData.Value);
+            if( protectIssuerDataAgainstReplay ) {
+                bsDataToVerify.write(issuerDataCounter.Value);
+            }
             try {
                 if (CardCrypto.VerifySignature(mCard.getIssuer().getPublicDataKey(), bsDataToVerify.toByteArray(), issuerDataSignature.Value)) {
                     mCard.setIssuerData(issuerData.Value, issuerDataSignature.Value);
