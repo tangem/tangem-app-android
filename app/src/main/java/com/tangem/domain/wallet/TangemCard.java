@@ -11,10 +11,10 @@ import com.tangem.wallet.R;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by dvol on 16.07.2017.
@@ -1387,6 +1387,16 @@ public class TangemCard {
         if (onlineValidated != null)
             B.putBoolean("onlineValidated", onlineValidated);
 
+    }
+
+    public boolean isBalanceRecieved() {
+        return balanceRecieved;
+    }
+
+    private boolean balanceRecieved;
+
+    public void setBalanceRecieved (boolean value) {
+        balanceRecieved = value;
     }
 
     public void LoadFromBundle(Bundle B) {
