@@ -90,7 +90,8 @@ public class TLV {
         TAG_Token_Decimal(0xA2),
         TAG_Denomination(0xC0),
         TAG_ValidatedBalance(0xC1),
-        TAG_LastSign_Date(0xC2);
+        TAG_LastSign_Date(0xC2),
+        TAG_DenominationText(0xC3);
 
 
         Tag(int Code) {
