@@ -117,4 +117,14 @@ public enum Issuer {
         return Issuer.Unknown;
     }
 
+    public static Issuer FindIssuer(String ID) {
+        Issuer[] issuers = Issuer.values();
+        for (int i = 1; i < issuers.length; i++) {
+            if (issuers[i].ID.equals(ID)) {
+                return issuers[i];
+            }
+        }
+        return Issuer.Unknown;
+    }
+
 }
