@@ -58,7 +58,7 @@ public class BalanceValidator {
             }
 
             if(card.getFailedBalanceRequestCounter()!=0) {
-                score = 100 - 10 * card.getFailedBalanceRequestCounter();
+                score = 100 - 5 * card.getFailedBalanceRequestCounter();
                 firstLine = "Verified balance.";
                 secondLine += " Not all nodes have returned balance. App is requesting more nodes to be 100% sure...";
                 if(score <= 0)
@@ -117,7 +117,7 @@ public class BalanceValidator {
         {
             score = -50;
             String firstLine = "Unguaranted balance.";
-            secondLine = " Loading in progress. Wait for full confirmation in blockchain.";
+            secondLine += " Loading in progress. Wait for full confirmation in blockchain.";
             if(score <= 0)
                 return;
         }
