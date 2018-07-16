@@ -431,6 +431,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
             taskRate.execute(rate);
 
         } else if (card.getBlockchain() == Blockchain.BitcoinTestNet || card.getBlockchain() == Blockchain.Bitcoin) {
+            card.resetFailedBalanceRequestCounter();
             SharedData data = new SharedData(SharedData.COUNT_REQUEST);
             for (int i = 0; i < data.allRequest; ++i) {
 
@@ -445,6 +446,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
             }
 
         } else if (card.getBlockchain() == Blockchain.BitcoinCashTestNet || card.getBlockchain() == Blockchain.BitcoinCash) {
+            card.resetFailedBalanceRequestCounter();
             SharedData data = new SharedData(SharedData.COUNT_REQUEST);
             for (int i = 0; i < data.allRequest; ++i) {
 
@@ -515,6 +517,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
                         taskRate.execute(rate);
 
                     } else if (card.getBlockchain() == Blockchain.BitcoinTestNet || card.getBlockchain() == Blockchain.Bitcoin) {
+                        card.resetFailedBalanceRequestCounter();
                         SharedData data = new SharedData(SharedData.COUNT_REQUEST);
 
                         for (int i = 0; i < data.allRequest; ++i) {
@@ -538,6 +541,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
                         taskRate.execute(rate);
 
                     } else if (card.getBlockchain() == Blockchain.BitcoinCashTestNet || card.getBlockchain() == Blockchain.BitcoinCash) {
+                        card.resetFailedBalanceRequestCounter();
                         SharedData data = new SharedData(SharedData.COUNT_REQUEST);
 
                         for (int i = 0; i < data.allRequest; ++i) {

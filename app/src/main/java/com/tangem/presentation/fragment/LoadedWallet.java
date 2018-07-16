@@ -36,12 +36,15 @@ import com.google.zxing.WriterException;
 import com.tangem.data.network.request.ElectrumRequest;
 import com.tangem.data.network.request.ExchangeRequest;
 import com.tangem.data.network.request.InfuraRequest;
+import com.tangem.data.network.request.VerificationServerProtocol;
+import com.tangem.data.network.task.VerificationServerTask;
 import com.tangem.data.network.task.loaded_wallet.ETHRequestTask;
 import com.tangem.data.network.task.loaded_wallet.RateInfoTask;
 import com.tangem.data.network.task.loaded_wallet.UpdateWalletInfoTask;
 import com.tangem.data.nfc.VerifyCardTask;
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.NfcManager;
+import com.tangem.domain.wallet.BalanceValidator;
 import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.CoinEngineFactory;
@@ -89,12 +92,12 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
     public SwipeRefreshLayout mSwipeRefreshLayout;
     private RelativeLayout rlProgressBar;
-    private TextView tvCardID, tvBalance, tvOffline, tvBalanceEquivalent, tvWallet, tvInputs, tvError, tvMessage, tvIssuer, tvBlockchain, tvValidationNode, tvHeader, tvCaution;
+    private TextView tvCardID, tvBalance, tvBalanceLine1, tvBalanceLine2,tvOffline, tvBalanceEquivalent, tvWallet, tvInputs, tvError, tvMessage, tvIssuer, tvBlockchain, tvValidationNode, tvHeader, tvCaution;
     private ProgressBar progressBar;
     private ImageView ivBlockchain, ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion;
     private AppCompatButton btnExtract;
 
-    public List<UpdateWalletInfoTask> updateTasks = new ArrayList<>();
+    public List<AsyncTask> updateTasks = new ArrayList<>();
     private boolean lastReadSuccess = true;
     private VerifyCardTask verifyCardTask = null;
     private int requestPIN2Count = 0;
@@ -102,10 +105,47 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     private String newPIN = "", newPIN2 = "";
     private CardProtocol mCardProtocol;
     private int scanTimes = 0;
+    OnlineVerifyTask onlineVerifyTask;
 
     public LoadedWallet() {
 
     }
+
+    private class OnlineVerifyTask extends VerificationServerTask {
+
+        @Override
+        protected void onCancelled() {
+            super.onCancelled();
+            updateTasks.remove(this);
+            onlineVerifyTask=null;
+            if (updateTasks.size() == 0) mSwipeRefreshLayout.setRefreshing(false);
+        }
+
+        @Override
+        protected void onPostExecute(List<VerificationServerProtocol.Request> requests) {
+            super.onPostExecute(requests);
+            Log.i("OnlineVerifyTask", "onPostExecute[" + String.valueOf(updateTasks.size()) + "]");
+            updateTasks.remove(this);
+            onlineVerifyTask=null;
+
+            for (VerificationServerProtocol.Request request : requests) {
+                if (request.error == null) {
+                    VerificationServerProtocol.Verify.Answer answer = (VerificationServerProtocol.Verify.Answer) request.answer;
+                    if (answer.error == null) {
+                        mCard.setOnlineVerified(answer.results[0].passed);
+                    } else {
+                        mCard.setOnlineVerified(null);
+                        errorOnUpdate(request.error);
+                    }
+                } else {
+                    mCard.setOnlineVerified(null);
+                    errorOnUpdate(request.error);
+                }
+            }
+            if (updateTasks.size() == 0) mSwipeRefreshLayout.setRefreshing(false);
+        }
+    }
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -127,6 +167,8 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         rlProgressBar = v.findViewById(R.id.rlProgressBar);
         ImageView ivTangemCard = v.findViewById(R.id.ivTangemCard);
         tvBalance = v.findViewById(R.id.tvBalance);
+        tvBalanceLine1 = v.findViewById(R.id.tvBalanceLine1);
+        tvBalanceLine2 = v.findViewById(R.id.tvBalanceLine2);
         tvOffline = v.findViewById(R.id.tvOffline);
         tvCardID = v.findViewById(R.id.tvCardID);
         tvWallet = v.findViewById(R.id.tvWallet);
@@ -175,6 +217,12 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         if (!mCard.hasBalanceInfo()) {
             mSwipeRefreshLayout.setRefreshing(true);
             mSwipeRefreshLayout.postDelayed(this::onRefresh, 1000);
+        }
+
+        if ( (mCard.isOnlineVerified()==null || !mCard.isOnlineVerified()) && onlineVerifyTask ==null) {
+            onlineVerifyTask = new OnlineVerifyTask();
+            updateTasks.add(onlineVerifyTask);
+            onlineVerifyTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, VerificationServerProtocol.Verify.prepare(mCard));
         }
 
         startVerify(lastTag);
@@ -266,7 +314,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     @Override
     public void onStop() {
         super.onStop();
-        for (UpdateWalletInfoTask ut : updateTasks) {
+        for (AsyncTask ut : updateTasks) {
             ut.cancel(true);
         }
         mNfcManager.onStop();
@@ -465,7 +513,9 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
 
         if (mCard.getBlockchain() == Blockchain.Bitcoin || mCard.getBlockchain() == Blockchain.BitcoinTestNet) {
+            mCard.resetFailedBalanceRequestCounter();
             SharedData data = new SharedData(SharedData.COUNT_REQUEST);
+            mCard.resetFailedBalanceRequestCounter();
             for (int i = 0; i < data.allRequest; ++i) {
                 String nodeAddress = Objects.requireNonNull(engine).GetNextNode(mCard);
                 int nodePort = engine.GetNextNodePort(mCard);
@@ -483,6 +533,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
 
         } else if (mCard.getBlockchain() == Blockchain.BitcoinCash || mCard.getBlockchain() == Blockchain.BitcoinCashTestNet) {
+            mCard.resetFailedBalanceRequestCounter();
             SharedData data = new SharedData(SharedData.COUNT_REQUEST);
             for (int i = 0; i < data.allRequest; ++i) {
                 String nodeAddress = Objects.requireNonNull(engine).GetNextNode(mCard);
@@ -688,6 +739,14 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             }
 
             CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
+
+            if (mCard.getBlockchain() == Blockchain.Bitcoin || mCard.getBlockchain() == Blockchain.BitcoinTestNet) {
+
+                BalanceValidator validator = new BalanceValidator();
+                validator.Check(mCard);
+                tvBalanceLine1.setText(validator.GetFirstLine());
+                tvBalanceLine2.setText(validator.GetSecondLine());
+            }
 
             if (engine.HasBalanceInfo(mCard) || mCard.getOfflineBalance() == null) {
                 if (mCard.getBlockchain() == Blockchain.Token) {
