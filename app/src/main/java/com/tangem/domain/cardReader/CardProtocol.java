@@ -610,6 +610,10 @@ public class CardProtocol {
 
             mCard.setRemainingSignatures(readResult.getTagAsInt(TLV.Tag.TAG_RemainingSignatures));
 
+            if (readResult != null && readResult.getTLV(TLV.Tag.TAG_SignedHashes) != null) {
+                mCard.setSignHashes(readResult.getTLV(TLV.Tag.TAG_SignedHashes).Value);
+            }
+
         } else {
             mCard.setWallet("N/A");
         }
