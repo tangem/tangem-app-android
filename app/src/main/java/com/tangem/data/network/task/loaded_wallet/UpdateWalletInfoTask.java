@@ -19,6 +19,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,20 +70,28 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                             String mWalletAddress = request.getParams().getString(0);
                             Long confBalance = request.getResult().getLong("confirmed");
                             Long unconf = request.getResult().getLong("unconfirmed");
+                            loadedWallet.mCard.setBalanceRecieved(true);
+
                             if (sharedCounter != null) {
+                                boolean notEqualBalance = !sharedCounter.UpdatePayload(new BigDecimal(String.valueOf(confBalance)));
+                                if (notEqualBalance)
+                                    loadedWallet.mCard.setIsBalanceEqual(false);
                                 int counter = sharedCounter.requestCounter.incrementAndGet();
                                 if (counter != 1) {
                                     continue;
                                 }
                             }
 
+
                             loadedWallet.mCard.setBalanceConfirmed(confBalance);
                             loadedWallet.mCard.setBalanceUnconfirmed(unconf);
                             loadedWallet.mCard.setDecimalBalance(String.valueOf(confBalance));
+
                             loadedWallet.mCard.setValidationNodeDescription(getValidationNodeDescription());
                         } catch (JSONException e) {
                             if (sharedCounter != null) {
                                 int errCounter = sharedCounter.errorRequest.incrementAndGet();
+                                loadedWallet.mCard.incFailedBalanceRequestCounter();
                                 if (errCounter >= sharedCounter.allRequest) {
                                     e.printStackTrace();
                                     loadedWallet.errorOnUpdate(e.toString());
@@ -270,6 +279,7 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                 } else {
                     if (sharedCounter != null) {
                         int errCounter = sharedCounter.errorRequest.incrementAndGet();
+                        loadedWallet.mCard.incFailedBalanceRequestCounter();
                         if (errCounter >= sharedCounter.allRequest) {
                             loadedWallet.errorOnUpdate(request.error);
                             engine.SwitchNode(loadedWallet.mCard);
@@ -285,6 +295,7 @@ public class UpdateWalletInfoTask extends ElectrumTask {
             } catch (JSONException e) {
                 if (sharedCounter != null) {
                     int errCounter = sharedCounter.errorRequest.incrementAndGet();
+                    loadedWallet.mCard.incFailedBalanceRequestCounter();
                     if (errCounter >= sharedCounter.allRequest) {
                         e.printStackTrace();
                         loadedWallet.errorOnUpdate(e.toString());
