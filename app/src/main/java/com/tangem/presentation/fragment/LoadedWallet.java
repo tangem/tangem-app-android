@@ -516,6 +516,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             mCard.resetFailedBalanceRequestCounter();
             SharedData data = new SharedData(SharedData.COUNT_REQUEST);
             mCard.resetFailedBalanceRequestCounter();
+            mCard.setIsBalanceEqual(true);
             for (int i = 0; i < data.allRequest; ++i) {
                 String nodeAddress = Objects.requireNonNull(engine).GetNextNode(mCard);
                 int nodePort = engine.GetNextNodePort(mCard);
@@ -535,6 +536,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         } else if (mCard.getBlockchain() == Blockchain.BitcoinCash || mCard.getBlockchain() == Blockchain.BitcoinCashTestNet) {
             mCard.resetFailedBalanceRequestCounter();
             SharedData data = new SharedData(SharedData.COUNT_REQUEST);
+            mCard.setIsBalanceEqual(true);
             for (int i = 0; i < data.allRequest; ++i) {
                 String nodeAddress = Objects.requireNonNull(engine).GetNextNode(mCard);
                 int nodePort = engine.GetNextNodePort(mCard);
