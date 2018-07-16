@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.tangem.presentation.dialog.NFCEnableDialog;
 
@@ -74,6 +75,27 @@ public class NfcManager {
             isoDep.close();
         }
 //        }
+    }
+
+    int errorCount=0;
+    public void notifyReadResult(boolean success)
+    {
+        if(success)
+        {
+            errorCount=0;
+        }else{
+            errorCount++;
+        }
+        if( errorCount>=3 )
+        {
+            disableReaderMode();
+            mNfcAdapter=null;
+            Toast.makeText(mActivity,"NFC restarted!",Toast.LENGTH_SHORT).show();
+            mActivity.runOnUiThread(()->{
+                mNfcAdapter = NfcAdapter.getDefaultAdapter(mActivity);
+                enableReaderMode();
+            });
+        }
     }
 
     private void showNFCEnableDialog() {
