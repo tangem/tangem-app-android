@@ -4,15 +4,11 @@ import android.content.Context;
 import android.nfc.tech.IsoDep;
 import android.util.Log;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.FW;
 import com.tangem.domain.cardReader.NfcManager;
 import com.tangem.domain.wallet.PINStorage;
 import com.tangem.domain.wallet.TangemCard;
-import com.tangem.util.Util;
 
 import java.util.Arrays;
 
