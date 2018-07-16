@@ -271,6 +271,7 @@ public class TangemCard {
     }
 
     private Boolean codeConfirmed;
+
     public void setCodeConfirmed(Boolean codeConfirmed) {
         this.codeConfirmed = codeConfirmed;
     }
@@ -280,6 +281,7 @@ public class TangemCard {
     }
 
     private Boolean onlineVerified;
+
     public void setOnlineVerified(Boolean verified) {
         this.onlineVerified = verified;
     }
@@ -289,6 +291,7 @@ public class TangemCard {
     }
 
     private Boolean onlineValidated;
+
     public void setOnlineValidated(Boolean validated) {
         this.onlineValidated = validated;
     }
@@ -654,8 +657,8 @@ public class TangemCard {
         return issuer.getOfficialName();
     }
 
-    byte[] issuerData;
-    byte[] issuerDataSignature;
+    private byte[] issuerData;
+    private byte[] issuerDataSignature;
 
     public byte[] getIssuerData() {
         return issuerData;
@@ -667,9 +670,10 @@ public class TangemCard {
 
     public void setIssuerData(byte[] value, byte[] signature) {
         issuerData = value;
+        issuerDataSignature = signature;
     }
 
-    boolean needWriteIssuerData = false;
+    private boolean needWriteIssuerData = false;
 
     public boolean getNeedWriteIssuerData() {
         return needWriteIssuerData;
@@ -826,6 +830,16 @@ public class TangemCard {
     public Boolean isFirmwareNewer(String version) throws Exception {
         int[] numbers1 = getFirmwareVersionNumbers(firmwareVersion), numbers2 = getFirmwareVersionNumbers(version);
         return numbers1[0] > numbers2[0] || (numbers1[0] == numbers2[0] && numbers1[1] > numbers2[1]);
+    }
+
+    private String batch;
+
+    public void setBatch(String batch) {
+        this.batch = batch;
+    }
+
+    public String getBatch() {
+        return batch;
     }
 
     private String validationNodeDescription = "";
@@ -1153,17 +1167,39 @@ public class TangemCard {
     }
 
     private byte[] Denomination;
+    private String DenominationText;
 
-    public void setDenomination(byte[] denomination) {
+    public void setDenomination(byte[] denomination, String denominationText) {
         this.Denomination = denomination;
+        this.DenominationText=denominationText;
+    }
+
+    public void setDenomination(byte[] denomination)
+    {
+        this.Denomination=denomination;
+        try {
+            this.DenominationText=CoinEngineFactory.Create(getBlockchain()).ConvertByteArrayToAmount(this, denomination);
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.DenominationText="N/A";
+        }
     }
 
     public byte[] getDenomination() {
         return Denomination;
     }
 
+    public String getDenominationText() {
+        return DenominationText;
+    }
+
+    public void setDenominationText(String denominationText) {
+        DenominationText = denominationText;
+    }
+
     public void clearDenomination() {
         Denomination = null;
+        DenominationText=null;
     }
 
     public void setError(String error) {
@@ -1232,6 +1268,7 @@ public class TangemCard {
         if (encryptionMode != null) B.putString("EncryptionMode", encryptionMode.name());
         if (issuer != null) B.putString("Issuer", issuer.getID());
         if (firmwareVersion != null) B.putString("FirmwareVersion", firmwareVersion);
+        if (batch != null) B.putString("Batch", batch);
         B.putString("BalanceDecimal", balanceDecimal);
         B.putString("BalanceDecimalAlter", balanceDecimalAlter);
         B.putBoolean("ManufacturerConfirmed", manufacturerConfirmed);
@@ -1283,16 +1320,16 @@ public class TangemCard {
         B.putFloat("rateAlter", rateAlter);
         B.putString("confirmTx", GetConfirmTXCount().toString(16));
 
-        if( codeConfirmed!=null )
+        if (codeConfirmed != null)
             B.putBoolean("codeConfirmed", codeConfirmed);
 
-        if( codeConfirmed!=null )
+        if (codeConfirmed != null)
             B.putBoolean("codeConfirmed", codeConfirmed);
 
-        if( onlineVerified!=null )
+        if (onlineVerified != null)
             B.putBoolean("onlineVerified", onlineVerified);
 
-        if( onlineValidated!=null )
+        if (onlineValidated != null)
             B.putBoolean("onlineValidated", onlineValidated);
 
     }
@@ -1334,6 +1371,7 @@ public class TangemCard {
 
         if (B.containsKey("Issuer")) issuer = Issuer.FindIssuer(B.getString("Issuer"));
         if (B.containsKey("FirmwareVersion")) firmwareVersion = B.getString("FirmwareVersion");
+        if (B.containsKey("Batch")) batch = B.getString("Batch");
 
         cardPublicKeyValid = B.getBoolean("CardPublicKeyValid");
         if (B.containsKey("CardPublicKey")) setCardPublicKey(B.getByteArray("CardPublicKey"));
@@ -1350,7 +1388,7 @@ public class TangemCard {
         if (B.containsKey("Denomination")) setDenomination(B.getByteArray("Denomination"));
         else clearDenomination();
 
-        if (B.containsKey("IssuerData"))
+        if (B.containsKey("IssuerData") && B.containsKey("IssuerDataSignature"))
             setIssuerData(B.getByteArray("IssuerData"), B.getByteArray("IssuerDataSignature"));
         else setIssuerData(null, null);
 
@@ -1405,21 +1443,22 @@ public class TangemCard {
         if (B.containsKey("confirmTx"))
             countConfirmTX = new BigInteger(B.getString("confirmTx"), 16);
 
-        if( B.containsKey("codeConfirmed") )
-            codeConfirmed=B.getBoolean("codeConfirmed");
+        if (B.containsKey("codeConfirmed"))
+            codeConfirmed = B.getBoolean("codeConfirmed");
 
-        if( B.containsKey("onlineVerified") )
-            onlineVerified=B.getBoolean("onlineVerified");
+        if (B.containsKey("onlineVerified"))
+            onlineVerified = B.getBoolean("onlineVerified");
 
-        if( B.containsKey("onlineValidated") )
-            onlineValidated=B.getBoolean("onlineValidated");
+        if (B.containsKey("onlineValidated"))
+            onlineValidated = B.getBoolean("onlineValidated");
     }
 
     private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
+
     public static String bytesToHex(byte[] bytes) {
         if (bytes == null) return "";
         char[] hexChars = new char[bytes.length * 2];
-        for ( int j = 0; j < bytes.length; j++ ) {
+        for (int j = 0; j < bytes.length; j++) {
             int v = bytes[j] & 0xFF;
             hexChars[j * 2] = hexArray[v >>> 4];
             hexChars[j * 2 + 1] = hexArray[v & 0x0F];
@@ -1430,9 +1469,9 @@ public class TangemCard {
     public int getCardImageResource() {
         switch (getBlockchainID()) {
             case "BTC":
-                if ( bytesToHex(getDenomination()).equals("40420F0000000000") )
+                if (bytesToHex(getDenomination()).equals("40420F0000000000"))
                     return R.drawable.card_btc001;
-                else if (bytesToHex(getDenomination()).equals("404B4C0000000000") )
+                else if (bytesToHex(getDenomination()).equals("404B4C0000000000"))
                     return R.drawable.card_btc005;
                 else
                     return R.drawable.card_default;
