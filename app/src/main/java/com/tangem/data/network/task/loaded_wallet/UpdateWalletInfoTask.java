@@ -73,7 +73,7 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                             loadedWallet.mCard.setBalanceRecieved(true);
 
                             if (sharedCounter != null) {
-                                boolean notEqualBalance = !sharedCounter.UpdatePayload(new BigDecimal(String.valueOf(confBalance)));
+                                boolean notEqualBalance = sharedCounter.UpdatePayload(new BigDecimal(String.valueOf(confBalance)));
                                 if (notEqualBalance)
                                     loadedWallet.mCard.setIsBalanceEqual(false);
                                 int counter = sharedCounter.requestCounter.incrementAndGet();
