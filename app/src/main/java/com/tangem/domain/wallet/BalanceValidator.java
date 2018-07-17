@@ -1,7 +1,5 @@
 package com.tangem.domain.wallet;
 
-import android.util.Pair;
-
 public class BalanceValidator {
     private String firstLine;
     private String secondLine;
