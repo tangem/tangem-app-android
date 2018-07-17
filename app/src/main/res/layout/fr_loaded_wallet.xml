@@ -142,7 +142,7 @@
                         android:layout_marginTop="5dp"
                         android:fontFamily="@font/montserrat_light"
                         android:textAlignment="center"
-                        android:textColor="@color/msg_okay"
+                        android:textColor="@android:color/holo_orange_dark"
                         android:textSize="18sp" />
 
                     <TextView
