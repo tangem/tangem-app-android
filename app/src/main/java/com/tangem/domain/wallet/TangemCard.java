@@ -1543,6 +1543,8 @@ public class TangemCard {
                     return R.drawable.card_btc001;
                 else if (bytesToHex(getDenomination()).equals("404B4C0000000000"))
                     return R.drawable.card_btc005;
+                else if (bytesToHex(getDenomination()).equals("0000000000000000"))
+                    return R.drawable.card_btc_hk_s;
                 else
                     return R.drawable.card_default;
 
