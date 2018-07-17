@@ -100,7 +100,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     private Timer timerHideErrorAndMessage = null;
     private String newPIN = "", newPIN2 = "";
     private CardProtocol mCardProtocol;
-    private int scanTimes = 0;
+//    private int scanTimes = 0;
     OnlineVerifyTask onlineVerifyTask;
 
     public LoadedWallet() {
@@ -254,7 +254,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             if (mCardProtocol != null)
                 openVerifyCard(mCardProtocol);
             else {
-                scanTimes++;
+//                scanTimes++;
                 Toast.makeText(getContext(), R.string.need_attach_card_again, Toast.LENGTH_LONG).show();
             }
         });
@@ -508,8 +508,13 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
         CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
 
+        if ( (mCard.isOnlineVerified()==null || !mCard.isOnlineVerified()) && onlineVerifyTask ==null) {
+            onlineVerifyTask = new OnlineVerifyTask();
+//            updateTasks.add(onlineVerifyTask);
+            onlineVerifyTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, VerificationServerProtocol.Verify.prepare(mCard));
+        }
+
         if (mCard.getBlockchain() == Blockchain.Bitcoin || mCard.getBlockchain() == Blockchain.BitcoinTestNet) {
-            mCard.resetFailedBalanceRequestCounter();
             SharedData data = new SharedData(SharedData.COUNT_REQUEST);
             mCard.resetFailedBalanceRequestCounter();
             mCard.setIsBalanceEqual(true);
@@ -634,11 +639,12 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                     mCardProtocol = cardProtocol;
 
 //                    Log.i(TAG, "scanTimes " + scanTimes);
-                    if (scanTimes > 0)
-                        openVerifyCard(mCardProtocol);
+//                    if (scanTimes > 0)
+//                        openVerifyCard(mCardProtocol);
 
-                    scanTimes++;
+//                    scanTimes++;
 
+                    onRefresh();
 
                     //addCard(cardProtocol.getCard());
                 });
@@ -744,6 +750,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 validator.Check(mCard);
                 tvBalanceLine1.setText(validator.GetFirstLine());
                 tvBalanceLine2.setText(validator.GetSecondLine());
+                tvBalanceLine1.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getContext()),validator.GetColor()));
             }
 
             if (engine.HasBalanceInfo(mCard) || mCard.getOfflineBalance() == null) {
