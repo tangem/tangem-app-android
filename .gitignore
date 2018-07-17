@@ -10,6 +10,6 @@
 .externalNativeBuild
 app/libs/
 .idea/vcs.xml
-.idea/caches
+.idea/caches/build_file_checksums.ser
 .idea/dictionaries
 .idea/runConfigurations.xml
