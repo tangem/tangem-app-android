@@ -20,47 +20,55 @@ public class RateInfoTask extends ExchangeTask {
 
     protected void onPostExecute(List<ExchangeRequest> requests) {
         super.onPostExecute(requests);
-        LoadedWallet loadedWallet = reference.get();
 
-        for (ExchangeRequest request : requests) {
-            if (request.error == null) {
-                try {
+        try {
+            LoadedWallet loadedWallet = reference.get();
 
-                    JSONArray arr = request.getAnswerList();
-                    for (int i = 0; i < arr.length(); ++i) {
-                        JSONObject obj = arr.getJSONObject(i);
-                        String currency = obj.getString("id");
+            for (ExchangeRequest request : requests) {
+                if (request.error == null) {
+                    try {
 
-                        boolean stop = false;
-                        boolean stopAlter = false;
-                        if (currency.equals(request.currency)) {
-                            String usd = obj.getString("price_usd");
+                        JSONArray arr = request.getAnswerList();
+                        for (int i = 0; i < arr.length(); ++i) {
+                            JSONObject obj = arr.getJSONObject(i);
+                            String currency = obj.getString("id");
 
-                            Float rate = Float.valueOf(usd);
-                            loadedWallet.mCard.setRate(rate);
-                            loadedWallet.updateViews();
-                            stop = true;
+                            boolean stop = false;
+                            boolean stopAlter = false;
+                            if (currency.equals(request.currency)) {
+                                String usd = obj.getString("price_usd");
+
+                                Float rate = Float.valueOf(usd);
+                                loadedWallet.mCard.setRate(rate);
+                                loadedWallet.updateViews();
+                                stop = true;
+                            }
+
+                            if (currency.equals(request.currencyAlter)) {
+                                String usd = obj.getString("price_usd");
+
+                                Float rate = Float.valueOf(usd);
+                                loadedWallet.mCard.setRateAlter(rate);
+                                loadedWallet.updateViews();
+                                stopAlter = true;
+                            }
+
+                            if (stop && stopAlter) {
+                                break;
+                            }
+
                         }
-
-                        if (currency.equals(request.currencyAlter)) {
-                            String usd = obj.getString("price_usd");
-
-                            Float rate = Float.valueOf(usd);
-                            loadedWallet.mCard.setRateAlter(rate);
-                            loadedWallet.updateViews();
-                            stopAlter = true;
-                        }
-
-                        if (stop && stopAlter) {
-                            break;
-                        }
-
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
             }
+
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+
         }
+
     }
 
 }
