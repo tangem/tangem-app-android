@@ -41,7 +41,7 @@ public class RequestWalletInfoTask extends ElectrumTask {
     protected void onCancelled() {
         super.onCancelled();
         Main main = reference.get();
-        main.requestTasks.remove(this);
+//        main.requestTasks.remove(this);
     }
 
     private void FinishWithError(String wallet, String message) {
@@ -54,7 +54,7 @@ public class RequestWalletInfoTask extends ElectrumTask {
         super.onPostExecute(requests);
         Main main = reference.get();
 
-        main.requestTasks.remove(this);
+//        main.requestTasks.remove(this);
 //        Log.i("RequestWalletInfoTask", "onPostExecute[" + String.valueOf(requests.size()) + "]");
 
         CoinEngine engine = CoinEngineFactory.Create(Blockchain.Bitcoin);
@@ -102,7 +102,7 @@ public class RequestWalletInfoTask extends ElectrumTask {
                                 String hash = jsUnspent.getString("tx_hash");
                                 if (height != -1) {
                                     RequestWalletInfoTask task = new RequestWalletInfoTask(main, request.Host, request.Port);
-                                    main.requestTasks.add(task);
+//                                    main.requestTasks.add(task);
                                     task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
                                             ElectrumRequest.GetTransaction(mWalletAddress, hash));
                                 }
@@ -125,7 +125,7 @@ public class RequestWalletInfoTask extends ElectrumTask {
                                 String hash = jsUnspent.getString("tx_hash");
                                 if (height != -1) {
                                     RequestWalletInfoTask task = new RequestWalletInfoTask(main, request.Host, request.Port);
-                                    main.requestTasks.add(task);
+//                                    main.requestTasks.add(task);
 
                                     task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
                                             ElectrumRequest.GetTransaction(mWalletAddress, hash));
