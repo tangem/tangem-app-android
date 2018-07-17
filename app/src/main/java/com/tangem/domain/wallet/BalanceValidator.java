@@ -1,6 +1,12 @@
 package com.tangem.domain.wallet;
 
+import android.graphics.Color;
+import android.support.v4.content.ContextCompat;
 import android.util.Pair;
+
+import com.tangem.wallet.R;
+
+import java.util.Objects;
 
 public class BalanceValidator {
     private String firstLine;
@@ -19,27 +25,30 @@ public class BalanceValidator {
             return score + "% safe. " + secondLine;
         }
     }
+    public int GetColor() {
+        if (score>89) { return R.color.msg_okay;}
+        else if (score>74) { return android.R.color.holo_orange_light;}
+        else if (score>0) { return android.R.color.holo_orange_dark;}
+        else { return android.R.color.holo_red_light;}
+    }
 
     public void Check(TangemCard card)
     {
-        String defaultFirstLine = "Unknown balance";
-        String successFirstLine = "Verified balance";
-
-        firstLine = successFirstLine;
+        firstLine = "";
         secondLine = "";
 
         // rule 1
         if(!CheckOfflineBalance(card) && !CheckOnlineBalance(card)) {
             score = 0;
-            secondLine = "Balance cannot be verified.";
-            firstLine = defaultFirstLine;
+            firstLine = "Unknown balance";
+            secondLine = "Balance cannot be verified. Swipe down to refresh.";
             return;
         }
         // rule 2.a
         if(!VerificationWalletKey(card)) {
             score = 0;
-            secondLine = "Wallet verification failed.";
-            firstLine = defaultFirstLine;
+            firstLine = "Verification failed";
+            secondLine = "Wallet verification failed. Tap again.";
             return;
         }
 
@@ -47,8 +56,8 @@ public class BalanceValidator {
         // rule 2.c
         if(!CheckAttestationServiceResult(card)) {
             score = 0;
-            secondLine = "Do not accept. Tangem Attestation service says card is not genuine. ";
-            firstLine = successFirstLine;
+            firstLine = "Not genuine banknote";
+            secondLine = "Tangem Attestation service says the banknote is not genuine.";
             return;
         }
 
@@ -58,17 +67,20 @@ public class BalanceValidator {
             if(card.isBalanceRecieved() && card.isBalanceEqual()) {
                 score = 100;
                 firstLine = "Verified balance";
-                secondLine += " Confirmed balance and banknote identity. ";
+                secondLine += "Confirmed balance and banknote identity. ";
+                if(card.getBalance() == 0) {
+                    firstLine = "Zero balance";
+                }
             }
 
             if(card.getFailedBalanceRequestCounter()!=0) {
-                score = 100 - 5 * card.getFailedBalanceRequestCounter();
-                firstLine = "Verified balance";
+                score -= 5 * card.getFailedBalanceRequestCounter();
                 secondLine += "Not all nodes have returned balance. Swipe down to refresh. ";
                 if(score <= 0)
                     return;
             }
-//
+
+            //
 //            if(card.isBalanceRecieved() && !card.isBalanceEqual()) {
 //                score = 0;
 //                firstLine = "Disputed balance";
@@ -80,9 +92,9 @@ public class BalanceValidator {
         // rule 7
         if(CheckOfflineBalance(card) && !CheckOnlineBalance(card))
         {
-            score -= 10;
-            String firstLine = "Verified offline balance";
-            secondLine += "Restore internet connection to be more confidient. ";
+            score = 90;
+            firstLine = "Verified offline balance";
+            secondLine += "Restore internet connection to be more confident. ";
             if(score <= 0)
                 return;
         }
@@ -92,7 +104,6 @@ public class BalanceValidator {
         {
             score -= 15;
             secondLine += "Card identity was not verified. Cannot reach attestation service. ";
-            firstLine = successFirstLine;
             if(score <= 0)
                 return;
         }
@@ -101,7 +112,7 @@ public class BalanceValidator {
         if(IsLostSecondRead(card))
         {
             score -= 30;
-            secondLine += "Wallet and banknote keys were not verified (tap again). ";
+            secondLine += "Wallet and banknote keys were not verified. Tap again. ";
             if(score <= 0)
                 return;
         }
@@ -110,8 +121,8 @@ public class BalanceValidator {
         if(!CheckSignHashes(card))
         {
             score -= 50;
-            secondLine = "Unguaranteed balance";
-            firstLine += "Potential unsent transaction at the moment. Try to tap and check this banknote later. ";
+            firstLine = "Unguaranteed balance";
+            secondLine += "Potential unsent transaction at the moment. Try to tap and check this banknote later. ";
             if(score <= 0)
                 return;
         }
