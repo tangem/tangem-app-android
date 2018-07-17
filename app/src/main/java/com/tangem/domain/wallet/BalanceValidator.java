@@ -1,12 +1,6 @@
 package com.tangem.domain.wallet;
 
-import android.graphics.Color;
-import android.support.v4.content.ContextCompat;
-import android.util.Pair;
-
 import com.tangem.wallet.R;
-
-import java.util.Objects;
 
 public class BalanceValidator {
     private String firstLine;
@@ -34,7 +28,7 @@ public class BalanceValidator {
 
     public void Check(TangemCard card)
     {
-        firstLine = "";
+        firstLine = "Verification failed";
         secondLine = "";
 
         // rule 1
@@ -54,7 +48,7 @@ public class BalanceValidator {
 
 
         // rule 2.c
-        if(!CheckAttestationServiceResult(card)) {
+        if(!CheckAttestationServiceResult(card) && CheckAttestationServiceAvailable(card)) {
             score = 0;
             firstLine = "Not genuine banknote";
             secondLine = "Tangem Attestation service says the banknote is not genuine.";
@@ -75,7 +69,7 @@ public class BalanceValidator {
 
             if(card.getFailedBalanceRequestCounter()!=0) {
                 score -= 5 * card.getFailedBalanceRequestCounter();
-                secondLine += "Not all nodes have returned balance. Swipe down to refresh. ";
+                secondLine += "Not all nodes have returned balance. Swipe down or tap again. ";
                 if(score <= 0)
                     return;
             }
