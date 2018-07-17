@@ -569,9 +569,9 @@
 
     </RelativeLayout>
 
-    <include
-        layout="@layout/layout_progress_horizontal"
-        android:visibility="gone"
-        tools:layout_editor_absoluteY="495dp" />
+    <!--<include-->
+        <!--layout="@layout/layout_progress_horizontal"-->
+        <!--android:visibility="gone"-->
+        <!--tools:layout_editor_absoluteY="495dp" />-->
 
 </android.support.constraint.ConstraintLayout>
