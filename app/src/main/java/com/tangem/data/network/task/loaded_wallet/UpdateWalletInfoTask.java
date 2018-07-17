@@ -1,7 +1,6 @@
 package com.tangem.data.network.task.loaded_wallet;
 
 import android.os.AsyncTask;
-import android.widget.Toast;
 
 import com.tangem.data.network.request.ElectrumRequest;
 import com.tangem.data.network.task.ElectrumTask;
@@ -314,8 +313,6 @@ public class UpdateWalletInfoTask extends ElectrumTask {
 
         } catch (NullPointerException e) {
             e.printStackTrace();
-
-            Toast.makeText(reference.get().getContext(), "NullPointerException", Toast.LENGTH_LONG).show();
 
             if (reference.get() != null) {
                 reference.get().mSwipeRefreshLayout.setRefreshing(false);
