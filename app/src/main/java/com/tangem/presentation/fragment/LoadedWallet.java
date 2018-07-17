@@ -113,13 +113,13 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
     private class OnlineVerifyTask extends VerificationServerTask {
 
-        @Override
-        protected void onCancelled() {
-            super.onCancelled();
-            updateTasks.remove(this);
-            onlineVerifyTask=null;
-            if (updateTasks.size() == 0) mSwipeRefreshLayout.setRefreshing(false);
-        }
+//        @Override
+//        protected void onCancelled() {
+//            super.onCancelled();
+//            updateTasks.remove(this);
+//            onlineVerifyTask=null;
+//            if (updateTasks.size() == 0) mSwipeRefreshLayout.setRefreshing(false);
+//        }
 
         @Override
         protected void onPostExecute(List<VerificationServerProtocol.Request> requests) {
