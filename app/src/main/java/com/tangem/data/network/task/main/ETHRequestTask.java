@@ -62,9 +62,9 @@ public class ETHRequestTask extends InfuraTask {
                                 main.mCardListAdapter.UpdateWalletBlockchain(mWalletAddress, Blockchain.Ethereum);
                                 main.mCardListAdapter.AddWalletBlockchainNameToken(mWalletAddress);
                                 TangemCard card = main.mCardListAdapter.getCardByWallet(request.WalletAddress);
-                                if (card != null) {
-                                    main.refreshCard(card);
-                                }
+//                                if (card != null) {
+//                                    main.refreshCard(card);
+//                                }
                                 return;
                             }
                             main.mCardListAdapter.UpdateWalletBalance(mWalletAddress, balance, l.toString(10), getValidationNodeDescription());
