@@ -6,8 +6,6 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.IsoDep;
@@ -27,7 +25,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -92,8 +89,8 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     public SwipeRefreshLayout mSwipeRefreshLayout;
     private RelativeLayout rlProgressBar;
     private TextView tvCardID, tvBalance, tvBalanceLine1, tvBalanceLine2,tvOffline, tvBalanceEquivalent, tvWallet, tvInputs, tvError, tvMessage, tvIssuer, tvBlockchain, tvValidationNode, tvHeader, tvCaution;
-    private ProgressBar progressBar;
-    private ImageView ivBlockchain, ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion;
+//    private ProgressBar progressBar;
+    private ImageView ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion;
     private AppCompatButton btnExtract;
 
 //    public List<AsyncTask> updateTasks = new ArrayList<>();
@@ -163,7 +160,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         View v = inflater.inflate(R.layout.fr_loaded_wallet, container, false);
 
         mSwipeRefreshLayout = v.findViewById(R.id.swipe_container);
-        progressBar = v.findViewById(R.id.progressBar);
+//        progressBar = v.findViewById(R.id.progressBar);
         rlProgressBar = v.findViewById(R.id.rlProgressBar);
         ImageView ivTangemCard = v.findViewById(R.id.ivTangemCard);
         tvBalance = v.findViewById(R.id.tvBalance);
@@ -182,7 +179,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         ImageView ivCopy = v.findViewById(R.id.ivCopy);
         tvValidationNode = v.findViewById(R.id.tvValidationNode);
         tvBlockchain = v.findViewById(R.id.tvBlockchain);
-        ivBlockchain = v.findViewById(R.id.imgBlockchain);
         ivPIN = v.findViewById(R.id.imgPIN);
         ivPIN2orSecurityDelay = v.findViewById(R.id.imgPIN2orSecurityDelay);
         ivDeveloperVersion = v.findViewById(R.id.imgDeveloperVersion);
@@ -617,10 +613,10 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
     @Override
     public void OnReadStart(CardProtocol cardProtocol) {
-        progressBar.post(() -> {
+        rlProgressBar.post(() -> {
             rlProgressBar.setVisibility(View.VISIBLE);
             //progressBar.setVisibility(View.VISIBLE);
-            progressBar.setProgress(5);
+//            progressBar.setProgress(5);
         });
     }
 
@@ -630,10 +626,10 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
         if (cardProtocol != null) {
             if (cardProtocol.getError() == null) {
-                progressBar.post(() -> {
+                rlProgressBar.post(() -> {
                     rlProgressBar.setVisibility(View.GONE);
-                    progressBar.setProgress(100);
-                    progressBar.setProgressTintList(ColorStateList.valueOf(Color.GREEN));
+//                    progressBar.setProgress(100);
+//                    progressBar.setProgressTintList(ColorStateList.valueOf(Color.GREEN));
 
                     mCardProtocol = cardProtocol;
 
@@ -648,7 +644,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 });
             } else {
                 // remove last UIDs because of error and no card read
-                progressBar.post(() -> {
+                rlProgressBar.post(() -> {
                     lastReadSuccess = false;
                     if (cardProtocol.getError() instanceof CardProtocol.TangemException_ExtendedLengthNotSupported) {
                         if (!NoExtendedLengthSupportDialog.allreadyShowed) {
@@ -657,18 +653,18 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                     } else {
                         Toast.makeText(getContext(), R.string.try_to_scan_again, Toast.LENGTH_SHORT).show();
                     }
-                    progressBar.setProgress(100);
-                    progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
+//                    progressBar.setProgress(100);
+//                    progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
                 });
             }
         }
 
-        progressBar.postDelayed(() -> {
+        rlProgressBar.postDelayed(() -> {
             try {
                 rlProgressBar.setVisibility(View.GONE);
-                progressBar.setProgress(0);
-                progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
-                progressBar.setVisibility(View.INVISIBLE);
+//                progressBar.setProgress(0);
+//                progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
+//                progressBar.setVisibility(View.INVISIBLE);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -677,18 +673,18 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
     @Override
     public void OnReadProgress(CardProtocol protocol, final int progress) {
-        progressBar.post(() -> progressBar.setProgress(progress));
+//        progressBar.post(() -> progressBar.setProgress(progress));
     }
 
     @Override
     public void OnReadCancel() {
         verifyCardTask = null;
-        progressBar.postDelayed(() -> {
+        rlProgressBar.postDelayed(() -> {
             try {
                 rlProgressBar.setVisibility(View.GONE);
-                progressBar.setProgress(0);
-                progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
-                progressBar.setVisibility(View.INVISIBLE);
+//                progressBar.setProgress(0);
+//                progressBar.setProgressTintList(ColorStateList.valueOf(Color.DKGRAY));
+//                progressBar.setVisibility(View.INVISIBLE);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -789,7 +785,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 tvInputs.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getContext()), R.color.confirmed));
 
             tvBlockchain.setText(mCard.getBlockchainName());
-            ivBlockchain.setImageResource(mCard.getBlockchain().getImageResource(getContext(), mCard.getTokenSymbol()));
 
             if (tvValidationNode != null) {
                 tvValidationNode.setText(mCard.getValidationNodeDescription());
@@ -845,23 +840,23 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 }
             }, 5000);
 
-            if (mCard.isReusable()) {
-                tvHeader.setText(R.string.reusable_wallet);
-                tvCaution.setVisibility(View.GONE);
-            } else {
-                if (mCard.getMaxSignatures() == mCard.getRemainingSignatures()) {
-                    tvHeader.setText(R.string.banknote);
-                    tvCaution.setVisibility(View.GONE);
-                } else {
-                    tvHeader.setText(R.string.not_transferable_banknote);
-                    tvCaution.setVisibility(View.VISIBLE);
-                }
-            }
-
-            if (mCard.useDevelopersFirmware()) {
-                tvHeader.setText(R.string.developer_kit);
-                tvCaution.setVisibility(View.VISIBLE);
-            }
+//            if (mCard.isReusable()) {
+//                tvHeader.setText(R.string.reusable_wallet);
+//                tvCaution.setVisibility(View.GONE);
+//            } else {
+//                if (mCard.getMaxSignatures() == mCard.getRemainingSignatures()) {
+//                    tvHeader.setText(R.string.banknote);
+//                    tvCaution.setVisibility(View.GONE);
+//                } else {
+//                    tvHeader.setText(R.string.not_transferable_banknote);
+//                    tvCaution.setVisibility(View.VISIBLE);
+//                }
+//            }
+//
+//            if (mCard.useDevelopersFirmware()) {
+//                tvHeader.setText(R.string.developer_kit);
+//                tvCaution.setVisibility(View.VISIBLE);
+//            }
 
         } catch (Exception e) {
             e.printStackTrace();
