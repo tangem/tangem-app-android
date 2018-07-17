@@ -66,7 +66,6 @@ import com.tangem.util.Util;
 import com.tangem.util.UtilHelper;
 import com.tangem.wallet.R;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
@@ -97,7 +96,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     private ImageView ivBlockchain, ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion;
     private AppCompatButton btnExtract;
 
-    public List<AsyncTask> updateTasks = new ArrayList<>();
+//    public List<AsyncTask> updateTasks = new ArrayList<>();
     private boolean lastReadSuccess = true;
     private VerifyCardTask verifyCardTask = null;
     private int requestPIN2Count = 0;
@@ -124,8 +123,8 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         @Override
         protected void onPostExecute(List<VerificationServerProtocol.Request> requests) {
             super.onPostExecute(requests);
-            Log.i("OnlineVerifyTask", "onPostExecute[" + String.valueOf(updateTasks.size()) + "]");
-            updateTasks.remove(this);
+//            Log.i("OnlineVerifyTask", "onPostExecute[" + String.valueOf(updateTasks.size()) + "]");
+//            updateTasks.remove(this);
             onlineVerifyTask=null;
 
             for (VerificationServerProtocol.Request request : requests) {
@@ -142,7 +141,8 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                     errorOnUpdate(request.error);
                 }
             }
-            if (updateTasks.size() == 0) mSwipeRefreshLayout.setRefreshing(false);
+//            if (updateTasks.size() == 0)
+                mSwipeRefreshLayout.setRefreshing(false);
         }
     }
 
@@ -221,7 +221,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
         if ( (mCard.isOnlineVerified()==null || !mCard.isOnlineVerified()) && onlineVerifyTask ==null) {
             onlineVerifyTask = new OnlineVerifyTask();
-            updateTasks.add(onlineVerifyTask);
+//            updateTasks.add(onlineVerifyTask);
             onlineVerifyTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, VerificationServerProtocol.Verify.prepare(mCard));
         }
 
@@ -314,9 +314,9 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     @Override
     public void onStop() {
         super.onStop();
-        for (AsyncTask ut : updateTasks) {
-            ut.cancel(true);
-        }
+//        for (AsyncTask ut : updateTasks) {
+//            ut.cancel(true);
+//        }
         mNfcManager.onStop();
     }
 
@@ -499,7 +499,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     @Override
     public void onRefresh() {
         // update, showing refresh animation before making http call
-        if (updateTasks.size() > 0) return;
+//        if (updateTasks.size() > 0) return;
 
         mSwipeRefreshLayout.setRefreshing(true);
         mCard.clearInfo();
@@ -524,7 +524,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(mCard.getWallet()));
 
                 UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(LoadedWallet.this, nodeAddress, nodePort, data);
-                updateTasks.add(updateWalletInfoTask);
+//                updateTasks.add(updateWalletInfoTask);
                 updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(mCard.getWallet()));
             }
 
@@ -548,7 +548,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             int nodePort = engine.GetNodePort(mCard);
             UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(LoadedWallet.this,nodeAddress, nodePort, data);
 
-            updateTasks.add(updateWalletInfoTask);
+//            updateTasks.add(updateWalletInfoTask);
             updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(mCard.getWallet())
 //                    ElectrumRequest.ListHistory(mCard.getWallet())
             );
