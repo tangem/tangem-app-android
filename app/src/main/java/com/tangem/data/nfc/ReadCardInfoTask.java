@@ -21,16 +21,23 @@ public class ReadCardInfoTask extends Thread {
     private Context mContext;
     private NfcManager mNfcManager;
 
-    private ArrayList<String> lastRead_UnsuccessfullPINs = new ArrayList<>();
-    private TangemCard.EncryptionMode lastRead_Encryption = null;
-    private String lastRead_UID;
+    // this fields are static to optimize process when need enter pin and scan card again
+    private static ArrayList<String> lastRead_UnsuccessfullPINs = new ArrayList<>();
+    private static TangemCard.EncryptionMode lastRead_Encryption = null;
+    private static String lastRead_UID;
 
-    public ReadCardInfoTask(Context context, NfcManager nfcManager, String lastRead_UID, IsoDep isoDep, CardProtocol.Notifications notifications) {
+    public static void resetLastReadInfo() {
+        lastRead_UID="";
+        lastRead_Encryption=null;
+        lastRead_UnsuccessfullPINs.clear();
+    }
+
+    public ReadCardInfoTask(Context context, NfcManager nfcManager, IsoDep isoDep, CardProtocol.Notifications notifications) {
         mContext = context;
         mIsoDep = isoDep;
         mNotifications = notifications;
         mNfcManager = nfcManager;
-        this.lastRead_UID = lastRead_UID;
+//        ReadCardInfoTask.lastRead_UID = lastRead_UID;
     }
 
     @Override
@@ -56,9 +63,7 @@ public class ReadCardInfoTask extends Thread {
                     byte[] UID = mIsoDep.getTag().getId();
                     String sUID = Util.byteArrayToHexString(UID);
                     if (!lastRead_UID.equals(sUID)) {
-                        lastRead_UID = sUID;
-                        lastRead_UnsuccessfullPINs.clear();
-                        lastRead_Encryption = null;
+                        resetLastReadInfo();
                     }
 
                     Log.i(TAG, "[-- Start read card info --]");
@@ -146,6 +151,7 @@ public class ReadCardInfoTask extends Thread {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            mNfcManager.notifyReadResult(false);
         }
     }
 
