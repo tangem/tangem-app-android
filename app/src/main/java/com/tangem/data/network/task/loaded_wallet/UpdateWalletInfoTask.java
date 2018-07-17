@@ -1,6 +1,7 @@
 package com.tangem.data.network.task.loaded_wallet;
 
 import android.os.AsyncTask;
+import android.widget.Toast;
 
 import com.tangem.data.network.request.ElectrumRequest;
 import com.tangem.data.network.task.ElectrumTask;
@@ -58,255 +59,269 @@ public class UpdateWalletInfoTask extends ElectrumTask {
 //        Log.i("RequestWalletInfoTask", "onPostExecute[" + String.valueOf(loadedWallet.updateTasks.size()) + "]");
 //        loadedWallet.updateTasks.remove(this);
 
-        CoinEngine engine = CoinEngineFactory.Create(loadedWallet.mCard.getBlockchain());
+        try {
+            CoinEngine engine = CoinEngineFactory.Create(
+                    loadedWallet.
+                            mCard.getBlockchain());
 
-        for (ElectrumRequest request : requests) {
-            try {
-                if (request.error == null) {
-                    if (request.isMethod(ElectrumRequest.METHOD_GetBalance)) {
-                        try {
-                            String mWalletAddress = request.getParams().getString(0);
-                            Long confBalance = request.getResult().getLong("confirmed");
-                            Long unconf = request.getResult().getLong("unconfirmed");
-                            loadedWallet.mCard.setBalanceRecieved(true);
+            for (ElectrumRequest request : requests) {
+                try {
+                    if (request.error == null) {
+                        if (request.isMethod(ElectrumRequest.METHOD_GetBalance)) {
+                            try {
+                                String mWalletAddress = request.getParams().getString(0);
+                                Long confBalance = request.getResult().getLong("confirmed");
+                                Long unconf = request.getResult().getLong("unconfirmed");
+                                loadedWallet.mCard.setBalanceRecieved(true);
 
-                            if (sharedCounter != null) {
-                                boolean notEqualBalance = sharedCounter.UpdatePayload(new BigDecimal(String.valueOf(confBalance)));
-                                if (notEqualBalance)
-                                    loadedWallet.mCard.setIsBalanceEqual(false);
-                                int counter = sharedCounter.requestCounter.incrementAndGet();
-                                if (counter != 1) {
-                                    continue;
+                                if (sharedCounter != null) {
+                                    boolean notEqualBalance = sharedCounter.UpdatePayload(new BigDecimal(String.valueOf(confBalance)));
+                                    if (notEqualBalance)
+                                        loadedWallet.mCard.setIsBalanceEqual(false);
+                                    int counter = sharedCounter.requestCounter.incrementAndGet();
+                                    if (counter != 1) {
+                                        continue;
+                                    }
                                 }
-                            }
 
 
-                            loadedWallet.mCard.setBalanceConfirmed(confBalance);
-                            loadedWallet.mCard.setBalanceUnconfirmed(unconf);
-                            loadedWallet.mCard.setDecimalBalance(String.valueOf(confBalance));
+                                loadedWallet.mCard.setBalanceConfirmed(confBalance);
+                                loadedWallet.mCard.setBalanceUnconfirmed(unconf);
+                                loadedWallet.mCard.setDecimalBalance(String.valueOf(confBalance));
 
-                            loadedWallet.mCard.setValidationNodeDescription(getValidationNodeDescription());
-                        } catch (JSONException e) {
-                            if (sharedCounter != null) {
-                                int errCounter = sharedCounter.errorRequest.incrementAndGet();
-                                loadedWallet.mCard.incFailedBalanceRequestCounter();
-                                if (errCounter >= sharedCounter.allRequest) {
+                                loadedWallet.mCard.setValidationNodeDescription(getValidationNodeDescription());
+                            } catch (JSONException e) {
+                                if (sharedCounter != null) {
+                                    int errCounter = sharedCounter.errorRequest.incrementAndGet();
+                                    loadedWallet.mCard.incFailedBalanceRequestCounter();
+                                    if (errCounter >= sharedCounter.allRequest) {
+                                        e.printStackTrace();
+                                        loadedWallet.errorOnUpdate(e.toString());
+                                        engine.SwitchNode(loadedWallet.mCard);
+                                    }
+                                } else {
                                     e.printStackTrace();
                                     loadedWallet.errorOnUpdate(e.toString());
                                     engine.SwitchNode(loadedWallet.mCard);
                                 }
-                            } else {
-                                e.printStackTrace();
-                                loadedWallet.errorOnUpdate(e.toString());
-                                engine.SwitchNode(loadedWallet.mCard);
                             }
-                        }
-                    } else if (request.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
-                        try {
-                            String hashTX = request.getResultString();
-
+                        } else if (request.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
                             try {
-                                LastSignStorage.setLastMessage(loadedWallet.mCard.getWallet(), hashTX);
-                                if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
-                                    hashTX = hashTX.substring(2);
-                                }
-                                BigInteger bigInt = new BigInteger(hashTX, 16); //TODO: очень плохой способ
-                                LastSignStorage.setTxWasSend(loadedWallet.mCard.getWallet());
-                                LastSignStorage.setLastMessage(loadedWallet.mCard.getWallet(), "");
+                                String hashTX = request.getResultString();
+
+                                try {
+                                    LastSignStorage.setLastMessage(loadedWallet.mCard.getWallet(), hashTX);
+                                    if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
+                                        hashTX = hashTX.substring(2);
+                                    }
+                                    BigInteger bigInt = new BigInteger(hashTX, 16); //TODO: очень плохой способ
+                                    LastSignStorage.setTxWasSend(loadedWallet.mCard.getWallet());
+                                    LastSignStorage.setLastMessage(loadedWallet.mCard.getWallet(), "");
 //                                Log.e("TX_RESULT", hashTX);
 
-                            } catch (Exception e) {
-                                engine.SwitchNode(loadedWallet.mCard);
+                                } catch (Exception e) {
+                                    engine.SwitchNode(loadedWallet.mCard);
+                                    loadedWallet.errorOnUpdate("Failed to send transaction. Try again.");
+                                }
+
+                            } catch (JSONException e) {
+                                e.printStackTrace();
                                 loadedWallet.errorOnUpdate("Failed to send transaction. Try again.");
+                                engine.SwitchNode(loadedWallet.mCard);
                             }
-
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            loadedWallet.errorOnUpdate("Failed to send transaction. Try again.");
-                            engine.SwitchNode(loadedWallet.mCard);
-                        }
-                    } else if (request.isMethod(ElectrumRequest.METHOD_ListUnspent)) {
-                        try {
-                            String mWalletAddress = request.getParams().getString(0);
-
-                            JSONArray jsUnspentArray = request.getResultArray();
+                        } else if (request.isMethod(ElectrumRequest.METHOD_ListUnspent)) {
                             try {
-                                loadedWallet.mCard.getUnspentTransactions().clear();
+                                String mWalletAddress = request.getParams().getString(0);
+
+                                JSONArray jsUnspentArray = request.getResultArray();
+                                try {
+                                    loadedWallet.mCard.getUnspentTransactions().clear();
+                                    for (int i = 0; i < jsUnspentArray.length(); i++) {
+                                        JSONObject jsUnspent = jsUnspentArray.getJSONObject(i);
+                                        TangemCard.UnspentTransaction trUnspent = new TangemCard.UnspentTransaction();
+                                        trUnspent.txID = jsUnspent.getString("tx_hash");
+                                        trUnspent.Amount = jsUnspent.getInt("value");
+                                        trUnspent.Height = jsUnspent.getInt("height");
+                                        loadedWallet.mCard.getUnspentTransactions().add(trUnspent);
+                                    }
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                    loadedWallet.errorOnUpdate(e.toString());
+                                    engine.SwitchNode(loadedWallet.mCard);
+                                }
+
                                 for (int i = 0; i < jsUnspentArray.length(); i++) {
                                     JSONObject jsUnspent = jsUnspentArray.getJSONObject(i);
-                                    TangemCard.UnspentTransaction trUnspent = new TangemCard.UnspentTransaction();
-                                    trUnspent.txID = jsUnspent.getString("tx_hash");
-                                    trUnspent.Amount = jsUnspent.getInt("value");
-                                    trUnspent.Height = jsUnspent.getInt("height");
-                                    loadedWallet.mCard.getUnspentTransactions().add(trUnspent);
+                                    Integer height = jsUnspent.getInt("height");
+                                    String hash = jsUnspent.getString("tx_hash");
+                                    if (height != -1) {
+                                        String nodeAddress = engine.GetNextNode(loadedWallet.mCard);
+                                        int nodePort = engine.GetNextNodePort(loadedWallet.mCard);
+                                        UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(loadedWallet, nodeAddress, nodePort);
+
+//                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
+
+                                        updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
+                                                ElectrumRequest.GetTransaction(mWalletAddress, hash));
+                                    }
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
                                 loadedWallet.errorOnUpdate(e.toString());
                                 engine.SwitchNode(loadedWallet.mCard);
                             }
-
-                            for (int i = 0; i < jsUnspentArray.length(); i++) {
-                                JSONObject jsUnspent = jsUnspentArray.getJSONObject(i);
-                                Integer height = jsUnspent.getInt("height");
-                                String hash = jsUnspent.getString("tx_hash");
-                                if (height != -1) {
-                                    String nodeAddress = engine.GetNextNode(loadedWallet.mCard);
-                                    int nodePort = engine.GetNextNodePort(loadedWallet.mCard);
-                                    UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(loadedWallet, nodeAddress, nodePort);
-
-//                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
-
-                                    updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
-                                            ElectrumRequest.GetTransaction(mWalletAddress, hash));
-                                }
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            loadedWallet.errorOnUpdate(e.toString());
-                            engine.SwitchNode(loadedWallet.mCard);
-                        }
-                    } else if (request.isMethod(ElectrumRequest.METHOD_GetHistory)) {
-                        try {
-                            String mWalletAddress = request.getParams().getString(0);
-
-                            JSONArray jsHistoryArray = request.getResultArray();
+                        } else if (request.isMethod(ElectrumRequest.METHOD_GetHistory)) {
                             try {
-                                loadedWallet.mCard.getHistoryTransactions().clear();
+                                String mWalletAddress = request.getParams().getString(0);
+
+                                JSONArray jsHistoryArray = request.getResultArray();
+                                try {
+                                    loadedWallet.mCard.getHistoryTransactions().clear();
+                                    for (int i = 0; i < jsHistoryArray.length(); i++) {
+                                        JSONObject jsUnspent = jsHistoryArray.getJSONObject(i);
+                                        TangemCard.HistoryTransaction trHistory = new TangemCard.HistoryTransaction();
+                                        trHistory.txID = jsUnspent.getString("tx_hash");
+                                        trHistory.Height = jsUnspent.getInt("height");
+                                        loadedWallet.mCard.getHistoryTransactions().add(trHistory);
+                                    }
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                    loadedWallet.errorOnUpdate(e.toString());
+                                    engine.SwitchNode(loadedWallet.mCard);
+                                }
+
                                 for (int i = 0; i < jsHistoryArray.length(); i++) {
                                     JSONObject jsUnspent = jsHistoryArray.getJSONObject(i);
-                                    TangemCard.HistoryTransaction trHistory = new TangemCard.HistoryTransaction();
-                                    trHistory.txID = jsUnspent.getString("tx_hash");
-                                    trHistory.Height = jsUnspent.getInt("height");
-                                    loadedWallet.mCard.getHistoryTransactions().add(trHistory);
-                                }
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                                loadedWallet.errorOnUpdate(e.toString());
-                                engine.SwitchNode(loadedWallet.mCard);
-                            }
+                                    Integer height = jsUnspent.getInt("height");
+                                    String hash = jsUnspent.getString("tx_hash");
+                                    if (height != -1) {
 
-                            for (int i = 0; i < jsHistoryArray.length(); i++) {
-                                JSONObject jsUnspent = jsHistoryArray.getJSONObject(i);
-                                Integer height = jsUnspent.getInt("height");
-                                String hash = jsUnspent.getString("tx_hash");
-                                if (height != -1) {
-
-                                    String nodeAddress = engine.GetNode(loadedWallet.mCard);
-                                    int nodePort = engine.GetNodePort(loadedWallet.mCard);
-                                    UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(loadedWallet, nodeAddress, nodePort);
+                                        String nodeAddress = engine.GetNode(loadedWallet.mCard);
+                                        int nodePort = engine.GetNodePort(loadedWallet.mCard);
+                                        UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(loadedWallet, nodeAddress, nodePort);
 //                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
 
-                                    updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
-                                            ElectrumRequest.GetTransaction(mWalletAddress, hash));
+                                        updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
+                                                ElectrumRequest.GetTransaction(mWalletAddress, hash));
+                                    }
+
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                loadedWallet.errorOnUpdate(e.toString());
+                                engine.SwitchNode(loadedWallet.mCard);
+                            }
+                        } else if (request.isMethod(ElectrumRequest.METHOD_GetHeader)) {
+                            try {
+                                JSONObject jsHeader = request.getResult();
+                                try {
+                                    loadedWallet.mCard.getHaedersInfo();
+                                    loadedWallet.mCard.UpdateHeaderInfo(new TangemCard.HeaderInfo(
+                                            jsHeader.getInt("block_height"),
+                                            jsHeader.getInt("timestamp")));
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                    loadedWallet.errorOnUpdate(e.toString());
+                                    engine.SwitchNode(loadedWallet.mCard);
+
                                 }
 
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            loadedWallet.errorOnUpdate(e.toString());
-                            engine.SwitchNode(loadedWallet.mCard);
-                        }
-                    } else if (request.isMethod(ElectrumRequest.METHOD_GetHeader)) {
-                        try {
-                            JSONObject jsHeader = request.getResult();
-                            try {
-                                loadedWallet.mCard.getHaedersInfo();
-                                loadedWallet.mCard.UpdateHeaderInfo(new TangemCard.HeaderInfo(
-                                        jsHeader.getInt("block_height"),
-                                        jsHeader.getInt("timestamp")));
                             } catch (JSONException e) {
                                 e.printStackTrace();
                                 loadedWallet.errorOnUpdate(e.toString());
                                 engine.SwitchNode(loadedWallet.mCard);
 
                             }
+                        } else if (request.isMethod(ElectrumRequest.METHOD_GetTransaction)) {
+                            try {
 
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            loadedWallet.errorOnUpdate(e.toString());
-                            engine.SwitchNode(loadedWallet.mCard);
+                                String txHash = request.TxHash;
+                                String raw = request.getResultString();
 
-                        }
-                    } else if (request.isMethod(ElectrumRequest.METHOD_GetTransaction)) {
-                        try {
-
-                            String txHash = request.TxHash;
-                            String raw = request.getResultString();
-
-                            List<TangemCard.UnspentTransaction> listTx = loadedWallet.mCard.getUnspentTransactions();
-                            for (TangemCard.UnspentTransaction tx : listTx) {
-                                if (tx.txID.equals(txHash)) {
-                                    tx.Raw = raw;
+                                List<TangemCard.UnspentTransaction> listTx = loadedWallet.mCard.getUnspentTransactions();
+                                for (TangemCard.UnspentTransaction tx : listTx) {
+                                    if (tx.txID.equals(txHash)) {
+                                        tx.Raw = raw;
+                                    }
                                 }
-                            }
 
-                            List<TangemCard.HistoryTransaction> listHTx = loadedWallet.mCard.getHistoryTransactions();
-                            for (TangemCard.HistoryTransaction tx : listHTx) {
-                                if (tx.txID.equals(txHash)) {
-                                    tx.Raw = raw;
-                                    try {
-                                        ArrayList<byte[]> prevHashes = BTCUtils.getPrevTX(raw);
+                                List<TangemCard.HistoryTransaction> listHTx = loadedWallet.mCard.getHistoryTransactions();
+                                for (TangemCard.HistoryTransaction tx : listHTx) {
+                                    if (tx.txID.equals(txHash)) {
+                                        tx.Raw = raw;
+                                        try {
+                                            ArrayList<byte[]> prevHashes = BTCUtils.getPrevTX(raw);
 
-                                        boolean isOur = false;
-                                        for (byte[] hash : prevHashes) {
-                                            String checkID = BTCUtils.toHex(hash);
-                                            for (TangemCard.HistoryTransaction txForCheck : listHTx) {
-                                                if (txForCheck.txID == checkID) {
-                                                    isOur = true;
+                                            boolean isOur = false;
+                                            for (byte[] hash : prevHashes) {
+                                                String checkID = BTCUtils.toHex(hash);
+                                                for (TangemCard.HistoryTransaction txForCheck : listHTx) {
+                                                    if (txForCheck.txID == checkID) {
+                                                        isOur = true;
+                                                    }
                                                 }
                                             }
+
+                                            tx.isInput = !isOur;
+                                        } catch (BitcoinException e) {
+                                            e.printStackTrace();
+                                            loadedWallet.errorOnUpdate(e.toString());
                                         }
-
-                                        tx.isInput = !isOur;
-                                    } catch (BitcoinException e) {
-                                        e.printStackTrace();
-                                        loadedWallet.errorOnUpdate(e.toString());
-                                    }
 //                                    Log.e("TX", raw);
+                                    }
                                 }
-                            }
 
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            loadedWallet.errorOnUpdate(e.toString());
-                            engine.SwitchNode(loadedWallet.mCard);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                loadedWallet.errorOnUpdate(e.toString());
+                                engine.SwitchNode(loadedWallet.mCard);
+                            }
                         }
-                    }
-                    loadedWallet.updateViews();
-                } else {
-                    if (sharedCounter != null) {
-                        int errCounter = sharedCounter.errorRequest.incrementAndGet();
-                        loadedWallet.mCard.incFailedBalanceRequestCounter();
-                        if (errCounter >= sharedCounter.allRequest) {
+                        loadedWallet.updateViews();
+                    } else {
+                        if (sharedCounter != null) {
+                            int errCounter = sharedCounter.errorRequest.incrementAndGet();
+                            loadedWallet.mCard.incFailedBalanceRequestCounter();
+                            if (errCounter >= sharedCounter.allRequest) {
+                                loadedWallet.errorOnUpdate(request.error);
+                                engine.SwitchNode(loadedWallet.mCard);
+
+                            }
+                        } else {
                             loadedWallet.errorOnUpdate(request.error);
                             engine.SwitchNode(loadedWallet.mCard);
 
                         }
-                    } else {
-                        loadedWallet.errorOnUpdate(request.error);
-                        engine.SwitchNode(loadedWallet.mCard);
 
                     }
-
-                }
-            } catch (JSONException e) {
-                if (sharedCounter != null) {
-                    int errCounter = sharedCounter.errorRequest.incrementAndGet();
-                    loadedWallet.mCard.incFailedBalanceRequestCounter();
-                    if (errCounter >= sharedCounter.allRequest) {
+                } catch (JSONException e) {
+                    if (sharedCounter != null) {
+                        int errCounter = sharedCounter.errorRequest.incrementAndGet();
+                        loadedWallet.mCard.incFailedBalanceRequestCounter();
+                        if (errCounter >= sharedCounter.allRequest) {
+                            e.printStackTrace();
+                            loadedWallet.errorOnUpdate(e.toString());
+                        }
+                    } else {
                         e.printStackTrace();
                         loadedWallet.errorOnUpdate(e.toString());
                     }
-                } else {
-                    e.printStackTrace();
-                    loadedWallet.errorOnUpdate(e.toString());
                 }
             }
-        }
 
 //        if (loadedWallet.updateTasks.size() == 0)
             loadedWallet.mSwipeRefreshLayout.setRefreshing(false);
+
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+
+            Toast.makeText(reference.get().getContext(), "NullPointerException", Toast.LENGTH_LONG).show();
+
+            if (reference.get() != null) {
+                reference.get().mSwipeRefreshLayout.setRefreshing(false);
+            }
+        }
+
 
     }
 }
