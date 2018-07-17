@@ -41,21 +41,26 @@ public class FW {
 
     public static VerifyCodeRecord selectRandomVerifyCodeBlock(String firmwareVersion) throws IOException {
 
-        for(int i=0; i<jaFirmwares.size(); i++) {
-            JsonObject jsVersion = jaFirmwares.get(i).getAsJsonObject();
-            if( jsVersion.get("fw").getAsString().equals(firmwareVersion) )
-            {
-                VerifyCodeRecord result=new VerifyCodeRecord();
-                result.hashAlg = "sha-256";
-                JsonArray jsHashes = jsVersion.get(result.hashAlg).getAsJsonArray();
-                result.challenge = Util.hexToBytes(jsVersion.get("challenge").getAsString());
-                int caseIndex= Util.byteArrayToInt(Util.generateRandomBytes(4))%jsHashes.size();
-                JsonObject jsRecord = jsHashes.get(caseIndex).getAsJsonObject();
-                result.blockIndex = jsRecord.get("block").getAsInt();
-                result.blockCount = jsRecord.get("count").getAsInt();
-                result.digest = Util.hexToBytes(jsRecord.get("digest").getAsString());
-                return result;
+        try {
+            for (int i = 0; i < jaFirmwares.size(); i++) {
+                JsonObject jsVersion = jaFirmwares.get(i).getAsJsonObject();
+                if (jsVersion.get("fw").getAsString().equals(firmwareVersion)) {
+                    VerifyCodeRecord result = new VerifyCodeRecord();
+                    result.hashAlg = "sha-256";
+                    JsonArray jsHashes = jsVersion.get(result.hashAlg).getAsJsonArray();
+                    result.challenge = Util.hexToBytes(jsVersion.get("challenge").getAsString());
+                    int caseIndex = (Util.byteArrayToInt(Util.generateRandomBytes(4)) & 0xFFFFFF) % jsHashes.size();
+                    JsonObject jsRecord = jsHashes.get(caseIndex).getAsJsonObject();
+                    result.blockIndex = jsRecord.get("block").getAsInt();
+                    result.blockCount = jsRecord.get("count").getAsInt();
+                    result.digest = Util.hexToBytes(jsRecord.get("digest").getAsString());
+                    return result;
+                }
             }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
         }
         return null;
     }
