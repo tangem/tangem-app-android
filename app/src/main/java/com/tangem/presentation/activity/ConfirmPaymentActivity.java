@@ -272,6 +272,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
                 Log.e("Build Fee error", ex.getMessage());
             }
 
+            mCard.resetFailedBalanceRequestCounter();
             SharedData sharedFee = new SharedData(SharedData.COUNT_REQUEST);
 
             progressBar.setVisibility(View.VISIBLE);
