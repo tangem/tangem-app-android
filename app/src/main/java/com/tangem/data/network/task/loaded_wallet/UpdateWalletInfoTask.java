@@ -56,7 +56,7 @@ public class UpdateWalletInfoTask extends ElectrumTask {
         LoadedWallet loadedWallet = reference.get();
 
 //        Log.i("RequestWalletInfoTask", "onPostExecute[" + String.valueOf(loadedWallet.updateTasks.size()) + "]");
-        loadedWallet.updateTasks.remove(this);
+//        loadedWallet.updateTasks.remove(this);
 
         CoinEngine engine = CoinEngineFactory.Create(loadedWallet.mCard.getBlockchain());
 
@@ -155,7 +155,7 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                     int nodePort = engine.GetNextNodePort(loadedWallet.mCard);
                                     UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(loadedWallet, nodeAddress, nodePort);
 
-                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
+//                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
 
                                     updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
                                             ElectrumRequest.GetTransaction(mWalletAddress, hash));
@@ -195,7 +195,7 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                     String nodeAddress = engine.GetNode(loadedWallet.mCard);
                                     int nodePort = engine.GetNodePort(loadedWallet.mCard);
                                     UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(loadedWallet, nodeAddress, nodePort);
-                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
+//                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
 
                                     updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
                                             ElectrumRequest.GetTransaction(mWalletAddress, hash));
