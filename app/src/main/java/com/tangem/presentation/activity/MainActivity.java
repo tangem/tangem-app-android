@@ -3,7 +3,6 @@ package com.tangem.presentation.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.content.res.AssetManager;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
@@ -49,6 +48,9 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
     private NfcAdapter.ReaderCallback onNFCReaderCallback;
     private OnCardsClean onCardsClean;
     private LinearLayout llTapPrompt;
+    private DeviceNFCAntennaLocation antenna;
+    private LinearLayout nfc;
+    private LinearLayout llHand;
 
     public interface OnCardsClean {
         void doClean();
@@ -80,10 +82,10 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
 
         TextView tvNFCHint = findViewById(R.id.tvNFCHint);
         llTapPrompt = findViewById(R.id.llTapPrompt);
-        LinearLayout hand = findViewById(R.id.llHand);
+        llHand = findViewById(R.id.llHand);
         ImageView ivHandCardHorizontal = findViewById(R.id.ivHandCardHorizontal);
         ImageView ivHandCardVertical = findViewById(R.id.ivHandCardVertical);
-        LinearLayout nfc = findViewById(R.id.llNFC);
+        nfc = findViewById(R.id.llNFC);
         RippleBackground rippleBackground = findViewById(R.id.imNFC);
         FloatingActionButton fab = findViewById(R.id.fab);
 
@@ -93,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
 
         rippleBackground.startRippleAnimation();
 
-        DeviceNFCAntennaLocation antenna = new DeviceNFCAntennaLocation();
+        antenna = new DeviceNFCAntennaLocation();
         antenna.getAntennaLocation();
 
         // set card orientation
@@ -112,11 +114,11 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         // set card z position
         switch (antenna.getZ()) {
             case DeviceNFCAntennaLocation.CARD_ON_BACK:
-                hand.setElevation(0.0f);
+                llHand.setElevation(0.0f);
                 break;
 
             case DeviceNFCAntennaLocation.CARD_ON_FRONT:
-                hand.setElevation(30.0f);
+                llHand.setElevation(30.0f);
                 break;
         }
 
@@ -126,27 +128,7 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         else
             tvNFCHint.setText(String.format(getString(R.string.scan_banknote), getString(R.string.phone)));
 
-        // animate
-        final RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) hand.getLayoutParams();
-        final RelativeLayout.LayoutParams lp2 = (RelativeLayout.LayoutParams) nfc.getLayoutParams();
-        final float dp = getResources().getDisplayMetrics().density;
-        final float lm = dp * (69 + antenna.getX() * 75);
-        lp.topMargin = (int) (dp * (-100 + antenna.getY() * 250));
-        lp2.topMargin = (int) (dp * (-125 + antenna.getY() * 250));
-        nfc.setLayoutParams(lp2);
-        Animation a = new Animation() {
-            @Override
-            protected void applyTransformation(float interpolatedTime, Transformation t) {
-                lp.leftMargin = (int) (lm * interpolatedTime);
-                hand.setLayoutParams(lp);
-            }
-        };
-        a.setDuration(2000);
-        a.setInterpolator(new DecelerateInterpolator());
-        hand.startAnimation(a);
-
-        // set listeners
-        fab.setOnClickListener(this::showMenu);
+        animate();
 
         // add fragment
         Main main = (Main) getSupportFragmentManager().findFragmentById(R.id.fragmentMain);
@@ -168,6 +150,15 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         RootBeer rootBeer = new RootBeer(this);
         if (rootBeer.isRootedWithoutBusyBoxCheck() && !BuildConfig.DEBUG)
             new RootFoundDialog().show(getFragmentManager(), RootFoundDialog.TAG);
+
+        // set listeners
+        fab.setOnClickListener(this::showMenu);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        animate();
     }
 
     @Override
@@ -247,8 +238,8 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         if (LastSignStorage.needInit()) {
             LastSignStorage.Init(context);
         }
-        if( Issuer.needInit() ) Issuer.Init(context);
-        if( FW.needInit() ) FW.Init(context);
+        if (Issuer.needInit()) Issuer.Init(context);
+        if (FW.needInit()) FW.Init(context);
     }
 
     public void showCleanButton() {
@@ -264,6 +255,27 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         intent.putExtra(LogoActivity.TAG, true);
         intent.putExtra(LogoActivity.EXTRA_AUTO_HIDE, false);
         startActivity(intent);
+    }
+
+    private void animate() {
+        final RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) llHand.getLayoutParams();
+        final RelativeLayout.LayoutParams lp2 = (RelativeLayout.LayoutParams) nfc.getLayoutParams();
+        final float dp = getResources().getDisplayMetrics().density;
+        final float lm = dp * (69 + antenna.getX() * 75);
+        lp.topMargin = (int) (dp * (-100 + antenna.getY() * 250));
+        lp2.topMargin = (int) (dp * (-125 + antenna.getY() * 250));
+        nfc.setLayoutParams(lp2);
+
+        Animation a = new Animation() {
+            @Override
+            protected void applyTransformation(float interpolatedTime, Transformation t) {
+                lp.leftMargin = (int) (lm * interpolatedTime);
+                llHand.setLayoutParams(lp);
+            }
+        };
+        a.setDuration(2000);
+        a.setInterpolator(new DecelerateInterpolator());
+        llHand.startAnimation(a);
     }
 
     private void showSavePinActivity() {
