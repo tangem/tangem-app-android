@@ -57,12 +57,7 @@ public class ETHRequestTask extends InfuraTask {
                             BigInteger l = new BigInteger(balanceCap, 16);
                             Long balance = l.longValue();
 
-//                                Log.i(TAG, " dvddvdv  BigInteger.ZERO");
-
                             if (l.compareTo(BigInteger.ZERO) == 0) {
-
-//                                    Log.i(TAG, "BigInteger.ZERO");
-
                                 loadedWallet.mCard.setBlockchainID(Blockchain.Ethereum.getID());
                                 loadedWallet.mCard.addTokenToBlockchainName();
                                 loadedWallet.mSwipeRefreshLayout.setRefreshing(false);
@@ -133,7 +128,7 @@ public class ETHRequestTask extends InfuraTask {
             }
         }
 
-        if (loadedWallet.updateTasks.size() == 0)
+//        if (loadedWallet.updateTasks.size() == 0)
             loadedWallet.mSwipeRefreshLayout.setRefreshing(false);
     }
 }
