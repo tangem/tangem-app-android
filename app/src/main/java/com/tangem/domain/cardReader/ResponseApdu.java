@@ -59,7 +59,7 @@ public class ResponseApdu {
             responseApdu.mSw2 = ((int) data[1] & 0xFF);
             return responseApdu;
         }else if( data.length>=18 ){
-            byte[] decryptedData = CardCrypto.Decrypt(key, Arrays.copyOfRange(data, 0, data.length - 2));
+            byte[] decryptedData = CardCrypto.Decrypt(key, Arrays.copyOfRange(data, 0, data.length - 2),true);
 
             ByteArrayInputStream inputStream = new ByteArrayInputStream(decryptedData);
             byte[] baLength = new byte[2];
