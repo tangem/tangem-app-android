@@ -1,7 +1,6 @@
 package com.tangem.data.network.task.loaded_wallet;
 
 import android.os.AsyncTask;
-import android.util.Log;
 
 import com.tangem.data.network.request.ElectrumRequest;
 import com.tangem.data.network.task.ElectrumTask;
@@ -32,7 +31,6 @@ public class UpdateWalletInfoTask extends ElectrumTask {
         reference = new WeakReference<>(context);
     }
 
-
     public UpdateWalletInfoTask(LoadedWallet context, String host, int port, SharedData sharedData) {
         super(host, port, sharedData);
         reference = new WeakReference<>(context);
@@ -43,21 +41,21 @@ public class UpdateWalletInfoTask extends ElectrumTask {
         super.onProgressUpdate(values);
     }
 
-    @Override
-    protected void onCancelled() {
-        super.onCancelled();
-        LoadedWallet loadedWallet = reference.get();
-
-        loadedWallet.updateTasks.remove(this);
-        if (loadedWallet.updateTasks.size() == 0) loadedWallet.mSwipeRefreshLayout.setRefreshing(false);
-    }
+//    @Override
+//    protected void onCancelled() {
+//        super.onCancelled();
+//        LoadedWallet loadedWallet = reference.get();
+//
+//        loadedWallet.updateTasks.remove(this);
+//        if (loadedWallet.updateTasks.size() == 0) loadedWallet.mSwipeRefreshLayout.setRefreshing(false);
+//    }
 
     @Override
     protected void onPostExecute(List<ElectrumRequest> requests) {
         super.onPostExecute(requests);
         LoadedWallet loadedWallet = reference.get();
 
-        Log.i("RequestWalletInfoTask", "onPostExecute[" + String.valueOf(loadedWallet.updateTasks.size()) + "]");
+//        Log.i("RequestWalletInfoTask", "onPostExecute[" + String.valueOf(loadedWallet.updateTasks.size()) + "]");
         loadedWallet.updateTasks.remove(this);
 
         CoinEngine engine = CoinEngineFactory.Create(loadedWallet.mCard.getBlockchain());
@@ -115,7 +113,7 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                 BigInteger bigInt = new BigInteger(hashTX, 16); //TODO: очень плохой способ
                                 LastSignStorage.setTxWasSend(loadedWallet.mCard.getWallet());
                                 LastSignStorage.setLastMessage(loadedWallet.mCard.getWallet(), "");
-                                Log.e("TX_RESULT", hashTX);
+//                                Log.e("TX_RESULT", hashTX);
 
                             } catch (Exception e) {
                                 engine.SwitchNode(loadedWallet.mCard);
@@ -265,7 +263,7 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                         e.printStackTrace();
                                         loadedWallet.errorOnUpdate(e.toString());
                                     }
-                                    Log.e("TX", raw);
+//                                    Log.e("TX", raw);
                                 }
                             }
 
@@ -306,7 +304,9 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                 }
             }
         }
-        if (loadedWallet.updateTasks.size() == 0) loadedWallet.mSwipeRefreshLayout.setRefreshing(false);
+
+//        if (loadedWallet.updateTasks.size() == 0)
+            loadedWallet.mSwipeRefreshLayout.setRefreshing(false);
 
     }
 }
