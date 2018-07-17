@@ -748,6 +748,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 validator.Check(mCard);
                 tvBalanceLine1.setText(validator.GetFirstLine());
                 tvBalanceLine2.setText(validator.GetSecondLine());
+                tvBalanceLine1.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getContext()),validator.GetColor()));
             }
 
             if (engine.HasBalanceInfo(mCard) || mCard.getOfflineBalance() == null) {
