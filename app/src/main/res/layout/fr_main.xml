@@ -38,15 +38,4 @@
         android:foregroundGravity="center_vertical"
         android:paddingTop="14dp"/>
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="12dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="false"
-        android:alpha="0.5"
-        android:elevation="1dp"
-        android:visibility="invisible"/>
-
 </RelativeLayout>
