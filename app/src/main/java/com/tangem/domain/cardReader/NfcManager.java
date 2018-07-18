@@ -79,20 +79,20 @@ public class NfcManager {
     int errorCount = 0;
 
     public void notifyReadResult(boolean success) {
-        if (success) {
-            errorCount = 0;
-        } else {
-            errorCount++;
-        }
-        if (errorCount >= 3) {
-            disableReaderMode();
-            mNfcAdapter = null;
-//            Toast.makeText(mActivity,"NFC restarted!",Toast.LENGTH_SHORT).show();
-            mActivity.runOnUiThread(() -> {
-                mNfcAdapter = NfcAdapter.getDefaultAdapter(mActivity);
-                enableReaderMode();
-            });
-        }
+//        if (success) {
+//            errorCount = 0;
+//        } else {
+//            errorCount++;
+//        }
+//        if (errorCount >= 3) {
+//            disableReaderMode();
+//            mNfcAdapter = null;
+////            Toast.makeText(mActivity,"NFC restarted!",Toast.LENGTH_SHORT).show();
+//            mActivity.runOnUiThread(() -> {
+//                mNfcAdapter = NfcAdapter.getDefaultAdapter(mActivity);
+//                enableReaderMode();
+//            });
+//        }
     }
 
     private void showNFCEnableDialog() {
