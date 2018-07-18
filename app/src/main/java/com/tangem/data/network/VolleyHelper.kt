@@ -19,13 +19,13 @@ class VolleyHelper {
                 { response ->
                     val data = GsonBuilder().setPrettyPrinting().create().toJson(JsonParser().parse(response))
                     val builder = AlertDialog.Builder(context)
-                    builder.setTitle("sxsx")
+                    builder.setTitle(url)
                             .setMessage(data)
                             .setPositiveButton(R.string.ok, null)
                             .setNeutralButton(R.string.send) { _, _ ->
                                 val intent = Intent(Intent.ACTION_SEND)
                                 intent.type = "text/html"
-                                intent.putExtra(Intent.EXTRA_EMAIL, arrayOf("digest2003@mail.ru"))
+                                intent.putExtra(Intent.EXTRA_EMAIL, arrayOf("erogov@tangem.com"))
                                 intent.putExtra(Intent.EXTRA_SUBJECT, url)
                                 intent.putExtra(Intent.EXTRA_TEXT, data)
                                 context.startActivity(Intent.createChooser(intent, "Send gson"))
@@ -47,7 +47,7 @@ class VolleyHelper {
             }
         }
 
-        stringRequest.retryPolicy = DefaultRetryPolicy(60000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
+        stringRequest.retryPolicy = DefaultRetryPolicy(30000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
         AppController.getInstance().addToRequestQueue(stringRequest)
     }
 
