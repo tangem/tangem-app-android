@@ -243,7 +243,7 @@ public class Util {
     }
 
     //This prints all non-control characters common to all parts of ISO/IEC 8859
-    //See EMV book 4 Annex B: Table 36: Common Character Set
+    //See EMV book 4 Annex B: Table 36: VolleyHelper Character Set
     public static String getSafePrintChars(byte[] byteArray) {
         if (byteArray == null) {
             return "";
