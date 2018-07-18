@@ -22,20 +22,19 @@ import java.util.Locale;
 
 public class VerificationServerProtocol {
 
-    public static class Request
-    {
-        public Request(CustomCommand command, Class answerClass)
-        {
-            this.command=command;
-            this.answerClass=answerClass;
+    public static class Request {
+        public Request(CustomCommand command, Class answerClass) {
+            this.command = command;
+            this.answerClass = answerClass;
         }
+
         public String error;
         public CustomCommand command;
         public CustomAnswer answer;
         public Type answerClass;
 
         public void doPost(String hostURL) throws IOException {
-            URL url = new URL(hostURL+"/"+command.getURL());
+            URL url = new URL(hostURL + "/" + command.getURL());
             URLConnection con = url.openConnection();
             HttpURLConnection http = (HttpURLConnection) con;
             try {
@@ -60,8 +59,7 @@ public class VerificationServerProtocol {
                         answer = getGson().fromJson(br, answerClass);
                     }
                 }
-            }
-            finally {
+            } finally {
                 http.disconnect();
             }
         }
@@ -70,8 +68,7 @@ public class VerificationServerProtocol {
     static abstract class CustomCommand {
         public abstract String getURL();
 
-        public byte[] toBytes()
-        {
+        public byte[] toBytes() {
             return getGson().toJson(this).getBytes(StandardCharsets.UTF_8);
         }
 
@@ -121,15 +118,14 @@ public class VerificationServerProtocol {
             public ResultItem[] results;
         }
 
-        public static Request prepare(TangemCard card)
-        {
-            Command c=new Command();
-            c.requests=new RequestItem[1];
-            c.requests[0]=new RequestItem();
-            c.requests[0].CID=Util.bytesToHex(card.getCID());
-            c.requests[0].publicKey=Util.bytesToHex(card.getCardPublicKey());
+        public static Request prepare(TangemCard card) {
+            Command c = new Command();
+            c.requests = new RequestItem[1];
+            c.requests[0] = new RequestItem();
+            c.requests[0].CID = Util.bytesToHex(card.getCID());
+            c.requests[0].publicKey = Util.bytesToHex(card.getCardPublicKey());
 
-            return new Request(c,Answer.class);
+            return new Request(c, Answer.class);
         }
     }
 
@@ -154,6 +150,7 @@ public class VerificationServerProtocol {
             public ResultItem(RequestItem request) {
                 CID = request.CID;
             }
+
             public String error;
             public String CID;
             public Integer previousCounter;
@@ -164,14 +161,13 @@ public class VerificationServerProtocol {
             public ResultItem[] results;
         }
 
-        public Request prepare(TangemCard card, int ValidationCounter, byte[] ValidationSignature)
-        {
-            Command c=new Command();
-            c.requests=new RequestItem[1];
-            c.requests[0].CID= Util.bytesToHex(card.getCID());
-            c.requests[0].counter=ValidationCounter;
-            c.requests[0].signature=Util.bytesToHex(ValidationSignature);
-            return new Request(new Command(),Answer.class);
+        public Request prepare(TangemCard card, int ValidationCounter, byte[] ValidationSignature) {
+            Command c = new Command();
+            c.requests = new RequestItem[1];
+            c.requests[0].CID = Util.bytesToHex(card.getCID());
+            c.requests[0].counter = ValidationCounter;
+            c.requests[0].signature = Util.bytesToHex(ValidationSignature);
+            return new Request(new Command(), Answer.class);
         }
     }
 
