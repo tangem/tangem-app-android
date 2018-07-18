@@ -30,6 +30,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.zxing.WriterException;
+import com.tangem.data.network.Server;
+import com.tangem.data.network.VolleyHelper;
 import com.tangem.data.network.request.ElectrumRequest;
 import com.tangem.data.network.request.ExchangeRequest;
 import com.tangem.data.network.request.InfuraRequest;
@@ -63,7 +65,9 @@ import com.tangem.util.Util;
 import com.tangem.util.UtilHelper;
 import com.tangem.wallet.R;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -88,20 +92,22 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
     public SwipeRefreshLayout mSwipeRefreshLayout;
     private RelativeLayout rlProgressBar;
-    private TextView tvCardID, tvBalance, tvBalanceLine1, tvBalanceLine2,tvOffline, tvBalanceEquivalent, tvWallet, tvInputs, tvError, tvMessage, tvIssuer, tvBlockchain, tvValidationNode, tvHeader, tvCaution;
-//    private ProgressBar progressBar;
+    private TextView tvCardID, tvBalance, tvBalanceLine1, tvBalanceLine2, tvOffline, tvBalanceEquivalent, tvWallet, tvInputs, tvError, tvMessage, tvIssuer, tvBlockchain, tvValidationNode, tvHeader, tvCaution;
+    //    private ProgressBar progressBar;
     private ImageView ivPIN, ivPIN2orSecurityDelay, ivDeveloperVersion;
     private AppCompatButton btnExtract;
 
-//    public List<AsyncTask> updateTasks = new ArrayList<>();
+    //    public List<AsyncTask> updateTasks = new ArrayList<>();
     private boolean lastReadSuccess = true;
     private VerifyCardTask verifyCardTask = null;
     private int requestPIN2Count = 0;
     private Timer timerHideErrorAndMessage = null;
     private String newPIN = "", newPIN2 = "";
     private CardProtocol mCardProtocol;
-//    private int scanTimes = 0;
+    //    private int scanTimes = 0;
     OnlineVerifyTask onlineVerifyTask;
+
+    private static final String URL_CARD_VALIDATE = Server.API.Method.CARD_VALIDATE;
 
     public LoadedWallet() {
 
@@ -122,7 +128,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             super.onPostExecute(requests);
 //            Log.i("OnlineVerifyTask", "onPostExecute[" + String.valueOf(updateTasks.size()) + "]");
 //            updateTasks.remove(this);
-            onlineVerifyTask=null;
+            onlineVerifyTask = null;
 
             for (VerificationServerProtocol.Request request : requests) {
                 if (request.error == null) {
@@ -139,8 +145,16 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 }
             }
 //            if (updateTasks.size() == 0)
-                mSwipeRefreshLayout.setRefreshing(false);
+            mSwipeRefreshLayout.setRefreshing(false);
         }
+    }
+
+    private void requestCardValidate() {
+        Map<String, String> params = new HashMap<>();
+        params.put("Content-Type", "application/json");
+        params.put("CID", Util.bytesToHex(mCard.getCID()));
+        params.put("publicKey", Util.bytesToHex(mCard.getCardPublicKey()));
+        new VolleyHelper().doRequest(getContext(), URL_CARD_VALIDATE, params);
     }
 
 
@@ -153,6 +167,8 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
         mCard.LoadFromBundle(Objects.requireNonNull(getActivity().getIntent().getExtras()).getBundle(TangemCard.EXTRA_CARD));
 
         lastTag = getActivity().getIntent().getParcelableExtra(Main.EXTRA_LAST_DISCOVERED_TAG);
+
+//        requestCardValidate();
     }
 
     @Override
@@ -215,7 +231,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
             mSwipeRefreshLayout.postDelayed(this::onRefresh, 1000);
         }
 
-        if ( (mCard.isOnlineVerified()==null || !mCard.isOnlineVerified()) && onlineVerifyTask ==null) {
+        if ((mCard.isOnlineVerified() == null || !mCard.isOnlineVerified()) && onlineVerifyTask == null) {
             onlineVerifyTask = new OnlineVerifyTask();
 //            updateTasks.add(onlineVerifyTask);
             onlineVerifyTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, VerificationServerProtocol.Verify.prepare(mCard));
@@ -508,7 +524,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
         CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
 
-        if ( (mCard.isOnlineVerified()==null || !mCard.isOnlineVerified()) && onlineVerifyTask ==null) {
+        if ((mCard.isOnlineVerified() == null || !mCard.isOnlineVerified()) && onlineVerifyTask == null) {
             onlineVerifyTask = new OnlineVerifyTask();
 //            updateTasks.add(onlineVerifyTask);
             onlineVerifyTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, VerificationServerProtocol.Verify.prepare(mCard));
@@ -547,7 +563,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
 
             String nodeAddress = Objects.requireNonNull(engine).GetNode(mCard);
             int nodePort = engine.GetNodePort(mCard);
-            UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(LoadedWallet.this,nodeAddress, nodePort, data);
+            UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(LoadedWallet.this, nodeAddress, nodePort, data);
 
 //            updateTasks.add(updateWalletInfoTask);
             updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(mCard.getWallet())
@@ -606,7 +622,6 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
     public void onTagDiscovered(Tag tag) {
         startVerify(tag);
     }
-
 
 
     public Intent prepareResultIntent() {
@@ -750,7 +765,7 @@ public class LoadedWallet extends Fragment implements SwipeRefreshLayout.OnRefre
                 validator.Check(mCard);
                 tvBalanceLine1.setText(validator.GetFirstLine());
                 tvBalanceLine2.setText(validator.GetSecondLine());
-                tvBalanceLine1.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getContext()),validator.GetColor()));
+                tvBalanceLine1.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getContext()), validator.GetColor()));
             }
 
             if (engine.HasBalanceInfo(mCard) || mCard.getOfflineBalance() == null) {
