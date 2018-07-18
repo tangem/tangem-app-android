@@ -67,12 +67,12 @@ public class BalanceValidator {
                 }
             }
 
-            if(card.getFailedBalanceRequestCounter()!=0) {
-                score -= 5 * card.getFailedBalanceRequestCounter();
-                secondLine += "Not all nodes have returned balance. Swipe down or tap again. ";
-                if(score <= 0)
-                    return;
-            }
+//            if(card.getFailedBalanceRequestCounter()!=0) {
+//                score -= 5 * card.getFailedBalanceRequestCounter();
+//                secondLine += "Not all nodes have returned balance. Swipe down or tap again. ";
+//                if(score <= 0)
+//                    return;
+//            }
 
             //
 //            if(card.isBalanceRecieved() && !card.isBalanceEqual()) {
@@ -116,7 +116,7 @@ public class BalanceValidator {
         {
             score -= 50;
             firstLine = "Unguaranteed balance";
-            secondLine += "Potential unsent transaction at the moment. Try to tap and check this banknote later. ";
+            secondLine += "Potential unsent transaction at the moment. Check this banknote later. ";
             if(score <= 0)
                 return;
         }
