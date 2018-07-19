@@ -167,12 +167,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         srlLoadedWallet!!.setOnRefreshListener { this.refresh() }
 
         ivLookup.setOnClickListener {
-            try {
+            if (mCard!!.hasBalanceInfo()) {
                 val engineClick = CoinEngineFactory.Create(mCard!!.blockchain)
                 val browserIntent = Intent(Intent.ACTION_VIEW, engineClick!!.getShareWalletURIExplorer(mCard))
                 startActivity(browserIntent)
-            } catch (e: ActivityNotFoundException) {
-                e.printStackTrace()
             }
         }
 
