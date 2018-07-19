@@ -16,7 +16,6 @@ import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.support.v4.widget.SwipeRefreshLayout
 import android.text.Html
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -505,7 +504,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         startVerify(tag)
     }
 
-
     fun prepareResultIntent(): Intent {
         val data = Intent()
         data.putExtra("UID", mCard!!.uid)
@@ -525,9 +523,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 rlProgressBar.post {
                     rlProgressBar.visibility = View.GONE
                     mCardProtocol = cardProtocol
-
                     refresh()
-
                 }
             } else {
                 // remove last UIDs because of error and no card read
@@ -723,14 +719,14 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         try {
             val isoDep = IsoDep.get(tag)
                     ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
-            val UID = tag!!.id
-            val sUID = Util.byteArrayToHexString(UID)
+            val uid = tag!!.id
+            val sUID = Util.byteArrayToHexString(uid)
             if (mCard!!.uid != sUID) {
-                Log.d(TAG, "Invalid UID: $sUID")
+//                Log.d(TAG, "Invalid UID: $sUID")
                 mNfcManager!!.ignoreTag(isoDep.tag)
                 return
             } else {
-                Log.v(TAG, "UID: $sUID")
+//                Log.v(TAG, "UID: $sUID")
             }
 
             if (lastReadSuccess) {
@@ -760,10 +756,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val isIntentSafe = activities.size > 0
 
             if (isIntentSafe) {
-                val title = getString(R.string.share_wallet_address_with)
-
                 // create intent to show chooser
-                val chooser = Intent.createChooser(intent, title)
+                val chooser = Intent.createChooser(intent, getString(R.string.share_wallet_address_with))
 
                 // verify the intent will resolve to at least one activity
                 if (intent.resolveActivity(activity!!.packageManager) != null) {
