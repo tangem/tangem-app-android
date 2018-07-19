@@ -95,12 +95,10 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                     loadedWallet.mCard.incFailedBalanceRequestCounter();
                                     if (errCounter >= sharedCounter.allRequest) {
                                         e.printStackTrace();
-                                        loadedWallet.errorOnUpdate(e.toString());
                                         engine.SwitchNode(loadedWallet.mCard);
                                     }
                                 } else {
                                     e.printStackTrace();
-                                    loadedWallet.errorOnUpdate(e.toString());
                                     engine.SwitchNode(loadedWallet.mCard);
                                 }
                             }
@@ -120,12 +118,10 @@ public class UpdateWalletInfoTask extends ElectrumTask {
 
                                 } catch (Exception e) {
                                     engine.SwitchNode(loadedWallet.mCard);
-                                    loadedWallet.errorOnUpdate("Failed to send transaction. Try again.");
                                 }
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
-                                loadedWallet.errorOnUpdate("Failed to send transaction. Try again.");
                                 engine.SwitchNode(loadedWallet.mCard);
                             }
                         } else if (request.isMethod(ElectrumRequest.METHOD_ListUnspent)) {
@@ -145,7 +141,6 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                     }
                                 } catch (JSONException e) {
                                     e.printStackTrace();
-                                    loadedWallet.errorOnUpdate(e.toString());
                                     engine.SwitchNode(loadedWallet.mCard);
                                 }
 
@@ -166,7 +161,6 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
-                                loadedWallet.errorOnUpdate(e.toString());
                                 engine.SwitchNode(loadedWallet.mCard);
                             }
                         } else if (request.isMethod(ElectrumRequest.METHOD_GetHistory)) {
@@ -185,7 +179,6 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                     }
                                 } catch (JSONException e) {
                                     e.printStackTrace();
-                                    loadedWallet.errorOnUpdate(e.toString());
                                     engine.SwitchNode(loadedWallet.mCard);
                                 }
 
@@ -207,7 +200,6 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
-                                loadedWallet.errorOnUpdate(e.toString());
                                 engine.SwitchNode(loadedWallet.mCard);
                             }
                         } else if (request.isMethod(ElectrumRequest.METHOD_GetHeader)) {
@@ -220,14 +212,12 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                             jsHeader.getInt("timestamp")));
                                 } catch (JSONException e) {
                                     e.printStackTrace();
-                                    loadedWallet.errorOnUpdate(e.toString());
                                     engine.SwitchNode(loadedWallet.mCard);
 
                                 }
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
-                                loadedWallet.errorOnUpdate(e.toString());
                                 engine.SwitchNode(loadedWallet.mCard);
 
                             }
@@ -264,7 +254,6 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                             tx.isInput = !isOur;
                                         } catch (BitcoinException e) {
                                             e.printStackTrace();
-                                            loadedWallet.errorOnUpdate(e.toString());
                                         }
 //                                    Log.e("TX", raw);
                                     }
@@ -272,7 +261,6 @@ public class UpdateWalletInfoTask extends ElectrumTask {
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
-                                loadedWallet.errorOnUpdate(e.toString());
                                 engine.SwitchNode(loadedWallet.mCard);
                             }
                         }
@@ -282,12 +270,10 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                             int errCounter = sharedCounter.errorRequest.incrementAndGet();
                             loadedWallet.mCard.incFailedBalanceRequestCounter();
                             if (errCounter >= sharedCounter.allRequest) {
-                                loadedWallet.errorOnUpdate(request.error);
                                 engine.SwitchNode(loadedWallet.mCard);
 
                             }
                         } else {
-                            loadedWallet.errorOnUpdate(request.error);
                             engine.SwitchNode(loadedWallet.mCard);
 
                         }
@@ -299,23 +285,20 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                         loadedWallet.mCard.incFailedBalanceRequestCounter();
                         if (errCounter >= sharedCounter.allRequest) {
                             e.printStackTrace();
-                            loadedWallet.errorOnUpdate(e.toString());
                         }
                     } else {
                         e.printStackTrace();
-                        loadedWallet.errorOnUpdate(e.toString());
                     }
                 }
             }
 
-//        if (loadedWallet.updateTasks.size() == 0)
-            loadedWallet.mSwipeRefreshLayout.setRefreshing(false);
+            loadedWallet.srlLoadedWallet.setRefreshing(false);
 
         } catch (NullPointerException e) {
             e.printStackTrace();
 
             if (reference.get() != null) {
-                reference.get().mSwipeRefreshLayout.setRefreshing(false);
+                reference.get().srlLoadedWallet.setRefreshing(false);
             }
         }
 
