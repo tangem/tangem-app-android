@@ -48,7 +48,6 @@ public class ETHRequestTask extends InfuraTask {
 
                         } catch (JSONException e) {
                             e.printStackTrace();
-                            loadedWallet.errorOnUpdate(e.toString());
                         }
                     } else if (request.isMethod(InfuraRequest.METHOD_ETH_Call)) {
                         try {
@@ -60,8 +59,8 @@ public class ETHRequestTask extends InfuraTask {
                             if (l.compareTo(BigInteger.ZERO) == 0) {
                                 loadedWallet.mCard.setBlockchainID(Blockchain.Ethereum.getID());
                                 loadedWallet.mCard.addTokenToBlockchainName();
-                                loadedWallet.mSwipeRefreshLayout.setRefreshing(false);
-                                loadedWallet.onRefresh();
+                                loadedWallet.srlLoadedWallet.setRefreshing(false);
+                                loadedWallet.refresh();
                                 return;
                             }
 
@@ -71,7 +70,6 @@ public class ETHRequestTask extends InfuraTask {
 
                         } catch (JSONException e) {
                             e.printStackTrace();
-                            loadedWallet.errorOnUpdate(e.toString());
                         }
                     } else if (request.isMethod(InfuraRequest.METHOD_ETH_GetOutTransactionCount)) {
                         try {
@@ -95,7 +93,6 @@ public class ETHRequestTask extends InfuraTask {
                                 JSONObject err = msg.getJSONObject("error");
                                 hashTX = err.getString("message");
                                 LastSignStorage.setLastMessage(loadedWallet.mCard.getWallet(), hashTX);
-                                loadedWallet.errorOnUpdate("Failed to send transaction. Try again");
                                 return;
                             }
 
@@ -115,20 +112,17 @@ public class ETHRequestTask extends InfuraTask {
 
                         } catch (Exception e) {
                             e.printStackTrace();
-                            loadedWallet.errorOnUpdate("Failed to send transaction. Try again");
                         }
                     }
                     loadedWallet.updateViews();
                 } else {
-                    loadedWallet.errorOnUpdate(request.error);
+
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
-                loadedWallet.errorOnUpdate(e.toString());
             }
         }
 
-//        if (loadedWallet.updateTasks.size() == 0)
-            loadedWallet.mSwipeRefreshLayout.setRefreshing(false);
+        loadedWallet.srlLoadedWallet.setRefreshing(false);
     }
 }
