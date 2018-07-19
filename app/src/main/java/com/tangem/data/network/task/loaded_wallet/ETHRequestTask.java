@@ -40,11 +40,11 @@ public class ETHRequestTask extends InfuraTask {
                             BigInteger d = l.divide(new BigInteger("1000000000000000000", 10));
                             Long balance = d.longValue();
 
-                            loadedWallet.mCard.setBalanceConfirmed(balance);
-                            loadedWallet.mCard.setBalanceUnconfirmed(0L);
-                            if (loadedWallet.mCard.getBlockchain() != Blockchain.Token)
-                                loadedWallet.mCard.setDecimalBalance(l.toString(10));
-                            loadedWallet.mCard.setDecimalBalanceAlter(l.toString(10));
+                            loadedWallet.getMCard().setBalanceConfirmed(balance);
+                            loadedWallet.getMCard().setBalanceUnconfirmed(0L);
+                            if (loadedWallet.getMCard().getBlockchain() != Blockchain.Token)
+                                loadedWallet.getMCard().setDecimalBalance(l.toString(10));
+                            loadedWallet.getMCard().setDecimalBalanceAlter(l.toString(10));
 
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -57,16 +57,16 @@ public class ETHRequestTask extends InfuraTask {
                             Long balance = l.longValue();
 
                             if (l.compareTo(BigInteger.ZERO) == 0) {
-                                loadedWallet.mCard.setBlockchainID(Blockchain.Ethereum.getID());
-                                loadedWallet.mCard.addTokenToBlockchainName();
-                                loadedWallet.srlLoadedWallet.setRefreshing(false);
+                                loadedWallet.getMCard().setBlockchainID(Blockchain.Ethereum.getID());
+                                loadedWallet.getMCard().addTokenToBlockchainName();
+                                loadedWallet.getSrlLoadedWallet().setRefreshing(false);
                                 loadedWallet.refresh();
                                 return;
                             }
 
-                            loadedWallet.mCard.setBalanceConfirmed(balance);
-                            loadedWallet.mCard.setBalanceUnconfirmed(0L);
-                            loadedWallet.mCard.setDecimalBalance(l.toString(10));
+                            loadedWallet.getMCard().setBalanceConfirmed(balance);
+                            loadedWallet.getMCard().setBalanceUnconfirmed(0L);
+                            loadedWallet.getMCard().setDecimalBalance(l.toString(10));
 
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -77,7 +77,7 @@ public class ETHRequestTask extends InfuraTask {
                             nonce = nonce.substring(2);
                             BigInteger count = new BigInteger(nonce, 16);
 
-                            loadedWallet.mCard.SetConfirmTXCount(count);
+                            loadedWallet.getMCard().SetConfirmTXCount(count);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -92,7 +92,7 @@ public class ETHRequestTask extends InfuraTask {
                                 JSONObject msg = request.getAnswer();
                                 JSONObject err = msg.getJSONObject("error");
                                 hashTX = err.getString("message");
-                                LastSignStorage.setLastMessage(loadedWallet.mCard.getWallet(), hashTX);
+                                LastSignStorage.setLastMessage(loadedWallet.getMCard().getWallet(), hashTX);
                                 return;
                             }
 
@@ -100,14 +100,14 @@ public class ETHRequestTask extends InfuraTask {
                                 hashTX = hashTX.substring(2);
                             }
                             BigInteger bigInt = new BigInteger(hashTX, 16); //TODO: очень плохой способ
-                            LastSignStorage.setTxWasSend(loadedWallet.mCard.getWallet());
-                            LastSignStorage.setLastMessage(loadedWallet.mCard.getWallet(), "");
+                            LastSignStorage.setTxWasSend(loadedWallet.getMCard().getWallet());
+                            LastSignStorage.setLastMessage(loadedWallet.getMCard().getWallet(), "");
                             Log.e("TX_RESULT", hashTX);
 
 
-                            BigInteger nonce = loadedWallet.mCard.GetConfirmTXCount();
+                            BigInteger nonce = loadedWallet.getMCard().GetConfirmTXCount();
                             nonce.add(BigInteger.valueOf(1));
-                            loadedWallet.mCard.SetConfirmTXCount(nonce);
+                            loadedWallet.getMCard().SetConfirmTXCount(nonce);
                             Log.e("TX_RESULT", hashTX);
 
                         } catch (Exception e) {
@@ -123,6 +123,6 @@ public class ETHRequestTask extends InfuraTask {
             }
         }
 
-        loadedWallet.srlLoadedWallet.setRefreshing(false);
+        loadedWallet.getSrlLoadedWallet().setRefreshing(false);
     }
 }

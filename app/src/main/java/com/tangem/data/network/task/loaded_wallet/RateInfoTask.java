@@ -39,7 +39,7 @@ public class RateInfoTask extends ExchangeTask {
                                 String usd = obj.getString("price_usd");
 
                                 Float rate = Float.valueOf(usd);
-                                loadedWallet.mCard.setRate(rate);
+                                loadedWallet.getMCard().setRate(rate);
                                 loadedWallet.updateViews();
                                 stop = true;
                             }
@@ -48,7 +48,7 @@ public class RateInfoTask extends ExchangeTask {
                                 String usd = obj.getString("price_usd");
 
                                 Float rate = Float.valueOf(usd);
-                                loadedWallet.mCard.setRateAlter(rate);
+                                loadedWallet.getMCard().setRateAlter(rate);
                                 loadedWallet.updateViews();
                                 stopAlter = true;
                             }
