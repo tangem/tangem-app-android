@@ -36,6 +36,7 @@
                 android:gravity="center"
                 android:orientation="vertical">
 
+                <!--not used-->
                 <TextView
                     android:id="@+id/tvCaution"
                     android:layout_width="match_parent"
@@ -59,8 +60,7 @@
                         android:id="@+id/ivTangemCard"
                         android:layout_width="match_parent"
                         android:layout_height="180dp"
-                        android:layout_weight="1"
-                        tools:src="@drawable/card_default" />
+                        tools:src="@drawable/card_default"/>
 
                     <RelativeLayout
                         android:id="@+id/rlProgressBar"
@@ -75,7 +75,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:alpha="0.75"
-                            android:background="@color/white" />
+                            android:background="@color/white"/>
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -84,7 +84,7 @@
                             android:alpha="0.8"
                             android:text="@string/verifying"
                             android:textColor="@color/colorPrimary"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"/>
 
                         <ProgressBar
                             android:layout_width="@dimen/size_progress_bar_big"
@@ -92,7 +92,7 @@
                             android:layout_centerInParent="true"
                             android:alpha="0.8"
                             android:elevation="1dp"
-                            android:progressTint="@color/colorPrimary" />
+                            android:progressTint="@color/colorPrimary"/>
 
                     </RelativeLayout>
                 </RelativeLayout>
@@ -120,7 +120,7 @@
                             android:textAlignment="center"
                             android:textColor="@color/black"
                             android:textSize="@dimen/text_size_large"
-                            tools:text="0.05 BTC" />
+                            tools:text="0.05 BTC"/>
 
                         <TextView
                             android:id="@+id/tvBlockchain"
@@ -132,7 +132,8 @@
                             android:paddingRight="10dp"
                             android:textColor="@color/primary"
                             android:textStyle="normal|bold"
-                            tools:text="Bitcoin" />
+                            tools:text="Bitcoin"/>
+
                     </LinearLayout>
 
                     <TextView
@@ -143,7 +144,7 @@
                         android:fontFamily="@font/montserrat_light"
                         android:textAlignment="center"
                         android:textColor="@android:color/holo_orange_dark"
-                        android:textSize="18sp" />
+                        android:textSize="18sp"/>
 
                     <TextView
                         android:id="@+id/tvBalanceLine2"
@@ -151,10 +152,11 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="5dp"
                         android:fontFamily="@font/montserrat_light"
-                        android:textAlignment="center" />
+                        android:textAlignment="center"/>
 
                 </LinearLayout>
 
+                <!--not used-->
                 <TextView
                     android:id="@+id/tvHeader"
                     android:layout_width="match_parent"
@@ -265,7 +267,7 @@
                     android:paddingRight="8dp">
 
                     <ImageView
-                        android:id="@+id/qrWallet"
+                        android:id="@+id/ivQR"
                         android:layout_width="@dimen/size_qr_image"
                         android:layout_height="@dimen/size_qr_image"/>
 
@@ -287,7 +289,7 @@
                             tools:text="1DoQdnSYshhZ5Tqt5Sk6svZt29jqoYVwQY"/>
 
                         <ImageView
-                            android:id="@+id/imgLookup"
+                            android:id="@+id/ivLookup"
                             android:layout_width="@dimen/size_explore_image"
                             android:layout_height="@dimen/size_explore_image"
                             android:layout_marginTop="15dp"
@@ -429,7 +431,7 @@
             android:textAlignment="center"
             android:textColor="@color/black"
             android:textStyle="normal|bold"
-            android:visibility="gone" />
+            android:visibility="gone"/>
 
         <TextView
             android:id="@+id/tvError"
@@ -446,7 +448,7 @@
             android:textAlignment="center"
             android:textColor="@color/white"
             android:textStyle="bold"
-            android:visibility="gone" />
+            android:visibility="gone"/>
 
     </RelativeLayout>
 
@@ -467,7 +469,7 @@
             android:layout_width="wrap_content"
             android:layout_margin="10dp"
             android:elevation="15dp"
-            android:text="@string/load" />
+            android:text="@string/load"/>
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fabInfo"
@@ -476,17 +478,16 @@
             android:layout_margin="10dp"
             android:layout_marginEnd="5dp"
             app:fabSize="mini"
-            app:srcCompat="@drawable/ic_information_variant_white_24dp" />
+            app:srcCompat="@drawable/ic_information_variant_white_24dp"/>
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fabNFC"
-
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
             android:layout_marginStart="5dp"
             app:fabSize="mini"
-            app:srcCompat="@drawable/ic_nfc_white_24dp" />
+            app:srcCompat="@drawable/ic_nfc_white_24dp"/>
 
         <android.support.v7.widget.AppCompatButton
             android:id="@+id/btnExtract"
@@ -494,10 +495,11 @@
             android:layout_width="wrap_content"
             android:layout_margin="10dp"
             android:width="100dp"
-            android:text="@string/extract" />
+            android:text="@string/extract"/>
 
     </LinearLayout>
 
+    <!--not used-->
     <RelativeLayout
         android:id="@+id/rlCardIdAndIcons"
         android:layout_width="match_parent"
@@ -506,19 +508,19 @@
         app:layout_constraintBottom_toBottomOf="parent">
 
         <ImageView
-            android:id="@+id/imgPIN"
+            android:id="@+id/ivPIN"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_alignParentBottom="true"
             android:layout_alignParentStart="false"
             android:layout_marginBottom="8dp"
             android:layout_marginStart="4dp"
-            android:layout_toStartOf="@+id/imgPIN2orSecurityDelay"
+            android:layout_toStartOf="@+id/ivPIN2orSecurityDelay"
             android:elevation="0dp"
             android:src="@drawable/unlock_pin1"/>
 
         <ImageView
-            android:id="@+id/imgPIN2orSecurityDelay"
+            android:id="@+id/ivPIN2orSecurityDelay"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_alignParentBottom="true"
@@ -530,7 +532,7 @@
             android:src="@drawable/unlock_pin2"/>
 
         <ImageView
-            android:id="@+id/imgDeveloperVersion"
+            android:id="@+id/ivDeveloperVersion"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_alignParentBottom="true"
@@ -570,8 +572,8 @@
     </RelativeLayout>
 
     <!--<include-->
-        <!--layout="@layout/layout_progress_horizontal"-->
-        <!--android:visibility="gone"-->
-        <!--tools:layout_editor_absoluteY="495dp" />-->
+    <!--layout="@layout/layout_progress_horizontal"-->
+    <!--android:visibility="gone"-->
+    <!--tools:layout_editor_absoluteY="495dp" />-->
 
 </android.support.constraint.ConstraintLayout>
