@@ -13,7 +13,7 @@
     tools:showIn="@layout/activity_loaded_wallet">
 
     <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/swipe_container"
+        android:id="@+id/srlLoadedWallet"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:padding="0dp"
