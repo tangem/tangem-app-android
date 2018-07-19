@@ -6,10 +6,11 @@
     android:background="#FFFFFF"
     android:gravity="bottom"
     android:orientation="vertical"
-    tools:context="com.tangem.presentation.activity.LogoActivity">
+    tools:context="com.tangem.presentation.activity.LogoActivity"
+    tools:ignore="contentDescription">
 
     <ImageView
-        android:id="@+id/imgLogo"
+        android:id="@+id/ivLogo"
         android:layout_width="match_parent"
         android:layout_height="70dp"
         android:layout_gravity="center_vertical"
@@ -17,7 +18,7 @@
         android:src="@drawable/tangem_logo_full_new"/>
 
     <TextView
-        android:id="@+id/AppVersion"
+        android:id="@+id/tvAppVersion"
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:layout_gravity="bottom"
@@ -30,7 +31,6 @@
         android:textSize="@dimen/text_size_small"/>
 
     <TextView
-        android:id="@+id/textView9"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
