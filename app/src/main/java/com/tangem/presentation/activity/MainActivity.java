@@ -1,5 +1,6 @@
 package com.tangem.presentation.activity;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -9,7 +10,6 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.PopupMenu;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -97,6 +97,13 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
 
         antenna = new DeviceNFCAntennaLocation();
         antenna.getAntennaLocation();
+
+        try {
+
+        } catch (ActivityNotFoundException e) {
+            e.printStackTrace();
+        }
+
 
         // set card orientation
         switch (antenna.getOrientation()) {
@@ -197,10 +204,10 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
                 try {
                     f = Logger.collectLogs(this);
                     if (f != null) {
-                        Log.e(TAG, String.format("Collect %d log bytes", f.length()));
+//                        Log.e(TAG, String.format("Collect %d log bytes", f.length()));
                         CommonUtil.sendEmail(this, zipFile, TAG, "Logs", PhoneUtility.getDeviceInfo(), new File[]{f});
                     } else {
-                        Log.e(TAG, "Can't create temporaly log file");
+//                        Log.e(TAG, "Can't create temporaly log file");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -252,7 +259,7 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
 
     private void showLogoActivity() {
         Intent intent = new Intent(getBaseContext(), LogoActivity.class);
-        intent.putExtra(LogoActivity.TAG, true);
+        intent.putExtra(LogoActivity.Companion.getTAG(), true);
         intent.putExtra(LogoActivity.EXTRA_AUTO_HIDE, false);
         startActivity(intent);
     }
