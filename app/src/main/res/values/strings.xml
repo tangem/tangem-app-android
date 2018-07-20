@@ -89,6 +89,7 @@
 
     <!-- LoadedWalletActivity, LoadedWallet -->
     <string name="wallet_empty">The wallet is empty</string>
+    <string name="no_compatible_wallet">No compatible wallet installed</string>
     <string name="not_enough_funds">Not enough funds for transaction fee (gas)!</string>
     <string name="please_wait_while_previous">Please wait while previous transaction is confirmed in blockchain</string>
     <string name="please_wait_for_confirmation">Could not obtain all inputs. Swipe down to refresh.</string>
