@@ -104,7 +104,6 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
         }
 
         btnNewWallet.setOnClickListener(v -> {
-            //CreateSelectBlockchainDialog();
             requestPIN2Count = 0;
             Intent intent = new Intent(getBaseContext(), RequestPINActivity.class);
             intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString());
@@ -237,7 +236,7 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
                             new NoExtendedLengthSupportDialog().show(getFragmentManager(), NoExtendedLengthSupportDialog.TAG);
                         }
                     } else {
-                        Toast.makeText(EmptyWalletActivity.this, "Try to scan again", Toast.LENGTH_LONG).show();
+                        Toast.makeText(EmptyWalletActivity.this, R.string.try_to_scan_again, Toast.LENGTH_LONG).show();
                     }
                     progressBar.setProgress(100);
                     progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
