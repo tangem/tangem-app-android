@@ -104,7 +104,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         val params = HashMap<String, String>()
         params["CID"] = Util.bytesToHex(mCard!!.cid)
         params["publicKey"] = Util.bytesToHex(mCard!!.cardPublicKey)
-        VolleyHelper().doRequest(context!!, URL_CARD_VALIDATE, params)
+        VolleyHelper().doRequestString(context!!, URL_CARD_VALIDATE, params)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -112,11 +112,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         mNfcManager = NfcManager(activity, this)
 
         mCard = TangemCard(activity!!.intent.getStringExtra(TangemCard.EXTRA_CARD))
-        mCard!!.LoadFromBundle(activity!!.intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
+        mCard!!.LoadFromBundle(activity!!.intent.extras.getBundle(TangemCard.EXTRA_CARD))
 
         lastTag = activity!!.intent.getParcelableExtra(Main.EXTRA_LAST_DISCOVERED_TAG)
-
-        //        requestCardValidate();
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -186,7 +184,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 intent.addCategory(Intent.CATEGORY_DEFAULT)
                 startActivity(intent)
             } catch (e: ActivityNotFoundException) {
-                e.printStackTrace()
+                Toast.makeText(context, R.string.no_compatible_wallet, Toast.LENGTH_LONG).show()
             }
         }
 
