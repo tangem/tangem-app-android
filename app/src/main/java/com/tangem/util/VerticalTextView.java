@@ -1,4 +1,4 @@
-package com.tangem;
+package com.tangem.util;
 
 import android.content.Context;
 import android.graphics.Canvas;
