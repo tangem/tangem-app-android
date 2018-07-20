@@ -112,12 +112,12 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
             startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2);
         });
 
-        if (getIntent().getExtras().containsKey(NfcAdapter.EXTRA_TAG)) {
-            Tag tag = getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
-            if (tag != null) {
-                onTagDiscovered(tag);
-            }
-        }
+//        if (getIntent().getExtras().containsKey(NfcAdapter.EXTRA_TAG)) {
+//            Tag tag = getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
+//            if (tag != null) {
+//                onTagDiscovered(tag);
+//            }
+//        }
     }
 
     @Override
