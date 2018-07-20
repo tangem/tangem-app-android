@@ -3,18 +3,21 @@ package com.tangem.data.network
 import android.content.Context
 import android.content.Intent
 import android.support.v7.app.AlertDialog
+import android.util.Log
 import com.android.volley.AuthFailureError
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
+import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 import com.tangem.AppController
+import com.tangem.presentation.fragment.LoadedWallet
 import com.tangem.wallet.R
 
 class VolleyHelper {
 
-    fun doRequest(context: Context, url: String, params: Map<String, String>) {
+    fun doRequestDebug(context: Context, url: String, params: Map<String, String>) {
         val stringRequest = object : StringRequest(Request.Method.POST, url,
                 { response ->
                     val data = GsonBuilder().setPrettyPrinting().create().toJson(JsonParser().parse(response))
@@ -34,6 +37,30 @@ class VolleyHelper {
                     alert.show()
                 },
                 { error -> val networkResponse = error.networkResponse }) {
+
+
+            @Throws(AuthFailureError::class)
+            override fun getHeaders(): Map<String, String> {
+                return Server.getHeader()
+            }
+
+            @Throws(AuthFailureError::class)
+            override fun getParams(): Map<String, String> {
+                return params
+            }
+        }
+
+        stringRequest.retryPolicy = DefaultRetryPolicy(30000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
+        AppController.getInstance().addToRequestQueue(stringRequest)
+    }
+
+    fun doRequestString(context: Context, url: String, params: Map<String, String>) {
+        val stringRequest = object : StringRequest(Request.Method.POST, url,
+                Response.Listener<String> { response ->
+//                    val json = String(response)
+                    Log.i(LoadedWallet.TAG, response)
+                },
+                Response.ErrorListener { "That didn't work!" }) {
 
 
             @Throws(AuthFailureError::class)
