@@ -1,6 +1,5 @@
 package com.tangem.presentation.activity;
 
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -96,13 +95,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
 
         antenna = new DeviceNFCAntennaLocation();
         antenna.getAntennaLocation();
-
-        try {
-
-        } catch (ActivityNotFoundException e) {
-            e.printStackTrace();
-        }
-
 
         // set card orientation
         switch (antenna.getOrientation()) {
