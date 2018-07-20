@@ -57,7 +57,7 @@
                 android:alpha="0.5"
                 android:background="@color/white"/>
 
-            <com.tangem.VerticalTextView
+            <com.tangem.util.VerticalTextView
                 android:id="@+id/tvType"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
