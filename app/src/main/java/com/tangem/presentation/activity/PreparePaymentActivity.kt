@@ -9,7 +9,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.text.Html
 import android.text.InputFilter
-import com.tangem.DecimalDigitsInputFilter
+import com.tangem.util.DecimalDigitsInputFilter
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
