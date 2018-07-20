@@ -580,7 +580,7 @@ public class VerifyCard extends Fragment implements NfcAdapter.ReaderCallback {
         popup.getMenu().findItem(R.id.action_set_PIN2).setVisible(mCard.allowSwapPIN2());
         popup.getMenu().findItem(R.id.action_reset_PIN2).setVisible(mCard.allowSwapPIN2() && !mCard.useDefaultPIN2());
         popup.getMenu().findItem(R.id.action_reset_PINs).setVisible(mCard.allowSwapPIN() && mCard.allowSwapPIN2() && !mCard.useDefaultPIN1() && !mCard.useDefaultPIN2());
-        if (!mCard.isReusable())
+        if (!mCard.isReusable() || !mCard.isWalletPublicKeyValid())
             popup.getMenu().findItem(R.id.action_purge).setVisible(false);
 
         popup.setOnMenuItemClickListener(item -> {
