@@ -62,7 +62,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         private const val URL_CARD_VALIDATE = Server.API.Method.CARD_VALIDATE
     }
 
-    private var mNfcManager: NfcManager? = null
+    private var nfcManager: NfcManager? = null
     var mCard: TangemCard? = null
     private var lastTag: Tag? = null
 
@@ -109,7 +109,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mNfcManager = NfcManager(activity, this)
+        nfcManager = NfcManager(activity, this)
 
         mCard = TangemCard(activity!!.intent.getStringExtra(TangemCard.EXTRA_CARD))
         mCard!!.LoadFromBundle(activity!!.intent.extras.getBundle(TangemCard.EXTRA_CARD))
@@ -223,17 +223,17 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     override fun onResume() {
         super.onResume()
-        mNfcManager!!.onResume()
+        nfcManager!!.onResume()
     }
 
     override fun onPause() {
         super.onPause()
-        mNfcManager!!.onPause()
+        nfcManager!!.onPause()
     }
 
     override fun onStop() {
         super.onStop()
-        mNfcManager!!.onStop()
+        nfcManager!!.onStop()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -721,7 +721,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val sUID = Util.byteArrayToHexString(uid)
             if (mCard!!.uid != sUID) {
 //                Log.d(TAG, "Invalid UID: $sUID")
-                mNfcManager!!.ignoreTag(isoDep.tag)
+                nfcManager!!.ignoreTag(isoDep.tag)
                 return
             } else {
 //                Log.v(TAG, "UID: $sUID")
@@ -733,7 +733,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 isoDep.timeout = 65000
             }
 
-            verifyCardTask = VerifyCardTask(context, mCard, mNfcManager, isoDep, this)
+            verifyCardTask = VerifyCardTask(context, mCard, nfcManager, isoDep, this)
             verifyCardTask!!.start()
 
         } catch (e: Exception) {

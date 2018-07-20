@@ -31,7 +31,6 @@ import com.tangem.domain.wallet.LastSignStorage;
 import com.tangem.domain.wallet.Logger;
 import com.tangem.domain.wallet.PINStorage;
 import com.tangem.presentation.dialog.RootFoundDialog;
-import com.tangem.presentation.fragment.Main;
 import com.tangem.util.CommonUtil;
 import com.tangem.util.PhoneUtility;
 import com.tangem.wallet.BuildConfig;
@@ -138,11 +137,11 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         animate();
 
         // add fragment
-        Main main = (Main) getSupportFragmentManager().findFragmentById(R.id.fragmentMain);
-        if (main.getCardListAdapter().getItemCount() > 0)
-            showCleanButton();
-        else
-            hideCleanButton();
+//        Main main = (Main) getSupportFragmentManager().findFragmentById(R.id.fragmentMain);
+//        if (main.getCardListAdapter().getItemCount() > 0)
+//            showCleanButton();
+//        else
+//            hideCleanButton();
 
         // NFC
         Intent intent = getIntent();
