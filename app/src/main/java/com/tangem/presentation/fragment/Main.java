@@ -36,7 +36,6 @@ import com.tangem.util.Util;
 import com.tangem.wallet.R;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -219,7 +218,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
             readCardInfoTask = new ReadCardInfoTask(getActivity(), mNfcManager, isoDep, this);
             readCardInfoTask.start();
 
-            Log.i(TAG, "onTagDiscovered " + Arrays.toString(tag.getId()));
+//            Log.i(TAG, "onTagDiscovered " + Arrays.toString(tag.getId()));
 
         } catch (Exception e) {
             e.printStackTrace();
