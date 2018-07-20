@@ -496,6 +496,14 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         if (needResendTX)
             sendTransaction(LastSignStorage.getTxForSend(mCard!!.wallet))
+
+
+//        if (activity!!.intent.extras!!.containsKey(NfcAdapter.EXTRA_TAG)) {
+//            val tag = activity!!.intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
+//            if (tag != null) {
+//                onTagDiscovered(tag)
+//            }
+//        }
     }
 
     override fun onTagDiscovered(tag: Tag) {
