@@ -87,17 +87,6 @@
                 android:textStyle="bold"
                 tools:text="4.51735 mBtc"/>
 
-            <!--<TextView-->
-                <!--android:id="@+id/tvBalanceEquivalent"-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:layout_marginStart="12dp"-->
-                <!--android:layout_marginTop="4dp"-->
-                <!--android:fontFamily="@font/montserrat_light"-->
-                <!--android:textColor="@android:color/darker_gray"-->
-                <!--android:textSize="@dimen/text_size_1_small"-->
-                <!--tools:text="$132"/>-->
-
         </LinearLayout>
 
     </LinearLayout>
@@ -148,8 +137,8 @@
             android:id="@+id/etWallet"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
             android:fontFamily="@font/montserrat_light"
             android:hint="@string/enter_wallet_address"
             android:inputType="text|textMultiLine|textNoSuggestions"
@@ -203,10 +192,10 @@
                 android:id="@+id/etAmount"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:digits="0123456789.,"
                 android:fontFamily="@font/montserrat_light"
                 android:hint="@string/enter_amount"
                 android:inputType="numberDecimal"
-                android:digits="0123456789.,"
                 android:padding="12dp"
                 android:textColor="@color/colorPrimaryDark"
                 android:textSize="@dimen/text_size_large"
@@ -214,7 +203,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintWidth_min="150dp" />
+                app:layout_constraintWidth_min="150dp"/>
 
             <TextView
                 android:id="@+id/tvCurrency"
@@ -228,18 +217,6 @@
                 android:textSize="@dimen/text_size_large"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toRightOf="@+id/etAmount"/>
-
-            <!--<TextView-->
-                <!--android:id="@+id/tvAmountEquivalent"-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:layout_marginBottom="4dp"-->
-                <!--android:layout_marginStart="8dp"-->
-                <!--android:fontFamily="@font/montserrat_light"-->
-                <!--android:textColor="@android:color/darker_gray"-->
-                <!--android:textSize="@dimen/text_size_1_small"-->
-                <!--app:layout_constraintBottom_toBottomOf="@+id/tvCurrency"-->
-                <!--app:layout_constraintLeft_toRightOf="@+id/tvCurrency"/>-->
 
         </android.support.constraint.ConstraintLayout>
 
