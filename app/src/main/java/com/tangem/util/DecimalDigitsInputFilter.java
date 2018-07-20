@@ -1,4 +1,4 @@
-package com.tangem;
+package com.tangem.util;
 
 import android.text.InputFilter;
 import android.text.Spanned;
