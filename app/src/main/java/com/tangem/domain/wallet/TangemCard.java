@@ -1214,13 +1214,13 @@ public class TangemCard {
         return Denomination;
     }
 
-    public byte[] SignHashes;
-    public void setSignHashes(byte[] SignHashes) {
-        this.SignHashes = SignHashes;
+    public int SignedHashes = -1; // Will remain -1 if tag was not found on card (= not safe to accept)
+    public void setSignedHashes(int SignedHashes) {
+        this.SignedHashes = SignedHashes;
     }
 
-    public byte[] getSignHashes() {
-        return SignHashes;
+    public int getSignedHashes() {
+        return SignedHashes;
     }
 
 
@@ -1313,7 +1313,7 @@ public class TangemCard {
 
         if(failedBalanceRequestCounter != null)
             B.putInt("FailedBalance", failedBalanceRequestCounter.get());
-        if(getSignHashes()!=null) B.putByteArray("SignHashes", getSignHashes());
+        B.putInt("SignedHashes", getSignedHashes());
         B.putString("Wallet", wallet);
         B.putString("Error", error);
         B.putBoolean("WalletPublicKeyValid", isWalletPublicKeyValid());
@@ -1434,7 +1434,7 @@ public class TangemCard {
         else
             encryptionMode = null;
 
-        if(B.containsKey("SignHashes")) setSignHashes(B.getByteArray("SignHashes"));
+        if(B.containsKey("SignedHashes")) setSignedHashes(B.getInt("SignedHashes"));
 
         if(B.containsKey("FailedBalance")) failedBalanceRequestCounter = new AtomicInteger(B.getInt("FailedBalance"));
         if (B.containsKey("Issuer")) issuer = Issuer.FindIssuer(B.getString("Issuer"));
