@@ -665,22 +665,22 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             if (mCard!!.useDefaultPIN1()!!) {
                 ivPIN.setImageResource(R.drawable.unlock_pin1)
-                ivPIN.setOnClickListener { v -> Toast.makeText(context, R.string.this_banknote_protected_default_PIN1_code, Toast.LENGTH_LONG).show() }
+                ivPIN.setOnClickListener { Toast.makeText(context, R.string.this_banknote_protected_default_PIN1_code, Toast.LENGTH_LONG).show() }
             } else {
                 ivPIN!!.setImageResource(R.drawable.lock_pin1)
-                ivPIN!!.setOnClickListener { v -> Toast.makeText(context, R.string.this_banknote_protected_user_PIN1_code, Toast.LENGTH_LONG).show() }
+                ivPIN!!.setOnClickListener { Toast.makeText(context, R.string.this_banknote_protected_user_PIN1_code, Toast.LENGTH_LONG).show() }
             }
 
             if (mCard!!.pauseBeforePIN2 > 0 && (mCard!!.useDefaultPIN2()!! || !mCard!!.useSmartSecurityDelay())) {
                 ivPIN2orSecurityDelay.setImageResource(R.drawable.timer)
-                ivPIN2orSecurityDelay.setOnClickListener { v -> Toast.makeText(context, String.format("This banknote will enforce %.0f seconds security delay for all operations requiring PIN2 code", mCard!!.pauseBeforePIN2 / 1000.0), Toast.LENGTH_LONG).show() }
+                ivPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, String.format("This banknote will enforce %.0f seconds security delay for all operations requiring PIN2 code", mCard!!.pauseBeforePIN2 / 1000.0), Toast.LENGTH_LONG).show() }
 
             } else if (mCard!!.useDefaultPIN2()!!) {
                 ivPIN2orSecurityDelay.setImageResource(R.drawable.unlock_pin2)
-                ivPIN2orSecurityDelay.setOnClickListener { v -> Toast.makeText(context, R.string.this_banknote_protected_default_PIN2_code, Toast.LENGTH_LONG).show() }
+                ivPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, R.string.this_banknote_protected_default_PIN2_code, Toast.LENGTH_LONG).show() }
             } else {
                 ivPIN2orSecurityDelay.setImageResource(R.drawable.lock_pin2)
-                ivPIN2orSecurityDelay.setOnClickListener { v -> Toast.makeText(context, R.string.this_banknote_protected_user_PIN2_code, Toast.LENGTH_LONG).show() }
+                ivPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, R.string.this_banknote_protected_user_PIN2_code, Toast.LENGTH_LONG).show() }
             }
 
             if (mCard!!.useDevelopersFirmware()!!) {
@@ -695,18 +695,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             tvIssuer.text = mCard!!.issuerDescription
 
-            timerHideErrorAndMessage = Timer()
-
-            timerHideErrorAndMessage!!.schedule(object : TimerTask() {
-                override fun run() {
-                    tvError.post {
-                        tvMessage!!.visibility = View.GONE
-                        tvError.visibility = View.GONE
-                        mCard!!.error = null
-                        mCard!!.message = null
-                    }
-                }
-            }, 5000)
+            mCard!!.error = null
+            mCard!!.message = null
 
         } catch (e: Exception) {
             e.printStackTrace()
