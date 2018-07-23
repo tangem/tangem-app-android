@@ -80,13 +80,11 @@
 
         <activity
             android:name="com.tangem.presentation.activity.LoadedWalletActivity"
-            android:label="@string/title_activity_loaded_wallet"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"/>
 
         <activity
             android:name="com.tangem.presentation.activity.VerifyCardActivity"
-            android:label="@string/title_activity_loaded_wallet"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"/>
 
