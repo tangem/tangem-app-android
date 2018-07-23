@@ -27,7 +27,6 @@
         <item>@string/bcBitcoin</item>
         <item>@string/bcEtherium</item>
     </array>
-    <string name="title_activity_loaded_wallet">LoadedWalletActivity</string>
     <string name="title_activity_settings_feature">Settings</string>
     <string name="balance">Balance</string>
     <string name="verified_offline">verified offline</string>
