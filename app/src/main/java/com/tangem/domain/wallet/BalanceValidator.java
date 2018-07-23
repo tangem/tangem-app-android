@@ -12,12 +12,10 @@ public class BalanceValidator {
     }
     public String GetSecondLine()
     {
-        if(score < 0) score = 0;
-        if (score ==0) {
-            return "Do not accept. " + secondLine;
-        } else {
-            return score + "% safe. " + secondLine;
-        }
+        if (score>89) { return "Safe to accept. " + secondLine;}
+        else if (score>74) { return "Not fully safe to accept. " + secondLine;}
+        else if (score>30) { return "Not safe to accept. " + secondLine;}
+        else { return "Do not accept! " + secondLine;}
     }
     public int GetColor() {
         if (score>89) { return R.color.msg_okay;}
@@ -46,7 +44,6 @@ public class BalanceValidator {
             return;
         }
 
-
         // rule 2.c
         if(!CheckAttestationServiceResult(card) && CheckAttestationServiceAvailable(card)) {
             score = 0;
@@ -55,17 +52,56 @@ public class BalanceValidator {
             return;
         }
 
-        // rule 3
-        if(CheckOnlineBalance(card) && !NotConfirmTransaction(card))
+        // rule 6
+        if(NotConfirmTransaction(card))
         {
-            if(card.isBalanceRecieved() && card.isBalanceEqual()) {
-                score = 100;
-                firstLine = "Verified balance";
-                secondLine += "Confirmed balance and banknote identity. ";
-                if(card.getBalance() == 0) {
-                    firstLine = "Zero balance";
-                }
+            score = 0;
+            firstLine = "Unguaranted balance";
+            secondLine = "Loading in progress. Wait for full confirmation in blockchain. ";
+            return;
+        }
+
+        // rule 5
+        if(IsLostSecondRead(card))
+        {
+            score = 0;
+            secondLine = "Wallet and note keys were not verified. Tap again. ";
+            return;
+        }
+
+        if(card.isBalanceRecieved() && card.isBalanceEqual()) {
+            score = 100;
+            firstLine = "Verified balance";
+            secondLine = "Balance confirmed in blockchain. ";
+            if(card.getBalance() == 0) {
+                firstLine = "";
             }
+        }
+
+        // rule 4 TODO: need to check SignedHashed against number of outputs in blockchain
+        if(HasEverSigned(card))
+        {
+            score = 80;
+            firstLine = "Unguaranteed balance";
+            secondLine = "Potential unsent transaction. Redeem immediately if accept. ";
+            return;
+        }
+        // rule 7
+        if(CheckOfflineBalance(card) && !CheckOnlineBalance(card))
+        {
+            score = 80;
+            firstLine = "Verified offline balance";
+            secondLine = "Can't obtain balance from blockchain. Restore internet connection to be more confident. ";
+        }
+
+        // rule 2.b
+        if(CheckAttestationServiceAvailable(card))
+        {
+            secondLine += "Verified note identity. ";
+        } else {
+            score = 80;
+            secondLine += "Card identity was not verified. Cannot reach Tangem attestation service. ";
+        }
 
 //            if(card.getFailedBalanceRequestCounter()!=0) {
 //                score -= 5 * card.getFailedBalanceRequestCounter();
@@ -74,62 +110,14 @@ public class BalanceValidator {
 //                    return;
 //            }
 
-            //
+        //
 //            if(card.isBalanceRecieved() && !card.isBalanceEqual()) {
 //                score = 0;
 //                firstLine = "Disputed balance";
 //                secondLine += " Cannot obtain trusted balance at the moment. Try to tap and check this banknote later.";
 //                return;
 //            }
-        }
 
-        // rule 7
-        if(CheckOfflineBalance(card) && !CheckOnlineBalance(card))
-        {
-            score = 90;
-            firstLine = "Verified offline balance";
-            secondLine += "Restore internet connection to be more confident. ";
-            if(score <= 0)
-                return;
-        }
-
-        // rule 2.b
-        if(!CheckAttestationServiceAvailable(card))
-        {
-            score -= 15;
-            secondLine += "Card identity was not verified. Cannot reach attestation service. ";
-            if(score <= 0)
-                return;
-        }
-
-        // rule 5
-        if(IsLostSecondRead(card))
-        {
-            score -= 30;
-            secondLine += "Wallet and banknote keys were not verified. Tap again. ";
-            if(score <= 0)
-                return;
-        }
-
-        // rule 4
-        if(!CheckSignHashes(card))
-        {
-            score -= 50;
-            firstLine = "Unguaranteed balance";
-            secondLine += "Potential unsent transaction at the moment. Check this banknote later. ";
-            if(score <= 0)
-                return;
-        }
-
-        // rule 6
-        if(NotConfirmTransaction(card))
-        {
-            score -= 50;
-            String firstLine = "Unguaranted balance";
-            secondLine += " Loading in progress. Wait for full confirmation in blockchain. ";
-            if(score <= 0)
-                return;
-        }
 
     }
 
@@ -148,9 +136,10 @@ public class BalanceValidator {
         return card.isWalletPublicKeyValid();
     }
 
-    boolean CheckSignHashes(TangemCard card)
+    boolean HasEverSigned(TangemCard card)
     {
-        return card.getSignHashes()==null;
+//        return card.getSignedHashes() != 0 || card.getRemainingSignatures() != card.getMaxSignatures();
+        return card.getRemainingSignatures() != card.getMaxSignatures();
     }
 
     boolean CheckAttestationServiceAvailable(TangemCard card)
