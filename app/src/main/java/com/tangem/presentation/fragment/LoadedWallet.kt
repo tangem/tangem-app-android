@@ -587,7 +587,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 timerHideErrorAndMessage!!.cancel()
                 timerHideErrorAndMessage = null
             }
-            tvCardID.text = mCard!!.cidDescription
 
             if (mCard!!.error == null || mCard!!.error.isEmpty()) {
                 tvError.visibility = View.GONE
@@ -663,33 +662,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             tvBlockchain.text = mCard!!.blockchainName
 
             tvValidationNode.text = mCard!!.validationNodeDescription
-
-            if (mCard!!.useDefaultPIN1()!!) {
-                ivPIN.setImageResource(R.drawable.unlock_pin1)
-                ivPIN.setOnClickListener { Toast.makeText(context, R.string.this_banknote_protected_default_PIN1_code, Toast.LENGTH_LONG).show() }
-            } else {
-                ivPIN!!.setImageResource(R.drawable.lock_pin1)
-                ivPIN!!.setOnClickListener { Toast.makeText(context, R.string.this_banknote_protected_user_PIN1_code, Toast.LENGTH_LONG).show() }
-            }
-
-            if (mCard!!.pauseBeforePIN2 > 0 && (mCard!!.useDefaultPIN2()!! || !mCard!!.useSmartSecurityDelay())) {
-                ivPIN2orSecurityDelay.setImageResource(R.drawable.timer)
-                ivPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, String.format(getString(R.string.this_banknote_will_enforce), mCard!!.pauseBeforePIN2 / 1000.0), Toast.LENGTH_LONG).show()}
-
-            } else if (mCard!!.useDefaultPIN2()!!) {
-                ivPIN2orSecurityDelay.setImageResource(R.drawable.unlock_pin2)
-                ivPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, R.string.this_banknote_protected_default_PIN2_code, Toast.LENGTH_LONG).show() }
-            } else {
-                ivPIN2orSecurityDelay.setImageResource(R.drawable.lock_pin2)
-                ivPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, R.string.this_banknote_protected_user_PIN2_code, Toast.LENGTH_LONG).show() }
-            }
-
-            if (mCard!!.useDevelopersFirmware()!!) {
-                ivDeveloperVersion.setImageResource(R.drawable.ic_developer_version)
-                ivDeveloperVersion.visibility = View.VISIBLE
-                ivDeveloperVersion.setOnClickListener { v -> Toast.makeText(context, R.string.unlocked_banknote_only_development_use, Toast.LENGTH_LONG).show() }
-            } else
-                ivDeveloperVersion.visibility = View.INVISIBLE
 
             btnExtract!!.isEnabled = mCard!!.hasBalanceInfo()
 
