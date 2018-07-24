@@ -158,7 +158,7 @@ public class CreateNewWalletActivity extends AppCompatActivity implements NfcAda
                 } else {
                     progressBar.post(() -> {
                         if (cardProtocol.getError() instanceof CardProtocol.TangemException_ExtendedLengthNotSupported) {
-                            if (!NoExtendedLengthSupportDialog.allreadyShowed) {
+                            if (!NoExtendedLengthSupportDialog.allReadyShowed) {
                                 new NoExtendedLengthSupportDialog().show(getFragmentManager(), NoExtendedLengthSupportDialog.TAG);
                             }
                         } else {
