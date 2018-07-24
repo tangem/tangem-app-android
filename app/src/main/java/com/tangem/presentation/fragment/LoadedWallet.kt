@@ -135,9 +135,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         val engine = CoinEngineFactory.Create(mCard!!.blockchain)
         val visibleFlag = engine?.InOutPutVisible() ?: true
-        val visibleIOPuts = if (visibleFlag) View.VISIBLE else View.GONE
-
-//        tvInputs.visibility = visibleIOPuts
 
         try {
             ivQR.setImageBitmap(UtilHelper.generateQrCode(engine!!.getShareWalletURI(mCard).toString()))
@@ -165,11 +162,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         srlLoadedWallet!!.setOnRefreshListener { this.refresh() }
 
         ivLookup.setOnClickListener {
-            if (mCard!!.hasBalanceInfo()) {
-                val engineClick = CoinEngineFactory.Create(mCard!!.blockchain)
-                val browserIntent = Intent(Intent.ACTION_VIEW, engineClick!!.getShareWalletURIExplorer(mCard))
-                startActivity(browserIntent)
-            }
+            val engineClick = CoinEngineFactory.Create(mCard!!.blockchain)
+            val browserIntent = Intent(Intent.ACTION_VIEW, engineClick!!.getShareWalletURIExplorer(mCard))
+            startActivity(browserIntent)
         }
 
         ivCopy.setOnClickListener { doShareWallet(false) }
