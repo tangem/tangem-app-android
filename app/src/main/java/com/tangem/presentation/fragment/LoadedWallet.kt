@@ -201,9 +201,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
 
         btnExtract.setOnClickListener {
-            if (!mCard!!.hasBalanceInfo()) {
-
-            } else if (!engine!!.IsBalanceNotZero(mCard))
+            if (!mCard!!.hasBalanceInfo())
+                Toast.makeText(context, R.string.cannot_obtain_data_from_blockchain, Toast.LENGTH_LONG).show()
+            else if (!engine!!.IsBalanceNotZero(mCard))
                 Toast.makeText(context, R.string.wallet_empty, Toast.LENGTH_LONG).show()
             else if (!engine.IsBalanceAlterNotZero(mCard))
                 Toast.makeText(context, R.string.not_enough_funds, Toast.LENGTH_LONG).show()
@@ -213,11 +213,12 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 Toast.makeText(context, R.string.please_wait_for_confirmation, Toast.LENGTH_LONG).show()
             else if (mCard!!.remainingSignatures == 0)
                 Toast.makeText(context, R.string.card_hasn_t_remaining_signature, Toast.LENGTH_LONG).show()
-
-            val intent = Intent(context, PreparePaymentActivity::class.java)
-            intent.putExtra("UID", mCard!!.uid)
-            intent.putExtra("Card", mCard!!.asBundle)
-            startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT)
+            else {
+                val intent = Intent(context, PreparePaymentActivity::class.java)
+                intent.putExtra("UID", mCard!!.uid)
+                intent.putExtra("Card", mCard!!.asBundle)
+                startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT)
+            }
         }
     }
 
