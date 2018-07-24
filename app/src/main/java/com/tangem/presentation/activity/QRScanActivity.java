@@ -7,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 import com.google.zxing.Result;
 
@@ -22,7 +21,7 @@ public class QRScanActivity extends AppCompatActivity implements ZXingScannerVie
         super.onCreate(savedInstanceState);
         //setContentView(R.layout.activity_qrscan);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            Log.e("QRScanActivity", "User hasn't granted permission to use camera");
+//            Log.e("QRScanActivity", "User hasn't granted permission to use camera");
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 1);
         } else {
             runScanner();
@@ -44,13 +43,13 @@ public class QRScanActivity extends AppCompatActivity implements ZXingScannerVie
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-                    Log.i("QRScanActivity", "permission was granted");
+//                    Log.i("QRScanActivity", "permission was granted");
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.
                     runScanner();
 
                 } else {
-                    Log.e("QRScanActivity", "permission denied");
+//                    Log.e("QRScanActivity", "permission denied");
                     setResult(Activity.RESULT_CANCELED);
                     finish();
 
