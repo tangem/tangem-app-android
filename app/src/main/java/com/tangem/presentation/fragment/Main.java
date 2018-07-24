@@ -316,7 +316,7 @@ public class Main extends Fragment implements NfcAdapter.ReaderCallback, CardLis
                             doEnterPIN();
                         } else {
                             if (cardProtocol.getError() instanceof CardProtocol.TangemException_ExtendedLengthNotSupported) {
-                                if (!NoExtendedLengthSupportDialog.allreadyShowed) {
+                                if (!NoExtendedLengthSupportDialog.allReadyShowed) {
                                     new NoExtendedLengthSupportDialog().show(Objects.requireNonNull(getActivity()).getFragmentManager(), NoExtendedLengthSupportDialog.TAG);
                                 }
                             }
