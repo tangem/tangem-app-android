@@ -30,7 +30,7 @@ public class BalanceValidator {
         secondLine = "";
 
         // rule 1
-        if(!CheckOfflineBalance(card) && !CheckOnlineBalance(card)) {
+        if((!CheckOfflineBalance(card) && !CheckOnlineBalance(card)) || (!CheckOnlineBalance(card) && HasEverSigned(card))) {
             score = 0;
             firstLine = "Unknown balance";
             secondLine = "Balance cannot be verified. Swipe down to refresh.";
@@ -62,10 +62,20 @@ public class BalanceValidator {
         }
 
         // rule 5
-        if(IsLostSecondRead(card))
+        if(!isCodeConfirmed(card))
         {
             score = 0;
-            secondLine = "Wallet and note keys were not verified. Tap again. ";
+            firstLine = "Not genuine banknote";
+            secondLine = "Firmware binary code verification failed";
+            return;
+        }
+
+        // rule 5
+        if(card.PIN2 == TangemCard.PIN2_Mode.CustomPIN2)
+        {
+            score = 0;
+            firstLine = "Locked with PIN2";
+            secondLine = "Ask the holder to disable PIN2 before accepting";
             return;
         }
 
@@ -79,7 +89,7 @@ public class BalanceValidator {
         }
 
         // rule 4 TODO: need to check SignedHashed against number of outputs in blockchain
-        if(HasEverSigned(card))
+        if(HasEverSigned(card) && card.getBalance() != 0)
         {
             score = 80;
             firstLine = "Unguaranteed balance";
@@ -87,7 +97,7 @@ public class BalanceValidator {
             return;
         }
         // rule 7
-        if(CheckOfflineBalance(card) && !CheckOnlineBalance(card))
+        if(CheckOfflineBalance(card) && !CheckOnlineBalance(card) && !HasEverSigned(card) && card.getBalance() != 0)
         {
             score = 80;
             firstLine = "Verified offline balance";
@@ -157,8 +167,8 @@ public class BalanceValidator {
         return card.getBalanceUnconfirmed()!=0;
     }
 
-    boolean IsLostSecondRead(TangemCard card)
+    boolean isCodeConfirmed(TangemCard card)
     {
-        return card.isCodeConfirmed() != null;
+        return card.isCodeConfirmed() == null || card.isCodeConfirmed();
     }
 }
