@@ -9,11 +9,11 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.text.Html
 import android.text.InputFilter
-import com.tangem.util.DecimalDigitsInputFilter
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemCard
+import com.tangem.util.DecimalDigitsInputFilter
 import com.tangem.util.FormatUtil
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_payment.*
@@ -78,6 +78,9 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             etAmount!!.setText(engine.GetBalanceValue(mCard))
         }
 
+        if (mCard!!.blockchain == Blockchain.Bitcoin)
+            etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(5))
+
         // set listeners
         btnVerify.setOnClickListener {
             val strAmount: String = etAmount!!.text.toString().replace(",", ".")
@@ -95,11 +98,16 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             if (engine1 != null)
                 checkAddress = engine1.ValdateAddress(etWallet!!.text.toString(), mCard)
 
-            if (!checkAddress)
-                etWallet!!.error = getString(R.string.incorrect_destination_wallet_address)
 
-            if (etWallet!!.text.toString() == mCard!!.wallet)
-                etWallet!!.error = getString(R.string.destination_wallet_address_equal_source_address)
+            if (!checkAddress) {
+                etWallet.error = getString(R.string.incorrect_destination_wallet_address)
+                return@setOnClickListener
+            }
+
+            if (etWallet.text.toString() == mCard!!.wallet) {
+                etWallet.error = getString(R.string.destination_wallet_address_equal_source_address)
+                return@setOnClickListener
+            }
 
             val intent = Intent(baseContext, ConfirmPaymentActivity::class.java)
             intent.putExtra("UID", mCard!!.uid)
@@ -113,9 +121,6 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             val intent = Intent(baseContext, QRScanActivity::class.java)
             startActivityForResult(intent, REQUEST_CODE_SCAN_QR)
         }
-
-        if (mCard!!.blockchain == Blockchain.Bitcoin)
-            etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(5))
     }
 
     public override fun onResume() {
