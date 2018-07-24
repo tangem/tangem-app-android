@@ -47,11 +47,11 @@ public class TangemCard {
     private float rate = 0;
     private float rateAlter = 0;
 
+//    public static final int SettingsMask_AllowSwapPIN = 0x0010;
 //    public static final int SettingsMask_IsReusable = 0x0001;
 //    public static final int SettingsMask_UseRecovery = 0x0002;
 //    public static final int SettingsMask_UseBlock = 0x0004;
 //
-//    public static final int SettingsMask_AllowSwapPIN = 0x0010;
 //    public static final int SettingsMask_AllowSwapPIN2 = 0x0020;
 //    public static final int SettingsMask_UseCVC = 0x0040;
 //
