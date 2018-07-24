@@ -436,7 +436,7 @@ public class VerifyCard extends Fragment implements NfcAdapter.ReaderCallback {
 
             if (mCard.getPauseBeforePIN2() > 0 && (mCard.useDefaultPIN2() || !mCard.useSmartSecurityDelay())) {
                 ivPIN2orSecurityDelay.setImageResource(R.drawable.timer);
-                ivPIN2orSecurityDelay.setOnClickListener(v -> Toast.makeText(getContext(), String.format("This banknote will enforce %.0f seconds security delay for all operations requiring PIN2 code", mCard.getPauseBeforePIN2() / 1000.0), Toast.LENGTH_LONG).show());
+                ivPIN2orSecurityDelay.setOnClickListener(v -> Toast.makeText(getContext(), String.format(getString(R.string.this_banknote_will_enforce), mCard.getPauseBeforePIN2() / 1000.0), Toast.LENGTH_LONG).show());
             } else if (mCard.useDefaultPIN2()) {
                 ivPIN2orSecurityDelay.setImageResource(R.drawable.unlock_pin2);
                 ivPIN2orSecurityDelay.setOnClickListener(v -> Toast.makeText(getContext(), R.string.this_banknote_protected_default_PIN2_code, Toast.LENGTH_LONG).show());
