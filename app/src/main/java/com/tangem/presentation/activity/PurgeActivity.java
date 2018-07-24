@@ -179,7 +179,7 @@ public class PurgeActivity extends AppCompatActivity implements NfcAdapter.Reade
                 purgeTask = new PurgeTask(this, mCard, mNfcManager, isoDep, this);
                 purgeTask.start();
             } else {
-                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + mCard.getUID() + ")");
+//                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + mCard.getUID() + ")");
                 mNfcManager.ignoreTag(isoDep.getTag());
                 return;
             }
@@ -252,7 +252,7 @@ public class PurgeActivity extends AppCompatActivity implements NfcAdapter.Reade
                 } else {
                     progressBar.post(() -> {
                         if (cardProtocol.getError() instanceof CardProtocol.TangemException_ExtendedLengthNotSupported) {
-                            if (!NoExtendedLengthSupportDialog.allreadyShowed) {
+                            if (!NoExtendedLengthSupportDialog.allReadyShowed) {
                                 new NoExtendedLengthSupportDialog().show(getFragmentManager(), NoExtendedLengthSupportDialog.TAG);
                             }
                         } else
