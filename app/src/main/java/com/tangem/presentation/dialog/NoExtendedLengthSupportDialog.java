@@ -11,7 +11,7 @@ import com.tangem.wallet.R;
 public class NoExtendedLengthSupportDialog extends DialogFragment {
     public static final String TAG = NoExtendedLengthSupportDialog.class.getSimpleName();
 
-    public static boolean allreadyShowed = false;
+    public static boolean allReadyShowed = false;
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -19,7 +19,7 @@ public class NoExtendedLengthSupportDialog extends DialogFragment {
                 .setIcon(R.drawable.tangem_logo_small_new)
                 .setTitle(R.string.warning)
                 .setMessage(R.string.the_nfc_adapter_length_apdu)
-                .setPositiveButton(R.string.got_it, (dialog, whichButton) -> NoExtendedLengthSupportDialog.allreadyShowed = true)
+                .setPositiveButton(R.string.got_it, (dialog, whichButton) -> NoExtendedLengthSupportDialog.allReadyShowed = true)
                 .create();
     }
 
