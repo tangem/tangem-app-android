@@ -56,7 +56,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
             tvType = itemView.findViewById(R.id.tvType);
             tvTypeBg = itemView.findViewById(R.id.tvTypeBg);
             tvVoid = itemView.findViewById(R.id.tvVoid);
-            tvInputs = itemView.findViewById(R.id.tvInputs);
+//            tvInputs = itemView.findViewById(R.id.tvInputs);
             tvLastInput = itemView.findViewById(R.id.tvLastInput);
             lbLastInput = itemView.findViewById(R.id.lbLastInput);
             lbLastOutput = itemView.findViewById(R.id.lbLastOutput);
