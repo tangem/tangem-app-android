@@ -110,91 +110,6 @@ public class SwapPINActivity extends AppCompatActivity implements NfcAdapter.Rea
         super.onStop();
     }
 
-//    private class SwapPINTask extends Thread {
-//
-//        IsoDep mIsoDep;
-//        CardProtocol.Notifications mNotifications;
-//        private boolean isCancelled = false;
-//
-//        SwapPINTask(IsoDep isoDep, CardProtocol.Notifications notifications) {
-//            mIsoDep = isoDep;
-//            mNotifications = notifications;
-//        }
-//
-//        @Override
-//        public void run() {
-//            if (mIsoDep == null) {
-//                return;
-//            }
-//            CardProtocol protocol = new CardProtocol(getBaseContext(), mIsoDep, mCard, mNotifications);
-//
-//            mNotifications.OnReadStart(protocol);
-//            try {
-//
-//                // for Samsung's bugs -
-//                // Workaround for the Samsung Galaxy S5 (since the
-//                // first connection always hangs on transceive).
-//                int timeout = mIsoDep.getTimeout();
-//                mIsoDep.connect();
-//                mIsoDep.close();
-//                mIsoDep.connect();
-//                mIsoDep.setTimeout(timeout);
-//                try {
-//
-//                    mNotifications.OnReadProgress(protocol, 5);
-//
-//                    Log.i("SwapTask", "[-- Start swap pin --]");
-//
-//                    if (isCancelled) return;
-//
-//                    if (mCard.getPauseBeforePIN2() > 0) {
-//                        mNotifications.OnReadWait(mCard.getPauseBeforePIN2());
-//                    }
-//
-////                    try {
-//                    protocol.run_SwapPIN(PINStorage.getPIN2(), newPIN, newPIN2, false);
-//                    protocol.setPIN(newPIN);
-//                    mCard.setPIN(newPIN);
-////                    } finally {
-////                        mNotifications.OnReadWait(0);
-////                    }
-//
-//                    mNotifications.OnReadProgress(protocol, 50);
-//
-//                    protocol.run_Read();
-//
-//                    mNotifications.OnReadProgress(protocol, 100);
-//
-//                } finally {
-//                    mNfcManager.ignoreTag(mIsoDep.getTag());
-//                }
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                protocol.setError(e);
-//
-//            } finally {
-//                Log.i("SwapPINTask", "[-- Finish purge --]");
-//                mNotifications.OnReadFinish(protocol);
-//            }
-//        }
-//
-//        public void cancel(Boolean AllowInterrupt) {
-//            try {
-//                if (this.isAlive()) {
-//                    isCancelled = true;
-//                    join(500);
-//                }
-//                if (this.isAlive() && AllowInterrupt) {
-//                    interrupt();
-//                    mNotifications.OnReadCancel();
-//                }
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//    }
-
     public void OnReadStart(CardProtocol cardProtocol) {
         progressBar.post(() -> {
             progressBar.setVisibility(View.VISIBLE);
@@ -242,7 +157,7 @@ public class SwapPINActivity extends AppCompatActivity implements NfcAdapter.Rea
 
                 progressBar.post(() -> {
                     if (cardProtocol.getError() instanceof CardProtocol.TangemException_ExtendedLengthNotSupported) {
-                        if (!NoExtendedLengthSupportDialog.allreadyShowed) {
+                        if (!NoExtendedLengthSupportDialog.allReadyShowed) {
                             new NoExtendedLengthSupportDialog().show(getFragmentManager(), NoExtendedLengthSupportDialog.TAG);
                         }
                     } else {
