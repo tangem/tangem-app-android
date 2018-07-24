@@ -537,7 +537,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 rlProgressBar.post {
                     lastReadSuccess = false
                     if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported)
-                        if (!NoExtendedLengthSupportDialog.allreadyShowed)
+                        if (!NoExtendedLengthSupportDialog.allReadyShowed)
                             NoExtendedLengthSupportDialog().show(activity!!.fragmentManager, NoExtendedLengthSupportDialog.TAG)
                         else
                             Toast.makeText(context, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show()
@@ -674,7 +674,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             if (mCard!!.pauseBeforePIN2 > 0 && (mCard!!.useDefaultPIN2()!! || !mCard!!.useSmartSecurityDelay())) {
                 ivPIN2orSecurityDelay.setImageResource(R.drawable.timer)
-                ivPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, String.format("This banknote will enforce %.0f seconds security delay for all operations requiring PIN2 code", mCard!!.pauseBeforePIN2 / 1000.0), Toast.LENGTH_LONG).show() }
+                ivPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, String.format(getString(R.string.this_banknote_will_enforce), mCard!!.pauseBeforePIN2 / 1000.0), Toast.LENGTH_LONG).show()}
 
             } else if (mCard!!.useDefaultPIN2()!!) {
                 ivPIN2orSecurityDelay.setImageResource(R.drawable.unlock_pin2)
@@ -690,7 +690,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 ivDeveloperVersion.setOnClickListener { v -> Toast.makeText(context, R.string.unlocked_banknote_only_development_use, Toast.LENGTH_LONG).show() }
             } else
                 ivDeveloperVersion.visibility = View.INVISIBLE
-
 
             btnExtract!!.isEnabled = mCard!!.hasBalanceInfo()
 
