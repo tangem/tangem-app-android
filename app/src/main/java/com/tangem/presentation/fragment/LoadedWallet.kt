@@ -137,7 +137,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         val visibleFlag = engine?.InOutPutVisible() ?: true
         val visibleIOPuts = if (visibleFlag) View.VISIBLE else View.GONE
 
-        tvInputs.visibility = visibleIOPuts
+//        tvInputs.visibility = visibleIOPuts
 
         try {
             ivQR.setImageBitmap(UtilHelper.generateQrCode(engine!!.getShareWalletURI(mCard).toString()))
@@ -497,14 +497,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         if (needResendTX)
             sendTransaction(LastSignStorage.getTxForSend(mCard!!.wallet))
-
-
-//        if (activity!!.intent.extras!!.containsKey(NfcAdapter.EXTRA_TAG)) {
-//            val tag = activity!!.intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
-//            if (tag != null) {
-//                onTagDiscovered(tag)
-//            }
-//        }
     }
 
     override fun onTagDiscovered(tag: Tag) {
@@ -630,8 +622,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     tvBalance.text = engine.GetBalanceWithAlter(mCard)
                 }
 
-                tvBalanceEquivalent.text = engine.GetBalanceEquivalent(mCard)
-                tvOffline.visibility = View.INVISIBLE
             } else {
                 val offlineAmount = engine.ConvertByteArrayToAmount(mCard, mCard!!.offlineBalance)
                 if (mCard!!.blockchain == Blockchain.Token) {
@@ -639,33 +629,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 } else {
                     tvBalance.text = engine.GetAmountDescription(mCard, offlineAmount)
                 }
-
-                tvBalanceEquivalent.text = engine.GetAmountEqualentDescriptor(mCard, offlineAmount)
-                tvOffline.visibility = View.VISIBLE
-            }
-
-            if (!mCard!!.amountEquivalentDescriptionAvailable) {
-
-            } else {
-                tvBalanceEquivalent.error = null
             }
 
             tvWallet.text = mCard!!.wallet
 
-            tvInputs.text = mCard!!.inputsDescription
-            when {
-                mCard!!.lastInputDescription.contains("awaiting") -> tvInputs.setTextColor(ContextCompat.getColor(context!!, R.color.not_confirmed))
-                mCard!!.lastInputDescription.contains("None") -> tvInputs.setTextColor(ContextCompat.getColor(context!!, R.color.primary_dark))
-                else -> tvInputs.setTextColor(ContextCompat.getColor(context!!, R.color.confirmed))
-            }
-
             tvBlockchain.text = mCard!!.blockchainName
 
-            tvValidationNode.text = mCard!!.validationNodeDescription
-
             btnExtract!!.isEnabled = mCard!!.hasBalanceInfo()
-
-            tvIssuer.text = mCard!!.issuerDescription
 
             mCard!!.error = null
             mCard!!.message = null
