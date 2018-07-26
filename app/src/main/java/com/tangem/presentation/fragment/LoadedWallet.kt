@@ -114,7 +114,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         mCard = TangemCard(activity!!.intent.getStringExtra(TangemCard.EXTRA_CARD))
         mCard!!.LoadFromBundle(activity!!.intent.extras.getBundle(TangemCard.EXTRA_CARD))
 
-        lastTag = activity!!.intent.getParcelableExtra(Main.EXTRA_LAST_DISCOVERED_TAG)
+        lastTag = activity!!.intent.getParcelableExtra(MainActivity.EXTRA_LAST_DISCOVERED_TAG)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
