@@ -139,7 +139,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         fab.setOnClickListener { this.showMenu(it) }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == REQUEST_CODE_SEND_EMAIL) {
             if (zipFile != null) {
                 zipFile!!.delete()
