@@ -28,7 +28,7 @@ public class SendTransactionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_send_transaction);
 
-        MainActivity.commonInit(getApplicationContext());
+        MainActivity.Companion.commonInit(getApplicationContext());
 
         progressBar = findViewById(R.id.progressBar);
 
