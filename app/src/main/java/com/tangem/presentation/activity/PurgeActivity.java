@@ -124,7 +124,7 @@ public class PurgeActivity extends AppCompatActivity implements NfcAdapter.Reade
 
         mNfcManager = new NfcManager(this, this);
 
-        MainActivity.commonInit(getApplicationContext());
+        MainActivity.Companion.commonInit(getApplicationContext());
 
         mCard = new TangemCard(getIntent().getStringExtra("UID"));
         mCard.LoadFromBundle(getIntent().getExtras().getBundle("Card"));
