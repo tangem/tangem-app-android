@@ -78,7 +78,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity implements NfcAdap
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_confirm_payment);
 
-        MainActivity.commonInit(getApplicationContext());
+        MainActivity.Companion.commonInit(getApplicationContext());
         mNfcManager = new NfcManager(this, this);
 
         mCard = new TangemCard(getIntent().getStringExtra("UID"));
