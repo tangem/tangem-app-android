@@ -47,7 +47,7 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_empty_wallet);
 
-        MainActivity.commonInit(getApplicationContext());
+        MainActivity.Companion.commonInit(getApplicationContext());
         mNfcManager = new NfcManager(this, this);
 
         mCard = new TangemCard(getIntent().getStringExtra("UID"));
