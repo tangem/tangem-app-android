@@ -54,7 +54,7 @@ public class RequestPINActivity extends AppCompatActivity implements NfcAdapter.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_request_pin);
 
-        MainActivity.commonInit(getApplicationContext());
+        MainActivity.Companion.commonInit(getApplicationContext());
 
         mNfcManager = new NfcManager(this, this);
 
