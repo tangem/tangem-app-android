@@ -63,7 +63,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_save_pin);
 
-        MainActivity.commonInit(getApplicationContext());
+        MainActivity.Companion.commonInit(getApplicationContext());
 
         UsePIN2 = getIntent().getBooleanExtra("PIN2", false);
 

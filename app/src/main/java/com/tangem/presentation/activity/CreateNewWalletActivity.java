@@ -40,7 +40,7 @@ public class CreateNewWalletActivity extends AppCompatActivity implements NfcAda
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_new_wallet);
 
-        MainActivity.commonInit(getApplicationContext());
+        MainActivity.Companion.commonInit(getApplicationContext());
         mCard = new TangemCard(getIntent().getStringExtra("UID"));
         mCard.LoadFromBundle(getIntent().getExtras().getBundle("Card"));
 
