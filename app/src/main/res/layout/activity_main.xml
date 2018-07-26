@@ -5,7 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.tangem.presentation.activity.MainActivity">
+    tools:context="com.tangem.presentation.activity.MainActivity"
+    tools:ignore="contentDescription">
 
     <LinearLayout
         android:id="@+id/llTapPrompt"
@@ -37,7 +38,7 @@
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/llNFC"
+                android:id="@+id/llNfc"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginStart="100dp"
@@ -46,7 +47,7 @@
                 android:orientation="vertical">
 
                 <com.skyfishjy.library.RippleBackground
-                    android:id="@+id/imNFC"
+                    android:id="@+id/rippleBackgroundNfc"
                     android:layout_width="150dp"
                     android:layout_height="150dp"
                     app:rb_color="@color/fab"
@@ -56,7 +57,6 @@
                     app:rb_scale="4"
                     app:rb_strokeWidth="8dp"
                     app:rb_type="strokeRipple">
-
                 </com.skyfishjy.library.RippleBackground>
 
             </LinearLayout>
@@ -84,6 +84,32 @@
 
             </LinearLayout>
 
+            <RelativeLayout
+                android:id="@+id/rlProgressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:elevation="10dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:alpha="0.8"
+                    android:text="@string/reading"
+                    android:textColor="@color/colorPrimary"
+                    android:textStyle="bold"/>
+
+                <ProgressBar
+                    android:layout_width="@dimen/size_progress_bar_big"
+                    android:layout_height="@dimen/size_progress_bar_big"
+                    android:alpha="0.8"
+                    android:elevation="1dp"/>
+
+            </RelativeLayout>
+
         </RelativeLayout>
 
         <TextView
@@ -103,12 +129,6 @@
             android:textSize="@dimen/text_size_medium"/>
 
     </LinearLayout>
-
-    <include
-        android:id="@+id/include2"
-        layout="@layout/content_main"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
 
     <FrameLayout
         android:id="@+id/frameFAB"
