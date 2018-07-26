@@ -40,7 +40,7 @@ public class SwapPINActivity extends AppCompatActivity implements NfcAdapter.Rea
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_swap_pin);
 
-        MainActivity.commonInit(getApplicationContext());
+        MainActivity.Companion.commonInit(getApplicationContext());
 
         mCard = new TangemCard(getIntent().getStringExtra("UID"));
         mCard.LoadFromBundle(getIntent().getExtras().getBundle("Card"));
