@@ -232,8 +232,8 @@ public class EmptyWalletActivity extends AppCompatActivity implements NfcAdapter
                 progressBar.post(() -> {
                     lastReadSuccess = false;
                     if (cardProtocol.getError() instanceof CardProtocol.TangemException_ExtendedLengthNotSupported) {
-                        if (!NoExtendedLengthSupportDialog.allReadyShowed) {
-                            new NoExtendedLengthSupportDialog().show(getFragmentManager(), NoExtendedLengthSupportDialog.TAG);
+                        if (!NoExtendedLengthSupportDialog.Companion.getAllReadyShowed()) {
+                            new NoExtendedLengthSupportDialog().show(getFragmentManager(), NoExtendedLengthSupportDialog.Companion.getTAG());
                         }
                     } else {
                         Toast.makeText(EmptyWalletActivity.this, R.string.try_to_scan_again, Toast.LENGTH_LONG).show();
