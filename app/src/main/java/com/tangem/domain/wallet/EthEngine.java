@@ -243,33 +243,35 @@ public class EthEngine extends CoinEngine {
 
 
     public boolean CheckAmountValie(TangemCard mCard, String amountValue, String feeValue, Long minFeeInInternalUnits) {
-        Long fee = null;
-        Long amount = null;
+//        Long fee = null;
+//        Long amount = null;
+//        try {
+//            amount = mCard.InternalUnitsFromString(amountValue);
+//            fee = mCard.InternalUnitsFromString(feeValue);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return false;
+//        }
+//
+//        if (fee == null || amount == null)
+//            return false;
+//
+//        if (fee == 0 || amount == 0)
+//            return false;
+//
+//
+//        if (fee < minFeeInInternalUnits)
+//            return false;
+
         try {
-            amount = mCard.InternalUnitsFromString(amountValue);
-            fee = mCard.InternalUnitsFromString(feeValue);
-        } catch (Exception e) {
+            BigDecimal tmpFee = new BigDecimal(feeValue);
+            BigDecimal tmpAmount = new BigDecimal(amountValue);
+            tmpAmount = tmpAmount.multiply(new BigDecimal("1000000000"));
+            if (tmpFee.compareTo(tmpAmount) > 0)
+                return false;
+        } catch (NumberFormatException e) {
             e.printStackTrace();
-            return false;
         }
-
-        if (fee == null || amount == null)
-            return false;
-
-        if (fee == 0 || amount == 0)
-            return false;
-
-
-        if (fee < minFeeInInternalUnits)
-            return false;
-
-
-        BigDecimal tmpFee = new BigDecimal(feeValue);
-        BigDecimal tmpAmount = new BigDecimal(amountValue);
-        tmpAmount = tmpAmount.multiply(new BigDecimal("1000000000"));
-
-        if (tmpFee.compareTo(tmpAmount) > 0)
-            return false;
 
         return true;
     }
