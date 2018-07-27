@@ -81,6 +81,9 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         if (mCard!!.blockchain == Blockchain.Bitcoin)
             etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(8))
 
+        if (mCard!!.blockchain == Blockchain.BitcoinCash)
+            etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(8))
+
         if (mCard!!.blockchain == Blockchain.Ethereum)
             etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(18))
 
