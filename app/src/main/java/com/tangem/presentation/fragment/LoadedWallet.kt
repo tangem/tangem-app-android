@@ -638,7 +638,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
     }
 
     private fun openVerifyCard(cardProtocol: CardProtocol) {
