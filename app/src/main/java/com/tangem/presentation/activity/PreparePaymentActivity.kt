@@ -81,6 +81,12 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         if (mCard!!.blockchain == Blockchain.Bitcoin)
             etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(5))
 
+        if (mCard!!.blockchain == Blockchain.Ethereum)
+            etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(10))
+
+        if (mCard!!.blockchain == Blockchain.Token)
+            etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(10))
+
         // set listeners
         btnVerify.setOnClickListener {
             val strAmount: String = etAmount!!.text.toString().replace(",", ".")
