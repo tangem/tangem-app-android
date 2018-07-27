@@ -155,10 +155,10 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
                     holder.tvType.setVisibility(View.VISIBLE);
                     holder.tvTypeBg.setVisibility(View.VISIBLE);
                     if (card.isReusable()) {
-                        holder.tvType.setText(R.string.reusable_reusable);
+//                        holder.tvType.setText(R.string.reusable_reusable);
                         holder.tvTypeBg.setBackgroundColor(ContextCompat.getColor(mContext, R.color.type_wallet));
                     } else {
-                        holder.tvType.setText(R.string.banknote_banknote);
+//                        holder.tvType.setText(R.string.banknote_banknote);
                         holder.tvTypeBg.setBackgroundColor(ContextCompat.getColor(mContext, R.color.type_banknote));
                     }
                     holder.tvVoid.setVisibility(View.INVISIBLE);
@@ -182,7 +182,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
                     holder.tvCardID.setError(null);
                     holder.tvType.setVisibility(View.VISIBLE);
                     holder.tvTypeBg.setVisibility(View.VISIBLE);
-                    holder.tvType.setText(R.string.banknote_banknote);
+//                    holder.tvType.setText(R.string.banknote_banknote);
                     holder.tvTypeBg.setBackgroundColor(ContextCompat.getColor(mContext, R.color.type_banknote));
                     holder.tvVoid.setVisibility(View.INVISIBLE);
                     break;
@@ -288,11 +288,11 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
                     holder.tvType.setVisibility(View.VISIBLE);
                     holder.tvTypeBg.setVisibility(View.VISIBLE);
                     if (card.isReusable()) {
-                        holder.tvType.setText(R.string.reusable_reusable);
+//                        holder.tvType.setText(R.string.reusable_reusable);
                         holder.tvTypeBg.setBackgroundColor(ContextCompat.getColor(mContext, R.color.type_wallet));
                         holder.tvVoid.setVisibility(View.INVISIBLE);
                     } else {
-                        holder.tvType.setText(R.string.banknote_banknote);
+//                        holder.tvType.setText(R.string.banknote_banknote);
                         if (card.getRemainingSignatures() != card.getMaxSignatures()) {
                             holder.tvVoid.setVisibility(View.VISIBLE);
                             holder.tvTypeBg.setBackgroundColor(ContextCompat.getColor(mContext, R.color.msg_err));
@@ -305,7 +305,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.CardVi
             }
 
             if (card.useDevelopersFirmware()) {
-                holder.tvType.setText(R.string.developer_kit_spaces);
+//                holder.tvType.setText(R.string.developer_kit_spaces);
                 holder.tvTypeBg.setBackgroundColor(ContextCompat.getColor(mContext, R.color.fab));
                 holder.tvVoid.setVisibility(View.INVISIBLE);
             }
