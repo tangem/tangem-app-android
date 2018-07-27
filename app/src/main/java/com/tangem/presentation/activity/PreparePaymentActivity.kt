@@ -79,13 +79,10 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
 
         if (mCard!!.blockchain == Blockchain.Bitcoin)
-            etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(5))
+            etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(8))
 
         if (mCard!!.blockchain == Blockchain.Ethereum)
-            etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(10))
-
-        if (mCard!!.blockchain == Blockchain.Token)
-            etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(10))
+            etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(18))
 
         // set listeners
         btnVerify.setOnClickListener {
