@@ -16,7 +16,7 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
-import com.tangem.presentation.dialog.NFCEnableDialog;
+import com.tangem.presentation.dialog.NfcEnableDialog;
 
 import java.io.IOException;
 
@@ -27,7 +27,7 @@ public class NfcManager {
     private static final int READER_FLAGS = NfcAdapter.FLAG_READER_NFC_A | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK | NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS;
 
     private NfcAdapter mNfcAdapter;
-    private NFCEnableDialog mEnableNfcDialog;
+    private NfcEnableDialog mEnableNfcDialog;
     private Activity mActivity;
     private NfcAdapter.ReaderCallback mReaderCallback;
 
@@ -96,8 +96,8 @@ public class NfcManager {
     }
 
     private void showNFCEnableDialog() {
-        mEnableNfcDialog = new NFCEnableDialog();
-        mEnableNfcDialog.show(mActivity.getFragmentManager(), NFCEnableDialog.TAG);
+        mEnableNfcDialog = new NfcEnableDialog();
+        mEnableNfcDialog.show(mActivity.getFragmentManager(), NfcEnableDialog.Companion.getTAG());
     }
 
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
