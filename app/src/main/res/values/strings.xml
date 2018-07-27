@@ -82,9 +82,6 @@
     <string name="no_wallet">NO WALLET</string>
     <string name="erased_wallet">ERASED WALLET</string>
     <string name="invalid_card">INVALID CARD</string>
-    <string name="developer_kit_spaces">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;DEVELOPER&#160;&#160;&#160;&#160;&#160;KIT&#160;&#160;&#160;&#160;&#160;</string>
-    <string name="banknote_banknote">&#160;&#160;BANKNOTE&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;BANKNOTE</string>
-    <string name="reusable_reusable">&#160;&#160;&#160;REUSABLE&#160;&#160;&#160;&#160;&#160;&#160;&#160;REUSABLE&#160;&#160;&#160;</string>
 
     <!-- LoadedWalletActivity, LoadedWallet -->
     <string name="wallet_empty">The wallet is empty</string>
@@ -121,7 +118,6 @@
     <string name="copied_clipboard">Copied to clipboard</string>
     <string name="extract">EXTRACT</string>
     <string name="load">LOAD</string>
-
 
     <!-- LogoActivity -->
     <string name="beta">BETA</string>
