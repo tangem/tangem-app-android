@@ -148,11 +148,10 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         }
 
         if (requestCode == REQUEST_CODE_ENTER_PIN_ACTIVITY) {
-            if (resultCode == Activity.RESULT_OK && lastTag != null) {
+            if (resultCode == Activity.RESULT_OK && lastTag != null)
                 onTagDiscovered(lastTag!!)
-            } else {
-                ReadCardInfoTask.resetLastReadInfo();
-            }
+            else
+                ReadCardInfoTask.resetLastReadInfo()
         }
         super.onActivityResult(requestCode, resultCode, data)
     }
