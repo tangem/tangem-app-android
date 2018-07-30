@@ -118,6 +118,10 @@
     <string name="copied_clipboard">Copied to clipboard</string>
     <string name="extract">EXTRACT</string>
     <string name="load">LOAD</string>
+    <string name="explore">EXPLORE</string>
+    <string name="copy">COPY</string>
+    <string name="details">DETAILS</string>
+    <string name="new_scan">NEW SCAN</string>
 
     <!-- LogoActivity -->
     <string name="beta">BETA</string>
