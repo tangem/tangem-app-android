@@ -13,7 +13,6 @@ class VerifyCardActivity : AppCompatActivity() {
         MainActivity.commonInit(applicationContext)
     }
 
-
     override fun onBackPressed() {
         super.onBackPressed()
         val verifyCard = supportFragmentManager.findFragmentById(R.id.verify_card_fragment) as VerifyCard
