@@ -24,7 +24,7 @@
     <dimen name="text_size_large">24sp</dimen>
     <dimen name="text_size_pin">32sp</dimen>
 
-    <dimen name="size_qr_image">220dp</dimen>
+    <dimen name="size_qr_image">200dp</dimen>
     <dimen name="size_explore_image">30dp</dimen>
     <dimen name="size_progress_bar_big">135dp</dimen>
 
