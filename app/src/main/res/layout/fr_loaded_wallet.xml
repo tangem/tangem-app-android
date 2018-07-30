@@ -197,7 +197,7 @@
                             android:fontFamily="@font/saira_condensed_bold"
                             android:paddingLeft="10dp"
                             android:paddingRight="10dp"
-                            android:text="EXPLORE"
+                            android:text="@string/explore"
                             android:textColor="@color/primary"
                             android:textSize="@dimen/text_size_medium" />
 
@@ -224,7 +224,7 @@
                             android:fontFamily="@font/saira_condensed_bold"
                             android:paddingLeft="10dp"
                             android:paddingRight="10dp"
-                            android:text="COPY"
+                            android:text="@string/copy"
                             android:textColor="@color/primary"
                             android:textSize="@dimen/text_size_medium" />
                     </LinearLayout>
@@ -343,7 +343,7 @@
             android:fontFamily="@font/saira_condensed_bold"
             android:paddingLeft="10dp"
             android:paddingRight="10dp"
-            android:text="DETAILS"
+            android:text="@string/details"
             android:textColor="@color/primary"
             android:textSize="@dimen/text_size_medium" />
 
@@ -363,9 +363,10 @@
             android:fontFamily="@font/saira_condensed_bold"
             android:paddingLeft="10dp"
             android:paddingRight="10dp"
-            android:text="NEW SCAN"
+            android:text="@string/new_scan"
             android:textColor="@color/primary"
             android:textSize="@dimen/text_size_medium" />
 
     </LinearLayout>
+
 </android.support.constraint.ConstraintLayout>
