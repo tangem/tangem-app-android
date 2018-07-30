@@ -64,9 +64,11 @@
                         android:layout_height="wrap_content"
                         android:layout_centerInParent="true"
                         android:alpha="0.8"
+                        android:fontFamily="@font/maaxmedium"
                         android:text="@string/verifying"
                         android:textColor="@color/colorPrimary"
-                        android:textStyle="bold"/>
+                        android:textSize="@dimen/text_size_small"
+                        android:textStyle="bold" />
 
                     <ProgressBar
                         android:layout_width="@dimen/size_progress_bar_big"
@@ -83,8 +85,8 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"
-                android:layout_marginStart="10dp"
+                android:layout_marginEnd="5dp"
+                android:layout_marginStart="5dp"
                 android:orientation="vertical">
 
                 <LinearLayout
@@ -98,14 +100,14 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="2"
-                        android:fontFamily="@font/montserrat_light"
-                        android:paddingLeft="10dp"
-                        android:paddingRight="10dp"
+                        android:fontFamily="@font/maaxmedium"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="5dp"
                         android:text="@string/no_data_string"
                         android:textAlignment="center"
                         android:textColor="@color/black"
                         android:textSize="@dimen/text_size_large"
-                        tools:text="0.05 BTC"/>
+                        tools:text="0.05 BTC" />
 
                     <TextView
                         android:id="@+id/tvBlockchain"
@@ -113,12 +115,12 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:layout_weight="1"
-                        android:fontFamily="@font/montserrat_light"
-                        android:paddingLeft="10dp"
-                        android:paddingRight="10dp"
+                        android:fontFamily="@font/maax"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="5dp"
                         android:textColor="@color/primary"
                         android:textStyle="normal|bold"
-                        tools:text="Bitcoin"/>
+                        tools:text="Bitcoin" />
 
                 </LinearLayout>
 
@@ -126,21 +128,21 @@
                     android:id="@+id/tvBalanceLine1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
-                    android:fontFamily="@font/montserrat_light"
+                    android:layout_marginTop="10dp"
+                    android:fontFamily="@font/maaxmedium"
                     android:textAlignment="center"
                     android:textColor="@color/msg_err"
-                    android:textSize="18sp"
-                    tools:text="Verification field"/>
+                    android:textSize="@dimen/text_size_medium"
+                    tools:text="Verification field" />
 
                 <TextView
                     android:id="@+id/tvBalanceLine2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
-                    android:fontFamily="@font/montserrat_light"
+                    android:fontFamily="@font/maax"
                     android:textAlignment="center"
-                    tools:text="Do not accept! Wallet verification field. Tap again."/>
+                    tools:text="Do not accept! Wallet verification field. Tap again." />
 
             </LinearLayout>
 
@@ -155,7 +157,7 @@
                 <ImageView
                     android:id="@+id/ivQR"
                     android:layout_width="@dimen/size_qr_image"
-                    android:layout_height="@dimen/size_qr_image"/>
+                    android:layout_height="@dimen/size_qr_image" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -167,28 +169,65 @@
                         android:id="@+id/tvWallet"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
                         android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"
-                        tools:text="1DoQdnSYshhZ5Tqt5Sk6svZt29jqoYVwQY"/>
+                        tools:text="1DoQdnSYshhZ5Tqt5Sk6svZt29jqoYVwQY" />
 
-                    <ImageView
-                        android:id="@+id/ivLookup"
-                        android:layout_width="@dimen/size_explore_image"
-                        android:layout_height="@dimen/size_explore_image"
-                        android:layout_marginTop="15dp"
-                        android:baselineAlignBottom="false"
-                        android:src="@drawable/chain_lookup"/>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="20dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                    <ImageView
-                        android:id="@+id/ivCopy"
-                        android:layout_width="@dimen/size_explore_image"
-                        android:layout_height="@dimen/size_explore_image"
-                        android:layout_marginTop="15dp"
-                        android:baselineAlignBottom="false"
-                        android:src="@drawable/ic_content_copy_black_24dp"/>
+                        <ImageView
+                            android:id="@+id/ivLookup"
+                            android:layout_width="@dimen/size_explore_image"
+                            android:layout_height="@dimen/size_explore_image"
+                            android:baselineAlignBottom="false"
+                            android:src="@drawable/chain_lookup" />
+
+                        <TextView
+                            android:id="@+id/tvLookup"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/saira_condensed_bold"
+                            android:paddingLeft="10dp"
+                            android:paddingRight="10dp"
+                            android:text="EXPLORE"
+                            android:textColor="@color/primary"
+                            android:textSize="@dimen/text_size_medium" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="10dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/ivCopy"
+                            android:layout_width="@dimen/size_explore_image"
+                            android:layout_height="@dimen/size_explore_image"
+                            android:baselineAlignBottom="false"
+                            android:src="@drawable/ic_content_copy_black_24dp" />
+
+                        <TextView
+                            android:id="@+id/tvCopy"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/saira_condensed_bold"
+                            android:paddingLeft="10dp"
+                            android:paddingRight="10dp"
+                            android:text="COPY"
+                            android:textColor="@color/primary"
+                            android:textSize="@dimen/text_size_medium" />
+                    </LinearLayout>
 
                 </LinearLayout>
 
@@ -210,14 +249,14 @@
             android:layout_height="wrap_content"
             android:background="#BF7FF27F"
             android:elevation="2dp"
-            android:fontFamily="@font/montserrat_light"
+            android:fontFamily="@font/maax"
             android:padding="4dp"
             android:text="@string/message"
             android:textAlignment="center"
             android:textColor="@color/black"
             android:textStyle="normal|bold"
             android:visibility="gone"
-            tools:visibility="visible"/>
+            tools:visibility="visible" />
 
         <TextView
             android:id="@+id/tvError"
@@ -227,7 +266,7 @@
             android:layout_below="@+id/tvMessage"
             android:background="#BFFF4444"
             android:elevation="3dp"
-            android:fontFamily="@font/montserrat_light"
+            android:fontFamily="@font/maax"
             android:padding="4dp"
             android:shadowColor="@color/cardview_shadow_start_color"
             android:text="@string/error"
@@ -235,7 +274,7 @@
             android:textColor="@color/white"
             android:textStyle="bold"
             android:visibility="gone"
-            tools:visibility="visible"/>
+            tools:visibility="visible" />
 
     </RelativeLayout>
 
@@ -244,42 +283,89 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/rlAuxButtons">
 
         <android.support.v7.widget.AppCompatButton
             android:id="@+id/btnLoad"
             style="@style/AppTheme.RoundedCornerMaterialButton"
-            android:layout_width="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_width="0dp"
+            android:layout_height="45dp"
+            android:layout_marginBottom="5dp"
+            android:layout_marginTop="5dp"
+            android:layout_weight="1"
             android:elevation="15dp"
-            android:text="@string/load"/>
-
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fabInfo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:layout_marginEnd="5dp"
-            app:fabSize="mini"
-            app:srcCompat="@drawable/ic_information_variant_white_24dp"/>
-
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fabNFC"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:layout_marginStart="5dp"
-            app:fabSize="mini"
-            app:srcCompat="@drawable/ic_nfc_white_24dp"/>
+            android:fontFamily="@font/saira_condensed_bold"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:text="@string/load"
+            android:textSize="@dimen/text_size_large" />
 
         <android.support.v7.widget.AppCompatButton
             android:id="@+id/btnExtract"
             style="@style/AppTheme.RoundedCornerMaterialButton"
-            android:layout_width="wrap_content"
-            android:layout_margin="10dp"
-            android:width="100dp"
-            android:text="@string/extract"/>
+            android:layout_width="0dp"
+            android:layout_height="45dp"
+            android:layout_marginBottom="5dp"
+            android:layout_marginTop="5dp"
+            android:layout_weight="1"
+            android:elevation="15dp"
+            android:fontFamily="@font/saira_condensed_bold"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:text="@string/extract"
+            android:textSize="@dimen/text_size_large" />
 
     </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/rlAuxButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingBottom="5dp"
+        android:paddingTop="5dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fabInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            app:backgroundTint="@color/primary_dark"
+            app:fabSize="mini"
+            app:srcCompat="@drawable/ic_information_variant_white_24dp" />
+
+        <TextView
+            android:id="@+id/tvInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="20dp"
+            android:fontFamily="@font/saira_condensed_bold"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:text="DETAILS"
+            android:textColor="@color/primary"
+            android:textSize="@dimen/text_size_medium" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fabNFC"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_marginLeft="20dp"
+            app:backgroundTint="@color/primary_dark"
+            app:fabSize="mini"
+            app:srcCompat="@drawable/ic_nfc_white_24dp" />
+
+        <TextView
+            android:id="@+id/tvNFC"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/saira_condensed_bold"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:text="NEW SCAN"
+            android:textColor="@color/primary"
+            android:textSize="@dimen/text_size_medium" />
+
+    </LinearLayout>
 </android.support.constraint.ConstraintLayout>
