@@ -78,25 +78,6 @@
             android:textStyle="bold"
             tools:text="4.51735 mBtc"/>
 
-        <!--<LinearLayout-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_marginStart="16dp"-->
-        <!--android:orientation="horizontal">-->
-
-        <!--<TextView-->
-        <!--android:id="@+id/tvBalanceEquivalent"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_marginStart="8dp"-->
-        <!--android:layout_marginTop="4dp"-->
-        <!--android:fontFamily="@font/montserrat_light"-->
-        <!--android:textColor="@android:color/darker_gray"-->
-        <!--android:textSize="@dimen/text_size_1_small"-->
-        <!--tools:text="343"/>-->
-
-        <!--</LinearLayout>-->
-
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -123,7 +104,6 @@
             android:id="@+id/etWallet"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-
             android:enabled="false"
             android:fontFamily="@font/montserrat_light"
             android:hint="@string/target_wallet_address"
@@ -202,20 +182,6 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/etAmount"
                 app:layout_constraintTop_toTopOf="parent"/>
-
-            <!--<TextView-->
-            <!--android:id="@+id/tvAmountEquivalent"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_marginEnd="12dp"-->
-            <!--android:layout_marginTop="12dp"-->
-            <!--android:fontFamily="@font/montserrat_light"-->
-            <!--android:textColor="@android:color/darker_gray"-->
-            <!--android:textSize="@dimen/text_size_1_small"-->
-            <!--app:layout_constraintBottom_toBottomOf="parent"-->
-            <!--app:layout_constraintEnd_toEndOf="parent"-->
-            <!--app:layout_constraintTop_toTopOf="parent"-->
-            <!--tools:text="0000"/>-->
 
         </android.support.constraint.ConstraintLayout>
 
@@ -334,14 +300,15 @@
                 android:id="@+id/tvFeeEquivalent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:fontFamily="@font/montserrat_light"
-                android:paddingLeft="10dp"
+                android:paddingEnd="10dp"
+                android:paddingStart="10dp"
                 android:textColor="@android:color/darker_gray"
                 android:textSize="@dimen/text_size_1_small"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toRightOf="@+id/tvCurrency2"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"/>
 
         </android.support.constraint.ConstraintLayout>
 
