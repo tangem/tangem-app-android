@@ -2,6 +2,7 @@ package com.tangem.presentation.activity;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.nfc.NfcAdapter;
@@ -38,6 +39,8 @@ public class PurgeActivity extends AppCompatActivity implements NfcAdapter.Reade
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_purge);
+
+        setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         mNfcManager = new NfcManager(this, this);
 
