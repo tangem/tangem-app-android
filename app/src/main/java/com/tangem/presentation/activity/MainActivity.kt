@@ -83,6 +83,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
         mNfcManager = NfcManager(this, this)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_NOSENSOR

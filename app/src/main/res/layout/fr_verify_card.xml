@@ -7,8 +7,8 @@
     android:layout_height="match_parent"
     android:background="@color/white"
     android:orientation="vertical"
-    android:padding="0dp"
     tools:context="com.tangem.presentation.fragment.VerifyCard"
+    tools:ignore="contentDescription"
     tools:showIn="@layout/activity_verify_card">
 
     <android.support.v4.widget.SwipeRefreshLayout
@@ -28,11 +28,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-
             <RelativeLayout
                 android:id="@+id/rlCardInfo"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -165,10 +164,10 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/montserrat_light"
-                            android:text="Sign hash"
                             android:textColor="@color/primary_dark"
                             android:textSize="@dimen/text_size_1_small"
-                            android:textStyle="normal|bold"/>
+                            android:textStyle="normal|bold"
+                            tools:text="Sign hash"/>
 
                     </LinearLayout>
 
@@ -190,10 +189,10 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/montserrat_light"
-                            android:text="Reusable"
                             android:textColor="@color/primary_dark"
                             android:textSize="@dimen/text_size_1_small"
-                            android:textStyle="normal|bold"/>
+                            android:textStyle="normal|bold"
+                            tools:text="Reusable"/>
 
                     </LinearLayout>
 
@@ -461,10 +460,10 @@
                             android:layout_height="match_parent"
                             android:fontFamily="@font/montserrat_light"
                             android:gravity="start|center_vertical"
-                            android:text="address"
                             android:textColor="@color/primary_dark"
                             android:textSize="@dimen/text_size_small"
-                            android:textStyle="normal|bold"/>
+                            android:textStyle="normal|bold"
+                            tools:text="1DoQdnSYshhZ5Tqt5Sk6svZt29jqoYVwQY"/>
 
                     </LinearLayout>
 
@@ -474,12 +473,11 @@
                         android:orientation="horizontal">
 
                         <TextView
-                            android:id="@+id/tvWalletIdentityLabel"
                             android:layout_width="@dimen/verify_card_left_col_width"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="20dp"
                             android:fontFamily="@font/raleway_r"
-                            android:text="Private key"
+                            android:text="@string/private_key"
                             android:textSize="@dimen/text_size_1_small"/>
 
                         <TextView
@@ -487,10 +485,10 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/montserrat_light"
-                            android:text="Possession proved"
                             android:textColor="@color/confirmed"
                             android:textSize="@dimen/text_size_1_small"
-                            android:textStyle="normal|bold"/>
+                            android:textStyle="normal|bold"
+                            tools:text="Possession proved"/>
 
                     </LinearLayout>
 
@@ -505,10 +503,10 @@
                         android:shadowDx="2"
                         android:shadowDy="2"
                         android:shadowRadius="2"
-                        android:text="Error!"
                         android:textAlignment="center"
                         android:textColor="@color/white"
-                        android:textStyle="bold"/>
+                        android:textStyle="bold"
+                        tools:text="Error!"/>
 
                     <TextView
                         android:id="@+id/tvMessage"
@@ -517,10 +515,10 @@
                         android:background="#7F7FF27F"
                         android:fontFamily="@font/montserrat_light"
                         android:padding="4dp"
-                        android:text="Message!"
                         android:textAlignment="center"
                         android:textColor="@color/black"
-                        android:textStyle="normal|bold"/>
+                        android:textStyle="normal|bold"
+                        tools:text="Message!"/>
 
                 </LinearLayout>
 
@@ -566,7 +564,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent">
-
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fabMenu"
