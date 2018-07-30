@@ -305,7 +305,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     newPIN2 = PINStorage.getPIN2()
 
                 val pinSwapWarningDialog = PINSwapWarningDialog()
-                pinSwapWarningDialog.setOnRefreshPage { this.startSwapPINActivity() }
+                pinSwapWarningDialog.setOnRefreshPage { startSwapPINActivity() }
                 val bundle = Bundle()
                 if (!PINStorage.isDefaultPIN(newPIN) || !PINStorage.isDefaultPIN2(newPIN2))
                     bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_forget))
