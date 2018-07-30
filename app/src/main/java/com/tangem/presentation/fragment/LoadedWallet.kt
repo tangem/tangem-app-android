@@ -167,7 +167,15 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             startActivity(browserIntent)
         }
 
+        tvLookup.setOnClickListener {
+            val engineClick = CoinEngineFactory.Create(mCard!!.blockchain)
+            val browserIntent = Intent(Intent.ACTION_VIEW, engineClick!!.getShareWalletURIExplorer(mCard))
+            startActivity(browserIntent)
+        }
+
         ivCopy.setOnClickListener { doShareWallet(false) }
+
+        tvCopy.setOnClickListener { doShareWallet(false) }
 
         tvWallet.setOnClickListener { doShareWallet(false) }
 
@@ -190,7 +198,19 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 Toast.makeText(context, R.string.need_attach_card_again, Toast.LENGTH_LONG).show()
         }
 
+        tvInfo.setOnClickListener {
+            if (mCardProtocol != null)
+                openVerifyCard(mCardProtocol!!)
+            else
+                Toast.makeText(context, R.string.need_attach_card_again, Toast.LENGTH_LONG).show()
+        }
+
         fabNFC.setOnClickListener {
+            val intent = Intent(context, MainActivity::class.java)
+            startActivity(intent)
+        }
+
+        tvNFC.setOnClickListener {
             val intent = Intent(context, MainActivity::class.java)
             startActivity(intent)
         }

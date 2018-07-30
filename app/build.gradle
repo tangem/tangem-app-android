@@ -6,7 +6,7 @@ apply plugin: 'kotlin-android-extensions'
 static def generateVersionName() {
     def gitCommitsCount = "git rev-list HEAD --count".execute().text.trim()
     def gitCurrentBranch = "git rev-parse --abbrev-ref HEAD".execute().text.trim()
-    return gitCommitsCount.toInteger() + 831 + "\\n" + gitCurrentBranch
+    return gitCommitsCount.toInteger() + 831// + "\\n" + gitCurrentBranch
 }
 
 android {
@@ -16,7 +16,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 27
         versionCode 51
-        versionName "0.87.1." + generateVersionName()
+        versionName "0.87.3." + generateVersionName()
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
