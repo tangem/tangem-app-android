@@ -190,10 +190,12 @@
     <string name="possession_proved">Possession proved</string>
     <string name="possession_not_proved">Possession NOT proved</string>
     <string name="not_available">not available</string>
+    <string name="private_key">Private key</string>
 
     <!-- SavePINActivity -->
     <string name="save">Save</string>
     <string name="delete">Delete</string>
     <string name="protect_with_fingerprint">Protect with fingerprint</string>
+    <string name="touch_fingerprint_scanner_to_confirm">Touch fingerprint scanner to confirm</string>
 
 </resources>
