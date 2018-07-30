@@ -99,7 +99,7 @@
                         android:id="@+id/tvBalance"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="2"
+                        android:layout_weight="3"
                         android:fontFamily="@font/maaxmedium"
                         android:paddingLeft="5dp"
                         android:paddingRight="5dp"
@@ -120,7 +120,7 @@
                         android:paddingRight="5dp"
                         android:textColor="@color/primary"
                         android:textStyle="normal|bold"
-                        tools:text="Bitcoin" />
+                        tools:text="Bitcoin"/>
 
                 </LinearLayout>
 
@@ -174,7 +174,7 @@
                         android:textColor="@android:color/black"
                         android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"
-                        tools:text="1DoQdnSYshhZ5Tqt5Sk6svZt29jqoYVwQY" />
+                        tools:text="1DoQdnSYshhZ5Tqt5Sk6svZt29jqoYVwQY"/>
 
                     <LinearLayout
                         android:layout_width="match_parent"
