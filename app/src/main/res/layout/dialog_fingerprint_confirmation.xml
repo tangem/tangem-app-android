@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:ignore="contentDescription">
 
     <ImageView
         android:layout_width="96dp"
@@ -17,7 +19,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_margin="16dp"
-        android:text="Touch fingerprint scanner to confirm"
+        android:text="@string/touch_fingerprint_scanner_to_confirm"
         android:textAlignment="center"
         android:textSize="@dimen/text_size_medium"/>
 
