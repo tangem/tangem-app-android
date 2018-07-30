@@ -62,6 +62,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         private const val URL_CARD_VALIDATE = Server.API.Method.CARD_VALIDATE
     }
 
+    private var singleToast: Toast? = null
     private var nfcManager: NfcManager? = null
     var mCard: TangemCard? = null
     private var lastTag: Tag? = null
@@ -187,7 +188,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 intent.addCategory(Intent.CATEGORY_DEFAULT)
                 startActivity(intent)
             } catch (e: ActivityNotFoundException) {
-                Toast.makeText(context, R.string.no_compatible_wallet, Toast.LENGTH_LONG).show()
+                showSingleToast(R.string.no_compatible_wallet)
             }
         }
 
@@ -195,14 +196,14 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             if (mCardProtocol != null)
                 openVerifyCard(mCardProtocol!!)
             else
-                Toast.makeText(context, R.string.need_attach_card_again, Toast.LENGTH_LONG).show()
+                showSingleToast(R.string.need_attach_card_again)
         }
 
         tvInfo.setOnClickListener {
             if (mCardProtocol != null)
                 openVerifyCard(mCardProtocol!!)
             else
-                Toast.makeText(context, R.string.need_attach_card_again, Toast.LENGTH_LONG).show()
+                showSingleToast(R.string.need_attach_card_again)
         }
 
         fabNFC.setOnClickListener {
@@ -216,18 +217,18 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
 
         btnExtract.setOnClickListener {
-            if (!mCard!!.hasBalanceInfo())
-                Toast.makeText(context, R.string.cannot_obtain_data_from_blockchain, Toast.LENGTH_LONG).show()
-            else if (!engine!!.IsBalanceNotZero(mCard))
-                Toast.makeText(context, R.string.wallet_empty, Toast.LENGTH_LONG).show()
+            if (!mCard!!.hasBalanceInfo()) {
+                showSingleToast(R.string.cannot_obtain_data_from_blockchain)
+            } else if (!engine!!.IsBalanceNotZero(mCard))
+                showSingleToast(R.string.wallet_empty)
             else if (!engine.IsBalanceAlterNotZero(mCard))
-                Toast.makeText(context, R.string.not_enough_funds, Toast.LENGTH_LONG).show()
+                showSingleToast(R.string.not_enough_funds)
             else if (engine.AwaitingConfirmation(mCard))
-                Toast.makeText(context, R.string.please_wait_while_previous, Toast.LENGTH_LONG).show()
+                showSingleToast(R.string.please_wait_while_previous)
             else if (!engine.CheckUnspentTransaction(mCard))
-                Toast.makeText(context, R.string.please_wait_for_confirmation, Toast.LENGTH_LONG).show()
+                showSingleToast(R.string.please_wait_for_confirmation)
             else if (mCard!!.remainingSignatures == 0)
-                Toast.makeText(context, R.string.card_hasn_t_remaining_signature, Toast.LENGTH_LONG).show()
+                showSingleToast(R.string.card_hasn_t_remaining_signature)
             else {
                 val intent = Intent(context, PreparePaymentActivity::class.java)
                 intent.putExtra("UID", mCard!!.uid)
@@ -758,6 +759,15 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         intent.putExtra("newPIN", newPIN)
         intent.putExtra("newPIN2", newPIN2)
         startActivityForResult(intent, REQUEST_CODE_SWAP_PIN)
+    }
+
+    private fun showSingleToast(text: Int) {
+        if (singleToast == null || !singleToast!!.view.isShown) {
+            if (singleToast != null)
+                singleToast!!.cancel()
+            singleToast = Toast.makeText(context, text, Toast.LENGTH_LONG)
+            singleToast!!.show()
+        }
     }
 
 }

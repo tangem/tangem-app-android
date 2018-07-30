@@ -299,7 +299,7 @@
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
             android:text="@string/load"
-            android:textSize="@dimen/text_size_large" />
+            android:textSize="@dimen/text_size_large"/>
 
         <android.support.v7.widget.AppCompatButton
             android:id="@+id/btnExtract"
