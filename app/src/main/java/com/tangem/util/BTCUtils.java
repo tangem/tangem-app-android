@@ -331,7 +331,7 @@ public final class BTCUtils {
         for(TangemCard.UnspentTransaction current: rawTxList)
         {
             byte[] rawTxByte = BTCUtils.fromHex(current.Raw);
-            if (rawTxByte == null)
+            if (rawTxByte == null || current.Raw.isEmpty())
             {
                 continue;
             }
