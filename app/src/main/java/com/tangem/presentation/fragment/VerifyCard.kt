@@ -290,10 +290,16 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
             tvIssuer.text = mCard!!.issuerDescription
             tvIssuerData.text = mCard!!.issuerDataDescription
-
             tvCardRegistredDate.text = mCard!!.personalizationDateTimeDescription
-
             tvBlockchain.text = mCard!!.blockchainName
+            tvValidationNode.text = mCard!!.validationNodeDescription
+            tvInputs.text = mCard!!.inputsDescription
+
+            when {
+                mCard!!.lastInputDescription.contains("awaiting") -> tvInputs.setTextColor(ContextCompat.getColor(context!!, R.color.not_confirmed))
+                mCard!!.lastInputDescription.contains("None") -> tvInputs.setTextColor(ContextCompat.getColor(context!!, R.color.primary_dark))
+                else -> tvInputs.setTextColor(ContextCompat.getColor(context!!, R.color.confirmed))
+            }
 
             ivBlockchain.setImageResource(mCard!!.blockchain.getLogoImageResource(mCard!!.blockchainID, mCard!!.tokenSymbol))
 
@@ -389,7 +395,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
             if (mCard!!.useDevelopersFirmware()!!) {
                 imgDeveloperVersion.setImageResource(R.drawable.ic_developer_version)
                 imgDeveloperVersion.visibility = View.VISIBLE
-                imgDeveloperVersion.setOnClickListener { v -> Toast.makeText(context, R.string.unlocked_banknote_only_development_use, Toast.LENGTH_LONG).show() }
+                imgDeveloperVersion.setOnClickListener { Toast.makeText(context, R.string.unlocked_banknote_only_development_use, Toast.LENGTH_LONG).show() }
             } else
                 imgDeveloperVersion.visibility = View.INVISIBLE
 
