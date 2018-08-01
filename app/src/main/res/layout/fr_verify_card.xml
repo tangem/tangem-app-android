@@ -15,7 +15,6 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginBottom="8dp"
-        android:padding="8dp"
         app:layout_constraintBottom_toTopOf="@+id/rlToolButtons1"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -31,8 +30,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@color/white"
-                android:orientation="vertical"
-                android:padding="8dp">
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:orientation="vertical">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -281,10 +281,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/montserrat_light"
-                        android:text="@string/allows_change_pin1_and_pin2"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_2_small"
-                        android:textStyle="normal|bold" />
+                        android:textStyle="normal|bold"
+                        tools:text="Allows change PIN1 and PIN2 \n Dynamic NDEF" />
 
                 </LinearLayout>
 
@@ -296,17 +296,20 @@
                     <TextView
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
                         android:fontFamily="@font/raleway_r"
-                        android:text=""
-                        android:textSize="@dimen/text_size_small" />
+                        android:text="@string/issuer_data"
+                        android:textSize="@dimen/text_size_1_small" />
 
                     <TextView
                         android:id="@+id/tvIssuerData"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/montserrat_light"
+                        android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_1_small"
-                        android:textStyle="normal|bold" />
+                        android:textStyle="normal|bold"
+                        tools:text="Tangem" />
 
                 </LinearLayout>
 
@@ -481,6 +484,56 @@
                         android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"
                         tools:text="Possession proved" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="@dimen/verify_card_left_col_width"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:fontFamily="@font/raleway_r"
+                        android:text="@string/validation_node"
+                        android:textSize="@dimen/text_size_1_small" />
+
+                    <TextView
+                        android:id="@+id/tvValidationNode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/montserrat_light"
+                        android:textColor="@color/primary_dark"
+                        android:textSize="@dimen/text_size_1_small"
+                        android:textStyle="normal|bold"
+                        tools:text="Electrum" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="@dimen/verify_card_left_col_width"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:fontFamily="@font/raleway_r"
+                        android:text="@string/unspents"
+                        android:textSize="@dimen/text_size_1_small" />
+
+                    <TextView
+                        android:id="@+id/tvInputs"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/montserrat_light"
+                        android:textColor="@color/primary_dark"
+                        android:textSize="@dimen/text_size_1_small"
+                        android:textStyle="normal|bold"
+                        tools:text="1 unspent" />
 
                 </LinearLayout>
 
