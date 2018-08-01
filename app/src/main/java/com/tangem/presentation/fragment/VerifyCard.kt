@@ -42,7 +42,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
         private const val REQUEST_CODE_SWAP_PIN = 8
     }
 
-    private var mNfcManager: NfcManager? = null
+    private var nfcManager: NfcManager? = null
     private var mCard: TangemCard? = null
 
     private var requestPIN2Count = 0
@@ -52,7 +52,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mNfcManager = NfcManager(activity, this)
+        nfcManager = NfcManager(activity, this)
 
         mCard = TangemCard(activity!!.intent.getStringExtra("UID"))
         mCard!!.LoadFromBundle(activity!!.intent.extras!!.getBundle("Card"))
@@ -81,17 +81,17 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
     override fun onResume() {
         super.onResume()
-        mNfcManager!!.onResume()
+        nfcManager!!.onResume()
     }
 
     override fun onPause() {
         super.onPause()
-        mNfcManager!!.onPause()
+        nfcManager!!.onPause()
     }
 
     override fun onStop() {
         super.onStop()
-        mNfcManager!!.onStop()
+        nfcManager!!.onStop()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -248,11 +248,10 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
     override fun onTagDiscovered(tag: Tag) {
         try {
 //            Log.w(getClass().getName(), "Ignore discovered tag!");
-            mNfcManager!!.ignoreTag(tag)
+            nfcManager!!.ignoreTag(tag)
         } catch (e: IOException) {
             e.printStackTrace()
         }
-
     }
 
     private fun updateViews() {
