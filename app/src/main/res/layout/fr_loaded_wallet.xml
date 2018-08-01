@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -41,7 +40,7 @@
                     android:id="@+id/ivTangemCard"
                     android:layout_width="match_parent"
                     android:layout_height="180dp"
-                    tools:src="@drawable/card_default"/>
+                    tools:src="@drawable/card_default" />
 
                 <RelativeLayout
                     android:id="@+id/rlProgressBar"
@@ -57,7 +56,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:alpha="0.75"
-                        android:background="@color/white"/>
+                        android:background="@color/white" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -76,7 +75,7 @@
                         android:layout_centerInParent="true"
                         android:alpha="0.8"
                         android:elevation="1dp"
-                        android:progressTint="@color/colorPrimary"/>
+                        android:progressTint="@color/colorPrimary" />
 
                 </RelativeLayout>
 
@@ -92,7 +91,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:gravity="center"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <TextView
@@ -101,8 +100,6 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="3"
                         android:fontFamily="@font/maaxmedium"
-                        android:paddingLeft="5dp"
-                        android:paddingRight="5dp"
                         android:text="@string/no_data_string"
                         android:textAlignment="center"
                         android:textColor="@color/black"
@@ -113,14 +110,11 @@
                         android:id="@+id/tvBlockchain"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
                         android:layout_weight="1"
                         android:fontFamily="@font/maax"
-                        android:paddingLeft="5dp"
-                        android:paddingRight="5dp"
                         android:textColor="@color/primary"
                         android:textStyle="normal|bold"
-                        tools:text="Bitcoin"/>
+                        tools:text="Bitcoin" />
 
                 </LinearLayout>
 
@@ -174,7 +168,7 @@
                         android:textColor="@android:color/black"
                         android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"
-                        tools:text="1DoQdnSYshhZ5Tqt5Sk6svZt29jqoYVwQY"/>
+                        tools:text="1DoQdnSYshhZ5Tqt5Sk6svZt29jqoYVwQY" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -227,6 +221,7 @@
                             android:text="@string/copy"
                             android:textColor="@color/primary"
                             android:textSize="@dimen/text_size_medium" />
+
                     </LinearLayout>
 
                 </LinearLayout>
@@ -247,7 +242,7 @@
             android:id="@+id/tvMessage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#BF7FF27F"
+            android:background="@color/msg_okay"
             android:elevation="2dp"
             android:fontFamily="@font/maax"
             android:padding="4dp"
@@ -264,7 +259,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="false"
             android:layout_below="@+id/tvMessage"
-            android:background="#BFFF4444"
+            android:background="@color/msg_err"
             android:elevation="3dp"
             android:fontFamily="@font/maax"
             android:padding="4dp"
@@ -299,7 +294,7 @@
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
             android:text="@string/load"
-            android:textSize="@dimen/text_size_large"/>
+            android:textSize="@dimen/text_size_large" />
 
         <android.support.v7.widget.AppCompatButton
             android:id="@+id/btnExtract"
@@ -339,7 +334,7 @@
             android:id="@+id/tvInfo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="20dp"
+            android:layout_marginEnd="20dp"
             android:fontFamily="@font/saira_condensed_bold"
             android:paddingLeft="10dp"
             android:paddingRight="10dp"
@@ -351,7 +346,7 @@
             android:id="@+id/fabNFC"
             android:layout_width="wrap_content"
             android:layout_height="30dp"
-            android:layout_marginLeft="20dp"
+            android:layout_marginStart="20dp"
             app:backgroundTint="@color/primary_dark"
             app:fabSize="mini"
             app:srcCompat="@drawable/ic_nfc_white_24dp" />
