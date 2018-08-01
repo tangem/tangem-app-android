@@ -228,7 +228,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             else if (!engine.CheckUnspentTransaction(mCard))
                 showSingleToast(R.string.please_wait_for_confirmation)
             else if (mCard!!.remainingSignatures == 0)
-                showSingleToast(R.string.card_hasn_t_remaining_signature)
+                showSingleToast(R.string.card_has_no_remaining_signature)
             else {
                 val intent = Intent(context, PreparePaymentActivity::class.java)
                 intent.putExtra("UID", mCard!!.uid)
