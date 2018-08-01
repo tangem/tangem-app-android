@@ -12,11 +12,11 @@
 
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipe_container"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginBottom="8dp"
         android:padding="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/rlToolButtons"
+        app:layout_constraintBottom_toTopOf="@+id/rlToolButtons1"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -488,7 +488,7 @@
                     android:id="@+id/tvError"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="#7FFF4444"
+                    android:background="@color/msg_okay"
                     android:fontFamily="@font/montserrat_light"
                     android:padding="4dp"
                     android:shadowColor="@color/cardview_shadow_start_color"
@@ -496,7 +496,7 @@
                     android:shadowDy="2"
                     android:shadowRadius="2"
                     android:textAlignment="center"
-                    android:textColor="@color/white"
+                    android:textColor="@color/black"
                     android:textStyle="bold"
                     tools:text="Error!" />
 
@@ -504,7 +504,7 @@
                     android:id="@+id/tvMessage"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="#7F7FF27F"
+                    android:background="@color/msg_err"
                     android:fontFamily="@font/montserrat_light"
                     android:padding="4dp"
                     android:textAlignment="center"
@@ -519,9 +519,12 @@
     </android.support.v4.widget.SwipeRefreshLayout>
 
     <RelativeLayout
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:padding="8dp"
+        android:id="@+id/rlToolButtons1"
+        android:layout_width="match_parent"
+        android:layout_height="25dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/rlToolButtons"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent">
@@ -559,8 +562,8 @@
 
     <LinearLayout
         android:id="@+id/rlToolButtons"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent">
