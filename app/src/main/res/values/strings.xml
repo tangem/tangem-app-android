@@ -74,7 +74,7 @@
     <string name="reset_pins_to_default">Reset PINs to default</string>
     <string name="erase_wallet">Erase wallet</string>
 
-    <!-- MainActivity, Main -->
+    <!-- MainActivity -->
     <string name="tap_tangem_card">Tap Tangem card with your smartphone</string>
     <string name="scan_banknote">Scan a banknote with your \n %1$s \n as shown above</string>
     <string name="phone">phone</string>
@@ -89,16 +89,13 @@
     <string name="not_enough_funds">Not enough funds for transaction fee (gas)!</string>
     <string name="please_wait_while_previous">Please wait while previous transaction is confirmed in blockchain</string>
     <string name="please_wait_for_confirmation">Could not obtain all inputs. Swipe down to refresh.</string>
-    <string name="card_hasn_t_remaining_signature">Card has no remaining signature!</string>
-    <string name="reusable_wallet">REUSABLE WALLET</string>
-    <string name="banknote">BANKNOTE</string>
-    <string name="not_transferable_banknote">NON-TRANSFERABLE BANKNOTE</string>
-    <string name="developer_kit">DEVELOPER KIT</string>
-    <string name="do_not_accept">DO NOT ACCEPT</string>
+    <string name="card_has_no_remaining_signature">Card has no remaining signature!</string>
+    <!--<string name="reusable_wallet">REUSABLE WALLET</string>-->
+    <!--<string name="banknote">BANKNOTE</string>-->
+    <!--<string name="not_transferable_banknote">NON-TRANSFERABLE BANKNOTE</string>-->
+    <!--<string name="developer_kit">DEVELOPER KIT</string>-->
+    <!--<string name="do_not_accept">DO NOT ACCEPT</string>-->
     <string name="explore_in_blockchain">EXPLORE</string>
-    <string name="unspents">Unspents</string>
-    <string name="issuer">Issuer</string>
-    <string name="validation_node">Validation node</string>
     <string name="swipe_down_to_refresh_data">Swipe down to refresh data</string>
     <string name="message">Message!</string>
     <string name="error">Error!</string>
@@ -133,6 +130,7 @@
     <string name="to_sign_the_payment">to sign the payment</string>
     <string name="to_change_pin_codes">to change PIN/PIN2 codes</string>
     <string name="by_tapping_the_card">By tapping the card, you will permanently remove the blockchain wallet. Ensure there will be no further incoming transactions</string>
+    <string name="cannot_erase_wallet">Cannot erase wallet. Make sure you enter correct PIN2!</string>
 
     <!-- PreparePaymentActivity -->
     <string name="enter_wallet_address">enter wallet address</string>
@@ -144,9 +142,6 @@
 
     <!-- SendTransactionActivity -->
     <string name="please_wait">Please wait while the payment is sent…</string>
-
-    <!-- PurgeActivity -->
-    <string name="cannot_erase_wallet">Cannot erase wallet. Make sure you enter correct PIN2!</string>
 
     <!-- PreparePaymentActivity -->
     <string name="not_enough_funds_on_your_card">Not enough funds on your card</string>
@@ -175,7 +170,6 @@
     <string name="remaining_signatures">Remaining signatures</string>
     <string name="time_of_last_signing">Time of last signing</string>
     <string name="features">Features</string>
-    <string name="allows_change_pin1_and_pin2">Allows change PIN1 and PIN2\nNeed CVC\nDynamic NDEF\nRecoverable\nBlockable\nAtomic command mode</string>
     <string name="manufacturer">Manufacturer</string>
     <string name="card_identity">Card identity</string>
     <string name="attested">Attested</string>
@@ -190,7 +184,11 @@
     <string name="possession_proved">Possession proved</string>
     <string name="possession_not_proved">Possession NOT proved</string>
     <string name="not_available">not available</string>
+    <string name="issuer">Issuer</string>
     <string name="private_key">Private key</string>
+    <string name="validation_node">Validation node</string>
+    <string name="issuer_data">Issuer Data</string>
+    <string name="unspents">Unspents</string>
 
     <!-- SavePINActivity -->
     <string name="save">Save</string>
