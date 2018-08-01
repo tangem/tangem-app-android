@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:android="http://schemas.android.com/tools">
+<resources>
 
     <color name="colorPrimary">#027aff</color>
     <color name="colorPrimaryDark">#027AFF</color>
@@ -16,8 +16,8 @@
     <color name="text_normal">#FF505050</color>
     <color name="msg_send">@color/accent</color>
     <color name="msg_rcv">#4a763d</color>
-    <color name="msg_okay">#4fc84f</color>
-    <color name="msg_err">#ff4444</color>
+    <color name="msg_okay">#BF7FF27F</color>
+    <color name="msg_err">#BFFF4444</color>
     <color name="msg_start">#4a086e</color>
     <color name="msg_action">#0c15c1</color>
     <color name="btn_light">#e3e3e3</color>
@@ -34,8 +34,8 @@
     <color name="type_banknote">#ffffff</color>
     <color name="type_wallet">#ffffff</color>
     <color name="black_overlay">#66000000</color>
-    <color name="confirmed" >#106800</color>
-    <color name="not_confirmed" >#7c0a02</color>
+    <color name="confirmed">#106800</color>
+    <color name="not_confirmed">#7c0a02</color>
     <color name="bg_err">#600600</color>
     <color name="bg_msg">#bff2af</color>
 
