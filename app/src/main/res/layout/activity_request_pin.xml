@@ -44,7 +44,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:ems="10"
-                android:fontFamily="@font/raleway_el"
+                android:fontFamily="@font/maax"
                 android:text="@string/prompt_pin"
                 android:textAlignment="center"
                 android:textSize="@dimen/text_size_medium"/>
@@ -69,7 +69,7 @@
                     android:layout_width="@dimen/pin_button_size"
                     android:layout_height="@dimen/pin_button_size"
                     android:layout_marginTop="8dp"
-                    android:fontFamily="@font/montserrat_light"
+                    android:fontFamily="@font/maax"
                     android:text="1"
                     android:textSize="@dimen/text_size_pin"/>
 
@@ -79,7 +79,7 @@
                     android:layout_width="@dimen/pin_button_size"
                     android:layout_height="@dimen/pin_button_size"
                     android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/montserrat_light"
+                    android:fontFamily="@font/maax"
                     android:text="2"
                     android:textSize="@dimen/text_size_pin"/>
 
@@ -89,7 +89,7 @@
                     android:layout_width="@dimen/pin_button_size"
                     android:layout_height="@dimen/pin_button_size"
                     android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/montserrat_light"
+                    android:fontFamily="@font/maax"
                     android:text="3"
                     android:textSize="@dimen/text_size_pin"/>
 
@@ -99,7 +99,7 @@
                     android:layout_width="@dimen/pin_button_size"
                     android:layout_height="@dimen/pin_button_size"
                     android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/montserrat_light"
+                    android:fontFamily="@font/maax"
                     android:text="4"
                     android:textSize="@dimen/text_size_pin"/>
 
@@ -109,7 +109,7 @@
                     android:layout_width="@dimen/pin_button_size"
                     android:layout_height="@dimen/pin_button_size"
                     android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/montserrat_light"
+                    android:fontFamily="@font/maax"
                     android:text="5"
                     android:textSize="@dimen/text_size_pin"/>
 
@@ -119,7 +119,7 @@
                     android:layout_width="@dimen/pin_button_size"
                     android:layout_height="@dimen/pin_button_size"
                     android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/montserrat_light"
+                    android:fontFamily="@font/maax"
                     android:text="6"
                     android:textSize="@dimen/text_size_pin"/>
 
@@ -129,7 +129,7 @@
                     android:layout_width="@dimen/pin_button_size"
                     android:layout_height="@dimen/pin_button_size"
                     android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/montserrat_light"
+                    android:fontFamily="@font/maax"
                     android:text="7"
                     android:textSize="@dimen/text_size_pin"/>
 
@@ -139,7 +139,7 @@
                     android:layout_width="@dimen/pin_button_size"
                     android:layout_height="@dimen/pin_button_size"
                     android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/montserrat_light"
+                    android:fontFamily="@font/maax"
                     android:text="8"
                     android:textSize="@dimen/text_size_pin"/>
 
@@ -149,7 +149,7 @@
                     android:layout_width="@dimen/pin_button_size"
                     android:layout_height="@dimen/pin_button_size"
                     android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/montserrat_light"
+                    android:fontFamily="@font/maax"
                     android:text="9"
                     android:textSize="@dimen/text_size_pin"/>
 
@@ -161,7 +161,7 @@
                     android:layout_width="@dimen/pin_button_size"
                     android:layout_height="@dimen/pin_button_size"
                     android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/montserrat_light"
+                    android:fontFamily="@font/maax"
                     android:text="0"
                     android:textSize="@dimen/text_size_pin"/>
 
@@ -171,7 +171,7 @@
                     android:layout_width="@dimen/pin_button_size"
                     android:layout_height="@dimen/pin_button_size"
                     android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/montserrat_light"
+                    android:fontFamily="@font/maax"
                     android:text="@string/pin_back"
                     android:textColor="@color/accent"
                     android:textSize="@dimen/text_size_pin"/>
