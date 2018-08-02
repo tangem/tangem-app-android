@@ -29,7 +29,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:fontFamily="@font/raleway_r"
+                android:fontFamily="@font/maax"
                 android:gravity="center_vertical"
                 android:text="@string/wallet_has_not_been_yet_created"
                 android:textAlignment="center"
@@ -39,8 +39,11 @@
                 android:id="@+id/btnNewWallet"
                 style="@style/AppTheme.RoundedCornerMaterialButton"
                 android:layout_width="match_parent"
+                android:layout_height="50dp"
                 android:layout_margin="32dp"
-                android:text="@string/create_wallet"/>
+                android:fontFamily="@font/saira_condensed_bold"
+                android:text="@string/create_wallet"
+                android:textSize="@dimen/text_size_large" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -51,7 +54,7 @@
                     android:layout_width="@dimen/empty_wallet_left_col_width"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/empty_wallet_left_col_margin"
-                    android:fontFamily="@font/raleway_r"
+                    android:fontFamily="@font/maax"
                     android:text="@string/blockchain"
                     android:textColor="@color/primary_dark"
                     android:textSize="@dimen/text_size_1_small"/>
@@ -60,7 +63,7 @@
                     android:id="@+id/tvBlockchain"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/montserrat_light"
+                    android:fontFamily="@font/maax"
                     android:textColor="@color/primary_dark"
                     android:textSize="@dimen/text_size_1_small"
                     android:textStyle="normal|bold"
@@ -77,7 +80,7 @@
                     android:layout_width="@dimen/empty_wallet_left_col_width"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/empty_wallet_left_col_margin"
-                    android:fontFamily="@font/raleway_r"
+                    android:fontFamily="@font/maax"
                     android:text="@string/issuer"
                     android:textColor="@color/primary_dark"
                     android:textSize="@dimen/text_size_1_small"/>
@@ -86,7 +89,7 @@
                     android:id="@+id/tvIssuer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/montserrat_light"
+                    android:fontFamily="@font/maax"
                     android:textColor="@color/primary_dark"
                     android:textSize="@dimen/text_size_1_small"
                     android:textStyle="normal|bold"
@@ -103,14 +106,14 @@
                     android:layout_width="@dimen/empty_wallet_left_col_width"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/empty_wallet_left_col_margin"
-                    android:fontFamily="@font/raleway_r"
+                    android:fontFamily="@font/maax"
                     android:text=""/>
 
                 <TextView
                     android:id="@+id/tvIssuerData"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/montserrat_light"
+                    android:fontFamily="@font/maax"
                     android:textSize="@dimen/text_size_1_small"
                     android:textStyle="normal|bold"
                     tools:text="11111"/>
@@ -130,7 +133,7 @@
                 android:id="@+id/tvCardID"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/montserrat_light"
+                android:fontFamily="@font/maax"
                 android:text="@string/no_data_string_1"
                 android:textAlignment="center"
                 android:textColor="@color/primary_dark"
@@ -141,7 +144,7 @@
                 android:id="@+id/textView5"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/raleway_r"
+                android:fontFamily="@font/maax"
                 android:text="@string/scan_again_to_verify_the_card"
                 android:textAlignment="center"
                 android:textColor="@android:color/darker_gray"
