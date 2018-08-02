@@ -46,7 +46,7 @@
                         android:layout_alignParentTop="true"
                         android:layout_marginBottom="24dp"
                         android:layout_marginTop="8dp"
-                        android:fontFamily="@font/raleway_r"
+                        android:fontFamily="@font/maaxmedium"
                         android:text="@string/card_id"
                         android:textAlignment="center"
                         android:textSize="@dimen/text_size_medium" />
@@ -59,7 +59,7 @@
                         android:layout_alignParentTop="true"
                         android:layout_marginBottom="4dp"
                         android:layout_marginTop="32dp"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:text="@string/no_data_string_1"
                         android:textAlignment="center"
                         android:textColor="@color/primary_dark"
@@ -84,7 +84,7 @@
                     <TextView
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/raleway_r"
+                        android:fontFamily="@font/maax"
                         android:text="@string/issuer"
                         android:textSize="@dimen/text_size_medium" />
 
@@ -92,7 +92,7 @@
                         android:id="@+id/tvIssuer"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:text="@string/smart_cash_ag"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_medium"
@@ -109,7 +109,7 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:text="@string/blockchain"
                         android:textSize="@dimen/text_size_1_small"
                         app:layout_constraintBottom_toBottomOf="parent"
@@ -120,7 +120,7 @@
                         android:id="@+id/tvBlockchain"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:text="@string/blockchain"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_1_small"
@@ -147,7 +147,7 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
-                        android:fontFamily="@font/raleway_r"
+                        android:fontFamily="@font/maax"
                         android:text="@string/signing_method"
                         android:textSize="@dimen/text_size_1_small" />
 
@@ -155,7 +155,7 @@
                         android:id="@+id/tvSigningMethod"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"
@@ -172,7 +172,7 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
-                        android:fontFamily="@font/raleway_r"
+                        android:fontFamily="@font/maax"
                         android:text="@string/this_card_is"
                         android:textSize="@dimen/text_size_1_small" />
 
@@ -180,7 +180,7 @@
                         android:id="@+id/tvReusable"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"
@@ -197,7 +197,7 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
-                        android:fontFamily="@font/raleway_r"
+                        android:fontFamily="@font/maax"
                         android:text="@string/signed_transactions"
                         android:textSize="@dimen/text_size_1_small" />
 
@@ -205,7 +205,7 @@
                         android:id="@+id/tvSignedTx"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"
@@ -222,7 +222,7 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
-                        android:fontFamily="@font/raleway_r"
+                        android:fontFamily="@font/maax"
                         android:text="@string/remaining_signatures"
                         android:textSize="@dimen/text_size_1_small" />
 
@@ -230,7 +230,7 @@
                         android:id="@+id/tvRemainingSignatures"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"
@@ -247,7 +247,7 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
-                        android:fontFamily="@font/raleway_r"
+                        android:fontFamily="@font/maax"
                         android:text="@string/time_of_last_signing"
                         android:textSize="@dimen/text_size_1_small" />
 
@@ -255,7 +255,7 @@
                         android:id="@+id/tvLastSigned"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:text=""
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_1_small"
@@ -266,13 +266,14 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <TextView
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
-                        android:fontFamily="@font/raleway_r"
+                        android:fontFamily="@font/maax"
                         android:text="@string/features"
                         android:textSize="@dimen/text_size_1_small" />
 
@@ -280,7 +281,7 @@
                         android:id="@+id/tvFeatures"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_2_small"
                         android:textStyle="normal|bold"
@@ -297,7 +298,7 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
-                        android:fontFamily="@font/raleway_r"
+                        android:fontFamily="@font/maax"
                         android:text="@string/issuer_data"
                         android:textSize="@dimen/text_size_1_small" />
 
@@ -305,7 +306,7 @@
                         android:id="@+id/tvIssuerData"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"
@@ -330,7 +331,7 @@
                     <TextView
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/raleway_r"
+                        android:fontFamily="@font/maax"
                         android:text="@string/manufacturer"
                         android:textSize="@dimen/text_size_medium" />
 
@@ -338,7 +339,7 @@
                         android:id="@+id/tvManufacturerInfo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:text="@string/smart_cash_ag"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_medium"
@@ -363,7 +364,7 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
-                        android:fontFamily="@font/raleway_r"
+                        android:fontFamily="@font/maax"
                         android:text="@string/card_identity"
                         android:textSize="@dimen/text_size_1_small" />
 
@@ -371,7 +372,7 @@
                         android:id="@+id/tvCardIdentity"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:text="@string/attested"
                         android:textColor="@color/confirmed"
                         android:textSize="@dimen/text_size_1_small"
@@ -388,7 +389,7 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
-                        android:fontFamily="@font/raleway_r"
+                        android:fontFamily="@font/maax"
                         android:text="@string/firmware"
                         android:textSize="@dimen/text_size_1_small" />
 
@@ -396,7 +397,7 @@
                         android:id="@+id/tvFirmware"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"
@@ -412,7 +413,7 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
-                        android:fontFamily="@font/raleway_r"
+                        android:fontFamily="@font/maax"
                         android:text="@string/registration_date"
                         android:textSize="@dimen/text_size_1_small" />
 
@@ -420,7 +421,7 @@
                         android:id="@+id/tvCardRegistredDate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"
@@ -445,7 +446,7 @@
                     <TextView
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/raleway_r"
+                        android:fontFamily="@font/maax"
                         android:text="@string/wallet"
                         android:textSize="@dimen/text_size_medium" />
 
@@ -453,10 +454,10 @@
                         android:id="@+id/tvWallet"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:gravity="start|center_vertical"
                         android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/text_size_small"
+                        android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"
                         tools:text="1DoQdnSYshhZ5Tqt5Sk6svZt29jqoYVwQY" />
 
@@ -471,7 +472,7 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
-                        android:fontFamily="@font/raleway_r"
+                        android:fontFamily="@font/maax"
                         android:text="@string/private_key"
                         android:textSize="@dimen/text_size_1_small" />
 
@@ -479,7 +480,7 @@
                         android:id="@+id/tvWalletIdentity"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:textColor="@color/confirmed"
                         android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"
@@ -496,7 +497,7 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
-                        android:fontFamily="@font/raleway_r"
+                        android:fontFamily="@font/maax"
                         android:text="@string/validation_node"
                         android:textSize="@dimen/text_size_1_small" />
 
@@ -504,7 +505,7 @@
                         android:id="@+id/tvValidationNode"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"
@@ -521,7 +522,7 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
-                        android:fontFamily="@font/raleway_r"
+                        android:fontFamily="@font/maax"
                         android:text="@string/unspents"
                         android:textSize="@dimen/text_size_1_small" />
 
@@ -529,7 +530,7 @@
                         android:id="@+id/tvInputs"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/montserrat_light"
+                        android:fontFamily="@font/maax"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"
@@ -542,7 +543,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/msg_okay"
-                    android:fontFamily="@font/montserrat_light"
+                    android:fontFamily="@font/maax"
                     android:padding="4dp"
                     android:shadowColor="@color/cardview_shadow_start_color"
                     android:shadowDx="2"
@@ -558,7 +559,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/msg_err"
-                    android:fontFamily="@font/montserrat_light"
+                    android:fontFamily="@font/maax"
                     android:padding="4dp"
                     android:textAlignment="center"
                     android:textColor="@color/black"
@@ -617,6 +618,7 @@
         android:id="@+id/rlToolButtons"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:gravity="center_vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent">
@@ -633,8 +635,11 @@
             android:id="@+id/btnOk"
             style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="match_parent"
+            android:layout_height="50dp"
             android:layout_margin="10dp"
-            android:text="@string/ok" />
+            android:fontFamily="@font/saira_condensed_bold"
+            android:text="@string/ok"
+            android:textSize="@dimen/text_size_large" />
 
     </LinearLayout>
 
