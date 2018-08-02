@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -33,7 +32,7 @@
                 android:gravity="center_vertical"
                 android:text="@string/wallet_has_not_been_yet_created"
                 android:textAlignment="center"
-                android:textSize="@dimen/text_size_1_small"/>
+                android:textSize="@dimen/text_size_1_small" />
 
             <android.support.v7.widget.AppCompatButton
                 android:id="@+id/btnNewWallet"
@@ -57,7 +56,7 @@
                     android:fontFamily="@font/maax"
                     android:text="@string/blockchain"
                     android:textColor="@color/primary_dark"
-                    android:textSize="@dimen/text_size_1_small"/>
+                    android:textSize="@dimen/text_size_1_small" />
 
                 <TextView
                     android:id="@+id/tvBlockchain"
@@ -67,7 +66,7 @@
                     android:textColor="@color/primary_dark"
                     android:textSize="@dimen/text_size_1_small"
                     android:textStyle="normal|bold"
-                    tools:text="12345"/>
+                    tools:text="12345" />
 
             </LinearLayout>
 
@@ -83,7 +82,7 @@
                     android:fontFamily="@font/maax"
                     android:text="@string/issuer"
                     android:textColor="@color/primary_dark"
-                    android:textSize="@dimen/text_size_1_small"/>
+                    android:textSize="@dimen/text_size_1_small" />
 
                 <TextView
                     android:id="@+id/tvIssuer"
@@ -93,30 +92,7 @@
                     android:textColor="@color/primary_dark"
                     android:textSize="@dimen/text_size_1_small"
                     android:textStyle="normal|bold"
-                    tools:text="5555"/>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="@dimen/empty_wallet_left_col_width"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/empty_wallet_left_col_margin"
-                    android:fontFamily="@font/maax"
-                    android:text=""/>
-
-                <TextView
-                    android:id="@+id/tvIssuerData"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/maax"
-                    android:textSize="@dimen/text_size_1_small"
-                    android:textStyle="normal|bold"
-                    tools:text="11111"/>
+                    tools:text="5555" />
 
             </LinearLayout>
 
@@ -138,7 +114,7 @@
                 android:textAlignment="center"
                 android:textColor="@color/primary_dark"
                 android:textSize="@dimen/text_size_1_small"
-                android:textStyle="normal|bold"/>
+                android:textStyle="normal|bold" />
 
             <TextView
                 android:id="@+id/textView5"
@@ -148,7 +124,7 @@
                 android:text="@string/scan_again_to_verify_the_card"
                 android:textAlignment="center"
                 android:textColor="@android:color/darker_gray"
-                android:textSize="@dimen/text_size_small"/>
+                android:textSize="@dimen/text_size_small" />
 
         </LinearLayout>
 
@@ -160,7 +136,7 @@
             android:layout_alignParentTop="true"
             android:layout_marginEnd="8dp"
             android:layout_marginTop="8dp"
-            android:src="@drawable/tangem_logo_small_new"/>
+            android:src="@drawable/tangem_logo_small_new" />
 
         <ImageView
             android:id="@+id/imgPIN"
@@ -171,7 +147,7 @@
             android:layout_margin="8dp"
             android:layout_marginEnd="4dp"
             android:layout_toStartOf="@+id/imgPIN2orSecurityDelay"
-            android:src="@drawable/unlock_pin1"/>
+            android:src="@drawable/unlock_pin1" />
 
         <ImageView
             android:id="@+id/imgPIN2orSecurityDelay"
@@ -182,7 +158,7 @@
             android:layout_alignParentStart="false"
             android:layout_marginBottom="8dp"
             android:layout_marginEnd="8dp"
-            android:src="@drawable/unlock_pin2"/>
+            android:src="@drawable/unlock_pin2" />
 
         <ImageView
             android:id="@+id/imgDeveloperVersion"
@@ -192,7 +168,7 @@
             android:layout_alignParentStart="true"
             android:layout_marginBottom="8dp"
             android:layout_marginStart="8dp"
-            android:src="@drawable/ic_developer_version"/>
+            android:src="@drawable/ic_developer_version" />
 
     </RelativeLayout>
 
@@ -206,6 +182,6 @@
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"/>
+        app:layout_constraintRight_toRightOf="parent" />
 
 </android.support.constraint.ConstraintLayout>
