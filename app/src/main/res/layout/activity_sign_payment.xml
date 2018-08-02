@@ -17,7 +17,7 @@
             android:id="@+id/textView6"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/raleway_r"
+            android:fontFamily="@font/maax"
             android:text="@string/now_touch_the_banknote_with_id"
             android:textAlignment="center"
             android:textSize="@dimen/text_size_medium"/>
@@ -28,7 +28,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
             android:layout_marginTop="10dp"
-            android:fontFamily="@font/montserrat_light"
+            android:fontFamily="@font/maax"
             android:textAlignment="center"
             android:textColor="@color/black"
             android:textSize="@dimen/text_size_large"
@@ -38,7 +38,7 @@
             android:id="@+id/textView7"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/raleway_r"
+            android:fontFamily="@font/maax"
             android:text="@string/to_sign_the_payment"
             android:textAlignment="center"
             android:textSize="@dimen/text_size_medium"/>
