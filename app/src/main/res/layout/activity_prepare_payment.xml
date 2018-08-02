@@ -11,7 +11,7 @@
         android:id="@+id/textView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:fontFamily="@font/raleway_r"
+        android:fontFamily="@font/maax"
         android:paddingBottom="8dp"
         android:paddingTop="8dp"
         android:text="@string/send_payment"
@@ -42,7 +42,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="7dp"
             android:layout_marginTop="8dp"
-            android:fontFamily="@font/raleway_r"
+            android:fontFamily="@font/maax"
             android:text="@string/from_banknote"
             android:textColor="@color/primary"
             android:textSize="@dimen/text_size_medium"/>
@@ -53,7 +53,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="4dp"
-            android:fontFamily="@font/montserrat_light"
+            android:fontFamily="@font/maax"
             android:textColor="@color/black"
             android:textSize="@dimen/text_size_medium"
             android:textStyle="bold"
@@ -64,7 +64,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="7dp"
             android:layout_marginTop="12dp"
-            android:fontFamily="@font/raleway_r"
+            android:fontFamily="@font/maax"
             android:text="@string/with_balance"
             android:textColor="@color/primary"
             android:textSize="@dimen/text_size_medium"/>
@@ -81,7 +81,7 @@
                 android:layout_marginBottom="2dp"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="4dp"
-                android:fontFamily="@font/montserrat_light"
+                android:fontFamily="@font/maax"
                 android:textColor="@color/black"
                 android:textSize="@dimen/text_size_medium"
                 android:textStyle="bold"
@@ -113,7 +113,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="4dp"
-                android:fontFamily="@font/raleway_r"
+                android:fontFamily="@font/maax"
                 android:text="@string/send_to_wallet"
                 android:textColor="@color/primary"
                 android:textSize="@dimen/text_size_medium"
@@ -139,7 +139,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:layout_marginStart="8dp"
-            android:fontFamily="@font/montserrat_light"
+            android:fontFamily="@font/maax"
             android:hint="@string/enter_wallet_address"
             android:inputType="text|textMultiLine|textNoSuggestions"
             android:padding="12dp"
@@ -162,7 +162,7 @@
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="7dp"
                 android:layout_marginTop="24dp"
-                android:fontFamily="@font/raleway_r"
+                android:fontFamily="@font/maax"
                 android:text="@string/amount"
                 android:textColor="@color/primary"
                 android:textSize="@dimen/text_size_medium"
@@ -176,7 +176,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="1dp"
                 android:layout_marginStart="4dp"
-                android:fontFamily="@font/raleway_r"
+                android:fontFamily="@font/maax"
                 android:text="@string/including_fee"
                 android:textColor="@color/primary"
                 android:textSize="@dimen/text_size_1_small"
@@ -186,14 +186,15 @@
 
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:layout_marginLeft="8dp">
 
             <EditText
                 android:id="@+id/etAmount"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:digits="0123456789.,"
-                android:fontFamily="@font/montserrat_light"
+                android:fontFamily="@font/maax"
                 android:hint="@string/enter_amount"
                 android:inputType="numberDecimal"
                 android:padding="12dp"
@@ -203,7 +204,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintWidth_min="150dp"/>
+                app:layout_constraintWidth_min="150dp" />
 
             <TextView
                 android:id="@+id/tvCurrency"
@@ -211,12 +212,12 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
-                android:fontFamily="@font/montserrat_light"
+                android:fontFamily="@font/maax"
                 android:text="@string/m_btc"
                 android:textColor="@color/primary"
                 android:textSize="@dimen/text_size_large"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toRightOf="@+id/etAmount"/>
+                app:layout_constraintLeft_toRightOf="@+id/etAmount" />
 
         </android.support.constraint.ConstraintLayout>
 
@@ -226,10 +227,13 @@
         android:id="@+id/btnVerify"
         style="@style/AppTheme.RoundedCornerMaterialButton"
         android:layout_width="match_parent"
+        android:layout_height="50dp"
         android:layout_marginBottom="16dp"
+        android:fontFamily="@font/saira_condensed_bold"
         android:text="@string/verify"
+        android:textSize="@dimen/text_size_large"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"/>
+        app:layout_constraintRight_toRightOf="parent" />
 
 </android.support.constraint.ConstraintLayout>
