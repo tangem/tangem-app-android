@@ -289,31 +289,6 @@
 
                 </LinearLayout>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="@dimen/verify_card_left_col_width"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="20dp"
-                        android:fontFamily="@font/maax"
-                        android:text="@string/issuer_data"
-                        android:textSize="@dimen/text_size_1_small" />
-
-                    <TextView
-                        android:id="@+id/tvIssuerData"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/maax"
-                        android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/text_size_1_small"
-                        android:textStyle="normal|bold"
-                        tools:text="Tangem" />
-
-                </LinearLayout>
-
                 <View
                     android:id="@+id/view2"
                     android:layout_width="match_parent"
@@ -440,7 +415,7 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="32dp"
                     android:layout_marginTop="2dp">
 
                     <TextView
