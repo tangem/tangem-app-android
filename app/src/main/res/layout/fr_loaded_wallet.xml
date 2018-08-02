@@ -20,7 +20,8 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -109,9 +110,10 @@
                     <TextView
                         android:id="@+id/tvBlockchain"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:fontFamily="@font/maax"
+                        android:gravity="center_vertical"
                         android:textColor="@color/primary"
                         android:textStyle="normal|bold"
                         tools:text="Bitcoin" />
@@ -135,6 +137,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
                     android:fontFamily="@font/maax"
+                    android:paddingEnd="5dp"
+                    android:paddingStart="5dp"
                     android:textAlignment="center"
                     tools:text="Do not accept! Wallet verification field. Tap again." />
 
@@ -167,14 +171,13 @@
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
                         android:textSize="@dimen/text_size_1_small"
-                        android:textStyle="normal|bold"
                         tools:text="1DoQdnSYshhZ5Tqt5Sk6svZt29jqoYVwQY" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_marginTop="20dp"
-                        android:gravity="center_vertical"
+                        android:layout_marginTop="15dp"
+                        android:gravity="center"
                         android:orientation="horizontal">
 
                         <ImageView
@@ -186,7 +189,7 @@
 
                         <TextView
                             android:id="@+id/tvLookup"
-                            android:layout_width="match_parent"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/saira_condensed_bold"
                             android:paddingLeft="10dp"
@@ -200,8 +203,8 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_marginTop="10dp"
-                        android:gravity="center_vertical"
+                        android:layout_marginTop="15dp"
+                        android:gravity="center"
                         android:orientation="horizontal">
 
                         <ImageView
@@ -209,11 +212,12 @@
                             android:layout_width="@dimen/size_explore_image"
                             android:layout_height="@dimen/size_explore_image"
                             android:baselineAlignBottom="false"
-                            android:src="@drawable/ic_content_copy_black_24dp" />
+                            android:src="@drawable/ic_content_copy_black_24dp"
+                            android:tint="@color/colorPrimary" />
 
                         <TextView
                             android:id="@+id/tvCopy"
-                            android:layout_width="match_parent"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/saira_condensed_bold"
                             android:paddingLeft="10dp"
@@ -285,7 +289,7 @@
             android:id="@+id/btnLoad"
             style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="0dp"
-            android:layout_height="45dp"
+            android:layout_height="50dp"
             android:layout_marginBottom="5dp"
             android:layout_marginTop="5dp"
             android:layout_weight="1"
@@ -300,7 +304,7 @@
             android:id="@+id/btnExtract"
             style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="0dp"
-            android:layout_height="45dp"
+            android:layout_height="50dp"
             android:layout_marginBottom="5dp"
             android:layout_marginTop="5dp"
             android:layout_weight="1"
@@ -318,49 +322,63 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:paddingBottom="5dp"
-        android:paddingTop="5dp"
+        android:paddingTop="10dp"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fabInfo"
-            android:layout_width="wrap_content"
-            android:layout_height="30dp"
-            app:backgroundTint="@color/primary_dark"
-            app:fabSize="mini"
-            app:srcCompat="@drawable/ic_information_variant_white_24dp" />
-
-        <TextView
-            android:id="@+id/tvInfo"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="20dp"
-            android:fontFamily="@font/saira_condensed_bold"
-            android:paddingLeft="10dp"
-            android:paddingRight="10dp"
-            android:text="@string/details"
-            android:textColor="@color/primary"
-            android:textSize="@dimen/text_size_medium" />
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingBottom="10dp">
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fabNFC"
-            android:layout_width="wrap_content"
-            android:layout_height="30dp"
-            android:layout_marginStart="20dp"
-            app:backgroundTint="@color/primary_dark"
-            app:fabSize="mini"
-            app:srcCompat="@drawable/ic_nfc_white_24dp" />
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/fabInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                app:backgroundTint="@color/colorPrimary"
+                app:fabSize="mini"
+                app:srcCompat="@drawable/ic_information_variant_white_24dp" />
 
-        <TextView
-            android:id="@+id/tvNFC"
-            android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/tvInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/saira_condensed_bold"
+                android:paddingLeft="10dp"
+                android:text="@string/details"
+                android:textColor="@color/primary"
+                android:textSize="@dimen/text_size_medium" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/saira_condensed_bold"
-            android:paddingLeft="10dp"
-            android:paddingRight="10dp"
-            android:text="@string/new_scan"
-            android:textColor="@color/primary"
-            android:textSize="@dimen/text_size_medium" />
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingBottom="10dp">
+
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/fabNFC"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                app:backgroundTint="@color/colorPrimary"
+                app:fabSize="mini"
+                app:srcCompat="@drawable/ic_nfc_white_24dp" />
+
+            <TextView
+                android:id="@+id/tvNFC"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/saira_condensed_bold"
+                android:paddingLeft="10dp"
+                android:text="@string/new_scan"
+                android:textColor="@color/primary"
+                android:textSize="@dimen/text_size_medium" />
+        </LinearLayout>
 
     </LinearLayout>
 
