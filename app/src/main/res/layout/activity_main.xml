@@ -119,7 +119,7 @@
             android:layout_marginLeft="24dp"
             android:layout_marginRight="24dp"
             android:layout_marginTop="24dp"
-            android:fontFamily="@font/raleway_el"
+            android:fontFamily="@font/maax"
             android:gravity="top"
             android:text="@string/tap_tangem_card"
             android:textAlignment="center"
