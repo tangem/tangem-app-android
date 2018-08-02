@@ -18,7 +18,7 @@ public class BalanceValidator {
         else { return "Do not accept! " + secondLine;}
     }
     public int GetColor() {
-        if (score>89) { return R.color.msg_okay;}
+        if (score>89) { return R.color.confirmed;}
         else if (score>74) { return android.R.color.holo_orange_light;}
         else if (score>0) { return android.R.color.holo_orange_dark;}
         else { return android.R.color.holo_red_light;}
