@@ -289,7 +289,6 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
             }
 
             tvIssuer.text = mCard!!.issuerDescription
-            tvIssuerData.text = mCard!!.issuerDataDescription
             tvCardRegistredDate.text = mCard!!.personalizationDateTimeDescription
             tvBlockchain.text = mCard!!.blockchainName
             tvValidationNode.text = mCard!!.validationNodeDescription
