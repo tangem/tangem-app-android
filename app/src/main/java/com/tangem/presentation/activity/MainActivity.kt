@@ -202,11 +202,11 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                 return true
             }
 
-            R.id.cleanCards -> {
-                onCardsClean!!.doClean()
-                llTapPrompt.visibility = View.VISIBLE
-                return true
-            }
+//            R.id.cleanCards -> {
+//                onCardsClean!!.doClean()
+//                llTapPrompt.visibility = View.VISIBLE
+//                return true
+//            }
 
             R.id.about -> {
                 showLogoActivity()
