@@ -34,7 +34,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:fontFamily="@font/raleway_r"
+        android:fontFamily="@font/maax"
         android:text="@string/please_wait"
         android:textAlignment="center"
         android:textSize="@dimen/text_size_medium"
