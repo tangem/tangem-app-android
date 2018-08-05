@@ -452,12 +452,13 @@
 
                     <TextView
                         android:id="@+id/tvWallet"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="match_parent"
                         android:fontFamily="@font/maax"
                         android:gravity="start|center_vertical"
+                        android:singleLine="true"
                         android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/text_size_1_small"
+                        android:textSize="@dimen/text_size_2_small"
                         android:textStyle="normal|bold"
                         tools:text="1DoQdnSYshhZ5Tqt5Sk6svZt29jqoYVwQY" />
 
@@ -507,7 +508,7 @@
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/maax"
                         android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/text_size_1_small"
+                        android:textSize="@dimen/text_size_2_small"
                         android:textStyle="normal|bold"
                         tools:text="Electrum" />
 
@@ -532,7 +533,7 @@
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/maax"
                         android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/text_size_1_small"
+                        android:textSize="@dimen/text_size_2_small"
                         android:textStyle="normal|bold"
                         tools:text="1 unspent" />
 
