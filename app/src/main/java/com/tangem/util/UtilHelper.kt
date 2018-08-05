@@ -13,8 +13,9 @@ object UtilHelper {
 
     @Throws(WriterException::class)
     fun generateQrCode(myCodeText: String): Bitmap {
-        val hintMap = Hashtable<EncodeHintType, ErrorCorrectionLevel>()
-        hintMap[EncodeHintType.ERROR_CORRECTION] = ErrorCorrectionLevel.H // H = 30% damage
+        val hintMap = Hashtable<EncodeHintType, Any>()
+        hintMap[EncodeHintType.ERROR_CORRECTION] = ErrorCorrectionLevel.M // H = 30% damage
+        hintMap[EncodeHintType.MARGIN] = 2
 
         val qrCodeWriter = QRCodeWriter()
 
