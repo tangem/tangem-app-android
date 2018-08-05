@@ -162,21 +162,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         // set listeners
         srlLoadedWallet!!.setOnRefreshListener { this.refresh() }
 
-        ivLookup.setOnClickListener {
+        btnLookup.setOnClickListener {
             val engineClick = CoinEngineFactory.Create(mCard!!.blockchain)
             val browserIntent = Intent(Intent.ACTION_VIEW, engineClick!!.getShareWalletURIExplorer(mCard))
             startActivity(browserIntent)
         }
 
-        tvLookup.setOnClickListener {
-            val engineClick = CoinEngineFactory.Create(mCard!!.blockchain)
-            val browserIntent = Intent(Intent.ACTION_VIEW, engineClick!!.getShareWalletURIExplorer(mCard))
-            startActivity(browserIntent)
-        }
-
-        ivCopy.setOnClickListener { doShareWallet(false) }
-
-        tvCopy.setOnClickListener { doShareWallet(false) }
+        btnCopy.setOnClickListener { doShareWallet(false) }
 
         tvWallet.setOnClickListener { doShareWallet(false) }
 
@@ -192,26 +184,14 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
         }
 
-        fabInfo.setOnClickListener {
+        btnDetails.setOnClickListener {
             if (mCardProtocol != null)
                 openVerifyCard(mCardProtocol!!)
             else
                 showSingleToast(R.string.need_attach_card_again)
         }
 
-        tvInfo.setOnClickListener {
-            if (mCardProtocol != null)
-                openVerifyCard(mCardProtocol!!)
-            else
-                showSingleToast(R.string.need_attach_card_again)
-        }
-
-        fabNFC.setOnClickListener {
-            val intent = Intent(context, MainActivity::class.java)
-            startActivity(intent)
-        }
-
-        tvNFC.setOnClickListener {
+        btnScanAgain.setOnClickListener {
             val intent = Intent(context, MainActivity::class.java)
             startActivity(intent)
         }
