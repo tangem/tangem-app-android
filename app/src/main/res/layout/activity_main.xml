@@ -121,12 +121,13 @@
             android:layout_marginTop="24dp"
             android:fontFamily="@font/maax"
             android:gravity="top"
+            android:lineSpacingExtra="8sp"
             android:text="@string/tap_tangem_card"
             android:textAlignment="center"
             android:textAllCaps="false"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textColor="@color/primary_dark"
-            android:textSize="@dimen/text_size_medium"/>
+            android:textSize="@dimen/text_size_medium" />
 
     </LinearLayout>
 
