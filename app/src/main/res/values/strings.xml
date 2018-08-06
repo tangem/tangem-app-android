@@ -138,7 +138,16 @@
     <string name="verify">Verify</string>
 
     <!-- RequestPINActivity -->
-    <string name="prompt_pin">Enter PIN or use fingerprint scanner</string>
+    <string name="enter_new_pin_or_use_fingerprint_scanner">Enter new PIN or use fingerprint scanner</string>
+    <string name="enter_new_pin">Enter new PIN</string>
+    <string name="enter_pin_or_use_fingerprint_scanner">Enter PIN or use fingerprint scanner</string>
+    <string name="enter_pin_2_or_use_fingerprint_scanner">Enter PIN2 or use fingerprint scanner</string>
+    <string name="confirm_new_pin">Confirm new PIN</string>
+    <string name="confirm_new_pin_2">Confirm new PIN2</string>
+    <string name="enter_pin">Enter PIN</string>
+    <string name="enter_pin_2">Enter PIN2</string>
+    <string name="enter_new_pin_2_or_use_fingerprint_scanner">Enter new PIN2 or use fingerprint scanner</string>
+    <string name="enter_new_pin_2">Enter new PIN2</string>
 
     <!-- SendTransactionActivity -->
     <string name="please_wait">Please wait while the payment is sent…</string>
