@@ -292,14 +292,19 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                     card.LoadFromBundle(cardInfo.getBundle("Card"))
 
                     val intent: Intent
-                    intent = if (card.status == TangemCard.Status.Empty)
-                        Intent(this, EmptyWalletActivity::class.java)
-                    else if (card.status == TangemCard.Status.Loaded)
-                        Intent(this, LoadedWalletActivity::class.java)
-                    else if (card.status == TangemCard.Status.NotPersonalized || card.status == TangemCard.Status.Purged)
-                        return@post
-                    else
-                        Intent(this, LoadedWalletActivity::class.java)
+                    intent = when {
+                        card.status == TangemCard.Status.Empty -> Intent(this, EmptyWalletActivity::class.java)
+                        card.status == TangemCard.Status.Loaded -> Intent(this, LoadedWalletActivity::class.java)
+                        card.status == TangemCard.Status.Purged -> {
+                            Toast.makeText(this, R.string.erased_wallet, Toast.LENGTH_SHORT).show()
+                            return@post
+                        }
+                        card.status == TangemCard.Status.NotPersonalized -> {
+                            Toast.makeText(this, R.string.not_personalized, Toast.LENGTH_SHORT).show()
+                            return@post
+                        }
+                        else -> Intent(this, LoadedWalletActivity::class.java)
+                    }
 
                     intent.putExtra(EXTRA_LAST_DISCOVERED_TAG, lastTag)
                     intent.putExtras(cardInfo)
