@@ -8,5 +8,15 @@
     <string name="no_data_string">-- -- --</string>
     <string name="no_data_string_1">---- ---- ---- ----</string>
     <string name="pin_back">&lt;</string>
+    <string name="_1">1</string>
+    <string name="_2">2</string>
+    <string name="_3">3</string>
+    <string name="_4">4</string>
+    <string name="_5">5</string>
+    <string name="_6">6</string>
+    <string name="_7">7</string>
+    <string name="_8">8</string>
+    <string name="_9">9</string>
+    <string name="_0">0</string>
 
 </resources>
