@@ -45,11 +45,11 @@ public class ConnectFeeTask extends FeeTask {
 
 
                             if (errCounter >= sharedCounter.allRequest) {
-                                confirmPaymentActivity.progressBar.setVisibility(View.INVISIBLE);
+                                confirmPaymentActivity.getProgressBar().setVisibility(View.INVISIBLE);
                                 confirmPaymentActivity.finishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! No connection with blockchain nodes");
                             }
                         } else {
-                            confirmPaymentActivity.progressBar.setVisibility(View.INVISIBLE);
+                            confirmPaymentActivity.getProgressBar().setVisibility(View.INVISIBLE);
                             confirmPaymentActivity.finishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! No connection with blockchain nodes");
                         }
 
@@ -58,7 +58,7 @@ public class ConnectFeeTask extends FeeTask {
                     }
 
                     if (minFeeRate == 0) {
-                        confirmPaymentActivity.progressBar.setVisibility(View.INVISIBLE);
+                        confirmPaymentActivity.getProgressBar().setVisibility(View.INVISIBLE);
                         confirmPaymentActivity.finishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! Wrong data received from the node");
                         return;
                     }
@@ -75,50 +75,50 @@ public class ConnectFeeTask extends FeeTask {
                     if (sharedCounter != null) {
                         int errCounter = sharedCounter.errorRequest.incrementAndGet();
                         if (errCounter >= sharedCounter.allRequest) {
-                            confirmPaymentActivity.progressBar.setVisibility(View.INVISIBLE);
+                            confirmPaymentActivity.getProgressBar().setVisibility(View.INVISIBLE);
                             confirmPaymentActivity.finishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! No connection with blockchain nodes");
                         }
                     } else {
-                        confirmPaymentActivity.progressBar.setVisibility(View.INVISIBLE);
+                        confirmPaymentActivity.getProgressBar().setVisibility(View.INVISIBLE);
                         confirmPaymentActivity.finishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! No connection with blockchain nodes");
                     }
                     return;
                 }
 
-                confirmPaymentActivity.progressBar.setVisibility(View.INVISIBLE);
+                confirmPaymentActivity.getProgressBar().setVisibility(View.INVISIBLE);
 
                 float finalFee = (float) minFeeRate / (float) 10000;
 
                 finalFee = Math.round(finalFee) / (float) 10000;
 
-                if ((request.getBlockCount() == FeeRequest.MINIMAL) && (confirmPaymentActivity.minFee == null)) {
-                    confirmPaymentActivity.minFee = String.valueOf(finalFee);
-                    confirmPaymentActivity.minFeeInInternalUnits = confirmPaymentActivity.mCard.InternalUnitsFromString(String.valueOf(finalFee));
-                } else if ((request.getBlockCount() == FeeRequest.NORMAL) && (confirmPaymentActivity.normalFee == null)) {
-                    confirmPaymentActivity.normalFee = String.valueOf(finalFee);
-                } else if ((request.getBlockCount() == FeeRequest.PRIORITY) && (confirmPaymentActivity.maxFee == null)) {
-                    confirmPaymentActivity.maxFee = String.valueOf(finalFee);
+                if ((request.getBlockCount() == FeeRequest.MINIMAL) && (confirmPaymentActivity.getMinFee() == null)) {
+                    confirmPaymentActivity.setMinFee(String.valueOf(finalFee));
+                    confirmPaymentActivity.setMinFeeInInternalUnits(confirmPaymentActivity.getCard().InternalUnitsFromString(String.valueOf(finalFee)));
+                } else if ((request.getBlockCount() == FeeRequest.NORMAL) && (confirmPaymentActivity.getNormalFee() == null)) {
+                    confirmPaymentActivity.setNormalFee(String.valueOf(finalFee));
+                } else if ((request.getBlockCount() == FeeRequest.PRIORITY) && (confirmPaymentActivity.getMaxFee() == null)) {
+                    confirmPaymentActivity.setMaxFee(String.valueOf(finalFee));
                 }
 
-                confirmPaymentActivity.doSetFee(confirmPaymentActivity.rgFee.getCheckedRadioButtonId());
+                confirmPaymentActivity.doSetFee(confirmPaymentActivity.getRgFee().getCheckedRadioButtonId());
 
-                confirmPaymentActivity.etFee.setError(null);
-                confirmPaymentActivity.feeRequestSuccess = true;
-                if (confirmPaymentActivity.feeRequestSuccess && confirmPaymentActivity.balanceRequestSuccess) {
-                    confirmPaymentActivity.btnSend.setVisibility(View.VISIBLE);
+                confirmPaymentActivity.getEtFee().setError(null);
+                confirmPaymentActivity.setFeeRequestSuccess(true);
+                if (confirmPaymentActivity.getFeeRequestSuccess() && confirmPaymentActivity.getBalanceRequestSuccess()) {
+                    confirmPaymentActivity.getBtnSend().setVisibility(View.VISIBLE);
                 }
-                confirmPaymentActivity.dtVerifyed = new Date();
+                confirmPaymentActivity.setDtVerified(new Date());
 
             } else {
 
                 if (sharedCounter != null) {
                     int errCounter = sharedCounter.errorRequest.incrementAndGet();
                     if (errCounter >= sharedCounter.allRequest) {
-                        confirmPaymentActivity.progressBar.setVisibility(View.INVISIBLE);
+                        confirmPaymentActivity.getProgressBar().setVisibility(View.INVISIBLE);
                         confirmPaymentActivity.finishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! No connection with blockchain nodes");
                     }
                 } else {
-                    confirmPaymentActivity.progressBar.setVisibility(View.INVISIBLE);
+                    confirmPaymentActivity.getProgressBar().setVisibility(View.INVISIBLE);
                     confirmPaymentActivity.finishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! No connection with blockchain nodes");
                 }
             }
