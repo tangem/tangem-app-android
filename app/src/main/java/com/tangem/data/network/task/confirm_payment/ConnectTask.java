@@ -42,34 +42,34 @@ public class ConnectTask extends ElectrumTask {
                 if (request.error == null) {
                     if (request.isMethod(ElectrumRequest.METHOD_GetBalance)) {
                         try {
-                            confirmPaymentActivity.etFee.setText("--");
+                            confirmPaymentActivity.getEtFee().setText("--");
 
                             //String mWalletAddress = request.getParams().getString(0);
-                            if ((request.getResult().getInt("confirmed") + request.getResult().getInt("unconfirmed")) / confirmPaymentActivity.mCard.getBlockchain().getMultiplier() * 1000000.0 < Float.parseFloat(confirmPaymentActivity.etAmount.getText().toString())) {
-                                confirmPaymentActivity.etFee.setError("Not enough funds");
+                            if ((request.getResult().getInt("confirmed") + request.getResult().getInt("unconfirmed")) / confirmPaymentActivity.getCard().getBlockchain().getMultiplier() * 1000000.0 < Float.parseFloat(confirmPaymentActivity.getEtAmount().getText().toString())) {
+                                confirmPaymentActivity.getEtFee().setError("Not enough funds");
                                 if (sharedCounter == null) {
-                                    confirmPaymentActivity.balanceRequestSuccess = false;
-                                    confirmPaymentActivity.btnSend.setVisibility(View.INVISIBLE);
-                                    confirmPaymentActivity.dtVerifyed = null;
-                                    confirmPaymentActivity.nodeCheck = false;
+                                    confirmPaymentActivity.setBalanceRequestSuccess(false);
+                                    confirmPaymentActivity.getBtnSend().setVisibility(View.INVISIBLE);
+                                    confirmPaymentActivity.setDtVerified(null);
+                                    confirmPaymentActivity.setNodeCheck(false);
                                 } else {
                                     int errCounter = sharedCounter.errorRequest.incrementAndGet();
                                     if (errCounter >= sharedCounter.allRequest) {
-                                        confirmPaymentActivity.balanceRequestSuccess = false;
-                                        confirmPaymentActivity.btnSend.setVisibility(View.INVISIBLE);
-                                        confirmPaymentActivity.dtVerifyed = null;
-                                        confirmPaymentActivity.nodeCheck = false;
+                                        confirmPaymentActivity.setBalanceRequestSuccess(false);
+                                        confirmPaymentActivity.getBtnSend().setVisibility(View.INVISIBLE);
+                                        confirmPaymentActivity.setDtVerified(null);
+                                        confirmPaymentActivity.setNodeCheck(false);
                                     }
                                 }
 
                             } else {
-                                confirmPaymentActivity.etFee.setError(null);
-                                confirmPaymentActivity.balanceRequestSuccess = true;
-                                if (confirmPaymentActivity.feeRequestSuccess && confirmPaymentActivity.balanceRequestSuccess) {
-                                    confirmPaymentActivity.btnSend.setVisibility(View.VISIBLE);
+                                confirmPaymentActivity.getEtFee().setError(null);
+                                confirmPaymentActivity.setBalanceRequestSuccess(true);
+                                if (confirmPaymentActivity.getFeeRequestSuccess() && confirmPaymentActivity.getBalanceRequestSuccess()) {
+                                    confirmPaymentActivity.getBtnSend().setVisibility(View.VISIBLE);
                                 }
-                                confirmPaymentActivity.dtVerifyed = new Date();
-                                confirmPaymentActivity.nodeCheck = true;
+                                confirmPaymentActivity.setDtVerified(new Date());
+                                confirmPaymentActivity.setNodeCheck(true);
                             }
                         } catch (JSONException e) {
                             if (sharedCounter != null) {
@@ -85,7 +85,7 @@ public class ConnectTask extends ElectrumTask {
                         }
                     } else if (request.isMethod(ElectrumRequest.METHOD_GetFee)) {
                         if (request.getResultString() == "-1") {
-                            confirmPaymentActivity.etFee.setText("3");
+                            confirmPaymentActivity.getEtFee().setText("3");
                         }
                     }
                 } else {
