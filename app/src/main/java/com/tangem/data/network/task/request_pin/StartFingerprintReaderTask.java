@@ -81,7 +81,7 @@ public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
     protected void onCancelled() {
         RequestPINActivity requestPINActivity = reference.get();
 
-        requestPINActivity.mStartFingerprintReaderTask = null;
+        requestPINActivity.setStartFingerprintReaderTask(null);
     }
 
     private boolean getKeyStore() {
@@ -159,9 +159,9 @@ public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
                 cipher.init(mode, keyspec);
             } else {
                 byte[] iv = null;
-                if (requestPINActivity.mode == RequestPINActivity.Mode.RequestPIN || activity.mode == RequestPINActivity.Mode.RequestNewPIN || activity.mode == RequestPINActivity.Mode.ConfirmNewPIN) {
+                if (requestPINActivity.getMode() == RequestPINActivity.Mode.RequestPIN || activity.getMode() == RequestPINActivity.Mode.RequestNewPIN || activity.getMode() == RequestPINActivity.Mode.ConfirmNewPIN) {
                     iv = PINStorage.loadEncryptedIV();
-                } else if (activity.mode == RequestPINActivity.Mode.RequestPIN2 || activity.mode == RequestPINActivity.Mode.RequestNewPIN2 || activity.mode == RequestPINActivity.Mode.ConfirmNewPIN2) {
+                } else if (activity.getMode() == RequestPINActivity.Mode.RequestPIN2 || activity.getMode() == RequestPINActivity.Mode.RequestNewPIN2 || activity.getMode() == RequestPINActivity.Mode.ConfirmNewPIN2) {
                     iv = PINStorage.loadEncryptedIV2();
                 }
                 IvParameterSpec ivspec = new IvParameterSpec(iv);
