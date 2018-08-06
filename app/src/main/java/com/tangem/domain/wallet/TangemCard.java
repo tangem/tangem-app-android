@@ -1537,26 +1537,36 @@ public class TangemCard {
     }
 
     public int getCardImageResource() {
-        switch (getBlockchainID()) {
-            case "BTC":
-                if (bytesToHex(getDenomination()).equals("40420F0000000000"))
-                    return R.drawable.card_btc001;
-                else if (bytesToHex(getDenomination()).equals("404B4C0000000000"))
-                    return R.drawable.card_btc005;
-                else if (bytesToHex(getDenomination()).equals("0000000000000000"))
-                    return R.drawable.card_btc_hk_s;
-                else
-                    return R.drawable.card_default;
 
-            case "Token":
-                if (getTokenSymbol().equals("SEED"))
-                    return R.drawable.card_seed;
-                else
-                    return R.drawable.card_default;
-
-            default:
-                return R.drawable.card_default;
+        switch (getBatch()) {
+            case "0004": case "0006": case "0010": return R.drawable.card_btc001;
+            case "0005": case "0007": case "0011": return R.drawable.card_btc005;
+            case "0012": return R.drawable.card_seed;
+            case "0013": return R.drawable.card_btc_hk_s;
+            case "0015": return R.drawable.card_default; //TODO: new BTC 0.00
+            case "0016": return R.drawable.card_default; // TODO: new ETH 0.00
+            default: return R.drawable.card_default;
         }
+        //        switch (getBlockchainID()) {
+//            case "BTC":
+//                if (bytesToHex(getDenomination()).equals("40420F0000000000"))
+//                    return R.drawable.card_btc001;
+//                else if (bytesToHex(getDenomination()).equals("404B4C0000000000"))
+//                    return R.drawable.card_btc005;
+//                else if (bytesToHex(getDenomination()).equals("0000000000000000"))
+//                    return R.drawable.card_btc_hk_s;
+//                else
+//                    return R.drawable.card_default;
+//
+//            case "Token":
+//                if (getTokenSymbol().equals("SEED"))
+//                    return R.drawable.card_seed;
+//                else
+//                    return R.drawable.card_default;
+//
+//            default:
+//                return R.drawable.card_default;
+//        }
 
     }
 
