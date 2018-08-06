@@ -39,21 +39,20 @@ public class ETHRequestTask extends InfuraTask {
                             gasPrice = gasPrice.substring(2);
                             BigInteger l = new BigInteger(gasPrice, 16);
 
-                            BigInteger m = confirmPaymentActivity.mCard.getBlockchain() == Blockchain.Token ? BigInteger.valueOf(55000) : BigInteger.valueOf(21000);
+                            BigInteger m = confirmPaymentActivity.getCard().getBlockchain() == Blockchain.Token ? BigInteger.valueOf(55000) : BigInteger.valueOf(21000);
                             l = l.multiply(m);
-                            String feeInGwei = confirmPaymentActivity.mCard.getAmountInGwei(String.valueOf(l));
+                            String feeInGwei = confirmPaymentActivity.getCard().getAmountInGwei(String.valueOf(l));
 
-                            confirmPaymentActivity.minFee = feeInGwei;
-                            confirmPaymentActivity.maxFee = feeInGwei;
-                            confirmPaymentActivity.normalFee = feeInGwei;
-                            confirmPaymentActivity.etFee.setText(feeInGwei);
-                            confirmPaymentActivity.etFee.setError(null);
-                            confirmPaymentActivity.btnSend.setVisibility(View.VISIBLE);
-                            confirmPaymentActivity.feeRequestSuccess = true;
-                            confirmPaymentActivity.balanceRequestSuccess = true;
-
-                            confirmPaymentActivity.dtVerifyed = new Date();
-                            confirmPaymentActivity.minFeeInInternalUnits = confirmPaymentActivity.mCard.InternalUnitsFromString(feeInGwei);
+                            confirmPaymentActivity.setMinFee(feeInGwei);
+                            confirmPaymentActivity.setMaxFee(feeInGwei);
+                            confirmPaymentActivity.setNormalFee(feeInGwei);
+                            confirmPaymentActivity.getEtFee().setText(feeInGwei);
+                            confirmPaymentActivity.getEtFee().setError(null);
+                            confirmPaymentActivity.getBtnSend().setVisibility(View.VISIBLE);
+                            confirmPaymentActivity.setFeeRequestSuccess(true);
+                            confirmPaymentActivity.setBalanceRequestSuccess(true);
+                            confirmPaymentActivity.setDtVerified(new Date());
+                            confirmPaymentActivity.setMinFeeInInternalUnits(confirmPaymentActivity.getCard().InternalUnitsFromString(feeInGwei));
 
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -69,4 +68,5 @@ public class ETHRequestTask extends InfuraTask {
             }
         }
     }
+
 }

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -20,7 +19,7 @@
         android:textSize="@dimen/text_size_large"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
         android:id="@+id/llPayment"
@@ -29,7 +28,8 @@
         android:background="@color/btn_light"
         android:orientation="vertical"
         android:paddingBottom="8dp"
-        android:paddingLeft="5dp"
+        android:paddingEnd="5dp"
+        android:paddingStart="5dp"
         android:paddingTop="8dp"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -211,7 +211,6 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <info.hoang8f.android.segmented.SegmentedGroup
-                xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:id="@+id/rgFee"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -302,7 +301,7 @@
                 android:textSize="@dimen/text_size_1_small"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toRightOf="@+id/tvCurrency2"
-                app:layout_constraintTop_toTopOf="parent"/>
+                app:layout_constraintTop_toTopOf="parent" />
 
         </android.support.constraint.ConstraintLayout>
 
@@ -319,7 +318,7 @@
         android:textSize="@dimen/text_size_large"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"/>
+        app:layout_constraintRight_toRightOf="parent" />
 
     <ProgressBar
         android:id="@+id/progressBar"
@@ -333,6 +332,6 @@
         android:visibility="invisible"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/llFee"/>
+        app:layout_constraintTop_toTopOf="@+id/llFee" />
 
 </android.support.constraint.ConstraintLayout>
