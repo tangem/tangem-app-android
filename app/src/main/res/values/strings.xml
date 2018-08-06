@@ -79,9 +79,8 @@
     <string name="scan_banknote">Scan a banknote with your \n %1$s \n as shown above</string>
     <string name="phone">phone</string>
     <string name="last_unspent">Last unspent</string>
-    <string name="no_wallet">NO WALLET</string>
-    <string name="erased_wallet">ERASED WALLET</string>
-    <string name="invalid_card">INVALID CARD</string>
+    <string name="erased_wallet">Wallet was erased</string>
+    <string name="not_personalized">Not personalized</string>
 
     <!-- LoadedWalletActivity, LoadedWallet -->
     <string name="wallet_empty">The wallet is empty</string>
@@ -90,11 +89,6 @@
     <string name="please_wait_while_previous">Please wait while previous transaction is confirmed in blockchain</string>
     <string name="please_wait_for_confirmation">Could not obtain all inputs. Swipe down to refresh.</string>
     <string name="card_has_no_remaining_signature">Card has no remaining signature!</string>
-    <!--<string name="reusable_wallet">REUSABLE WALLET</string>-->
-    <!--<string name="banknote">BANKNOTE</string>-->
-    <!--<string name="not_transferable_banknote">NON-TRANSFERABLE BANKNOTE</string>-->
-    <!--<string name="developer_kit">DEVELOPER KIT</string>-->
-    <!--<string name="do_not_accept">DO NOT ACCEPT</string>-->
     <string name="explore_in_blockchain">EXPLORE</string>
     <string name="swipe_down_to_refresh_data">Swipe down to refresh data</string>
     <string name="message">Message!</string>
