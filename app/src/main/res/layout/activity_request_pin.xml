@@ -112,7 +112,7 @@
                 android:layout_marginTop="@dimen/pin_button_top_margin"
                 android:fontFamily="@font/maax"
                 android:text="@string/pin_back"
-                android:textColor="@color/accent"
+                android:textColor="@color/black"
                 android:textSize="@dimen/text_size_pin" />
 
         </GridLayout>
