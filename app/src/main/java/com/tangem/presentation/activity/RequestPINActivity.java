@@ -140,11 +140,11 @@ public class RequestPINActivity extends AppCompatActivity implements NfcAdapter.
                 tvPrompt.setText("Enter PIN2");
             }
         }
-        ImageView imgFingerprint = findViewById(R.id.imgFingerprint);
+
         if (!allowFingerprint) {
-            imgFingerprint.setVisibility(View.GONE);
+            tvPrompt.setVisibility(View.GONE);
         } else {
-            imgFingerprint.setVisibility(View.VISIBLE);
+            tvPrompt.setVisibility(View.VISIBLE);
         }
 
     }
