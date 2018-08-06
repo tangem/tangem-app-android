@@ -64,5 +64,13 @@
         <item name="android:layout_marginRight">16dp</item>
     </style>
 
+    <style name="ButtonPin" parent="@android:style/Widget.DeviceDefault.Button.Borderless">
+        <item name="android:layout_width">@dimen/pin_button_size</item>
+        <item name="android:layout_height">@dimen/pin_button_size</item>
+        <item name="android:layout_marginTop">8dp</item>
+        <item name="android:fontFamily">@font/maax</item>
+        <item name="android:textSize">@dimen/text_size_pin</item>
+    </style>
+
 
 </resources>
