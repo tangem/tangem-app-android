@@ -26,6 +26,8 @@ public class BalanceValidator {
 
     public void Check(TangemCard card)
     {
+
+
         firstLine = "Verification failed";
         secondLine = "";
 
@@ -36,6 +38,15 @@ public class BalanceValidator {
             secondLine = "Balance cannot be verified. Swipe down to refresh.";
             return;
         }
+
+        // Workaround before new back-end
+//        if (!HasEverSigned(card)) {
+//            firstLine = "Verified balance";
+//            secondLine = "Balance confirmed in blockchain. ";
+//            secondLine += "Verified note identity. ";
+//            return;
+//        }
+
         // rule 2.a
         if(!VerificationWalletKey(card)) {
             score = 0;
@@ -89,13 +100,14 @@ public class BalanceValidator {
         }
 
         // rule 4 TODO: need to check SignedHashed against number of outputs in blockchain
-        if(HasEverSigned(card) && card.getBalance() != 0)
-        {
-            score = 80;
-            firstLine = "Unguaranteed balance";
-            secondLine = "Potential unsent transaction. Redeem immediately if accept. ";
-            return;
-        }
+//        if(HasEverSigned(card) && card.getBalance() != 0)
+//        {
+//            score = 80;
+//            firstLine = "Unguaranteed balance";
+//            secondLine = "Potential unsent transaction. Redeem immediately if accept. ";
+//            return;
+//        }
+
         // rule 7
         if(CheckOfflineBalance(card) && !CheckOnlineBalance(card) && !HasEverSigned(card) && card.getBalance() != 0)
         {
