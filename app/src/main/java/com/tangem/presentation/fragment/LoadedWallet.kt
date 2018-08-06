@@ -438,15 +438,20 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             mCard!!.resetFailedBalanceRequestCounter()
             mCard!!.setIsBalanceEqual(true)
             for (i in 0 until data.allRequest) {
+
                 val nodeAddress = engine!!.GetNextNode(mCard)
                 val nodePort = engine.GetNextNodePort(mCard)
+
+                // check balance
                 val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
                 connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(mCard!!.wallet))
 
+                // list unspent input
                 val updateWalletInfoTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
                 updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(mCard!!.wallet))
             }
 
+            // course request
             val taskRate = RateInfoTask(this@LoadedWallet)
             val rate = ExchangeRequest.GetRate(mCard!!.wallet, "bitcoin", "bitcoin")
             taskRate.execute(rate)
@@ -459,6 +464,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             for (i in 0 until data.allRequest) {
                 val nodeAddress = engine!!.GetNextNode(mCard)
                 val nodePort = engine.GetNextNodePort(mCard)
+
+                // check balance
                 val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
                 connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(mCard!!.wallet))
             }
@@ -466,9 +473,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val nodeAddress = engine!!.GetNode(mCard)
             val nodePort = engine.GetNodePort(mCard)
 
+            // list unspent input
             val updateWalletInfoTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
             updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(mCard!!.wallet))
 
+            // course request
             val taskRate = RateInfoTask(this@LoadedWallet)
             val rate = ExchangeRequest.GetRate(mCard!!.wallet, "bitcoin-cash", "bitcoin-cash")
             taskRate.execute(rate)
@@ -486,6 +495,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             updateETH.execute(reqETH, reqNonce)
 
+            // course request
             val taskRate = RateInfoTask(this@LoadedWallet)
             val rate = ExchangeRequest.GetRate(mCard!!.wallet, "ethereum", "ethereum")
             taskRate.execute(rate)
@@ -505,7 +515,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             reqNonce.setBlockchain(mCard!!.blockchain)
             updateETH.execute(reqETH, reqNonce, reqBalance)
 
-
+            // course request
             val taskRate = RateInfoTask(this@LoadedWallet)
             val rate = ExchangeRequest.GetRate(mCard!!.wallet, "ethereum", "ethereum")
             taskRate.execute(rate)
