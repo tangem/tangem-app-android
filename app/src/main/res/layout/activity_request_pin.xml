@@ -1,195 +1,132 @@
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    tools:context="com.tangem.presentation.activity.RequestPINActivity">
+    tools:context="com.tangem.presentation.activity.RequestPINActivity"
+    tools:ignore="contentDescription">
+
+    <TextView
+        android:id="@+id/pin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="numberPassword"
+        android:paddingBottom="16dp"
+        android:singleLine="false"
+        android:textAlignment="center"
+        android:textSize="36sp"
+        tools:ignore="TextViewEdits"
+        tools:text="12345" />
 
     <LinearLayout
-        android:id="@+id/login_form"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        android:padding="16dp">
 
         <TextView
-            android:id="@+id/pin"
+            android:id="@+id/pin_prompt"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:drawableStart="@mipmap/ic_fp"
             android:ems="10"
-            android:inputType="numberPassword"
-            android:paddingBottom="16dp"
-            android:singleLine="false"
+            android:fontFamily="@font/maax"
+            android:padding="5dp"
+            android:text="@string/prompt_pin"
             android:textAlignment="center"
-            android:textSize="36sp"
-            tools:ignore="TextViewEdits"
-            tools:text="12345"/>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp">
-
-            <ImageView
-                android:id="@+id/imgFingerprint"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="16dp"
-                android:background="@mipmap/ic_fp"/>
-
-            <TextView
-                android:id="@+id/pin_prompt"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:ems="10"
-                android:fontFamily="@font/maax"
-                android:text="@string/prompt_pin"
-                android:textAlignment="center"
-                android:textSize="@dimen/text_size_medium"/>
-        </LinearLayout>
-
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <GridLayout
-                android:id="@+id/gridLayout"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:columnCount="3"
-                android:rowCount="4">
-
-                <Button
-                    android:id="@+id/btn1"
-                    style="@android:style/Widget.DeviceDefault.Button.Borderless"
-                    android:layout_width="@dimen/pin_button_size"
-                    android:layout_height="@dimen/pin_button_size"
-                    android:layout_marginTop="8dp"
-                    android:fontFamily="@font/maax"
-                    android:text="1"
-                    android:textSize="@dimen/text_size_pin"/>
-
-                <Button
-                    android:id="@+id/btn2"
-                    style="@android:style/Widget.DeviceDefault.Button.Borderless"
-                    android:layout_width="@dimen/pin_button_size"
-                    android:layout_height="@dimen/pin_button_size"
-                    android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/maax"
-                    android:text="2"
-                    android:textSize="@dimen/text_size_pin"/>
-
-                <Button
-                    android:id="@+id/btn3"
-                    style="@android:style/Widget.DeviceDefault.Button.Borderless"
-                    android:layout_width="@dimen/pin_button_size"
-                    android:layout_height="@dimen/pin_button_size"
-                    android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/maax"
-                    android:text="3"
-                    android:textSize="@dimen/text_size_pin"/>
-
-                <Button
-                    android:id="@+id/btn4"
-                    style="@android:style/Widget.DeviceDefault.Button.Borderless"
-                    android:layout_width="@dimen/pin_button_size"
-                    android:layout_height="@dimen/pin_button_size"
-                    android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/maax"
-                    android:text="4"
-                    android:textSize="@dimen/text_size_pin"/>
-
-                <Button
-                    android:id="@+id/btn5"
-                    style="@android:style/Widget.DeviceDefault.Button.Borderless"
-                    android:layout_width="@dimen/pin_button_size"
-                    android:layout_height="@dimen/pin_button_size"
-                    android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/maax"
-                    android:text="5"
-                    android:textSize="@dimen/text_size_pin"/>
-
-                <Button
-                    android:id="@+id/btn6"
-                    style="@android:style/Widget.DeviceDefault.Button.Borderless"
-                    android:layout_width="@dimen/pin_button_size"
-                    android:layout_height="@dimen/pin_button_size"
-                    android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/maax"
-                    android:text="6"
-                    android:textSize="@dimen/text_size_pin"/>
-
-                <Button
-                    android:id="@+id/btn7"
-                    style="@android:style/Widget.DeviceDefault.Button.Borderless"
-                    android:layout_width="@dimen/pin_button_size"
-                    android:layout_height="@dimen/pin_button_size"
-                    android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/maax"
-                    android:text="7"
-                    android:textSize="@dimen/text_size_pin"/>
-
-                <Button
-                    android:id="@+id/btn8"
-                    style="@android:style/Widget.DeviceDefault.Button.Borderless"
-                    android:layout_width="@dimen/pin_button_size"
-                    android:layout_height="@dimen/pin_button_size"
-                    android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/maax"
-                    android:text="8"
-                    android:textSize="@dimen/text_size_pin"/>
-
-                <Button
-                    android:id="@+id/btn9"
-                    style="@android:style/Widget.DeviceDefault.Button.Borderless"
-                    android:layout_width="@dimen/pin_button_size"
-                    android:layout_height="@dimen/pin_button_size"
-                    android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/maax"
-                    android:text="9"
-                    android:textSize="@dimen/text_size_pin"/>
-
-                <Space/>
-
-                <Button
-                    android:id="@+id/btn0"
-                    style="@android:style/Widget.DeviceDefault.Button.Borderless"
-                    android:layout_width="@dimen/pin_button_size"
-                    android:layout_height="@dimen/pin_button_size"
-                    android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/maax"
-                    android:text="0"
-                    android:textSize="@dimen/text_size_pin"/>
-
-                <Button
-                    android:id="@+id/btnBackspace"
-                    style="@style/Widget.AppCompat.Button.Borderless"
-                    android:layout_width="@dimen/pin_button_size"
-                    android:layout_height="@dimen/pin_button_size"
-                    android:layout_marginTop="@dimen/pin_button_top_margin"
-                    android:fontFamily="@font/maax"
-                    android:text="@string/pin_back"
-                    android:textColor="@color/accent"
-                    android:textSize="@dimen/text_size_pin"/>
-
-            </GridLayout>
-
-            <android.support.v7.widget.AppCompatButton
-                android:id="@+id/btnContinue"
-                style="@style/AppTheme.RoundedCornerMaterialButton"
-                android:layout_width="match_parent"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentStart="true"
-                android:layout_gravity="bottom"
-                android:layout_marginBottom="16dp"
-                android:text="@string/ok"/>
-
-        </RelativeLayout>
+            android:textSize="@dimen/text_size_medium" />
 
     </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <GridLayout
+            android:id="@+id/gridLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:columnCount="3"
+            android:rowCount="4">
+
+            <Button
+                android:id="@+id/btn1"
+                style="@style/ButtonPin"
+                android:text="@string/_1" />
+
+            <Button
+                android:id="@+id/btn2"
+                style="@style/ButtonPin"
+                android:text="@string/_2" />
+
+            <Button
+                android:id="@+id/btn3"
+                style="@style/ButtonPin"
+                android:text="@string/_3" />
+
+            <Button
+                android:id="@+id/btn4"
+                style="@style/ButtonPin"
+                android:text="@string/_4" />
+
+            <Button
+                android:id="@+id/btn5"
+                style="@style/ButtonPin"
+                android:text="@string/_5" />
+
+            <Button
+                android:id="@+id/btn6"
+                style="@style/ButtonPin"
+                android:text="@string/_6" />
+
+            <Button
+                android:id="@+id/btn7"
+                style="@style/ButtonPin"
+                android:text="@string/_7" />
+
+            <Button
+                android:id="@+id/btn8"
+                style="@style/ButtonPin"
+                android:text="@string/_8" />
+
+            <Button
+                android:id="@+id/btn9"
+                style="@style/ButtonPin"
+                android:text="@string/_9" />
+
+            <Space />
+
+            <Button
+                android:id="@+id/btn0"
+                style="@style/ButtonPin"
+                android:text="@string/_0" />
+
+            <Button
+                android:id="@+id/btnBackspace"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="@dimen/pin_button_size"
+                android:layout_height="@dimen/pin_button_size"
+                android:layout_marginTop="@dimen/pin_button_top_margin"
+                android:fontFamily="@font/maax"
+                android:text="@string/pin_back"
+                android:textColor="@color/accent"
+                android:textSize="@dimen/text_size_pin" />
+
+        </GridLayout>
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/btnContinue"
+            style="@style/AppTheme.RoundedCornerMaterialButton"
+            android:layout_width="match_parent"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="16dp"
+            android:text="@string/ok" />
+
+    </RelativeLayout>
 
 </LinearLayout>
