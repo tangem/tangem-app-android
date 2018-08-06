@@ -9,12 +9,11 @@
     <color name="primary">#616161</color>
     <color name="primary_dark">@color/bg_material_dark</color>
 
-    <color name="accent">#000000</color>
     <color name="white">@android:color/white</color>
     <color name="black">#000000</color>
     <color name="bg_separator">#FFBABABA</color>
     <color name="text_normal">#FF505050</color>
-    <color name="msg_send">@color/accent</color>
+    <color name="msg_send">@color/black</color>
     <color name="msg_rcv">#4a763d</color>
     <color name="msg_okay">#BF7FF27F</color>
     <color name="msg_err">#BFFF4444</color>
