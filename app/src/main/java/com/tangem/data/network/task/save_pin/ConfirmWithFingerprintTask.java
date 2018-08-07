@@ -17,7 +17,7 @@ public class ConfirmWithFingerprintTask extends AsyncTask<Void, Void, Boolean> {
     public ConfirmWithFingerprintTask(SavePINActivity context) {
         reference = new WeakReference<>(context);
 
-        reference.get().fingerprintHelper = new FingerprintHelper(reference.get());
+        reference.get().setFingerprintHelper(new FingerprintHelper(reference.get()));
     }
 
     @Override
@@ -46,8 +46,7 @@ public class ConfirmWithFingerprintTask extends AsyncTask<Void, Void, Boolean> {
         if (!success) {
             Toast.makeText(savePINActivity, R.string.pin_save_fail, Toast.LENGTH_LONG).show();
         } else {
-            savePINActivity.print("Confirm PIN action using fingerprint!");
-            savePINActivity.fingerprintHelper.startAuth(savePINActivity.fingerprintManager, savePINActivity.cryptoObject);
+            savePINActivity.getFingerprintHelper().startAuth(savePINActivity.getFingerprintManager(), savePINActivity.getCryptoObject());
         }
     }
 
@@ -55,8 +54,8 @@ public class ConfirmWithFingerprintTask extends AsyncTask<Void, Void, Boolean> {
     protected void onCancelled() {
         SavePINActivity savePINActivity = reference.get();
 
-        if (savePINActivity.dFingerPrintConfirmation != null) {
-            savePINActivity.dFingerPrintConfirmation.cancel();
+        if (savePINActivity.getDFingerPrintConfirmation() != null) {
+            savePINActivity.getDFingerPrintConfirmation().cancel();
         }
     }
 
