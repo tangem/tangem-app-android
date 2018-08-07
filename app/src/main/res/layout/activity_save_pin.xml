@@ -7,7 +7,7 @@
     tools:context="com.tangem.presentation.activity.SavePINActivity">
 
     <TextView
-        android:id="@+id/pin"
+        android:id="@+id/tvPin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
@@ -19,7 +19,7 @@
         tools:ignore="TextViewEdits" />
 
     <TextView
-        android:id="@+id/pin_prompt"
+        android:id="@+id/tvPinPrompt"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
@@ -45,7 +45,7 @@
             android:orientation="vertical">
 
             <CheckBox
-                android:id="@+id/chkUseFingerprint"
+                android:id="@+id/cbUseFingerprint"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
