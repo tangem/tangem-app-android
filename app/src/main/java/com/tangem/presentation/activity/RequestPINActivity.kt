@@ -26,6 +26,7 @@ import com.tangem.domain.wallet.PINStorage
 import com.tangem.domain.wallet.TangemCard
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_request_pin.*
+import kotlinx.android.synthetic.main.layout_pin_buttons.*
 import java.io.IOException
 
 class RequestPINActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, FingerprintHelper.FingerprintHelperListener {
