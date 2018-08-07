@@ -44,7 +44,7 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
     private TextView tvPIN;
     private CheckBox chkUseFingerprint;
 
-    public ConfirmWithFingerprintTask mConfirmWithFingerprintTask;
+    public ConfirmWithFingerprintTask confirmWithFingerprintTask;
 
     private KeyStore keyStore;
     private Cipher cipher;
@@ -70,11 +70,10 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
         tvPIN = findViewById(R.id.pin);
         OnClickListener onButtonNClick = view -> tvPIN.setText(String.format("%s%s", tvPIN.getText(), ((Button) view).getText()));
 
-        if (UsePIN2) {
+        if (UsePIN2)
             ((TextView) findViewById(R.id.pin_prompt)).setText(R.string.enter_pin2_and_use_fingerprint_to_save_it);
-        } else {
+        else
             ((TextView) findViewById(R.id.pin_prompt)).setText(R.string.enter_pin_and_use_fingerprint_to_save_it);
-        }
 
         chkUseFingerprint = findViewById(R.id.chkUseFingerprint);
 
@@ -85,7 +84,6 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
             chkUseFingerprint.setChecked(PINStorage.haveEncryptedPIN());
             chkUseFingerprint.setEnabled(true);
         }
-
 
         Button btn0 = findViewById(R.id.btn0);
         btn0.setOnClickListener(onButtonNClick);
@@ -121,7 +119,6 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
 
         Button btnDelete = findViewById(R.id.btnDeletePIN);
         btnDelete.setOnClickListener(view -> doDeletePIN());
-
     }
 
     @Override
@@ -131,8 +128,8 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
         if (fingerprintHelper != null)
             fingerprintHelper.cancel();
 
-        if (mConfirmWithFingerprintTask != null)
-            mConfirmWithFingerprintTask.cancel(true);
+        if (confirmWithFingerprintTask != null)
+            confirmWithFingerprintTask.cancel(true);
     }
 
     @Override
@@ -141,12 +138,12 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
         if (fingerprintHelper != null)
             fingerprintHelper.cancel();
 
-        if (mConfirmWithFingerprintTask != null)
-            mConfirmWithFingerprintTask.cancel(true);
+        if (confirmWithFingerprintTask != null)
+            confirmWithFingerprintTask.cancel(true);
     }
 
     private void doSavePIN() {
-        if (mConfirmWithFingerprintTask != null) {
+        if (confirmWithFingerprintTask != null) {
             return;
         }
 
@@ -175,8 +172,8 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
 
                 onConfirmAction = OnConfirmAction.Save;
 
-                mConfirmWithFingerprintTask = new ConfirmWithFingerprintTask(SavePINActivity.this);
-                mConfirmWithFingerprintTask.execute((Void) null);
+                confirmWithFingerprintTask = new ConfirmWithFingerprintTask(SavePINActivity.this);
+                confirmWithFingerprintTask.execute((Void) null);
             } else {
                 if (chkUseFingerprint.isChecked() || PINStorage.haveEncryptedPIN()) {
                     if (!testFingerPrintSettings()) {
@@ -190,11 +187,10 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
                         onConfirmAction = OnConfirmAction.DeleteEncryptedAndSave;
                     }
 
-                    // Show a progress spinner, and kick off a background task to
-                    // perform the user login attempt.
+                    // show a progress spinner, and kick off a background task to perform the user login attempt
                     //showProgress(true);
-                    mConfirmWithFingerprintTask = new ConfirmWithFingerprintTask(SavePINActivity.this);
-                    mConfirmWithFingerprintTask.execute((Void) null);
+                    confirmWithFingerprintTask = new ConfirmWithFingerprintTask(SavePINActivity.this);
+                    confirmWithFingerprintTask.execute((Void) null);
                 } else {
                     PINStorage.savePIN(tvPIN.getText().toString());
                     finish();
@@ -211,8 +207,8 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
                     return;
                 }
                 onConfirmAction = OnConfirmAction.Delete;
-                mConfirmWithFingerprintTask = new ConfirmWithFingerprintTask(SavePINActivity.this);
-                mConfirmWithFingerprintTask.execute((Void) null);
+                confirmWithFingerprintTask = new ConfirmWithFingerprintTask(SavePINActivity.this);
+                confirmWithFingerprintTask.execute((Void) null);
             } else {
                 tvPIN.setText("");
                 finish();
@@ -224,8 +220,8 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
                     return;
                 }
                 onConfirmAction = OnConfirmAction.Delete;
-                mConfirmWithFingerprintTask = new ConfirmWithFingerprintTask(SavePINActivity.this);
-                mConfirmWithFingerprintTask.execute((Void) null);
+                confirmWithFingerprintTask = new ConfirmWithFingerprintTask(SavePINActivity.this);
+                confirmWithFingerprintTask.execute((Void) null);
             } else {
                 tvPIN.setText("");
                 PINStorage.deletePIN();
@@ -416,43 +412,4 @@ public class SavePINActivity extends AppCompatActivity implements FingerprintHel
 
     public Dialog dFingerPrintConfirmation = null;
 
-    public void CreateFingerPrintConfirmationDialog() {
-//        final AlertDialogWrapper.Builder b = new AlertDialogWrapper.Builder(this);
-//        switch (onConfirmAction)
-//        {
-//            case Save:
-//                if( UsePIN2) {
-//                    b.setTitle("Confirm new PIN2 saving ");
-//                }else{
-//                    b.setTitle("Confirm new PIN saving ");
-//                }
-//                break;
-//            case Delete:
-//                if( UsePIN2 ) {
-//                    b.setTitle("Confirm PIN2 deleting");
-//                }else{
-//                    b.setTitle("Confirm PIN deleting");
-//                }
-//                break;
-//            case DeleteEncryptedAndSave:
-//                if( UsePIN2 ) {
-//                    b.setTitle("Confirm deleting old saved PIN2");
-//                }else {
-//                    b.setTitle("Confirm deleting old saved PIN");
-//                }
-//                break;
-//        }
-//        View view = getLayoutInflater().inflate(R.layout.dialog_fingerprint_confirmation, null);
-//        b.setView(view);
-
-//        dFingerPrintConfirmation = b.show();
-//        dFingerPrintConfirmation.setOnCancelListener(new DialogInterface.OnCancelListener() {
-//            @Override
-//            public void onCancel(DialogInterface dialog) {
-//                fingerprintHelper.cancel();
-//                print("Cancel fingerprint confirmation");
-//            }
-//        });
-    }
 }
-
