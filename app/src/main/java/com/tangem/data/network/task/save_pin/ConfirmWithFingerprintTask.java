@@ -48,7 +48,6 @@ public class ConfirmWithFingerprintTask extends AsyncTask<Void, Void, Boolean> {
         } else {
             savePINActivity.print("Confirm PIN action using fingerprint!");
             savePINActivity.fingerprintHelper.startAuth(savePINActivity.fingerprintManager, savePINActivity.cryptoObject);
-            savePINActivity.CreateFingerPrintConfirmationDialog();
         }
     }
 
@@ -56,7 +55,6 @@ public class ConfirmWithFingerprintTask extends AsyncTask<Void, Void, Boolean> {
     protected void onCancelled() {
         SavePINActivity savePINActivity = reference.get();
 
-        savePINActivity.mConfirmWithFingerprintTask = null;
         if (savePINActivity.dFingerPrintConfirmation != null) {
             savePINActivity.dFingerPrintConfirmation.cancel();
         }
