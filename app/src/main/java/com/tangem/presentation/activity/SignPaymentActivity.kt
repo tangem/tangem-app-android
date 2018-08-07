@@ -9,10 +9,11 @@ import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.view.KeyEvent
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
-import com.tangem.data.nfc.SwapPINTask
+import com.tangem.data.nfc.SignPaymentTask
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.TangemCard
@@ -20,41 +21,46 @@ import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.util.Util
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.activity_swap_pin.*
+import kotlinx.android.synthetic.main.activity_sign_payment.*
 
-class SwapPINActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
+class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
 
     companion object {
-        val TAG: String = SwapPINActivity::class.java.simpleName
+        val TAG: String = SignPaymentActivity::class.java.simpleName
 
+        const val EXTRA_AMOUNT = "Amount"
+        const val REQUEST_CODE_SEND_PAYMENT = 1
         const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
     }
 
     private var nfcManager: NfcManager? = null
-    private var card: TangemCard? = null
+    private var mCard: TangemCard? = null
 
-    private var newPIN: String? = null
-    private var newPIN2: String? = null
+    private var signPaymentTask: SignPaymentTask? = null
+
+    private var amountStr: String? = null
+    private var feeStr: String? = null
+    private var outAddressStr: String? = null
+    private var lastReadSuccess = true
 
     private var progressBar: ProgressBar? = null
 
-    private var swapPinTask: SwapPINTask? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_swap_pin)
+        setContentView(R.layout.activity_sign_payment)
 
         MainActivity.commonInit(applicationContext)
 
         nfcManager = NfcManager(this, this)
 
-        card = TangemCard(intent.getStringExtra("UID"))
-        card!!.LoadFromBundle(intent.extras!!.getBundle("Card"))
+        mCard = TangemCard(intent.getStringExtra("UID"))
+        mCard!!.LoadFromBundle(intent.extras!!.getBundle("Card"))
 
-        newPIN = intent.getStringExtra("newPIN")
-        newPIN2 = intent.getStringExtra("newPIN2")
+        amountStr = intent.getStringExtra(EXTRA_AMOUNT)
+        feeStr = intent.getStringExtra("Fee")
+        outAddressStr = intent.getStringExtra("Wallet")
 
-        tvCardID.text = card!!.cidDescription
+        tvCardID.text = mCard!!.cidDescription
 
         progressBar = findViewById(R.id.progressBar)
         progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
@@ -70,10 +76,14 @@ class SwapPINActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
             val sUID = Util.byteArrayToHexString(uid)
 //            Log.v(TAG, "UID: $sUID")
 
-            if (sUID == card!!.uid) {
-                isoDep.timeout = card!!.pauseBeforePIN2 + 65000
-                swapPinTask = SwapPINTask(this, card, nfcManager, newPIN, newPIN2, isoDep, this)
-                swapPinTask!!.start()
+            if (sUID == mCard!!.uid) {
+                if (lastReadSuccess) {
+                    isoDep.timeout = mCard!!.pauseBeforePIN2 + 5000
+                } else {
+                    isoDep.timeout = mCard!!.pauseBeforePIN2 + 65000
+                }
+                signPaymentTask = SignPaymentTask(this, mCard, nfcManager, isoDep, this, amountStr, feeStr, outAddressStr)
+                signPaymentTask!!.start()
             } else {
 //                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + mCard!!.uid + ")")
                 nfcManager!!.ignoreTag(isoDep.tag)
@@ -91,17 +101,38 @@ class SwapPINActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
 
     public override fun onPause() {
         nfcManager!!.onPause()
-        if (swapPinTask != null)
-            swapPinTask!!.cancel(true)
+        if (signPaymentTask != null)
+            signPaymentTask!!.cancel(true)
         super.onPause()
     }
 
     public override fun onStop() {
         // dismiss enable NFC dialog
         nfcManager!!.onStop()
-        if (swapPinTask != null)
-            swapPinTask!!.cancel(true)
+        if (signPaymentTask != null)
+            signPaymentTask!!.cancel(true)
         super.onStop()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+        if (requestCode == REQUEST_CODE_SEND_PAYMENT) {
+            setResult(resultCode, data)
+            finish()
+            return
+        }
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        when (keyCode) {
+            KeyEvent.KEYCODE_BACK -> {
+                val intent = Intent()
+                setResult(Activity.RESULT_CANCELED, intent)
+                finish()
+                return true
+            }
+        }
+        return super.onKeyDown(keyCode, event)
     }
 
     override fun OnReadStart(cardProtocol: CardProtocol) {
@@ -112,20 +143,16 @@ class SwapPINActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
     }
 
     override fun OnReadFinish(cardProtocol: CardProtocol?) {
-        swapPinTask = null
-
+        signPaymentTask = null
         if (cardProtocol != null) {
-            when {
-                cardProtocol.error == null -> progressBar!!.post {
+            if (cardProtocol.error == null) {
+                progressBar!!.post {
                     progressBar!!.progress = 100
                     progressBar!!.progressTintList = ColorStateList.valueOf(Color.GREEN)
-                    val intent = Intent()
-                    intent.putExtra("UID", cardProtocol.card.uid)
-                    intent.putExtra("Card", cardProtocol.card.asBundle)
-                    setResult(Activity.RESULT_OK, intent)
-                    finish()
                 }
-                cardProtocol.error is CardProtocol.TangemException_InvalidPIN -> {
+            } else {
+                lastReadSuccess = false
+                if (cardProtocol.error.javaClass == CardProtocol.TangemException_InvalidPIN::class.java) {
                     progressBar!!.post {
                         progressBar!!.progress = 100
                         progressBar!!.progressTintList = ColorStateList.valueOf(Color.RED)
@@ -136,7 +163,7 @@ class SwapPINActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
                             progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
                             progressBar!!.visibility = View.INVISIBLE
                             val intent = Intent()
-                            intent.putExtra("message", "Cannot change PIN(s). Make sure you enter correct PIN2!")
+                            intent.putExtra("message", "Cannot sign transaction. Make sure you enter correct PIN2!")
                             intent.putExtra("UID", cardProtocol.card.uid)
                             intent.putExtra("Card", cardProtocol.card.asBundle)
                             setResult(RESULT_INVALID_PIN, intent)
@@ -145,30 +172,31 @@ class SwapPINActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
                             e.printStackTrace()
                         }
                     }, 500)
-                }
-                else -> progressBar!!.post {
-                    if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported) {
-                        if (!NoExtendedLengthSupportDialog.allReadyShowed) {
-                            NoExtendedLengthSupportDialog().show(fragmentManager, NoExtendedLengthSupportDialog.TAG)
+                } else {
+                    progressBar!!.post {
+                        if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported) {
+                            if (!NoExtendedLengthSupportDialog.allReadyShowed) {
+                                NoExtendedLengthSupportDialog().show(fragmentManager, NoExtendedLengthSupportDialog.TAG)
+                            }
+                        } else {
+                            Toast.makeText(baseContext, R.string.try_to_scan_again, Toast.LENGTH_LONG).show()
                         }
-                    } else {
-                        Toast.makeText(baseContext, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show()
+                        progressBar!!.progress = 100
+                        progressBar!!.progressTintList = ColorStateList.valueOf(Color.RED)
                     }
-                    progressBar!!.progress = 100
-                    progressBar!!.progressTintList = ColorStateList.valueOf(Color.RED)
                 }
             }
-
-            progressBar!!.postDelayed({
-                try {
-                    progressBar!!.progress = 0
-                    progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
-                    progressBar!!.visibility = View.INVISIBLE
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }, 500)
         }
+
+        progressBar!!.postDelayed({
+            try {
+                progressBar!!.progress = 0
+                progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+                progressBar!!.visibility = View.INVISIBLE
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }, 500)
     }
 
     override fun OnReadProgress(protocol: CardProtocol, progress: Int) {
@@ -176,7 +204,7 @@ class SwapPINActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
     }
 
     override fun OnReadCancel() {
-        swapPinTask = null
+        signPaymentTask = null
 
         progressBar!!.postDelayed({
             try {
