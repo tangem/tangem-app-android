@@ -62,7 +62,7 @@ public class SendTransactionActivity extends AppCompatActivity {
     public boolean onKeyDown(int keycode, KeyEvent e) {
         switch (keycode) {
             case KeyEvent.KEYCODE_BACK:
-                Toast.makeText(getBaseContext(), "Please wait while the payment is sent...", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.please_wait, Toast.LENGTH_LONG).show();
                 return true;
         }
         return super.onKeyDown(keycode, e);
@@ -77,7 +77,7 @@ public class SendTransactionActivity extends AppCompatActivity {
 
     public void finishWithSuccess() {
         Intent intent = new Intent();
-        intent.putExtra("message", "Transaction has been successfully signed and sent to blockchain node. Wallet balance will be updated in a while");
+        intent.putExtra("message", getString(R.string.transaction_has_been_successfully_signed));
         setResult(MainActivity.RESULT_OK, intent);
         finish();
     }
