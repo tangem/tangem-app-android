@@ -91,18 +91,16 @@ class SwapPINActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
 
     public override fun onPause() {
         nfcManager!!.onPause()
-        if (swapPinTask != null) {
+        if (swapPinTask != null)
             swapPinTask!!.cancel(true)
-        }
         super.onPause()
     }
 
     public override fun onStop() {
         // dismiss enable NFC dialog
         nfcManager!!.onStop()
-        if (swapPinTask != null) {
+        if (swapPinTask != null)
             swapPinTask!!.cancel(true)
-        }
         super.onStop()
     }
 
