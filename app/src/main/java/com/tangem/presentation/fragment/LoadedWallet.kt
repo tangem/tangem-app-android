@@ -247,16 +247,16 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             REQUEST_CODE_ENTER_NEW_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (data != null) {
                     if (data.extras != null && data.extras!!.containsKey("confirmPIN")) {
-                        val intent = Intent(context, RequestPINActivity::class.java)
-                        intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString())
+                        val intent = Intent(context, PinRequestActivity::class.java)
+                        intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
                         intent.putExtra("UID", mCard!!.uid)
                         intent.putExtra("Card", mCard!!.asBundle)
                         newPIN = data.getStringExtra("newPIN")
                         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
                     } else {
-                        val intent = Intent(context, RequestPINActivity::class.java)
+                        val intent = Intent(context, PinRequestActivity::class.java)
                         intent.putExtra("newPIN", data.getStringExtra("newPIN"))
-                        intent.putExtra("mode", RequestPINActivity.Mode.ConfirmNewPIN.toString())
+                        intent.putExtra("mode", PinRequestActivity.Mode.ConfirmNewPIN.toString())
                         startActivityForResult(intent, REQUEST_CODE_ENTER_NEW_PIN)
                     }
                 }
@@ -264,16 +264,16 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             REQUEST_CODE_ENTER_NEW_PIN2 -> if (resultCode == Activity.RESULT_OK) {
                 if (data != null) {
                     if (data.extras != null && data.extras!!.containsKey("confirmPIN2")) {
-                        val intent = Intent(context, RequestPINActivity::class.java)
-                        intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString())
+                        val intent = Intent(context, PinRequestActivity::class.java)
+                        intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
                         intent.putExtra("UID", mCard!!.uid)
                         intent.putExtra("Card", mCard!!.asBundle)
                         newPIN2 = data.getStringExtra("newPIN2")
                         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
                     } else {
-                        val intent = Intent(context, RequestPINActivity::class.java)
+                        val intent = Intent(context, PinRequestActivity::class.java)
                         intent.putExtra("newPIN2", data.getStringExtra("newPIN2"))
-                        intent.putExtra("mode", RequestPINActivity.Mode.ConfirmNewPIN2.toString())
+                        intent.putExtra("mode", PinRequestActivity.Mode.ConfirmNewPIN2.toString())
                         startActivityForResult(intent, REQUEST_CODE_ENTER_NEW_PIN2)
                     }
                 }
@@ -317,8 +317,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 }
                 if (resultCode == CreateNewWalletActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
-                    val intent = Intent(context, RequestPINActivity::class.java)
-                    intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString())
+                    val intent = Intent(context, PinRequestActivity::class.java)
+                    intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
                     intent.putExtra("UID", mCard!!.uid)
                     intent.putExtra("Card", mCard!!.asBundle)
                     startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
@@ -356,8 +356,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 }
                 if (resultCode == CreateNewWalletActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
-                    val intent = Intent(context, RequestPINActivity::class.java)
-                    intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString())
+                    val intent = Intent(context, PinRequestActivity::class.java)
+                    intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
                     intent.putExtra("UID", mCard!!.uid)
                     intent.putExtra("Card", mCard!!.asBundle)
                     startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_PURGE)
@@ -743,7 +743,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     private fun startSwapPINActivity() {
-        val intent = Intent(context, SwapPINActivity::class.java)
+        val intent = Intent(context, PinSwapActivity::class.java)
         intent.putExtra("UID", mCard!!.uid)
         intent.putExtra("Card", mCard!!.asBundle)
         intent.putExtra("newPIN", newPIN)
