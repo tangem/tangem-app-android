@@ -55,7 +55,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
         nfcManager = NfcManager(activity, this)
 
         mCard = TangemCard(activity!!.intent.getStringExtra("UID"))
-        mCard!!.LoadFromBundle(activity!!.intent.extras!!.getBundle("Card"))
+        mCard!!.loadFromBundle(activity!!.intent.extras!!.getBundle("Card"))
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -163,7 +163,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
             } else {
                 if (data != null && data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
                     val updatedCard = TangemCard(data.getStringExtra("UID"))
-                    updatedCard.LoadFromBundle(data.getBundleExtra("Card"))
+                    updatedCard.loadFromBundle(data.getBundleExtra("Card"))
                     mCard = updatedCard
                 }
                 if (resultCode == CreateNewWalletActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
@@ -201,7 +201,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
             } else {
                 if (data != null && data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
                     val updatedCard = TangemCard(data.getStringExtra("UID"))
-                    updatedCard.LoadFromBundle(data.getBundleExtra("Card"))
+                    updatedCard.loadFromBundle(data.getBundleExtra("Card"))
                     mCard = updatedCard
                 }
                 if (resultCode == CreateNewWalletActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
@@ -229,7 +229,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 if (data != null) {
                     if (data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
                         val updatedCard = TangemCard(data.getStringExtra("UID"))
-                        updatedCard.LoadFromBundle(data.getBundleExtra("Card"))
+                        updatedCard.loadFromBundle(data.getBundleExtra("Card"))
                         mCard = updatedCard
                     }
                     if (data.extras!!.containsKey("message")) {
@@ -483,10 +483,10 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
     private fun doPurge() {
         requestPIN2Count = 0
-        val engine = CoinEngineFactory.Create(mCard!!.blockchain)
+        val engine = CoinEngineFactory.create(mCard!!.blockchain)
         if (!mCard!!.hasBalanceInfo()) {
             return
-        } else if (engine != null && engine.IsBalanceNotZero(mCard)) {
+        } else if (engine != null && engine.isBalanceNotZero(mCard)) {
             Toast.makeText(context, R.string.cannot_erase_wallet_with_non_zero_balance, Toast.LENGTH_LONG).show()
             return
         }
