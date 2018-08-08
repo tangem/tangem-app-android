@@ -20,12 +20,12 @@ import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.util.Util
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.activity_swap_pin.*
+import kotlinx.android.synthetic.main.activity_pin_swap.*
 
-class SwapPINActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
+class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
 
     companion object {
-        val TAG: String = SwapPINActivity::class.java.simpleName
+        val TAG: String = PinSwapActivity::class.java.simpleName
 
         const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
     }
@@ -42,7 +42,7 @@ class SwapPINActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_swap_pin)
+        setContentView(R.layout.activity_pin_swap)
 
         MainActivity.commonInit(applicationContext)
 
