@@ -23,7 +23,7 @@ public class ConnectTask extends ElectrumTask {
     private int remaining_attempts;
 
 
-    private void CreateChildTask (TangemCard mCard, String tx, String error_message) {
+    private void CreateChildTask(TangemCard mCard, String tx, String error_message) {
 
         if (remaining_attempts > 0) {
 
@@ -39,7 +39,7 @@ public class ConnectTask extends ElectrumTask {
             } else if (mCard.getBlockchain() == Blockchain.BitcoinCash || mCard.getBlockchain() == Blockchain.BitcoinCashTestNet) {
                 String nodeAddress = engine.GetNode(mCard);
                 int nodePort = engine.GetNodePort(mCard);
-                ConnectTask connectTask = new ConnectTask(reference.get(), nodeAddress, nodePort,remaining_attempts);
+                ConnectTask connectTask = new ConnectTask(reference.get(), nodeAddress, nodePort, remaining_attempts);
                 connectTask.execute(ElectrumRequest.Broadcast(mCard.getWallet(), tx));
             }
 
@@ -47,7 +47,6 @@ public class ConnectTask extends ElectrumTask {
             reference.get().finishWithError(error_message);
         }
     }
-
 
 
     public ConnectTask(SendTransactionActivity context, String host, int port, int attempts) {
@@ -82,38 +81,38 @@ public class ConnectTask extends ElectrumTask {
                             String hashTX = request.getResultString();
 
                             try {
-                                LastSignStorage.setLastMessage(sendTransactionActivity.mCard.getWallet(), hashTX);
+                                LastSignStorage.setLastMessage(sendTransactionActivity.getCard().getWallet(), hashTX);
                                 if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
                                     hashTX = hashTX.substring(2);
                                 }
                                 BigInteger bigInt = new BigInteger(hashTX, 16); //TODO: очень плохой способ
-                                LastSignStorage.setTxWasSend(sendTransactionActivity.mCard.getWallet());
-                                LastSignStorage.setLastMessage(sendTransactionActivity.mCard.getWallet(), "");
+                                LastSignStorage.setTxWasSend(sendTransactionActivity.getCard().getWallet());
+                                LastSignStorage.setLastMessage(sendTransactionActivity.getCard().getWallet(), "");
                                 Log.e("TX_RESULT", hashTX);
                                 sendTransactionActivity.finishWithSuccess();
                             } catch (Exception e) {
                                 engine.SwitchNode(null);
 //                                sendTransactionActivity.finishWithError(hashTX);
-                                CreateChildTask(sendTransactionActivity.mCard, request.TX, hashTX);
+                                CreateChildTask(sendTransactionActivity.getCard(), request.TX, hashTX);
                             }
 
                         } catch (JSONException e) {
                             e.printStackTrace();
                             engine.SwitchNode(null);
 //                            sendTransactionActivity.finishWithError(e.toString());
-                            CreateChildTask(sendTransactionActivity.mCard, request.TX, e.toString());
+                            CreateChildTask(sendTransactionActivity.getCard(), request.TX, e.toString());
                         }
                     }
                 } else {
                     engine.SwitchNode(null);
 //                    sendTransactionActivity.finishWithError(request.error);
-                    CreateChildTask(sendTransactionActivity.mCard, request.TX, request.error);
+                    CreateChildTask(sendTransactionActivity.getCard(), request.TX, request.error);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
                 engine.SwitchNode(null);
 //                sendTransactionActivity.finishWithError(e.toString());
-                CreateChildTask(sendTransactionActivity.mCard, request.TX, e.toString());
+                CreateChildTask(sendTransactionActivity.getCard(), request.TX, e.toString());
             }
         }
     }
