@@ -16,6 +16,7 @@ import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.support.v4.widget.SwipeRefreshLayout
 import android.text.Html
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,6 +24,7 @@ import android.widget.Toast
 import com.google.zxing.WriterException
 import com.tangem.data.network.Server
 import com.tangem.data.network.VolleyHelper
+import com.tangem.data.network.model.ResponseVerify
 import com.tangem.data.network.request.ElectrumRequest
 import com.tangem.data.network.request.ExchangeRequest
 import com.tangem.data.network.request.InfuraRequest
@@ -45,7 +47,15 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
 import java.util.*
 
-class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
+class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, VolleyHelper.IRequestCardVerify {
+
+    override fun success(responseVerify: ResponseVerify) {
+        Toast.makeText(activity, responseVerify.results!![1].CID, Toast.LENGTH_SHORT).show()
+    }
+
+    override fun error(error: String) {
+
+    }
 
     companion object {
         val TAG: String = LoadedWallet::class.java.simpleName
@@ -59,11 +69,12 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         private const val REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN = 7
         private const val REQUEST_CODE_SWAP_PIN = 8
 
-        private const val URL_CARD_VALIDATE = Server.API.Method.CARD_VALIDATE
+        private const val URL_CARD_VERIFY = Server.API.Method.VERIFY
     }
 
     private var singleToast: Toast? = null
     private var nfcManager: NfcManager? = null
+    private var volleyHelper: VolleyHelper? = null
     var card: TangemCard? = null
     private var lastTag: Tag? = null
 
@@ -90,8 +101,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     val answer = request.answer as VerificationServerProtocol.Verify.Answer
                     if (answer.error == null) {
                         card!!.isOnlineVerified = answer.results[0].passed
+//                        Log.i(TAG, "isOnlineVerified = " + answer.results[0].passed)
                     } else {
                         card!!.isOnlineVerified = null
+//                        Log.i(TAG, "isOnlineVerified = null")
                     }
                 } else {
                     card!!.isOnlineVerified = null
@@ -101,11 +114,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
     }
 
-    private fun requestCardValidate() {
-        val params = HashMap<String, String>()
-        params["CID"] = Util.bytesToHex(card!!.cid)
-        params["publicKey"] = Util.bytesToHex(card!!.cardPublicKey)
-        VolleyHelper().doRequestString(context!!, URL_CARD_VALIDATE, params)
+    private fun requestVerify() {
+        if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified) && onlineVerifyTask == null) {
+            onlineVerifyTask = OnlineVerifyTask()
+            onlineVerifyTask!!.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, VerificationServerProtocol.Verify.prepare(card))
+
+//            volleyHelper!!.requestCardVerify(card!!)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -116,6 +131,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         card!!.loadFromBundle(activity!!.intent.extras.getBundle(TangemCard.EXTRA_CARD))
 
         lastTag = activity!!.intent.getParcelableExtra(MainActivity.EXTRA_LAST_DISCOVERED_TAG)
+
+        volleyHelper = VolleyHelper(this)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -150,10 +167,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             srlLoadedWallet!!.postDelayed({ this.refresh() }, 1000)
         }
 
-        if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified) && onlineVerifyTask == null) {
-            onlineVerifyTask = OnlineVerifyTask()
-            onlineVerifyTask!!.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, VerificationServerProtocol.Verify.prepare(card))
-        }
+        requestVerify()
 
         startVerify(lastTag)
 
@@ -408,10 +422,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         val engine = CoinEngineFactory.create(card!!.blockchain)
 
-        if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified) && onlineVerifyTask == null) {
-            onlineVerifyTask = OnlineVerifyTask()
-            onlineVerifyTask!!.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, VerificationServerProtocol.Verify.prepare(card))
-        }
+        requestVerify()
 
         if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
             val data = SharedData(SharedData.COUNT_REQUEST)
