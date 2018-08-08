@@ -64,7 +64,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     private var singleToast: Toast? = null
     private var nfcManager: NfcManager? = null
-    var mCard: TangemCard? = null
+    var card: TangemCard? = null
     private var lastTag: Tag? = null
 
     var srlLoadedWallet: SwipeRefreshLayout? = null
@@ -89,12 +89,12 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 if (request.error == null) {
                     val answer = request.answer as VerificationServerProtocol.Verify.Answer
                     if (answer.error == null) {
-                        mCard!!.isOnlineVerified = answer.results[0].passed
+                        card!!.isOnlineVerified = answer.results[0].passed
                     } else {
-                        mCard!!.isOnlineVerified = null
+                        card!!.isOnlineVerified = null
                     }
                 } else {
-                    mCard!!.isOnlineVerified = null
+                    card!!.isOnlineVerified = null
                 }
             }
             srlLoadedWallet!!.isRefreshing = false
@@ -103,8 +103,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     private fun requestCardValidate() {
         val params = HashMap<String, String>()
-        params["CID"] = Util.bytesToHex(mCard!!.cid)
-        params["publicKey"] = Util.bytesToHex(mCard!!.cardPublicKey)
+        params["CID"] = Util.bytesToHex(card!!.cid)
+        params["publicKey"] = Util.bytesToHex(card!!.cardPublicKey)
         VolleyHelper().doRequestString(context!!, URL_CARD_VALIDATE, params)
     }
 
@@ -112,8 +112,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         super.onCreate(savedInstanceState)
         nfcManager = NfcManager(activity, this)
 
-        mCard = TangemCard(activity!!.intent.getStringExtra(TangemCard.EXTRA_CARD))
-        mCard!!.LoadFromBundle(activity!!.intent.extras.getBundle(TangemCard.EXTRA_CARD))
+        card = TangemCard(activity!!.intent.getStringExtra(TangemCard.EXTRA_CARD))
+        card!!.loadFromBundle(activity!!.intent.extras.getBundle(TangemCard.EXTRA_CARD))
 
         lastTag = activity!!.intent.getParcelableExtra(MainActivity.EXTRA_LAST_DISCOVERED_TAG)
     }
@@ -129,42 +129,42 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (mCard!!.blockchain == Blockchain.Token)
+        if (card!!.blockchain == Blockchain.Token)
             tvBalance.setSingleLine(false)
 
-        ivTangemCard.setImageResource(mCard!!.cardImageResource)
+        ivTangemCard.setImageResource(card!!.cardImageResource)
 
-        val engine = CoinEngineFactory.Create(mCard!!.blockchain)
-        val visibleFlag = engine?.InOutPutVisible() ?: true
+        val engine = CoinEngineFactory.create(card!!.blockchain)
+        val visibleFlag = engine?.inOutPutVisible() ?: true
 
         try {
-            ivQR.setImageBitmap(UtilHelper.generateQrCode(engine!!.getShareWalletURI(mCard).toString()))
+            ivQR.setImageBitmap(UtilHelper.generateQrCode(engine!!.getShareWalletUri(card).toString()))
         } catch (e: WriterException) {
             e.printStackTrace()
         }
 
         updateViews()
 
-        if (!mCard!!.hasBalanceInfo()) {
+        if (!card!!.hasBalanceInfo()) {
             srlLoadedWallet!!.isRefreshing = true
             srlLoadedWallet!!.postDelayed({ this.refresh() }, 1000)
         }
 
-        if ((mCard!!.isOnlineVerified == null || !mCard!!.isOnlineVerified) && onlineVerifyTask == null) {
+        if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified) && onlineVerifyTask == null) {
             onlineVerifyTask = OnlineVerifyTask()
-            onlineVerifyTask!!.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, VerificationServerProtocol.Verify.prepare(mCard))
+            onlineVerifyTask!!.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, VerificationServerProtocol.Verify.prepare(card))
         }
 
         startVerify(lastTag)
 
-        tvWallet.text = mCard!!.wallet
+        tvWallet.text = card!!.wallet
 
         // set listeners
         srlLoadedWallet!!.setOnRefreshListener { this.refresh() }
 
         btnLookup.setOnClickListener {
-            val engineClick = CoinEngineFactory.Create(mCard!!.blockchain)
-            val browserIntent = Intent(Intent.ACTION_VIEW, engineClick!!.getShareWalletURIExplorer(mCard))
+            val engineClick = CoinEngineFactory.create(card!!.blockchain)
+            val browserIntent = Intent(Intent.ACTION_VIEW, engineClick!!.getShareWalletUriExplorer(card))
             startActivity(browserIntent)
         }
 
@@ -176,7 +176,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         btnLoad.setOnClickListener {
             try {
-                val intent = Intent(Intent.ACTION_VIEW, CoinEngineFactory.Create(mCard!!.blockchain)!!.getShareWalletURI(mCard))
+                val intent = Intent(Intent.ACTION_VIEW, CoinEngineFactory.create(card!!.blockchain)!!.getShareWalletUri(card))
                 intent.addCategory(Intent.CATEGORY_DEFAULT)
                 startActivity(intent)
             } catch (e: ActivityNotFoundException) {
@@ -197,22 +197,22 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
 
         btnExtract.setOnClickListener {
-            if (!mCard!!.hasBalanceInfo()) {
+            if (!card!!.hasBalanceInfo()) {
                 showSingleToast(R.string.cannot_obtain_data_from_blockchain)
-            } else if (!engine!!.IsBalanceNotZero(mCard))
+            } else if (!engine!!.isBalanceNotZero(card))
                 showSingleToast(R.string.wallet_empty)
-            else if (!engine.IsBalanceAlterNotZero(mCard))
+            else if (!engine.isBalanceAlterNotZero(card))
                 showSingleToast(R.string.not_enough_funds)
-            else if (engine.AwaitingConfirmation(mCard))
+            else if (engine.awaitingConfirmation(card))
                 showSingleToast(R.string.please_wait_while_previous)
-            else if (!engine.CheckUnspentTransaction(mCard))
+            else if (!engine.checkUnspentTransaction(card))
                 showSingleToast(R.string.please_wait_for_confirmation)
-            else if (mCard!!.remainingSignatures == 0)
+            else if (card!!.remainingSignatures == 0)
                 showSingleToast(R.string.card_has_no_remaining_signature)
             else {
                 val intent = Intent(context, PreparePaymentActivity::class.java)
-                intent.putExtra("UID", mCard!!.uid)
-                intent.putExtra("Card", mCard!!.asBundle)
+                intent.putExtra("UID", card!!.uid)
+                intent.putExtra("Card", card!!.asBundle)
                 startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT)
             }
         }
@@ -249,8 +249,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     if (data.extras != null && data.extras!!.containsKey("confirmPIN")) {
                         val intent = Intent(context, PinRequestActivity::class.java)
                         intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                        intent.putExtra("UID", mCard!!.uid)
-                        intent.putExtra("Card", mCard!!.asBundle)
+                        intent.putExtra("UID", card!!.uid)
+                        intent.putExtra("Card", card!!.asBundle)
                         newPIN = data.getStringExtra("newPIN")
                         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
                     } else {
@@ -266,8 +266,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     if (data.extras != null && data.extras!!.containsKey("confirmPIN2")) {
                         val intent = Intent(context, PinRequestActivity::class.java)
                         intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                        intent.putExtra("UID", mCard!!.uid)
-                        intent.putExtra("Card", mCard!!.asBundle)
+                        intent.putExtra("UID", card!!.uid)
+                        intent.putExtra("Card", card!!.asBundle)
                         newPIN2 = data.getStringExtra("newPIN2")
                         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
                     } else {
@@ -280,7 +280,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
             REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (newPIN == "")
-                    newPIN = mCard!!.pin
+                    newPIN = card!!.pin
 
                 if (newPIN2 == "")
                     newPIN2 = PINStorage.getPIN2()
@@ -299,8 +299,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             REQUEST_CODE_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
                     data = Intent()
-                    data.putExtra("UID", mCard!!.uid)
-                    data.putExtra("Card", mCard!!.asBundle)
+                    data.putExtra("UID", card!!.uid)
+                    data.putExtra("Card", card!!.asBundle)
                     data.putExtra("modification", "delete")
                 } else
                     data.putExtra("modification", "update")
@@ -312,34 +312,34 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             } else {
                 if (data != null && data.extras != null && data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
                     val updatedCard = TangemCard(data.getStringExtra("UID"))
-                    updatedCard.LoadFromBundle(data.getBundleExtra("Card"))
-                    mCard = updatedCard
+                    updatedCard.loadFromBundle(data.getBundleExtra("Card"))
+                    card = updatedCard
                 }
                 if (resultCode == CreateNewWalletActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
                     val intent = Intent(context, PinRequestActivity::class.java)
                     intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                    intent.putExtra("UID", mCard!!.uid)
-                    intent.putExtra("Card", mCard!!.asBundle)
+                    intent.putExtra("UID", card!!.uid)
+                    intent.putExtra("Card", card!!.asBundle)
                     startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
                     return
                 } else {
                     if (data != null && data.extras!!.containsKey("message")) {
-                        mCard!!.error = data.getStringExtra("message")
+                        card!!.error = data.getStringExtra("message")
                     }
                 }
             }
             REQUEST_CODE_REQUEST_PIN2_FOR_PURGE -> if (resultCode == Activity.RESULT_OK) {
                 val intent = Intent(context, PurgeActivity::class.java)
-                intent.putExtra("UID", mCard!!.uid)
-                intent.putExtra("Card", mCard!!.asBundle)
+                intent.putExtra("UID", card!!.uid)
+                intent.putExtra("Card", card!!.asBundle)
                 startActivityForResult(intent, REQUEST_CODE_PURGE)
             }
             REQUEST_CODE_PURGE -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
                     data = Intent()
-                    data.putExtra("UID", mCard!!.uid)
-                    data.putExtra("Card", mCard!!.asBundle)
+                    data.putExtra("UID", card!!.uid)
+                    data.putExtra("Card", card!!.asBundle)
                     data.putExtra("modification", "delete")
                 } else {
                     data.putExtra("modification", "update")
@@ -351,20 +351,20 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             } else {
                 if (data != null && data.extras != null && data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
                     val updatedCard = TangemCard(data.getStringExtra("UID"))
-                    updatedCard.LoadFromBundle(data.getBundleExtra("Card"))
-                    mCard = updatedCard
+                    updatedCard.loadFromBundle(data.getBundleExtra("Card"))
+                    card = updatedCard
                 }
                 if (resultCode == CreateNewWalletActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
                     val intent = Intent(context, PinRequestActivity::class.java)
                     intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                    intent.putExtra("UID", mCard!!.uid)
-                    intent.putExtra("Card", mCard!!.asBundle)
+                    intent.putExtra("UID", card!!.uid)
+                    intent.putExtra("Card", card!!.asBundle)
                     startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_PURGE)
                     return
                 } else {
                     if (data != null && data.extras!!.containsKey("message")) {
-                        mCard!!.error = data.getStringExtra("message")
+                        card!!.error = data.getStringExtra("message")
                     }
                 }
                 updateViews()
@@ -373,21 +373,21 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 if (resultCode == Activity.RESULT_OK) {
                     srlLoadedWallet!!.postDelayed({ this.refresh() }, 10000)
                     srlLoadedWallet!!.isRefreshing = true
-                    mCard!!.clearInfo()
+                    card!!.clearInfo()
                     updateViews()
                 }
 
                 if (data != null && data.extras != null) {
                     if (data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
                         val updatedCard = TangemCard(data.getStringExtra("UID"))
-                        updatedCard.LoadFromBundle(data.getBundleExtra("Card"))
-                        mCard = updatedCard
+                        updatedCard.loadFromBundle(data.getBundleExtra("Card"))
+                        card = updatedCard
                     }
                     if (data.extras!!.containsKey("message")) {
                         if (resultCode == Activity.RESULT_OK) {
-                            mCard!!.message = data.getStringExtra("message")
+                            card!!.message = data.getStringExtra("message")
                         } else {
-                            mCard!!.error = data.getStringExtra("message")
+                            card!!.error = data.getStringExtra("message")
                         }
                     }
                     updateViews()
@@ -398,111 +398,111 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     fun refresh() {
         srlLoadedWallet!!.isRefreshing = true
-        mCard!!.clearInfo()
-        mCard!!.error = null
-        mCard!!.message = null
+        card!!.clearInfo()
+        card!!.error = null
+        card!!.message = null
 
-        val needResendTX = LastSignStorage.getNeedTxSend(mCard!!.wallet)
+        val needResendTX = LastSignStorage.getNeedTxSend(card!!.wallet)
 
         updateViews()
 
-        val engine = CoinEngineFactory.Create(mCard!!.blockchain)
+        val engine = CoinEngineFactory.create(card!!.blockchain)
 
-        if ((mCard!!.isOnlineVerified == null || !mCard!!.isOnlineVerified) && onlineVerifyTask == null) {
+        if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified) && onlineVerifyTask == null) {
             onlineVerifyTask = OnlineVerifyTask()
-            onlineVerifyTask!!.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, VerificationServerProtocol.Verify.prepare(mCard))
+            onlineVerifyTask!!.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, VerificationServerProtocol.Verify.prepare(card))
         }
 
-        if (mCard!!.blockchain == Blockchain.Bitcoin || mCard!!.blockchain == Blockchain.BitcoinTestNet) {
+        if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
             val data = SharedData(SharedData.COUNT_REQUEST)
-            mCard!!.resetFailedBalanceRequestCounter()
-            mCard!!.setIsBalanceEqual(true)
+            card!!.resetFailedBalanceRequestCounter()
+            card!!.setIsBalanceEqual(true)
             for (i in 0 until data.allRequest) {
 
-                val nodeAddress = engine!!.GetNextNode(mCard)
-                val nodePort = engine.GetNextNodePort(mCard)
+                val nodeAddress = engine!!.getNextNode(card)
+                val nodePort = engine.getNextNodePort(card)
 
                 // check balance
                 val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(mCard!!.wallet))
+                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(card!!.wallet))
 
                 // list unspent input
                 val updateWalletInfoTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-                updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(mCard!!.wallet))
+                updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(card!!.wallet))
             }
 
             // course request
             val taskRate = RateInfoTask(this@LoadedWallet)
-            val rate = ExchangeRequest.GetRate(mCard!!.wallet, "bitcoin", "bitcoin")
+            val rate = ExchangeRequest.GetRate(card!!.wallet, "bitcoin", "bitcoin")
             taskRate.execute(rate)
 
 
-        } else if (mCard!!.blockchain == Blockchain.BitcoinCash || mCard!!.blockchain == Blockchain.BitcoinCashTestNet) {
-            mCard!!.resetFailedBalanceRequestCounter()
+        } else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
+            card!!.resetFailedBalanceRequestCounter()
             val data = SharedData(SharedData.COUNT_REQUEST)
-            mCard!!.setIsBalanceEqual(true)
+            card!!.setIsBalanceEqual(true)
             for (i in 0 until data.allRequest) {
-                val nodeAddress = engine!!.GetNextNode(mCard)
-                val nodePort = engine.GetNextNodePort(mCard)
+                val nodeAddress = engine!!.getNextNode(card)
+                val nodePort = engine.getNextNodePort(card)
 
                 // check balance
                 val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(mCard!!.wallet))
+                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(card!!.wallet))
             }
 
-            val nodeAddress = engine!!.GetNode(mCard)
-            val nodePort = engine.GetNodePort(mCard)
+            val nodeAddress = engine!!.getNode(card)
+            val nodePort = engine.getNodePort(card)
 
             // list unspent input
             val updateWalletInfoTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-            updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(mCard!!.wallet))
+            updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(card!!.wallet))
 
             // course request
             val taskRate = RateInfoTask(this@LoadedWallet)
-            val rate = ExchangeRequest.GetRate(mCard!!.wallet, "bitcoin-cash", "bitcoin-cash")
+            val rate = ExchangeRequest.GetRate(card!!.wallet, "bitcoin-cash", "bitcoin-cash")
             taskRate.execute(rate)
 
 
-        } else if (mCard!!.blockchain == Blockchain.Ethereum || mCard!!.blockchain == Blockchain.EthereumTestNet) {
-            val updateETH = ETHRequestTask(this@LoadedWallet, mCard!!.blockchain)
-            val reqETH = InfuraRequest.GetBalance(mCard!!.wallet)
+        } else if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet) {
+            val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
+            val reqETH = InfuraRequest.GetBalance(card!!.wallet)
             reqETH.id = 67
-            reqETH.setBlockchain(mCard!!.blockchain)
+            reqETH.setBlockchain(card!!.blockchain)
 
-            val reqNonce = InfuraRequest.GetOutTransactionCount(mCard!!.wallet)
+            val reqNonce = InfuraRequest.GetOutTransactionCount(card!!.wallet)
             reqNonce.id = 67
-            reqNonce.setBlockchain(mCard!!.blockchain)
+            reqNonce.setBlockchain(card!!.blockchain)
 
             updateETH.execute(reqETH, reqNonce)
 
             // course request
             val taskRate = RateInfoTask(this@LoadedWallet)
-            val rate = ExchangeRequest.GetRate(mCard!!.wallet, "ethereum", "ethereum")
+            val rate = ExchangeRequest.GetRate(card!!.wallet, "ethereum", "ethereum")
             taskRate.execute(rate)
 
-        } else if (mCard!!.blockchain == Blockchain.Token) {
-            val updateETH = ETHRequestTask(this@LoadedWallet, mCard!!.blockchain)
-            val reqETH = InfuraRequest.GetTokenBalance(mCard!!.wallet, engine!!.GetContractAddress(mCard), engine.GetTokenDecimals(mCard))
+        } else if (card!!.blockchain == Blockchain.Token) {
+            val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
+            val reqETH = InfuraRequest.GetTokenBalance(card!!.wallet, engine!!.getContractAddress(card), engine.getTokenDecimals(card))
             reqETH.id = 67
-            reqETH.setBlockchain(mCard!!.blockchain)
+            reqETH.setBlockchain(card!!.blockchain)
 
-            val reqBalance = InfuraRequest.GetBalance(mCard!!.wallet)
+            val reqBalance = InfuraRequest.GetBalance(card!!.wallet)
             reqBalance.id = 67
-            reqBalance.setBlockchain(mCard!!.blockchain)
+            reqBalance.setBlockchain(card!!.blockchain)
 
-            val reqNonce = InfuraRequest.GetOutTransactionCount(mCard!!.wallet)
+            val reqNonce = InfuraRequest.GetOutTransactionCount(card!!.wallet)
             reqNonce.id = 67
-            reqNonce.setBlockchain(mCard!!.blockchain)
+            reqNonce.setBlockchain(card!!.blockchain)
             updateETH.execute(reqETH, reqNonce, reqBalance)
 
             // course request
             val taskRate = RateInfoTask(this@LoadedWallet)
-            val rate = ExchangeRequest.GetRate(mCard!!.wallet, "ethereum", "ethereum")
+            val rate = ExchangeRequest.GetRate(card!!.wallet, "ethereum", "ethereum")
             taskRate.execute(rate)
         }
 
         if (needResendTX)
-            sendTransaction(LastSignStorage.getTxForSend(mCard!!.wallet))
+            sendTransaction(LastSignStorage.getTxForSend(card!!.wallet))
     }
 
     override fun onTagDiscovered(tag: Tag) {
@@ -511,8 +511,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     fun prepareResultIntent(): Intent {
         val data = Intent()
-        data.putExtra("UID", mCard!!.uid)
-        data.putExtra("Card", mCard!!.asBundle)
+        data.putExtra("UID", card!!.uid)
+        data.putExtra("Card", card!!.asBundle)
         return data
     }
 
@@ -586,65 +586,63 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 timerHideErrorAndMessage = null
             }
 
-            if (mCard!!.error == null || mCard!!.error.isEmpty()) {
+            if (card!!.error == null || card!!.error.isEmpty()) {
                 tvError.visibility = View.GONE
                 tvError.text = ""
             } else {
                 tvError.visibility = View.VISIBLE
-                tvError.text = mCard!!.error
+                tvError.text = card!!.error
             }
 
-            val needResendTX = LastSignStorage.getNeedTxSend(mCard!!.wallet)
+            val needResendTX = LastSignStorage.getNeedTxSend(card!!.wallet)
 
-            if ((mCard!!.message == null || mCard!!.message.isEmpty()) && !needResendTX) {
+            if ((card!!.message == null || card!!.message.isEmpty()) && !needResendTX) {
                 tvMessage!!.text = ""
                 tvMessage!!.visibility = View.GONE
             } else {
                 if (needResendTX) {
 
                 } else {
-                    tvMessage!!.text = mCard!!.message
+                    tvMessage!!.text = card!!.message
                 }
 
                 tvMessage!!.visibility = View.VISIBLE
             }
 
-            val engine = CoinEngineFactory.Create(mCard!!.blockchain)
+            val engine = CoinEngineFactory.create(card!!.blockchain)
 
-            if (mCard!!.blockchain == Blockchain.Bitcoin || mCard!!.blockchain == Blockchain.BitcoinTestNet) {
+            if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
 
                 val validator = BalanceValidator()
-                validator.Check(mCard)
+                validator.Check(card)
                 tvBalanceLine1.text = validator.GetFirstLine()
                 tvBalanceLine2.text = validator.GetSecondLine()
                 tvBalanceLine1.setTextColor(ContextCompat.getColor(context!!, validator.GetColor()))
             }
 
-            if (engine!!.HasBalanceInfo(mCard) || mCard!!.offlineBalance == null) {
-                if (mCard!!.blockchain == Blockchain.Token) {
-                    val html = Html.fromHtml(engine.GetBalanceWithAlter(mCard))
+            if (engine!!.hasBalanceInfo(card) || card!!.offlineBalance == null) {
+                if (card!!.blockchain == Blockchain.Token) {
+                    val html = Html.fromHtml(engine.getBalanceWithAlter(card))
                     tvBalance.text = html
-                } else {
-                    tvBalance.text = engine.GetBalanceWithAlter(mCard)
-                }
+                } else
+                    tvBalance.text = engine.getBalanceWithAlter(card)
 
             } else {
-                val offlineAmount = engine.ConvertByteArrayToAmount(mCard, mCard!!.offlineBalance)
-                if (mCard!!.blockchain == Blockchain.Token) {
+                val offlineAmount = engine.convertByteArrayToAmount(card, card!!.offlineBalance)
+                if (card!!.blockchain == Blockchain.Token) {
                     tvBalance.setText(R.string.not_implemented)
-                } else {
-                    tvBalance.text = engine.GetAmountDescription(mCard, offlineAmount)
-                }
+                } else
+                    tvBalance.text = engine.getAmountDescription(card, offlineAmount)
             }
 
-            tvWallet.text = mCard!!.wallet
+            tvWallet.text = card!!.wallet
 
-            tvBlockchain.text = mCard!!.blockchainName
+            tvBlockchain.text = card!!.blockchainName
 
-            btnExtract!!.isEnabled = mCard!!.hasBalanceInfo()
+            btnExtract!!.isEnabled = card!!.hasBalanceInfo()
 
-            mCard!!.error = null
-            mCard!!.message = null
+            card!!.error = null
+            card!!.message = null
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -664,7 +662,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag!!.id
             val sUID = Util.byteArrayToHexString(uid)
-            if (mCard!!.uid != sUID) {
+            if (card!!.uid != sUID) {
 //                Log.d(TAG, "Invalid UID: $sUID")
                 nfcManager!!.ignoreTag(isoDep.tag)
                 return
@@ -678,7 +676,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 isoDep.timeout = 65000
             }
 
-            verifyCardTask = VerifyCardTask(context, mCard, nfcManager, isoDep, this)
+            verifyCardTask = VerifyCardTask(context, card, nfcManager, isoDep, this)
             verifyCardTask!!.start()
 
         } catch (e: Exception) {
@@ -688,7 +686,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     private fun doShareWallet(useURI: Boolean) {
         if (useURI) {
-            val txtShare = CoinEngineFactory.Create(mCard!!.blockchain)!!.getShareWalletURI(mCard).toString()
+            val txtShare = CoinEngineFactory.create(card!!.blockchain)!!.getShareWalletUri(card).toString()
             val intent = Intent(Intent.ACTION_SEND)
             intent.type = "text/plain"
             intent.putExtra(Intent.EXTRA_SUBJECT, "Wallet address")
@@ -712,7 +710,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 Toast.makeText(context, R.string.copied_clipboard, Toast.LENGTH_LONG).show()
             }
         } else {
-            val txtShare = mCard!!.wallet
+            val txtShare = card!!.wallet
             val clipboard = activity!!.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
             clipboard.primaryClip = ClipData.newPlainText(txtShare, txtShare)
             Toast.makeText(context, R.string.copied_clipboard, Toast.LENGTH_LONG).show()
@@ -720,32 +718,32 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     private fun sendTransaction(tx: String) {
-        val engine = CoinEngineFactory.Create(mCard!!.blockchain)
-        if (mCard!!.blockchain == Blockchain.Ethereum || mCard!!.blockchain == Blockchain.EthereumTestNet || mCard!!.blockchain == Blockchain.Token) {
-            val task = ETHRequestTask(this@LoadedWallet, mCard!!.blockchain)
-            val req = InfuraRequest.SendTransaction(mCard!!.wallet, tx)
+        val engine = CoinEngineFactory.create(card!!.blockchain)
+        if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet || card!!.blockchain == Blockchain.Token) {
+            val task = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
+            val req = InfuraRequest.SendTransaction(card!!.wallet, tx)
             req.id = 67
-            req.setBlockchain(mCard!!.blockchain)
+            req.setBlockchain(card!!.blockchain)
             task.execute(req)
-        } else if (mCard!!.blockchain == Blockchain.Bitcoin || mCard!!.blockchain == Blockchain.BitcoinTestNet) {
-            val nodeAddress = engine!!.GetNode(mCard)
-            val nodePort = engine.GetNodePort(mCard)
+        } else if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
+            val nodeAddress = engine!!.getNode(card)
+            val nodePort = engine.getNodePort(card)
 
             val connectTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort)
-            connectTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.Broadcast(mCard!!.wallet, tx))
-        } else if (mCard!!.blockchain == Blockchain.BitcoinCash || mCard!!.blockchain == Blockchain.BitcoinCashTestNet) {
-            val nodeAddress = engine!!.GetNode(mCard)
-            val nodePort = engine.GetNodePort(mCard)
+            connectTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.Broadcast(card!!.wallet, tx))
+        } else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
+            val nodeAddress = engine!!.getNode(card)
+            val nodePort = engine.getNodePort(card)
 
             val connectTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort)
-            connectTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.Broadcast(mCard!!.wallet, tx))
+            connectTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.Broadcast(card!!.wallet, tx))
         }
     }
 
     private fun startSwapPINActivity() {
         val intent = Intent(context, PinSwapActivity::class.java)
-        intent.putExtra("UID", mCard!!.uid)
-        intent.putExtra("Card", mCard!!.asBundle)
+        intent.putExtra("UID", card!!.uid)
+        intent.putExtra("Card", card!!.asBundle)
         intent.putExtra("newPIN", newPIN)
         intent.putExtra("newPIN2", newPIN2)
         startActivityForResult(intent, REQUEST_CODE_SWAP_PIN)
