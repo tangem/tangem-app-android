@@ -124,7 +124,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
 
         ivCamera.setOnClickListener {
-            val intent = Intent(baseContext, QRScanActivity::class.java)
+            val intent = Intent(baseContext, QrScanActivity::class.java)
             startActivityForResult(intent, REQUEST_CODE_SCAN_QR)
         }
     }
