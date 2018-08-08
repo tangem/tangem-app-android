@@ -47,7 +47,7 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         nfcManager = NfcManager(this, this)
 
         card = TangemCard(intent.getStringExtra("UID"))
-        card!!.LoadFromBundle(intent.extras!!.getBundle("Card"))
+        card!!.loadFromBundle(intent.extras!!.getBundle("Card"))
 
         tvCardId.text = card!!.cidDescription
 
