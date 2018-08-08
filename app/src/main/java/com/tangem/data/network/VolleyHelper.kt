@@ -9,29 +9,46 @@ import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonParser
+import com.google.gson.Gson
 import com.tangem.AppController
+import com.tangem.data.network.model.ResponseVerify
+import com.tangem.domain.wallet.TangemCard
 import com.tangem.presentation.fragment.LoadedWallet
+import com.tangem.util.Util
 import com.tangem.wallet.R
+import java.util.HashMap
 
-class VolleyHelper {
+class VolleyHelper (private val requestCardVerify: IRequestCardVerify){
+
+    interface IRequestCardVerify {
+
+        fun success(responseVerify: ResponseVerify)
+
+        fun error(error: String)
+    }
+
+    fun requestCardVerify(card: TangemCard) {
+        val params = HashMap<String, String>()
+        params["CID"] = Util.bytesToHex(card.cid)
+        params["publicKey"] = Util.bytesToHex(card.cardPublicKey)
+        doRequestString(Server.API.Method.VERIFY, params)
+    }
 
     fun doRequestDebug(context: Context, url: String, params: Map<String, String>) {
-        val stringRequest = object : StringRequest(Request.Method.POST, url,
+        val stringRequest = object : StringRequest(Request.Method.GET, url,
                 { response ->
-                    val data = GsonBuilder().setPrettyPrinting().create().toJson(JsonParser().parse(response))
+                    //                    Log.i(LoadedWallet.TAG, response.toString())
                     val builder = AlertDialog.Builder(context)
                     builder.setTitle(url)
-                            .setMessage(data)
+                            .setMessage(response.toString())
                             .setPositiveButton(R.string.ok, null)
                             .setNeutralButton(R.string.send) { _, _ ->
                                 val intent = Intent(Intent.ACTION_SEND)
                                 intent.type = "text/html"
                                 intent.putExtra(Intent.EXTRA_EMAIL, arrayOf("erogov@tangem.com"))
                                 intent.putExtra(Intent.EXTRA_SUBJECT, url)
-                                intent.putExtra(Intent.EXTRA_TEXT, data)
-                                context.startActivity(Intent.createChooser(intent, "Send gson"))
+                                intent.putExtra(Intent.EXTRA_TEXT, response.toString())
+                                context.startActivity(Intent.createChooser(intent, "Send json"))
                             }
                     val alert = builder.create()
                     alert.show()
@@ -54,14 +71,18 @@ class VolleyHelper {
         AppController.getInstance().addToRequestQueue(stringRequest)
     }
 
-    fun doRequestString(context: Context, url: String, params: Map<String, String>) {
-        val stringRequest = object : StringRequest(Request.Method.POST, url,
+    private fun doRequestString(url: String, params: Map<String, String>) {
+        val stringRequest = object : StringRequest(Request.Method.GET, url,
                 Response.Listener<String> { response ->
-//                    val json = String(response)
-                    Log.i(LoadedWallet.TAG, response)
+                    val requestResponse = response.toString().substring(response.toString().lastIndexOf("Response:") + 10)
+
+                    val responseVerify = Gson().fromJson(requestResponse, ResponseVerify::class.java)
+
+                    requestCardVerify.success(responseVerify)
+
+//                    Log.i(LoadedWallet.TAG, responseVerify.results!![2].CID)
                 },
                 Response.ErrorListener { "That didn't work!" }) {
-
 
             @Throws(AuthFailureError::class)
             override fun getHeaders(): Map<String, String> {
