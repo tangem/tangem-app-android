@@ -5,7 +5,7 @@ package com.tangem.domain.wallet;
  */
 
 public class CoinEngineFactory {
-    public static CoinEngine Create(Blockchain chain) {
+    public static CoinEngine create(Blockchain chain) {
         if (Blockchain.BitcoinCash == chain || Blockchain.BitcoinCashTestNet == chain) {
             return new BtcCashEngine();
         } else if (Blockchain.Bitcoin == chain || Blockchain.BitcoinTestNet == chain) {
