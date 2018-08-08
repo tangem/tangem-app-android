@@ -41,7 +41,7 @@ public class ETHRequestTask extends InfuraTask {
                                 JSONObject msg = request.getAnswer();
                                 JSONObject err = msg.getJSONObject("error");
                                 hashTX = err.getString("message");
-                                LastSignStorage.setLastMessage(sendTransactionActivity.mCard.getWallet(), hashTX);
+                                LastSignStorage.setLastMessage(sendTransactionActivity.getCard().getWallet(), hashTX);
                                 Log.e("Send_TX_Error:", hashTX);
                                 sendTransactionActivity.finishWithError(hashTX);
                                 return;
@@ -52,11 +52,11 @@ public class ETHRequestTask extends InfuraTask {
                                     hashTX = hashTX.substring(2);
                                 }
                                 BigInteger bigInt = new BigInteger(hashTX, 16); //TODO: очень плохой способ
-                                LastSignStorage.setTxWasSend(sendTransactionActivity.mCard.getWallet());
-                                LastSignStorage.setLastMessage(sendTransactionActivity.mCard.getWallet(), "");
-                                BigInteger nonce = sendTransactionActivity.mCard.GetConfirmTXCount();
+                                LastSignStorage.setTxWasSend(sendTransactionActivity.getCard().getWallet());
+                                LastSignStorage.setLastMessage(sendTransactionActivity.getCard().getWallet(), "");
+                                BigInteger nonce = sendTransactionActivity.getCard().GetConfirmTXCount();
                                 nonce.add(BigInteger.valueOf(1));
-                                sendTransactionActivity.mCard.SetConfirmTXCount(nonce);
+                                sendTransactionActivity.getCard().SetConfirmTXCount(nonce);
                                 Log.e("TX_RESULT", hashTX);
                                 sendTransactionActivity.finishWithSuccess();
                             } catch (Exception e) {
