@@ -265,15 +265,15 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         super.onStop()
     }
 
-    override fun OnReadStart(cardProtocol: CardProtocol) {
+    override fun onReadStart(cardProtocol: CardProtocol) {
         rlProgressBar.post { rlProgressBar.visibility = View.VISIBLE }
     }
 
-    override fun OnReadProgress(protocol: CardProtocol, progress: Int) {
+    override fun onReadProgress(protocol: CardProtocol, progress: Int) {
 
     }
 
-    override fun OnReadFinish(cardProtocol: CardProtocol?) {
+    override fun onReadFinish(cardProtocol: CardProtocol?) {
         readCardInfoTask = null
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
@@ -341,7 +341,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         }, 500)
     }
 
-    override fun OnReadCancel() {
+    override fun onReadCancel() {
         readCardInfoTask = null
         ReadCardInfoTask.resetLastReadInfo()
         rlProgressBar.postDelayed({
@@ -353,15 +353,15 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         }, 500)
     }
 
-    override fun OnReadWait(msec: Int) {
+    override fun onReadWait(msec: Int) {
         WaitSecurityDelayDialog.OnReadWait(Objects.requireNonNull(this), msec)
     }
 
-    override fun OnReadBeforeRequest(timeout: Int) {
+    override fun onReadBeforeRequest(timeout: Int) {
         WaitSecurityDelayDialog.onReadBeforeRequest(Objects.requireNonNull(this), timeout)
     }
 
-    override fun OnReadAfterRequest() {
+    override fun onReadAfterRequest() {
         WaitSecurityDelayDialog.onReadAfterRequest(Objects.requireNonNull(this))
     }
 
