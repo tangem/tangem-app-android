@@ -23,7 +23,7 @@ import com.tangem.data.network.task.save_pin.ConfirmWithFingerprintTask
 import com.tangem.domain.wallet.FingerprintHelper
 import com.tangem.domain.wallet.PINStorage
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.activity_save_pin.*
+import kotlinx.android.synthetic.main.activity_pin_save.*
 import kotlinx.android.synthetic.main.layout_pin_buttons.*
 import java.io.IOException
 import java.security.KeyStore
@@ -36,7 +36,7 @@ import javax.crypto.NoSuchPaddingException
 import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 
-class SavePINActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelperListener {
+class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelperListener {
 
     private var confirmWithFingerprintTask: ConfirmWithFingerprintTask? = null
     private var keyStore: KeyStore? = null
@@ -54,7 +54,7 @@ class SavePINActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_save_pin)
+        setContentView(R.layout.activity_pin_save)
 
         MainActivity.commonInit(applicationContext)
 
@@ -121,7 +121,7 @@ class SavePINActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
         cipher = result.cryptoObject.cipher
 
         when (onConfirmAction) {
-            SavePINActivity.OnConfirmAction.Save -> {
+            PinSaveActivity.OnConfirmAction.Save -> {
                 val textToEncrypt = tvPin.text.toString()
                 if (usePIN2) {
                     PINStorage.saveEncryptedPIN2(cipher, textToEncrypt)
@@ -130,7 +130,7 @@ class SavePINActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
                 }
             }
 
-            SavePINActivity.OnConfirmAction.Delete -> {
+            PinSaveActivity.OnConfirmAction.Delete -> {
                 if (usePIN2) {
                     PINStorage.deleteEncryptedPIN2()
                 } else {
@@ -140,7 +140,7 @@ class SavePINActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
                 tvPin.text = ""
             }
 
-            SavePINActivity.OnConfirmAction.DeleteEncryptedAndSave -> if (usePIN2) {
+            PinSaveActivity.OnConfirmAction.DeleteEncryptedAndSave -> if (usePIN2) {
                 PINStorage.deleteEncryptedPIN2()
                 PINStorage.saveEncryptedPIN2(cipher, tvPin.text.toString())
             } else {
@@ -155,7 +155,7 @@ class SavePINActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
 
     fun getKeyStore(): Boolean {
         try {
-            keyStore = KeyStore.getInstance(RequestPINActivity.KEYSTORE)
+            keyStore = KeyStore.getInstance(PinRequestActivity.KEYSTORE)
             // create empty keystore
             keyStore!!.load(null)
             return true
@@ -176,12 +176,12 @@ class SavePINActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
     fun createNewKey(forceCreate: Boolean): Boolean {
         try {
             if (forceCreate)
-                keyStore!!.deleteEntry(RequestPINActivity.KEY_ALIAS)
+                keyStore!!.deleteEntry(PinRequestActivity.KEY_ALIAS)
 
-            if (!keyStore!!.containsAlias(RequestPINActivity.KEY_ALIAS)) {
-                val generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, RequestPINActivity.KEYSTORE)
+            if (!keyStore!!.containsAlias(PinRequestActivity.KEY_ALIAS)) {
+                val generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, PinRequestActivity.KEYSTORE)
 
-                generator.init(KeyGenParameterSpec.Builder(RequestPINActivity.KEY_ALIAS,
+                generator.init(KeyGenParameterSpec.Builder(PinRequestActivity.KEY_ALIAS,
                         KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
                         .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
                         .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
@@ -217,7 +217,7 @@ class SavePINActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
     fun initCipher(mode: Int): Boolean {
         try {
             keyStore!!.load(null)
-            val keyspec = keyStore!!.getKey(RequestPINActivity.KEY_ALIAS, null) as SecretKey
+            val keyspec = keyStore!!.getKey(PinRequestActivity.KEY_ALIAS, null) as SecretKey
 
             if (mode == Cipher.ENCRYPT_MODE) {
                 cipher!!.init(mode, keyspec)
@@ -285,7 +285,7 @@ class SavePINActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
 
                 onConfirmAction = OnConfirmAction.Save
 
-                confirmWithFingerprintTask = ConfirmWithFingerprintTask(this@SavePINActivity)
+                confirmWithFingerprintTask = ConfirmWithFingerprintTask(this@PinSaveActivity)
                 confirmWithFingerprintTask!!.execute(null as Void?)
 
             } else {
@@ -303,7 +303,7 @@ class SavePINActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
 
                     // show a progress spinner, and kick off a background task to perform the user login attempt
                     //showProgress(true);
-                    confirmWithFingerprintTask = ConfirmWithFingerprintTask(this@SavePINActivity)
+                    confirmWithFingerprintTask = ConfirmWithFingerprintTask(this@PinSaveActivity)
                     confirmWithFingerprintTask!!.execute(null as Void?)
                 } else {
                     PINStorage.savePIN(tvPin.text.toString())
@@ -321,7 +321,7 @@ class SavePINActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
                     return
                 }
                 onConfirmAction = OnConfirmAction.Delete
-                confirmWithFingerprintTask = ConfirmWithFingerprintTask(this@SavePINActivity)
+                confirmWithFingerprintTask = ConfirmWithFingerprintTask(this@PinSaveActivity)
                 confirmWithFingerprintTask!!.execute(null as Void?)
             } else {
                 tvPin.text = ""
@@ -334,7 +334,7 @@ class SavePINActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
                     return
                 }
                 onConfirmAction = OnConfirmAction.Delete
-                confirmWithFingerprintTask = ConfirmWithFingerprintTask(this@SavePINActivity)
+                confirmWithFingerprintTask = ConfirmWithFingerprintTask(this@PinSaveActivity)
                 confirmWithFingerprintTask!!.execute(null as Void?)
             } else {
                 tvPin.text = ""

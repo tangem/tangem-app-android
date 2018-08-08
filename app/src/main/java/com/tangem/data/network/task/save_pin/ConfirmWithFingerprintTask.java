@@ -4,7 +4,7 @@ import android.os.AsyncTask;
 import android.widget.Toast;
 
 import com.tangem.domain.wallet.FingerprintHelper;
-import com.tangem.presentation.activity.SavePINActivity;
+import com.tangem.presentation.activity.PinSaveActivity;
 import com.tangem.wallet.R;
 
 import java.lang.ref.WeakReference;
@@ -12,9 +12,9 @@ import java.lang.ref.WeakReference;
 import javax.crypto.Cipher;
 
 public class ConfirmWithFingerprintTask extends AsyncTask<Void, Void, Boolean> {
-    private WeakReference<SavePINActivity> reference;
+    private WeakReference<PinSaveActivity> reference;
 
-    public ConfirmWithFingerprintTask(SavePINActivity context) {
+    public ConfirmWithFingerprintTask(PinSaveActivity context) {
         reference = new WeakReference<>(context);
 
         reference.get().setFingerprintHelper(new FingerprintHelper(reference.get()));
@@ -22,40 +22,40 @@ public class ConfirmWithFingerprintTask extends AsyncTask<Void, Void, Boolean> {
 
     @Override
     protected Boolean doInBackground(Void... params) {
-        SavePINActivity savePINActivity = reference.get();
+        PinSaveActivity pinSaveActivity = reference.get();
 
-        if (!savePINActivity.getKeyStore())
+        if (!pinSaveActivity.getKeyStore())
             return false;
 
-        if (!savePINActivity.createNewKey(false))
+        if (!pinSaveActivity.createNewKey(false))
             return false;
 
-        if (!savePINActivity.getCipher())
+        if (!pinSaveActivity.getCipher())
             return false;
 
-        return savePINActivity.initCipher(Cipher.ENCRYPT_MODE) && savePINActivity.initCryptObject();
+        return pinSaveActivity.initCipher(Cipher.ENCRYPT_MODE) && pinSaveActivity.initCryptObject();
 
     }
 
     @Override
     protected void onPostExecute(final Boolean success) {
-        SavePINActivity savePINActivity = reference.get();
+        PinSaveActivity pinSaveActivity = reference.get();
 
         onCancelled();
 
         if (!success) {
-            Toast.makeText(savePINActivity, R.string.pin_save_fail, Toast.LENGTH_LONG).show();
+            Toast.makeText(pinSaveActivity, R.string.pin_save_fail, Toast.LENGTH_LONG).show();
         } else {
-            savePINActivity.getFingerprintHelper().startAuth(savePINActivity.getFingerprintManager(), savePINActivity.getCryptoObject());
+            pinSaveActivity.getFingerprintHelper().startAuth(pinSaveActivity.getFingerprintManager(), pinSaveActivity.getCryptoObject());
         }
     }
 
     @Override
     protected void onCancelled() {
-        SavePINActivity savePINActivity = reference.get();
+        PinSaveActivity pinSaveActivity = reference.get();
 
-        if (savePINActivity.getDFingerPrintConfirmation() != null) {
-            savePINActivity.getDFingerPrintConfirmation().cancel();
+        if (pinSaveActivity.getDFingerPrintConfirmation() != null) {
+            pinSaveActivity.getDFingerPrintConfirmation().cancel();
         }
     }
 
