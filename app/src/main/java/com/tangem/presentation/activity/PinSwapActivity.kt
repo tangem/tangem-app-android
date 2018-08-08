@@ -104,14 +104,14 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
         super.onStop()
     }
 
-    override fun OnReadStart(cardProtocol: CardProtocol) {
+    override fun onReadStart(cardProtocol: CardProtocol) {
         progressBar!!.post {
             progressBar!!.visibility = View.VISIBLE
             progressBar!!.progress = 5
         }
     }
 
-    override fun OnReadFinish(cardProtocol: CardProtocol?) {
+    override fun onReadFinish(cardProtocol: CardProtocol?) {
         swapPinTask = null
 
         if (cardProtocol != null) {
@@ -171,11 +171,11 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
         }
     }
 
-    override fun OnReadProgress(protocol: CardProtocol, progress: Int) {
+    override fun onReadProgress(protocol: CardProtocol, progress: Int) {
         progressBar!!.post { progressBar!!.progress = progress }
     }
 
-    override fun OnReadCancel() {
+    override fun onReadCancel() {
         swapPinTask = null
 
         progressBar!!.postDelayed({
@@ -189,15 +189,15 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
         }, 500)
     }
 
-    override fun OnReadWait(msec: Int) {
+    override fun onReadWait(msec: Int) {
         WaitSecurityDelayDialog.OnReadWait(this, msec)
     }
 
-    override fun OnReadBeforeRequest(timeout: Int) {
+    override fun onReadBeforeRequest(timeout: Int) {
         WaitSecurityDelayDialog.onReadBeforeRequest(this, timeout)
     }
 
-    override fun OnReadAfterRequest() {
+    override fun onReadAfterRequest() {
         WaitSecurityDelayDialog.onReadAfterRequest(this)
     }
 
