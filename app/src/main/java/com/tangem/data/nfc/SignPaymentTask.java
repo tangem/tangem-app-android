@@ -82,7 +82,7 @@ public class SignPaymentTask extends Thread {
 //                        SignBTC_TX(protocol);
 //                    }
 
-                CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
+                CoinEngine engine = CoinEngineFactory.create(mCard.getBlockchain());
                 if (engine != null) {
                     if (mCard.getPauseBeforePIN2() > 0) {
                         mNotifications.onReadWait(mCard.getPauseBeforePIN2());
@@ -90,7 +90,7 @@ public class SignPaymentTask extends Thread {
 
                     byte[] tx;
 //                        try {
-                    tx = engine.Sign(txFee, txAmount, txOutAddress, mCard, protocol);
+                    tx = engine.sign(txFee, txAmount, txOutAddress, mCard, protocol);
 //                        }
 //                        finally {
 //                            mNotifications.onReadWait(0);
