@@ -13,70 +13,70 @@ import java.security.NoSuchProviderException;
 
 public abstract class CoinEngine {
 
-    public abstract String GetNextNode(TangemCard mCard);
+    public abstract String getNextNode(TangemCard card);
 
-    public abstract int GetNextNodePort(TangemCard mCard);
+    public abstract int getNextNodePort(TangemCard card);
 
-    public abstract String GetNode(TangemCard mCard);
+    public abstract String getNode(TangemCard card);
 
-    public abstract int GetNodePort(TangemCard mCard);
+    public abstract int getNodePort(TangemCard card);
 
-    public abstract void SwitchNode(TangemCard mCard);
+    public abstract void switchNode(TangemCard card);
 
-    public abstract boolean AwaitingConfirmation(TangemCard card);
+    public abstract boolean awaitingConfirmation(TangemCard card);
 
-    public abstract boolean HasBalanceInfo(TangemCard card);
+    public abstract boolean hasBalanceInfo(TangemCard card);
 
-    public abstract boolean IsBalanceNotZero(TangemCard card);
+    public abstract boolean isBalanceNotZero(TangemCard card);
 
-    public abstract boolean IsBalanceAlterNotZero(TangemCard card);
+    public abstract boolean isBalanceAlterNotZero(TangemCard card);
 
-    public abstract boolean CheckAmount(TangemCard card, String amount) throws Exception;
+    public abstract boolean checkAmount(TangemCard card, String amount) throws Exception;
 
-    public abstract int GetTokenDecimals(TangemCard card);
+    public abstract int getTokenDecimals(TangemCard card);
 
-    public abstract String GetContractAddress(TangemCard card);
+    public abstract String getContractAddress(TangemCard card);
 
-    public abstract byte[] Sign(String feeValue, String amountValue, String toValue, TangemCard mCard, CardProtocol protocol) throws Exception;
+    public abstract byte[] sign(String feeValue, String amountValue, String toValue, TangemCard mCard, CardProtocol protocol) throws Exception;
 
-    public abstract boolean CheckUnspentTransaction(TangemCard mCard);
+    public abstract boolean checkUnspentTransaction(TangemCard card);
 
-    public abstract Uri getShareWalletURIExplorer(TangemCard mCard);
+    public abstract Uri getShareWalletUriExplorer(TangemCard card);
 
-    public abstract Long GetBalanceLong(TangemCard mCard);
+    public abstract Long getBalanceLong(TangemCard card);
 
-    public abstract Uri getShareWalletURI(TangemCard mCard);
+    public abstract Uri getShareWalletUri(TangemCard card);
 
-    public abstract String EvaluteFeeEquivalent(TangemCard mCard, String fee);
+    public abstract String evaluateFeeEquivalent(TangemCard card, String fee);
 
-    public abstract boolean CheckAmountValie(TangemCard mCard, String amount, String fee, Long minFeeInInternalUnits);
+    public abstract boolean checkAmountValue(TangemCard card, String amount, String fee, Long minFeeInInternalUnits);
 
-    public abstract boolean InOutPutVisible();
+    public abstract boolean inOutPutVisible();
 
-    public abstract String GetBalance(TangemCard mCard);
+    public abstract String getBalance(TangemCard card);
 
-    public abstract String GetBalanceWithAlter(TangemCard mCard);
+    public abstract String getBalanceWithAlter(TangemCard card);
 
-    public abstract String GetBalanceCurrency(TangemCard card);
+    public abstract String getBalanceCurrency(TangemCard card);
 
-    public abstract String GetFeeCurrency();
+    public abstract String getFeeCurrency();
 
-    public abstract boolean IsNeedCheckNode();
+    public abstract boolean isNeedCheckNode();
 
-    public abstract String GetBalanceEquivalent(TangemCard mCard);
+    public abstract String getBalanceEquivalent(TangemCard card);
 
-    public abstract String GetBalanceValue(TangemCard mCard);
+    public abstract String getBalanceValue(TangemCard card);
 
-    public abstract String GetAmountDescription(TangemCard mCard, String amount) throws Exception;
+    public abstract String getAmountDescription(TangemCard card, String amount) throws Exception;
 
-    public abstract String GetAmountEqualentDescriptor(TangemCard mCard, String value);
+    public abstract String getAmountEquivalentDescriptor(TangemCard card, String value);
 
-    public abstract boolean ValdateAddress(String address, TangemCard catd);
+    public abstract boolean validateAddress(String address, TangemCard card);
 
-    public abstract String calculateAddress(TangemCard mCard, byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException;
+    public abstract String calculateAddress(TangemCard card, byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException;
 
-    public abstract String ConvertByteArrayToAmount(TangemCard mCard, byte[] bytes) throws Exception;
+    public abstract String convertByteArrayToAmount(TangemCard card, byte[] bytes) throws Exception;
 
-    public abstract byte[] ConvertAmountToByteArray(TangemCard mCard, String amount) throws Exception;
+    public abstract byte[] convertAmountToByteArray(TangemCard card, String amount) throws Exception;
 
 }
