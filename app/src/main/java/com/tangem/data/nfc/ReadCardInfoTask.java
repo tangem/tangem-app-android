@@ -56,9 +56,9 @@ public class ReadCardInfoTask extends Thread {
             mIsoDep.setTimeout(timeout);
             try {
                 CardProtocol protocol = new CardProtocol(mContext, mIsoDep, mNotifications);
-                mNotifications.OnReadStart(protocol);
+                mNotifications.onReadStart(protocol);
                 try {
-                    mNotifications.OnReadProgress(protocol, 5);
+                    mNotifications.onReadProgress(protocol, 5);
 
                     byte[] UID = mIsoDep.getTag().getId();
                     String sUID = Util.byteArrayToHexString(UID);
@@ -85,7 +85,7 @@ public class ReadCardInfoTask extends Thread {
                         //already have read result (obtained while get supported encryption), only read issuer data and define offline balance
                         protocol.parseReadResult();
                         protocol.run_ReadWriteIssuerData();
-                        mNotifications.OnReadProgress(protocol, 60);
+                        mNotifications.onReadProgress(protocol, 60);
                         PINStorage.setLastUsedPIN(protocol.getCard().getPIN());
                     } else {
                         //don't have read result - may be don't get supported encryption on this try, need encryption or need another PIN
@@ -121,7 +121,7 @@ public class ReadCardInfoTask extends Thread {
                                     protocol.CreateProtocolKey();
                                 }
                                 protocol.run_Read();
-                                mNotifications.OnReadProgress(protocol, 60);
+                                mNotifications.onReadProgress(protocol, 60);
                                 PINStorage.setLastUsedPIN(PIN);
                                 pinFound = true;
                                 protocol.getCard().setPIN(PIN);
@@ -144,7 +144,7 @@ public class ReadCardInfoTask extends Thread {
 
                 } finally {
                     Log.i(TAG, "[-- Finish read card info --]");
-                    mNotifications.OnReadFinish(protocol);
+                    mNotifications.onReadFinish(protocol);
                 }
             } finally {
                 mNfcManager.ignoreTag(mIsoDep.getTag());
@@ -163,7 +163,7 @@ public class ReadCardInfoTask extends Thread {
             }
             if (isAlive() && AllowInterrupt) {
                 interrupt();
-                mNotifications.OnReadCancel();
+                mNotifications.onReadCancel();
             }
         } catch (Exception e) {
             e.printStackTrace();
