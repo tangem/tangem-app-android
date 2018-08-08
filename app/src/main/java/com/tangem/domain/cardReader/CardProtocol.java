@@ -609,7 +609,7 @@ public class CardProtocol {
             mCard.setWalletPublicKey(pkUncompressed);
             mCard.setWalletPublicKeyRar(pkCompresses);
 
-            CoinEngine engineCoin = CoinEngineFactory.Create(mCard.getBlockchain());
+            CoinEngine engineCoin = CoinEngineFactory.create(mCard.getBlockchain());
             String wallet = engineCoin.calculateAddress(mCard, pkUncompressed);
             mCard.setWallet(wallet);
             //mCard.setWallet(Blockchain.calculateWalletAddress(mCard, pkUncompressed));
