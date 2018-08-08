@@ -131,7 +131,7 @@
     <string name="enter_amount">enter amount</string>
     <string name="verify">Verify</string>
 
-    <!-- RequestPINActivity -->
+    <!-- PinRequestActivity -->
     <string name="enter_new_pin_or_use_fingerprint_scanner">Enter new PIN or use fingerprint scanner</string>
     <string name="enter_new_pin">Enter new PIN</string>
     <string name="enter_pin_or_use_fingerprint_scanner">Enter PIN or use fingerprint scanner</string>
@@ -202,7 +202,7 @@
     <string name="issuer_data">Issuer Data</string>
     <string name="unspents">Unspents</string>
 
-    <!-- SavePINActivity -->
+    <!-- PinSaveActivity -->
     <string name="save">Save</string>
     <string name="delete">Delete</string>
     <string name="protect_with_fingerprint">Protect with fingerprint</string>
