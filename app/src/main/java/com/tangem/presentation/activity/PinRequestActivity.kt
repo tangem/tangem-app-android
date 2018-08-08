@@ -84,7 +84,7 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         else if (mode == Mode.RequestPIN2) {
             val uid = intent.getStringExtra("UID")
             val mCard = TangemCard(uid)
-            mCard.LoadFromBundle(intent.getBundleExtra("Card"))
+            mCard.loadFromBundle(intent.getBundleExtra("Card"))
 
             if (mCard.PIN2 == TangemCard.PIN2_Mode.DefaultPIN2 || mCard.PIN2 == TangemCard.PIN2_Mode.Unchecked) {
                 // if we know PIN2 or not try default previously - use it
