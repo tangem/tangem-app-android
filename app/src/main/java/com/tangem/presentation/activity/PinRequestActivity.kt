@@ -25,11 +25,11 @@ import com.tangem.domain.wallet.FingerprintHelper
 import com.tangem.domain.wallet.PINStorage
 import com.tangem.domain.wallet.TangemCard
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.activity_request_pin.*
+import kotlinx.android.synthetic.main.activity_pin_request.*
 import kotlinx.android.synthetic.main.layout_pin_buttons.*
 import java.io.IOException
 
-class RequestPINActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, FingerprintHelper.FingerprintHelperListener {
+class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, FingerprintHelper.FingerprintHelperListener {
 
     companion object {
         const val KEY_ALIAS = "pinKey"
@@ -51,7 +51,7 @@ class RequestPINActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_request_pin)
+        setContentView(R.layout.activity_pin_request)
 
         MainActivity.commonInit(applicationContext)
 
@@ -246,7 +246,7 @@ class RequestPINActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         if (!allowFingerprint)
             return
 
-        fingerprintHelper = FingerprintHelper(this@RequestPINActivity)
+        fingerprintHelper = FingerprintHelper(this@PinRequestActivity)
         startFingerprintReaderTask = StartFingerprintReaderTask(this, fingerprintManager, fingerprintHelper)
         startFingerprintReaderTask!!.execute(null as Void?)
     }
