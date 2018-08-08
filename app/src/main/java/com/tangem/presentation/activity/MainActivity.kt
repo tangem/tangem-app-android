@@ -289,7 +289,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
                     val uid = cardInfo.getString("UID")
                     val card = TangemCard(uid)
-                    card.LoadFromBundle(cardInfo.getBundle("Card"))
+                    card.loadFromBundle(cardInfo.getBundle("Card"))
 
                     val intent: Intent
                     intent = when {
