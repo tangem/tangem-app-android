@@ -146,6 +146,7 @@
     <!-- SendTransactionActivity -->
     <string name="please_wait">Please wait while the payment is sent…</string>
     <string name="transaction_has_been_successfully_signed">Transaction has been successfully signed and sent to blockchain node. Wallet balance will be updated in a while</string>
+    <string name="try_again_failed_to_send_transaction">Try again. Failed to send transaction (%1$s)</string>
 
     <!-- PreparePaymentActivity -->
     <string name="not_enough_funds_on_your_card">Not enough funds on your card</string>
