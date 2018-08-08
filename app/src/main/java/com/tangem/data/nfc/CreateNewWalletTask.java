@@ -33,7 +33,7 @@ public class CreateNewWalletTask extends Thread {
             return;
         }
         CardProtocol protocol = new CardProtocol(mContext, mIsoDep, mCard, mNotifications);
-        mNotifications.OnReadStart(protocol);
+        mNotifications.onReadStart(protocol);
         try {
             // for Samsung's bugs -
             // Workaround for the Samsung Galaxy S5 (since the
@@ -44,7 +44,7 @@ public class CreateNewWalletTask extends Thread {
             mIsoDep.connect();
             mIsoDep.setTimeout(timeout);
             try {
-                mNotifications.OnReadProgress(protocol, 5);
+                mNotifications.onReadProgress(protocol, 5);
 
                 Log.i(TAG, "[-- Start create new wallet --]");
 
@@ -53,18 +53,18 @@ public class CreateNewWalletTask extends Thread {
 
                 Log.i(TAG, "Manufacturer: " + protocol.getCard().getManufacturer().getOfficialName());
 
-                mNotifications.OnReadProgress(protocol, 30);
+                mNotifications.onReadProgress(protocol, 30);
                 if (isCancelled) return;
 
 //                    if (mCard.getPauseBeforePIN2() > 0) {
-//                        mNotifications.OnReadWait(mCard.getPauseBeforePIN2());
+//                        mNotifications.onReadWait(mCard.getPauseBeforePIN2());
 //                    }
 //                    try {
                 protocol.run_CreateWallet(PINStorage.getPIN2());
 //                    } finally {
-//                        mNotifications.OnReadWait(0);
+//                        mNotifications.onReadWait(0);
 //                    }
-                mNotifications.OnReadProgress(protocol, 60);
+                mNotifications.onReadProgress(protocol, 60);
                 if (isCancelled) return;
 
                 protocol.run_Read();
@@ -78,7 +78,7 @@ public class CreateNewWalletTask extends Thread {
 
         } finally {
             Log.i(TAG, "[-- Finish create new wallet --]");
-            mNotifications.OnReadFinish(protocol);
+            mNotifications.onReadFinish(protocol);
         }
     }
 
@@ -90,7 +90,7 @@ public class CreateNewWalletTask extends Thread {
             }
             if (isAlive() && AllowInterrupt) {
                 interrupt();
-                mNotifications.OnReadCancel();
+                mNotifications.onReadCancel();
             }
         } catch (Exception e) {
             e.printStackTrace();

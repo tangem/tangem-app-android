@@ -37,7 +37,7 @@ public class SwapPINTask extends Thread {
         }
         CardProtocol protocol = new CardProtocol(mContext, mIsoDep, mCard, mNotifications);
 
-        mNotifications.OnReadStart(protocol);
+        mNotifications.onReadStart(protocol);
         try {
 
             // for Samsung's bugs -
@@ -50,14 +50,14 @@ public class SwapPINTask extends Thread {
             mIsoDep.setTimeout(timeout);
             try {
 
-                mNotifications.OnReadProgress(protocol, 5);
+                mNotifications.onReadProgress(protocol, 5);
 
                 Log.i(TAG, "[-- Start swap pin --]");
 
                 if (isCancelled) return;
 
                 if (mCard.getPauseBeforePIN2() > 0) {
-                    mNotifications.OnReadWait(mCard.getPauseBeforePIN2());
+                    mNotifications.onReadWait(mCard.getPauseBeforePIN2());
                 }
 
 //                    try {
@@ -65,18 +65,18 @@ public class SwapPINTask extends Thread {
                 protocol.setPIN(newPIN);
                 mCard.setPIN(newPIN);
 //                    } finally {
-//                        mNotifications.OnReadWait(0);
+//                        mNotifications.onReadWait(0);
 //                    }
 
-                mNotifications.OnReadProgress(protocol, 50);
+                mNotifications.onReadProgress(protocol, 50);
 
                 protocol.run_Read();
 
-                mNotifications.OnReadProgress(protocol, 100);
+                mNotifications.onReadProgress(protocol, 100);
 
             } finally {
                 mNfcManager.ignoreTag(mIsoDep.getTag());
-                mNotifications.OnReadWait(0);
+                mNotifications.onReadWait(0);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -84,7 +84,7 @@ public class SwapPINTask extends Thread {
 
         } finally {
             Log.i(TAG, "[-- Finish purge --]");
-            mNotifications.OnReadFinish(protocol);
+            mNotifications.onReadFinish(protocol);
         }
     }
 
@@ -96,7 +96,7 @@ public class SwapPINTask extends Thread {
             }
             if (isAlive() && AllowInterrupt) {
                 interrupt();
-                mNotifications.OnReadCancel();
+                mNotifications.onReadCancel();
             }
         } catch (Exception e) {
             e.printStackTrace();
