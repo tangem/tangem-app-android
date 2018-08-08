@@ -167,14 +167,14 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         }
     }
 
-    override fun OnReadStart(cardProtocol: CardProtocol) {
+    override fun onReadStart(cardProtocol: CardProtocol) {
         progressBar!!.post {
             progressBar!!.visibility = View.VISIBLE
             progressBar!!.progress = 5
         }
     }
 
-    override fun OnReadFinish(cardProtocol: CardProtocol?) {
+    override fun onReadFinish(cardProtocol: CardProtocol?) {
         verifyCardTask = null
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
@@ -215,11 +215,11 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         }, 500)
     }
 
-    override fun OnReadProgress(protocol: CardProtocol, progress: Int) {
+    override fun onReadProgress(protocol: CardProtocol, progress: Int) {
         progressBar!!.post { progressBar!!.progress = progress }
     }
 
-    override fun OnReadCancel() {
+    override fun onReadCancel() {
         verifyCardTask = null
         progressBar!!.postDelayed({
             try {
@@ -232,15 +232,15 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         }, 500)
     }
 
-    override fun OnReadWait(msec: Int) {
+    override fun onReadWait(msec: Int) {
         WaitSecurityDelayDialog.OnReadWait(this, msec)
     }
 
-    override fun OnReadBeforeRequest(timeout: Int) {
+    override fun onReadBeforeRequest(timeout: Int) {
         WaitSecurityDelayDialog.onReadBeforeRequest(this, timeout)
     }
 
-    override fun OnReadAfterRequest() {
+    override fun onReadAfterRequest() {
         WaitSecurityDelayDialog.onReadAfterRequest(this)
     }
 
