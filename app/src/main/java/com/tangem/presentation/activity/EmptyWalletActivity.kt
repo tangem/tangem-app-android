@@ -46,7 +46,7 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         nfcManager = NfcManager(this, this)
 
         card = TangemCard(intent.getStringExtra("UID"))
-        card!!.LoadFromBundle(intent.extras!!.getBundle("Card"))
+        card!!.loadFromBundle(intent.extras!!.getBundle("Card"))
 
         tvIssuer.text = card!!.issuerDescription
         tvBlockchain.text = card!!.blockchainName
@@ -118,7 +118,7 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
             } else {
                 if (data != null && data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
                     val updatedCard = TangemCard(data.getStringExtra("UID"))
-                    updatedCard.LoadFromBundle(data.getBundleExtra("Card"))
+                    updatedCard.loadFromBundle(data.getBundleExtra("Card"))
                     card = updatedCard
                 }
                 if (resultCode == CreateNewWalletActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
