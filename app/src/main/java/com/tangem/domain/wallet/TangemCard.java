@@ -878,10 +878,10 @@ public class TangemCard {
     }
 
     public enum SigningMethod {
-        Sign_Hash(0, "Sign hash"),
-        Sign_Raw(1, "Sign raw tx"),
-        Sign_Hash_Validated_By_Issuer(2, "Sign hash validated by issuer"),
-        Sign_Raw_Validated_By_Issuer(3, "Sign raw tx validated by issuer");
+        Sign_Hash(0, "sign hash"),
+        Sign_Raw(1, "sign raw tx"),
+        Sign_Hash_Validated_By_Issuer(2, "sign hash validated by issuer"),
+        Sign_Raw_Validated_By_Issuer(3, "sign raw tx validated by issuer");
 
         int ID;
         String mDescription;
@@ -1203,7 +1203,7 @@ public class TangemCard {
     {
         this.Denomination=denomination;
         try {
-            this.DenominationText=CoinEngineFactory.Create(getBlockchain()).ConvertByteArrayToAmount(this, denomination);
+            this.DenominationText=CoinEngineFactory.create(getBlockchain()).convertByteArrayToAmount(this, denomination);
         } catch (Exception e) {
             e.printStackTrace();
             this.DenominationText="N/A";
@@ -1368,7 +1368,7 @@ public class TangemCard {
         if( onlineVerified!=null )
             B.putBoolean("onlineVerified", onlineVerified);
 
-        B.putBoolean("balanceRecieved", balanceRecieved);
+        B.putBoolean("balanceReceived", balanceReceived);
 
 
         if( onlineValidated!=null )
@@ -1389,17 +1389,17 @@ public class TangemCard {
 
     }
 
-    public boolean isBalanceRecieved() {
-        return balanceRecieved;
+    public boolean isBalanceReceived() {
+        return balanceReceived;
     }
 
-    private boolean balanceRecieved;
+    private boolean balanceReceived;
 
-    public void setBalanceRecieved (boolean value) {
-        balanceRecieved = value;
+    public void setBalanceReceived(boolean value) {
+        balanceReceived = value;
     }
 
-    public void LoadFromBundle(Bundle B) {
+    public void loadFromBundle(Bundle B) {
         UID = B.getString("UID");
         CID = B.getByteArray("CID");
         PIN = B.getString("PIN");
@@ -1445,7 +1445,7 @@ public class TangemCard {
         cardPublicKeyValid = B.getBoolean("CardPublicKeyValid");
         if (B.containsKey("CardPublicKey")) setCardPublicKey(B.getByteArray("CardPublicKey"));
 
-        if(B.containsKey("balanceRecieved")) setBalanceRecieved(B.getBoolean("balanceRecieved"));
+        if(B.containsKey("balanceReceived")) setBalanceReceived(B.getBoolean("balanceReceived"));
         if (B.containsKey("BalanceConfirmed")) balanceConfirmed = B.getLong("BalanceConfirmed");
         else balanceConfirmed = null;
         if (B.containsKey("BalanceUnconfirmed"))
