@@ -50,9 +50,9 @@ public class VerifyCardTask extends Thread {
             mIsoDep.setTimeout(timeout);
             try {
                 CardProtocol protocol = new CardProtocol(mContext, mIsoDep, mCard, mNotifications);
-                mNotifications.OnReadStart(protocol);
+                mNotifications.onReadStart(protocol);
                 try {
-                    mNotifications.OnReadProgress(protocol, 5);
+                    mNotifications.onReadProgress(protocol, 5);
 
                     Log.i(TAG, "[-- Start verify card --]");
 
@@ -62,15 +62,15 @@ public class VerifyCardTask extends Thread {
                     protocol.setPIN(PIN);
                     protocol.run_Read(false);
                     PINStorage.setLastUsedPIN(PIN);
-                    mNotifications.OnReadProgress(protocol, 20);
+                    mNotifications.onReadProgress(protocol, 20);
                     if (isCancelled) return;
                     protocol.run_VerifyCard();
-                    mNotifications.OnReadProgress(protocol, 50);
+                    mNotifications.onReadProgress(protocol, 50);
                     Log.i(TAG, "Manufacturer: " + protocol.getCard().getManufacturer().getOfficialName());
                     if (isCancelled) return;
                     if (protocol.getCard().getStatus() == TangemCard.Status.Loaded) {
                         protocol.run_CheckWalletWithSignatureVerify();
-                        mNotifications.OnReadProgress(protocol, 80);
+                        mNotifications.onReadProgress(protocol, 80);
                     }
                     if (isCancelled) return;
                     FW.VerifyCodeRecord record=FW.selectRandomVerifyCodeBlock(mCard.getFirmwareVersion());
@@ -81,14 +81,14 @@ public class VerifyCardTask extends Thread {
                     }else{
                         mCard.setCodeConfirmed(null);
                     }
-                    mNotifications.OnReadProgress(protocol, 90);
+                    mNotifications.onReadProgress(protocol, 90);
                 } catch (Exception e) {
                     e.printStackTrace();
                     protocol.setError(e);
 
                 } finally {
                     Log.i(TAG, "[-- Finish verify card --]");
-                    mNotifications.OnReadFinish(protocol);
+                    mNotifications.onReadFinish(protocol);
                 }
             } finally {
                 mNfcManager.ignoreTag(mIsoDep.getTag());
@@ -106,7 +106,7 @@ public class VerifyCardTask extends Thread {
             }
             if (isAlive() && AllowInterrupt) {
                 interrupt();
-                mNotifications.OnReadCancel();
+                mNotifications.onReadCancel();
             }
         } catch (Exception e) {
             e.printStackTrace();
