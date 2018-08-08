@@ -35,7 +35,7 @@ public class PurgeTask extends Thread {
         }
         CardProtocol protocol = new CardProtocol(mContext, mIsoDep, mCard, mNotifications);
 
-        mNotifications.OnReadStart(protocol);
+        mNotifications.onReadStart(protocol);
         try {
 
             // for Samsung's bugs - Workaround for the Samsung Galaxy S5 (since the first connection always hangs on transceive).
@@ -45,34 +45,34 @@ public class PurgeTask extends Thread {
             mIsoDep.connect();
             mIsoDep.setTimeout(timeout);
             try {
-                mNotifications.OnReadProgress(protocol, 5);
+                mNotifications.onReadProgress(protocol, 5);
 
                 Log.i(TAG, "[-- Start purge --]");
 
                 if (isCancelled) return;
 
                 if (mCard.getPauseBeforePIN2() > 0) {
-                    mNotifications.OnReadWait(mCard.getPauseBeforePIN2());
+                    mNotifications.onReadWait(mCard.getPauseBeforePIN2());
                 }
 
 //                    try {
                 protocol.run_PurgeWallet(PINStorage.getPIN2());
 //                    } finally {
-//                        mNotifications.OnReadWait(0);
+//                        mNotifications.onReadWait(0);
 //                    }
 
-                mNotifications.OnReadProgress(protocol, 50);
+                mNotifications.onReadProgress(protocol, 50);
 
                 protocol.run_Read();
 
-                mNotifications.OnReadProgress(protocol, 100);
+                mNotifications.onReadProgress(protocol, 100);
 
                 if (isCancelled)
                     return;
 
             } finally {
                 mNfcManager.ignoreTag(mIsoDep.getTag());
-                mNotifications.OnReadWait(0);
+                mNotifications.onReadWait(0);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -80,7 +80,7 @@ public class PurgeTask extends Thread {
 
         } finally {
             Log.i(TAG, "[-- Finish purge --]");
-            mNotifications.OnReadFinish(protocol);
+            mNotifications.onReadFinish(protocol);
         }
     }
 
@@ -92,7 +92,7 @@ public class PurgeTask extends Thread {
             }
             if (isAlive() && AllowInterrupt) {
                 interrupt();
-                mNotifications.OnReadCancel();
+                mNotifications.onReadCancel();
             }
         } catch (Exception e) {
             e.printStackTrace();
