@@ -68,7 +68,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         nfcManager = NfcManager(this, this)
 
         card = TangemCard(intent.getStringExtra("UID"))
-        card!!.LoadFromBundle(intent.extras!!.getBundle("Card"))
+        card!!.loadFromBundle(intent.extras!!.getBundle("Card"))
 
         progressBar = findViewById(R.id.progressBar)
         btnSend = findViewById(R.id.btnSend)
@@ -77,16 +77,16 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         tvFeeEquivalent = findViewById(R.id.tvFeeEquivalent)
         rgFee = findViewById(R.id.rgFee)
 
-        val engine = CoinEngineFactory.Create(card!!.blockchain)
+        val engine = CoinEngineFactory.create(card!!.blockchain)
         if (card!!.blockchain == Blockchain.Token) {
-            val html = Html.fromHtml(engine!!.GetBalanceWithAlter(card))
+            val html = Html.fromHtml(engine!!.getBalanceWithAlter(card))
             tvBalance.text = html
         } else
-            tvBalance.text = engine!!.GetBalanceWithAlter(card)
+            tvBalance.text = engine!!.getBalanceWithAlter(card)
 
         etAmount!!.setText(intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT))
-        tvCurrency.text = engine.GetBalanceCurrency(card)
-        tvCurrency2.text = engine.GetFeeCurrency()
+        tvCurrency.text = engine.getBalanceCurrency(card)
+        tvCurrency2.text = engine.getFeeCurrency()
 
         tvCardID.text = card!!.cidDescription
 
@@ -108,8 +108,8 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
                 try {
-                    val engine = CoinEngineFactory.Create(card!!.blockchain)
-                    val eqFee = engine!!.EvaluteFeeEquivalent(card, etFee!!.text.toString())
+                    val engine = CoinEngineFactory.create(card!!.blockchain)
+                    val eqFee = engine!!.evaluateFeeEquivalent(card, etFee!!.text.toString())
                     tvFeeEquivalent!!.text = eqFee
 
                     if (!card!!.amountEquivalentDescriptionAvailable) {
@@ -137,9 +137,9 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 return@setOnClickListener
             }
 
-            val engineCoin = CoinEngineFactory.Create(card!!.blockchain)
+            val engineCoin = CoinEngineFactory.create(card!!.blockchain)
 
-            if (engineCoin!!.IsNeedCheckNode() && !nodeCheck) {
+            if (engineCoin!!.isNeedCheckNode() && !nodeCheck) {
                 Toast.makeText(baseContext, getString(R.string.cannot_reach_current_active_blockchain_node_try_again), Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
@@ -147,20 +147,20 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             val txFee = etFee!!.text.toString()
             val txAmount = etAmount!!.text.toString()
 
-            if (!engineCoin.HasBalanceInfo(card)) {
+            if (!engineCoin.hasBalanceInfo(card)) {
                 finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
                 return@setOnClickListener
 
-            } else if (!engineCoin.IsBalanceNotZero(card)) {
+            } else if (!engineCoin.isBalanceNotZero(card)) {
                 finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.the_wallet_is_empty))
                 return@setOnClickListener
 
-            } else if (!engineCoin.CheckUnspentTransaction(card)) {
+            } else if (!engineCoin.checkUnspentTransaction(card)) {
                 finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.please_wait_for_confirmation_of_incoming_transaction))
                 return@setOnClickListener
             }
 
-            if (!engineCoin.CheckAmountValie(card, txAmount, txFee, minFeeInInternalUnits)) {
+            if (!engineCoin.checkAmountValue(card, txAmount, txFee, minFeeInInternalUnits)) {
                 finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.fee_exceeds_payment_amount_enter_correct_value_and_repeat_sending))
                 return@setOnClickListener
             }
@@ -184,11 +184,11 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         } else {
             rgFee!!.isEnabled = true
             val data = SharedData(SharedData.COUNT_REQUEST)
-            val engineCoin = CoinEngineFactory.Create(card!!.blockchain)
+            val engineCoin = CoinEngineFactory.create(card!!.blockchain)
 
             for (i in 0 until data.allRequest) {
-                val nodeAddress = engineCoin!!.GetNextNode(card)
-                val nodePort = engineCoin.GetNextNodePort(card)
+                val nodeAddress = engineCoin!!.getNextNode(card)
+                val nodePort = engineCoin.getNextNodePort(card)
                 val connectTaskEx = ConnectTask(this@ConfirmPaymentActivity, nodeAddress, nodePort, data)
                 connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(card!!.wallet))
             }
@@ -235,7 +235,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             if (data != null && data.extras != null) {
                 if (data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
                     val updatedCard = TangemCard(data.getStringExtra("UID"))
-                    updatedCard.LoadFromBundle(data.getBundleExtra("Card"))
+                    updatedCard.loadFromBundle(data.getBundleExtra("Card"))
                     card = updatedCard
                 }
             }
