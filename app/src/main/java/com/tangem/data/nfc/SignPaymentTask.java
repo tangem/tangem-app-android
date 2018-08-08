@@ -10,7 +10,6 @@ import com.tangem.domain.cardReader.NfcManager;
 import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.CoinEngineFactory;
-import com.tangem.domain.wallet.LastSignStorage;
 import com.tangem.domain.wallet.TangemCard;
 import com.tangem.presentation.activity.SendTransactionActivity;
 import com.tangem.presentation.activity.SignPaymentActivity;
@@ -52,7 +51,7 @@ public class SignPaymentTask extends Thread {
         }
         CardProtocol protocol = new CardProtocol(mContext, mIsoDep, mCard, mNotifications);
 
-        mNotifications.OnReadStart(protocol);
+        mNotifications.onReadStart(protocol);
         try {
 
             // for Samsung's bugs -
@@ -64,7 +63,7 @@ public class SignPaymentTask extends Thread {
             mIsoDep.connect();
             mIsoDep.setTimeout(timeout);
             try {
-                mNotifications.OnReadProgress(protocol, 5);
+                mNotifications.onReadProgress(protocol, 5);
 
                 Log.i(TAG, "[-- Start sign payment --]");
 
@@ -74,7 +73,7 @@ public class SignPaymentTask extends Thread {
 
                 Log.i(TAG, "Manufacturer: " + protocol.getCard().getManufacturer().getOfficialName());
 
-                mNotifications.OnReadProgress(protocol, 30);
+                mNotifications.onReadProgress(protocol, 30);
                 if (isCancelled) return;
 //
 //                    if (mCard.getBlockchain() == Blockchain.Ethereum) {
@@ -86,7 +85,7 @@ public class SignPaymentTask extends Thread {
                 CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
                 if (engine != null) {
                     if (mCard.getPauseBeforePIN2() > 0) {
-                        mNotifications.OnReadWait(mCard.getPauseBeforePIN2());
+                        mNotifications.onReadWait(mCard.getPauseBeforePIN2());
                     }
 
                     byte[] tx;
@@ -94,7 +93,7 @@ public class SignPaymentTask extends Thread {
                     tx = engine.Sign(txFee, txAmount, txOutAddress, mCard, protocol);
 //                        }
 //                        finally {
-//                            mNotifications.OnReadWait(0);
+//                            mNotifications.onReadWait(0);
 //                        }
 
                     if (tx != null) {
@@ -112,14 +111,14 @@ public class SignPaymentTask extends Thread {
                         mContext.startActivityForResult(intent, SignPaymentActivity.REQUEST_CODE_SEND_PAYMENT);
                     }
                 }
-                mNotifications.OnReadProgress(protocol, 100);
+                mNotifications.onReadProgress(protocol, 100);
 
 
                 if (isCancelled) return;
 
             } finally {
                 mNfcManager.ignoreTag(mIsoDep.getTag());
-                mNotifications.OnReadWait(0);
+                mNotifications.onReadWait(0);
             }
         } catch (CardProtocol.TangemException_InvalidPIN e) {
             e.printStackTrace();
@@ -130,7 +129,7 @@ public class SignPaymentTask extends Thread {
 
         } finally {
             Log.i(TAG, "[-- Finish sign payment --]");
-            mNotifications.OnReadFinish(protocol);
+            mNotifications.onReadFinish(protocol);
         }
     }
 
@@ -142,7 +141,7 @@ public class SignPaymentTask extends Thread {
             }
             if (isAlive() && AllowInterrupt) {
                 interrupt();
-                mNotifications.OnReadCancel();
+                mNotifications.onReadCancel();
             }
         } catch (Exception e) {
             e.printStackTrace();

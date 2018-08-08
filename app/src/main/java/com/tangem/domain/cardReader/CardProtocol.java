@@ -40,19 +40,19 @@ import javax.crypto.KeyAgreement;
 public class CardProtocol {
 
     public interface Notifications {
-        void OnReadStart(CardProtocol cardProtocol);
+        void onReadStart(CardProtocol cardProtocol);
 
-        void OnReadProgress(CardProtocol cardProtocol, int progress);
+        void onReadProgress(CardProtocol cardProtocol, int progress);
 
-        void OnReadFinish(CardProtocol cardProtocol);
+        void onReadFinish(CardProtocol cardProtocol);
 
-        void OnReadCancel();
+        void onReadCancel();
 
-        void OnReadWait(int msec);
+        void onReadWait(int msec);
 
-        void OnReadBeforeRequest(int timeout);
+        void onReadBeforeRequest(int timeout);
 
-        void OnReadAfterRequest();
+        void onReadAfterRequest();
     }
 
     public void setError(Exception error) {
@@ -136,7 +136,6 @@ public class CardProtocol {
             super(message);
         }
     }
-
 
     public byte[] GetUID() {
         if (mIsoDep == null || mIsoDep.getTag() == null) return null;
@@ -296,11 +295,11 @@ public class CardProtocol {
 //        try {
 //            do {
 //                try {
-//                    mNotifications.OnReadBeforeRequest(mIsoDep.getTimeout());
+//                    mNotifications.onReadBeforeRequest(mIsoDep.getTimeout());
 //                    try {
 //                        rsp = mIsoDep.transceive(cmdBytes);
 //                    } finally {
-//                        mNotifications.OnReadAfterRequest();
+//                        mNotifications.onReadAfterRequest();
 //                    }
 //                } catch (IOException e) {
 //                    if (e.getMessage().contains("length exceeds supported maximum") && mIsoDep.isExtendedLengthApduSupported()) {
@@ -323,14 +322,14 @@ public class CardProtocol {
 //                    if (breakOnNeedPause) {
 //                        break;
 //                    } else {
-//                        mNotifications.OnReadWait(remainingPause);
+//                        mNotifications.onReadWait(remainingPause);
 //                    }
 //                } else {
 //                    Log.v("NFC", String.format(">> [%s]: %s", cmdApdu.getCommandName(), Util.bytesToHex(rsp)));
 //                }
 //            } while (rspApdu.getSW1SW2() == SW.NEED_PAUSE);
 //        } finally {
-//            mNotifications.OnReadWait(0);
+//            mNotifications.onReadWait(0);
 //        }
 //
 //        return rspApdu;
@@ -352,11 +351,11 @@ public class CardProtocol {
         try {
             do {
                 try {
-                    mNotifications.OnReadBeforeRequest(mIsoDep.getTimeout());
+                    mNotifications.onReadBeforeRequest(mIsoDep.getTimeout());
                     try {
                         rsp = mIsoDep.transceive(cmdBytes);
                     } finally {
-                        mNotifications.OnReadAfterRequest();
+                        mNotifications.onReadAfterRequest();
                     }
                 } catch (IOException e) {
                     if (e.getMessage().contains("length exceeds supported maximum") && mIsoDep.isExtendedLengthApduSupported()) {
@@ -384,14 +383,14 @@ public class CardProtocol {
                     if (breakOnNeedPause) {
                         break;
                     } else {
-                        mNotifications.OnReadWait(remainingPause);
+                        mNotifications.onReadWait(remainingPause);
                     }
                 } else {
                     Log.v("NFC", String.format(">> [%s]: %s", cmdApdu.getCommandName(), Util.bytesToHex(rsp)));
                 }
             } while (rspApdu.getSW1SW2() == SW.NEED_PAUSE);
         } finally {
-            mNotifications.OnReadWait(0);
+            mNotifications.onReadWait(0);
         }
 
         return rspApdu;
@@ -410,6 +409,7 @@ public class CardProtocol {
     public void run_Read() throws Exception {
         run_Read(true);
     }
+
     public void run_Read(boolean parseResult) throws Exception {
         CommandApdu rqApdu = StartPrepareCommand(INS.Read);
         Log.i(logTag, String.format("[%s]\n%s", rqApdu.getCommandName(), rqApdu.getTLVs().getParsedTLVs("  ")));
@@ -424,10 +424,10 @@ public class CardProtocol {
 
             readResult = rspApdu.getTLVs();
 
-            if( parseResult ){
+            if (parseResult) {
                 parseReadResult();
                 run_ReadWriteIssuerData();
-            }else{
+            } else {
                 //TODO: проверить что карта та же
             }
 
@@ -470,9 +470,9 @@ public class CardProtocol {
 
         // try read denomination
         if (tlvIssuerData != null && tlvIssuerData.getTLV(TLV.Tag.TAG_Denomination) != null) {
-            if(tlvIssuerData.getTLV(TLV.Tag.TAG_DenominationText) != null) {
+            if (tlvIssuerData.getTLV(TLV.Tag.TAG_DenominationText) != null) {
                 mCard.setDenomination(tlvIssuerData.getTLV(TLV.Tag.TAG_Denomination).Value, tlvIssuerData.getTLV(TLV.Tag.TAG_DenominationText).getAsString());
-            }else{
+            } else {
                 mCard.setDenomination(tlvIssuerData.getTLV(TLV.Tag.TAG_Denomination).Value);
             }
         } else {
@@ -624,7 +624,6 @@ public class CardProtocol {
             mCard.setWallet("N/A");
         }
     }
-
 
     public TLVList run_VerifyCard() throws Exception {
         if (mCard.getCardPublicKey() == null || readResult == null) {
@@ -986,7 +985,7 @@ public class CardProtocol {
             TLV issuerDataSignature = rspApdu.getTLVs().getTLV(TLV.Tag.TAG_Issuer_Data_Signature);
             TLV issuerDataCounter = rspApdu.getTLVs().getTLV(TLV.Tag.TAG_Issuer_Data_Counter);
 
-            boolean protectIssuerDataAgainstReplay=(readResult.getTagAsInt(TLV.Tag.TAG_SettingsMask)&SettingsMask.ProtectIssuerDataAgainstReplay)!=0;
+            boolean protectIssuerDataAgainstReplay = (readResult.getTagAsInt(TLV.Tag.TAG_SettingsMask) & SettingsMask.ProtectIssuerDataAgainstReplay) != 0;
 
             if (issuerData == null || issuerDataSignature == null)
                 throw new TangemException("Invalid answer format (GetIssuerData)");
@@ -994,7 +993,7 @@ public class CardProtocol {
             ByteArrayOutputStream bsDataToVerify = new ByteArrayOutputStream();
             bsDataToVerify.write(mCard.getCID());
             bsDataToVerify.write(issuerData.Value);
-            if( protectIssuerDataAgainstReplay ) {
+            if (protectIssuerDataAgainstReplay) {
                 bsDataToVerify.write(issuerDataCounter.Value);
             }
             try {
