@@ -90,7 +90,7 @@ public class BalanceValidator {
             return;
         }
 
-        if(card.isBalanceRecieved() && card.isBalanceEqual()) {
+        if(card.isBalanceReceived() && card.isBalanceEqual()) {
             score = 100;
             firstLine = "Verified balance";
             secondLine = "Balance confirmed in blockchain. ";
@@ -133,7 +133,7 @@ public class BalanceValidator {
 //            }
 
         //
-//            if(card.isBalanceRecieved() && !card.isBalanceEqual()) {
+//            if(card.isBalanceReceived() && !card.isBalanceEqual()) {
 //                score = 0;
 //                firstLine = "Disputed balance";
 //                secondLine += " Cannot obtain trusted balance at the moment. Try to tap and check this banknote later.";
@@ -150,7 +150,7 @@ public class BalanceValidator {
 
     boolean CheckOnlineBalance(TangemCard card)
     {
-        return card.isBalanceRecieved();
+        return card.isBalanceReceived();
     }
 
     boolean VerificationWalletKey(TangemCard card)
