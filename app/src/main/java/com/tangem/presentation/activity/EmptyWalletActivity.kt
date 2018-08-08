@@ -82,8 +82,8 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
         btnNewWallet.setOnClickListener {
             requestPIN2Count = 0
-            val intent = Intent(baseContext, RequestPINActivity::class.java)
-            intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString())
+            val intent = Intent(baseContext, PinRequestActivity::class.java)
+            intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
             intent.putExtra("UID", card!!.uid)
             intent.putExtra("Card", card!!.asBundle)
             startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
@@ -123,8 +123,8 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                 }
                 if (resultCode == CreateNewWalletActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
-                    val intent = Intent(baseContext, RequestPINActivity::class.java)
-                    intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN2.toString())
+                    val intent = Intent(baseContext, PinRequestActivity::class.java)
+                    intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
                     intent.putExtra("UID", card!!.uid)
                     intent.putExtra("Card", card!!.asBundle)
                     startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
