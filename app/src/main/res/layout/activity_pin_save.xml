@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    tools:context="com.tangem.presentation.activity.SavePINActivity">
+    tools:context="com.tangem.presentation.activity.PinSaveActivity">
 
     <TextView
         android:id="@+id/tvPin"
