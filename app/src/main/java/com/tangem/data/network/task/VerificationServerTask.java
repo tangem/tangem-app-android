@@ -8,7 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class VerificationServerTask extends AsyncTask<VerificationServerProtocol.Request, Void, List<VerificationServerProtocol.Request>> {
-    public static final String hostURL = "https://tangem-webapp.appspot.com";
+//    public static final String hostURL = "https://tangem-webapp.appspot.com";
+    public static final String hostURL = "https://verify.tangem.com";
 
     public VerificationServerTask() {
 

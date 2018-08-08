@@ -42,40 +42,40 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         mNfcManager = NfcManager(this, this)
 
         mCard = TangemCard(intent.getStringExtra("UID"))
-        mCard!!.LoadFromBundle(intent.extras!!.getBundle("Card"))
+        mCard!!.loadFromBundle(intent.extras!!.getBundle("Card"))
 
         tvCardID.text = mCard!!.cidDescription
-        val engine = CoinEngineFactory.Create(mCard!!.blockchain)
+        val engine = CoinEngineFactory.create(mCard!!.blockchain)
 
         if (mCard!!.blockchain == Blockchain.Token) {
-            val html = Html.fromHtml(engine!!.GetBalanceWithAlter(mCard))
+            val html = Html.fromHtml(engine!!.getBalanceWithAlter(mCard))
             tvBalance.text = html
         } else
-            tvBalance.text = engine!!.GetBalanceWithAlter(mCard)
+            tvBalance.text = engine!!.getBalanceWithAlter(mCard)
 
         if (mCard!!.remainingSignatures < 2)
             etAmount!!.isEnabled = false
 
         if (mCard!!.blockchain == Blockchain.Ethereum || mCard!!.blockchain == Blockchain.EthereumTestNet) {
-            tvCurrency.text = engine.GetBalanceCurrency(mCard)
+            tvCurrency.text = engine.getBalanceCurrency(mCard)
             useCurrency = false
-            etAmount!!.setText(engine.GetBalanceValue(mCard))
+            etAmount!!.setText(engine.getBalanceValue(mCard))
         } else if (mCard!!.blockchain == Blockchain.Bitcoin || mCard!!.blockchain == Blockchain.BitcoinTestNet) {
-            val balance = engine.GetBalanceLong(mCard)!! / (mCard!!.blockchain.multiplier / 1000.0)
+            val balance = engine.getBalanceLong(mCard)!! / (mCard!!.blockchain.multiplier / 1000.0)
             tvCurrency.text = "m" + mCard!!.blockchain.currency
             useCurrency = true
             val output = FormatUtil.DoubleToString(balance)
             etAmount!!.setText(output)
         } else if (mCard!!.blockchain == Blockchain.BitcoinCash || mCard!!.blockchain == Blockchain.BitcoinCashTestNet) {
-            val balance = engine.GetBalanceLong(mCard)!! / (mCard!!.blockchain.multiplier / 1000.0)
+            val balance = engine.getBalanceLong(mCard)!! / (mCard!!.blockchain.multiplier / 1000.0)
             tvCurrency.text = "m" + mCard!!.blockchain.currency
             useCurrency = true
             val output = FormatUtil.DoubleToString(balance)
             etAmount!!.setText(output)
         } else {
-            tvCurrency.text = engine.GetBalanceCurrency(mCard)
+            tvCurrency.text = engine.getBalanceCurrency(mCard)
             useCurrency = false
-            etAmount!!.setText(engine.GetBalanceValue(mCard))
+            etAmount!!.setText(engine.getBalanceValue(mCard))
         }
 
         if (mCard!!.blockchain == Blockchain.Bitcoin)
@@ -91,10 +91,10 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         btnVerify.setOnClickListener {
             val strAmount: String = etAmount!!.text.toString().replace(",", ".")
 
-            val engine1 = CoinEngineFactory.Create(mCard!!.blockchain)
+            val engine1 = CoinEngineFactory.create(mCard!!.blockchain)
 
             try {
-                if (!engine.CheckAmount(mCard, etAmount!!.text.toString()))
+                if (!engine.checkAmount(mCard, etAmount!!.text.toString()))
                     etAmount!!.error = getString(R.string.not_enough_funds_on_your_card)
             } catch (e: Exception) {
                 etAmount!!.error = getString(R.string.unknown_amount_format)
@@ -102,7 +102,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
             var checkAddress = false
             if (engine1 != null)
-                checkAddress = engine1.ValdateAddress(etWallet!!.text.toString(), mCard)
+                checkAddress = engine1.validateAddress(etWallet!!.text.toString(), mCard)
 
 
             if (!checkAddress) {
