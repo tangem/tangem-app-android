@@ -29,16 +29,16 @@ public class ConnectTask extends ElectrumTask {
 
             remaining_attempts--;
 
-            CoinEngine engine = CoinEngineFactory.Create(mCard.getBlockchain());
+            CoinEngine engine = CoinEngineFactory.create(mCard.getBlockchain());
 
             if (mCard.getBlockchain() == Blockchain.Bitcoin || mCard.getBlockchain() == Blockchain.BitcoinTestNet) {
-                String nodeAddress = engine.GetNode(mCard);
-                int nodePort = engine.GetNodePort(mCard);
+                String nodeAddress = engine.getNode(mCard);
+                int nodePort = engine.getNodePort(mCard);
                 ConnectTask connectTask = new ConnectTask(reference.get(), nodeAddress, nodePort, remaining_attempts);
                 connectTask.execute(ElectrumRequest.Broadcast(mCard.getWallet(), tx));
             } else if (mCard.getBlockchain() == Blockchain.BitcoinCash || mCard.getBlockchain() == Blockchain.BitcoinCashTestNet) {
-                String nodeAddress = engine.GetNode(mCard);
-                int nodePort = engine.GetNodePort(mCard);
+                String nodeAddress = engine.getNode(mCard);
+                int nodePort = engine.getNodePort(mCard);
                 ConnectTask connectTask = new ConnectTask(reference.get(), nodeAddress, nodePort, remaining_attempts);
                 connectTask.execute(ElectrumRequest.Broadcast(mCard.getWallet(), tx));
             }
@@ -71,7 +71,7 @@ public class ConnectTask extends ElectrumTask {
         super.onPostExecute(requests);
         SendTransactionActivity sendTransactionActivity = reference.get();
 
-        CoinEngine engine = CoinEngineFactory.Create(Blockchain.Bitcoin);
+        CoinEngine engine = CoinEngineFactory.create(Blockchain.Bitcoin);
 
         for (ElectrumRequest request : requests) {
             try {
@@ -91,26 +91,26 @@ public class ConnectTask extends ElectrumTask {
                                 Log.e("TX_RESULT", hashTX);
                                 sendTransactionActivity.finishWithSuccess();
                             } catch (Exception e) {
-                                engine.SwitchNode(null);
+                                engine.switchNode(null);
 //                                sendTransactionActivity.finishWithError(hashTX);
                                 CreateChildTask(sendTransactionActivity.getCard(), request.TX, hashTX);
                             }
 
                         } catch (JSONException e) {
                             e.printStackTrace();
-                            engine.SwitchNode(null);
+                            engine.switchNode(null);
 //                            sendTransactionActivity.finishWithError(e.toString());
                             CreateChildTask(sendTransactionActivity.getCard(), request.TX, e.toString());
                         }
                     }
                 } else {
-                    engine.SwitchNode(null);
+                    engine.switchNode(null);
 //                    sendTransactionActivity.finishWithError(request.error);
                     CreateChildTask(sendTransactionActivity.getCard(), request.TX, request.error);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
-                engine.SwitchNode(null);
+                engine.switchNode(null);
 //                sendTransactionActivity.finishWithError(e.toString());
                 CreateChildTask(sendTransactionActivity.getCard(), request.TX, e.toString());
             }
