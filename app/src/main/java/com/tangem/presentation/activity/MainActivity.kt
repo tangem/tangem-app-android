@@ -397,13 +397,13 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     }
 
     private fun showSavePinActivity() {
-        val intent = Intent(baseContext, SavePINActivity::class.java)
+        val intent = Intent(baseContext, PinSaveActivity::class.java)
         intent.putExtra("PIN2", false)
         startActivity(intent)
     }
 
     private fun showSavePin2Activity() {
-        val intent = Intent(baseContext, SavePINActivity::class.java)
+        val intent = Intent(baseContext, PinSaveActivity::class.java)
         intent.putExtra("PIN2", true)
         startActivity(intent)
     }
@@ -424,8 +424,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     }
 
     private fun doEnterPIN() {
-        val intent = Intent(this, RequestPINActivity::class.java)
-        intent.putExtra("mode", RequestPINActivity.Mode.RequestPIN.toString())
+        val intent = Intent(this, PinRequestActivity::class.java)
+        intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN.toString())
         startActivityForResult(intent, REQUEST_CODE_ENTER_PIN_ACTIVITY)
     }
 
