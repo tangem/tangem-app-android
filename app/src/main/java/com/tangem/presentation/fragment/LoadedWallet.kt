@@ -175,19 +175,14 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         // set listeners
         srlLoadedWallet!!.setOnRefreshListener { this.refresh() }
-
         btnLookup.setOnClickListener {
             val engineClick = CoinEngineFactory.create(card!!.blockchain)
             val browserIntent = Intent(Intent.ACTION_VIEW, engineClick!!.getShareWalletUriExplorer(card))
             startActivity(browserIntent)
         }
-
         btnCopy.setOnClickListener { doShareWallet(false) }
-
         tvWallet.setOnClickListener { doShareWallet(false) }
-
         ivQR.setOnClickListener { doShareWallet(true) }
-
         btnLoad.setOnClickListener {
             try {
                 val intent = Intent(Intent.ACTION_VIEW, CoinEngineFactory.create(card!!.blockchain)!!.getShareWalletUri(card))
@@ -197,19 +192,16 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 showSingleToast(R.string.no_compatible_wallet)
             }
         }
-
         btnDetails.setOnClickListener {
             if (mCardProtocol != null)
                 openVerifyCard(mCardProtocol!!)
             else
                 showSingleToast(R.string.need_attach_card_again)
         }
-
         btnScanAgain.setOnClickListener {
             val intent = Intent(context, MainActivity::class.java)
             startActivity(intent)
         }
-
         btnExtract.setOnClickListener {
             if (!card!!.hasBalanceInfo()) {
                 showSingleToast(R.string.cannot_obtain_data_from_blockchain)

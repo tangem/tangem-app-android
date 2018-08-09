@@ -80,6 +80,7 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         } else
             imgDeveloperVersion.visibility = View.INVISIBLE
 
+        // set listeners
         btnNewWallet.setOnClickListener {
             requestPIN2Count = 0
             val intent = Intent(baseContext, PinRequestActivity::class.java)
