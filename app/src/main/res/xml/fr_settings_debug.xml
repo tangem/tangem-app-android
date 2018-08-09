@@ -1,0 +1,15 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:title="">
+        <SwitchPreference
+            android:key="debug_new_request_verify"
+            android:summary=""/>
+
+        <SwitchPreference
+            android:key="debug_new_request_verify_show_json"
+            android:summary=""/>
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
