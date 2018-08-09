@@ -167,7 +167,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                             progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
                             progressBar!!.visibility = View.INVISIBLE
                             val intent = Intent()
-                            intent.putExtra("message", "Cannot sign transaction. Make sure you enter correct PIN2!")
+                            intent.putExtra("message", getString(R.string.cannot_sign_transaction__make_sure_you_enter_correct_pin_2))
                             intent.putExtra("UID", cardProtocol.card.uid)
                             intent.putExtra("Card", cardProtocol.card.asBundle)
                             setResult(RESULT_INVALID_PIN, intent)
