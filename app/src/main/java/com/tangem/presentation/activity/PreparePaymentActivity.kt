@@ -104,7 +104,6 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             if (engine1 != null)
                 checkAddress = engine1.validateAddress(etWallet!!.text.toString(), mCard)
 
-
             if (!checkAddress) {
                 etWallet.error = getString(R.string.incorrect_destination_wallet_address)
                 return@setOnClickListener
@@ -123,6 +122,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT)
         }
 
+        // set listeners
         ivCamera.setOnClickListener {
             val intent = Intent(baseContext, QrScanActivity::class.java)
             startActivityForResult(intent, REQUEST_CODE_SCAN_QR)
