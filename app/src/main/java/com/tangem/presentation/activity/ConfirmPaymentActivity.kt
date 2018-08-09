@@ -100,7 +100,6 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         // set listeners
         rgFee!!.setOnCheckedChangeListener { _, checkedId -> doSetFee(checkedId) }
-
         etFee!!.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
 
@@ -127,7 +126,6 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
             }
         })
-
         btnSend!!.setOnClickListener {
             val calendar = Calendar.getInstance()
             calendar.add(Calendar.MINUTE, -1)
