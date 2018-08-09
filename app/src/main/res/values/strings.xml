@@ -47,6 +47,7 @@
     <string name="need_attach_card_again">Scan again to verify the card</string>
     <string name="reading">READING…</string>
     <string name="verifying">VERIFYING…</string>
+    <string name="debug_settings">Дебаг</string>
 
     <!-- dialogs -->
     <string name="device_is_rooted">Your Android device is rooted. Security at risk!</string>
