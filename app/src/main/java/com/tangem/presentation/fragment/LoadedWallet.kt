@@ -1,17 +1,15 @@
 package com.tangem.presentation.fragment
 
 import android.app.Activity
-import android.content.ActivityNotFoundException
-import android.content.ClipData
-import android.content.ClipboardManager
+import android.content.*
 import android.content.Context.CLIPBOARD_SERVICE
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.AsyncTask
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.support.v4.widget.SwipeRefreshLayout
@@ -21,6 +19,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import com.android.volley.BuildConfig
 import com.google.zxing.WriterException
 import com.tangem.data.network.Server
 import com.tangem.data.network.VolleyHelper
@@ -47,10 +46,16 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
 import java.util.*
 
-class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, VolleyHelper.IRequestCardVerify {
+class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, VolleyHelper.IRequestCardVerify, SharedPreferences.OnSharedPreferenceChangeListener {
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+        if (BuildConfig.DEBUG && this@LoadedWallet.isAdded) {
+            debugNewRequestVerify = sharedPreferences!!.getBoolean(getString(R.string.key_debug_new_request_verify), false)
+            debugNewRequestVerifyShowJson = sharedPreferences.getBoolean(getString(R.string.key_debug_new_request_verify_show_json), false)
+        }
+    }
 
     override fun success(responseVerify: ResponseVerify) {
-        Toast.makeText(activity, responseVerify.results!![1].CID, Toast.LENGTH_SHORT).show()
+//        Toast.makeText(activity, responseVerify.results!![1].CID, Toast.LENGTH_SHORT).show()
     }
 
     override fun error(error: String) {
@@ -90,6 +95,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     private var onlineVerifyTask: OnlineVerifyTask? = null
 
+    private var sp: SharedPreferences? = null
+    private var debugNewRequestVerify: Boolean = false
+    private var debugNewRequestVerifyShowJson: Boolean = false
+
     private inner class OnlineVerifyTask : VerificationServerTask() {
 
         override fun onPostExecute(requests: List<VerificationServerProtocol.Request>) {
@@ -116,15 +125,22 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     private fun requestVerify() {
         if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified) && onlineVerifyTask == null) {
-            onlineVerifyTask = OnlineVerifyTask()
-            onlineVerifyTask!!.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, VerificationServerProtocol.Verify.prepare(card))
+            if (debugNewRequestVerify) {
+                volleyHelper!!.requestCardVerify(card!!)
 
-//            volleyHelper!!.requestCardVerify(card!!)
+                if (debugNewRequestVerifyShowJson)
+                    this.activity?.let { volleyHelper!!.requestCardVerifyShowResponse(it, card!!) }
+
+            } else {
+                onlineVerifyTask = OnlineVerifyTask()
+                onlineVerifyTask!!.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, VerificationServerProtocol.Verify.prepare(card))
+            }
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        sp = PreferenceManager.getDefaultSharedPreferences(activity)
         nfcManager = NfcManager(activity, this)
 
         card = TangemCard(activity!!.intent.getStringExtra(TangemCard.EXTRA_CARD))
@@ -133,13 +149,14 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         lastTag = activity!!.intent.getParcelableExtra(MainActivity.EXTRA_LAST_DISCOVERED_TAG)
 
         volleyHelper = VolleyHelper(this)
+
+        debugNewRequestVerify = sp!!.getBoolean(getString(R.string.key_debug_new_request_verify), false)
+        debugNewRequestVerifyShowJson = sp!!.getBoolean(getString(R.string.key_debug_new_request_verify_show_json), false)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val v = inflater.inflate(R.layout.fr_loaded_wallet, container, false)
-
         srlLoadedWallet = v.findViewById(R.id.srlLoadedWallet)
-
         return v
     }
 
