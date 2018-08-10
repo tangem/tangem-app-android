@@ -1,5 +1,6 @@
 package com.tangem.data.network
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.support.v7.app.AlertDialog
@@ -32,6 +33,13 @@ class VolleyHelper (private val requestCardVerify: IRequestCardVerify){
         params["CID"] = Util.bytesToHex(card.cid)
         params["publicKey"] = Util.bytesToHex(card.cardPublicKey)
         doRequestString(Server.API.Method.VERIFY, params)
+    }
+
+    fun requestCardVerifyShowResponse(context: Activity, card: TangemCard) {
+        val params = HashMap<String, String>()
+        params["CID"] = Util.bytesToHex(card.cid)
+        params["publicKey"] = Util.bytesToHex(card.cardPublicKey)
+        doRequestDebug(context, Server.API.Method.VERIFY, params)
     }
 
     fun doRequestDebug(context: Context, url: String, params: Map<String, String>) {
