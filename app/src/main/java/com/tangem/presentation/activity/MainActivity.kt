@@ -3,11 +3,13 @@ package com.tangem.presentation.activity
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.PopupMenu
 import android.view.Menu
@@ -27,6 +29,8 @@ import com.tangem.domain.wallet.*
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.RootFoundDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.presentation.fragment.LoadedWallet
+import com.tangem.presentation.fragment.SettingsDebug
 import com.tangem.util.CommonUtil
 import com.tangem.util.PhoneUtility
 import com.tangem.wallet.BuildConfig
@@ -78,6 +82,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                 onNFCReaderCallback.onTagDiscovered(tag)
         }
     }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -139,6 +144,13 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
         // set listeners
         fab.setOnClickListener { this.showMenu(it) }
+
+        if (BuildConfig.DEBUG) {
+            fab.setOnLongClickListener {
+                startActivity(Intent(this, SettingsDebugActivity::class.java))
+                false
+            }
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
