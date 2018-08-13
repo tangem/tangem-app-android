@@ -16,14 +16,7 @@ public class DecimalDigitsInputFilter implements InputFilter {
     }
 
     @Override
-    public CharSequence filter(CharSequence source,
-                               int start,
-                               int end,
-                               Spanned dest,
-                               int dstart,
-                               int dend) {
-
-
+    public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
         int dotPos = -1;
         int len = dest.length();
         for (int i = 0; i < len; i++) {
@@ -33,17 +26,18 @@ public class DecimalDigitsInputFilter implements InputFilter {
                 break;
             }
         }
-        if (dotPos >= 0) {
 
+        if (dotPos >= 0) {
             // protects against many dots
-            if (source.equals(".") || source.equals(","))
-            {
+            if (source.equals(".") || source.equals(",")) {
                 return "";
             }
+
             // if the text is entered before the dot
             if (dend <= dotPos) {
                 return null;
             }
+
             if (len - dotPos > decimalDigits) {
                 return "";
             }
