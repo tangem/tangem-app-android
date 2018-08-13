@@ -14,7 +14,6 @@ import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.support.v4.widget.SwipeRefreshLayout
 import android.text.Html
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -91,7 +90,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private var timerHideErrorAndMessage: Timer? = null
     private var newPIN = ""
     private var newPIN2 = ""
-    private var mCardProtocol: CardProtocol? = null
+    private var cardProtocol: CardProtocol? = null
 
     private var onlineVerifyTask: OnlineVerifyTask? = null
 
@@ -210,8 +209,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
         }
         btnDetails.setOnClickListener {
-            if (mCardProtocol != null)
-                openVerifyCard(mCardProtocol!!)
+            if (cardProtocol != null)
+                openVerifyCard(cardProtocol!!)
             else
                 showSingleToast(R.string.need_attach_card_again)
         }
@@ -551,7 +550,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             if (cardProtocol.error == null) {
                 rlProgressBar.post {
                     rlProgressBar.visibility = View.GONE
-                    mCardProtocol = cardProtocol
+                    this.cardProtocol = cardProtocol
                     refresh()
                 }
             } else {
