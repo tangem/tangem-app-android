@@ -29,8 +29,8 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
         const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
     }
 
-    private var mCard: TangemCard? = null
-    private var mNfcManager: NfcManager? = null
+    private var card: TangemCard? = null
+    private var nfcManager: NfcManager? = null
     private var purgeTask: PurgeTask? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,25 +39,25 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
-        mNfcManager = NfcManager(this, this)
+        nfcManager = NfcManager(this, this)
 
         MainActivity.commonInit(applicationContext)
 
-        mCard = TangemCard(intent.getStringExtra("UID"))
-        mCard!!.loadFromBundle(intent.extras!!.getBundle("Card"))
+        card = TangemCard(intent.getStringExtra("UID"))
+        card!!.loadFromBundle(intent.extras!!.getBundle("Card"))
 
-        tvCardID.text = mCard!!.cidDescription
+        tvCardID.text = card!!.cidDescription
         progressBar.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
         progressBar.visibility = View.INVISIBLE
     }
 
     public override fun onResume() {
         super.onResume()
-        mNfcManager!!.onResume()
+        nfcManager!!.onResume()
     }
 
     public override fun onPause() {
-        mNfcManager!!.onPause()
+        nfcManager!!.onPause()
         if (purgeTask != null) {
             purgeTask!!.cancel(true)
         }
@@ -66,7 +66,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
 
     public override fun onStop() {
         // dismiss enable NFC dialog
-        mNfcManager!!.onStop()
+        nfcManager!!.onStop()
         if (purgeTask != null) {
             purgeTask!!.cancel(true)
         }
@@ -82,13 +82,13 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
             val sUID = Util.byteArrayToHexString(uid)
 //            Log.v(TAG, "UID: $sUID")
 
-            if (sUID == mCard!!.uid) {
-                isoDep.timeout = mCard!!.pauseBeforePIN2 + 65000
-                purgeTask = PurgeTask(this, mCard, mNfcManager, isoDep, this)
+            if (sUID == card!!.uid) {
+                isoDep.timeout = card!!.pauseBeforePIN2 + 65000
+                purgeTask = PurgeTask(this, card, nfcManager, isoDep, this)
                 purgeTask!!.start()
             } else {
-                //               this Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + mCard.getUID() + ")");
-                mNfcManager!!.ignoreTag(isoDep.tag)
+                //               this Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card.getUID() + ")");
+                nfcManager!!.ignoreTag(isoDep.tag)
             }
 
         } catch (e: Exception) {
