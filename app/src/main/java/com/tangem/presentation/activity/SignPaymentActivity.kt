@@ -34,7 +34,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
     }
 
     private var nfcManager: NfcManager? = null
-    private var mCard: TangemCard? = null
+    private var card: TangemCard? = null
 
     private var signPaymentTask: SignPaymentTask? = null
 
@@ -53,14 +53,14 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
         nfcManager = NfcManager(this, this)
 
-        mCard = TangemCard(intent.getStringExtra("UID"))
-        mCard!!.loadFromBundle(intent.extras!!.getBundle("Card"))
+        card = TangemCard(intent.getStringExtra("UID"))
+        card!!.loadFromBundle(intent.extras!!.getBundle("Card"))
 
         amountStr = intent.getStringExtra(EXTRA_AMOUNT)
         feeStr = intent.getStringExtra("Fee")
         outAddressStr = intent.getStringExtra("Wallet")
 
-        tvCardID.text = mCard!!.cidDescription
+        tvCardID.text = card!!.cidDescription
 
         progressBar = findViewById(R.id.progressBar)
         progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
@@ -76,16 +76,16 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
             val sUID = Util.byteArrayToHexString(uid)
 //            Log.v(TAG, "UID: $sUID")
 
-            if (sUID == mCard!!.uid) {
+            if (sUID == card!!.uid) {
                 if (lastReadSuccess) {
-                    isoDep.timeout = mCard!!.pauseBeforePIN2 + 5000
+                    isoDep.timeout = card!!.pauseBeforePIN2 + 5000
                 } else {
-                    isoDep.timeout = mCard!!.pauseBeforePIN2 + 65000
+                    isoDep.timeout = card!!.pauseBeforePIN2 + 65000
                 }
-                signPaymentTask = SignPaymentTask(this, mCard, nfcManager, isoDep, this, amountStr, feeStr, outAddressStr)
+                signPaymentTask = SignPaymentTask(this, card, nfcManager, isoDep, this, amountStr, feeStr, outAddressStr)
                 signPaymentTask!!.start()
             } else {
-//                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + mCard!!.uid + ")")
+//                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card!!.uid + ")")
                 nfcManager!!.ignoreTag(isoDep.tag)
             }
 
