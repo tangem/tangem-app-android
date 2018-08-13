@@ -3,13 +3,11 @@ package com.tangem.presentation.activity
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.PopupMenu
 import android.view.Menu
@@ -29,8 +27,6 @@ import com.tangem.domain.wallet.*
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.RootFoundDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
-import com.tangem.presentation.fragment.LoadedWallet
-import com.tangem.presentation.fragment.SettingsDebug
 import com.tangem.util.CommonUtil
 import com.tangem.util.PhoneUtility
 import com.tangem.wallet.BuildConfig
@@ -67,9 +63,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
     private var zipFile: File? = null
     private val onNFCReaderCallback: NfcAdapter.ReaderCallback? = null
-    private val onCardsClean: OnCardsClean? = null
     private var antenna: DeviceNFCAntennaLocation? = null
-    private var mNfcManager: NfcManager? = null
+    private var nfcManager: NfcManager? = null
     private var readCardInfoTask: ReadCardInfoTask? = null
     private var unsuccessReadCount = 0
     private var lastTag: Tag? = null
@@ -83,14 +78,13 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         }
     }
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
-        mNfcManager = NfcManager(this, this)
+        nfcManager = NfcManager(this, this)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_NOSENSOR
 
@@ -214,12 +208,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                 return true
             }
 
-//            R.id.cleanCards -> {
-//                onCardsClean!!.doClean()
-//                llTapPrompt.visibility = View.VISIBLE
-//                return true
-//            }
-
             R.id.about -> {
                 showLogoActivity()
                 return true
@@ -242,14 +230,14 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
             }
             lastTag = tag
 
-            readCardInfoTask = ReadCardInfoTask(this, mNfcManager, isoDep, this)
+            readCardInfoTask = ReadCardInfoTask(this, nfcManager, isoDep, this)
             readCardInfoTask!!.start()
 
 //            Log.i(TAG, "onTagDiscovered " + Arrays.toString(tag.getId()));
 
         } catch (e: Exception) {
             e.printStackTrace()
-            mNfcManager!!.notifyReadResult(false)
+            nfcManager!!.notifyReadResult(false)
         }
     }
 
@@ -257,11 +245,11 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         super.onResume()
         animate()
         ReadCardInfoTask.resetLastReadInfo()
-        mNfcManager!!.onResume()
+        nfcManager!!.onResume()
     }
 
     public override fun onPause() {
-        mNfcManager!!.onPause()
+        nfcManager!!.onPause()
         if (readCardInfoTask != null) {
             readCardInfoTask!!.cancel(true)
         }
@@ -270,7 +258,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
     public override fun onStop() {
         // dismiss enable NFC dialog
-        mNfcManager!!.onStop()
+        nfcManager!!.onStop()
         if (readCardInfoTask != null) {
             readCardInfoTask!!.cancel(true)
         }
@@ -289,7 +277,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         readCardInfoTask = null
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
-                mNfcManager!!.notifyReadResult(true)
+                nfcManager!!.notifyReadResult(true)
                 rlProgressBar.post {
                     rlProgressBar.visibility = View.GONE
 
@@ -338,7 +326,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
                         lastTag = null
                         ReadCardInfoTask.resetLastReadInfo()
-                        mNfcManager!!.notifyReadResult(false)
+                        nfcManager!!.notifyReadResult(false)
                     }
                 }
             }
@@ -375,10 +363,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
     override fun onReadAfterRequest() {
         WaitSecurityDelayDialog.onReadAfterRequest(Objects.requireNonNull(this))
-    }
-
-    interface OnCardsClean {
-        fun doClean()
     }
 
     private fun showLogoActivity() {
