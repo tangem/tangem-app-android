@@ -61,20 +61,20 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         }
     }
 
-    private var zipFile: File? = null
-    private val onNFCReaderCallback: NfcAdapter.ReaderCallback? = null
-    private var antenna: DeviceNFCAntennaLocation? = null
     private var nfcManager: NfcManager? = null
-    private var readCardInfoTask: ReadCardInfoTask? = null
+    private var zipFile: File? = null
+    private var antenna: DeviceNFCAntennaLocation? = null
     private var unsuccessReadCount = 0
     private var lastTag: Tag? = null
+    private var readCardInfoTask: ReadCardInfoTask? = null
+    private var onNfcReaderCallback: NfcAdapter.ReaderCallback? = null
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action || NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action)) {
             val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
-            if (tag != null && onNFCReaderCallback != null)
-                onNFCReaderCallback.onTagDiscovered(tag)
+            if (tag != null && onNfcReaderCallback != null)
+                onNfcReaderCallback!!.onTagDiscovered(tag)
         }
     }
 
@@ -89,6 +89,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_NOSENSOR
 
         commonInit(applicationContext)
+
+        setNfcAdapterReaderCallback(this)
 
         rippleBackgroundNfc.startRippleAnimation()
 
@@ -126,8 +128,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         val intent = intent
         if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action || NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action)) {
             val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
-            if (tag != null && onNFCReaderCallback != null) {
-                onNFCReaderCallback.onTagDiscovered(tag)
+            if (tag != null && onNfcReaderCallback != null) {
+                onNfcReaderCallback!!.onTagDiscovered(tag)
             }
         }
 
@@ -137,7 +139,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
             RootFoundDialog().show(fragmentManager, RootFoundDialog.TAG)
 
         // set listeners
-        fab.setOnClickListener { this.showMenu(it) }
+        fab.setOnClickListener { showMenu(it) }
 
         if (BuildConfig.DEBUG) {
             fab.setOnLongClickListener {
@@ -363,6 +365,10 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
     override fun onReadAfterRequest() {
         WaitSecurityDelayDialog.onReadAfterRequest(Objects.requireNonNull(this))
+    }
+
+    private fun setNfcAdapterReaderCallback(callback: NfcAdapter.ReaderCallback) {
+        onNfcReaderCallback = callback
     }
 
     private fun showLogoActivity() {
