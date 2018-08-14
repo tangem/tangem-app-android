@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ProgressBar;
 
 import com.tangem.wallet.R;
@@ -22,6 +23,12 @@ public class WaitSecurityDelayDialog extends DialogFragment {
     private ProgressBar progressBar;
     private int msTimeout = 60000, msProgress = 0;
     private Timer timer;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
