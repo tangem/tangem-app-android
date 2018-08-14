@@ -67,7 +67,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
         updateViews()
 
-        swipe_container.setOnRefreshListener { swipe_container.isRefreshing = false }
+        srlVerifyCard.setOnRefreshListener { srlVerifyCard.isRefreshing = false }
 
         // set listeners
         fabMenu.setOnClickListener { showMenu(fabMenu) }
@@ -219,7 +219,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
             }
             REQUEST_CODE_SEND_PAYMENT -> {
                 if (resultCode == Activity.RESULT_OK) {
-                    swipe_container.isRefreshing = true
+                    srlVerifyCard.isRefreshing = true
                     card!!.clearInfo()
                     updateViews()
                 }
