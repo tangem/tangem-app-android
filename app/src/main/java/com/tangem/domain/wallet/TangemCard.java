@@ -698,27 +698,30 @@ public class TangemCard {
     }
 
     private AtomicInteger failedBalanceRequestCounter;
-    public int incFailedBalanceRequestCounter()
-    {
-        if(failedBalanceRequestCounter == null)
+
+    public int incFailedBalanceRequestCounter() {
+        if (failedBalanceRequestCounter == null)
             failedBalanceRequestCounter = new AtomicInteger(0);
         return failedBalanceRequestCounter.incrementAndGet();
     }
-    public void resetFailedBalanceRequestCounter()
-    {
+
+    public void resetFailedBalanceRequestCounter() {
         failedBalanceRequestCounter = new AtomicInteger(0);
     }
-    public int getFailedBalanceRequestCounter()
-    {
-        if(failedBalanceRequestCounter == null)
+
+    public int getFailedBalanceRequestCounter() {
+        if (failedBalanceRequestCounter == null)
             return 0;
         return failedBalanceRequestCounter.get();
     }
 
     Boolean balanceEqual;
-    public Boolean isBalanceEqual(){return balanceEqual;}
-    public void setIsBalanceEqual(boolean isEqual)
-    {
+
+    public Boolean isBalanceEqual() {
+        return balanceEqual;
+    }
+
+    public void setIsBalanceEqual(boolean isEqual) {
         balanceEqual = isEqual;
     }
 
@@ -1196,17 +1199,16 @@ public class TangemCard {
 
     public void setDenomination(byte[] denomination, String denominationText) {
         this.Denomination = denomination;
-        this.DenominationText=denominationText;
+        this.DenominationText = denominationText;
     }
 
-    public void setDenomination(byte[] denomination)
-    {
-        this.Denomination=denomination;
+    public void setDenomination(byte[] denomination) {
+        this.Denomination = denomination;
         try {
-            this.DenominationText=CoinEngineFactory.create(getBlockchain()).convertByteArrayToAmount(this, denomination);
+            this.DenominationText = CoinEngineFactory.create(getBlockchain()).convertByteArrayToAmount(this, denomination);
         } catch (Exception e) {
             e.printStackTrace();
-            this.DenominationText="N/A";
+            this.DenominationText = "N/A";
         }
     }
 
@@ -1215,6 +1217,7 @@ public class TangemCard {
     }
 
     public int SignedHashes = -1; // Will remain -1 if tag was not found on card (= not safe to accept)
+
     public void setSignedHashes(int SignedHashes) {
         this.SignedHashes = SignedHashes;
     }
@@ -1234,7 +1237,7 @@ public class TangemCard {
 
     public void clearDenomination() {
         Denomination = null;
-        DenominationText=null;
+        DenominationText = null;
     }
 
     public void setError(String error) {
@@ -1303,7 +1306,7 @@ public class TangemCard {
         if (encryptionMode != null) B.putString("EncryptionMode", encryptionMode.name());
         if (issuer != null) B.putString("Issuer", issuer.getID());
         if (firmwareVersion != null) B.putString("FirmwareVersion", firmwareVersion);
-        if(balanceEqual != null) B.putBoolean("isBalanceEqual", balanceEqual);
+        if (balanceEqual != null) B.putBoolean("isBalanceEqual", balanceEqual);
         if (batch != null) B.putString("Batch", batch);
         B.putString("BalanceDecimal", balanceDecimal);
         B.putString("BalanceDecimalAlter", balanceDecimalAlter);
@@ -1311,7 +1314,7 @@ public class TangemCard {
         B.putBoolean("CardPublicKeyValid", isCardPublicKeyValid());
         B.putByteArray("CardPublicKey", getCardPublicKey());
 
-        if(failedBalanceRequestCounter != null)
+        if (failedBalanceRequestCounter != null)
             B.putInt("FailedBalance", failedBalanceRequestCounter.get());
         B.putInt("SignedHashes", getSignedHashes());
         B.putString("Wallet", wallet);
@@ -1359,19 +1362,19 @@ public class TangemCard {
         B.putFloat("rateAlter", rateAlter);
         B.putString("confirmTx", GetConfirmTXCount().toString(16));
 
-        if( codeConfirmed!=null )
+        if (codeConfirmed != null)
             B.putBoolean("codeConfirmed", codeConfirmed);
 
-        if( codeConfirmed!=null )
+        if (codeConfirmed != null)
             B.putBoolean("codeConfirmed", codeConfirmed);
 
-        if( onlineVerified!=null )
+        if (onlineVerified != null)
             B.putBoolean("onlineVerified", onlineVerified);
 
         B.putBoolean("balanceReceived", balanceReceived);
 
 
-        if( onlineValidated!=null )
+        if (onlineValidated != null)
             B.putBoolean("onlineValidated", onlineValidated);
 
 
@@ -1434,18 +1437,19 @@ public class TangemCard {
         else
             encryptionMode = null;
 
-        if(B.containsKey("SignedHashes")) setSignedHashes(B.getInt("SignedHashes"));
+        if (B.containsKey("SignedHashes")) setSignedHashes(B.getInt("SignedHashes"));
 
-        if(B.containsKey("FailedBalance")) failedBalanceRequestCounter = new AtomicInteger(B.getInt("FailedBalance"));
+        if (B.containsKey("FailedBalance"))
+            failedBalanceRequestCounter = new AtomicInteger(B.getInt("FailedBalance"));
         if (B.containsKey("Issuer")) issuer = Issuer.FindIssuer(B.getString("Issuer"));
         if (B.containsKey("FirmwareVersion")) firmwareVersion = B.getString("FirmwareVersion");
         if (B.containsKey("Batch")) batch = B.getString("Batch");
 
-        if(B.containsKey("isBalanceEqual")) setIsBalanceEqual(B.getBoolean("isBalanceEqual"));
+        if (B.containsKey("isBalanceEqual")) setIsBalanceEqual(B.getBoolean("isBalanceEqual"));
         cardPublicKeyValid = B.getBoolean("CardPublicKeyValid");
         if (B.containsKey("CardPublicKey")) setCardPublicKey(B.getByteArray("CardPublicKey"));
 
-        if(B.containsKey("balanceReceived")) setBalanceReceived(B.getBoolean("balanceReceived"));
+        if (B.containsKey("balanceReceived")) setBalanceReceived(B.getBoolean("balanceReceived"));
         if (B.containsKey("BalanceConfirmed")) balanceConfirmed = B.getLong("BalanceConfirmed");
         else balanceConfirmed = null;
         if (B.containsKey("BalanceUnconfirmed"))
@@ -1537,15 +1541,27 @@ public class TangemCard {
     }
 
     public int getCardImageResource() {
-
         switch (getBatch()) {
-            case "0004": case "0006": case "0010": return R.drawable.card_btc001;
-            case "0005": case "0007": case "0011": return R.drawable.card_btc005;
-            case "0012": return R.drawable.card_seed;
-            case "0013": return R.drawable.card_btc_hk_s;
-            case "0015": return R.drawable.card_default; //TODO: new BTC 0.00
-            case "0016": return R.drawable.card_default; // TODO: new ETH 0.00
-            default: return R.drawable.card_default;
+            case "0004":
+            case "0006":
+            case "0010":
+                return R.drawable.card_btc001;
+            case "0005":
+            case "0007":
+            case "0011":
+                return R.drawable.card_btc005;
+            case "0012":
+                return R.drawable.card_seed;
+            case "0013":
+                return R.drawable.card_btc_hk_s;
+            case "0015":
+                return R.drawable.card_btc000;
+            case "0016":
+                return R.drawable.card_eth000;
+            case "0017":
+                return R.drawable.card_qlear200;
+            default:
+                return R.drawable.card_default;
         }
         //        switch (getBlockchainID()) {
 //            case "BTC":
