@@ -11,7 +11,7 @@
     tools:showIn="@layout/activity_verify_card">
 
     <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/swipe_container"
+        android:id="@+id/srlVerifyCard"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginBottom="8dp"
@@ -29,9 +29,9 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/white"
-                android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
+                android:layout_marginStart="16dp"
+                android:background="@color/white"
                 android:orientation="vertical">
 
                 <RelativeLayout
@@ -481,6 +481,7 @@
                         android:id="@+id/tvValidationNode"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginBottom="5dp"
                         android:fontFamily="@font/maax"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_2_small"
@@ -506,6 +507,7 @@
                         android:id="@+id/tvInputs"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginBottom="5dp"
                         android:fontFamily="@font/maax"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_2_small"
@@ -525,13 +527,18 @@
                     android:shadowDx="2"
                     android:shadowDy="2"
                     android:shadowRadius="2"
+
+
                     android:textAlignment="center"
                     android:textColor="@color/black"
                     android:textStyle="bold"
-                    tools:text="Error!" />
+                    android:visibility="gone"
+                    tools:text="Message!" />
 
                 <TextView
                     android:id="@+id/tvMessage"
+
+
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/msg_err"
@@ -540,7 +547,8 @@
                     android:textAlignment="center"
                     android:textColor="@color/black"
                     android:textStyle="normal|bold"
-                    tools:text="Message!" />
+                    android:visibility="gone"
+                    tools:text="Error!" />
 
             </LinearLayout>
 
@@ -551,9 +559,7 @@
     <RelativeLayout
         android:id="@+id/rlToolButtons1"
         android:layout_width="match_parent"
-        android:layout_height="25dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
+        android:layout_height="28dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/rlToolButtons"
         app:layout_constraintLeft_toLeftOf="parent"
