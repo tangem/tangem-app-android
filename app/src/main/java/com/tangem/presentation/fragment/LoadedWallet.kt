@@ -171,7 +171,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         val visibleFlag = engine?.inOutPutVisible() ?: true
 
         try {
-            ivQR.setImageBitmap(UtilHelper.generateQrCode(engine!!.getShareWalletUri(card).toString()))
+            ivQR.setImageBitmap(UtilHelper.generateQrCode(engine.getShareWalletUri(card).toString()))
         } catch (e: WriterException) {
             e.printStackTrace()
         }
@@ -193,7 +193,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         srlLoadedWallet!!.setOnRefreshListener { this.refresh() }
         btnLookup.setOnClickListener {
             val engineClick = CoinEngineFactory.create(card!!.blockchain)
-            val browserIntent = Intent(Intent.ACTION_VIEW, engineClick!!.getShareWalletUriExplorer(card))
+            val browserIntent = Intent(Intent.ACTION_VIEW, engineClick.getShareWalletUriExplorer(card))
             startActivity(browserIntent)
         }
         btnCopy.setOnClickListener { doShareWallet(false) }
@@ -221,7 +221,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         btnExtract.setOnClickListener {
             if (!card!!.hasBalanceInfo()) {
                 showSingleToast(R.string.cannot_obtain_data_from_blockchain)
-            } else if (!engine!!.isBalanceNotZero(card))
+            } else if (!engine.isBalanceNotZero(card))
                 showSingleToast(R.string.wallet_empty)
             else if (!engine.isBalanceAlterNotZero(card))
                 showSingleToast(R.string.not_enough_funds)
@@ -436,8 +436,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val data = SharedData(SharedData.COUNT_REQUEST)
             card!!.resetFailedBalanceRequestCounter()
             card!!.setIsBalanceEqual(true)
-            for (i in 0 until data.allRequest) {
 
+            for (i in 0 until data.allRequest) {
                 val nodeAddress = engine!!.getNextNode(card)
                 val nodePort = engine.getNextNodePort(card)
 
@@ -454,7 +454,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val taskRate = RateInfoTask(this@LoadedWallet)
             val rate = ExchangeRequest.GetRate(card!!.wallet, "bitcoin", "bitcoin")
             taskRate.execute(rate)
-
 
         } else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
             card!!.resetFailedBalanceRequestCounter()
@@ -480,7 +479,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val taskRate = RateInfoTask(this@LoadedWallet)
             val rate = ExchangeRequest.GetRate(card!!.wallet, "bitcoin-cash", "bitcoin-cash")
             taskRate.execute(rate)
-
 
         } else if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet) {
             val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
