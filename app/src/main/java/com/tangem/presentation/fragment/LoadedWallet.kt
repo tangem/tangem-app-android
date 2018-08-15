@@ -14,6 +14,7 @@ import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.support.v4.widget.SwipeRefreshLayout
 import android.text.Html
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -43,6 +44,9 @@ import com.tangem.util.Util
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.WebSocket
 import java.util.*
 
 class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, VolleyHelper.IRequestCardVerify, SharedPreferences.OnSharedPreferenceChangeListener {
@@ -581,6 +585,21 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 // check balance
                 val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
                 connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(card!!.wallet))
+
+
+
+
+                Log.i("effefefe23", nodeAddress)
+                Log.i("effefefe23", nodePort.toString())
+
+                val client = OkHttpClient.Builder().build()
+                val request = Request.Builder()
+                        .url("ws://btc.cihar.com:50001")
+                        .build()
+                val wsc = WebSocketClass()
+                val ws = client.newWebSocket(request, wsc)
+
+
 
                 // list unspent input
                 val updateWalletInfoTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
