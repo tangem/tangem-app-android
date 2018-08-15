@@ -7,24 +7,26 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by Ilia on 12.04.2018.
  */
 
-
-public class SharedData
-{
+public class SharedData {
     public static int COUNT_REQUEST = 3;
     public AtomicInteger requestCounter;
     public int allRequest;
     public AtomicInteger errorRequest;
-
     public BigDecimal payload;
-    public synchronized boolean UpdatePayload(BigDecimal value)
-    {
 
-        if(payload == null || payload.compareTo(value)!=0)
-        {
+    public SharedData(int requestCount) {
+        payload = BigDecimal.ZERO;
+        allRequest = requestCount;
+        errorRequest = new AtomicInteger(0);
+        requestCounter = new AtomicInteger(0);
+    }
+
+    public synchronized boolean updatePayload(BigDecimal value) {
+        if (payload == null || payload.compareTo(value) != 0) {
             boolean isChange = true;
-            if(payload == null || payload == BigDecimal.ZERO)
+            if (payload == null || payload == BigDecimal.ZERO)
                 isChange = false;
-            if(value!=BigDecimal.ZERO)
+            if (value != BigDecimal.ZERO)
                 payload = value;
             else
                 isChange = false;
@@ -35,16 +37,8 @@ public class SharedData
         return false;
     }
 
-    public void SetErrorRequest(int val)
-    {
-            errorRequest = new AtomicInteger(val);
+    public void setErrorRequest(int val) {
+        errorRequest = new AtomicInteger(val);
     }
 
-    public SharedData(int requstCount)
-    {
-        payload = BigDecimal.ZERO;
-        allRequest = requstCount;
-        errorRequest = new AtomicInteger(0);
-        requestCounter = new AtomicInteger(0);
-    }
 }
