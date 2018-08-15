@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.text.Html
 import android.text.InputFilter
+import android.widget.Toast
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
@@ -54,28 +55,31 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             tvBalance.text = engine!!.getBalanceWithAlter(card)
 
         if (card!!.remainingSignatures < 2)
-            etAmount!!.isEnabled = false
+            etAmount.isEnabled = false
 
         if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet) {
             tvCurrency.text = engine.getBalanceCurrency(card)
             useCurrency = false
-            etAmount!!.setText(engine.getBalanceValue(card))
+            etAmount.setText(engine.getBalanceValue(card))
+
         } else if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
             val balance = engine.getBalanceLong(card)!! / (card!!.blockchain.multiplier / 1000.0)
             tvCurrency.text = "m" + card!!.blockchain.currency
             useCurrency = true
             val output = FormatUtil.DoubleToString(balance)
-            etAmount!!.setText(output)
+            etAmount.setText(output)
+
         } else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
             val balance = engine.getBalanceLong(card)!! / (card!!.blockchain.multiplier / 1000.0)
             tvCurrency.text = "m" + card!!.blockchain.currency
             useCurrency = true
             val output = FormatUtil.DoubleToString(balance)
-            etAmount!!.setText(output)
+            etAmount.setText(output)
+
         } else {
             tvCurrency.text = engine.getBalanceCurrency(card)
             useCurrency = false
-            etAmount!!.setText(engine.getBalanceValue(card))
+            etAmount.setText(engine.getBalanceValue(card))
         }
 
         if (card!!.blockchain == Blockchain.Bitcoin)
@@ -89,20 +93,20 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         // set listeners
         btnVerify.setOnClickListener {
-            val strAmount: String = etAmount!!.text.toString().replace(",", ".")
+            val strAmount: String = etAmount.text.toString().replace(",", ".")
 
             val engine1 = CoinEngineFactory.create(card!!.blockchain)
 
             try {
-                if (!engine.checkAmount(card, etAmount!!.text.toString()))
-                    etAmount!!.error = getString(R.string.not_enough_funds_on_your_card)
+                if (!engine.checkAmount(card, etAmount.text.toString()))
+                    etAmount.error = getString(R.string.not_enough_funds_on_your_card)
             } catch (e: Exception) {
-                etAmount!!.error = getString(R.string.unknown_amount_format)
+                etAmount.error = getString(R.string.unknown_amount_format)
             }
 
             var checkAddress = false
             if (engine1 != null)
-                checkAddress = engine1.validateAddress(etWallet!!.text.toString(), card)
+                checkAddress = engine1.validateAddress(etWallet.text.toString(), card)
 
             if (!checkAddress) {
                 etWallet.error = getString(R.string.incorrect_destination_wallet_address)
@@ -111,6 +115,12 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
             if (etWallet.text.toString() == card!!.wallet) {
                 etWallet.error = getString(R.string.destination_wallet_address_equal_source_address)
+                return@setOnClickListener
+            }
+
+            val balance = engine.getBalanceLong(card)!! / (card!!.blockchain.multiplier / 1000.0)
+            if (etAmount.text.toString().replace(",", ".").toDouble() > balance) {
+                etAmount.error = getString(R.string.not_enough_funds_on_your_card)
                 return@setOnClickListener
             }
 
