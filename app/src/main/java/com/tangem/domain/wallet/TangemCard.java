@@ -1560,6 +1560,8 @@ public class TangemCard {
                 return R.drawable.card_eth000;
             case "0017":
                 return R.drawable.card_qlear200;
+            case "0019":
+                return R.drawable.card_cle100;
             default:
                 return R.drawable.card_default;
         }
