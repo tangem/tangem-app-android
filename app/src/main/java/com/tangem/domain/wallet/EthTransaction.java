@@ -1,6 +1,5 @@
 package com.tangem.domain.wallet;
 
-
 import android.util.Log;
 
 import com.tangem.util.BTCUtils;
@@ -28,7 +27,7 @@ public class EthTransaction {
     byte[] receiveAddress;
     byte[] value;
     byte[] data;
-    Integer  chainId;
+    Integer chainId;
     byte[] rlpRaw;
     public ECDSASignatureETH signature;
     byte[] rlpEncoded;
@@ -36,8 +35,7 @@ public class EthTransaction {
     private static final int CHAIN_ID_INC = 35;
     private static final int LOWER_REAL_V = 27;
 
-    public static EthTransaction create(String to, BigInteger amount, BigInteger nonce, BigInteger gasPrice,
-                                        BigInteger gasLimit, Integer chainId){
+    public static EthTransaction create(String to, BigInteger amount, BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit, Integer chainId) {
         return new EthTransaction(BigIntegers.asUnsignedByteArray(nonce),
                 BigIntegers.asUnsignedByteArray(gasPrice),
                 BigIntegers.asUnsignedByteArray(gasLimit),
@@ -47,9 +45,7 @@ public class EthTransaction {
                 chainId);
     }
 
-
-    public static EthTransaction create(String to, BigInteger amount, BigInteger nonce, BigInteger gasPrice,
-                                        BigInteger gasLimit, Integer chainId, byte[] data){
+    public static EthTransaction create(String to, BigInteger amount, BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit, Integer chainId, byte[] data) {
         return new EthTransaction(BigIntegers.asUnsignedByteArray(nonce),
                 BigIntegers.asUnsignedByteArray(gasPrice),
                 BigIntegers.asUnsignedByteArray(gasLimit),
@@ -59,8 +55,7 @@ public class EthTransaction {
                 chainId);
     }
 
-    public EthTransaction(byte[] nonce, byte[] gasPrice, byte[] gasLimit, byte[] receiveAddress, byte[] value, byte[] data,
-                          Integer chainId) {
+    public EthTransaction(byte[] nonce, byte[] gasPrice, byte[] gasLimit, byte[] receiveAddress, byte[] value, byte[] data, Integer chainId) {
         this.nonce = nonce;
         this.gasPrice = gasPrice;
         this.gasLimit = gasLimit;
@@ -78,18 +73,17 @@ public class EthTransaction {
         }
     }
 
-    public enum ChainEnum
-    {
+    public enum ChainEnum {
         Mainnet(1),
         Morden(2),
         Ropsten(3),
         Rinkeby(4),
         Rootstock_mainnet(30),
-        Rootstock_testnet (31),
-        Kovan (42),
+        Rootstock_testnet(31),
+        Kovan(42),
         Ethereum_Classic_mainnet(61),
         Ethereum_Classic_testnet(62),
-        Geth_private_chains (1337);
+        Geth_private_chains(1337);
 
         private int value;
 
@@ -116,39 +110,36 @@ public class EthTransaction {
         return kec.digest(plainMsg);
     }
 
-    public int BruteRecoveryID2(ECDSASignatureETH sig, byte[] messageHash, byte[] thisKey)
-    {
+    public int BruteRecoveryID2(ECDSASignatureETH sig, byte[] messageHash, byte[] thisKey) {
         Log.e("ETH_KZ", BTCUtils.toHex(thisKey));
         int recId = -1;
         for (int i = 0; i < 4; i++) {
             byte[] recK = CryptoUtil.recoverPubBytesFromSignature(i, sig, messageHash);
 
-            if(recK == null)
-            {
+            if (recK == null) {
                 continue;
             }
 
-            Log.e("ETH_k "+String.valueOf(i), BTCUtils.toHex(recK));
+            Log.e("ETH_k " + String.valueOf(i), BTCUtils.toHex(recK));
             if (Arrays.equals(recK, thisKey)) {
                 recId = i;
-                recId +=27;
+                recId += 27;
                 break;
             }
         }
         return recId;
     }
 
-    public int BruteRecoveryID(ECKey.ECDSASignature sig, Sha256Hash messageHash, byte[] thisKey)
-    {
+    public int BruteRecoveryID(ECKey.ECDSASignature sig, Sha256Hash messageHash, byte[] thisKey) {
         Log.e("ETH_KZ", BTCUtils.toHex(thisKey));
         int recId = -1;
         for (int i = 0; i < 4; i++) {
             ECKey k = ECKey.recoverFromSignature(i, sig, messageHash, false);
 
-            if(k == null)
+            if (k == null)
                 continue;
             byte[] recK = k.getPubKey();
-            Log.e("ETH_k "+String.valueOf(i), BTCUtils.toHex(recK));
+            Log.e("ETH_k " + String.valueOf(i), BTCUtils.toHex(recK));
             if (k != null && Arrays.equals(recK, thisKey)) {
                 recId = i;
                 break;
@@ -230,4 +221,5 @@ public class EthTransaction {
         }
         return rlpRaw;
     }
+
 }
