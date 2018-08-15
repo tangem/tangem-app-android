@@ -59,9 +59,7 @@ public class UpdateWalletInfoTask extends ElectrumTask {
 //        loadedWallet.updateTasks.remove(this);
 
         try {
-            CoinEngine engine = CoinEngineFactory.create(
-                    loadedWallet.getCard().getBlockchain());
-
+            CoinEngine engine = CoinEngineFactory.create(loadedWallet.getCard().getBlockchain());
             for (ElectrumRequest request : requests) {
                 try {
                     if (request.error == null) {
@@ -73,7 +71,7 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                 loadedWallet.getCard().setBalanceReceived(true);
 
                                 if (sharedCounter != null) {
-                                    boolean notEqualBalance = sharedCounter.UpdatePayload(new BigDecimal(String.valueOf(confBalance)));
+                                    boolean notEqualBalance = sharedCounter.updatePayload(new BigDecimal(String.valueOf(confBalance)));
                                     if (notEqualBalance)
                                         loadedWallet.getCard().setIsBalanceEqual(false);
                                     int counter = sharedCounter.requestCounter.incrementAndGet();
@@ -81,7 +79,6 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                         continue;
                                     }
                                 }
-
 
                                 loadedWallet.getCard().setBalanceConfirmed(confBalance);
                                 loadedWallet.getCard().setBalanceUnconfirmed(unconf);
@@ -206,13 +203,10 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                 JSONObject jsHeader = request.getResult();
                                 try {
                                     loadedWallet.getCard().getHaedersInfo();
-                                    loadedWallet.getCard().UpdateHeaderInfo(new TangemCard.HeaderInfo(
-                                            jsHeader.getInt("block_height"),
-                                            jsHeader.getInt("timestamp")));
+                                    loadedWallet.getCard().UpdateHeaderInfo(new TangemCard.HeaderInfo(jsHeader.getInt("block_height"), jsHeader.getInt("timestamp")));
                                 } catch (JSONException e) {
                                     e.printStackTrace();
                                     engine.switchNode(loadedWallet.getCard());
-
                                 }
 
                             } catch (JSONException e) {
@@ -228,9 +222,8 @@ public class UpdateWalletInfoTask extends ElectrumTask {
 
                                 List<TangemCard.UnspentTransaction> listTx = loadedWallet.getCard().getUnspentTransactions();
                                 for (TangemCard.UnspentTransaction tx : listTx) {
-                                    if (tx.txID.equals(txHash)) {
+                                    if (tx.txID.equals(txHash))
                                         tx.Raw = raw;
-                                    }
                                 }
 
                                 List<TangemCard.HistoryTransaction> listHTx = loadedWallet.getCard().getHistoryTransactions();
@@ -239,14 +232,12 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                         tx.Raw = raw;
                                         try {
                                             ArrayList<byte[]> prevHashes = BTCUtils.getPrevTX(raw);
-
                                             boolean isOur = false;
                                             for (byte[] hash : prevHashes) {
                                                 String checkID = BTCUtils.toHex(hash);
                                                 for (TangemCard.HistoryTransaction txForCheck : listHTx) {
-                                                    if (txForCheck.txID == checkID) {
+                                                    if (txForCheck.txID.equals(checkID))
                                                         isOur = true;
-                                                    }
                                                 }
                                             }
 
