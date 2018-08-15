@@ -54,9 +54,8 @@ public class ElectrumTask extends AsyncTask<ElectrumRequest, Integer, List<Elect
             result.add(requests[i]);
         }
         try {
-
             InetAddress serverAddress = InetAddress.getByName(Host);
-            Log.v(logTag, "Connecting..."+Host);
+            Log.v(logTag, "Connecting..." + Host);
 //            Socket socket = new Socket(serverAddress, Port);
             Socket socket = new Socket();
             socket.setSoTimeout(5000);
@@ -102,8 +101,8 @@ public class ElectrumTask extends AsyncTask<ElectrumRequest, Integer, List<Elect
             out.flush();
 
             request.answerData = in.readLine();
-            request.Host=Host;
-            request.Port=Port;
+            request.Host = Host;
+            request.Port = Port;
             if (request.answerData != null) {
                 Log.v(logTag, ">> " + request.answerData);
             } else {
@@ -116,7 +115,7 @@ public class ElectrumTask extends AsyncTask<ElectrumRequest, Integer, List<Elect
     }
 
     public String getValidationNodeDescription() {
-        return "Electrum, "+Host+":"+String.valueOf(Port);
+        return "Electrum, " + Host + ":" + String.valueOf(Port);
     }
 
 
