@@ -418,119 +418,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
     }
 
-    fun refresh() {
-        srlLoadedWallet!!.isRefreshing = true
-        card!!.clearInfo()
-        card!!.error = null
-        card!!.message = null
-
-        val needResendTX = LastSignStorage.getNeedTxSend(card!!.wallet)
-
-        updateViews()
-
-        val engine = CoinEngineFactory.create(card!!.blockchain)
-
-        requestVerify()
-
-        if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
-            val data = SharedData(SharedData.COUNT_REQUEST)
-            card!!.resetFailedBalanceRequestCounter()
-            card!!.setIsBalanceEqual(true)
-
-            for (i in 0 until data.allRequest) {
-                val nodeAddress = engine!!.getNextNode(card)
-                val nodePort = engine.getNextNodePort(card)
-
-                // check balance
-                val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(card!!.wallet))
-
-                // list unspent input
-                val updateWalletInfoTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-                updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(card!!.wallet))
-            }
-
-            // course request
-            val taskRate = RateInfoTask(this@LoadedWallet)
-            val rate = ExchangeRequest.GetRate(card!!.wallet, "bitcoin", "bitcoin")
-            taskRate.execute(rate)
-
-        } else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
-            card!!.resetFailedBalanceRequestCounter()
-            val data = SharedData(SharedData.COUNT_REQUEST)
-            card!!.setIsBalanceEqual(true)
-            for (i in 0 until data.allRequest) {
-                val nodeAddress = engine!!.getNextNode(card)
-                val nodePort = engine.getNextNodePort(card)
-
-                // check balance
-                val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(card!!.wallet))
-            }
-
-            val nodeAddress = engine!!.getNode(card)
-            val nodePort = engine.getNodePort(card)
-
-            // list unspent input
-            val updateWalletInfoTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-            updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(card!!.wallet))
-
-            // course request
-            val taskRate = RateInfoTask(this@LoadedWallet)
-            val rate = ExchangeRequest.GetRate(card!!.wallet, "bitcoin-cash", "bitcoin-cash")
-            taskRate.execute(rate)
-
-        } else if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet) {
-            val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
-            val reqETH = InfuraRequest.GetBalance(card!!.wallet)
-            reqETH.id = 67
-            reqETH.setBlockchain(card!!.blockchain)
-
-            val reqNonce = InfuraRequest.GetOutTransactionCount(card!!.wallet)
-            reqNonce.id = 67
-            reqNonce.setBlockchain(card!!.blockchain)
-
-            updateETH.execute(reqETH, reqNonce)
-
-            // course request
-            val taskRate = RateInfoTask(this@LoadedWallet)
-            val rate = ExchangeRequest.GetRate(card!!.wallet, "ethereum", "ethereum")
-            taskRate.execute(rate)
-
-        } else if (card!!.blockchain == Blockchain.Token) {
-            val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
-            val reqETH = InfuraRequest.GetTokenBalance(card!!.wallet, engine!!.getContractAddress(card), engine.getTokenDecimals(card))
-            reqETH.id = 67
-            reqETH.setBlockchain(card!!.blockchain)
-
-            val reqBalance = InfuraRequest.GetBalance(card!!.wallet)
-            reqBalance.id = 67
-            reqBalance.setBlockchain(card!!.blockchain)
-
-            val reqNonce = InfuraRequest.GetOutTransactionCount(card!!.wallet)
-            reqNonce.id = 67
-            reqNonce.setBlockchain(card!!.blockchain)
-            updateETH.execute(reqETH, reqNonce, reqBalance)
-
-            // course request
-            val taskRate = RateInfoTask(this@LoadedWallet)
-            val rate = ExchangeRequest.GetRate(card!!.wallet, "ethereum", "ethereum")
-            taskRate.execute(rate)
-        }
-
-        if (needResendTX)
-            sendTransaction(LastSignStorage.getTxForSend(card!!.wallet))
-    }
-
     override fun onTagDiscovered(tag: Tag) {
         startVerify(tag)
-    }
-
-    fun prepareResultIntent(): Intent {
-        val data = Intent()
-        data.putExtra("UID", card!!.uid)
-        data.putExtra("Card", card!!.asBundle)
-        return data
     }
 
     override fun onReadStart(cardProtocol: CardProtocol) {
@@ -664,6 +553,117 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    fun refresh() {
+        srlLoadedWallet!!.isRefreshing = true
+        card!!.clearInfo()
+        card!!.error = null
+        card!!.message = null
+
+        val needResendTX = LastSignStorage.getNeedTxSend(card!!.wallet)
+
+        updateViews()
+
+        val engine = CoinEngineFactory.create(card!!.blockchain)
+
+        requestVerify()
+
+        if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
+            val data = SharedData(SharedData.COUNT_REQUEST)
+            card!!.resetFailedBalanceRequestCounter()
+            card!!.setIsBalanceEqual(true)
+
+            for (i in 0 until data.allRequest) {
+                val nodeAddress = engine!!.getNextNode(card)
+                val nodePort = engine.getNextNodePort(card)
+
+                // check balance
+                val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
+                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(card!!.wallet))
+
+                // list unspent input
+                val updateWalletInfoTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
+                updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(card!!.wallet))
+            }
+
+            // course request
+            val taskRate = RateInfoTask(this@LoadedWallet)
+            val rate = ExchangeRequest.GetRate(card!!.wallet, "bitcoin", "bitcoin")
+            taskRate.execute(rate)
+
+        } else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
+            card!!.resetFailedBalanceRequestCounter()
+            val data = SharedData(SharedData.COUNT_REQUEST)
+            card!!.setIsBalanceEqual(true)
+            for (i in 0 until data.allRequest) {
+                val nodeAddress = engine!!.getNextNode(card)
+                val nodePort = engine.getNextNodePort(card)
+
+                // check balance
+                val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
+                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(card!!.wallet))
+            }
+
+            val nodeAddress = engine!!.getNode(card)
+            val nodePort = engine.getNodePort(card)
+
+            // list unspent input
+            val updateWalletInfoTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
+            updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(card!!.wallet))
+
+            // course request
+            val taskRate = RateInfoTask(this@LoadedWallet)
+            val rate = ExchangeRequest.GetRate(card!!.wallet, "bitcoin-cash", "bitcoin-cash")
+            taskRate.execute(rate)
+
+        } else if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet) {
+            val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
+            val reqETH = InfuraRequest.GetBalance(card!!.wallet)
+            reqETH.id = 67
+            reqETH.setBlockchain(card!!.blockchain)
+
+            val reqNonce = InfuraRequest.GetOutTransactionCount(card!!.wallet)
+            reqNonce.id = 67
+            reqNonce.setBlockchain(card!!.blockchain)
+
+            updateETH.execute(reqETH, reqNonce)
+
+            // course request
+            val taskRate = RateInfoTask(this@LoadedWallet)
+            val rate = ExchangeRequest.GetRate(card!!.wallet, "ethereum", "ethereum")
+            taskRate.execute(rate)
+
+        } else if (card!!.blockchain == Blockchain.Token) {
+            val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
+            val reqETH = InfuraRequest.GetTokenBalance(card!!.wallet, engine!!.getContractAddress(card), engine.getTokenDecimals(card))
+            reqETH.id = 67
+            reqETH.setBlockchain(card!!.blockchain)
+
+            val reqBalance = InfuraRequest.GetBalance(card!!.wallet)
+            reqBalance.id = 67
+            reqBalance.setBlockchain(card!!.blockchain)
+
+            val reqNonce = InfuraRequest.GetOutTransactionCount(card!!.wallet)
+            reqNonce.id = 67
+            reqNonce.setBlockchain(card!!.blockchain)
+            updateETH.execute(reqETH, reqNonce, reqBalance)
+
+            // course request
+            val taskRate = RateInfoTask(this@LoadedWallet)
+            val rate = ExchangeRequest.GetRate(card!!.wallet, "ethereum", "ethereum")
+            taskRate.execute(rate)
+        }
+
+        if (needResendTX)
+            sendTransaction(LastSignStorage.getTxForSend(card!!.wallet))
+    }
+
+    fun prepareResultIntent(): Intent {
+        val data = Intent()
+        data.putExtra("UID", card!!.uid)
+        data.putExtra("Card", card!!.asBundle)
+        return data
     }
 
     private fun openVerifyCard(cardProtocol: CardProtocol) {
