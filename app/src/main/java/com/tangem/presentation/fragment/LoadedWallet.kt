@@ -634,9 +634,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
                 val validator = BalanceValidator()
                 validator.Check(card)
-                tvBalanceLine1.text = validator.GetFirstLine()
-                tvBalanceLine2.text = validator.GetSecondLine()
-                tvBalanceLine1.setTextColor(ContextCompat.getColor(context!!, validator.GetColor()))
+                tvBalanceLine1.text = validator.firstLine
+                tvBalanceLine2.text = validator.secondLine
+                tvBalanceLine1.setTextColor(ContextCompat.getColor(context!!, validator.color))
             }
 
             if (engine!!.hasBalanceInfo(card) || card!!.offlineBalance == null) {
