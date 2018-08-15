@@ -61,6 +61,8 @@ public class ElectrumTask extends AsyncTask<ElectrumRequest, Integer, List<Elect
             socket.setSoTimeout(5000);
             socket.bind(new InetSocketAddress(0));
             socket.connect(new InetSocketAddress(serverAddress, Port));
+//            Log.i("effefefe", Host);
+//            Log.i("effefefe", String.valueOf(Port));
             try {
                 OutputStream os = socket.getOutputStream();
                 out = new OutputStreamWriter(os, "UTF-8");
