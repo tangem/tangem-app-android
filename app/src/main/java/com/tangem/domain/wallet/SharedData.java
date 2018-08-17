@@ -12,7 +12,7 @@ public class SharedData {
     public AtomicInteger requestCounter;
     public int allRequest;
     public AtomicInteger errorRequest;
-    public BigDecimal payload;
+    private BigDecimal payload;
 
     public SharedData(int requestCount) {
         payload = BigDecimal.ZERO;
@@ -24,9 +24,9 @@ public class SharedData {
     public synchronized boolean updatePayload(BigDecimal value) {
         if (payload == null || payload.compareTo(value) != 0) {
             boolean isChange = true;
-            if (payload == null || payload == BigDecimal.ZERO)
+            if (payload == null || payload.equals(BigDecimal.ZERO))
                 isChange = false;
-            if (value != BigDecimal.ZERO)
+            if (!value.equals(BigDecimal.ZERO))
                 payload = value;
             else
                 isChange = false;
