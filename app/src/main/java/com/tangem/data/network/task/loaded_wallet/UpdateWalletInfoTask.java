@@ -63,13 +63,13 @@ public class UpdateWalletInfoTask extends ElectrumTask {
             for (ElectrumRequest request : requests) {
                 try {
                     if (request.error == null) {
+                        // get balance
                         if (request.isMethod(ElectrumRequest.METHOD_GetBalance)) {
                             try {
-                                String mWalletAddress = request.getParams().getString(0);
+                                String walletAddress = request.getParams().getString(0);
                                 Long confBalance = request.getResult().getLong("confirmed");
-                                Long unconf = request.getResult().getLong("unconfirmed");
+                                Long unconfirmedBalance = request.getResult().getLong("unconfirmed");
                                 loadedWallet.getCard().setBalanceReceived(true);
-
                                 if (sharedCounter != null) {
                                     boolean notEqualBalance = sharedCounter.updatePayload(new BigDecimal(String.valueOf(confBalance)));
                                     if (notEqualBalance)
@@ -79,11 +79,9 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                         continue;
                                     }
                                 }
-
                                 loadedWallet.getCard().setBalanceConfirmed(confBalance);
-                                loadedWallet.getCard().setBalanceUnconfirmed(unconf);
+                                loadedWallet.getCard().setBalanceUnconfirmed(unconfirmedBalance);
                                 loadedWallet.getCard().setDecimalBalance(String.valueOf(confBalance));
-
                                 loadedWallet.getCard().setValidationNodeDescription(getValidationNodeDescription());
                             } catch (JSONException e) {
                                 if (sharedCounter != null) {
@@ -98,32 +96,33 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                     engine.switchNode(loadedWallet.getCard());
                                 }
                             }
-                        } else if (request.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
+                        }
+
+                        // send transaction
+                        else if (request.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
                             try {
                                 String hashTX = request.getResultString();
-
                                 try {
                                     LastSignStorage.setLastMessage(loadedWallet.getCard().getWallet(), hashTX);
-                                    if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
+                                    if (hashTX.startsWith("0x") || hashTX.startsWith("0X"))
                                         hashTX = hashTX.substring(2);
-                                    }
                                     BigInteger bigInt = new BigInteger(hashTX, 16); //TODO: очень плохой способ
                                     LastSignStorage.setTxWasSend(loadedWallet.getCard().getWallet());
                                     LastSignStorage.setLastMessage(loadedWallet.getCard().getWallet(), "");
 //                                Log.e("TX_RESULT", hashTX);
-
                                 } catch (Exception e) {
                                     engine.switchNode(loadedWallet.getCard());
                                 }
-
                             } catch (JSONException e) {
                                 e.printStackTrace();
                                 engine.switchNode(loadedWallet.getCard());
                             }
-                        } else if (request.isMethod(ElectrumRequest.METHOD_ListUnspent)) {
+                        }
+
+                        // list unspent
+                        else if (request.isMethod(ElectrumRequest.METHOD_ListUnspent)) {
                             try {
                                 String mWalletAddress = request.getParams().getString(0);
-
                                 JSONArray jsUnspentArray = request.getResultArray();
                                 try {
                                     loadedWallet.getCard().getUnspentTransactions().clear();
@@ -148,21 +147,20 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                         String nodeAddress = engine.getNextNode(loadedWallet.getCard());
                                         int nodePort = engine.getNextNodePort(loadedWallet.getCard());
                                         UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(loadedWallet, nodeAddress, nodePort);
-
 //                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
-
-                                        updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
-                                                ElectrumRequest.GetTransaction(mWalletAddress, hash));
+                                        updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.getHeader(mWalletAddress, String.valueOf(height)), ElectrumRequest.getTransaction(mWalletAddress, hash));
                                     }
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
                                 engine.switchNode(loadedWallet.getCard());
                             }
-                        } else if (request.isMethod(ElectrumRequest.METHOD_GetHistory)) {
+                        }
+
+                        // get history
+                        else if (request.isMethod(ElectrumRequest.METHOD_GetHistory)) {
                             try {
                                 String mWalletAddress = request.getParams().getString(0);
-
                                 JSONArray jsHistoryArray = request.getResultArray();
                                 try {
                                     loadedWallet.getCard().getHistoryTransactions().clear();
@@ -183,22 +181,21 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                     Integer height = jsUnspent.getInt("height");
                                     String hash = jsUnspent.getString("tx_hash");
                                     if (height != -1) {
-
                                         String nodeAddress = engine.getNode(loadedWallet.getCard());
                                         int nodePort = engine.getNodePort(loadedWallet.getCard());
                                         UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(loadedWallet, nodeAddress, nodePort);
 //                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
-
-                                        updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.GetHeader(mWalletAddress, String.valueOf(height)),
-                                                ElectrumRequest.GetTransaction(mWalletAddress, hash));
+                                        updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.getHeader(mWalletAddress, String.valueOf(height)), ElectrumRequest.getTransaction(mWalletAddress, hash));
                                     }
-
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
                                 engine.switchNode(loadedWallet.getCard());
                             }
-                        } else if (request.isMethod(ElectrumRequest.METHOD_GetHeader)) {
+                        }
+
+                        // get header
+                        else if (request.isMethod(ElectrumRequest.METHOD_GetHeader)) {
                             try {
                                 JSONObject jsHeader = request.getResult();
                                 try {
@@ -208,24 +205,22 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                     e.printStackTrace();
                                     engine.switchNode(loadedWallet.getCard());
                                 }
-
                             } catch (JSONException e) {
                                 e.printStackTrace();
                                 engine.switchNode(loadedWallet.getCard());
-
                             }
-                        } else if (request.isMethod(ElectrumRequest.METHOD_GetTransaction)) {
+                        }
+
+                        // get transaction
+                        else if (request.isMethod(ElectrumRequest.METHOD_GetTransaction)) {
                             try {
-
-                                String txHash = request.TxHash;
+                                String txHash = request.txHash;
                                 String raw = request.getResultString();
-
                                 List<TangemCard.UnspentTransaction> listTx = loadedWallet.getCard().getUnspentTransactions();
                                 for (TangemCard.UnspentTransaction tx : listTx) {
                                     if (tx.txID.equals(txHash))
                                         tx.Raw = raw;
                                 }
-
                                 List<TangemCard.HistoryTransaction> listHTx = loadedWallet.getCard().getHistoryTransactions();
                                 for (TangemCard.HistoryTransaction tx : listHTx) {
                                     if (tx.txID.equals(txHash)) {
@@ -240,7 +235,6 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                                         isOur = true;
                                                 }
                                             }
-
                                             tx.isInput = !isOur;
                                         } catch (BitcoinException e) {
                                             e.printStackTrace();
@@ -248,32 +242,28 @@ public class UpdateWalletInfoTask extends ElectrumTask {
 //                                    Log.e("TX", raw);
                                     }
                                 }
-
                             } catch (JSONException e) {
                                 e.printStackTrace();
                                 engine.switchNode(loadedWallet.getCard());
                             }
                         }
                         loadedWallet.updateViews();
+
                     } else {
                         if (sharedCounter != null) {
                             int errCounter = sharedCounter.errorRequest.incrementAndGet();
                             loadedWallet.getCard().incFailedBalanceRequestCounter();
-                            if (errCounter >= sharedCounter.allRequest) {
+                            if (errCounter >= sharedCounter.allRequest)
                                 engine.switchNode(loadedWallet.getCard());
-                            }
-                        } else {
+                        } else
                             engine.switchNode(loadedWallet.getCard());
-                        }
-
                     }
                 } catch (JSONException e) {
                     if (sharedCounter != null) {
                         int errCounter = sharedCounter.errorRequest.incrementAndGet();
                         loadedWallet.getCard().incFailedBalanceRequestCounter();
-                        if (errCounter >= sharedCounter.allRequest) {
+                        if (errCounter >= sharedCounter.allRequest)
                             e.printStackTrace();
-                        }
                     } else {
                         e.printStackTrace();
                     }
@@ -284,10 +274,8 @@ public class UpdateWalletInfoTask extends ElectrumTask {
 
         } catch (NullPointerException e) {
             e.printStackTrace();
-
-            if (reference.get() != null) {
+            if (reference.get() != null)
                 reference.get().getSrlLoadedWallet().setRefreshing(false);
-            }
         }
     }
 
