@@ -44,9 +44,6 @@ import com.tangem.util.Util
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.WebSocket
 import java.util.*
 
 class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, VolleyHelper.IRequestCardVerify, SharedPreferences.OnSharedPreferenceChangeListener {
@@ -573,6 +570,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         requestVerify()
 
+        // Bitcoin
         if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
             val data = SharedData(SharedData.COUNT_REQUEST)
             card!!.resetFailedBalanceRequestCounter()
@@ -582,36 +580,27 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 val nodeAddress = engine!!.getNextNode(card)
                 val nodePort = engine.getNextNodePort(card)
 
+                Log.i(TAG, nodeAddress)
+                Log.i(TAG, nodePort.toString())
+                Log.i(TAG, i.toString())
+
                 // check balance
                 val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(card!!.wallet))
-
-
-
-
-                Log.i("effefefe23", nodeAddress)
-                Log.i("effefefe23", nodePort.toString())
-
-                val client = OkHttpClient.Builder().build()
-                val request = Request.Builder()
-                        .url("ws://btc.cihar.com:50001")
-                        .build()
-                val wsc = WebSocketClass()
-                val ws = client.newWebSocket(request, wsc)
-
-
+                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.checkBalance(card!!.wallet))
 
                 // list unspent input
                 val updateWalletInfoTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-                updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(card!!.wallet))
+                updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.listUnspent(card!!.wallet))
             }
 
             // course request
             val taskRate = RateInfoTask(this@LoadedWallet)
             val rate = ExchangeRequest.GetRate(card!!.wallet, "bitcoin", "bitcoin")
             taskRate.execute(rate)
+        }
 
-        } else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
+        // BitcoinCash
+        else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
             card!!.resetFailedBalanceRequestCounter()
             val data = SharedData(SharedData.COUNT_REQUEST)
             card!!.setIsBalanceEqual(true)
@@ -621,7 +610,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
                 // check balance
                 val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.CheckBalance(card!!.wallet))
+                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.checkBalance(card!!.wallet))
             }
 
             val nodeAddress = engine!!.getNode(card)
@@ -629,14 +618,17 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             // list unspent input
             val updateWalletInfoTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-            updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.ListUnspent(card!!.wallet))
+            updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.listUnspent(card!!.wallet))
 
             // course request
             val taskRate = RateInfoTask(this@LoadedWallet)
             val rate = ExchangeRequest.GetRate(card!!.wallet, "bitcoin-cash", "bitcoin-cash")
             taskRate.execute(rate)
 
-        } else if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet) {
+        }
+
+        // Ethereum
+        else if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet) {
             val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
             val reqETH = InfuraRequest.GetBalance(card!!.wallet)
             reqETH.id = 67
@@ -653,7 +645,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val rate = ExchangeRequest.GetRate(card!!.wallet, "ethereum", "ethereum")
             taskRate.execute(rate)
 
-        } else if (card!!.blockchain == Blockchain.Token) {
+        }
+
+        // Token
+        else if (card!!.blockchain == Blockchain.Token) {
             val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
             val reqETH = InfuraRequest.GetTokenBalance(card!!.wallet, engine!!.getContractAddress(card), engine.getTokenDecimals(card))
             reqETH.id = 67
@@ -766,13 +761,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val nodePort = engine.getNodePort(card)
 
             val connectTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort)
-            connectTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.Broadcast(card!!.wallet, tx))
+            connectTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.broadcast(card!!.wallet, tx))
         } else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
             val nodeAddress = engine!!.getNode(card)
             val nodePort = engine.getNodePort(card)
 
             val connectTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort)
-            connectTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.Broadcast(card!!.wallet, tx))
+            connectTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.broadcast(card!!.wallet, tx))
         }
     }
 
