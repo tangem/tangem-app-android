@@ -15,6 +15,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -50,9 +51,10 @@ public class ElectrumTask extends AsyncTask<ElectrumRequest, Integer, List<Elect
     @Override
     protected List<ElectrumRequest> doInBackground(ElectrumRequest... requests) {
         List<ElectrumRequest> result = new ArrayList<>();
-        for (int i = 0; i < requests.length; i++) {
-            result.add(requests[i]);
-        }
+//        for (int i = 0; i < requests.length; i++) {
+//            result.add(requests[i]);
+//        }
+        Collections.addAll(result, requests);
         try {
             InetAddress serverAddress = InetAddress.getByName(Host);
             Log.v(logTag, "Connecting..." + Host);
