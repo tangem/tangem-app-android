@@ -35,12 +35,12 @@ public class ConnectTask extends ElectrumTask {
                 String nodeAddress = engine.getNode(mCard);
                 int nodePort = engine.getNodePort(mCard);
                 ConnectTask connectTask = new ConnectTask(reference.get(), nodeAddress, nodePort, remaining_attempts);
-                connectTask.execute(ElectrumRequest.Broadcast(mCard.getWallet(), tx));
+                connectTask.execute(ElectrumRequest.broadcast(mCard.getWallet(), tx));
             } else if (mCard.getBlockchain() == Blockchain.BitcoinCash || mCard.getBlockchain() == Blockchain.BitcoinCashTestNet) {
                 String nodeAddress = engine.getNode(mCard);
                 int nodePort = engine.getNodePort(mCard);
                 ConnectTask connectTask = new ConnectTask(reference.get(), nodeAddress, nodePort, remaining_attempts);
-                connectTask.execute(ElectrumRequest.Broadcast(mCard.getWallet(), tx));
+                connectTask.execute(ElectrumRequest.broadcast(mCard.getWallet(), tx));
             }
 
         } else {
