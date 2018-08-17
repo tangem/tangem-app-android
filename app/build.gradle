@@ -59,5 +59,7 @@ dependencies {
     implementation 'org.bitcoinj:bitcoinj-core:0.14.4'
     implementation 'me.dm7.barcodescanner:zxing:1.9.8'
     implementation 'info.hoang8f:android-segmented:1.0.6'
-    implementation 'com.squareup.okhttp3:okhttp:3.7.0'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.0'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    implementation 'io.reactivex.rxjava2:rxkotlin:2.3.0'
 }
