@@ -20,8 +20,8 @@ public class ElectrumRequest {
     public JSONObject jsRequestData;
     public String answerData;
     public String error;
-    public String WalletAddress;
-    public String TxHash;
+    public String walletAddress;
+    public String txHash;
     public String TX;
     public String Host;
     public int Port;
@@ -71,10 +71,10 @@ public class ElectrumRequest {
         }
     }
 
-    public static ElectrumRequest CheckBalance(String wallet) {
+    public static ElectrumRequest checkBalance(String wallet) {
         ElectrumRequest request = new ElectrumRequest();
         try {
-            request.WalletAddress=wallet;
+            request.walletAddress = wallet;
             request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_GetBalance + "\", \"params\":[\"" + wallet + "\"] }");
         } catch (JSONException e) {
             e.printStackTrace();
@@ -84,24 +84,22 @@ public class ElectrumRequest {
     }
 
 
-    public static ElectrumRequest GetFee(String wallet) {
+    public static ElectrumRequest getFee(String wallet) {
         ElectrumRequest request = new ElectrumRequest();
-        try{
-            request.WalletAddress = wallet; //METHOD_GetFee
+        try {
+            request.walletAddress = wallet; //METHOD_GetFee
             request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_GetFee + "\", \"params\":[\"" + 6 + "\"] }");
-        }
-        catch(JSONException e)
-        {
+        } catch (JSONException e) {
             e.printStackTrace();
             request.error = e.toString();
         }
         return request;
     }
 
-    public static ElectrumRequest GetHeader(String wallet, String height) {
+    public static ElectrumRequest getHeader(String wallet, String height) {
         ElectrumRequest request = new ElectrumRequest();
         try {
-            request.WalletAddress=wallet;
+            request.walletAddress = wallet;
             request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_GetHeader + "\", \"params\":[\"" + height + "\"] }");
         } catch (JSONException e) {
             e.printStackTrace();
@@ -110,10 +108,10 @@ public class ElectrumRequest {
         return request;
     }
 
-    public static ElectrumRequest ListUnspent(String wallet) {
+    public static ElectrumRequest listUnspent(String wallet) {
         ElectrumRequest request = new ElectrumRequest();
         try {
-            request.WalletAddress=wallet;
+            request.walletAddress = wallet;
             request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_ListUnspent + "\", \"params\":[\"" + wallet + "\"] }");
         } catch (JSONException e) {
             e.printStackTrace();
@@ -122,11 +120,11 @@ public class ElectrumRequest {
         return request;
     }
 
-    public static ElectrumRequest Broadcast(String wallet, String tx) {
+    public static ElectrumRequest broadcast(String wallet, String tx) {
         ElectrumRequest request = new ElectrumRequest();
         try {
-            request.WalletAddress=wallet;
-            request.TX=tx;
+            request.walletAddress = wallet;
+            request.TX = tx;
             request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_SendTransaction + "\", \"params\":[\"" + tx + "\"] }");
         } catch (JSONException e) {
             e.printStackTrace();
@@ -135,10 +133,10 @@ public class ElectrumRequest {
         return request;
     }
 
-    public static ElectrumRequest ListHistory(String wallet) {
+    public static ElectrumRequest listHistory(String wallet) {
         ElectrumRequest request = new ElectrumRequest();
         try {
-            request.WalletAddress=wallet;
+            request.walletAddress = wallet;
             request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_GetHistory + "\", \"params\":[\"" + wallet + "\"] }");
         } catch (JSONException e) {
             e.printStackTrace();
@@ -147,11 +145,11 @@ public class ElectrumRequest {
         return request;
     }
 
-    public static ElectrumRequest GetTransaction(String wallet, String tx_hash) {
+    public static ElectrumRequest getTransaction(String wallet, String tx_hash) {
         ElectrumRequest request = new ElectrumRequest();
         try {
-            request.WalletAddress=wallet;
-            request.TxHash = tx_hash;
+            request.walletAddress = wallet;
+            request.txHash = tx_hash;
             request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_GetTransaction + "\", \"params\":[\"" + tx_hash + "\"] }");
         } catch (JSONException e) {
             e.printStackTrace();
@@ -179,6 +177,5 @@ public class ElectrumRequest {
     public JSONArray getResultArray() throws JSONException {
         return getAnswer().getJSONArray("result");
     }
-
 
 }
