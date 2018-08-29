@@ -23,8 +23,8 @@ public class ElectrumRequest {
     public String walletAddress;
     public String txHash;
     public String TX;
-    public String Host;
-    public int Port;
+    public String host;
+    public int port;
 
     private ElectrumRequest() {
     }
