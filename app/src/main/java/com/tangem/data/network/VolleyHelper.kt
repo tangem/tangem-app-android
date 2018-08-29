@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.support.v7.app.AlertDialog
-import android.util.Log
 import com.android.volley.AuthFailureError
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
@@ -12,18 +11,17 @@ import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.google.gson.Gson
 import com.tangem.AppController
-import com.tangem.data.network.model.ResponseVerify
+import com.tangem.data.network.model.CardVerifyModel
 import com.tangem.domain.wallet.TangemCard
-import com.tangem.presentation.fragment.LoadedWallet
 import com.tangem.util.Util
 import com.tangem.wallet.R
-import java.util.HashMap
+import java.util.*
 
 class VolleyHelper (private val requestCardVerify: IRequestCardVerify){
 
     interface IRequestCardVerify {
 
-        fun success(responseVerify: ResponseVerify)
+        fun success(cardVerifyModel: CardVerifyModel)
 
         fun error(error: String)
     }
@@ -32,14 +30,14 @@ class VolleyHelper (private val requestCardVerify: IRequestCardVerify){
         val params = HashMap<String, String>()
         params["CID"] = Util.bytesToHex(card.cid)
         params["publicKey"] = Util.bytesToHex(card.cardPublicKey)
-        doRequestString(Server.API.Method.VERIFY, params)
+        doRequestString(Server.ApiTangem.Method.VERIFY, params)
     }
 
     fun requestCardVerifyShowResponse(context: Activity, card: TangemCard) {
         val params = HashMap<String, String>()
         params["CID"] = Util.bytesToHex(card.cid)
         params["publicKey"] = Util.bytesToHex(card.cardPublicKey)
-        doRequestDebug(context, Server.API.Method.VERIFY, params)
+        doRequestDebug(context, Server.ApiTangem.Method.VERIFY, params)
     }
 
     fun doRequestDebug(context: Context, url: String, params: Map<String, String>) {
@@ -84,7 +82,7 @@ class VolleyHelper (private val requestCardVerify: IRequestCardVerify){
                 Response.Listener<String> { response ->
                     val requestResponse = response.toString().substring(response.toString().lastIndexOf("Response:") + 10)
 
-                    val responseVerify = Gson().fromJson(requestResponse, ResponseVerify::class.java)
+                    val responseVerify = Gson().fromJson(requestResponse, CardVerifyModel::class.java)
 
                     requestCardVerify.success(responseVerify)
 
