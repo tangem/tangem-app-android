@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.text.Html
 import android.text.InputFilter
+import android.util.Log
 import android.widget.Toast
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
@@ -57,26 +58,33 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         if (card!!.remainingSignatures < 2)
             etAmount.isEnabled = false
 
+        // Ethereum EthereumTestNet
         if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet) {
             tvCurrency.text = engine.getBalanceCurrency(card)
             useCurrency = false
             etAmount.setText(engine.getBalanceValue(card))
+        }
 
-        } else if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
+        // Bitcoin BitcoinTestNet
+        else if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
             val balance = engine.getBalanceLong(card)!! / (card!!.blockchain.multiplier / 1000.0)
             tvCurrency.text = "m" + card!!.blockchain.currency
             useCurrency = true
             val output = FormatUtil.DoubleToString(balance)
             etAmount.setText(output)
+        }
 
-        } else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
+        // BitcoinCash BitcoinCashTestNet
+        else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
             val balance = engine.getBalanceLong(card)!! / (card!!.blockchain.multiplier / 1000.0)
             tvCurrency.text = "m" + card!!.blockchain.currency
             useCurrency = true
             val output = FormatUtil.DoubleToString(balance)
             etAmount.setText(output)
+        }
 
-        } else {
+        // Default
+        else {
             tvCurrency.text = engine.getBalanceCurrency(card)
             useCurrency = false
             etAmount.setText(engine.getBalanceValue(card))
@@ -108,6 +116,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             if (engine1 != null)
                 checkAddress = engine1.validateAddress(etWallet.text.toString(), card)
 
+            // check wallet address
             if (!checkAddress) {
                 etWallet.error = getString(R.string.incorrect_destination_wallet_address)
                 return@setOnClickListener
@@ -118,8 +127,8 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 return@setOnClickListener
             }
 
-            val balance = engine.getBalanceLong(card)!! / (card!!.blockchain.multiplier / 1000.0)
-            if (etAmount.text.toString().replace(",", ".").toDouble() > balance) {
+            // check enough funds
+            if (etAmount.text.toString().replace(",", ".").toDouble() > engine.getBalanceValue(card).replace(",", ".").toDouble()) {
                 etAmount.error = getString(R.string.not_enough_funds_on_your_card)
                 return@setOnClickListener
             }
@@ -131,6 +140,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             intent.putExtra(SignPaymentActivity.EXTRA_AMOUNT, strAmount)
             startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT)
         }
+
         ivCamera.setOnClickListener {
             val intent = Intent(baseContext, QrScanActivity::class.java)
             startActivityForResult(intent, REQUEST_CODE_SCAN_QR)
