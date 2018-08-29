@@ -1562,29 +1562,13 @@ public class TangemCard {
                 return R.drawable.card_qlear200;
             case "0019":
                 return R.drawable.card_cle100;
+            case "001A":
+                return R.drawable.card_btc_001a;
+            case "001B":
+                return R.drawable.card_btc_001b;
             default:
                 return R.drawable.card_default;
         }
-        //        switch (getBlockchainID()) {
-//            case "BTC":
-//                if (bytesToHex(getDenomination()).equals("40420F0000000000"))
-//                    return R.drawable.card_btc001;
-//                else if (bytesToHex(getDenomination()).equals("404B4C0000000000"))
-//                    return R.drawable.card_btc005;
-//                else if (bytesToHex(getDenomination()).equals("0000000000000000"))
-//                    return R.drawable.card_btc_hk_s;
-//                else
-//                    return R.drawable.card_default;
-//
-//            case "Token":
-//                if (getTokenSymbol().equals("SEED"))
-//                    return R.drawable.card_seed;
-//                else
-//                    return R.drawable.card_default;
-//
-//            default:
-//                return R.drawable.card_default;
-//        }
 
     }
 
