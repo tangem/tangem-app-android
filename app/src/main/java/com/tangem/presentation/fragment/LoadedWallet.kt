@@ -21,9 +21,8 @@ import android.view.ViewGroup
 import android.widget.Toast
 import com.android.volley.BuildConfig
 import com.google.zxing.WriterException
-import com.tangem.data.network.Server
 import com.tangem.data.network.VolleyHelper
-import com.tangem.data.network.model.ResponseVerify
+import com.tangem.data.network.model.CardVerifyModel
 import com.tangem.data.network.request.ElectrumRequest
 import com.tangem.data.network.request.ExchangeRequest
 import com.tangem.data.network.request.InfuraRequest
@@ -54,8 +53,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
     }
 
-    override fun success(responseVerify: ResponseVerify) {
-//        Toast.makeText(activity, responseVerify.results!![1].CID, Toast.LENGTH_SHORT).show()
+    override fun success(cardVerifyModel: CardVerifyModel) {
+//        Toast.makeText(activity, cardVerifyModel.results!![1].CID, Toast.LENGTH_SHORT).show()
     }
 
     override fun error(error: String) {
@@ -74,7 +73,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         private const val REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN = 7
         private const val REQUEST_CODE_SWAP_PIN = 8
 
-        private const val URL_CARD_VERIFY = Server.API.Method.VERIFY
+//        private const val URL_CARD_VERIFY = Server.API.Method.VERIFY
     }
 
     private var singleToast: Toast? = null
