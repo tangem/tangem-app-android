@@ -2,7 +2,7 @@ package com.tangem.data.network.model
 
 import com.google.gson.annotations.SerializedName
 
-data class ResponseVerify(
+data class CardVerifyModel(
         @SerializedName("results")
         var results: ArrayList<Verify>? = null,
 
