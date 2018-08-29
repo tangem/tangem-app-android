@@ -24,8 +24,8 @@ import java.util.List;
 
 public class ElectrumTask extends AsyncTask<ElectrumRequest, Integer, List<ElectrumRequest>> {
     public static final String logTag = "Electrum";
-    //public static final String Host = /*"hsmiths.changeip.net";*/ "testnetnode.arihanc.com";
-    //public static final int Port = /*8080*/51001;
+    //public static final String host = /*"hsmiths.changeip.net";*/ "testnetnode.arihanc.com";
+    //public static final int port = /*8080*/51001;
     private int reqID = 1;
     private String Host = "";
     private int Port = 0;
@@ -58,13 +58,13 @@ public class ElectrumTask extends AsyncTask<ElectrumRequest, Integer, List<Elect
         try {
             InetAddress serverAddress = InetAddress.getByName(Host);
             Log.v(logTag, "Connecting..." + Host);
-//            Socket socket = new Socket(serverAddress, Port);
+//            Socket socket = new Socket(serverAddress, port);
             Socket socket = new Socket();
             socket.setSoTimeout(5000);
             socket.bind(new InetSocketAddress(0));
             socket.connect(new InetSocketAddress(serverAddress, Port));
-//            Log.i("effefefe", Host);
-//            Log.i("effefefe", String.valueOf(Port));
+//            Log.i("effefefe", host);
+//            Log.i("effefefe", String.valueOf(port));
             try {
                 OutputStream os = socket.getOutputStream();
                 out = new OutputStreamWriter(os, "UTF-8");
@@ -105,8 +105,8 @@ public class ElectrumTask extends AsyncTask<ElectrumRequest, Integer, List<Elect
             out.flush();
 
             request.answerData = in.readLine();
-            request.Host = Host;
-            request.Port = Port;
+            request.host = Host;
+            request.port = Port;
             if (request.answerData != null) {
                 Log.v(logTag, ">> " + request.answerData);
             } else {
