@@ -19,6 +19,9 @@ android {
         versionName "0.88.1." + generateVersionName()
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+    androidExtensions {
+        experimental = true
+    }
     buildTypes {
         release {
             debuggable false
@@ -41,7 +44,6 @@ android {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'com.android.support:design:27.1.1'
     implementation 'com.android.support:support-compat:27.1.1'
@@ -54,7 +56,10 @@ dependencies {
     implementation 'com.madgag.spongycastle:core:1.56.0.0'
     implementation 'com.madgag.spongycastle:prov:1.56.0.0'
     implementation 'com.scottyab:rootbeer-lib:0.0.6'
+    implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
+    implementation 'com.jakewharton.retrofit:retrofit2-rxjava2-adapter:1.0.0'
     implementation 'com.skyfishjy.ripplebackground:library:1.0.1'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'org.bitcoinj:bitcoinj-parent:0.14.4'
     implementation 'org.bitcoinj:bitcoinj-core:0.14.4'
     implementation 'me.dm7.barcodescanner:zxing:1.9.8'
