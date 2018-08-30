@@ -623,7 +623,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val taskRate = RateInfoTask(this@LoadedWallet)
             val rate = ExchangeRequest.GetRate(card!!.wallet, "bitcoin-cash", "bitcoin-cash")
             taskRate.execute(rate)
-
         }
 
         // Ethereum
@@ -643,7 +642,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val taskRate = RateInfoTask(this@LoadedWallet)
             val rate = ExchangeRequest.GetRate(card!!.wallet, "ethereum", "ethereum")
             taskRate.execute(rate)
-
         }
 
         // Token
@@ -670,8 +668,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         if (needResendTX)
             sendTransaction(LastSignStorage.getTxForSend(card!!.wallet))
-
-        tvBlockchain.text = card!!.blockchainName
     }
 
     fun prepareResultIntent(): Intent {
