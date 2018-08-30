@@ -670,6 +670,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         if (needResendTX)
             sendTransaction(LastSignStorage.getTxForSend(card!!.wallet))
+
+        tvBlockchain.text = card!!.blockchainName
     }
 
     fun prepareResultIntent(): Intent {
