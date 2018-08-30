@@ -221,7 +221,8 @@
 
             </LinearLayout>
 
-        </android.support.constraint.ConstraintLayout>>
+        </android.support.constraint.ConstraintLayout>
+        >
 
     </android.support.v4.widget.SwipeRefreshLayout>
 
@@ -298,6 +299,7 @@
             android:layout_marginTop="5dp"
             android:layout_weight="1"
             android:elevation="15dp"
+            android:enabled="false"
             android:fontFamily="@font/saira_condensed_bold"
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
