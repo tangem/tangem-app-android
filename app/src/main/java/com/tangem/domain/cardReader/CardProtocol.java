@@ -517,8 +517,21 @@ public class CardProtocol {
                 if (tokenSymbol != null)
                     mCard.setTokenSymbol(tokenSymbol.getAsString());
 
-                if (contractAddress != null)
+                // Hardcoded smart contracts for the cards manufactured before registration of smart-contract in ETH
+
+                if( mCard.getBatch().equals("0017") )
+                {
+
+                    mCard.setContractAddress("contract for 0017");
+                }
+                else if( mCard.getBatch().equals("0019") )
+                {
+                    mCard.setContractAddress("0x0c056b0cda0763cc14b8b2d6c02465c91e33ec72");
+                }
+                else if (contractAddress != null)
+                {
                     mCard.setContractAddress(contractAddress.getAsString());
+                }
 
                 if (tokens_decimal != null)
                     mCard.setTokensDecimal(tokens_decimal.getAsInt());
