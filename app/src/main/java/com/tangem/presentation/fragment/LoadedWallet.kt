@@ -19,15 +19,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import com.android.volley.BuildConfig
 import com.google.zxing.WriterException
-import com.tangem.data.network.VolleyHelper
-import com.tangem.data.network.model.CardVerifyModel
+import com.tangem.data.network.ServerApiHelper
 import com.tangem.data.network.request.ElectrumRequest
 import com.tangem.data.network.request.ExchangeRequest
 import com.tangem.data.network.request.InfuraRequest
-import com.tangem.data.network.request.VerificationServerProtocol
-import com.tangem.data.network.task.VerificationServerTask
 import com.tangem.data.network.task.loaded_wallet.ETHRequestTask
 import com.tangem.data.network.task.loaded_wallet.RateInfoTask
 import com.tangem.data.network.task.loaded_wallet.UpdateWalletInfoTask
@@ -45,21 +41,7 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
 import java.util.*
 
-class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, VolleyHelper.IRequestCardVerify, SharedPreferences.OnSharedPreferenceChangeListener {
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
-        if (BuildConfig.DEBUG && this@LoadedWallet.isAdded) {
-            debugNewRequestVerify = sharedPreferences!!.getBoolean(getString(R.string.key_debug_new_request_verify), false)
-            debugNewRequestVerifyShowJson = sharedPreferences.getBoolean(getString(R.string.key_debug_new_request_verify_show_json), false)
-        }
-    }
-
-    override fun success(cardVerifyModel: CardVerifyModel) {
-//        Toast.makeText(activity, cardVerifyModel.results!![1].CID, Toast.LENGTH_SHORT).show()
-    }
-
-    override fun error(error: String) {
-
-    }
+class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, SharedPreferences.OnSharedPreferenceChangeListener {
 
     companion object {
         val TAG: String = LoadedWallet::class.java.simpleName
@@ -72,13 +54,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         private const val REQUEST_CODE_ENTER_NEW_PIN2 = 6
         private const val REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN = 7
         private const val REQUEST_CODE_SWAP_PIN = 8
-
-//        private const val URL_CARD_VERIFY = Server.API.Method.VERIFY
     }
 
     private var singleToast: Toast? = null
     private var nfcManager: NfcManager? = null
-    private var volleyHelper: VolleyHelper? = null
+
+    private var serverApiHelper: ServerApiHelper? = null
+
     var card: TangemCard? = null
     private var lastTag: Tag? = null
 
@@ -92,65 +74,19 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private var newPIN2 = ""
     private var cardProtocol: CardProtocol? = null
 
-    private var onlineVerifyTask: OnlineVerifyTask? = null
-
     private var sp: SharedPreferences? = null
-    private var debugNewRequestVerify: Boolean = false
-    private var debugNewRequestVerifyShowJson: Boolean = false
-
-    private inner class OnlineVerifyTask : VerificationServerTask() {
-
-        override fun onPostExecute(requests: List<VerificationServerProtocol.Request>) {
-            super.onPostExecute(requests)
-            onlineVerifyTask = null
-
-            for (request in requests) {
-                if (request.error == null) {
-                    val answer = request.answer as VerificationServerProtocol.Verify.Answer
-                    if (answer.error == null) {
-                        card!!.isOnlineVerified = answer.results[0].passed
-//                        Log.i(TAG, "isOnlineVerified = " + answer.results[0].passed)
-                    } else {
-                        card!!.isOnlineVerified = null
-//                        Log.i(TAG, "isOnlineVerified = null")
-                    }
-                } else {
-                    card!!.isOnlineVerified = null
-                }
-            }
-            srlLoadedWallet!!.isRefreshing = false
-        }
-    }
-
-    private fun requestVerify() {
-        if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified) && onlineVerifyTask == null) {
-            if (debugNewRequestVerify) {
-                volleyHelper!!.requestCardVerify(card!!)
-
-                if (debugNewRequestVerifyShowJson)
-                    this.activity?.let { volleyHelper!!.requestCardVerifyShowResponse(it, card!!) }
-
-            } else {
-                onlineVerifyTask = OnlineVerifyTask()
-                onlineVerifyTask!!.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, VerificationServerProtocol.Verify.prepare(card))
-            }
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         sp = PreferenceManager.getDefaultSharedPreferences(activity)
         nfcManager = NfcManager(activity, this)
 
+        serverApiHelper = ServerApiHelper()
+
         card = TangemCard(activity!!.intent.getStringExtra(TangemCard.EXTRA_CARD))
         card!!.loadFromBundle(activity!!.intent.extras.getBundle(TangemCard.EXTRA_CARD))
 
         lastTag = activity!!.intent.getParcelableExtra(MainActivity.EXTRA_LAST_DISCOVERED_TAG)
-
-        volleyHelper = VolleyHelper(this)
-
-        debugNewRequestVerify = sp!!.getBoolean(getString(R.string.key_debug_new_request_verify), false)
-        debugNewRequestVerifyShowJson = sp!!.getBoolean(getString(R.string.key_debug_new_request_verify_show_json), false)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -183,7 +119,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             srlLoadedWallet!!.postDelayed({ this.refresh() }, 1000)
         }
 
-        requestVerify()
+//        requestCardVerify()
 
         startVerify(lastTag)
 
@@ -238,6 +174,18 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT)
             }
         }
+
+        // request card verify listener
+        serverApiHelper!!.setCardVerify {
+            card!!.isOnlineVerified = it.results!![0].passed
+            srlLoadedWallet!!.isRefreshing = false
+//            Log.i(TAG, "setCardVerify " + it.results!![0].passed)
+        }
+    }
+
+    private fun requestCardVerify() {
+        if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified))
+            serverApiHelper!!.cardVerify(card)
     }
 
     override fun onResume() {
@@ -485,6 +433,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         WaitSecurityDelayDialog.onReadAfterRequest(activity!!)
     }
 
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+
+    }
+
     fun updateViews() {
         try {
             if (timerHideErrorAndMessage != null) {
@@ -567,7 +519,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         val engine = CoinEngineFactory.create(card!!.blockchain)
 
-        requestVerify()
+        requestCardVerify()
 
         // Bitcoin
         if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
