@@ -15,7 +15,7 @@ public class Server {
      * https://tangem-webapp.appspot.com/
      */
     public static class ApiTangem {
-        private static final String URL_TANGEM = ServerURL.API_TANGEM;
+        public static final String URL_TANGEM = ServerURL.API_TANGEM;
 
         public static class Method {
             public static final String INFO_VERIFY = URL_TANGEM + "info/version";
@@ -34,11 +34,7 @@ public class Server {
 
         public static class Method {
             public static final String V1_TICKER_CONVERT = URL_COINMARKET + "v1/ticker/?convert=USD&lmit=10";
-
         }
-
     }
-
-
 
 }
