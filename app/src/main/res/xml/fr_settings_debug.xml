@@ -1,14 +1,13 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory
-        android:title="">
+    <PreferenceCategory android:title="">
         <SwitchPreference
-            android:key="debug_new_request_verify"
-            android:summary=""/>
+            android:key="debug_switch_1"
+            android:summary="" />
 
         <SwitchPreference
-            android:key="debug_new_request_verify_show_json"
-            android:summary=""/>
+            android:key="debug_switch_2"
+            android:summary="" />
 
     </PreferenceCategory>
 
