@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
-data class RateInfoModel(
+data class RateInfoResponse(
         @SerializedName(ID)
         var id: String = "",
 
@@ -54,7 +54,7 @@ data class RateInfoModel(
 ) : Parcelable {
 
     companion object {
-        val TAG: String = RateInfoModel::class.java.simpleName
+        val TAG: String = RateInfoResponse::class.java.simpleName
 
         const val ID = "id"
         const val NAME = "name"
