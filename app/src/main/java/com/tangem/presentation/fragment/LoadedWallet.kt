@@ -173,6 +173,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
         }
 
+        serverApiHelper!!.infura("eth_gasPrice", 67)
+
         // request card verify listener
         serverApiHelper!!.setCardVerify {
             card!!.isOnlineVerified = it.results!![0].passed
