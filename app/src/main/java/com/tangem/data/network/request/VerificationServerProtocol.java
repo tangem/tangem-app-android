@@ -1,5 +1,7 @@
 package com.tangem.data.network.request;
 
+import android.util.Log;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.tangem.domain.wallet.TangemCard;
@@ -35,6 +37,7 @@ public class VerificationServerProtocol {
 
         public void doPost(String hostURL) throws IOException {
             URL url = new URL(hostURL + "/" + command.getURL());
+            Log.i("isOnlineVerified", hostURL + "/" + command.getURL());
             URLConnection con = url.openConnection();
             HttpURLConnection http = (HttpURLConnection) con;
             try {
@@ -170,7 +173,6 @@ public class VerificationServerProtocol {
             return new Request(new Command(), Answer.class);
         }
     }
-
 
     public static Date strToDate(String date) throws ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
