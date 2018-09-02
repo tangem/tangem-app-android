@@ -25,4 +25,16 @@ public class Server {
         }
     }
 
+    /**
+     * https://infura.io/
+     */
+    public static class ApiInfura {
+        public static final String URL_INFURA = ServerURL.API_INFURA;
+
+        public static class Method {
+            public static final String MAIN = URL_INFURA + "AfWg0tmYEX5Kukn2UkKV";
+        }
+
+    }
+
 }

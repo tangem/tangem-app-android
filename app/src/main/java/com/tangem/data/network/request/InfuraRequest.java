@@ -14,8 +14,8 @@ public class InfuraRequest {
     public static final String METHOD_ETH_GetBalance = "eth_getBalance";
     public static final String METHOD_ETH_GetOutTransactionCount = "eth_getTransactionCount";
     public static final String METHOD_ETH_GetGasPrice = "eth_gasPrice";
-    public static final String METHOD_ETH_SendRawTransaction =  "eth_sendRawTransaction";
-    public static final String METHOD_ETH_Call =  "eth_call";
+    public static final String METHOD_ETH_SendRawTransaction = "eth_sendRawTransaction";
+    public static final String METHOD_ETH_Call = "eth_call";
 
     public JSONObject jsRequestData;
     public String answerData;
@@ -29,8 +29,7 @@ public class InfuraRequest {
         blockchain = value;
     }
 
-    public Blockchain getBlockchain()
-    {
+    public Blockchain getBlockchain() {
         return blockchain;
     }
 
@@ -86,7 +85,7 @@ public class InfuraRequest {
     public static InfuraRequest GetBalance(String wallet) {
         InfuraRequest request = new InfuraRequest();
         try {
-            request.WalletAddress=wallet;
+            request.WalletAddress = wallet;
             request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_ETH_GetBalance + "\", \"params\":[\"" + wallet + "\", \"latest\"] }");
         } catch (JSONException e) {
             e.printStackTrace();
@@ -95,15 +94,14 @@ public class InfuraRequest {
         return request;
     }
 
-    public static InfuraRequest GetTokenBalance(String wallet, String contract, int dec)
-    {
+    public static InfuraRequest GetTokenBalance(String wallet, String contract, int dec) {
         InfuraRequest request = new InfuraRequest();
         try {
-            request.WalletAddress=wallet;
+            request.WalletAddress = wallet;
             request.Dec = dec;
             String address = wallet.substring(2);
             String dataValue = String.format("{\"data\": \"0x70a08231000000000000000000000000%s\", \"to\": \"%s\"}", address, contract);
-            request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_ETH_Call + "\", \"params\":[" +dataValue+", \"latest\"] }");
+            request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_ETH_Call + "\", \"params\":[" + dataValue + ", \"latest\"] }");
         } catch (JSONException e) {
             e.printStackTrace();
             request.error = e.toString();
@@ -114,7 +112,7 @@ public class InfuraRequest {
     public static InfuraRequest SendTransaction(String wallet, String tx) {
         InfuraRequest request = new InfuraRequest();
         try {
-            request.WalletAddress=wallet;
+            request.WalletAddress = wallet;
             request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_ETH_SendRawTransaction + "\", \"params\":[\"" + tx + "\"] }");
         } catch (JSONException e) {
             e.printStackTrace();
@@ -124,11 +122,10 @@ public class InfuraRequest {
     }
 
 
-
     public static InfuraRequest GetOutTransactionCount(String wallet) {
         InfuraRequest request = new InfuraRequest();
         try {
-            request.WalletAddress=wallet;
+            request.WalletAddress = wallet;
             request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_ETH_GetOutTransactionCount + "\", \"params\":[\"" + wallet + "\", \"latest\"] }");
         } catch (JSONException e) {
             e.printStackTrace();
@@ -140,7 +137,7 @@ public class InfuraRequest {
     public static InfuraRequest GetPendingTransactionCount(String wallet) {
         InfuraRequest request = new InfuraRequest();
         try {
-            request.WalletAddress=wallet;
+            request.WalletAddress = wallet;
             request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_ETH_GetOutTransactionCount + "\", \"params\":[\"" + wallet + "\", \"pending\"] }");
         } catch (JSONException e) {
             e.printStackTrace();
@@ -152,7 +149,7 @@ public class InfuraRequest {
     public static InfuraRequest GetGasPrise(String wallet) {
         InfuraRequest request = new InfuraRequest();
         try {
-            request.WalletAddress=wallet;
+            request.WalletAddress = wallet;
             request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_ETH_GetGasPrice + "\", \"params\":[] }");
         } catch (JSONException e) {
             e.printStackTrace();
@@ -165,7 +162,7 @@ public class InfuraRequest {
     public static InfuraRequest SendTransactionCount(String wallet, String TX) {
         InfuraRequest request = new InfuraRequest();
         try {
-            request.WalletAddress=wallet;
+            request.WalletAddress = wallet;
             request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_ETH_SendRawTransaction + "\", \"params\":[\"" + TX + "\"] }");
         } catch (JSONException e) {
             e.printStackTrace();
@@ -173,7 +170,6 @@ public class InfuraRequest {
         }
         return request;
     }
-
 
 
     //METHOD_ETH_GetOutTransactionCount

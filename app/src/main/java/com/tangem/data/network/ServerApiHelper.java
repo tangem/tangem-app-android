@@ -11,6 +11,8 @@ import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import com.tangem.data.network.model.CardVerify;
 import com.tangem.data.network.model.CardVerifyBody;
 import com.tangem.data.network.model.CardVerifyResponse;
+import com.tangem.data.network.model.InfuraEthGasPriceBody;
+import com.tangem.data.network.model.InfuraEthGasPriceResponse;
 import com.tangem.data.network.model.RateInfoResponse;
 import com.tangem.data.network.request.ElectrumRequest;
 import com.tangem.domain.BitcoinNode;
@@ -50,6 +52,49 @@ public class ServerApiHelper {
 
     /**
      * HTTP
+     * Infura
+     */
+    private InfuraListener infuraListener;
+
+    public interface InfuraListener {
+        void onInfura(CardVerifyResponse cardVerifyResponse);
+    }
+
+    public void setInfura(InfuraListener listener) {
+        infuraListener = listener;
+    }
+
+    public void infura(String method, int id) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(Server.ApiInfura.URL_INFURA)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        InfuraApi infuraApi = retrofit.create(InfuraApi.class);
+
+        InfuraEthGasPriceBody infuraEthGasPriceBody = new InfuraEthGasPriceBody(method, id);
+
+        Call<InfuraEthGasPriceResponse> call = infuraApi.ethGasPrice("application/json", infuraEthGasPriceBody);
+
+        call.enqueue(new Callback<InfuraEthGasPriceResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<InfuraEthGasPriceResponse> call, @NonNull Response<InfuraEthGasPriceResponse> response) {
+                if (response.code() == 200) {
+                    Log.i(TAG, "infura onResponse " + response.code());
+                    Log.i(TAG, "infura onResponse " + response.body().getResult());
+                } else
+                    Log.e(TAG, "infura onResponse " + response.code());
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<InfuraEthGasPriceResponse> call, @NonNull Throwable t) {
+                Log.e(TAG, "infura onFailure " + t.getMessage());
+            }
+        });
+    }
+
+    /**
+     * HTTP
      * Card verify
      */
     private CardVerifyListener cardVerifyListener;
@@ -83,13 +128,12 @@ public class ServerApiHelper {
                     CardVerifyResponse cardVerifyResponse = response.body();
                     cardVerifyListener.onCardVerify(cardVerifyResponse);
                     Log.i(TAG, "cardVerify onResponse " + response.code());
-                } else {
+                } else
                     Log.e(TAG, "cardVerify onResponse " + response.code());
-                }
             }
 
             @Override
-            public void onFailure(Call<CardVerifyResponse> call, Throwable t) {
+            public void onFailure(@NonNull Call<CardVerifyResponse> call, @NonNull Throwable t) {
                 Log.e(TAG, "cardVerify onFailure " + t.getMessage());
             }
         });
