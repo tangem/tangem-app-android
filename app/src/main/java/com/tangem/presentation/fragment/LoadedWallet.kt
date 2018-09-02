@@ -22,10 +22,8 @@ import android.widget.Toast
 import com.google.zxing.WriterException
 import com.tangem.data.network.ServerApiHelper
 import com.tangem.data.network.request.ElectrumRequest
-import com.tangem.data.network.request.ExchangeRequest
 import com.tangem.data.network.request.InfuraRequest
 import com.tangem.data.network.task.loaded_wallet.ETHRequestTask
-import com.tangem.data.network.task.loaded_wallet.RateInfoTask
 import com.tangem.data.network.task.loaded_wallet.UpdateWalletInfoTask
 import com.tangem.data.nfc.VerifyCardTask
 import com.tangem.domain.cardReader.CardProtocol
@@ -179,13 +177,28 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         serverApiHelper!!.setCardVerify {
             card!!.isOnlineVerified = it.results!![0].passed
             srlLoadedWallet!!.isRefreshing = false
+
 //            Log.i(TAG, "setCardVerify " + it.results!![0].passed)
+        }
+
+        // request rate info listener
+        serverApiHelper!!.setRateInfoData {
+            val rate = it.priceUsd.toFloat()
+            card!!.rate = rate
+            card!!.rateAlter = rate
+            srlLoadedWallet!!.isRefreshing = false
+
+//            Log.i(TAG, "setRateInfoData $rate")
         }
     }
 
     private fun requestCardVerify() {
         if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified))
             serverApiHelper!!.cardVerify(card)
+    }
+
+    private fun requestRateInfo(cryptoId: String) {
+        serverApiHelper!!.rateInfoData(cryptoId)
     }
 
     override fun onResume() {
@@ -544,10 +557,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.listUnspent(card!!.wallet))
             }
 
-            // course request
-            val taskRate = RateInfoTask(this@LoadedWallet)
-            val rate = ExchangeRequest.GetRate(card!!.wallet, "bitcoin", "bitcoin")
-            taskRate.execute(rate)
+            requestRateInfo("bitcoin")
         }
 
         // BitcoinCash
@@ -571,10 +581,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val updateWalletInfoTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
             updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.listUnspent(card!!.wallet))
 
-            // course request
-            val taskRate = RateInfoTask(this@LoadedWallet)
-            val rate = ExchangeRequest.GetRate(card!!.wallet, "bitcoin-cash", "bitcoin-cash")
-            taskRate.execute(rate)
+            requestRateInfo("bitcoin-cash")
         }
 
         // Ethereum
@@ -590,10 +597,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             updateETH.execute(reqETH, reqNonce)
 
-            // course request
-            val taskRate = RateInfoTask(this@LoadedWallet)
-            val rate = ExchangeRequest.GetRate(card!!.wallet, "ethereum", "ethereum")
-            taskRate.execute(rate)
+            requestRateInfo("ethereum")
         }
 
         // Token
@@ -612,10 +616,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             reqNonce.setBlockchain(card!!.blockchain)
             updateETH.execute(reqETH, reqNonce, reqBalance)
 
-            // course request
-            val taskRate = RateInfoTask(this@LoadedWallet)
-            val rate = ExchangeRequest.GetRate(card!!.wallet, "ethereum", "ethereum")
-            taskRate.execute(rate)
+            requestRateInfo("ethereum")
         }
 
         if (needResendTX)
