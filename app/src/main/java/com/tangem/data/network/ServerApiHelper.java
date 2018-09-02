@@ -1,15 +1,26 @@
 package com.tangem.data.network;
 
 import android.annotation.SuppressLint;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
-import com.tangem.data.network.model.RateInfoModel;
+import com.tangem.data.network.model.CardVerify;
+import com.tangem.data.network.model.CardVerifyBody;
+import com.tangem.data.network.model.CardVerifyResponse;
+import com.tangem.data.network.model.RateInfoResponse;
 import com.tangem.data.network.request.ElectrumRequest;
 import com.tangem.domain.BitcoinNode;
 import com.tangem.domain.BitcoinNodeTestNet;
 import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.TangemCard;
+import com.tangem.util.Util;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -28,6 +39,9 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DefaultObserver;
 import io.reactivex.schedulers.Schedulers;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -36,12 +50,59 @@ public class ServerApiHelper {
 
     /**
      * HTTP
+     * Card verify
+     */
+    private CardVerifyListener cardVerifyListener;
+
+    public interface CardVerifyListener {
+        void onCardVerify(CardVerifyResponse cardVerifyResponse);
+    }
+
+    public void setCardVerify(CardVerifyListener listener) {
+        cardVerifyListener = listener;
+    }
+
+    public void cardVerify(TangemCard card) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(Server.ApiTangem.URL_TANGEM)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        TangemApi tangemApi = retrofit.create(TangemApi.class);
+
+        CardVerify[] requests = new CardVerify[1];
+        requests[0] = new CardVerify(Util.bytesToHex(card.getCID()), Util.bytesToHex(card.getCardPublicKey()));
+
+        CardVerifyBody cardVerifyBody = new CardVerifyBody(requests);
+
+        Call<CardVerifyResponse> call = tangemApi.getCardVerify("application/json", cardVerifyBody);
+        call.enqueue(new Callback<CardVerifyResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<CardVerifyResponse> call, @NonNull Response<CardVerifyResponse> response) {
+                if (response.code() == 200) {
+                    CardVerifyResponse cardVerifyResponse = response.body();
+                    cardVerifyListener.onCardVerify(cardVerifyResponse);
+                    Log.i(TAG, "cardVerify onResponse " + response.code());
+                } else {
+                    Log.e(TAG, "cardVerify onResponse " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CardVerifyResponse> call, Throwable t) {
+                Log.e(TAG, "cardVerify onFailure " + t.getMessage());
+            }
+        });
+    }
+
+    /**
+     * HTTP
      * Used in Crypto-currency course
      */
     private RateInfoDataListener rateInfoDataListener;
 
     public interface RateInfoDataListener {
-        void onRateInfoDataData(RateInfoModel rateInfoModel);
+        void onRateInfoDataData(RateInfoResponse rateInfoResponse);
     }
 
     public void setRateInfoData(RateInfoDataListener listener) {
@@ -63,7 +124,7 @@ public class ServerApiHelper {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(rateInfoModelList -> {
                             if (!rateInfoModelList.isEmpty()) {
-                                for (RateInfoModel rateInfoMode : rateInfoModelList) {
+                                for (RateInfoResponse rateInfoMode : rateInfoModelList) {
                                     if (rateInfoMode.getId().equals(cryptoId)) {
                                         rateInfoDataListener.onRateInfoDataData(rateInfoMode);
                                         Log.i("rateInfoData", rateInfoMode.getId());
