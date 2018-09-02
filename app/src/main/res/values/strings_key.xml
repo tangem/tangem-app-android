@@ -1,6 +1,0 @@
-<resources>
-
-    <string name="key_debug_new_request_verify" translatable="false">debug_new_request_verify</string>
-    <string name="key_debug_new_request_verify_show_json" translatable="false">debug_new_request_verify_show_json</string>
-
-</resources>
