@@ -173,7 +173,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
         }
 
-        serverApiHelper!!.infura("eth_gasPrice", 67)
+//        serverApiHelper!!.infura("eth_gasPrice", 67)
 
         // request card verify listener
         serverApiHelper!!.setCardVerify {
