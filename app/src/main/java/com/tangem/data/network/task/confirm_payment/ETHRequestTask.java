@@ -1,6 +1,7 @@
 package com.tangem.data.network.task.confirm_payment;
 
 import android.app.Activity;
+import android.util.Log;
 import android.view.View;
 
 import com.tangem.data.network.request.InfuraRequest;
@@ -36,12 +37,18 @@ public class ETHRequestTask extends InfuraTask {
                     if (request.isMethod(InfuraRequest.METHOD_ETH_GetGasPrice)) {
                         try {
                             String gasPrice = request.getResultString();
+                            Log.i("sjjoefeff", gasPrice);
                             gasPrice = gasPrice.substring(2);
                             BigInteger l = new BigInteger(gasPrice, 16);
+
+
+                            Log.i("sjjoefeff", gasPrice);
 
                             BigInteger m = confirmPaymentActivity.getCard().getBlockchain() == Blockchain.Token ? BigInteger.valueOf(55000) : BigInteger.valueOf(21000);
                             l = l.multiply(m);
                             String feeInGwei = confirmPaymentActivity.getCard().getAmountInGwei(String.valueOf(l));
+
+                            Log.i("sjjoefeff", feeInGwei);
 
                             confirmPaymentActivity.setMinFee(feeInGwei);
                             confirmPaymentActivity.setMaxFee(feeInGwei);
