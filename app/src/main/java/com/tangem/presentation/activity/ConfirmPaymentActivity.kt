@@ -86,7 +86,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         etAmount!!.setText(intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT))
         tvCurrency.text = engine.getBalanceCurrency(card)
-        tvCurrency2.text = engine.getFeeCurrency()
+        tvCurrency2.text = engine.feeCurrency
 
         tvCardID.text = card!!.cidDescription
 
@@ -137,7 +137,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
             val engineCoin = CoinEngineFactory.create(card!!.blockchain)
 
-            if (engineCoin!!.isNeedCheckNode() && !nodeCheck) {
+            if (engineCoin!!.isNeedCheckNode && !nodeCheck) {
                 Toast.makeText(baseContext, getString(R.string.cannot_reach_current_active_blockchain_node_try_again), Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
@@ -159,7 +159,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             }
 
             if (!engineCoin.checkAmountValue(card, txAmount, txFee, minFeeInInternalUnits)) {
-                finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.fee_exceeds_payment_amount_enter_correct_value_and_repeat_sending))
+                finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.not_enough_eth_for_transaction_fee))
                 return@setOnClickListener
             }
 
