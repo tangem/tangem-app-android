@@ -72,10 +72,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        sp = PreferenceManager.getDefaultSharedPreferences(activity)
         nfcManager = NfcManager(activity, this)
 
         serverApiHelper = ServerApiHelper()
+
+        sp = PreferenceManager.getDefaultSharedPreferences(activity)
 
         card = TangemCard(activity!!.intent.getStringExtra(TangemCard.EXTRA_CARD))
         card!!.loadFromBundle(activity!!.intent.extras.getBundle(TangemCard.EXTRA_CARD))
@@ -170,8 +171,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT)
             }
         }
-
-//        serverApiHelper!!.infura("eth_gasPrice", 67)
 
         // request card verify listener
         serverApiHelper!!.setCardVerify {
