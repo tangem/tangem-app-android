@@ -134,11 +134,11 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="1dp"
                 android:fontFamily="@font/maax"
-                android:text="@string/including_fee"
                 android:textColor="@color/primary"
                 android:textSize="14sp"
                 app:layout_constraintBottom_toBottomOf="@+id/textView3"
-                app:layout_constraintLeft_toRightOf="@+id/textView3" />
+                app:layout_constraintLeft_toRightOf="@+id/textView3"
+                tools:text="(including fee)" />
 
         </android.support.constraint.ConstraintLayout>
 
