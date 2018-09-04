@@ -113,8 +113,8 @@ public class TokenEngine extends CoinEngine {
         return output;
     }
 
-    public BigDecimal GetBalanceAlterValueBigDecimal(TangemCard mCard) {
-        String dec = mCard.getDecimalBalanceAlter();
+    public BigDecimal getBalanceAlterValueBigDecimal(TangemCard card) {
+        String dec = card.getDecimalBalanceAlter();
         BigDecimal d = convertToEth(dec);
 //        String s = d.toString();
 
@@ -271,9 +271,9 @@ public class TokenEngine extends CoinEngine {
         return EthEngine.getAmountEquivalentDescriptionETH(d, mCard.getRate());
     }
 
-    public String GetFeeEqualentDescriptor(TangemCard mCard, String value) {
+    public String getFeeEquivalentDescriptor(TangemCard card, String value) {
         BigDecimal d = new BigDecimal(value);
-        return EthEngine.getAmountEquivalentDescriptionETH(d, mCard.getRateAlter());
+        return EthEngine.getAmountEquivalentDescriptionETH(d, card.getRateAlter());
     }
 
     public Uri getShareWalletUriExplorer(TangemCard mCard) {
@@ -288,12 +288,12 @@ public class TokenEngine extends CoinEngine {
         return true;
     }
 
-    public boolean checkAmountValue(TangemCard mCard, String amountValue, String feeValue, Long minFeeInInternalUnits) {
-        Long fee = null;
-        BigDecimal amount = null;
+    public boolean checkAmountValue(TangemCard card, String amountValue, String feeValue, Long minFeeInInternalUnits) {
+        Long fee;
+        BigDecimal amount;
         try {
-            amount = GetBalanceAlterValueBigDecimal(mCard);//mCard.InternalUnitsFromString(amountValue);
-            fee = mCard.InternalUnitsFromString(feeValue);
+            amount = getBalanceAlterValueBigDecimal(card);//card.internalUnitsFromString(amountValue);
+            fee = card.internalUnitsFromString(feeValue);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -324,7 +324,7 @@ public class TokenEngine extends CoinEngine {
         BigDecimal gweFee = new BigDecimal(fee);
         gweFee = gweFee.divide(new BigDecimal("1000000000"));
         gweFee = gweFee.setScale(18, RoundingMode.DOWN);
-        return GetFeeEqualentDescriptor(mCard, gweFee.toString());
+        return getFeeEquivalentDescriptor(mCard, gweFee.toString());
     }
 
     public byte[] sign(String feeValue, String amountValue, String toValue, TangemCard mCard, CardProtocol protocol) throws Exception {
