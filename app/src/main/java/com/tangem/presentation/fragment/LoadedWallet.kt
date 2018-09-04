@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.*
 import android.content.Context.CLIPBOARD_SERVICE
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
@@ -40,10 +41,8 @@ import kotlinx.android.synthetic.main.fr_loaded_wallet.*
 import java.util.*
 
 class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, SharedPreferences.OnSharedPreferenceChangeListener {
-
     companion object {
         val TAG: String = LoadedWallet::class.java.simpleName
-
         private const val REQUEST_CODE_SEND_PAYMENT = 1
         private const val REQUEST_CODE_VERIFY_CARD = 4
         private const val REQUEST_CODE_PURGE = 2
@@ -56,14 +55,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     private var singleToast: Toast? = null
     private var nfcManager: NfcManager? = null
-
     private var serverApiHelper: ServerApiHelper? = null
-
     var card: TangemCard? = null
     private var lastTag: Tag? = null
-
     var srlLoadedWallet: SwipeRefreshLayout? = null
-
     private var lastReadSuccess = true
     private var verifyCardTask: VerifyCardTask? = null
     private var requestPIN2Count = 0
@@ -71,8 +66,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private var newPIN = ""
     private var newPIN2 = ""
     private var cardProtocol: CardProtocol? = null
-
     private var sp: SharedPreferences? = null
+    private val inactiveColor: ColorStateList by lazy { resources.getColorStateList(R.color.primary) }
+    private val activeColor: ColorStateList by lazy { resources.getColorStateList(R.color.colorAccent) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -109,6 +105,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         } catch (e: WriterException) {
             e.printStackTrace()
         }
+
+        btnExtract.backgroundTintList = inactiveColor
 
         updateViews()
 
@@ -512,7 +510,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             tvBlockchain.text = card!!.blockchainName
 
-            btnExtract!!.isEnabled = card!!.hasBalanceInfo()
+            btnExtract.isEnabled = card!!.hasBalanceInfo()
+
+            if (btnExtract.isEnabled)
+                btnExtract.backgroundTintList = activeColor
 
             card!!.error = null
             card!!.message = null
