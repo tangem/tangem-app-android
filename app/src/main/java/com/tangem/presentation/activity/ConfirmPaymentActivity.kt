@@ -17,10 +17,8 @@ import android.widget.*
 import com.tangem.data.network.ServerApiHelper
 import com.tangem.data.network.request.ElectrumRequest
 import com.tangem.data.network.request.FeeRequest
-import com.tangem.data.network.request.InfuraRequest
 import com.tangem.data.network.task.confirm_payment.ConnectFeeTask
 import com.tangem.data.network.task.confirm_payment.ConnectTask
-import com.tangem.data.network.task.confirm_payment.ETHRequestTask
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
 import com.tangem.util.BTCUtils
@@ -83,10 +81,10 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         } else
             tvBalance.text = engine!!.getBalanceWithAlter(card)
 
-        if(intent.getBooleanExtra("IncFee", true)) {
-            tvIncFee!!.setText(R.string.feein);
+        if (intent.getBooleanExtra("IncFee", true)) {
+            tvIncFee!!.setText(R.string.including_fee)
         } else {
-            tvIncFee!!.setText(R.string.feeout);
+            tvIncFee!!.setText(R.string.not_including_fee)
         }
 
         etAmount!!.setText(intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT))
@@ -221,20 +219,23 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             var gasPrice = it.result
             gasPrice = gasPrice.substring(2)
             var l = BigInteger(gasPrice, 16)
+
             val m = if (card!!.blockchain == Blockchain.Token) BigInteger.valueOf(55000) else BigInteger.valueOf(21000)
             l = l.multiply(m)
-            val feeInGwei = card!!.getAmountInGwei(l.toString())
+            val minFeeInGwei = card!!.getAmountInGwei(l.toString())
+            val normalFeeInGwei = card!!.getAmountInGwei(l.multiply(BigInteger.valueOf(12)).divide(BigInteger.valueOf(10)).toString())
+            val maxFeeInGwei = card!!.getAmountInGwei(l.multiply(BigInteger.valueOf(15)).divide(BigInteger.valueOf(10)).toString())
 
-            minFee = feeInGwei
-            maxFee = feeInGwei
-            normalFee = feeInGwei
-            etFee!!.setText(feeInGwei)
+            minFee = minFeeInGwei
+            normalFee = normalFeeInGwei
+            maxFee = maxFeeInGwei
+            etFee!!.setText(normalFeeInGwei)
             etFee!!.error = null
             btnSend!!.visibility = View.VISIBLE
             feeRequestSuccess = true
             balanceRequestSuccess = true
             dtVerified = Date()
-            minFeeInInternalUnits = card!!.internalUnitsFromString(feeInGwei)
+            minFeeInInternalUnits = card!!.internalUnitsFromString(normalFeeInGwei)
 
 //            Log.i("eth_gas_price", feeInGwei)
         }
