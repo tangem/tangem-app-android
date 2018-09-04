@@ -193,7 +193,7 @@
                         android:layout_marginTop="10dp"
                         android:layout_weight="1"
                         android:backgroundTint="@color/white"
-                        android:drawableLeft="@drawable/ic_explore_black_24dp"
+                        android:drawableStart="@drawable/ic_explore_black_24dp"
                         android:elevation="15dp"
                         android:fontFamily="@font/saira_condensed_bold"
                         android:paddingLeft="20dp"
@@ -210,7 +210,7 @@
                         android:layout_marginTop="10dp"
                         android:layout_weight="1"
                         android:backgroundTint="@color/white"
-                        android:drawableLeft="@drawable/ic_content_copy_black_24dp"
+                        android:drawableStart="@drawable/ic_content_copy_black_24dp"
                         android:elevation="15dp"
                         android:fontFamily="@font/saira_condensed_bold"
                         android:paddingLeft="20dp"
@@ -223,7 +223,6 @@
             </LinearLayout>
 
         </android.support.constraint.ConstraintLayout>
-        >
 
     </android.support.v4.widget.SwipeRefreshLayout>
 
@@ -314,61 +313,43 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
+        android:paddingBottom="10dp"
         android:paddingTop="10dp"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <LinearLayout
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/btnDetails"
+            style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="34dp"
+            android:layout_marginBottom="5dp"
+            android:layout_marginTop="5dp"
             android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:paddingBottom="10dp">
+            android:backgroundTint="@color/white"
+            android:drawableStart="@drawable/ic_settings_black_24dp"
+            android:elevation="15dp"
+            android:fontFamily="@font/saira_condensed_bold"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:text="@string/details"
+            android:textColor="@color/primary_dark" />
 
-            <android.support.v7.widget.AppCompatButton
-                android:id="@+id/btnDetails"
-                style="@style/AppTheme.RoundedCornerMaterialButton"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_marginBottom="5dp"
-                android:layout_marginTop="5dp"
-                android:layout_weight="1"
-                android:backgroundTint="@color/white"
-                android:drawableStart="@drawable/ic_settings_black_24dp"
-                android:elevation="15dp"
-                android:fontFamily="@font/saira_condensed_bold"
-                android:paddingLeft="20dp"
-                android:paddingRight="20dp"
-                android:text="@string/details"
-                android:textColor="@color/primary_dark" />
-
-        </LinearLayout>
-
-        <LinearLayout
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/btnScanAgain"
+            style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="34dp"
+            android:layout_marginBottom="5dp"
+            android:layout_marginTop="5dp"
             android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:paddingBottom="10dp">
-
-            <android.support.v7.widget.AppCompatButton
-                android:id="@+id/btnScanAgain"
-                style="@style/AppTheme.RoundedCornerMaterialButton"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_marginBottom="5dp"
-                android:layout_marginTop="5dp"
-                android:layout_weight="1"
-                android:backgroundTint="@color/white"
-                android:drawableStart="@drawable/ic_nfc_white_24dp"
-                android:elevation="15dp"
-                android:fontFamily="@font/saira_condensed_bold"
-                android:paddingLeft="20dp"
-                android:paddingRight="20dp"
-                android:text="@string/new_scan"
-                android:textColor="@color/primary_dark" />
-        </LinearLayout>
+            android:backgroundTint="@color/white"
+            android:drawableStart="@drawable/ic_nfc_white_24dp"
+            android:elevation="15dp"
+            android:fontFamily="@font/saira_condensed_bold"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:text="@string/new_scan"
+            android:textColor="@color/primary_dark" />
 
     </LinearLayout>
 
