@@ -228,7 +228,7 @@
                 android:layout_width="150dp"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/saira_condensed_bold"
-                android:text="@string/feein"
+                android:text="@string/including_fee_"
                 android:textSize="@dimen/text_size_medium" />
 
             <RadioButton
@@ -237,7 +237,7 @@
                 android:layout_width="150dp"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/saira_condensed_bold"
-                android:text="@string/feeout"
+                android:text="@string/not_including_fee_"
                 android:textSize="@dimen/text_size_medium" />
 
         </info.hoang8f.android.segmented.SegmentedGroup>
