@@ -75,7 +75,6 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         etAmount = findViewById(R.id.etAmount)
         etFee = findViewById(R.id.etFee)
         tvFeeEquivalent = findViewById(R.id.tvFeeEquivalent)
-        rgFee = findViewById(R.id.rgFee)
 
         val engine = CoinEngineFactory.create(card!!.blockchain)
         if (card!!.blockchain == Blockchain.Token) {
@@ -83,6 +82,12 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             tvBalance.text = html
         } else
             tvBalance.text = engine!!.getBalanceWithAlter(card)
+
+        if(intent.getBooleanExtra("IncFee", true)) {
+            tvIncFee!!.setText(R.string.feein);
+        } else {
+            tvIncFee!!.setText(R.string.feeout);
+        }
 
         etAmount!!.setText(intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT))
         tvCurrency.text = engine.getBalanceCurrency(card)
@@ -176,7 +181,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             val req = InfuraRequest.GetGasPrise(card!!.wallet)
             req.id = 67
             req.setBlockchain(card!!.blockchain)
-            rgFee!!.isEnabled = false
+            rgFee!!.isEnabled = true
             task.execute(req)
 
         } else {
