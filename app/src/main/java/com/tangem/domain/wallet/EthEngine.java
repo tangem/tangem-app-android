@@ -194,9 +194,9 @@ public class EthEngine extends CoinEngine {
         throw new Exception("Not implemented");
     }
 
-    public String getAmountEquivalentDescriptor(TangemCard mCard, String value) {
+    public String getAmountEquivalentDescriptor(TangemCard card, String value) {
         BigDecimal d = new BigDecimal(value);
-        return getAmountEquivalentDescriptionETH(d, mCard.getRate());
+        return getAmountEquivalentDescriptionETH(d, card.getRate());
     }
 
     public BigDecimal GetBalanceAlterValueBigDecimal(TangemCard mCard) {
@@ -276,11 +276,11 @@ public class EthEngine extends CoinEngine {
         return true;
     }
 
-    public String evaluateFeeEquivalent(TangemCard mCard, String fee) {
+    public String evaluateFeeEquivalent(TangemCard card, String fee) {
         BigDecimal gweFee = new BigDecimal(fee);
         gweFee = gweFee.divide(new BigDecimal("1000000000"));
         gweFee = gweFee.setScale(18, RoundingMode.DOWN);
-        return getAmountEquivalentDescriptor(mCard, gweFee.toString());
+        return getAmountEquivalentDescriptor(card, gweFee.toString());
     }
 
     public String calculateAddress(TangemCard mCard, byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException {
