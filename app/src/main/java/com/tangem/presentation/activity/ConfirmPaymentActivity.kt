@@ -14,12 +14,11 @@ import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.widget.*
+import com.tangem.data.network.ServerApiHelper
 import com.tangem.data.network.request.ElectrumRequest
 import com.tangem.data.network.request.FeeRequest
-import com.tangem.data.network.request.InfuraRequest
 import com.tangem.data.network.task.confirm_payment.ConnectFeeTask
 import com.tangem.data.network.task.confirm_payment.ConnectTask
-import com.tangem.data.network.task.confirm_payment.ETHRequestTask
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
 import com.tangem.util.BTCUtils
@@ -39,18 +38,16 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     }
 
     private var nfcManager: NfcManager? = null
+    private var serverApiHelper: ServerApiHelper? = null
     var card: TangemCard? = null
-
     var feeRequestSuccess = false
     var balanceRequestSuccess = false
-
     private var tvFeeEquivalent: TextView? = null
     var etAmount: EditText? = null
     var etFee: EditText? = null
     var rgFee: RadioGroup? = null
     var progressBar: ProgressBar? = null
     var btnSend: Button? = null
-
     var minFee: String? = null
     var maxFee: String? = null
     var normalFee: String? = null
@@ -66,6 +63,8 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         MainActivity.commonInit(applicationContext)
 
         nfcManager = NfcManager(this, this)
+
+        serverApiHelper = ServerApiHelper()
 
         card = TangemCard(intent.getStringExtra("UID"))
         card!!.loadFromBundle(intent.extras!!.getBundle("Card"))
@@ -97,6 +96,42 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         btnSend!!.visibility = View.INVISIBLE
         feeRequestSuccess = false
         balanceRequestSuccess = false
+
+        if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet || card!!.blockchain == Blockchain.Token) {
+            rgFee!!.isEnabled = false
+            serverApiHelper!!.infuraEthGasPrice("eth_gasPrice", 67)
+
+        } else {
+            rgFee!!.isEnabled = true
+            val data = SharedData(SharedData.COUNT_REQUEST)
+            val engineCoin = CoinEngineFactory.create(card!!.blockchain)
+
+            for (i in 0 until data.allRequest) {
+                val nodeAddress = engineCoin!!.getNextNode(card)
+                val nodePort = engineCoin.getNextNodePort(card)
+                val connectTaskEx = ConnectTask(this@ConfirmPaymentActivity, nodeAddress, nodePort, data)
+                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.checkBalance(card!!.wallet))
+            }
+
+            var calcSize = 256
+            try {
+                calcSize = buildSize(etWallet!!.text.toString(), "0.00", etAmount!!.text.toString())
+            } catch (ex: Exception) {
+                Log.e("Build Fee error", ex.message)
+            }
+
+            card!!.resetFailedBalanceRequestCounter()
+            val sharedFee = SharedData(SharedData.COUNT_REQUEST)
+
+            progressBar!!.visibility = View.VISIBLE
+            for (i in 0 until SharedData.COUNT_REQUEST) {
+                val feeTask = ConnectFeeTask(this@ConfirmPaymentActivity, sharedFee)
+                feeTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
+                        FeeRequest.GetFee(card!!.wallet, calcSize.toLong(), FeeRequest.NORMAL),
+                        FeeRequest.GetFee(card!!.wallet, calcSize.toLong(), FeeRequest.MINIMAL),
+                        FeeRequest.GetFee(card!!.wallet, calcSize.toLong(), FeeRequest.PRIORITY))
+            }
+        }
 
         // set listeners
         rgFee!!.setOnCheckedChangeListener { _, checkedId -> doSetFee(checkedId) }
@@ -171,44 +206,27 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
         }
 
-        if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet || card!!.blockchain == Blockchain.Token) {
-            val task = ETHRequestTask(this@ConfirmPaymentActivity, card!!.blockchain)
-            val req = InfuraRequest.GetGasPrise(card!!.wallet)
-            req.id = 67
-            req.setBlockchain(card!!.blockchain)
-            rgFee!!.isEnabled = false
-            task.execute(req)
+        // request eth gas price listener
+        serverApiHelper!!.setInfuraEthGasPrice {
+            var gasPrice = it.result
+            gasPrice = gasPrice.substring(2)
+            var l = BigInteger(gasPrice, 16)
+            val m = if (card!!.blockchain == Blockchain.Token) BigInteger.valueOf(55000) else BigInteger.valueOf(21000)
+            l = l.multiply(m)
+            val feeInGwei = card!!.getAmountInGwei(l.toString())
 
-        } else {
-            rgFee!!.isEnabled = true
-            val data = SharedData(SharedData.COUNT_REQUEST)
-            val engineCoin = CoinEngineFactory.create(card!!.blockchain)
+            minFee = feeInGwei
+            maxFee = feeInGwei
+            normalFee = feeInGwei
+            etFee!!.setText(feeInGwei)
+            etFee!!.error = null
+            btnSend!!.visibility = View.VISIBLE
+            feeRequestSuccess = true
+            balanceRequestSuccess = true
+            dtVerified = Date()
+            minFeeInInternalUnits = card!!.internalUnitsFromString(feeInGwei)
 
-            for (i in 0 until data.allRequest) {
-                val nodeAddress = engineCoin!!.getNextNode(card)
-                val nodePort = engineCoin.getNextNodePort(card)
-                val connectTaskEx = ConnectTask(this@ConfirmPaymentActivity, nodeAddress, nodePort, data)
-                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.checkBalance(card!!.wallet))
-            }
-
-            var calcSize = 256
-            try {
-                calcSize = buildSize(etWallet!!.text.toString(), "0.00", etAmount!!.text.toString())
-            } catch (ex: Exception) {
-                Log.e("Build Fee error", ex.message)
-            }
-
-            card!!.resetFailedBalanceRequestCounter()
-            val sharedFee = SharedData(SharedData.COUNT_REQUEST)
-
-            progressBar!!.visibility = View.VISIBLE
-            for (i in 0 until SharedData.COUNT_REQUEST) {
-                val feeTask = ConnectFeeTask(this@ConfirmPaymentActivity, sharedFee)
-                feeTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
-                        FeeRequest.GetFee(card!!.wallet, calcSize.toLong(), FeeRequest.NORMAL),
-                        FeeRequest.GetFee(card!!.wallet, calcSize.toLong(), FeeRequest.MINIMAL),
-                        FeeRequest.GetFee(card!!.wallet, calcSize.toLong(), FeeRequest.PRIORITY))
-            }
+//            Log.i("eth_gas_price", feeInGwei)
         }
     }
 
