@@ -176,12 +176,12 @@ public class BtcCashEngine extends CoinEngine {
         return Uri.parse("bitcoincash:" + mCard.getWallet());
     }
 
-    public boolean checkAmountValue(TangemCard mCard, String amountValue, String feeValue, Long minFeeInInternalUnits) {
-        Long fee = null;
-        Long amount = null;
+    public boolean checkAmountValue(TangemCard card, String amountValue, String feeValue, Long minFeeInInternalUnits) {
+        Long fee;
+        Long amount;
         try {
-            amount = mCard.InternalUnitsFromString(amountValue);
-            fee = mCard.InternalUnitsFromString(feeValue);
+            amount = card.internalUnitsFromString(amountValue);
+            fee = card.internalUnitsFromString(feeValue);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -287,8 +287,8 @@ public class BtcCashEngine extends CoinEngine {
     }
 
     @Override
-    public byte[] convertAmountToByteArray(TangemCard mCard, String amount) throws Exception {
-        byte[] bytes = Util.longToByteArray(mCard.InternalUnitsFromString(amount));
+    public byte[] convertAmountToByteArray(TangemCard card, String amount) throws Exception {
+        byte[] bytes = Util.longToByteArray(card.internalUnitsFromString(amount));
         byte[] reversed = new byte[bytes.length];
         for (int i = 0; i < bytes.length; i++) reversed[i] = bytes[bytes.length - i - 1];
         return reversed;
