@@ -52,19 +52,19 @@ public class ServerApiHelper {
 
     /**
      * HTTP
-     * Infura
+     * InfuraEthGasPrice
      */
-    private InfuraListener infuraListener;
+    private InfuraEthGasPriceBodyListener infuraEthGasPriceBodyListener;
 
-    public interface InfuraListener {
-        void onInfura(CardVerifyResponse cardVerifyResponse);
+    public interface InfuraEthGasPriceBodyListener {
+        void onInfuraEthGasPrice(InfuraEthGasPriceResponse cardVerifyResponse);
     }
 
-    public void setInfura(InfuraListener listener) {
-        infuraListener = listener;
+    public void setInfuraEthGasPrice(InfuraEthGasPriceBodyListener listener) {
+        infuraEthGasPriceBodyListener = listener;
     }
 
-    public void infura(String method, int id) {
+    public void infuraEthGasPrice(String method, int id) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(Server.ApiInfura.URL_INFURA)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -80,15 +80,15 @@ public class ServerApiHelper {
             @Override
             public void onResponse(@NonNull Call<InfuraEthGasPriceResponse> call, @NonNull Response<InfuraEthGasPriceResponse> response) {
                 if (response.code() == 200) {
-                    Log.i(TAG, "infura onResponse " + response.code());
-                    Log.i(TAG, "infura onResponse " + response.body().getResult());
+                    infuraEthGasPriceBodyListener.onInfuraEthGasPrice(response.body());
+                    Log.i(TAG, "infuraEthGasPrice onResponse " + response.code());
                 } else
-                    Log.e(TAG, "infura onResponse " + response.code());
+                    Log.e(TAG, "infuraEthGasPrice onResponse " + response.code());
             }
 
             @Override
             public void onFailure(@NonNull Call<InfuraEthGasPriceResponse> call, @NonNull Throwable t) {
-                Log.e(TAG, "infura onFailure " + t.getMessage());
+                Log.e(TAG, "infuraEthGasPrice onFailure " + t.getMessage());
             }
         });
     }
