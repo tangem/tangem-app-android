@@ -1,6 +1,7 @@
 package com.tangem.presentation.fragment
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.*
 import android.content.Context.CLIPBOARD_SERVICE
 import android.content.pm.PackageManager
@@ -36,6 +37,7 @@ import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.util.Util
 import com.tangem.util.UtilHelper
+import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
 import java.util.*
@@ -51,6 +53,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         private const val REQUEST_CODE_ENTER_NEW_PIN2 = 6
         private const val REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN = 7
         private const val REQUEST_CODE_SWAP_PIN = 8
+        private const val REQUEST_CODE_RECEIVE_PAYMENT = 9
     }
 
     private var singleToast: Toast? = null
@@ -133,12 +136,53 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         tvWallet.setOnClickListener { doShareWallet(false) }
         ivQR.setOnClickListener { doShareWallet(true) }
         btnLoad.setOnClickListener {
-            try {
-                val intent = Intent(Intent.ACTION_VIEW, CoinEngineFactory.create(card!!.blockchain)!!.getShareWalletUri(card))
-                intent.addCategory(Intent.CATEGORY_DEFAULT)
-                startActivity(intent)
-            } catch (e: ActivityNotFoundException) {
-                showSingleToast(R.string.no_compatible_wallet)
+            if (BuildConfig.DEBUG) {
+                val items = arrayOf<CharSequence>(getString(R.string.in_app), getString(R.string.via_cryptonit), getString(R.string.via_kraken))
+                val dialog = AlertDialog.Builder(activity).setTitle(getString(R.string.select_loading_method)).setItems(items
+                ) { _, which ->
+                    when (items[which]) {
+                        getString(R.string.in_app) -> {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, CoinEngineFactory.create(card!!.blockchain)!!.getShareWalletUri(card))
+                                intent.addCategory(Intent.CATEGORY_DEFAULT)
+                                startActivity(intent)
+                            } catch (e: ActivityNotFoundException) {
+                                showSingleToast(R.string.no_compatible_wallet)
+                            }
+
+                        }
+//                        getString(R.string.via_cryptonit2) -> {
+//                            val intent = Intent(context, PrepareCryptonitOtherAPIWithdrawalActivity::class.java)
+//                            intent.putExtra("UID", card!!.uid)
+//                            intent.putExtra("Card", card!!.asBundle)
+//                            startActivityForResult(intent, REQUEST_CODE_RECEIVE_PAYMENT)
+//                        }
+                        getString(R.string.via_cryptonit) -> {
+                            val intent = Intent(context, PrepareCryptonitWithdrawalActivity::class.java)
+                            intent.putExtra("UID", card!!.uid)
+                            intent.putExtra("Card", card!!.asBundle)
+                            startActivityForResult(intent, REQUEST_CODE_RECEIVE_PAYMENT)
+                        }
+                        getString(R.string.via_kraken) -> {
+                            val intent = Intent(context, PrepareKrakenWithdrawalActivity::class.java)
+                            intent.putExtra("UID", card!!.uid)
+                            intent.putExtra("Card", card!!.asBundle)
+                            startActivityForResult(intent, REQUEST_CODE_RECEIVE_PAYMENT)
+                        }
+                        else -> {
+                        }
+                    }
+
+                }
+                dialog.show()
+            } else {
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, CoinEngineFactory.create(card!!.blockchain)!!.getShareWalletUri(card))
+                    intent.addCategory(Intent.CATEGORY_DEFAULT)
+                    startActivity(intent)
+                } catch (e: ActivityNotFoundException) {
+                    showSingleToast(R.string.no_compatible_wallet)
+                }
             }
         }
         btnDetails.setOnClickListener {
@@ -351,7 +395,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 }
                 updateViews()
             }
-            REQUEST_CODE_SEND_PAYMENT -> {
+            REQUEST_CODE_SEND_PAYMENT, REQUEST_CODE_RECEIVE_PAYMENT -> {
                 if (resultCode == Activity.RESULT_OK) {
                     srlLoadedWallet!!.postDelayed({ this.refresh() }, 10000)
                     srlLoadedWallet!!.isRefreshing = true
