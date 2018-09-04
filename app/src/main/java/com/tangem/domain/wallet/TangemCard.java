@@ -207,7 +207,7 @@ public class TangemCard {
     }
 
     // TODO разобраться с балансами, привести к единому интерфейсу
-    public Long InternalUnitsFromString(String caption) {
+    public Long internalUnitsFromString(String caption) {
         try {
             return FormatUtil.ConvertStringToLong(caption);
         } catch (Exception e) {
