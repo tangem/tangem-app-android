@@ -227,7 +227,11 @@ public class EthEngine extends CoinEngine {
     }
 
     public Uri getShareWalletUri(TangemCard mCard) {
-        return Uri.parse("" + mCard.getWallet());
+        if (mCard.getDenomination() != null) {
+            return Uri.parse("ethereum:" + mCard.getWallet());// + "?value=" + mCard.getDenomination() +"e18");
+        } else {
+            return Uri.parse("ethereum:" + mCard.getWallet());
+        }
     }
 
     public Uri getShareWalletUriExplorer(TangemCard mCard) {
@@ -303,7 +307,7 @@ public class EthEngine extends CoinEngine {
         return String.format("0x%s", BTCUtils.toHex(address));
     }
 
-    public byte[] sign(String feeValue, String amountValue, String toValue, TangemCard mCard, CardProtocol protocol) throws Exception {
+    public byte[] sign(String feeValue, String amountValue, boolean IncFee, String toValue, TangemCard mCard, CardProtocol protocol) throws Exception {
 
         BigInteger nonceValue = mCard.GetConfirmTXCount();
         byte[] pbKey = mCard.getWalletPublicKey();
@@ -318,7 +322,9 @@ public class EthEngine extends CoinEngine {
 
 
         BigInteger amount = amountDec.toBigInteger(); //new BigInteger(amountValue, 10);
-        amount = amount.subtract(fee);
+        if (IncFee) {
+            amount = amount.subtract(fee);
+        }
 
         BigInteger nonce = nonceValue;
         BigInteger gasPrice = fee.divide(BigInteger.valueOf(21000));
