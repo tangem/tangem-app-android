@@ -164,6 +164,8 @@
     <string name="minimal">Minimal</string>
     <string name="normal">Normal</string>
     <string name="priority">Priority</string>
+    <string name="feein">Including fee</string>
+    <string name="feeout">Not including fee</string>
     <string name="the_obtained_data_is_outdated_try_again">The obtained data is outdated! Try again</string>
     <string name="cannot_reach_current_active_blockchain_node_try_again">Cannot reach current active blockchain node. Try again</string>
     <string name="cannot_check_balance_no_connection_with_blockchain_nodes">Cannot check balance! No connection with blockchain nodes</string>
