@@ -246,8 +246,8 @@ public class EthEngine extends CoinEngine {
 //        Long fee = null;
 //        Long amount = null;
 //        try {
-//            amount = mCard.InternalUnitsFromString(amountValue);
-//            fee = mCard.InternalUnitsFromString(feeValue);
+//            amount = mCard.internalUnitsFromString(amountValue);
+//            fee = mCard.internalUnitsFromString(feeValue);
 //        } catch (Exception e) {
 //            e.printStackTrace();
 //            return false;
