@@ -93,7 +93,7 @@ public class ConnectFeeTask extends FeeTask {
 
                 if ((request.getBlockCount() == FeeRequest.MINIMAL) && (confirmPaymentActivity.getMinFee() == null)) {
                     confirmPaymentActivity.setMinFee(String.valueOf(finalFee));
-                    confirmPaymentActivity.setMinFeeInInternalUnits(confirmPaymentActivity.getCard().InternalUnitsFromString(String.valueOf(finalFee)));
+                    confirmPaymentActivity.setMinFeeInInternalUnits(confirmPaymentActivity.getCard().internalUnitsFromString(String.valueOf(finalFee)));
                 } else if ((request.getBlockCount() == FeeRequest.NORMAL) && (confirmPaymentActivity.getNormalFee() == null)) {
                     confirmPaymentActivity.setNormalFee(String.valueOf(finalFee));
                 } else if ((request.getBlockCount() == FeeRequest.PRIORITY) && (confirmPaymentActivity.getMaxFee() == null)) {
