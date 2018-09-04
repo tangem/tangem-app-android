@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity
 import android.text.Html
 import android.text.InputFilter
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
@@ -52,8 +53,11 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         if (card!!.blockchain == Blockchain.Token) {
             val html = Html.fromHtml(engine!!.getBalanceWithAlter(card))
             tvBalance.text = html
-        } else
+            rgIncFee!!.visibility = View.INVISIBLE
+        } else {
             tvBalance.text = engine!!.getBalanceWithAlter(card)
+            rgIncFee!!.visibility = View.VISIBLE
+        }
 
         if (card!!.remainingSignatures < 2)
             etAmount.isEnabled = false
@@ -80,11 +84,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             tvCurrency.text = "m" + card!!.blockchain.currency
             useCurrency = true
             val output = FormatUtil.DoubleToString(balance)
-            etAmount.setText(output)
-        }
-
-        // Default
-        else {
+        } else {
             tvCurrency.text = engine.getBalanceCurrency(card)
             useCurrency = false
             etAmount.setText(engine.getBalanceValue(card))
@@ -137,6 +137,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             intent.putExtra("UID", card!!.uid)
             intent.putExtra("Card", card!!.asBundle)
             intent.putExtra("Wallet", etWallet!!.text.toString())
+            intent.putExtra("IncFee", (rgIncFee!!.checkedRadioButtonId == R.id.rbFeeIn))
             intent.putExtra(SignPaymentActivity.EXTRA_AMOUNT, strAmount)
             startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT)
         }
