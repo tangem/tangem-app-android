@@ -281,7 +281,11 @@ public class TokenEngine extends CoinEngine {
     }
 
     public Uri getShareWalletUri(TangemCard mCard) {
-        return Uri.parse("" + mCard.getWallet());
+        if (mCard.getDenomination() != null) {
+            return Uri.parse("ethereum:" + mCard.getWallet());// + "?value=" + mCard.getDenomination() +"e18");
+        } else {
+            return Uri.parse("ethereum:" + mCard.getWallet());
+        }
     }
 
     public boolean checkUnspentTransaction(TangemCard mCard) {
@@ -327,7 +331,7 @@ public class TokenEngine extends CoinEngine {
         return GetFeeEqualentDescriptor(mCard, gweFee.toString());
     }
 
-    public byte[] sign(String feeValue, String amountValue, String toValue, TangemCard mCard, CardProtocol protocol) throws Exception {
+    public byte[] sign(String feeValue, String amountValue, boolean IncFee, String toValue, TangemCard mCard, CardProtocol protocol) throws Exception {
 
         BigInteger nonceValue = mCard.GetConfirmTXCount();
         byte[] pbKey = mCard.getWalletPublicKey();
