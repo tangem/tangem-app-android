@@ -42,7 +42,6 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     var card: TangemCard? = null
     var feeRequestSuccess = false
     var balanceRequestSuccess = false
-    private var tvFeeEquivalent: TextView? = null
     var etAmount: EditText? = null
     var etFee: EditText? = null
     var rgFee: RadioGroup? = null
@@ -73,7 +72,6 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         btnSend = findViewById(R.id.btnSend)
         etAmount = findViewById(R.id.etAmount)
         etFee = findViewById(R.id.etFee)
-        tvFeeEquivalent = findViewById(R.id.tvFeeEquivalent)
         rgFee = findViewById(R.id.rgFee)
 
         val engine = CoinEngineFactory.create(card!!.blockchain)
@@ -144,16 +142,20 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 try {
                     val engine = CoinEngineFactory.create(card!!.blockchain)
                     val eqFee = engine!!.evaluateFeeEquivalent(card, etFee!!.text.toString())
-                    tvFeeEquivalent!!.text = eqFee
+                    tvFeeEquivalent.text = eqFee
 
                     if (!card!!.amountEquivalentDescriptionAvailable) {
-                        tvFeeEquivalent!!.error = "Service unavailable"
-                    } else {
-                        tvFeeEquivalent!!.error = null
-                    }
+                        tvFeeEquivalent.error = "Service unavailable"
+                        tvCurrency2.visibility = View.GONE
+                        tvFeeEquivalent.visibility = View.GONE
+                    } else
+                        tvFeeEquivalent.error = null
+
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    tvFeeEquivalent!!.text = ""
+                    tvFeeEquivalent.text = ""
+                    tvCurrency2.visibility = View.GONE
+                    tvFeeEquivalent.visibility = View.GONE
                 }
             }
 
