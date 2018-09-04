@@ -20,10 +20,12 @@ public class SignPaymentTask extends Thread {
 
     private String txAmount = "";
     private String txFee = "";
+    private Boolean txIncFee = true;
 
-    public void SetTransactionValue(String amount, String fee) {
+    public void SetTransactionValue(String amount, String fee, Boolean incfee) {
         txAmount = amount;
         txFee = fee;
+        txIncFee = incfee;
     }
 
     private String txOutAddress;
@@ -34,14 +36,14 @@ public class SignPaymentTask extends Thread {
     private CardProtocol.Notifications mNotifications;
     private boolean isCancelled = false;
 
-    public SignPaymentTask(Activity context, TangemCard card, NfcManager nfcManager, IsoDep isoDep, CardProtocol.Notifications notifications, String amount, String fee, String outAddress) {
+    public SignPaymentTask(Activity context, TangemCard card, NfcManager nfcManager, IsoDep isoDep, CardProtocol.Notifications notifications, String amount, String fee, Boolean IncFee, String outAddress) {
         mCard = card;
         mContext = context;
         mNfcManager = nfcManager;
         mIsoDep = isoDep;
         mNotifications = notifications;
         txOutAddress = outAddress;
-        SetTransactionValue(amount, fee);
+        SetTransactionValue(amount, fee, IncFee);
     }
 
     @Override
@@ -90,7 +92,7 @@ public class SignPaymentTask extends Thread {
 
                     byte[] tx;
 //                        try {
-                    tx = engine.sign(txFee, txAmount, txOutAddress, mCard, protocol);
+                    tx = engine.sign(txFee, txAmount, txIncFee, txOutAddress, mCard, protocol);
 //                        }
 //                        finally {
 //                            mNotifications.onReadWait(0);
