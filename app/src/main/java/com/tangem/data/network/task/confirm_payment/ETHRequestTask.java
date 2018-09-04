@@ -46,20 +46,22 @@ public class ETHRequestTask extends InfuraTask {
 
                             BigInteger m = confirmPaymentActivity.getCard().getBlockchain() == Blockchain.Token ? BigInteger.valueOf(55000) : BigInteger.valueOf(21000);
                             l = l.multiply(m);
-                            String feeInGwei = confirmPaymentActivity.getCard().getAmountInGwei(String.valueOf(l));
+                            String MinFeeInGwei = confirmPaymentActivity.getCard().getAmountInGwei(String.valueOf(l));
+                            String NormalFeeInGwei = confirmPaymentActivity.getCard().getAmountInGwei(String.valueOf(l.multiply(BigInteger.valueOf(12)).divide(BigInteger.valueOf(10))));
+                            String MaxFeeInGwei = confirmPaymentActivity.getCard().getAmountInGwei(String.valueOf(l.multiply(BigInteger.valueOf(15)).divide(BigInteger.valueOf(10))));
 
-                            Log.i("sjjoefeff", feeInGwei);
+                            Log.i("sjjoefeff", MinFeeInGwei);
 
-                            confirmPaymentActivity.setMinFee(feeInGwei);
-                            confirmPaymentActivity.setMaxFee(feeInGwei);
-                            confirmPaymentActivity.setNormalFee(feeInGwei);
-                            confirmPaymentActivity.getEtFee().setText(feeInGwei);
+                            confirmPaymentActivity.setMinFee(MinFeeInGwei);
+                            confirmPaymentActivity.setNormalFee(NormalFeeInGwei);
+                            confirmPaymentActivity.setMaxFee(MaxFeeInGwei);
+                            confirmPaymentActivity.getEtFee().setText(NormalFeeInGwei);
                             confirmPaymentActivity.getEtFee().setError(null);
                             confirmPaymentActivity.getBtnSend().setVisibility(View.VISIBLE);
                             confirmPaymentActivity.setFeeRequestSuccess(true);
                             confirmPaymentActivity.setBalanceRequestSuccess(true);
                             confirmPaymentActivity.setDtVerified(new Date());
-                            confirmPaymentActivity.setMinFeeInInternalUnits(confirmPaymentActivity.getCard().InternalUnitsFromString(feeInGwei));
+                            confirmPaymentActivity.setMinFeeInInternalUnits(confirmPaymentActivity.getCard().InternalUnitsFromString(NormalFeeInGwei));
 
                         } catch (JSONException e) {
                             e.printStackTrace();
