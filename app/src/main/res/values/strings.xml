@@ -36,6 +36,7 @@
     <string name="cannot_erase_wallet_with_non_zero_balance">Cannot erase wallet with non-zero balance</string>
     <string name="send_payment">Send payment</string>
     <string name="from_banknote">From banknote</string>
+    <string name="on_banknote">on banknote</string>
     <string name="with_balance">with balance</string>
     <string name="send_to_wallet">Send to wallet</string>
     <string name="amount">Amount</string>
@@ -60,6 +61,11 @@
     <string name="please_hold_banknote">Please hold the banknote firmly\n until the operation is completed…</string>
     <string name="you_may_be_required_to_repeat">You may be required to repeat this operation a few times depending on the NFC performance of your smartphone.\n This is made for safety of your funds.</string>
 
+    <string name="select_loading_method">Select loading method</string>
+    <string name="via_cryptonit">via CRYPTONIT</string>
+    <string name="via_cryptonit2">via CRYPTONIT2</string>
+    <string name="via_kraken">via KRAKEN</string>
+    <string name="in_app">In-App</string>
     <!-- menu main -->
     <string name="clean_up">Clean up</string>
     <string name="manage_user_pin_1">Manage user PIN1…</string>
@@ -217,4 +223,26 @@
     <string name="user_has_not_granted_permission_to_use_fingerprint">User hasn\'t granted permission to use Fingerprint</string>
     <string name="user_has_not_registered_any_fingerprints">User hasn\'t registered any fingerprints</string>
 
+    <!-- PrepareCryptonitWithdrawal -->
+    <string name="cryptonit_payment">CRYPTONIT payment</string>
+    <string name="cryptonit_from_account">From CRYPTONIT account:</string>
+    <string name="cryptonit_user_id">user ID:</string>
+    <string name="cryptonit_key">key:</string>
+    <string name="cryptonit_secret">secret:</string>
+    <string name="cryptonit_nonce">nonce:</string>
+    <string name="cryptonit_username">username:</string>
+    <string name="cryptonit_password">password:</string>
+    <string name="cryptonit_not_enough_account_data">Please enter account data</string>
+    <string name="cryptonit_request_balance">Get balance</string>
+    <string name="cryptonit_request_withdrawal">Withdrawal</string>
+    <string name="withdrawal_fee">operation fee</string>
+
+    <!-- PrepareKrakenWithdrawal -->
+    <string name="kraken_payment">KRAKEN payment</string>
+    <string name="kraken_from_account">From KRAKEN account:</string>
+    <string name="kraken_key">key:</string>
+    <string name="kraken_secret">secret:</string>
+    <string name="kraken_not_enough_account_data">Please enter account data</string>
+    <string name="kraken_request_balance">Get balance</string>
+    <string name="kraken_request_withdrawal">Withdrawal</string>
 </resources>
