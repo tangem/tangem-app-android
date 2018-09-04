@@ -59,7 +59,7 @@ public class ETHRequestTask extends InfuraTask {
                             confirmPaymentActivity.setFeeRequestSuccess(true);
                             confirmPaymentActivity.setBalanceRequestSuccess(true);
                             confirmPaymentActivity.setDtVerified(new Date());
-                            confirmPaymentActivity.setMinFeeInInternalUnits(confirmPaymentActivity.getCard().InternalUnitsFromString(feeInGwei));
+                            confirmPaymentActivity.setMinFeeInInternalUnits(confirmPaymentActivity.getCard().internalUnitsFromString(feeInGwei));
 
                         } catch (JSONException e) {
                             e.printStackTrace();
