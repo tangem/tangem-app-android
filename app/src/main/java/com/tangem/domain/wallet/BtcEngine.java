@@ -468,7 +468,7 @@ public class BtcEngine extends CoinEngine {
         return getAmountEquivalentDescriptionBTC(Double.parseDouble(value) / 1000.0, mCard.getRate());
     }
 
-    public byte[] sign(String feeValue, String amountValue, String toValue, TangemCard mCard, CardProtocol protocol) throws Exception {
+    public byte[] sign(String feeValue, String amountValue, boolean IncFee, String toValue, TangemCard mCard, CardProtocol protocol) throws Exception {
 
         String myAddress = mCard.getWallet();
         byte[] pbKey = mCard.getWalletPublicKey();
@@ -490,9 +490,12 @@ public class BtcEngine extends CoinEngine {
 
         long fees = FormatUtil.ConvertStringToLong(feeValue);
         long amount = FormatUtil.ConvertStringToLong(amountValue);
-        amount = amount - fees;
-
-        long change = fullAmount - fees - amount;
+        long change = fullAmount - amount;
+        if (IncFee) {
+            amount = amount - fees;
+        } else {
+            change = change - fees;
+        }
 
         if (amount + fees > fullAmount) {
             throw new Exception(String.format("Balance (%d) < amount (%d) + (%d)", fullAmount, change, amount));
