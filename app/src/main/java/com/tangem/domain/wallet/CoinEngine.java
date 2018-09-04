@@ -37,7 +37,7 @@ public abstract class CoinEngine {
 
     public abstract String getContractAddress(TangemCard card);
 
-    public abstract byte[] sign(String feeValue, String amountValue, String toValue, TangemCard mCard, CardProtocol protocol) throws Exception;
+    public abstract byte[] sign(String feeValue, String amountValue, boolean IncFee, String toValue, TangemCard mCard, CardProtocol protocol) throws Exception;
 
     public abstract boolean checkUnspentTransaction(TangemCard card);
 

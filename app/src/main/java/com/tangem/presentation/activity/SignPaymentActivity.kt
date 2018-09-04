@@ -40,6 +40,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
     private var amountStr: String? = null
     private var feeStr: String? = null
+    private var incfeeBool = true
     private var outAddressStr: String? = null
     private var lastReadSuccess = true
 
@@ -58,6 +59,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
         amountStr = intent.getStringExtra(EXTRA_AMOUNT)
         feeStr = intent.getStringExtra("Fee")
+        incfeeBool = intent.getBooleanExtra("IncFee", true)
         outAddressStr = intent.getStringExtra("Wallet")
 
         tvCardID.text = card!!.cidDescription
@@ -82,7 +84,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                 } else {
                     isoDep.timeout = card!!.pauseBeforePIN2 + 65000
                 }
-                signPaymentTask = SignPaymentTask(this, card, nfcManager, isoDep, this, amountStr, feeStr, outAddressStr)
+                signPaymentTask = SignPaymentTask(this, card, nfcManager, isoDep, this, amountStr, feeStr,incfeeBool, outAddressStr)
                 signPaymentTask!!.start()
             } else {
 //                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card!!.uid + ")")
