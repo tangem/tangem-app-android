@@ -17,8 +17,10 @@ import android.widget.*
 import com.tangem.data.network.ServerApiHelper
 import com.tangem.data.network.request.ElectrumRequest
 import com.tangem.data.network.request.FeeRequest
+import com.tangem.data.network.request.InfuraRequest
 import com.tangem.data.network.task.confirm_payment.ConnectFeeTask
 import com.tangem.data.network.task.confirm_payment.ConnectTask
+import com.tangem.data.network.task.confirm_payment.ETHRequestTask
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
 import com.tangem.util.BTCUtils
@@ -80,6 +82,12 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             tvBalance.text = html
         } else
             tvBalance.text = engine!!.getBalanceWithAlter(card)
+
+        if(intent.getBooleanExtra("IncFee", true)) {
+            tvIncFee!!.setText(R.string.feein);
+        } else {
+            tvIncFee!!.setText(R.string.feeout);
+        }
 
         etAmount!!.setText(intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT))
         tvCurrency.text = engine.getBalanceCurrency(card)
