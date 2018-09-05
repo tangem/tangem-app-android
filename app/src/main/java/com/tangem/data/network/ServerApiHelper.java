@@ -52,6 +52,48 @@ public class ServerApiHelper {
 
     /**
      * HTTP
+     * Estimate fee
+     */
+    private EstimateFeeListener estimateFeeListener;
+
+    //
+    public interface EstimateFeeListener {
+        void onInfuraEthGasPrice(String estimateFeeResponse);
+    }
+
+    public void setEstimateFee(EstimateFeeListener listener) {
+        estimateFeeListener = listener;
+    }
+
+    public void estimateFee(String fee) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(Server.ApiEstimatefee.Method.N + fee)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        EstimatefeeApi estimatefeeApi = retrofit.create(EstimatefeeApi.class);
+
+        Call<String> call = estimatefeeApi.getEstimatefee();
+
+        call.enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
+                if (response.code() == 200) {
+                    estimateFeeListener.onInfuraEthGasPrice(response.body());
+                    Log.i(TAG, "estimateFee onResponse " + response.code());
+                } else
+                    Log.e(TAG, "estimateFee onResponse " + response.code());
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+                Log.e(TAG, "estimateFee onFailure " + t.getMessage());
+            }
+        });
+    }
+
+    /**
+     * HTTP
      * InfuraEthGasPrice
      */
     private InfuraEthGasPriceBodyListener infuraEthGasPriceBodyListener;
@@ -74,7 +116,7 @@ public class ServerApiHelper {
 
         InfuraEthGasPriceBody infuraEthGasPriceBody = new InfuraEthGasPriceBody(method, id);
 
-        Call<InfuraEthGasPriceResponse> call = infuraApi.ethGasPrice("application/json", infuraEthGasPriceBody);
+        Call<InfuraEthGasPriceResponse> call = infuraApi.ethGasPrice(infuraEthGasPriceBody);
 
         call.enqueue(new Callback<InfuraEthGasPriceResponse>() {
             @Override
@@ -120,7 +162,7 @@ public class ServerApiHelper {
 
         CardVerifyBody cardVerifyBody = new CardVerifyBody(requests);
 
-        Call<CardVerifyResponse> call = tangemApi.getCardVerify("application/json", cardVerifyBody);
+        Call<CardVerifyResponse> call = tangemApi.getCardVerify(cardVerifyBody);
         call.enqueue(new Callback<CardVerifyResponse>() {
             @Override
             public void onResponse(@NonNull Call<CardVerifyResponse> call, @NonNull Response<CardVerifyResponse> response) {

@@ -130,6 +130,9 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             val sharedFee = SharedData(SharedData.COUNT_REQUEST)
 
             progressBar!!.visibility = View.VISIBLE
+
+            serverApiHelper!!.estimateFee("3/")
+
             for (i in 0 until SharedData.COUNT_REQUEST) {
                 val feeTask = ConnectFeeTask(this@ConfirmPaymentActivity, sharedFee)
                 feeTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
@@ -241,6 +244,13 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             minFeeInInternalUnits = card!!.internalUnitsFromString(normalFeeInGwei)
 
 //            Log.i("eth_gas_price", feeInGwei)
+        }
+
+        // request estimate fee listener
+        serverApiHelper!!.setEstimateFee {
+
+
+            Log.i("estimate_fee", it)
         }
     }
 
