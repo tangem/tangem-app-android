@@ -125,6 +125,9 @@ public class SignPaymentTask extends Thread {
         } catch (CardProtocol.TangemException_InvalidPIN e) {
             e.printStackTrace();
             protocol.setError(e);
+        } catch (CardProtocol.TangemException_WrongAmount e) {
+            e.printStackTrace();
+            protocol.setError(e);
         } catch (Exception e) {
             e.printStackTrace();
             protocol.setError(e);
