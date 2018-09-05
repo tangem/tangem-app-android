@@ -498,7 +498,7 @@ public class BtcEngine extends CoinEngine {
         }
 
         if (amount + fees > fullAmount) {
-            throw new Exception(String.format("Balance (%d) < amount (%d) + (%d)", fullAmount, change, amount));
+            throw new CardProtocol.TangemException_WrongAmount(String.format("Balance (%d) < amount (%d) + (%d)", fullAmount, change, amount));
         }
 
         byte[][] dataForSign = new byte[unspentOutputs.size()][];
