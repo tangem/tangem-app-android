@@ -155,6 +155,7 @@
     <string name="transaction_has_been_successfully_signed">Transaction has been successfully signed and sent to blockchain node. Wallet balance will be updated in a while</string>
     <string name="try_again_failed_to_send_transaction">Try again. Failed to send transaction (%1$s)</string>
     <string name="cannot_sign_transaction._make_sure_you_enter_correct_pin_2">Cannot sign transaction. Make sure you enter correct PIN2!</string>
+    <string name="cannot_sign_transaction_wrong_amount">Amount and fee exceed total wallet balance!</string>
 
     <!-- PreparePaymentActivity -->
     <string name="not_enough_funds_on_your_card">Not enough funds on your card</string>
