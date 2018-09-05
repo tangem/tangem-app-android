@@ -47,14 +47,13 @@ public class FeeRequest {
     public static final int NORMAL = 3;
     public static final int MINIMAL = 6;
     private int blockCount = NORMAL;
+
     public void setBlockCount(int count
-    )
-    {
+    ) {
         blockCount = count;
     }
 
-    public int getBlockCount()
-    {
+    public int getBlockCount() {
         return blockCount;
     }
 
@@ -77,7 +76,7 @@ public class FeeRequest {
 
     public static FeeRequest GetFee(String wallet, long txSize, int blockCount) {
         FeeRequest request = new FeeRequest();
-        request.WalletAddress=wallet;
+        request.WalletAddress = wallet;
         request.txSize = txSize;
         request.setBlockCount(blockCount);
         return request;
