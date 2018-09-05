@@ -50,6 +50,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     var minFee: String? = null
     var maxFee: String? = null
     var normalFee: String? = null
+    var incFee: Boolean = true
     var minFeeInInternalUnits: Long? = 0L
     private var requestPIN2Count = 0
     var nodeCheck = false
@@ -81,7 +82,8 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         } else
             tvBalance.text = engine!!.getBalanceWithAlter(card)
 
-        if (intent.getBooleanExtra("IncFee", true)) {
+        incFee = intent.getBooleanExtra("IncFee", true);
+        if (incFee) {
             tvIncFee!!.setText(R.string.including_fee)
         } else {
             tvIncFee!!.setText(R.string.not_including_fee)
@@ -211,6 +213,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
             intent.putExtra("UID", card!!.uid)
             intent.putExtra("Card", card!!.asBundle)
+            intent.putExtra("IncFee", incFee)
             startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
         }
 
@@ -272,6 +275,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
                 intent.putExtra("UID", card!!.uid)
                 intent.putExtra("Card", card!!.asBundle)
+                intent.putExtra("IncFee", incFee)
                 startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
                 return
             }
@@ -285,6 +289,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 intent.putExtra("Wallet", etWallet!!.text.toString())
                 intent.putExtra(SignPaymentActivity.EXTRA_AMOUNT, etAmount!!.text.toString())
                 intent.putExtra("Fee", etFee!!.text.toString())
+                intent.putExtra("IncFee", incFee)
                 startActivityForResult(intent, REQUEST_CODE_SIGN_PAYMENT)
             } else
                 Toast.makeText(baseContext, R.string.pin_2_is_required_to_sign_the_payment, Toast.LENGTH_LONG).show()
