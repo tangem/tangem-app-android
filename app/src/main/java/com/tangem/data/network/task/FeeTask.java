@@ -1,6 +1,7 @@
 package com.tangem.data.network.task;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import com.tangem.data.network.request.FeeRequest;
 import com.tangem.domain.wallet.SharedData;
@@ -39,6 +40,9 @@ public class FeeTask extends AsyncTask<FeeRequest, Void, List<FeeRequest>> {
                 URL url = new URL("https://estimatefee.com/n/"+String.valueOf(request.getBlockCount()));
                 httpcon = (HttpURLConnection) url.openConnection();
                 httpcon.setRequestMethod("GET");
+
+
+                Log.i("scscsccsw222", url.toString());
 
                 httpcon.connect();
 
