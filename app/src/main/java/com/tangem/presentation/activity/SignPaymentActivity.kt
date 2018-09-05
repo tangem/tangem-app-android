@@ -179,6 +179,18 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                         }
                     }, 500)
                 } else {
+                    if (cardProtocol.error is CardProtocol.TangemException_WrongAmount) {
+                        try {
+                            val intent = Intent()
+                            intent.putExtra("message", getString(R.string.cannot_sign_transaction_wrong_amount))
+                            intent.putExtra("UID", cardProtocol.card.uid)
+                            intent.putExtra("Card", cardProtocol.card.asBundle)
+                            setResult(Activity.RESULT_CANCELED, intent)
+                            finish()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
                     progressBar!!.post {
                         if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported) {
                             if (!NoExtendedLengthSupportDialog.allReadyShowed) {
