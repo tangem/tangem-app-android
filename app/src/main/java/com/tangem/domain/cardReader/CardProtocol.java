@@ -137,6 +137,12 @@ public class CardProtocol {
         }
     }
 
+    public static class TangemException_WrongAmount extends TangemException {
+        public TangemException_WrongAmount(String message) {
+            super(message);
+        }
+    }
+
     public byte[] GetUID() {
         if (mIsoDep == null || mIsoDep.getTag() == null) return null;
         return mIsoDep.getTag().getId();
