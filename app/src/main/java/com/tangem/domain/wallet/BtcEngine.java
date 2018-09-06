@@ -333,7 +333,7 @@ public class BtcEngine extends CoinEngine {
     }
 
 
-    public boolean checkAmountValue(TangemCard card, String amountValue, String feeValue, Long minFeeInInternalUnits) {
+    public boolean checkAmountValue(TangemCard card, String amountValue, String feeValue, Long minFeeInInternalUnits, Boolean incfee) {
         Long fee;
         Long amount;
         try {
@@ -350,10 +350,10 @@ public class BtcEngine extends CoinEngine {
         if (fee == 0 || amount == 0)
             return false;
 
-        if (fee > amount)
+        if (incfee && amount > card.getBalance())
             return false;
 
-        if (fee < minFeeInInternalUnits)
+        if (!incfee && amount + fee > card.getBalance())
             return false;
 
         return true;
