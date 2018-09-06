@@ -121,7 +121,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //            srlLoadedWallet!!.postDelayed({ refresh() }, 1000)
 //        }
 
-        repeatRefresh()
+//        repeatRefresh()
+
+        refresh()
 
         startVerify(lastTag)
 
@@ -266,7 +268,12 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     override fun onPause() {
         super.onPause()
         nfcManager!!.onPause()
-        timerRepeatRefresh.cancel()
+
+        try {
+            timerRepeatRefresh.cancel()
+        } catch (e: IllegalStateException) {
+            e.printStackTrace()
+        }
     }
 
     override fun onStop() {
