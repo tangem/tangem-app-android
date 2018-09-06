@@ -49,7 +49,7 @@ public abstract class CoinEngine {
 
     public abstract String evaluateFeeEquivalent(TangemCard card, String fee);
 
-    public abstract boolean checkAmountValue(TangemCard card, String amount, String fee, Long minFeeInInternalUnits);
+    public abstract boolean checkAmountValue(TangemCard card, String amount, String fee, Long minFeeInInternalUnits, Boolean incfee);
 
     public abstract boolean inOutPutVisible();
 
