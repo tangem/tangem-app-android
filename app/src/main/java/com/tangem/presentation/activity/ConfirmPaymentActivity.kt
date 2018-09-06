@@ -131,7 +131,9 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
             progressBar!!.visibility = View.VISIBLE
 
-            serverApiHelper!!.estimateFee("3/")
+//            serverApiHelper!!.estimateFee(ServerApiHelper.ESTIMATE_FEE_PRIORITY)
+//            serverApiHelper!!.estimateFee(ServerApiHelper.ESTIMATE_FEE_NORMAL)
+//            serverApiHelper!!.estimateFee(ServerApiHelper.ESTIMATE_FEE_MINIMAL)
 
             for (i in 0 until SharedData.COUNT_REQUEST) {
                 val feeTask = ConnectFeeTask(this@ConfirmPaymentActivity, sharedFee)
@@ -247,10 +249,20 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
 
         // request estimate fee listener
-        serverApiHelper!!.setEstimateFee {
+        serverApiHelper!!.setEstimateFee { blockCount, estimateFeeResponse ->
+            when (blockCount) {
+                ServerApiHelper.ESTIMATE_FEE_PRIORITY -> {
+//                    Log.i("estimate_fee_PRIORITY", estimateFeeResponse)
+                }
 
+                ServerApiHelper.ESTIMATE_FEE_NORMAL -> {
+//                    Log.i("estimate_fee_NORMAL", estimateFeeResponse)
+                }
 
-            Log.i("estimate_fee", it)
+                ServerApiHelper.ESTIMATE_FEE_MINIMAL -> {
+//                    Log.i("estimate_fee_MINIMAL", estimateFeeResponse)
+                }
+            }
         }
     }
 
