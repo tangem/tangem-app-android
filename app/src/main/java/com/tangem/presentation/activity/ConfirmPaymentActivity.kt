@@ -208,8 +208,8 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 return@setOnClickListener
             }
 
-            if (!engineCoin.checkAmountValue(card, txAmount, txFee, minFeeInInternalUnits)) {
-                finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.not_enough_eth_for_transaction_fee))
+            if (!engineCoin.checkAmountValue(card, txAmount, txFee, minFeeInInternalUnits, incFee)) {
+                finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.not_enough_funds_or_incorrect_amount))
                 return@setOnClickListener
             }
 
@@ -228,7 +228,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             gasPrice = gasPrice.substring(2)
             var l = BigInteger(gasPrice, 16)
 
-            val m = if (card!!.blockchain == Blockchain.Token) BigInteger.valueOf(55000) else BigInteger.valueOf(21000)
+            val m = if (card!!.blockchain == Blockchain.Token) BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
             l = l.multiply(m)
             val minFeeInGwei = card!!.getAmountInGwei(l.toString())
             val normalFeeInGwei = card!!.getAmountInGwei(l.multiply(BigInteger.valueOf(12)).divide(BigInteger.valueOf(10)).toString())

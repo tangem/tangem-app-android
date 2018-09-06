@@ -292,7 +292,7 @@ public class TokenEngine extends CoinEngine {
         return true;
     }
 
-    public boolean checkAmountValue(TangemCard card, String amountValue, String feeValue, Long minFeeInInternalUnits) {
+    public boolean checkAmountValue(TangemCard card, String amountValue, String feeValue, Long minFeeInInternalUnits, Boolean incfee) {
         Long fee;
         BigDecimal amount;
         try {
@@ -309,17 +309,12 @@ public class TokenEngine extends CoinEngine {
         if (fee == 0 || amount.compareTo(BigDecimal.ZERO) == 0)
             return false;
 
-
-        if (fee < minFeeInInternalUnits)
-            return false;
-
-
-        BigDecimal tmpFee = new BigDecimal(feeValue);
-        BigDecimal tmpAmount = amount;
-        tmpAmount = tmpAmount.multiply(new BigDecimal("1000000000"));
-
-        if (tmpFee.compareTo(tmpAmount) > 0)
-            return false;
+//        BigDecimal tmpFee = new BigDecimal(feeValue);
+//        BigDecimal tmpAmount = amount;
+//        tmpAmount = tmpAmount.multiply(new BigDecimal("1000000000"));
+//
+//        if (tmpFee.compareTo(tmpAmount) > 0)
+//            return false;
 
         return true;
     }
@@ -357,7 +352,7 @@ public class TokenEngine extends CoinEngine {
         //amount = amount.subtract(fee);
 
         BigInteger nonce = nonceValue;
-        BigInteger gasPrice = fee.divide(BigInteger.valueOf(21000));
+        BigInteger gasPrice = fee.divide(BigInteger.valueOf(60000));
         BigInteger gasLimit = BigInteger.valueOf(60000);
         Integer chainId = EthTransaction.ChainEnum.Mainnet.getValue();
         BigInteger amountZero = BigInteger.ZERO;
