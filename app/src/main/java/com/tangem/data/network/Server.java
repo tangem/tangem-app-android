@@ -1,5 +1,7 @@
 package com.tangem.data.network;
 
+import static com.tangem.data.network.Server.ApiTangem.URL_TANGEM;
+
 public class Server {
 
     /**
@@ -11,6 +13,14 @@ public class Server {
 
         public static class Method {
             public static final String VERIFY = URL_TANGEM + "verify";
+        }
+    }
+
+    public static class ApiUpdateVersion {
+        public static final String URL_UPDATE_VERSION = ServerURL.API_UPDATE_VERSION;
+
+        public static class Method {
+            public static final String LAST_VERSION = URL_UPDATE_VERSION +"TangemCash/tangem-binaries/master/apk-version.txt";
         }
     }
 
