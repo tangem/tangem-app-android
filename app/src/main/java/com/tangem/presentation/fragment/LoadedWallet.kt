@@ -40,6 +40,7 @@ import com.tangem.util.UtilHelper
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
+import java.math.BigInteger
 import java.util.*
 
 class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, SharedPreferences.OnSharedPreferenceChangeListener {
@@ -237,6 +238,18 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
 //            Log.i(TAG, "setRateInfoData $rate")
         }
+
+        // request eth get balance listener
+        serverApiHelper!!.setInfura { method, infuraResponse ->
+            if (method == ServerApiHelper.INFURA_ETH_GET_BALANCE) {
+
+//                Log.i("eth_get_balance", gasPrice)
+            }
+        }
+    }
+
+    private fun requestInfura(method: String) {
+        serverApiHelper!!.infura(method, 67, card!!.wallet)
     }
 
     private fun requestCardVerify() {
@@ -613,9 +626,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 val nodeAddress = engine!!.getNextNode(card)
                 val nodePort = engine.getNextNodePort(card)
 
-                Log.i(TAG, nodeAddress)
-                Log.i(TAG, nodePort.toString())
-                Log.i(TAG, i.toString())
+//                Log.i(TAG, nodeAddress)
+//                Log.i(TAG, nodePort.toString())
+//                Log.i(TAG, i.toString())
 
                 // check balance
                 val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
@@ -655,6 +668,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         // Ethereum
         else if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet) {
+
+//            requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE)
+
             val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
             val reqETH = InfuraRequest.GetBalance(card!!.wallet)
             reqETH.id = 67
@@ -690,6 +706,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         if (needResendTX)
             sendTransaction(LastSignStorage.getTxForSend(card!!.wallet))
+
+//        requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE)
+
+
     }
 
     fun prepareResultIntent(): Intent {
