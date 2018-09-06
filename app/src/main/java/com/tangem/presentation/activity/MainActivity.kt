@@ -19,6 +19,7 @@ import android.view.animation.Transformation
 import android.widget.RelativeLayout
 import android.widget.Toast
 import com.scottyab.rootbeer.RootBeer
+import com.tangem.data.network.ServerApiHelper
 import com.tangem.data.nfc.ReadCardInfoTask
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.FW
@@ -147,6 +148,13 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                 false
             }
         }
+
+        val apiHelper = ServerApiHelper()
+        apiHelper.setLastVersionListener {
+            response->
+            if(response!! != BuildConfig.VERSION_NAME) Toast.makeText(this, "There is a new application version: "+response.toString(),Toast.LENGTH_LONG).show()
+        }
+        apiHelper.requestLastVersion()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
