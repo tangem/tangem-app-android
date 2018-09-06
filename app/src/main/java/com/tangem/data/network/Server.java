@@ -43,9 +43,10 @@ public class Server {
         public static final String URL_ESTIMATEFEE = ServerURL.API_ESTIMATEFEE;
 
         public static class Method {
-            public static final String N = URL_ESTIMATEFEE + "n/";
+            public static final String N_2 = URL_ESTIMATEFEE + "n/2";
+            public static final String N_3 = URL_ESTIMATEFEE + "n/3";
+            public static final String N_6 = URL_ESTIMATEFEE + "n/6";
         }
-
     }
 
 }
