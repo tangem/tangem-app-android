@@ -25,6 +25,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -41,6 +42,9 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DefaultObserver;
 import io.reactivex.schedulers.Schedulers;
+import okhttp3.OkHttpClient;
+import okhttp3.ResponseBody;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -299,6 +303,60 @@ public class ServerApiHelper {
 
     public String getValidationNodeDescription() {
         return "Electrum, " + host + ":" + String.valueOf(port);
+    }
+
+    /**
+     * HTTP
+     * Last version request from GitHub
+     */
+    private LastVersionListener lastVersionListener;
+
+    public interface LastVersionListener {
+        void onLastVersion(String lastVersion);
+    }
+
+    public void setLastVersionListener(LastVersionListener listener) {
+        lastVersionListener = listener;
+    }
+
+    public void requestLastVersion() {
+
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+        OkHttpClient httpClient = new OkHttpClient.Builder().
+                addInterceptor(logging).
+//        addInterceptor(new AuthorizationInterceptor()).
+        build();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(Server.ApiUpdateVersion.URL_UPDATE_VERSION)
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(httpClient)
+                .build();
+
+        UpdateVersionApi updateVersionApi = retrofit.create(UpdateVersionApi.class);
+
+        Call<ResponseBody> call = updateVersionApi.getLastVersion();
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                Log.i(TAG, "LastVersion onResponse " + response.code());
+                if (response.code() == 200) {
+                    String stringResponse;
+                    try {
+                        stringResponse = response.body().string();
+                        lastVersionListener.onLastVersion(stringResponse);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                Log.e(TAG, "LastVersion onFailure " + t.getMessage());
+            }
+        });
     }
 
 }
