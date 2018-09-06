@@ -201,7 +201,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             } else if (!engine.isBalanceNotZero(card))
                 showSingleToast(R.string.wallet_empty)
             else if (!engine.isBalanceAlterNotZero(card))
-                showSingleToast(R.string.not_enough_funds)
+                showSingleToast(R.string.not_enough_funds_or_incorrect_amount)
             else if (engine.awaitingConfirmation(card))
                 showSingleToast(R.string.please_wait_while_previous)
             else if (!engine.checkUnspentTransaction(card))
