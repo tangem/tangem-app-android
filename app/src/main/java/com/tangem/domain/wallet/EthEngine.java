@@ -246,7 +246,7 @@ public class EthEngine extends CoinEngine {
     }
 
 
-    public boolean checkAmountValue(TangemCard mCard, String amountValue, String feeValue, Long minFeeInInternalUnits) {
+    public boolean checkAmountValue(TangemCard mCard, String amountValue, String feeValue, Long minFeeInInternalUnits, Boolean incfee) {
 //        Long fee = null;
 //        Long amount = null;
 //        try {
@@ -270,9 +270,18 @@ public class EthEngine extends CoinEngine {
         try {
             BigDecimal tmpFee = new BigDecimal(feeValue);
             BigDecimal tmpAmount = new BigDecimal(amountValue);
+            BigDecimal cardBalance = new BigDecimal(mCard.getDecimalBalance());
             tmpAmount = tmpAmount.multiply(new BigDecimal("1000000000"));
-            if (tmpFee.compareTo(tmpAmount) > 0)
+            cardBalance = cardBalance.divide(new BigDecimal("1000000000"));
+            //if (tmpFee.compareTo(tmpAmount) > 0)
+            //    return false;
+
+            if (incfee && tmpAmount.compareTo(cardBalance) > 0 )
                 return false;
+
+            if (!incfee && tmpAmount.add(tmpFee).compareTo(cardBalance) > 0)
+                return false;
+
         } catch (NumberFormatException e) {
             e.printStackTrace();
         }
