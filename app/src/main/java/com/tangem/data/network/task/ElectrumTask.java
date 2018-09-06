@@ -60,7 +60,8 @@ public class ElectrumTask extends AsyncTask<ElectrumRequest, Integer, List<Elect
             Log.v(logTag, "Connecting..." + Host);
 //            Socket socket = new Socket(serverAddress, port);
             Socket socket = new Socket();
-            socket.setSoTimeout(5000);
+//            socket.setSoTimeout(5000);
+            socket.setSoTimeout(10000);
             socket.bind(new InetSocketAddress(0));
             socket.connect(new InetSocketAddress(serverAddress, Port));
 //            Log.i("effefefe", host);
