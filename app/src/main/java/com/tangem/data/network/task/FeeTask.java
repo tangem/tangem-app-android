@@ -42,7 +42,7 @@ public class FeeTask extends AsyncTask<FeeRequest, Void, List<FeeRequest>> {
                 httpcon.setRequestMethod("GET");
 
 
-                Log.i("scscsccsw222", url.toString());
+                Log.i("scscsccsw222", String.valueOf(request.getBlockCount()));
 
                 httpcon.connect();
 
