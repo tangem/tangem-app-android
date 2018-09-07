@@ -5,9 +5,6 @@ package com.tangem.domain.cardReader;
  */
 public enum INS {
     Unknown(0x00),
-    BootROM_SOS(0x40),
-    BootROM_Tangem(0xF0),
-    Personalize(0xF1),
     Read(0xF2),
     VerifyCard(0xF3),
     ValidateCard(0xF4),
