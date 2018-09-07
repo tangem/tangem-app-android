@@ -1514,17 +1514,19 @@ public class TangemCard {
             case "0004":
             case "0006":
             case "0010":
-                return R.drawable.card_btc001;
+                return R.drawable.card_btc_001;
             case "0005":
             case "0007":
             case "0011":
-                return R.drawable.card_btc005;
+                return R.drawable.card_btc_005;
             case "0012":
                 return R.drawable.card_seed;
             case "0013":
                 return R.drawable.card_btc_hk_s;
+            case "0014":
+                return R.drawable.card_btc_0014;
             case "0015":
-                return R.drawable.card_btc000;
+                return R.drawable.card_btc_000;
             case "0016":
                 return R.drawable.card_eth000;
             case "0017":
