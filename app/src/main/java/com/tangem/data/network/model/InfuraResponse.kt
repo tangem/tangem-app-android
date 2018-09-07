@@ -2,7 +2,7 @@ package com.tangem.data.network.model
 
 import com.google.gson.annotations.SerializedName
 
-data class InfuraEthGasPriceResponse(
+data class InfuraResponse(
         @SerializedName("jsonrpc")
         var jsonrpc: String = "",
 
