@@ -40,7 +40,9 @@ import com.tangem.util.UtilHelper
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
+import java.math.BigInteger
 import java.util.*
+import kotlin.concurrent.fixedRateTimer
 
 class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, SharedPreferences.OnSharedPreferenceChangeListener {
     companion object {
@@ -73,7 +75,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private val inactiveColor: ColorStateList by lazy { resources.getColorStateList(R.color.primary) }
     private val activeColor: ColorStateList by lazy { resources.getColorStateList(R.color.colorAccent) }
 
-    private val timerRepeatRefresh = Timer()
+    private var timerRepeatRefresh: Timer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -237,6 +239,18 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
 //            Log.i(TAG, "setRateInfoData $rate")
         }
+
+        // request eth get balance listener
+        serverApiHelper!!.setInfura { method, infuraResponse ->
+            if (method == ServerApiHelper.INFURA_ETH_GET_BALANCE) {
+
+//                Log.i("eth_get_balance", gasPrice)
+            }
+        }
+    }
+
+    private fun requestInfura(method: String) {
+        serverApiHelper!!.infura(method, 67, card!!.wallet)
     }
 
     private fun requestCardVerify() {
@@ -253,27 +267,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         nfcManager!!.onResume()
     }
 
-    private fun repeatRefresh() {
-        val getBalance = object : TimerTask() {
-            override fun run() {
-                activity!!.runOnUiThread {
-                    refresh()
-//                    Log.i("efgrgegsdfgsd", "repeatRefresh")
-                }
-            }
-        }
-        timerRepeatRefresh.schedule(getBalance, 0, 5000)
-    }
-
     override fun onPause() {
         super.onPause()
         nfcManager!!.onPause()
-
-        try {
-            timerRepeatRefresh.cancel()
-        } catch (e: IllegalStateException) {
-            e.printStackTrace()
-        }
+        if (timerRepeatRefresh != null)
+            timerRepeatRefresh!!.cancel()
     }
 
     override fun onStop() {
@@ -421,8 +419,15 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 if (resultCode == Activity.RESULT_OK) {
 //                    srlLoadedWallet!!.postDelayed({ refresh() }, 10000)
 //                    srlLoadedWallet!!.isRefreshing = true
+
+                    timerRepeatRefresh = fixedRateTimer(name = "refresh", initialDelay = 2000, period = 5000) {
+                        activity!!.runOnUiThread {
+                            refresh()
+                            Log.i("sfsf", "refresh")
+                        }
+                    }
                     card!!.clearInfo()
-                    repeatRefresh()
+
 //                    updateViews()
                 }
 
@@ -613,9 +618,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 val nodeAddress = engine!!.getNextNode(card)
                 val nodePort = engine.getNextNodePort(card)
 
-                Log.i(TAG, nodeAddress)
-                Log.i(TAG, nodePort.toString())
-                Log.i(TAG, i.toString())
+//                Log.i(TAG, nodeAddress)
+//                Log.i(TAG, nodePort.toString())
+//                Log.i(TAG, i.toString())
 
                 // check balance
                 val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
@@ -655,6 +660,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         // Ethereum
         else if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet) {
+
+//            requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE)
+
             val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
             val reqETH = InfuraRequest.GetBalance(card!!.wallet)
             reqETH.id = 67
@@ -690,6 +698,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         if (needResendTX)
             sendTransaction(LastSignStorage.getTxForSend(card!!.wallet))
+
+//        requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE)
+
+
     }
 
     fun prepareResultIntent(): Intent {
