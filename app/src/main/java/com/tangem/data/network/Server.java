@@ -1,7 +1,5 @@
 package com.tangem.data.network;
 
-import static com.tangem.data.network.Server.ApiTangem.URL_TANGEM;
-
 public class Server {
 
     /**
