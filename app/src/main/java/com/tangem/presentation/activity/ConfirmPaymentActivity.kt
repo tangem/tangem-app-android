@@ -105,7 +105,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet || card!!.blockchain == Blockchain.Token) {
             rgFee!!.isEnabled = false
-            serverApiHelper!!.infuraEthGasPrice("eth_gasPrice", 67)
+            serverApiHelper!!.infura(ServerApiHelper.INFURA_ETH_GAS_PRICE, 67, card!!.wallet)
 
         } else {
             rgFee!!.isEnabled = true
@@ -223,29 +223,31 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
 
         // request eth gas price listener
-        serverApiHelper!!.setInfuraEthGasPrice {
-            var gasPrice = it.result
-            gasPrice = gasPrice.substring(2)
-            var l = BigInteger(gasPrice, 16)
+        serverApiHelper!!.setInfura { method, infuraResponse ->
+            if (method == ServerApiHelper.INFURA_ETH_GAS_PRICE) {
+                var gasPrice = infuraResponse.result
+                gasPrice = gasPrice.substring(2)
+                var l = BigInteger(gasPrice, 16)
 
-            val m = if (card!!.blockchain == Blockchain.Token) BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
-            l = l.multiply(m)
-            val minFeeInGwei = card!!.getAmountInGwei(l.toString())
-            val normalFeeInGwei = card!!.getAmountInGwei(l.multiply(BigInteger.valueOf(12)).divide(BigInteger.valueOf(10)).toString())
-            val maxFeeInGwei = card!!.getAmountInGwei(l.multiply(BigInteger.valueOf(15)).divide(BigInteger.valueOf(10)).toString())
+                val m = if (card!!.blockchain == Blockchain.Token) BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
+                l = l.multiply(m)
+                val minFeeInGwei = card!!.getAmountInGwei(l.toString())
+                val normalFeeInGwei = card!!.getAmountInGwei(l.multiply(BigInteger.valueOf(12)).divide(BigInteger.valueOf(10)).toString())
+                val maxFeeInGwei = card!!.getAmountInGwei(l.multiply(BigInteger.valueOf(15)).divide(BigInteger.valueOf(10)).toString())
 
-            minFee = minFeeInGwei
-            normalFee = normalFeeInGwei
-            maxFee = maxFeeInGwei
-            etFee!!.setText(normalFeeInGwei)
-            etFee!!.error = null
-            btnSend!!.visibility = View.VISIBLE
-            feeRequestSuccess = true
-            balanceRequestSuccess = true
-            dtVerified = Date()
-            minFeeInInternalUnits = card!!.internalUnitsFromString(normalFeeInGwei)
+                minFee = minFeeInGwei
+                normalFee = normalFeeInGwei
+                maxFee = maxFeeInGwei
+                etFee!!.setText(normalFeeInGwei)
+                etFee!!.error = null
+                btnSend!!.visibility = View.VISIBLE
+                feeRequestSuccess = true
+                balanceRequestSuccess = true
+                dtVerified = Date()
+                minFeeInInternalUnits = card!!.internalUnitsFromString(normalFeeInGwei)
 
-//            Log.i("eth_gas_price", feeInGwei)
+//                Log.i("eth_gas_price", gasPrice)
+            }
         }
 
         // request estimate fee listener
