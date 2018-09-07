@@ -27,7 +27,6 @@ public class TLV {
         TAG_SettingsMask(0x0A),
         TAG_CardData(0x0C),
         TAG_NDEFData(0x0D),
-        TAG_CreateWalletAtPersonalize(0x0E),
         TAG_Health(0x0F),
 
         TAG_PIN(0x10),
@@ -71,11 +70,6 @@ public class TLV {
         TAG_Signature(0x61),
         TAG_RemainingSignatures(0x62),
         TAG_SignedHashes(0x63),
-
-        TAG_Wallet_PrivateKey(0x70),
-        TAG_Card_PrivateKey(0x71),
-        TAG_Block_Reason(0x72),
-
 
         TAG_Firmware(0x80),
         TAG_Batch(0x81),
