@@ -67,9 +67,6 @@ public class Issuer {
 
     public static void Init(Context context) {
         try {
-
-//            JsonArray jaIssuers=loadIssuersFile();
-//
             Issuer unknown = new Issuer();
             unknown.id = "UNKNOWN";
             unknown.officialName = "UNKNOWN";
@@ -82,55 +79,10 @@ public class Issuer {
                 }
             }
             instances.add(0, unknown);
-//            for (JsonElement jeIssuer : jaIssuers) {
-//                Issuer instance = new Gson().fromJson(jeIssuer, Issuer.class);
-//                instances.add(instance);
-//            }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-//    private static JsonArray loadIssuersFile() throws IOException {
-//        String result;
-//        JsonParser jsonParser = new JsonParser();
-//        try (BufferedReader reader = Files.newReader(new File("Issuers.json"), StandardCharsets.UTF_8)) {
-//            String str;
-//            StringBuilder buf = new StringBuilder();
-//            while ((str = reader.readLine()) != null) {
-//                buf.append(str);
-//                buf.append("\n");
-//            }
-//            result = buf.toString();
-//        }
-//        return jsonParser.parse(result).getAsJsonArray();
-//    }
-//
-//    static String ReadJSONResource(Context mContext, int id) {
-//        Resources resources = mContext.getResources();
-//        InputStream resourceReader = resources.openRawResource(id);
-//        Writer writer = new StringWriter();
-//        try {
-//            try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceReader, "UTF-8"))) {
-//                String line = reader.readLine();
-//                while (line != null) {
-//                    writer.write(line);
-//                    line = reader.readLine();
-//                }
-//            }
-//        } catch (Exception e) {
-//            Log.e("ReadJSONResource", "Unhandled exception while using JSONResourceReader", e);
-//        } finally {
-//            try {
-//                resourceReader.close();
-//            } catch (Exception e) {
-//                Log.e("ReadJSONResource", "Unhandled exception while using JSONResourceReader", e);
-//            }
-//        }
-//
-//        return writer.toString();
-//    }
 
     public byte[] getPublicDataKey() throws Exception {
         if (dataKey == null)
