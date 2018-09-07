@@ -4,9 +4,6 @@ import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import com.tangem.data.network.model.CardVerify;
 import com.tangem.data.network.model.CardVerifyBody;
@@ -20,9 +17,6 @@ import com.tangem.domain.BitcoinNodeTestNet;
 import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.TangemCard;
 import com.tangem.util.Util;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -56,6 +50,66 @@ public class ServerApiHelper {
 
     /**
      * HTTP
+     * Estimate fee
+     */
+    public static final int ESTIMATE_FEE_PRIORITY = 2;
+    public static final int ESTIMATE_FEE_NORMAL = 3;
+    public static final int ESTIMATE_FEE_MINIMAL = 6;
+    private EstimateFeeListener estimateFeeListener;
+
+    public interface EstimateFeeListener {
+        void onInfuraEthGasPrice(int blockCount, String estimateFeeResponse);
+    }
+
+    public void setEstimateFee(EstimateFeeListener listener) {
+        estimateFeeListener = listener;
+    }
+
+    public void estimateFee(int blockCount) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(Server.ApiEstimatefee.URL_ESTIMATEFEE)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        EstimatefeeApi estimatefeeApi = retrofit.create(EstimatefeeApi.class);
+
+        Call<String> call;
+        switch (blockCount) {
+            case ESTIMATE_FEE_PRIORITY:
+                call = estimatefeeApi.getEstimateFeePriority();
+                break;
+
+            case ESTIMATE_FEE_NORMAL:
+                call = estimatefeeApi.getEstimateFeeNormal();
+                break;
+
+            case ESTIMATE_FEE_MINIMAL:
+                call = estimatefeeApi.getEstimateFeeMinimal();
+                break;
+
+            default:
+                call = estimatefeeApi.getEstimateFeeNormal();
+        }
+
+        call.enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
+                if (response.code() == 200) {
+                    estimateFeeListener.onInfuraEthGasPrice(blockCount, response.body());
+                    Log.i(TAG, "estimateFee onResponse " + response.code());
+                } else
+                    Log.e(TAG, "estimateFee onResponse " + response.code());
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+                Log.e(TAG, "estimateFee onFailure " + t.getMessage());
+            }
+        });
+    }
+
+    /**
+     * HTTP
      * InfuraEthGasPrice
      */
     private InfuraEthGasPriceBodyListener infuraEthGasPriceBodyListener;
@@ -78,7 +132,7 @@ public class ServerApiHelper {
 
         InfuraEthGasPriceBody infuraEthGasPriceBody = new InfuraEthGasPriceBody(method, id);
 
-        Call<InfuraEthGasPriceResponse> call = infuraApi.ethGasPrice("application/json", infuraEthGasPriceBody);
+        Call<InfuraEthGasPriceResponse> call = infuraApi.ethGasPrice(infuraEthGasPriceBody);
 
         call.enqueue(new Callback<InfuraEthGasPriceResponse>() {
             @Override
@@ -124,7 +178,7 @@ public class ServerApiHelper {
 
         CardVerifyBody cardVerifyBody = new CardVerifyBody(requests);
 
-        Call<CardVerifyResponse> call = tangemApi.getCardVerify("application/json", cardVerifyBody);
+        Call<CardVerifyResponse> call = tangemApi.getCardVerify(cardVerifyBody);
         call.enqueue(new Callback<CardVerifyResponse>() {
             @Override
             public void onResponse(@NonNull Call<CardVerifyResponse> call, @NonNull Response<CardVerifyResponse> response) {
