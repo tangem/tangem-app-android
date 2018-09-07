@@ -56,7 +56,7 @@ public class TangemCard {
         return countConfirmTX;
     }
 
-    public void SetConfirmTXCount(BigInteger count) {
+    public void setConfirmTXCount(BigInteger count) {
         countConfirmTX = count;
     }
 
