@@ -56,7 +56,7 @@ public class ETHRequestTask extends InfuraTask {
                                 LastSignStorage.setLastMessage(sendTransactionActivity.getCard().getWallet(), "");
                                 BigInteger nonce = sendTransactionActivity.getCard().GetConfirmTXCount();
                                 nonce.add(BigInteger.valueOf(1));
-                                sendTransactionActivity.getCard().SetConfirmTXCount(nonce);
+                                sendTransactionActivity.getCard().setConfirmTXCount(nonce);
                                 Log.e("TX_RESULT", hashTX);
                                 sendTransactionActivity.finishWithSuccess();
                             } catch (Exception e) {
