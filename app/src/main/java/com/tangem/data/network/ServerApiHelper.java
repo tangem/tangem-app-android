@@ -113,9 +113,11 @@ public class ServerApiHelper {
      * Infura
      * <p>
      * eth_getBalance
+     * eth_getTransactionCount
      * eth_gasPrice
      */
     public static final String INFURA_ETH_GET_BALANCE = "eth_getBalance";
+    public static final String INFURA_ETH_GET_TRANSACTION_COUNT = "eth_getTransactionCount";
     public static final String INFURA_ETH_GAS_PRICE = "eth_gasPrice";
     private InfuraBodyListener infuraBodyListener;
 
@@ -138,6 +140,7 @@ public class ServerApiHelper {
         InfuraBody infuraBody;
         switch (method) {
             case INFURA_ETH_GET_BALANCE:
+            case INFURA_ETH_GET_TRANSACTION_COUNT:
                 infuraBody = new InfuraBody(method, new String[]{wallet, "latest"}, id);
                 break;
 
@@ -246,11 +249,12 @@ public class ServerApiHelper {
                                 for (RateInfoResponse rateInfoMode : rateInfoModelList) {
                                     if (rateInfoMode.getId().equals(cryptoId)) {
                                         rateInfoDataListener.onRateInfoDataData(rateInfoMode);
-                                        Log.i("rateInfoData", rateInfoMode.getId());
-                                        Log.i("rateInfoData", rateInfoMode.getPriceUsd());
+                                        Log.i(TAG, "rateInfoData " + cryptoId + " onResponse " + "200");
                                     }
                                 }
-                            }
+                            } else
+                                Log.e(TAG, "rateInfoData " + cryptoId + " onResponse " + "Empty");
+
                         },
                         // handle error
                         Throwable::printStackTrace);
@@ -411,7 +415,7 @@ public class ServerApiHelper {
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
-                Log.i(TAG, "LastVersion onResponse " + response.code());
+                Log.i(TAG, "lastVersion onResponse " + response.code());
                 if (response.code() == 200) {
                     String stringResponse;
                     try {
@@ -425,7 +429,7 @@ public class ServerApiHelper {
 
             @Override
             public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
-                Log.e(TAG, "LastVersion onFailure " + t.getMessage());
+                Log.e(TAG, "lastVersion onFailure " + t.getMessage());
             }
         });
 
