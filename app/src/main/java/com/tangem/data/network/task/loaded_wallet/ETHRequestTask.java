@@ -77,7 +77,7 @@ public class ETHRequestTask extends InfuraTask {
                             nonce = nonce.substring(2);
                             BigInteger count = new BigInteger(nonce, 16);
 
-                            loadedWallet.getCard().SetConfirmTXCount(count);
+                            loadedWallet.getCard().setConfirmTXCount(count);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -107,7 +107,7 @@ public class ETHRequestTask extends InfuraTask {
 
                             BigInteger nonce = loadedWallet.getCard().GetConfirmTXCount();
                             nonce.add(BigInteger.valueOf(1));
-                            loadedWallet.getCard().SetConfirmTXCount(nonce);
+                            loadedWallet.getCard().setConfirmTXCount(nonce);
                             Log.e("TX_RESULT", hashTX);
 
                         } catch (Exception e) {
