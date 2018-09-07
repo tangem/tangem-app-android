@@ -197,11 +197,11 @@ public class Cryptonit_OtherAPI {
 
         String signature = calcSignature();
 
-        Log.e("CRYPTONIT", "user: " + userId);
-        Log.e("CRYPTONIT", "key: " + key);
-        Log.e("CRYPTONIT", "secret: " + secret);
-        Log.e("CRYPTONIT", "nonce: " + nonce);
-        Log.e("CRYPTONIT", "signature: " + signature);
+//        Log.e("CRYPTONIT", "user: " + userId);
+//        Log.e("CRYPTONIT", "key: " + key);
+//        Log.e("CRYPTONIT", "secret: " + secret);
+//        Log.e("CRYPTONIT", "nonce: " + nonce);
+//        Log.e("CRYPTONIT", "signature: " + signature);
 
         api.getBalance(cryptoCurrency, fiatCurrency,
                 RequestBody.create(MediaType.parse("text/plain"), key),
@@ -222,12 +222,12 @@ public class Cryptonit_OtherAPI {
 
         String signature = calcSignature();
 
-        Log.e("CRYPTONIT", "user: " + userId);
-        Log.e("CRYPTONIT", "key: " + key);
-        Log.e("CRYPTONIT", "secret: " + secret);
-        Log.e("CRYPTONIT", "nonce: " + nonce);
-        Log.e("CRYPTONIT", "signature: " + signature);
-
+//        Log.e("CRYPTONIT", "user: " + userId);
+//        Log.e("CRYPTONIT", "key: " + key);
+//        Log.e("CRYPTONIT", "secret: " + secret);
+//        Log.e("CRYPTONIT", "nonce: " + nonce);
+//        Log.e("CRYPTONIT", "signature: " + signature);
+//
         api.cryptoWithdrawal(
                 RequestBody.create(MediaType.parse("text/plain"), currency),
                 RequestBody.create(MediaType.parse("text/plain"), amount),
