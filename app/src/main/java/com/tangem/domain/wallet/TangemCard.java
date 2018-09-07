@@ -47,18 +47,6 @@ public class TangemCard {
     private float rate = 0;
     private float rateAlter = 0;
 
-//    public static final int SettingsMask_AllowSwapPIN = 0x0010;
-//    public static final int SettingsMask_IsReusable = 0x0001;
-//    public static final int SettingsMask_UseRecovery = 0x0002;
-//    public static final int SettingsMask_UseBlock = 0x0004;
-//
-//    public static final int SettingsMask_AllowSwapPIN2 = 0x0020;
-//    public static final int SettingsMask_UseCVC = 0x0040;
-//
-//    public static final int SettingsMask_UseOneCommandAtTime = 0x100;
-//    public static final int SettingsMask_UseNDEF = 0x200;
-//    public static final int SettingsMask_UseDynamicNDEF = 0x400;
-
     private BigInteger countConfirmTX = null;
 
     public BigInteger GetConfirmTXCount() {
@@ -93,8 +81,6 @@ public class TangemCard {
     }
 
     public Blockchain getBlockchain() {
-        //TODO: hard fork only for test
-        //return Blockchain.Ethereum;
         return Blockchain.fromId(blockchainID);
     }
 
@@ -126,21 +112,6 @@ public class TangemCard {
 
     public void setBlockchainIDFromCard(String blockchainID) {
 
-        //TODO: ONLY FOR TEST
-
-//        if(Blockchain.fromId(blockchainID) == Blockchain.Bitcoin)
-//        {
-//            this.blockchainID = "BCH";
-//            return;
-//        }
-//
-//        if(Blockchain.fromId(blockchainID) == Blockchain.BitcoinTestNet)
-//        {
-//            this.blockchainID = "BCH/test";
-//            return;
-//        }
-
-
         if (Blockchain.fromId(blockchainID) != Blockchain.Ethereum && Blockchain.fromId(blockchainID) != Blockchain.EthereumTestNet)
             this.blockchainID = blockchainID;
 
@@ -150,8 +121,6 @@ public class TangemCard {
         } else {
             this.blockchainID = blockchainID;
         }
-
-
     }
 
     public void setWalletPublicKey(byte[] publicKey) {

@@ -233,9 +233,9 @@ public class Kraken {
 
         initApi();
 
-        Log.e("kraken", "key: " + key);
-        Log.e("kraken", "secret: " + secret);
-        Log.e("kraken", "nonce: " + nonce);
+//        Log.e("kraken", "key: " + key);
+//        Log.e("kraken", "secret: " + secret);
+//        Log.e("kraken", "nonce: " + nonce);
 
         api.getBalance(nonce.toString())
                 .subscribeOn(Schedulers.io())
