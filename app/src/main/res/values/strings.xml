@@ -92,7 +92,6 @@
     <!-- LoadedWalletActivity, LoadedWallet -->
     <string name="wallet_empty">The wallet is empty</string>
     <string name="no_compatible_wallet">No compatible wallet installed</string>
-    <string name="not_enough_funds">Not enough funds for transaction fee (gas)!</string>
     <string name="please_wait_while_previous">Please wait while previous transaction is confirmed in blockchain</string>
     <string name="please_wait_for_confirmation">Could not obtain all inputs. Swipe down to refresh.</string>
     <string name="card_has_no_remaining_signature">Card has no remaining signature!</string>
@@ -180,7 +179,7 @@
     <string name="cannot_check_balance_no_connection_with_blockchain_nodes">Cannot check balance! No connection with blockchain nodes</string>
     <string name="the_wallet_is_empty">The wallet is empty</string>
     <string name="please_wait_for_confirmation_of_incoming_transaction">Please wait for confirmation of incoming transaction</string>
-    <string name="not_enough_eth_for_transaction_fee">Not enough ETH for transaction fee</string>
+    <string name="not_enough_funds_or_incorrect_amount">Not enough funds or incorrect amount</string>
     <string name="pin_2_is_required_to_sign_the_payment">PIN2 is required to sign the payment</string>
 
     <!-- EmptyWalletActivity -->
