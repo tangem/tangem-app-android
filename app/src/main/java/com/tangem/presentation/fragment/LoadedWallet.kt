@@ -73,6 +73,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private val inactiveColor: ColorStateList by lazy { resources.getColorStateList(R.color.primary) }
     private val activeColor: ColorStateList by lazy { resources.getColorStateList(R.color.colorAccent) }
 
+    private val timerRepeatRefresh = Timer()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         nfcManager = NfcManager(activity, this)
@@ -112,21 +114,23 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         btnExtract.backgroundTintList = inactiveColor
 
-        updateViews()
+//        updateViews()
 
-        if (!card!!.hasBalanceInfo()) {
-            srlLoadedWallet!!.isRefreshing = true
-            srlLoadedWallet!!.postDelayed({ this.refresh() }, 1000)
-        }
+//        if (!card!!.hasBalanceInfo()) {
+//            srlLoadedWallet!!.isRefreshing = true
+//            srlLoadedWallet!!.postDelayed({ refresh() }, 1000)
+//        }
 
-//        requestCardVerify()
+//        repeatRefresh()
+
+        refresh()
 
         startVerify(lastTag)
 
         tvWallet.text = card!!.wallet
 
         // set listeners
-        srlLoadedWallet!!.setOnRefreshListener { this.refresh() }
+        srlLoadedWallet!!.setOnRefreshListener { refresh() }
         btnLookup.setOnClickListener {
             val engineClick = CoinEngineFactory.create(card!!.blockchain)
             val browserIntent = Intent(Intent.ACTION_VIEW, engineClick.getShareWalletUriExplorer(card))
@@ -201,7 +205,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             } else if (!engine.isBalanceNotZero(card))
                 showSingleToast(R.string.wallet_empty)
             else if (!engine.isBalanceAlterNotZero(card))
-                showSingleToast(R.string.not_enough_funds)
+                showSingleToast(R.string.not_enough_funds_or_incorrect_amount)
             else if (engine.awaitingConfirmation(card))
                 showSingleToast(R.string.please_wait_while_previous)
             else if (!engine.checkUnspentTransaction(card))
@@ -249,9 +253,27 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         nfcManager!!.onResume()
     }
 
+    private fun repeatRefresh() {
+        val getBalance = object : TimerTask() {
+            override fun run() {
+                activity!!.runOnUiThread {
+                    refresh()
+//                    Log.i("efgrgegsdfgsd", "repeatRefresh")
+                }
+            }
+        }
+        timerRepeatRefresh.schedule(getBalance, 0, 5000)
+    }
+
     override fun onPause() {
         super.onPause()
         nfcManager!!.onPause()
+
+        try {
+            timerRepeatRefresh.cancel()
+        } catch (e: IllegalStateException) {
+            e.printStackTrace()
+        }
     }
 
     override fun onStop() {
@@ -397,10 +419,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
             REQUEST_CODE_SEND_PAYMENT, REQUEST_CODE_RECEIVE_PAYMENT -> {
                 if (resultCode == Activity.RESULT_OK) {
-                    srlLoadedWallet!!.postDelayed({ this.refresh() }, 10000)
-                    srlLoadedWallet!!.isRefreshing = true
+//                    srlLoadedWallet!!.postDelayed({ refresh() }, 10000)
+//                    srlLoadedWallet!!.isRefreshing = true
                     card!!.clearInfo()
-                    updateViews()
+                    repeatRefresh()
+//                    updateViews()
                 }
 
                 if (data != null && data.extras != null) {
