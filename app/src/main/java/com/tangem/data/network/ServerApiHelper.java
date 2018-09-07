@@ -411,6 +411,7 @@ public class ServerApiHelper {
                 Log.e(TAG, "LastVersion onFailure " + t.getMessage());
             }
         });
+
     }
 
 }
