@@ -240,11 +240,31 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //            Log.i(TAG, "setRateInfoData $rate")
         }
 
-        // request eth get balance listener
+        // request eth get balance, eth get transaction count listener
         serverApiHelper!!.setInfura { method, infuraResponse ->
             if (method == ServerApiHelper.INFURA_ETH_GET_BALANCE) {
+                var balanceCap = infuraResponse.result
+                balanceCap = balanceCap.substring(2)
+                val l = BigInteger(balanceCap, 16)
+                val d = l.divide(BigInteger("1000000000000000000", 10))
+                val balance = d.toLong()
 
-//                Log.i("eth_get_balance", gasPrice)
+                card!!.setBalanceConfirmed(balance)
+                card!!.balanceUnconfirmed = 0L
+                if (card!!.blockchain != Blockchain.Token)
+                    card!!.decimalBalance = l.toString(10)
+                card!!.decimalBalanceAlter = l.toString(10)
+
+//                Log.i("eth_get_balance", balanceCap)
+            }
+
+            if (method == ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT) {
+                var nonce = infuraResponse.result
+                nonce = nonce.substring(2)
+                val count = BigInteger(nonce, 16)
+                card!!.setConfirmTXCount(count)
+
+//                Log.i("eth_getTransactionCount", nonce)
             }
         }
     }
@@ -661,37 +681,48 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         // Ethereum
         else if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet) {
 
-//            requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE)
+            requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE)
+            requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT)
 
-            val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
-            val reqETH = InfuraRequest.GetBalance(card!!.wallet)
-            reqETH.id = 67
-            reqETH.setBlockchain(card!!.blockchain)
+//            val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
 
-            val reqNonce = InfuraRequest.GetOutTransactionCount(card!!.wallet)
-            reqNonce.id = 67
-            reqNonce.setBlockchain(card!!.blockchain)
+//            val reqETH = InfuraRequest.GetBalance(card!!.wallet)
+//            reqETH.id = 67
+//            reqETH.setBlockchain(card!!.blockchain)
 
-            updateETH.execute(reqETH, reqNonce)
+//            val reqNonce = InfuraRequest.GetOutTransactionCount(card!!.wallet)
+//            reqNonce.id = 67
+//            reqNonce.setBlockchain(card!!.blockchain)
+
+//            updateETH.execute(reqETH, reqNonce)
+//            updateETH.execute(reqNonce)
 
             requestRateInfo("ethereum")
         }
 
         // Token
         else if (card!!.blockchain == Blockchain.Token) {
+
             val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
+
             val reqETH = InfuraRequest.GetTokenBalance(card!!.wallet, engine!!.getContractAddress(card), engine.getTokenDecimals(card))
             reqETH.id = 67
             reqETH.setBlockchain(card!!.blockchain)
 
-            val reqBalance = InfuraRequest.GetBalance(card!!.wallet)
-            reqBalance.id = 67
-            reqBalance.setBlockchain(card!!.blockchain)
+            requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE)
 
-            val reqNonce = InfuraRequest.GetOutTransactionCount(card!!.wallet)
-            reqNonce.id = 67
-            reqNonce.setBlockchain(card!!.blockchain)
-            updateETH.execute(reqETH, reqNonce, reqBalance)
+            requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT)
+
+//            val reqBalance = InfuraRequest.GetBalance(card!!.wallet)
+//            reqBalance.id = 67
+//            reqBalance.setBlockchain(card!!.blockchain)
+
+//            val reqNonce = InfuraRequest.GetOutTransactionCount(card!!.wallet)
+//            reqNonce.id = 67
+//            reqNonce.setBlockchain(card!!.blockchain)
+
+//            updateETH.execute(reqETH, reqNonce, reqBalance)
+            updateETH.execute(reqETH)
 
             requestRateInfo("ethereum")
         }
