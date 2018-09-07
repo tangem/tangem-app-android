@@ -8,8 +8,8 @@ import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import com.tangem.data.network.model.CardVerify;
 import com.tangem.data.network.model.CardVerifyBody;
 import com.tangem.data.network.model.CardVerifyResponse;
-import com.tangem.data.network.model.InfuraEthGasPriceBody;
-import com.tangem.data.network.model.InfuraEthGasPriceResponse;
+import com.tangem.data.network.model.InfuraBody;
+import com.tangem.data.network.model.InfuraResponse;
 import com.tangem.data.network.model.RateInfoResponse;
 import com.tangem.data.network.request.ElectrumRequest;
 import com.tangem.domain.BitcoinNode;
@@ -110,19 +110,24 @@ public class ServerApiHelper {
 
     /**
      * HTTP
-     * InfuraEthGasPrice
+     * Infura
+     * <p>
+     * eth_getBalance
+     * eth_gasPrice
      */
-    private InfuraEthGasPriceBodyListener infuraEthGasPriceBodyListener;
+    public static final String INFURA_ETH_GET_BALANCE = "eth_getBalance";
+    public static final String INFURA_ETH_GAS_PRICE = "eth_gasPrice";
+    private InfuraBodyListener infuraBodyListener;
 
-    public interface InfuraEthGasPriceBodyListener {
-        void onInfuraEthGasPrice(InfuraEthGasPriceResponse cardVerifyResponse);
+    public interface InfuraBodyListener {
+        void onInfura(String method, InfuraResponse infuraResponse);
     }
 
-    public void setInfuraEthGasPrice(InfuraEthGasPriceBodyListener listener) {
-        infuraEthGasPriceBodyListener = listener;
+    public void setInfura(InfuraBodyListener listener) {
+        infuraBodyListener = listener;
     }
 
-    public void infuraEthGasPrice(String method, int id) {
+    public void infura(String method, int id, String wallet) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(Server.ApiInfura.URL_INFURA)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -130,23 +135,35 @@ public class ServerApiHelper {
 
         InfuraApi infuraApi = retrofit.create(InfuraApi.class);
 
-        InfuraEthGasPriceBody infuraEthGasPriceBody = new InfuraEthGasPriceBody(method, id);
+        InfuraBody infuraBody;
+        switch (method) {
+            case INFURA_ETH_GET_BALANCE:
+                infuraBody = new InfuraBody(method, new String[]{wallet, "latest"}, id);
+                break;
 
-        Call<InfuraEthGasPriceResponse> call = infuraApi.ethGasPrice(infuraEthGasPriceBody);
+            case INFURA_ETH_GAS_PRICE:
+                infuraBody = new InfuraBody(method, id);
+                break;
 
-        call.enqueue(new Callback<InfuraEthGasPriceResponse>() {
+            default:
+                infuraBody = new InfuraBody();
+        }
+
+        Call<InfuraResponse> call = infuraApi.infura(infuraBody);
+
+        call.enqueue(new Callback<InfuraResponse>() {
             @Override
-            public void onResponse(@NonNull Call<InfuraEthGasPriceResponse> call, @NonNull Response<InfuraEthGasPriceResponse> response) {
+            public void onResponse(@NonNull Call<InfuraResponse> call, @NonNull Response<InfuraResponse> response) {
                 if (response.code() == 200) {
-                    infuraEthGasPriceBodyListener.onInfuraEthGasPrice(response.body());
-                    Log.i(TAG, "infuraEthGasPrice onResponse " + response.code());
+                    infuraBodyListener.onInfura(method, response.body());
+                    Log.i(TAG, "infura " + method + " onResponse " + response.code());
                 } else
-                    Log.e(TAG, "infuraEthGasPrice onResponse " + response.code());
+                    Log.e(TAG, "infura " + method + " onResponse " + response.code());
             }
 
             @Override
-            public void onFailure(@NonNull Call<InfuraEthGasPriceResponse> call, @NonNull Throwable t) {
-                Log.e(TAG, "infuraEthGasPrice onFailure " + t.getMessage());
+            public void onFailure(@NonNull Call<InfuraResponse> call, @NonNull Throwable t) {
+                Log.e(TAG, "infura " + method + " onFailure " + t.getMessage());
             }
         });
     }
