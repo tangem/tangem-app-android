@@ -114,10 +114,12 @@ public class ServerApiHelper {
      * <p>
      * eth_getBalance
      * eth_getTransactionCount
+     * eth_call
      * eth_gasPrice
      */
     public static final String INFURA_ETH_GET_BALANCE = "eth_getBalance";
     public static final String INFURA_ETH_GET_TRANSACTION_COUNT = "eth_getTransactionCount";
+    public static final String INFURA_ETH_CALL = "eth_call";
     public static final String INFURA_ETH_GAS_PRICE = "eth_gasPrice";
     private InfuraBodyListener infuraBodyListener;
 
@@ -129,7 +131,7 @@ public class ServerApiHelper {
         infuraBodyListener = listener;
     }
 
-    public void infura(String method, int id, String wallet) {
+    public void infura(String method, int id, String wallet, String contract) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(Server.ApiInfura.URL_INFURA)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -142,6 +144,11 @@ public class ServerApiHelper {
             case INFURA_ETH_GET_BALANCE:
             case INFURA_ETH_GET_TRANSACTION_COUNT:
                 infuraBody = new InfuraBody(method, new String[]{wallet, "latest"}, id);
+                break;
+
+            case INFURA_ETH_CALL:
+                String address = wallet.substring(2);
+                infuraBody = new InfuraBody(method, new Object[]{new InfuraBody.EthCallParams("0x70a08231000000000000000000000000" + address, contract), "latest"}, id);
                 break;
 
             case INFURA_ETH_GAS_PRICE:
