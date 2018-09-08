@@ -4,6 +4,8 @@ package com.tangem.data.network.request;
  * Created by Ilia on 19.12.2017.
  */
 
+import android.util.Log;
+
 import com.tangem.domain.wallet.Blockchain;
 
 import org.json.JSONArray;
@@ -102,6 +104,10 @@ public class InfuraRequest {
             String address = wallet.substring(2);
             String dataValue = String.format("{\"data\": \"0x70a08231000000000000000000000000%s\", \"to\": \"%s\"}", address, contract);
             request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_ETH_Call + "\", \"params\":[" + dataValue + ", \"latest\"] }");
+
+            Log.i("swdwd", request.jsRequestData.toString());
+            Log.i("swdwd + address", address);
+            Log.i("swdwd + contract", contract);
         } catch (JSONException e) {
             e.printStackTrace();
             request.error = e.toString();
