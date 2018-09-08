@@ -266,11 +266,35 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
 //                Log.i("eth_getTransactionCount", nonce)
             }
+
+            if (method == ServerApiHelper.INFURA_ETH_CALL) {
+                var balanceCap = infuraResponse.result
+                balanceCap = balanceCap.substring(2)
+                val l = BigInteger(balanceCap, 16)
+                val balance = l.toLong()
+
+                if (l.compareTo(BigInteger.ZERO) == 0) {
+                    card!!.blockchainID = Blockchain.Ethereum.id
+                    card!!.addTokenToBlockchainName()
+                    srlLoadedWallet!!.isRefreshing = false
+//                   refresh()
+                    return@setInfura
+                }
+
+                card!!.setBalanceConfirmed(balance)
+                card!!.balanceUnconfirmed = 0L
+                card!!.decimalBalance = l.toString(10)
+
+//                Log.i("eth_call", balanceCap)
+
+            }
+
+            updateViews()
         }
     }
 
-    private fun requestInfura(method: String) {
-        serverApiHelper!!.infura(method, 67, card!!.wallet)
+    private fun requestInfura(method: String, contract: String) {
+        serverApiHelper!!.infura(method, 67, card!!.wallet, contract)
     }
 
     private fun requestCardVerify() {
@@ -681,8 +705,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         // Ethereum
         else if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet) {
 
-            requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE)
-            requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT)
+            requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
+            requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
 
 //            val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
 
@@ -703,15 +727,15 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         // Token
         else if (card!!.blockchain == Blockchain.Token) {
 
-            val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
+//            val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
+//
+//            val reqETH = InfuraRequest.GetTokenBalance(card!!.wallet, engine!!.getContractAddress(card), engine.getTokenDecimals(card))
+//            reqETH.id = 67
+//            reqETH.setBlockchain(card!!.blockchain)
 
-            val reqETH = InfuraRequest.GetTokenBalance(card!!.wallet, engine!!.getContractAddress(card), engine.getTokenDecimals(card))
-            reqETH.id = 67
-            reqETH.setBlockchain(card!!.blockchain)
-
-            requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE)
-
-            requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT)
+            requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
+            requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
+            requestInfura(ServerApiHelper.INFURA_ETH_CALL, engine.getContractAddress(card))
 
 //            val reqBalance = InfuraRequest.GetBalance(card!!.wallet)
 //            reqBalance.id = 67
@@ -722,15 +746,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //            reqNonce.setBlockchain(card!!.blockchain)
 
 //            updateETH.execute(reqETH, reqNonce, reqBalance)
-            updateETH.execute(reqETH)
+//            updateETH.execute(reqETH)
 
             requestRateInfo("ethereum")
         }
 
         if (needResendTX)
             sendTransaction(LastSignStorage.getTxForSend(card!!.wallet))
-
-//        requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE)
 
 
     }
