@@ -105,7 +105,8 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet || card!!.blockchain == Blockchain.Token) {
             rgFee!!.isEnabled = false
-            serverApiHelper!!.infura(ServerApiHelper.INFURA_ETH_GAS_PRICE, 67, card!!.wallet, "")
+
+            requestInfura(ServerApiHelper.INFURA_ETH_GAS_PRICE)
 
         } else {
             rgFee!!.isEnabled = true
@@ -266,6 +267,10 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 }
             }
         }
+    }
+
+    private fun requestInfura(method: String) {
+        serverApiHelper!!.infura(method, 67, card!!.wallet, "", "")
     }
 
     public override fun onResume() {
