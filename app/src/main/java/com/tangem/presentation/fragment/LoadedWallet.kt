@@ -40,6 +40,7 @@ import com.tangem.util.UtilHelper
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
+import org.json.JSONException
 import java.math.BigInteger
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
@@ -272,7 +273,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 balanceCap = balanceCap.substring(2)
                 val l = BigInteger(balanceCap, 16)
                 val balance = l.toLong()
-
                 if (l.compareTo(BigInteger.ZERO) == 0) {
                     card!!.blockchainID = Blockchain.Ethereum.id
                     card!!.addTokenToBlockchainName()
@@ -280,13 +280,43 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //                   refresh()
                     return@setInfura
                 }
-
                 card!!.setBalanceConfirmed(balance)
                 card!!.balanceUnconfirmed = 0L
                 card!!.decimalBalance = l.toString(10)
 
 //                Log.i("eth_call", balanceCap)
+            }
 
+            if (method == ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION) {
+//                try {
+//                    var hashTX: String
+//                    try {
+//                        val tmp = request.getResultString()
+//                        hashTX = tmp
+//                    } catch (e: JSONException) {
+//                        val msg = request.getAnswer()
+//                        val err = msg!!.getJSONObject("error")
+//                        hashTX = err.getString("message")
+//                        LastSignStorage.setLastMessage(card!!.wallet, hashTX)
+//                        return@setInfura
+//                    }
+//
+//                    if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
+//                        hashTX = hashTX.substring(2)
+//                    }
+//                    LastSignStorage.setTxWasSend(card!!.wallet)
+//                    LastSignStorage.setLastMessage(card!!.wallet, "")
+//                    Log.e("TX_RESULT", hashTX)
+//
+//
+//                    val nonce = card!!.GetConfirmTXCount()
+//                    nonce.add(BigInteger.valueOf(1))
+//                    card!!.setConfirmTXCount(nonce)
+//                    Log.e("TX_RESULT", hashTX)
+//
+//                } catch (e: Exception) {
+//                    e.printStackTrace()
+//                }
             }
 
             updateViews()
@@ -294,7 +324,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     private fun requestInfura(method: String, contract: String) {
-        serverApiHelper!!.infura(method, 67, card!!.wallet, contract)
+        serverApiHelper!!.infura(method, 67, card!!.wallet, contract, LastSignStorage.getTxForSend(card!!.wallet))
     }
 
     private fun requestCardVerify() {
@@ -704,22 +734,20 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         // Ethereum
         else if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet) {
-
-            requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
-            requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
-
 //            val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
-
+//
 //            val reqETH = InfuraRequest.GetBalance(card!!.wallet)
 //            reqETH.id = 67
 //            reqETH.setBlockchain(card!!.blockchain)
-
+//
 //            val reqNonce = InfuraRequest.GetOutTransactionCount(card!!.wallet)
 //            reqNonce.id = 67
 //            reqNonce.setBlockchain(card!!.blockchain)
-
+//
 //            updateETH.execute(reqETH, reqNonce)
-//            updateETH.execute(reqNonce)
+
+            requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
+            requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
 
             requestRateInfo("ethereum")
         }
@@ -732,28 +760,26 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //            val reqETH = InfuraRequest.GetTokenBalance(card!!.wallet, engine!!.getContractAddress(card), engine.getTokenDecimals(card))
 //            reqETH.id = 67
 //            reqETH.setBlockchain(card!!.blockchain)
+//
+//            val reqBalance = InfuraRequest.GetBalance(card!!.wallet)
+//            reqBalance.id = 67
+//            reqBalance.setBlockchain(card!!.blockchain)
+//
+//            val reqNonce = InfuraRequest.GetOutTransactionCount(card!!.wallet)
+//            reqNonce.id = 67
+//            reqNonce.setBlockchain(card!!.blockchain)
+//
+//            updateETH.execute(reqETH, reqNonce, reqBalance)
 
             requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
             requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
             requestInfura(ServerApiHelper.INFURA_ETH_CALL, engine.getContractAddress(card))
-
-//            val reqBalance = InfuraRequest.GetBalance(card!!.wallet)
-//            reqBalance.id = 67
-//            reqBalance.setBlockchain(card!!.blockchain)
-
-//            val reqNonce = InfuraRequest.GetOutTransactionCount(card!!.wallet)
-//            reqNonce.id = 67
-//            reqNonce.setBlockchain(card!!.blockchain)
-
-//            updateETH.execute(reqETH, reqNonce, reqBalance)
-//            updateETH.execute(reqETH)
 
             requestRateInfo("ethereum")
         }
 
         if (needResendTX)
             sendTransaction(LastSignStorage.getTxForSend(card!!.wallet))
-
 
     }
 
@@ -840,6 +866,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             req.id = 67
             req.setBlockchain(card!!.blockchain)
             task.execute(req)
+
+//            requestInfura(ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION, "")
+
         } else if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
             val nodeAddress = engine!!.getNode(card)
             val nodePort = engine.getNodePort(card)
