@@ -14,6 +14,7 @@ public class InfuraBody {
         this.id = id;
     }
 
+    // body for eth getBalance, eth getTransactionCount, eth sendRawTransaction
     public InfuraBody(String method, String[] params, int id) {
         this.method = method;
         this.params = params;
@@ -36,4 +37,5 @@ public class InfuraBody {
             this.to = to;
         }
     }
+
 }
