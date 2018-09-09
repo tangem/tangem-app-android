@@ -14,9 +14,16 @@ import com.tangem.data.network.task.send_transaction.ETHRequestTask
 import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemCard
+import com.tangem.presentation.fragment.LoadedWallet
 import com.tangem.wallet.R
 
 class SendTransactionActivity : AppCompatActivity() {
+
+    companion object {
+        const val EXTRA_UID: String = "UID"
+        const val EXTRA_CARD: String = "Card"
+        const val EXTRA_TX: String = "TX"
+    }
 
     var card: TangemCard? = null
     private var tx: String? = null
@@ -31,9 +38,9 @@ class SendTransactionActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.progressBar)
 
         val intent = intent
-        card = TangemCard(getIntent().getStringExtra("UID"))
-        card!!.loadFromBundle(intent.extras!!.getBundle("Card"))
-        tx = intent.getStringExtra("TX")
+        card = TangemCard(getIntent().getStringExtra(EXTRA_UID))
+        card!!.loadFromBundle(intent.extras!!.getBundle(EXTRA_CARD))
+        tx = intent.getStringExtra(EXTRA_TX)
 
         val engine = CoinEngineFactory.create(card!!.blockchain)
         if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet || card!!.blockchain == Blockchain.Token) {
