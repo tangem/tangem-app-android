@@ -1,15 +1,20 @@
 package com.tangem.presentation.activity
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.PopupMenu
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -44,6 +49,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         private const val REQUEST_CODE_SEND_EMAIL = 3
         private const val REQUEST_CODE_ENTER_PIN_ACTIVITY = 2
         private const val REQUEST_CODE_SHOW_CARD_ACTIVITY = 1
+        private const val REQUEST_CODE_REQUEST_CAMERA_PERMISSIONS = 3
 
         const val EXTRA_LAST_DISCOVERED_TAG = "extra_last_tag"
 
@@ -86,6 +92,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         nfcManager = NfcManager(this, this)
+        verifyPermissions()
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_NOSENSOR
 
@@ -150,26 +157,34 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         }
 
         val apiHelper = ServerApiHelper()
-        apiHelper.setLastVersionListener {
-            response->
-            if(response!! != BuildConfig.VERSION_NAME) Toast.makeText(this, "There is a new application version: "+response.toString(),Toast.LENGTH_LONG).show()
+        apiHelper.setLastVersionListener { response ->
+            if (response!! != BuildConfig.VERSION_NAME) Toast.makeText(this, "There is a new application version: " + response.toString(), Toast.LENGTH_LONG).show()
         }
         apiHelper.requestLastVersion()
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == REQUEST_CODE_SEND_EMAIL) {
-            if (zipFile != null) {
-                zipFile!!.delete()
-                zipFile = null
-            }
+    fun verifyPermissions() {
+        NfcManager.verifyPermissions(this)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            Log.e("QRScanActivity", "User hasn't granted permission to use camera")
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), REQUEST_CODE_REQUEST_CAMERA_PERMISSIONS)
         }
+    }
 
-        if (requestCode == REQUEST_CODE_ENTER_PIN_ACTIVITY) {
-            if (resultCode == Activity.RESULT_OK && lastTag != null)
-                onTagDiscovered(lastTag!!)
-            else
-                ReadCardInfoTask.resetLastReadInfo()
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        when (requestCode) {
+            REQUEST_CODE_SEND_EMAIL -> {
+                if (zipFile != null) {
+                    zipFile!!.delete()
+                    zipFile = null
+                }
+            }
+            REQUEST_CODE_ENTER_PIN_ACTIVITY -> {
+                if (resultCode == Activity.RESULT_OK && lastTag != null)
+                    onTagDiscovered(lastTag!!)
+                else
+                    ReadCardInfoTask.resetLastReadInfo()
+            }
         }
         super.onActivityResult(requestCode, resultCode, data)
     }
