@@ -284,6 +284,7 @@
                 android:fontFamily="@font/maax"
                 android:hint="@string/enter_amount"
                 android:inputType="numberDecimal"
+                android:imeOptions="actionDone"
                 android:padding="12dp"
                 android:textColor="@color/colorPrimaryDark"
                 android:textSize="@dimen/text_size_large"
