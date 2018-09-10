@@ -23,6 +23,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import com.google.zxing.WriterException
 import com.tangem.data.network.ServerApiHelper
+import com.tangem.data.network.model.InfuraResponse
 import com.tangem.data.network.request.ElectrumRequest
 import com.tangem.data.network.request.InfuraRequest
 import com.tangem.data.network.task.loaded_wallet.ETHRequestTask
@@ -116,15 +117,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
 
         btnExtract.backgroundTintList = inactiveColor
-
-//        updateViews()
-
-//        if (!card!!.hasBalanceInfo()) {
-//            srlLoadedWallet!!.isRefreshing = true
-//            srlLoadedWallet!!.postDelayed({ refresh() }, 1000)
-//        }
-
-//        repeatRefresh()
 
         refresh()
 
@@ -241,86 +233,102 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //            Log.i(TAG, "setRateInfoData $rate")
         }
 
-        // request eth get balance, eth get transaction count listener
-        serverApiHelper!!.setInfura { method, infuraResponse ->
-            if (method == ServerApiHelper.INFURA_ETH_GET_BALANCE) {
-                var balanceCap = infuraResponse.result
-                balanceCap = balanceCap.substring(2)
-                val l = BigInteger(balanceCap, 16)
-                val d = l.divide(BigInteger("1000000000000000000", 10))
-                val balance = d.toLong()
+        // request eth get balance, eth get transaction count, eth call, eth sendRawTransaction listener
+        val infuraBodyListener: ServerApiHelper.InfuraBodyListener = object : ServerApiHelper.InfuraBodyListener {
+            override fun onInfuraSuccess(method: String, infuraResponse: InfuraResponse) {
+                when (method) {
+                    ServerApiHelper.INFURA_ETH_GET_BALANCE -> {
+                        var balanceCap = infuraResponse.result
+                        balanceCap = balanceCap.substring(2)
+                        val l = BigInteger(balanceCap, 16)
+                        val d = l.divide(BigInteger("1000000000000000000", 10))
+                        val balance = d.toLong()
 
-                card!!.setBalanceConfirmed(balance)
-                card!!.balanceUnconfirmed = 0L
-                if (card!!.blockchain != Blockchain.Token)
-                    card!!.decimalBalance = l.toString(10)
-                card!!.decimalBalanceAlter = l.toString(10)
+                        card!!.setBalanceConfirmed(balance)
+                        card!!.balanceUnconfirmed = 0L
+                        if (card!!.blockchain != Blockchain.Token)
+                            card!!.decimalBalance = l.toString(10)
+                        card!!.decimalBalanceAlter = l.toString(10)
 
-//                Log.i("eth_get_balance", balanceCap)
-            }
+                        Log.i("$TAG eth_get_balance", balanceCap)
+                    }
 
-            if (method == ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT) {
-                var nonce = infuraResponse.result
-                nonce = nonce.substring(2)
-                val count = BigInteger(nonce, 16)
-                card!!.setConfirmTXCount(count)
+                    ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT -> {
+                        var nonce = infuraResponse.result
+                        nonce = nonce.substring(2)
+                        val count = BigInteger(nonce, 16)
+                        card!!.setConfirmTXCount(count)
 
-//                Log.i("eth_getTransactionCount", nonce)
-            }
+                        Log.i("$TAG eth_getTransCount", nonce)
+                    }
 
-            if (method == ServerApiHelper.INFURA_ETH_CALL) {
-                var balanceCap = infuraResponse.result
-                balanceCap = balanceCap.substring(2)
-                val l = BigInteger(balanceCap, 16)
-                val balance = l.toLong()
-                if (l.compareTo(BigInteger.ZERO) == 0) {
-                    card!!.blockchainID = Blockchain.Ethereum.id
-                    card!!.addTokenToBlockchainName()
-                    srlLoadedWallet!!.isRefreshing = false
-//                   refresh()
-                    return@setInfura
-                }
-                card!!.setBalanceConfirmed(balance)
-                card!!.balanceUnconfirmed = 0L
-                card!!.decimalBalance = l.toString(10)
+                    ServerApiHelper.INFURA_ETH_CALL -> {
+                        var balanceCap = infuraResponse.result
+                        balanceCap = balanceCap.substring(2)
+                        val l = BigInteger(balanceCap, 16)
+                        val balance = l.toLong()
+                        if (l.compareTo(BigInteger.ZERO) == 0) {
+                            card!!.blockchainID = Blockchain.Ethereum.id
+                            card!!.addTokenToBlockchainName()
+                            srlLoadedWallet!!.isRefreshing = false
+//                            refresh()
+                            return@onInfuraSuccess
+                        }
+                        card!!.setBalanceConfirmed(balance)
+                        card!!.balanceUnconfirmed = 0L
+                        card!!.decimalBalance = l.toString(10)
 
-//                Log.i("eth_call", balanceCap)
-            }
+                        Log.i("$TAG eth_call", balanceCap)
+                    }
 
-            if (method == ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION) {
-//                try {
-//                    var hashTX: String
-//                    try {
-//                        val tmp = request.getResultString()
-//                        hashTX = tmp
-//                    } catch (e: JSONException) {
+                    ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION -> {
+                        try {
+                            var hashTX: String
+                            try {
+                                val tmp = infuraResponse.result
+                                hashTX = tmp
+                            } catch (e: JSONException) {
 //                        val msg = request.getAnswer()
 //                        val err = msg!!.getJSONObject("error")
 //                        hashTX = err.getString("message")
 //                        LastSignStorage.setLastMessage(card!!.wallet, hashTX)
-//                        return@setInfura
-//                    }
-//
-//                    if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
-//                        hashTX = hashTX.substring(2)
-//                    }
-//                    LastSignStorage.setTxWasSend(card!!.wallet)
-//                    LastSignStorage.setLastMessage(card!!.wallet, "")
-//                    Log.e("TX_RESULT", hashTX)
-//
-//
-//                    val nonce = card!!.GetConfirmTXCount()
-//                    nonce.add(BigInteger.valueOf(1))
-//                    card!!.setConfirmTXCount(nonce)
-//                    Log.e("TX_RESULT", hashTX)
-//
-//                } catch (e: Exception) {
-//                    e.printStackTrace()
-//                }
+                                return@onInfuraSuccess
+                            }
+
+                            if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
+                                hashTX = hashTX.substring(2)
+                            }
+                            val bigInt = BigInteger(hashTX, 16) //TODO: очень плохой способ
+                            LastSignStorage.setTxWasSend(card!!.wallet)
+                            LastSignStorage.setLastMessage(card!!.wallet, "")
+
+                            Log.e("$TAG TX_RESULT", hashTX)
+
+                            val nonce = card!!.GetConfirmTXCount()
+                            nonce.add(BigInteger.valueOf(1))
+                            card!!.setConfirmTXCount(nonce)
+
+                            Log.e("$TAG TX_RESULT", hashTX)
+
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+
+                    else -> {
+
+                    }
+                }
+
+                updateViews()
             }
 
-            updateViews()
+            override fun onInfuraFail(method: String, message: String) {
+
+            }
         }
+
+        serverApiHelper!!.setInfuraResponse(infuraBodyListener)
     }
 
     private fun requestInfura(method: String, contract: String) {
@@ -861,13 +869,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private fun sendTransaction(tx: String) {
         val engine = CoinEngineFactory.create(card!!.blockchain)
         if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet || card!!.blockchain == Blockchain.Token) {
-            val task = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
-            val req = InfuraRequest.SendTransaction(card!!.wallet, tx)
-            req.id = 67
-            req.setBlockchain(card!!.blockchain)
-            task.execute(req)
+//            val task = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
+//            val req = InfuraRequest.SendTransaction(card!!.wallet, tx)
+//            req.id = 67
+//            req.setBlockchain(card!!.blockchain)
+//            task.execute(req)
 
-//            requestInfura(ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION, "")
+            requestInfura(ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION, "")
 
         } else if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
             val nodeAddress = engine!!.getNode(card)
