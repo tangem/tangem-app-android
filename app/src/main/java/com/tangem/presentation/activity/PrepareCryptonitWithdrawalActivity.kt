@@ -1,6 +1,7 @@
 package com.tangem.presentation.activity
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.Color
 import android.nfc.NfcAdapter
 import android.nfc.Tag
@@ -8,6 +9,8 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.text.InputFilter
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import com.tangem.data.network.Cryptonit
 import com.tangem.domain.cardReader.NfcManager
@@ -18,6 +21,7 @@ import com.tangem.util.DecimalDigitsInputFilter
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_cryptonit_withdrawal.*
 import java.io.IOException
+
 
 class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
@@ -71,6 +75,15 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         tvFeeCurrency.text = tvCurrency.text
 
         etAmount.setText(engine.convertByteArrayToAmount(card!!, card!!.denomination))
+        etAmount.setOnEditorActionListener{lv,actionId,event->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                val imm = lv.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(lv.windowToken, 0)
+                true
+            }else {
+                false
+            }
+        }
         when (card!!.blockchain) {
             Blockchain.Bitcoin -> {
                 etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(5))
