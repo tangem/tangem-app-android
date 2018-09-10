@@ -3,6 +3,7 @@ package com.tangem.presentation.activity
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Color
@@ -12,6 +13,8 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.text.InputFilter
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import com.tangem.data.network.Kraken
 import com.tangem.domain.cardReader.NfcManager
@@ -86,6 +89,17 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
             Blockchain.Ethereum ->
                 etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(18))
             else -> {
+            }
+        }
+
+        etAmount.setOnEditorActionListener{lv,actionId,event->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                val imm = lv.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(lv.windowToken, 0)
+                lv.clearFocus()
+                true
+            }else {
+                false
             }
         }
 
@@ -258,8 +272,8 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
             when (requestCode) {
                 REQUEST_CODE_SCAN_QR -> {
                     val uri = URI(data.getStringExtra("QRCode"))
-                    var query = uri.query
-                    var params = query.split("&")
+                    val query = uri.query
+                    val params = query.split("&")
                     for (param in params) {
                         if (param.startsWith("key=")) kraken!!.key = param.substring(4)
                         else if (param.startsWith("secret=")) kraken!!.secret = param.substring(7)
