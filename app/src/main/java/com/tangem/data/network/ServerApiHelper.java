@@ -123,13 +123,16 @@ public class ServerApiHelper {
     public static final String INFURA_ETH_CALL = "eth_call";
     public static final String INFURA_ETH_SEND_RAW_TRANSACTION = "eth_sendRawTransaction";
     public static final String INFURA_ETH_GAS_PRICE = "eth_gasPrice";
+
     private InfuraBodyListener infuraBodyListener;
 
     public interface InfuraBodyListener {
-        void onInfura(String method, InfuraResponse infuraResponse);
+        void onInfuraSuccess(String method, InfuraResponse infuraResponse);
+
+        void onInfuraFail(String method, String message);
     }
 
-    public void setInfura(InfuraBodyListener listener) {
+    public void setInfuraResponse(InfuraBodyListener listener) {
         infuraBodyListener = listener;
     }
 
@@ -166,19 +169,21 @@ public class ServerApiHelper {
         }
 
         Call<InfuraResponse> call = infuraApi.infura(infuraBody);
-
         call.enqueue(new Callback<InfuraResponse>() {
             @Override
             public void onResponse(@NonNull Call<InfuraResponse> call, @NonNull Response<InfuraResponse> response) {
                 if (response.code() == 200) {
-                    infuraBodyListener.onInfura(method, response.body());
+                    infuraBodyListener.onInfuraSuccess(method, response.body());
                     Log.i(TAG, "infura " + method + " onResponse " + response.code());
-                } else
+                } else {
+                    infuraBodyListener.onInfuraFail(method, String.valueOf(response.code()));
                     Log.e(TAG, "infura " + method + " onResponse " + response.code());
+                }
             }
 
             @Override
             public void onFailure(@NonNull Call<InfuraResponse> call, @NonNull Throwable t) {
+                infuraBodyListener.onInfuraFail(method, String.valueOf(t.getMessage()));
                 Log.e(TAG, "infura " + method + " onFailure " + t.getMessage());
             }
         });
