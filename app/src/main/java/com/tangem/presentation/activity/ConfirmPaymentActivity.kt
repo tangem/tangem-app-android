@@ -15,6 +15,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.*
 import com.tangem.data.network.ServerApiHelper
+import com.tangem.data.network.model.InfuraResponse
 import com.tangem.data.network.request.ElectrumRequest
 import com.tangem.data.network.request.FeeRequest
 import com.tangem.data.network.task.confirm_payment.ConnectFeeTask
@@ -223,33 +224,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
         }
 
-        // request eth gas price listener
-        serverApiHelper!!.setInfura { method, infuraResponse ->
-            if (method == ServerApiHelper.INFURA_ETH_GAS_PRICE) {
-                var gasPrice = infuraResponse.result
-                gasPrice = gasPrice.substring(2)
-                var l = BigInteger(gasPrice, 16)
 
-                val m = if (card!!.blockchain == Blockchain.Token) BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
-                l = l.multiply(m)
-                val minFeeInGwei = card!!.getAmountInGwei(l.toString())
-                val normalFeeInGwei = card!!.getAmountInGwei(l.multiply(BigInteger.valueOf(12)).divide(BigInteger.valueOf(10)).toString())
-                val maxFeeInGwei = card!!.getAmountInGwei(l.multiply(BigInteger.valueOf(15)).divide(BigInteger.valueOf(10)).toString())
-
-                minFee = minFeeInGwei
-                normalFee = normalFeeInGwei
-                maxFee = maxFeeInGwei
-                etFee!!.setText(normalFeeInGwei)
-                etFee!!.error = null
-                btnSend!!.visibility = View.VISIBLE
-                feeRequestSuccess = true
-                balanceRequestSuccess = true
-                dtVerified = Date()
-                minFeeInInternalUnits = card!!.internalUnitsFromString(normalFeeInGwei)
-
-//                Log.i("eth_gas_price", gasPrice)
-            }
-        }
 
         // request estimate fee listener
         serverApiHelper!!.setEstimateFee { blockCount, estimateFeeResponse ->
@@ -267,6 +242,56 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 }
             }
         }
+
+        // request eth gasPrice listener
+        val infuraBodyListener: ServerApiHelper.InfuraBodyListener = object : ServerApiHelper.InfuraBodyListener {
+            override fun onInfuraSuccess(method: String, infuraResponse: InfuraResponse) {
+                when (method) {
+                    ServerApiHelper.INFURA_ETH_GAS_PRICE -> {
+                        var gasPrice = infuraResponse.result
+                        gasPrice = gasPrice.substring(2)
+                        var l = BigInteger(gasPrice, 16)
+
+                        val m = if (card!!.blockchain == Blockchain.Token) BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
+                        l = l.multiply(m)
+                        val minFeeInGwei = card!!.getAmountInGwei(l.toString())
+                        val normalFeeInGwei = card!!.getAmountInGwei(l.multiply(BigInteger.valueOf(12)).divide(BigInteger.valueOf(10)).toString())
+                        val maxFeeInGwei = card!!.getAmountInGwei(l.multiply(BigInteger.valueOf(15)).divide(BigInteger.valueOf(10)).toString())
+
+                        minFee = minFeeInGwei
+                        normalFee = normalFeeInGwei
+                        maxFee = maxFeeInGwei
+                        etFee!!.setText(normalFeeInGwei)
+                        etFee!!.error = null
+                        btnSend!!.visibility = View.VISIBLE
+                        feeRequestSuccess = true
+                        balanceRequestSuccess = true
+                        dtVerified = Date()
+                        minFeeInInternalUnits = card!!.internalUnitsFromString(normalFeeInGwei)
+
+                        Log.i("eth_gas_price", gasPrice)
+                    }
+
+                    else -> {
+
+                    }
+                }
+            }
+
+            override fun onInfuraFail(method: String, message: String) {
+                when (method) {
+                    ServerApiHelper.INFURA_ETH_GAS_PRICE -> {
+
+                    }
+
+                    else -> {
+
+                    }
+                }
+            }
+        }
+
+        serverApiHelper!!.setInfuraResponse(infuraBodyListener)
     }
 
     private fun requestInfura(method: String) {
