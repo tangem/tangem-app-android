@@ -438,6 +438,7 @@ public class BtcEngine extends CoinEngine {
 
     @Override
     public String convertByteArrayToAmount(TangemCard mCard, byte[] bytes) throws Exception {
+        if( bytes==null ) return "";
         byte[] reversed = new byte[bytes.length];
         for (int i = 0; i < bytes.length; i++) reversed[i] = bytes[bytes.length - i - 1];
         return FormatUtil.DoubleToString(1000.0 * mCard.AmountFromInternalUnits(Util.byteArrayToLong(reversed)));
