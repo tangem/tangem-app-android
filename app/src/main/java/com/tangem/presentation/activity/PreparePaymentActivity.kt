@@ -2,6 +2,7 @@ package com.tangem.presentation.activity
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
@@ -9,9 +10,9 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.text.Html
 import android.text.InputFilter
-import android.util.Log
 import android.view.View
-import android.widget.Toast
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
@@ -99,6 +100,18 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         if (card!!.blockchain == Blockchain.Ethereum)
             etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(18))
 
+
+        etAmount.setOnEditorActionListener { lv, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                val imm = lv.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(lv.windowToken, 0)
+                lv.clearFocus()
+                true
+            } else {
+                false
+            }
+        }
+
         // set listeners
         btnVerify.setOnClickListener {
             val strAmount: String = etAmount.text.toString().replace(",", ".")
@@ -167,9 +180,24 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE_SCAN_QR && resultCode == Activity.RESULT_OK && data != null && data.extras!!.containsKey("QRCode")) {
             var code = data.getStringExtra("QRCode")
-            if (code.contains("bitcoin:")) {
-                val tmp = code.split("bitcoin:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                code = tmp[1]
+            when (card!!.blockchain) {
+                Blockchain.Bitcoin -> {
+                    if (code.contains("bitcoin:")) {
+                        val tmp = code.split("bitcoin:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                        code = tmp[1]
+                    }
+                }
+                Blockchain.Ethereum -> {
+                    if (code.contains("ethereum:")) {
+                        val tmp = code.split("ethereum:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                        code = tmp[1]
+                    } else if (code.contains("blockchain:")) {
+                        val tmp = code.split("blockchain:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                        code = tmp[1]
+                    }
+                }
+                else -> {
+                }
             }
             etWallet!!.setText(code)
         } else if (requestCode == REQUEST_CODE_SEND_PAYMENT) {
