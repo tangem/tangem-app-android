@@ -187,7 +187,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         code = tmp[1]
                     }
                 }
-                Blockchain.Ethereum -> {
+                Blockchain.Ethereum, Blockchain.Token -> {
                     if (code.contains("ethereum:")) {
                         val tmp = code.split("ethereum:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                         code = tmp[1]
