@@ -77,24 +77,24 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         rgFee = findViewById(R.id.rgFee)
 
         val engine = CoinEngineFactory.create(card!!.blockchain)
+
+        val balanceWithAlter = engine!!.getBalanceWithAlter(card).replace(",", ".")
         if (card!!.blockchain == Blockchain.Token) {
-            val html = Html.fromHtml(engine!!.getBalanceWithAlter(card))
+            val html = Html.fromHtml(balanceWithAlter)
             tvBalance.text = html
         } else
-            tvBalance.text = engine!!.getBalanceWithAlter(card)
+            tvBalance.text = balanceWithAlter
 
-        incFee = intent.getBooleanExtra("IncFee", true);
-        if (incFee) {
-            tvIncFee!!.setText(R.string.including_fee)
-        } else {
-            tvIncFee!!.setText(R.string.not_including_fee)
-        }
+        incFee = intent.getBooleanExtra("IncFee", true)
+        if (incFee)
+            tvIncFee.setText(R.string.including_fee)
+        else
+            tvIncFee.setText(R.string.not_including_fee)
 
-        if (card!!.blockchain == Blockchain.Token) {
-            tvIncFee!!.visibility = View.INVISIBLE
-        } else {
-            tvIncFee!!.visibility = View.VISIBLE
-        }
+        if (card!!.blockchain == Blockchain.Token)
+            tvIncFee.visibility = View.INVISIBLE
+        else
+            tvIncFee.visibility = View.VISIBLE
 
         etAmount!!.setText(intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT))
         tvCurrency.text = engine.getBalanceCurrency(card)
@@ -102,7 +102,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         tvCardID.text = card!!.cidDescription
 
-        etWallet!!.setText(intent.getStringExtra("Wallet"))
+        etWallet.setText(intent.getStringExtra("Wallet"))
 
         etFee!!.setText("?")
 
@@ -175,8 +175,6 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 } catch (e: Exception) {
                     e.printStackTrace()
                     tvFeeEquivalent.text = ""
-                    tvCurrency2.visibility = View.GONE
-                    tvFeeEquivalent.visibility = View.GONE
                 }
             }
 
@@ -229,7 +227,6 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             intent.putExtra("IncFee", incFee)
             startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
         }
-
 
 
         // request estimate fee listener
