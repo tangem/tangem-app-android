@@ -470,7 +470,7 @@ public class CardProtocol {
                 if( mCard.getBatch().equals("0017") )
                 {
 
-                    mCard.setContractAddress("contract for 0017");
+                    mCard.setContractAddress("0x9Eef75bA8e81340da9D8d1fd06B2f313DB88839c");
                 }
                 else if( mCard.getBatch().equals("0019") )
                 {
