@@ -90,6 +90,12 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             tvIncFee!!.setText(R.string.not_including_fee)
         }
 
+        if (card!!.blockchain == Blockchain.Token) {
+            tvIncFee!!.visibility = View.INVISIBLE
+        } else {
+            tvIncFee!!.visibility = View.VISIBLE
+        }
+
         etAmount!!.setText(intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT))
         tvCurrency.text = engine.getBalanceCurrency(card)
         tvCurrency2.text = engine.feeCurrency
