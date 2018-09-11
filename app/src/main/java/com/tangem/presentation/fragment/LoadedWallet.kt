@@ -148,7 +148,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                             } catch (e: ActivityNotFoundException) {
                                 showSingleToast(R.string.no_compatible_wallet)
                             }
-
                         }
 //                        getString(R.string.via_cryptonit2) -> {
 //                            val intent = Intent(context, PrepareCryptonitOtherAPIWithdrawalActivity::class.java)
@@ -263,22 +262,29 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     }
 
                     ServerApiHelper.INFURA_ETH_CALL -> {
-                        var balanceCap = infuraResponse.result
-                        balanceCap = balanceCap.substring(2)
-                        val l = BigInteger(balanceCap, 16)
-                        val balance = l.toLong()
-                        if (l.compareTo(BigInteger.ZERO) == 0) {
-                            card!!.blockchainID = Blockchain.Ethereum.id
-                            card!!.addTokenToBlockchainName()
-                            srlLoadedWallet!!.isRefreshing = false
+                        try {
+                            var balanceCap = infuraResponse.result
+                            balanceCap = balanceCap.substring(2)
+                            val l = BigInteger(balanceCap, 16)
+                            val balance = l.toLong()
+                            if (l.compareTo(BigInteger.ZERO) == 0) {
+                                card!!.blockchainID = Blockchain.Ethereum.id
+                                card!!.addTokenToBlockchainName()
+                                srlLoadedWallet!!.isRefreshing = false
 //                            refresh()
-                            return@onInfuraSuccess
-                        }
-                        card!!.setBalanceConfirmed(balance)
-                        card!!.balanceUnconfirmed = 0L
-                        card!!.decimalBalance = l.toString(10)
+                                return@onInfuraSuccess
+                            }
+                            card!!.setBalanceConfirmed(balance)
+                            card!!.balanceUnconfirmed = 0L
+                            card!!.decimalBalance = l.toString(10)
 
-                        Log.i("$TAG eth_call", balanceCap)
+                            Log.i("$TAG eth_call", balanceCap)
+
+                        } catch (e: JSONException) {
+                            e.printStackTrace()
+                        } catch (e: NumberFormatException) {
+                            e.printStackTrace()
+                        }
                     }
 
                     ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION -> {
@@ -779,9 +785,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //
 //            updateETH.execute(reqETH, reqNonce, reqBalance)
 
+            requestInfura(ServerApiHelper.INFURA_ETH_CALL, engine.getContractAddress(card))
             requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
             requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
-            requestInfura(ServerApiHelper.INFURA_ETH_CALL, engine.getContractAddress(card))
+
 
             requestRateInfo("ethereum")
         }
