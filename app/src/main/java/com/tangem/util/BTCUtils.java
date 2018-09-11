@@ -114,7 +114,7 @@ public final class BTCUtils {
 
         String pattern = "#0.00000000";
         DecimalFormat myFormatter = new DecimalFormat(pattern);
-        String output = myFormatter.format(dec);
+        String output = myFormatter.format(dec).replace(",",".");
         return output;
     }
 
