@@ -504,19 +504,26 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 updateViews()
             }
             REQUEST_CODE_SEND_PAYMENT, REQUEST_CODE_RECEIVE_PAYMENT -> {
+//                if (resultCode == Activity.RESULT_OK) {
+////                    srlLoadedWallet!!.postDelayed({ refresh() }, 10000)
+////                    srlLoadedWallet!!.isRefreshing = true
+//
+//                    timerRepeatRefresh = fixedRateTimer(name = "refresh", initialDelay = 2000, period = 5000) {
+//                        activity!!.runOnUiThread {
+//                            refresh()
+//                            Log.i("sfsf", "refresh")
+//                        }
+//                    }
+//                    card!!.clearInfo()
+//
+////                    updateViews()
+//                }
+
                 if (resultCode == Activity.RESULT_OK) {
-//                    srlLoadedWallet!!.postDelayed({ refresh() }, 10000)
-//                    srlLoadedWallet!!.isRefreshing = true
-
-                    timerRepeatRefresh = fixedRateTimer(name = "refresh", initialDelay = 2000, period = 5000) {
-                        activity!!.runOnUiThread {
-                            refresh()
-                            Log.i("sfsf", "refresh")
-                        }
-                    }
+                    srlLoadedWallet!!.postDelayed({ this.refresh() }, 3000)
+                    srlLoadedWallet!!.isRefreshing = true
                     card!!.clearInfo()
-
-//                    updateViews()
+                    updateViews()
                 }
 
                 if (data != null && data.extras != null) {
@@ -642,7 +649,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val engine = CoinEngineFactory.create(card!!.blockchain)
 
             if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
-
                 val validator = BalanceValidator()
                 validator.Check(card)
                 tvBalanceLine1.text = validator.firstLine
@@ -672,6 +678,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             if (card!!.hasBalanceInfo()) {
                 btnExtract.isEnabled = true
                 btnExtract.backgroundTintList = activeColor
+            } else {
+                btnExtract.isEnabled = false
+                btnExtract.backgroundTintList = inactiveColor
             }
 
             card!!.error = null
