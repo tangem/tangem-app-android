@@ -92,6 +92,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         nfcManager = NfcManager(this, this)
+
         verifyPermissions()
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_NOSENSOR
@@ -149,12 +150,12 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         // set listeners
         fab.setOnClickListener { showMenu(it) }
 
-        if (BuildConfig.DEBUG) {
-            fab.setOnLongClickListener {
-                startActivity(Intent(this, SettingsDebugActivity::class.java))
-                false
-            }
-        }
+//        if (BuildConfig.DEBUG) {
+//            fab.setOnLongClickListener {
+//                startActivity(Intent(this, SettingsDebugActivity::class.java))
+//                false
+//            }
+//        }
 
         val apiHelper = ServerApiHelper()
         apiHelper.setLastVersionListener { response ->
@@ -163,7 +164,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         apiHelper.requestLastVersion()
     }
 
-    fun verifyPermissions() {
+    private fun verifyPermissions() {
         NfcManager.verifyPermissions(this)
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             Log.e("QRScanActivity", "User hasn't granted permission to use camera")
