@@ -669,10 +669,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             tvBlockchain.text = card!!.blockchainName
 
-            btnExtract.isEnabled = card!!.hasBalanceInfo()
-
-            if (btnExtract.isEnabled)
+            if (card!!.hasBalanceInfo()) {
+                btnExtract.isEnabled = true
                 btnExtract.backgroundTintList = activeColor
+            }
 
             card!!.error = null
             card!!.message = null
@@ -795,6 +795,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         if (needResendTX)
             sendTransaction(LastSignStorage.getTxForSend(card!!.wallet))
+
+//        if (btnExtract.isEnabled)
+
 
     }
 
