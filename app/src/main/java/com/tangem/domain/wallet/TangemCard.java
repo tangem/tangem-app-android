@@ -1537,10 +1537,14 @@ public class TangemCard {
                 return R.drawable.card_btc_001a;
             case "001B":
                 return R.drawable.card_btc_001b;
+            case "001C":
+                return R.drawable.card_btc_001c;
+            case "001D":
+                return R.drawable.card_eth_001d;
+
             default:
                 return R.drawable.card_default;
         }
-
     }
 
     public enum EncryptionMode {
