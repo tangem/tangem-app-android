@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import com.tangem.data.network.model.CardVerify;
+import com.tangem.data.network.model.CardVerifyAndGetArtwork;
 import com.tangem.data.network.model.CardVerifyBody;
 import com.tangem.data.network.model.CardVerifyResponse;
 import com.tangem.data.network.model.InfuraBody;
@@ -234,6 +235,54 @@ public class ServerApiHelper {
             }
         });
     }
+
+
+    /**
+     * HTTP
+     * Card verify
+     */
+    private CardVerifyAndGetArtworkListener cardVerifyAndGetArtworkListener;
+
+    public interface CardVerifyAndGetArtworkListener {
+        void onCardVerifyAndGetArtwork(CardVerifyAndGetArtwork.Response cardVerifyAndGetArtworkResponse);
+    }
+
+    public void setCardVerifyAndGetArtworkListener(CardVerifyAndGetArtworkListener listener) {
+        cardVerifyAndGetArtworkListener = listener;
+    }
+
+    public void cardVerifyAndGetArtwork(TangemCard card) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(Server.ApiTangem.URL_TANGEM)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        TangemApi tangemApi = retrofit.create(TangemApi.class);
+
+        List<CardVerifyAndGetArtwork.Request.RequestItem> requests = new ArrayList<>();
+        requests.add(new CardVerifyAndGetArtwork.Request.RequestItem(Util.bytesToHex(card.getCID()), Util.bytesToHex(card.getCardPublicKey()),null));
+
+        CardVerifyAndGetArtwork.Request requestBody = new CardVerifyAndGetArtwork.Request(requests);
+
+        Call<CardVerifyAndGetArtwork.Response> call = tangemApi.getCardVerifyAndGetArtwork(requestBody);
+        call.enqueue(new Callback<CardVerifyAndGetArtwork.Response>() {
+            @Override
+            public void onResponse(@NonNull Call<CardVerifyAndGetArtwork.Response> call, @NonNull Response<CardVerifyAndGetArtwork.Response> response) {
+                if (response.code() == 200) {
+                    CardVerifyAndGetArtwork.Response cardVerifyAndGetArtworkResponse = response.body();
+                    cardVerifyAndGetArtworkListener.onCardVerifyAndGetArtwork(cardVerifyAndGetArtworkResponse);
+                    Log.i(TAG, "cardVerifyAndGetArtwork onResponse " + response.code());
+                } else
+                    Log.e(TAG, "cardVerifyAndGetArtwork onResponse " + response.code());
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<CardVerifyAndGetArtwork.Response> call, @NonNull Throwable t) {
+                Log.e(TAG, "cardVerifyAndGetArtwork onFailure " + t.getMessage());
+            }
+        });
+    }
+
 
     /**
      * HTTP
