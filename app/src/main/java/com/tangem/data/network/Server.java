@@ -12,6 +12,7 @@ public class Server {
         public static class Method {
             public static final String VERIFY = URL_TANGEM + "verify";
             public static final String VERIFY_AND_GET_ARTWORK = URL_TANGEM + "verify-and-get-artwork";
+            public static final String ARTWORK = URL_TANGEM + "artwork";
         }
     }
 
