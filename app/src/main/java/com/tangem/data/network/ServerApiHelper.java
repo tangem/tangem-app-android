@@ -194,47 +194,47 @@ public class ServerApiHelper {
      * HTTP
      * Card verify
      */
-    private CardVerifyListener cardVerifyListener;
-
-    public interface CardVerifyListener {
-        void onCardVerify(CardVerifyResponse cardVerifyResponse);
-    }
-
-    public void setCardVerify(CardVerifyListener listener) {
-        cardVerifyListener = listener;
-    }
-
-    public void cardVerify(TangemCard card) {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(Server.ApiTangem.URL_TANGEM)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        TangemApi tangemApi = retrofit.create(TangemApi.class);
-
-        CardVerify[] requests = new CardVerify[1];
-        requests[0] = new CardVerify(Util.bytesToHex(card.getCID()), Util.bytesToHex(card.getCardPublicKey()));
-
-        CardVerifyBody cardVerifyBody = new CardVerifyBody(requests);
-
-        Call<CardVerifyResponse> call = tangemApi.getCardVerify(cardVerifyBody);
-        call.enqueue(new Callback<CardVerifyResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<CardVerifyResponse> call, @NonNull Response<CardVerifyResponse> response) {
-                if (response.code() == 200) {
-                    CardVerifyResponse cardVerifyResponse = response.body();
-                    cardVerifyListener.onCardVerify(cardVerifyResponse);
-                    Log.i(TAG, "cardVerify onResponse " + response.code());
-                } else
-                    Log.e(TAG, "cardVerify onResponse " + response.code());
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<CardVerifyResponse> call, @NonNull Throwable t) {
-                Log.e(TAG, "cardVerify onFailure " + t.getMessage());
-            }
-        });
-    }
+//    private CardVerifyListener cardVerifyListener;
+//
+//    public interface CardVerifyListener {
+//        void onCardVerify(CardVerifyResponse cardVerifyResponse);
+//    }
+//
+//    public void setCardVerify(CardVerifyListener listener) {
+//        cardVerifyListener = listener;
+//    }
+//
+//    public void cardVerify(TangemCard card) {
+//        Retrofit retrofit = new Retrofit.Builder()
+//                .baseUrl(Server.ApiTangem.URL_TANGEM)
+//                .addConverterFactory(GsonConverterFactory.create())
+//                .build();
+//
+//        TangemApi tangemApi = retrofit.create(TangemApi.class);
+//
+//        CardVerify[] requests = new CardVerify[1];
+//        requests[0] = new CardVerify(Util.bytesToHex(card.getCID()), Util.bytesToHex(card.getCardPublicKey()));
+//
+//        CardVerifyBody cardVerifyBody = new CardVerifyBody(requests);
+//
+//        Call<CardVerifyResponse> call = tangemApi.getCardVerify(cardVerifyBody);
+//        call.enqueue(new Callback<CardVerifyResponse>() {
+//            @Override
+//            public void onResponse(@NonNull Call<CardVerifyResponse> call, @NonNull Response<CardVerifyResponse> response) {
+//                if (response.code() == 200) {
+//                    CardVerifyResponse cardVerifyResponse = response.body();
+//                    cardVerifyListener.onCardVerify(cardVerifyResponse);
+//                    Log.i(TAG, "cardVerify onResponse " + response.code());
+//                } else
+//                    Log.e(TAG, "cardVerify onResponse " + response.code());
+//            }
+//
+//            @Override
+//            public void onFailure(@NonNull Call<CardVerifyResponse> call, @NonNull Throwable t) {
+//                Log.e(TAG, "cardVerify onFailure " + t.getMessage());
+//            }
+//        });
+//    }
 
 
     /**
@@ -259,8 +259,8 @@ public class ServerApiHelper {
 
         TangemApi tangemApi = retrofit.create(TangemApi.class);
 
-        List<CardVerifyAndGetArtwork.Request.RequestItem> requests = new ArrayList<>();
-        requests.add(new CardVerifyAndGetArtwork.Request.RequestItem(Util.bytesToHex(card.getCID()), Util.bytesToHex(card.getCardPublicKey()),null));
+        List<CardVerifyAndGetArtwork.Request.Item> requests = new ArrayList<>();
+        requests.add(new CardVerifyAndGetArtwork.Request.Item(Util.bytesToHex(card.getCID()), Util.bytesToHex(card.getCardPublicKey())));
 
         CardVerifyAndGetArtwork.Request requestBody = new CardVerifyAndGetArtwork.Request(requests);
 
@@ -282,6 +282,62 @@ public class ServerApiHelper {
             }
         });
     }
+
+    /**
+     * HTTP
+     * Last version request from GitHub
+     */
+    private ArtworkListener artworkListener;
+
+    public interface ArtworkListener {
+        void onArtwork(InputStream inputStream);
+    }
+
+    public void setArtworkListener(ArtworkListener listener) {
+        artworkListener = listener;
+    }
+
+    public void requestArtwork() {
+
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+        OkHttpClient httpClient = new OkHttpClient.Builder().
+                addInterceptor(logging).
+//        addInterceptor(new AuthorizationInterceptor()).
+        build();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(Server.ApiUpdateVersion.URL_UPDATE_VERSION)
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(httpClient)
+                .build();
+
+        UpdateVersionApi updateVersionApi = retrofit.create(UpdateVersionApi.class);
+
+        Call<ResponseBody> call = updateVersionApi.getLastVersion();
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                Log.i(TAG, "lastVersion onResponse " + response.code());
+                if (response.code() == 200) {
+                    String stringResponse;
+                    try {
+                        stringResponse = response.body().string();
+                        lastVersionListener.onLastVersion(stringResponse);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                Log.e(TAG, "lastVersion onFailure " + t.getMessage());
+            }
+        });
+
+    }
+
 
 
     /**
