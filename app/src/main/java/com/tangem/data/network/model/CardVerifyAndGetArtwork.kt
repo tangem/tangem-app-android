@@ -25,19 +25,29 @@ class CardVerifyAndGetArtwork {
     ) {
 
         data class Item(
-                var error: String = "",
+                var error: String? = null,
                 var CID: String = "",
                 var passed: Boolean = false,
                 var batch: String = "",
                 var artworkId: String = "",
                 var artworkHash: String = "",
-                var update_date: String = ""
+                var updateDate: String = ""
         ) {
             fun getUpdateDate(): Instant? {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    return LocalDateTime.parse(update_date, DateTimeFormatter.ISO_LOCAL_DATE_TIME).toInstant(ZoneOffset.UTC)
-                }else{
-                    return SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US).parse(update_date).toInstant()
+                    return try {
+                        LocalDateTime.parse(updateDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME).toInstant(ZoneOffset.UTC)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        null
+                    }
+                } else {
+                    return try {
+                        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US).parse(updateDate).toInstant()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        null
+                    }
                 }
             }
         }
