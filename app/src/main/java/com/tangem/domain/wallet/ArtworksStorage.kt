@@ -26,7 +26,7 @@ data class ArtworksStorage(
 
     init {
         if (artworksFile.exists()) {
-            artworksFile.bufferedReader().use { artworks = Gson().fromJson(it, object : TypeToken<Map<String, ArtworkInfo>>() {}.type) }
+            artworksFile.bufferedReader().use { artworks = Gson().fromJson(it, object : TypeToken<HashMap<String, ArtworkInfo>>() {}.type) }
         } else {
             artworks = HashMap()
             putResourceArtworkToCatalog("card_default", false)
@@ -34,7 +34,7 @@ data class ArtworksStorage(
             putResourceArtworkToCatalog("card_btc_005", true)
         }
         if (batchesFile.exists()) {
-            batchesFile.bufferedReader().use { batches = Gson().fromJson(it, object : TypeToken<Map<String, BatchInfo>>() {}.type) }
+            batchesFile.bufferedReader().use { batches = Gson().fromJson(it, object : TypeToken<HashMap<String, BatchInfo>>() {}.type) }
         } else {
             batches = HashMap()
 
@@ -62,15 +62,7 @@ data class ArtworksStorage(
         }
     }
 
-    fun checkNeedUpdateArtwork(batch: String, artworkId: String, artworkHash: String, updateDate: Instant?): Boolean {
-        val batchInfo = batches[batch]
-        if (batchInfo == null) {
-            putBatchToCatalog(batch, artworkId)
-            return true
-        }
-        if (batchInfo.artworkId != artworkId) {
-            putBatchToCatalog(batch, artworkId)
-        }
+    fun checkNeedUpdateArtwork(artworkId: String, artworkHash: String, updateDate: Instant?): Boolean {
         val artwork = artworks[artworkId] ?: return true
 
         if (artwork.hash == artworkHash) return false
@@ -80,10 +72,23 @@ data class ArtworksStorage(
         return artwork.updateDate == null || artwork.updateDate < updateDate
     }
 
+    fun checkBatchArtworkChanged(batch: String, artworkId: String): Boolean {
+        val batchInfo = batches[batch]
+        if (batchInfo == null) {
+            putBatchToCatalog(batch, artworkId)
+            return true
+        }
+        if (batchInfo.artworkId != artworkId) {
+            putBatchToCatalog(batch, artworkId)
+            return true
+        }
+        return false
+    }
+
     fun updateArtwork(artworkId: String, inputStream: InputStream, updateDate: Instant) {
         val data = inputStream.readBytes()
         cache.saveBitmap(artworkId, data)
-        putArtworkToCatalog(artworkId, data, updateDate, true)
+        putArtworkToCatalog(artworkId, false, data, updateDate, true)
     }
 
     private fun putBatchToCatalog(batch: String, artworkId: String, forceSave: Boolean = true) {
@@ -96,12 +101,12 @@ data class ArtworksStorage(
 
     @SuppressLint("ResourceType")
     private fun putResourceArtworkToCatalog(artworkId: String, forceSave: Boolean) {
-        context.resources.openRawResource(R.drawable.card_default).use { putArtworkToCatalog(artworkId, it.readBytes(), null, forceSave) }
+        context.resources.openRawResource(R.drawable.card_default).use { putArtworkToCatalog(artworkId, true, it.readBytes(), null, forceSave) }
     }
 
-    private fun putArtworkToCatalog(artworkId: String, data: ByteArray, instant: Instant?, forceSave: Boolean = true) {
+    private fun putArtworkToCatalog(artworkId: String, isResource: Boolean, data: ByteArray, instant: Instant?, forceSave: Boolean = true) {
         val artworkInfo = ArtworkInfo(
-                false, Util.bytesToHex(Util.calculateSHA256(data)), instant
+                isResource, Util.bytesToHex(Util.calculateSHA256(data)), instant
         )
         artworks[artworkId] = artworkInfo
         if (forceSave) {
