@@ -80,10 +80,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     private var timerRepeatRefresh: Timer? = null
 
-    private val artworksStorage: ArtworksStorage = ArtworksStorage(context!!)
+    private lateinit var artworksStorage: ArtworksStorage
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         nfcManager = NfcManager(activity, this)
 
         serverApiHelper = ServerApiHelper()
@@ -94,6 +95,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         card!!.loadFromBundle(activity!!.intent.extras.getBundle(TangemCard.EXTRA_CARD))
 
         lastTag = activity!!.intent.getParcelableExtra(MainActivity.EXTRA_LAST_DISCOVERED_TAG)
+
+        artworksStorage = ArtworksStorage(context!!)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -226,17 +229,34 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 ////            Log.i(TAG, "setCardVerify " + it.results!![0].passed)
 //        }
         serverApiHelper!!.setCardVerifyAndGetArtworkListener {
-            card!!.isOnlineVerified = it.results!![0].passed
             srlLoadedWallet!!.isRefreshing = false
-            val result=it.results!![0]
-            if( artworksStorage.checkNeedUpdateArtwork(result.batch, result.artworkId, result.artworkHash, result.getUpdateDate() ) )
-            {
+            val result = it.results!![0]
+            if (result.error != null) {
+                Log.e(TAG, "Can't verify card: ${result.error}")
+                card!!.isOnlineVerified = false
+                return@setCardVerifyAndGetArtworkListener
+            }
+            card!!.isOnlineVerified = result.passed
 
+            if (!result.passed) return@setCardVerifyAndGetArtworkListener
+
+            if (artworksStorage.checkBatchArtworkChanged(result.batch, result.artworkId)) {
+                Log.w(TAG, "Batch ${result.batch} artwork  changed to '${result.artworkId}'")
+                ivTangemCard.setImageBitmap(artworksStorage.getBatchBitmap(card!!.batch))
+            }
+            if (artworksStorage.checkNeedUpdateArtwork(result.artworkId, result.artworkHash, result.getUpdateDate())) {
+                Log.w(TAG, "Artwork '${result.artworkId}' updated, need download")
+                serverApiHelper!!.requestArtwork(result.artworkId, result.getUpdateDate(), card!!)
             }
 
 //            Log.i(TAG, "setCardVerify " + it.results!![0].passed)
         }
 
+        serverApiHelper!!.setArtworkListener { artworkId, inputStream, updateDate ->
+            Log.w(TAG, "Artwork '$artworkId' downloaded")
+            artworksStorage.updateArtwork(artworkId, inputStream, updateDate)
+            ivTangemCard.setImageBitmap(artworksStorage.getBatchBitmap(card!!.batch))
+        }
 
         // request rate info listener
         serverApiHelper!!.setRateInfoData {

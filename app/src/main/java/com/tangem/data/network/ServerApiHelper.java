@@ -28,6 +28,7 @@ import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -252,9 +253,18 @@ public class ServerApiHelper {
     }
 
     public void cardVerifyAndGetArtwork(TangemCard card) {
+
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+        OkHttpClient httpClient = new OkHttpClient.Builder().
+                addInterceptor(logging).
+                build();
+
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(Server.ApiTangem.URL_TANGEM)
                 .addConverterFactory(GsonConverterFactory.create())
+                .client(httpClient)
                 .build();
 
         TangemApi tangemApi = retrofit.create(TangemApi.class);
@@ -290,41 +300,41 @@ public class ServerApiHelper {
     private ArtworkListener artworkListener;
 
     public interface ArtworkListener {
-        void onArtwork(InputStream inputStream);
+        void onArtwork(String artworkId, InputStream inputStream, Instant updateDate);
     }
 
     public void setArtworkListener(ArtworkListener listener) {
         artworkListener = listener;
     }
 
-    public void requestArtwork() {
+    public void requestArtwork(String artworkId, Instant updateDate, TangemCard card) {
 
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
         OkHttpClient httpClient = new OkHttpClient.Builder().
                 addInterceptor(logging).
-//        addInterceptor(new AuthorizationInterceptor()).
-        build();
+                build();
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(Server.ApiUpdateVersion.URL_UPDATE_VERSION)
+                .baseUrl(Server.ApiTangem.URL_TANGEM)
                 .addConverterFactory(GsonConverterFactory.create())
                 .client(httpClient)
                 .build();
 
-        UpdateVersionApi updateVersionApi = retrofit.create(UpdateVersionApi.class);
+        TangemApi tangemApi = retrofit.create(TangemApi.class);
 
-        Call<ResponseBody> call = updateVersionApi.getLastVersion();
+        Call<ResponseBody> call = tangemApi.getArtwork(artworkId, Util.bytesToHex(card.getCID()), Util.bytesToHex(card.getCardPublicKey()));
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
-                Log.i(TAG, "lastVersion onResponse " + response.code());
-                if (response.code() == 200) {
-                    String stringResponse;
+                Log.i(TAG, "getArtwork onResponse " + response.code());
+                if (response.code() == 200 ) {
                     try {
-                        stringResponse = response.body().string();
-                        lastVersionListener.onLastVersion(stringResponse);
-                    } catch (IOException e) {
+                        ResponseBody body=response.body();
+                        if ( body!= null) {
+                            artworkListener.onArtwork(artworkId, body.byteStream(), updateDate);
+                        }
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
@@ -332,12 +342,11 @@ public class ServerApiHelper {
 
             @Override
             public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
-                Log.e(TAG, "lastVersion onFailure " + t.getMessage());
+                Log.e(TAG, "getArtwork onFailure " + t.getMessage());
             }
         });
 
     }
-
 
 
     /**
