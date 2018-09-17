@@ -273,6 +273,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                                 updateViews()
                                 srlLoadedWallet!!.isRefreshing = false
 //                            refresh()
+                                requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
+                                requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
                                 return@onInfuraSuccess
                             }
                             card!!.setBalanceConfirmed(balance)
@@ -281,6 +283,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
                             Log.i("$TAG eth_call", balanceCap)
 
+                            requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
+                            requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
                         } catch (e: JSONException) {
                             e.printStackTrace()
                         } catch (e: NumberFormatException) {
@@ -797,9 +801,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //            updateETH.execute(reqETH, reqNonce, reqBalance)
 
             requestInfura(ServerApiHelper.INFURA_ETH_CALL, engine.getContractAddress(card))
-            requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
-            requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
-
 
             requestRateInfo("ethereum")
         }
