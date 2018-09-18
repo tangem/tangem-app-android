@@ -138,7 +138,7 @@ data class ArtworksStorage(
 
     fun getCardArtworkBitmap(card: TangemCard): Bitmap {
         // special cases (first series of cards, hardcode CID->artwork), on new series batch<->artwork
-        val artworkId =
+        var artworkId =
                 when (card.cidDescription) {
                     in "AA01 0000 0000 0000".."AA01 0000 0000 4999" -> {
                         context.resources.getResourceName(R.drawable.card_btc_001)
@@ -184,6 +184,8 @@ data class ArtworksStorage(
                         batchInfo.artworkId
                     }
                 }
+        if( artworkId.contains('/'))
+            artworkId=artworkId.split('/').last()
         return getArtworkBitmap(artworkId) ?: return getDefaultArtworkBitmap()
     }
 
