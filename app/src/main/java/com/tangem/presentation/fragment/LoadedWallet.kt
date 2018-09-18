@@ -23,11 +23,8 @@ import android.view.ViewGroup
 import android.widget.Toast
 import com.google.zxing.WriterException
 import com.tangem.data.network.ServerApiHelper
-import com.tangem.data.network.model.CardVerifyAndGetArtwork
 import com.tangem.data.network.model.InfuraResponse
 import com.tangem.data.network.request.ElectrumRequest
-import com.tangem.data.network.request.InfuraRequest
-import com.tangem.data.network.task.loaded_wallet.ETHRequestTask
 import com.tangem.data.network.task.loaded_wallet.UpdateWalletInfoTask
 import com.tangem.data.nfc.VerifyCardTask
 import com.tangem.domain.cardReader.CardProtocol
@@ -45,7 +42,6 @@ import kotlinx.android.synthetic.main.fr_loaded_wallet.*
 import org.json.JSONException
 import java.math.BigInteger
 import java.util.*
-import kotlin.concurrent.fixedRateTimer
 
 class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, SharedPreferences.OnSharedPreferenceChangeListener {
     companion object {
@@ -112,7 +108,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             tvBalance.setSingleLine(false)
 
         //ivTangemCard.setImageResource(card!!.cardImageResource)
-        ivTangemCard.setImageBitmap(artworksStorage.getBatchBitmap(card!!.batch))
+        ivTangemCard.setImageBitmap(artworksStorage.getCardArtworkBitmap(card!!))
 
         val engine = CoinEngineFactory.create(card!!.blockchain)
         val visibleFlag = engine?.inOutPutVisible() ?: true
@@ -242,7 +238,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             if (artworksStorage.checkBatchArtworkChanged(result.batch, result.artworkId)) {
                 Log.w(TAG, "Batch ${result.batch} artwork  changed to '${result.artworkId}'")
-                ivTangemCard.setImageBitmap(artworksStorage.getBatchBitmap(card!!.batch))
+                ivTangemCard.setImageBitmap(artworksStorage.getCardArtworkBitmap(card!!))
             }
             if (artworksStorage.checkNeedUpdateArtwork(result.artworkId, result.artworkHash, result.getUpdateDate())) {
                 Log.w(TAG, "Artwork '${result.artworkId}' updated, need download")
@@ -255,7 +251,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         serverApiHelper!!.setArtworkListener { artworkId, inputStream, updateDate ->
             Log.w(TAG, "Artwork '$artworkId' downloaded")
             artworksStorage.updateArtwork(artworkId, inputStream, updateDate)
-            ivTangemCard.setImageBitmap(artworksStorage.getBatchBitmap(card!!.batch))
+            ivTangemCard.setImageBitmap(artworksStorage.getCardArtworkBitmap(card!!))
         }
 
         // request rate info listener
