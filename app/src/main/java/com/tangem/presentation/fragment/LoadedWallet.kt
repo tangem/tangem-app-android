@@ -306,8 +306,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                             if (l.compareTo(BigInteger.ZERO) == 0) {
                                 card!!.blockchainID = Blockchain.Ethereum.id
                                 card!!.addTokenToBlockchainName()
+                                updateViews()
                                 srlLoadedWallet!!.isRefreshing = false
 //                            refresh()
+                                requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
+                                requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
                                 return@onInfuraSuccess
                             }
                             card!!.setBalanceConfirmed(balance)
@@ -316,6 +319,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
                             Log.i("$TAG eth_call", balanceCap)
 
+                            requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
+                            requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
                         } catch (e: JSONException) {
                             e.printStackTrace()
                         } catch (e: NumberFormatException) {
@@ -366,7 +371,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
 
             override fun onInfuraFail(method: String, message: String) {
-
+                srlLoadedWallet!!.isRefreshing = false
             }
         }
 
@@ -556,7 +561,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //                }
 
                 if (resultCode == Activity.RESULT_OK) {
-                    srlLoadedWallet!!.postDelayed({ this.refresh() }, 3000)
+                    srlLoadedWallet!!.postDelayed({ this.refresh() }, 5000)
                     srlLoadedWallet!!.isRefreshing = true
                     card!!.clearInfo()
                     updateViews()
@@ -601,7 +606,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 rlProgressBar.post {
                     rlProgressBar.visibility = View.GONE
                     this.cardProtocol = cardProtocol
-                    refresh()
+                    if (!cardProtocol.card.isWalletPublicKeyValid) refresh()
+                    else updateViews()
                 }
             } else {
                 // remove last UIDs because of error and no card read
@@ -831,9 +837,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //            updateETH.execute(reqETH, reqNonce, reqBalance)
 
             requestInfura(ServerApiHelper.INFURA_ETH_CALL, engine.getContractAddress(card))
-            requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
-            requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
-
 
             requestRateInfo("ethereum")
         }
