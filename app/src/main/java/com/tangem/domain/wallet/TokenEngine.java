@@ -104,6 +104,7 @@ public class TokenEngine extends CoinEngine {
 
     public String GetBalanceAlterValue(TangemCard mCard) {
         String dec = mCard.getDecimalBalanceAlter();
+        if(dec.isEmpty()) return "-- -- --";
         BigDecimal d = convertToEth(dec);
         String s = d.toString();
 
