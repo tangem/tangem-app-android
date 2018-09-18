@@ -38,13 +38,13 @@ data class ArtworksStorage(
         } else {
             batches = HashMap()
 
-            putBatchToCatalog("0004", "card_btc_001", false)
-            putBatchToCatalog("0006", "card_btc_001", false)
-            putBatchToCatalog("0010", "card_btc_001", false)
-
-            putBatchToCatalog("0005", "card_btc_005", false)
-            putBatchToCatalog("0007", "card_btc_005", false)
-            putBatchToCatalog("0011", "card_btc_005", true)
+//            putBatchToCatalog("0004", "card_btc_001", false)
+//            putBatchToCatalog("0006", "card_btc_001", false)
+//            putBatchToCatalog("0010", "card_btc_001", false)
+//
+//            putBatchToCatalog("0005", "card_btc_005", false)
+//            putBatchToCatalog("0007", "card_btc_005", false)
+//            putBatchToCatalog("0011", "card_btc_005", true)
 
 //            "0012": card_seed;
 //            "0013": card_btc_hk_s;
@@ -136,9 +136,55 @@ data class ArtworksStorage(
         return bitmap
     }
 
-    fun getBatchBitmap(batch: String): Bitmap {
-        val batchInfo = batches[batch] ?: return getDefaultArtworkBitmap()
-        return getArtworkBitmap(batchInfo.artworkId) ?: return getDefaultArtworkBitmap()
+    fun getCardArtworkBitmap(card: TangemCard): Bitmap {
+        // special cases (first series of cards, hardcode CID->artwork), on new series batch<->artwork
+        val artworkId =
+                when (card.cidDescription) {
+                    in "AA01 0000 0000 0000".."AA01 0000 0000 4999" -> {
+                        context.resources.getResourceName(R.drawable.card_btc_001)
+                    }
+                    in "AA01 0000 0000 5000".."AA01 0000 0000 9999" -> {
+                        context.resources.getResourceName(R.drawable.card_btc_005)
+                    }
+
+                    in "AE01 0000 0000 0000".."AE01 0000 0000 4999" -> {
+                        context.resources.getResourceName(R.drawable.card_btc_001)
+                    }
+                    in "AE01 0000 0000 5000".."AE01 0000 0000 9999" -> {
+                        context.resources.getResourceName(R.drawable.card_btc_005)
+                    }
+
+                    in "CB01 0000 0000 0000".."CB01 0000 0000 9999" -> {
+                        context.resources.getResourceName(R.drawable.card_btc_001)
+                    }
+                    in "CB01 0000 0001 0000".."CB01 0000 0001 9999" -> {
+                        context.resources.getResourceName(R.drawable.card_btc_005)
+                    }
+
+                    in "CB01 0000 0002 0000".."CB01 0000 0003 9999" -> {
+                        context.resources.getResourceName(R.drawable.card_btc_001)
+                    }
+                    in "CB01 0000 0004 0000".."CB01 0000 0005 9999" -> {
+                        context.resources.getResourceName(R.drawable.card_btc_005)
+                    }
+
+                    in "CB02 0000 0000 0000".."CB02 0000 0002 4999" -> {
+                        context.resources.getResourceName(R.drawable.card_btc_001)
+                    }
+                    in "CB02 0000 0002 5000".."CB02 0000 0004 9999" -> {
+                        context.resources.getResourceName(R.drawable.card_btc_005)
+                    }
+
+                    in "CB05 0000 1000 0000".."CB05 0000 1000 9999" -> {
+                        context.resources.getResourceName(R.drawable.card_btc_001)
+                    }
+
+                    else -> {
+                        val batchInfo = batches[card.batch] ?: return getDefaultArtworkBitmap()
+                        batchInfo.artworkId
+                    }
+                }
+        return getArtworkBitmap(artworkId) ?: return getDefaultArtworkBitmap()
     }
 
     data class ArtworkInfo(
