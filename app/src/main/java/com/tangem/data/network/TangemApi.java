@@ -1,6 +1,6 @@
 package com.tangem.data.network;
 
-import com.tangem.data.network.model.CardVerifyAndGetArtwork;
+import com.tangem.data.network.model.CardVerifyAndGetInfo;
 import com.tangem.data.network.model.CardVerifyBody;
 import com.tangem.data.network.model.CardVerifyResponse;
 
@@ -18,8 +18,8 @@ public interface TangemApi {
     Call<CardVerifyResponse> getCardVerify(@Body CardVerifyBody body);
 
     @Headers("Content-Type: application/json")
-    @POST(Server.ApiTangem.Method.VERIFY_AND_GET_ARTWORK)
-    Call<CardVerifyAndGetArtwork.Response> getCardVerifyAndGetArtwork(@Body CardVerifyAndGetArtwork.Request requestBody);
+    @POST(Server.ApiTangem.Method.VERIFY_AND_GET_INFO)
+    Call<CardVerifyAndGetInfo.Response> getCardVerifyAndGetInfo(@Body CardVerifyAndGetInfo.Request requestBody);
 
     @GET(Server.ApiTangem.Method.ARTWORK)
     Call<ResponseBody> getArtwork(@Query("artworkId") String artworkId, @Query("CID") String CID, @Query("publicKey") String publicKey);
