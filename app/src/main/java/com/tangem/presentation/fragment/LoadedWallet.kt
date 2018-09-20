@@ -76,7 +76,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     private var timerRepeatRefresh: Timer? = null
 
-    private lateinit var artworksStorage: ArtworksStorage
+    private lateinit var localStorage: LocalStorage
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,7 +92,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         lastTag = activity!!.intent.getParcelableExtra(MainActivity.EXTRA_LAST_DISCOVERED_TAG)
 
-        artworksStorage = ArtworksStorage(context!!)
+        localStorage = LocalStorage(context!!)
+        localStorage.applySubstitution(card!!)
+
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -108,7 +110,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             tvBalance.setSingleLine(false)
 
         //ivTangemCard.setImageResource(card!!.cardImageResource)
-        ivTangemCard.setImageBitmap(artworksStorage.getCardArtworkBitmap(card!!))
+        ivTangemCard.setImageBitmap(localStorage.getCardArtworkBitmap(card!!))
 
         val engine = CoinEngineFactory.create(card!!.blockchain)
         val visibleFlag = engine?.inOutPutVisible() ?: true
@@ -224,34 +226,34 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //
 ////            Log.i(TAG, "setCardVerify " + it.results!![0].passed)
 //        }
-        serverApiHelper!!.setCardVerifyAndGetArtworkListener {
+        serverApiHelper!!.setCardVerifyAndGetInfoListener {
             srlLoadedWallet!!.isRefreshing = false
             val result = it.results!![0]
             if (result.error != null) {
                 Log.e(TAG, "Can't verify card: ${result.error}")
                 card!!.isOnlineVerified = false
-                return@setCardVerifyAndGetArtworkListener
+                return@setCardVerifyAndGetInfoListener
             }
             card!!.isOnlineVerified = result.passed
 
-            if (!result.passed) return@setCardVerifyAndGetArtworkListener
+            if (!result.passed) return@setCardVerifyAndGetInfoListener
 
-            if (artworksStorage.checkBatchArtworkChanged(result.batch, result.artworkId)) {
-                Log.w(TAG, "Batch ${result.batch} artwork  changed to '${result.artworkId}'")
-                ivTangemCard.setImageBitmap(artworksStorage.getCardArtworkBitmap(card!!))
+            if (localStorage.checkBatchInfoChanged(result)) {
+                Log.w(TAG, "Batch ${result.batch} info  changed to '$result'")
+                ivTangemCard.setImageBitmap(localStorage.getCardArtworkBitmap(card!!))
+                updateViews()
             }
-            if (artworksStorage.checkNeedUpdateArtwork(result.artworkId, result.artworkHash, result.getUpdateDate())) {
-                Log.w(TAG, "Artwork '${result.artworkId}' updated, need download")
-                serverApiHelper!!.requestArtwork(result.artworkId, result.getUpdateDate(), card!!)
+            if (result.artwork!=null && localStorage.checkNeedUpdateArtwork(result.artwork)) {
+                Log.w(TAG, "Artwork '${result.artwork!!.id}' updated, need download")
+                serverApiHelper!!.requestArtwork(result.artwork!!.id, result.artwork!!.getUpdateDate(), card!!)
             }
-
 //            Log.i(TAG, "setCardVerify " + it.results!![0].passed)
         }
 
         serverApiHelper!!.setArtworkListener { artworkId, inputStream, updateDate ->
             Log.w(TAG, "Artwork '$artworkId' downloaded")
-            artworksStorage.updateArtwork(artworkId, inputStream, updateDate)
-            ivTangemCard.setImageBitmap(artworksStorage.getCardArtworkBitmap(card!!))
+            localStorage.updateArtwork(artworkId, inputStream, updateDate)
+            ivTangemCard.setImageBitmap(localStorage.getCardArtworkBitmap(card!!))
         }
 
         // request rate info listener
@@ -380,7 +382,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     private fun requestCardVerify() {
         if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified))
-            serverApiHelper!!.cardVerifyAndGetArtwork(card) //serverApiHelper!!.cardVerify(card)
+            serverApiHelper!!.cardVerifyAndGetInfo(card) //serverApiHelper!!.cardVerify(card)
     }
 
     private fun requestRateInfo(cryptoId: String) {
