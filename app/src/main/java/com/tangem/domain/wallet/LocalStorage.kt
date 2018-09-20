@@ -8,23 +8,31 @@ import kotlin.collections.HashMap
 import android.graphics.BitmapFactory
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.tangem.data.network.model.CardVerifyAndGetInfo
+import com.tangem.domain.cardReader.CardCrypto
 import com.tangem.util.Util
 import com.tangem.wallet.R
 import java.io.InputStream
 import java.lang.Exception
+import java.nio.charset.StandardCharsets
 import java.time.Instant
 
 
-data class ArtworksStorage(
+data class LocalStorage(
         val context: Context
 ) {
-    private val cache: FileCache = FileCache(context)
     private lateinit var artworks: HashMap<String, ArtworkInfo>
     private lateinit var batches: HashMap<String, BatchInfo>
-    private var artworksFile: File = File(context.filesDir, "artworks.json")
-    private var batchesFile: File = File(context.filesDir, "batches.json")
+    private val artworksFile: File = File(context.filesDir, "artworks.json")
+    private val batchesFile: File = File(context.filesDir, "batches.json")
+
+    private var cacheDir: File? = null
 
     init {
+        cacheDir = File(context.filesDir, "artworks")
+        if (!cacheDir!!.exists())
+            cacheDir!!.mkdirs()
+
         if (artworksFile.exists()) {
             artworksFile.bufferedReader().use { artworks = Gson().fromJson(it, object : TypeToken<HashMap<String, ArtworkInfo>>() {}.type) }
         } else {
@@ -62,24 +70,44 @@ data class ArtworksStorage(
         }
     }
 
-    fun checkNeedUpdateArtwork(artworkId: String, artworkHash: String, updateDate: Instant?): Boolean {
-        val artwork = artworks[artworkId] ?: return true
-
-        if (artwork.hash == artworkHash) return false
-
-        if (updateDate == null) return false
-
-        return artwork.updateDate == null || artwork.updateDate < updateDate
+    private fun getArtworkFile(artworkId: String): File {
+        return File(cacheDir, "$artworkId.png")
     }
 
-    fun checkBatchArtworkChanged(batch: String, artworkId: String): Boolean {
-        val batchInfo = batches[batch]
-        if (batchInfo == null) {
-            putBatchToCatalog(batch, artworkId)
-            return true
+    private fun loadArtworkBitmapFromFile(artworkId: String): Bitmap? {
+        return try {
+            BitmapFactory.decodeFile(getArtworkFile(artworkId).absolutePath)
+        } catch (E: Exception) {
+            E.printStackTrace()
+            null
         }
-        if (batchInfo.artworkId != artworkId) {
-            putBatchToCatalog(batch, artworkId)
+    }
+
+    private fun saveArtworkBitmapToFile(artworkId: String, data: ByteArray) {
+        val file = getArtworkFile(artworkId)
+        file.writeBytes(data)
+    }
+
+    fun checkNeedUpdateArtwork(artwork: CardVerifyAndGetInfo.Response.Item.ArtworkInfo?): Boolean {
+        if (artwork == null) return false
+        val localArtwork = artworks[artwork.id] ?: return true
+
+        if (localArtwork.hash == artwork.hash) return false
+
+
+        return localArtwork.updateDate == null || localArtwork.updateDate < artwork.getUpdateDate()
+    }
+
+    fun checkBatchInfoChanged(result: CardVerifyAndGetInfo.Response.Item): Boolean {
+        var sData: String? = result.substitution?.data
+        var sSignature: String? = result.substitution?.signature
+        if (!BatchInfo.CardDataSubstitution.verifySignature(result.batch, sData, sSignature)) {
+            sData = null
+            sSignature = null
+        }
+        val batchInfo = batches[result.batch]
+        if (batchInfo == null || batchInfo.artworkId != result.artwork?.id || batchInfo.dataSubstitution != sData) {
+            putBatchToCatalog(result.batch, result.artwork?.id, sData, sSignature)
             return true
         }
         return false
@@ -87,12 +115,12 @@ data class ArtworksStorage(
 
     fun updateArtwork(artworkId: String, inputStream: InputStream, updateDate: Instant) {
         val data = inputStream.readBytes()
-        cache.saveBitmap(artworkId, data)
+        saveArtworkBitmapToFile(artworkId, data)
         putArtworkToCatalog(artworkId, false, data, updateDate, true)
     }
 
-    private fun putBatchToCatalog(batch: String, artworkId: String, forceSave: Boolean = true) {
-        batches[batch] = BatchInfo(artworkId)
+    private fun putBatchToCatalog(batch: String, artworkId: String?, substitution: String?, substitutionSignature: String?, forceSave: Boolean = true) {
+        batches[batch] = BatchInfo(artworkId, substitution, substitutionSignature)
         if (forceSave) {
             val sBatches = Gson().toJson(batches)
             batchesFile.bufferedWriter().use { it.write(sBatches) }
@@ -122,15 +150,16 @@ data class ArtworksStorage(
             if (resID == 0) return null
             BitmapFactory.decodeResource(context.resources, resID)
         } else {
-            cache.getBitmap(artworkId)
+            loadArtworkBitmapFromFile(artworkId)
         }
     }
 
     private fun getDefaultArtworkBitmap(): Bitmap {
+        val defaultArtworkId = context.resources.getResourceEntryName(R.drawable.card_default)
         val info = artworks[defaultArtworkId]
         var bitmap: Bitmap? = null
         if (info != null && !info.isResource) {
-            bitmap = cache.getBitmap(defaultArtworkId)
+            bitmap = loadArtworkBitmapFromFile(defaultArtworkId)
         }
         if (bitmap == null) return BitmapFactory.decodeResource(context.resources, R.drawable.card_default)
         return bitmap
@@ -138,55 +167,61 @@ data class ArtworksStorage(
 
     fun getCardArtworkBitmap(card: TangemCard): Bitmap {
         // special cases (first series of cards, hardcode CID->artwork), on new series batch<->artwork
-        var artworkId =
+        val artworkId =
                 when (card.cidDescription) {
                     in "AA01 0000 0000 0000".."AA01 0000 0000 4999" -> {
-                        context.resources.getResourceName(R.drawable.card_btc_001)
+                        context.resources.getResourceEntryName(R.drawable.card_btc_001)
                     }
                     in "AA01 0000 0000 5000".."AA01 0000 0000 9999" -> {
-                        context.resources.getResourceName(R.drawable.card_btc_005)
+                        context.resources.getResourceEntryName(R.drawable.card_btc_005)
                     }
 
                     in "AE01 0000 0000 0000".."AE01 0000 0000 4999" -> {
-                        context.resources.getResourceName(R.drawable.card_btc_001)
+                        context.resources.getResourceEntryName(R.drawable.card_btc_001)
                     }
                     in "AE01 0000 0000 5000".."AE01 0000 0000 9999" -> {
-                        context.resources.getResourceName(R.drawable.card_btc_005)
+                        context.resources.getResourceEntryName(R.drawable.card_btc_005)
                     }
 
                     in "CB01 0000 0000 0000".."CB01 0000 0000 9999" -> {
-                        context.resources.getResourceName(R.drawable.card_btc_001)
+                        context.resources.getResourceEntryName(R.drawable.card_btc_001)
                     }
                     in "CB01 0000 0001 0000".."CB01 0000 0001 9999" -> {
-                        context.resources.getResourceName(R.drawable.card_btc_005)
+                        context.resources.getResourceEntryName(R.drawable.card_btc_005)
                     }
 
                     in "CB01 0000 0002 0000".."CB01 0000 0003 9999" -> {
-                        context.resources.getResourceName(R.drawable.card_btc_001)
+                        context.resources.getResourceEntryName(R.drawable.card_btc_001)
                     }
                     in "CB01 0000 0004 0000".."CB01 0000 0005 9999" -> {
-                        context.resources.getResourceName(R.drawable.card_btc_005)
+                        context.resources.getResourceEntryName(R.drawable.card_btc_005)
                     }
 
                     in "CB02 0000 0000 0000".."CB02 0000 0002 4999" -> {
-                        context.resources.getResourceName(R.drawable.card_btc_001)
+                        context.resources.getResourceEntryName(R.drawable.card_btc_001)
                     }
                     in "CB02 0000 0002 5000".."CB02 0000 0004 9999" -> {
-                        context.resources.getResourceName(R.drawable.card_btc_005)
+                        context.resources.getResourceEntryName(R.drawable.card_btc_005)
                     }
 
                     in "CB05 0000 1000 0000".."CB05 0000 1000 9999" -> {
-                        context.resources.getResourceName(R.drawable.card_btc_001)
+                        context.resources.getResourceEntryName(R.drawable.card_btc_001)
                     }
 
                     else -> {
                         val batchInfo = batches[card.batch] ?: return getDefaultArtworkBitmap()
                         batchInfo.artworkId
                     }
-                }
-        if( artworkId.contains('/'))
-            artworkId=artworkId.split('/').last()
+                } ?: return getDefaultArtworkBitmap()
+//        if (artworkId.contains('/'))
+//            artworkId = artworkId.split('/').last()
         return getArtworkBitmap(artworkId) ?: return getDefaultArtworkBitmap()
+    }
+
+    fun applySubstitution(card: TangemCard) {
+        val batchInfo = batches[card.batch] ?: return
+        val substitution = batchInfo.getDataSubstitution(card.batch) ?: return
+        substitution.applyToCard(card)
     }
 
     data class ArtworkInfo(
@@ -196,51 +231,40 @@ data class ArtworksStorage(
     )
 
     data class BatchInfo(
-            val artworkId: String
-    )
+            val artworkId: String?,
+            val dataSubstitution: String?,
+            val dataSubstitutionSignature: String?
+    ) {
 
-    inner class FileCache(context: Context) {
-
-        private var cacheDir: File? = null
-
-        init {
-            cacheDir = File(context.filesDir, "artworks")
-            //Find the dir to save cached images
-//            if (android.os.Environment.getExternalStorageState() == android.os.Environment.MEDIA_MOUNTED)
-//                cacheDir = File(android.os.Environment.getExternalStorageDirectory(), "artworks_cache")
-//            else
-//                cacheDir = context.getCacheDir()
-            if (!cacheDir!!.exists())
-                cacheDir!!.mkdirs()
-        }
-
-        private fun getFile(artworkId: String): File {
-            return File(cacheDir, "$artworkId.png")
-        }
-
-        fun getBitmap(artworkId: String): Bitmap? {
-            return try {
-                BitmapFactory.decodeFile(getFile(artworkId).absolutePath)
-            } catch (E: Exception) {
-                E.printStackTrace()
+        fun getDataSubstitution(batch: String): CardDataSubstitution? {
+            return if (CardDataSubstitution.verifySignature(batch, dataSubstitution, dataSubstitutionSignature)) {
+                Gson().fromJson(dataSubstitution, CardDataSubstitution::class.java)
+            } else {
                 null
             }
         }
 
-        fun saveBitmap(artworkId: String, data: ByteArray) {
-            val file = getFile(artworkId)
-            file.writeBytes(data)
+        class CardDataSubstitution(
+                val tokenSymbol: String?,
+                val tokenDecimal: Int?,
+                val contractAddress: String?
+        ) {
+            fun applyToCard(card: TangemCard) {
+                if (card.tokenSymbol.isNullOrBlank()) card.tokenSymbol = tokenSymbol
+                if (tokenDecimal != null) card.tokensDecimal = tokenDecimal
+                if (card.contractAddress.isNullOrBlank()) card.contractAddress = contractAddress
+            }
+
+            companion object {
+                private val substitutionPublicKey: ByteArray = byteArrayOf(0x00, 0x00)
+                fun verifySignature(batch: String, substitutionData: String?, substitutionSignature: String?): Boolean {
+                    if (substitutionData == null && substitutionSignature == null) return true
+                    if (substitutionData == null || substitutionSignature == null) return false
+                    val dataToSign = batch.toByteArray(StandardCharsets.UTF_8) + substitutionData.toByteArray(StandardCharsets.UTF_8)
+                    return CardCrypto.VerifySignature(substitutionPublicKey, dataToSign, Util.hexToBytes(substitutionSignature))
+                }
+            }
+
         }
-
-        fun clear() {
-            val files = cacheDir!!.listFiles() ?: return
-            for (f in files)
-                f.delete()
-        }
-
-    }
-
-    companion object {
-        const val defaultArtworkId = ""
     }
 }
