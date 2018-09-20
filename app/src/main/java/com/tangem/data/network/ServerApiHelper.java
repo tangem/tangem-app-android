@@ -5,10 +5,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
-import com.tangem.data.network.model.CardVerify;
-import com.tangem.data.network.model.CardVerifyAndGetArtwork;
-import com.tangem.data.network.model.CardVerifyBody;
-import com.tangem.data.network.model.CardVerifyResponse;
+import com.tangem.data.network.model.CardVerifyAndGetInfo;
 import com.tangem.data.network.model.InfuraBody;
 import com.tangem.data.network.model.InfuraResponse;
 import com.tangem.data.network.model.RateInfoResponse;
@@ -242,17 +239,17 @@ public class ServerApiHelper {
      * HTTP
      * Card verify
      */
-    private CardVerifyAndGetArtworkListener cardVerifyAndGetArtworkListener;
+    private CardVerifyAndGetInfoListener cardVerifyAndGetInfoListener;
 
-    public interface CardVerifyAndGetArtworkListener {
-        void onCardVerifyAndGetArtwork(CardVerifyAndGetArtwork.Response cardVerifyAndGetArtworkResponse);
+    public interface CardVerifyAndGetInfoListener {
+        void onCardVerifyAndGetInfo(CardVerifyAndGetInfo.Response cardVerifyAndGetArtworkResponse);
     }
 
-    public void setCardVerifyAndGetArtworkListener(CardVerifyAndGetArtworkListener listener) {
-        cardVerifyAndGetArtworkListener = listener;
+    public void setCardVerifyAndGetInfoListener(CardVerifyAndGetInfoListener listener) {
+        cardVerifyAndGetInfoListener = listener;
     }
 
-    public void cardVerifyAndGetArtwork(TangemCard card) {
+    public void cardVerifyAndGetInfo(TangemCard card) {
 
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
@@ -269,26 +266,26 @@ public class ServerApiHelper {
 
         TangemApi tangemApi = retrofit.create(TangemApi.class);
 
-        List<CardVerifyAndGetArtwork.Request.Item> requests = new ArrayList<>();
-        requests.add(new CardVerifyAndGetArtwork.Request.Item(Util.bytesToHex(card.getCID()), Util.bytesToHex(card.getCardPublicKey())));
+        List<CardVerifyAndGetInfo.Request.Item> requests = new ArrayList<>();
+        requests.add(new CardVerifyAndGetInfo.Request.Item(Util.bytesToHex(card.getCID()), Util.bytesToHex(card.getCardPublicKey())));
 
-        CardVerifyAndGetArtwork.Request requestBody = new CardVerifyAndGetArtwork.Request(requests);
+        CardVerifyAndGetInfo.Request requestBody = new CardVerifyAndGetInfo.Request(requests);
 
-        Call<CardVerifyAndGetArtwork.Response> call = tangemApi.getCardVerifyAndGetArtwork(requestBody);
-        call.enqueue(new Callback<CardVerifyAndGetArtwork.Response>() {
+        Call<CardVerifyAndGetInfo.Response> call = tangemApi.getCardVerifyAndGetInfo(requestBody);
+        call.enqueue(new Callback<CardVerifyAndGetInfo.Response>() {
             @Override
-            public void onResponse(@NonNull Call<CardVerifyAndGetArtwork.Response> call, @NonNull Response<CardVerifyAndGetArtwork.Response> response) {
+            public void onResponse(@NonNull Call<CardVerifyAndGetInfo.Response> call, @NonNull Response<CardVerifyAndGetInfo.Response> response) {
                 if (response.code() == 200) {
-                    CardVerifyAndGetArtwork.Response cardVerifyAndGetArtworkResponse = response.body();
-                    cardVerifyAndGetArtworkListener.onCardVerifyAndGetArtwork(cardVerifyAndGetArtworkResponse);
-                    Log.i(TAG, "cardVerifyAndGetArtwork onResponse " + response.code());
+                    CardVerifyAndGetInfo.Response cardVerifyAndGetArtworkResponse = response.body();
+                    cardVerifyAndGetInfoListener.onCardVerifyAndGetInfo(cardVerifyAndGetArtworkResponse);
+                    Log.i(TAG, "cardVerifyAndGeInfo onResponse " + response.code());
                 } else
-                    Log.e(TAG, "cardVerifyAndGetArtwork onResponse " + response.code());
+                    Log.e(TAG, "cardVerifyAndGetInfo onResponse " + response.code());
             }
 
             @Override
-            public void onFailure(@NonNull Call<CardVerifyAndGetArtwork.Response> call, @NonNull Throwable t) {
-                Log.e(TAG, "cardVerifyAndGetArtwork onFailure " + t.getMessage());
+            public void onFailure(@NonNull Call<CardVerifyAndGetInfo.Response> call, @NonNull Throwable t) {
+                Log.e(TAG, "cardVerifyAndGetInfo onFailure " + t.getMessage());
             }
         });
     }
