@@ -169,7 +169,8 @@ public class TLV {
     }
 
     public String getAsString() {
-        //String s=String.valueOf(Value);
+        if( Value.length==0 ) return "";
+
         if (Value[Value.length - 1] == 0) {
             String s1 = new String(Arrays.copyOfRange(Value, 0, Value.length - 1), Charset.forName("utf-8"));
             return s1.trim();
