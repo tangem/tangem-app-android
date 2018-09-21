@@ -1509,44 +1509,6 @@ public class TangemCard {
         return new String(hexChars);
     }
 
-    public int getCardImageResource() {
-        switch (getBatch()) {
-            case "0004":
-            case "0006":
-            case "0010":
-                return R.drawable.card_btc_001;
-            case "0005":
-            case "0007":
-            case "0011":
-                return R.drawable.card_btc_005;
-            case "0012":
-                return R.drawable.card_seed;
-            case "0013":
-                return R.drawable.card_btc_hk_s;
-            case "0014":
-                return R.drawable.card_btc_0014;
-            case "0015":
-                return R.drawable.card_btc_000;
-            case "0016":
-                return R.drawable.card_eth000;
-            case "0017":
-                return R.drawable.card_qlear200;
-            case "0019":
-                return R.drawable.card_cle100;
-            case "001A":
-                return R.drawable.card_btc_001a;
-            case "001B":
-                return R.drawable.card_btc_001b;
-            case "001C":
-                return R.drawable.card_btc_001c;
-            case "001D":
-                return R.drawable.card_eth_001d;
-
-            default:
-                return R.drawable.card_default;
-        }
-    }
-
     public enum EncryptionMode {
         None((byte) 0x0), Fast((byte) 0x1), Strong((byte) 0x2);
 
