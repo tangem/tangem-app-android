@@ -19,7 +19,6 @@ import java.lang.Exception
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 
-
 data class LocalStorage(
         val context: Context
 ) {
@@ -36,9 +35,17 @@ data class LocalStorage(
             cacheDir!!.mkdirs()
 
         if (artworksFile.exists()) {
-            artworksFile.bufferedReader().use { artworks = Gson().fromJson(it, object : TypeToken<HashMap<String, ArtworkInfo>>() {}.type) }
+            try {
+                artworksFile.bufferedReader().use { artworks = Gson().fromJson(it, object : TypeToken<HashMap<String, ArtworkInfo>>() {}.type) }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                artworks = HashMap()
+            }
         } else {
             artworks = HashMap()
+        }
+
+        if (artworks.count() == 0) {
             putResourceArtworkToCatalog(R.drawable.card_default, false)
             putResourceArtworkToCatalog(R.drawable.card_ru006, false)
             putResourceArtworkToCatalog(R.drawable.card_ru007, false)
@@ -54,30 +61,37 @@ data class LocalStorage(
             putResourceArtworkToCatalog(R.drawable.card_ru023, true)
         }
         if (batchesFile.exists()) {
-            batchesFile.bufferedReader().use { batches = Gson().fromJson(it, object : TypeToken<HashMap<String, BatchInfo>>() {}.type) }
+            try {
+                batchesFile.bufferedReader().use { batches = Gson().fromJson(it, object : TypeToken<HashMap<String, BatchInfo>>() {}.type) }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                batches = HashMap()
+            }
         } else {
             batches = HashMap()
-
-            putBatchToCatalog("0004", R.drawable.card_ru006, false)
-            putBatchToCatalog("0006", R.drawable.card_ru006, false)
-            putBatchToCatalog("0010", R.drawable.card_ru006, false)
-
-            putBatchToCatalog("0005", R.drawable.card_ru007, false)
-            putBatchToCatalog("0007", R.drawable.card_ru007, false)
-            putBatchToCatalog("0011", R.drawable.card_ru007, false)
-
-            putBatchToCatalog("0012", R.drawable.card_ru011, false)
-            putBatchToCatalog("0013", R.drawable.card_ru012, false)
-            putBatchToCatalog("0014", R.drawable.card_ru006, false)
-            putBatchToCatalog("0015", R.drawable.card_ru020, false)
-            putBatchToCatalog("0016", R.drawable.card_ru021, false)
-            putBatchToCatalog("0017", R.drawable.card_ru013, false)
-            putBatchToCatalog("0019", R.drawable.card_ru016, false)
-            putBatchToCatalog("001A", R.drawable.card_ru014, false)
-            putBatchToCatalog("001B", R.drawable.card_ru015, false)
-            putBatchToCatalog("001C", R.drawable.card_ru023, false)
-            putBatchToCatalog("001D", R.drawable.card_ru022, true)
         }
+
+//        if (batches.count() == 0) {
+//            putBatchToCatalog("0004", R.drawable.card_ru006, false)
+//            putBatchToCatalog("0006", R.drawable.card_ru006, false)
+//            putBatchToCatalog("0010", R.drawable.card_ru006, false)
+//
+//            putBatchToCatalog("0005", R.drawable.card_ru007, false)
+//            putBatchToCatalog("0007", R.drawable.card_ru007, false)
+//            putBatchToCatalog("0011", R.drawable.card_ru007, false)
+//
+//            putBatchToCatalog("0012", R.drawable.card_ru011, false)
+//            putBatchToCatalog("0013", R.drawable.card_ru012, false)
+//            putBatchToCatalog("0014", R.drawable.card_ru006, false)
+//            putBatchToCatalog("0015", R.drawable.card_ru020, false)
+//            putBatchToCatalog("0016", R.drawable.card_ru021, false)
+//            putBatchToCatalog("0017", R.drawable.card_ru013, false)
+//            putBatchToCatalog("0019", R.drawable.card_ru016, false)
+//            putBatchToCatalog("001A", R.drawable.card_ru014, false)
+//            putBatchToCatalog("001B", R.drawable.card_ru015, false)
+//            putBatchToCatalog("001C", R.drawable.card_ru023, false)
+//            putBatchToCatalog("001D", R.drawable.card_ru022, true)
+//        }
     }
 
     private fun getArtworkFile(artworkId: String): File {
@@ -111,7 +125,7 @@ data class LocalStorage(
     fun checkBatchInfoChanged(card: TangemCard, result: CardVerifyAndGetInfo.Response.Item): Boolean {
         var sData: String? = result.substitution?.data
         var sSignature: String? = result.substitution?.signature
-        if( card.batch!=result.batch ) {
+        if (card.batch != result.batch) {
             Log.e("LocalStorage", "Invalid batch received!")
             return false
         }
@@ -133,9 +147,9 @@ data class LocalStorage(
         putArtworkToCatalog(artworkId, false, data, updateDate, true)
     }
 
-    private fun putBatchToCatalog(batch: String, resourceId: Int, forceSave: Boolean = true) {
-        putBatchToCatalog(batch, context.resources.getResourceEntryName(resourceId), null, null, forceSave)
-    }
+//    private fun putBatchToCatalog(batch: String, resourceId: Int, forceSave: Boolean = true) {
+//        putBatchToCatalog(batch, context.resources.getResourceEntryName(resourceId), null, null, forceSave)
+//    }
 
     private fun putBatchToCatalog(batch: String, artworkId: String?, substitution: String?, substitutionSignature: String?, forceSave: Boolean = true) {
         batches[batch] = BatchInfo(artworkId, substitution, substitutionSignature)
@@ -162,7 +176,7 @@ data class LocalStorage(
     }
 
     private fun getArtworkBitmap(artworkId: String): Bitmap? {
-        if( artworkId.isBlank() ) return null
+        if (artworkId.isBlank()) return null
         val info = artworks[artworkId.toLowerCase()] ?: return null
         return if (info.isResource) {
             val resID = context.resources.getIdentifier(artworkId, "drawable", context.packageName)
@@ -186,54 +200,52 @@ data class LocalStorage(
 
     fun getCardArtworkBitmap(card: TangemCard): Bitmap {
         // special cases (first series of cards, hardcode CID->artwork), on new series batch<->artwork
-        val artworkId =
-                when (card.cidDescription) {
-                    in "AA01 0000 0000 0000".."AA01 0000 0000 4999" -> {
-                        context.resources.getResourceEntryName(R.drawable.card_ru006)
-                    }
-                    in "AA01 0000 0000 5000".."AA01 0000 0000 9999" -> {
-                        context.resources.getResourceEntryName(R.drawable.card_ru007)
-                    }
+        val hexCID = Util.bytesToHex(card.cid)
+        val artworkResourceId: Int? = when {
+            hexCID in "AA01000000000000".."AA0100000000 4999" -> R.drawable.card_ru006
+            hexCID in "AA01000000005000".."AA0100000000 9999" -> R.drawable.card_ru007
 
-                    in "AE01 0000 0000 0000".."AE01 0000 0000 4999" -> {
-                        context.resources.getResourceEntryName(R.drawable.card_ru006)
-                    }
-                    in "AE01 0000 0000 5000".."AE01 0000 0000 9999" -> {
-                        context.resources.getResourceEntryName(R.drawable.card_ru007)
-                    }
+            hexCID in "AE01000000000000".."AE010000 0000 4999" -> R.drawable.card_ru006
+            hexCID in "AE01000000005000".."AE010000 0000 9999" -> R.drawable.card_ru007
 
-                    in "CB01 0000 0000 0000".."CB01 0000 0000 9999" -> {
-                        context.resources.getResourceEntryName(R.drawable.card_ru006)
-                    }
-                    in "CB01 0000 0001 0000".."CB01 0000 0001 9999" -> {
-                        context.resources.getResourceEntryName(R.drawable.card_ru007)
-                    }
+            hexCID in "CB01000000000000".."CB010000 0000 9999" -> R.drawable.card_ru006
+            hexCID in "CB01000000010000".."CB010000 0001 9999" -> R.drawable.card_ru007
 
-                    in "CB01 0000 0002 0000".."CB01 0000 0003 9999" -> {
-                        context.resources.getResourceEntryName(R.drawable.card_ru006)
-                    }
-                    in "CB01 0000 0004 0000".."CB01 0000 0005 9999" -> {
-                        context.resources.getResourceEntryName(R.drawable.card_ru007)
-                    }
+            hexCID in "CB01000000020000".."CB010000 0003 9999" -> R.drawable.card_ru006
+            hexCID in "CB01000000040000".."CB010000 0005 9999" -> R.drawable.card_ru007
 
-                    in "CB02 0000 0000 0000".."CB02 0000 0002 4999" -> {
-                        context.resources.getResourceEntryName(R.drawable.card_ru006)
-                    }
-                    in "CB02 0000 0002 5000".."CB02 0000 0004 9999" -> {
-                        context.resources.getResourceEntryName(R.drawable.card_ru007)
-                    }
+            hexCID in "CB02000000000000".."CB020000 0002 4999" -> R.drawable.card_ru006
+            hexCID in "CB02000000025000".."CB020000 0004 9999" -> R.drawable.card_ru007
 
-                    in "CB05 0000 1000 0000".."CB05 0000 1000 9999" -> {
-                        context.resources.getResourceEntryName(R.drawable.card_ru006)
-                    }
+            hexCID in "CB05000010000000".."CB050000 1000 9999" -> R.drawable.card_ru006
 
-                    else -> {
-                        val batchInfo = batches[card.batch] ?: return getDefaultArtworkBitmap()
-                        batchInfo.artworkId
-                    }
-                } ?: return getDefaultArtworkBitmap()
-//        if (artworkId.contains('/'))
-//            artworkId = artworkId.split('/').last()
+            card.batch == "0004" -> R.drawable.card_ru006
+            card.batch == "0006" -> R.drawable.card_ru006
+            card.batch == "0010" -> R.drawable.card_ru006
+            card.batch == "0005" -> R.drawable.card_ru007
+            card.batch == "0007" -> R.drawable.card_ru007
+            card.batch == "0011" -> R.drawable.card_ru007
+            card.batch == "0012" -> R.drawable.card_ru011
+            card.batch == "0013" -> R.drawable.card_ru012
+            card.batch == "0014" -> R.drawable.card_ru006
+            card.batch == "0015" -> R.drawable.card_ru020
+            card.batch == "0016" -> R.drawable.card_ru021
+            card.batch == "0017" -> R.drawable.card_ru013
+            card.batch == "0019" -> R.drawable.card_ru016
+            card.batch == "001A" -> R.drawable.card_ru014
+            card.batch == "001B" -> R.drawable.card_ru015
+            card.batch == "001C" -> R.drawable.card_ru023
+            card.batch == "001D" -> R.drawable.card_ru022
+
+            else -> null
+        }
+
+        if (artworkResourceId != null) {
+            val artworkId = context.resources.getResourceEntryName(artworkResourceId)
+            return getArtworkBitmap(artworkId) ?: return getDefaultArtworkBitmap()
+        }
+        val batchInfo = batches[card.batch] ?: return getDefaultArtworkBitmap()
+        val artworkId = batchInfo.artworkId ?: return getDefaultArtworkBitmap()
         return getArtworkBitmap(artworkId) ?: return getDefaultArtworkBitmap()
     }
 
@@ -243,13 +255,13 @@ data class LocalStorage(
         substitution.applyToCard(card)
     }
 
-    data class ArtworkInfo(
+    private data class ArtworkInfo(
             val isResource: Boolean,
             val hash: String,
             val updateDate: Instant?
     )
 
-    data class BatchInfo(
+    private data class BatchInfo(
             val artworkId: String?,
             val dataSubstitution: String?,
             val dataSubstitutionSignature: String?
@@ -272,9 +284,9 @@ data class LocalStorage(
                 private val contractAddress: String?
         ) {
             fun applyToCard(card: TangemCard) {
-                if (card.tokenSymbol.isNullOrBlank()) card.tokenSymbol = tokenSymbol
-                if (tokenDecimal != null) card.tokensDecimal = tokenDecimal
-                if (card.contractAddress.isNullOrBlank()) card.contractAddress = contractAddress
+                if (tokenSymbol != null && card.tokenSymbol.isNullOrBlank()) card.tokenSymbol = tokenSymbol
+                if (tokenDecimal != null && card.tokensDecimal == 0) card.tokensDecimal = tokenDecimal
+                if (contractAddress != null && card.contractAddress.isNullOrBlank()) card.contractAddress = contractAddress
             }
 
             companion object {
