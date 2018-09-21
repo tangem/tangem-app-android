@@ -468,15 +468,8 @@ public class CardProtocol {
 
                 // Hardcoded smart contracts for the cards manufactured before registration of smart-contract in ETH
 
-                if( mCard.getBatch().equals("0017") )
-                {
-                    mCard.setContractAddress("0x9Eef75bA8e81340da9D8d1fd06B2f313DB88839c");
-                }
-                else if( mCard.getBatch().equals("0019") )
-                {
-                    mCard.setContractAddress("0x0c056b0cda0763cc14b8b2d6c02465c91e33ec72");
-                }
-                else if (contractAddress != null)
+
+                if (contractAddress != null)
                 {
                     mCard.setContractAddress(contractAddress.getAsString());
                 }
@@ -484,9 +477,6 @@ public class CardProtocol {
                 if (tokens_decimal != null)
                     mCard.setTokensDecimal(tokens_decimal.getAsInt());
 
-                // this method has reflection TokenSymbol
-                // you mast call setBlockchainIDFromCard after calling setTokensDecimal
-                mCard.setBlockchainIDFromCard(tlvCardData.getTLV(TLV.Tag.TAG_Blockchain_ID).getAsString());
                 byte[] tlvPersonalizationDT = tlvCardData.getTLV(TLV.Tag.TAG_ManufactureDateTime).Value;
                 int year = (tlvPersonalizationDT[0] & 0xFF) << 8 | (tlvPersonalizationDT[1] & 0xFF);
                 int month = tlvPersonalizationDT[2] - 1;
@@ -525,15 +515,28 @@ public class CardProtocol {
                 }
 
                 // substitutions for card, that was produced with wrong blockchain data (for example token contract was unknown)
+                // this method must be called after set issuer because substitution is verified by issuer data key
                 try {
-                    LocalStorage localStorage = new LocalStorage(mContext);
-                    localStorage.applySubstitution(mCard);
+//                    if( mCard.getBatch().equals("0017") )
+//                    {
+//                        mCard.setContractAddress("0x9Eef75bA8e81340da9D8d1fd06B2f313DB88839c");
+//                    }
+//                    else if( mCard.getBatch().equals("0019") )
+//                    {
+//                        mCard.setContractAddress("0x0c056b0cda0763cc14b8b2d6c02465c91e33ec72");
+//                    }else {
+                        LocalStorage localStorage = new LocalStorage(mContext);
+                        localStorage.applySubstitution(mCard);
+//                    }
                 }catch(Exception e)
                 {
                     Log.e(logTag, "Can't apply card data substitution");
                     e.printStackTrace();
                 }
 
+                // this method has reflection TokenSymbol
+                // you mast call setBlockchainIDFromCard after calling setTokensXXX and make substitutions
+                mCard.setBlockchainIDFromCard(tlvCardData.getTLV(TLV.Tag.TAG_Blockchain_ID).getAsString());
 
                 try {
                     mCard.setSettingsMask(readResult.getTagAsInt(TLV.Tag.TAG_SettingsMask));
