@@ -240,11 +240,16 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 Log.w(TAG, "Batch ${result.batch} info  changed to '$result'")
                 ivTangemCard.setImageBitmap(localStorage.getCardArtworkBitmap(card!!))
                 localStorage.applySubstitution(card!!)
+                if (card!!.blockchain == Blockchain.Token || card!!.blockchain == Blockchain.Ethereum) {
+                    //TODO: change this very bad code - it need because we have switch to token from ethereum if token symbol specified
+                    card!!.setBlockchainIDFromCard(Blockchain.Ethereum.id)
+                }
                 updateViews()
             }
-            if (result.artwork!=null && localStorage.checkNeedUpdateArtwork(result.artwork)) {
+            if (result.artwork != null && localStorage.checkNeedUpdateArtwork(result.artwork)) {
                 Log.w(TAG, "Artwork '${result.artwork!!.id}' updated, need download")
                 serverApiHelper!!.requestArtwork(result.artwork!!.id, result.artwork!!.getUpdateDate(), card!!)
+                refresh()
             }
 //            Log.i(TAG, "setCardVerify " + it.results!![0].passed)
         }
