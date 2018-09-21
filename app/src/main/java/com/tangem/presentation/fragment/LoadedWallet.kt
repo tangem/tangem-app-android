@@ -93,8 +93,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         lastTag = activity!!.intent.getParcelableExtra(MainActivity.EXTRA_LAST_DISCOVERED_TAG)
 
         localStorage = LocalStorage(context!!)
-        localStorage.applySubstitution(card!!)
-
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -238,9 +236,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             if (!result.passed) return@setCardVerifyAndGetInfoListener
 
-            if (localStorage.checkBatchInfoChanged(result)) {
+            if (localStorage.checkBatchInfoChanged(card!!, result)) {
                 Log.w(TAG, "Batch ${result.batch} info  changed to '$result'")
                 ivTangemCard.setImageBitmap(localStorage.getCardArtworkBitmap(card!!))
+                localStorage.applySubstitution(card!!)
                 updateViews()
             }
             if (result.artwork!=null && localStorage.checkNeedUpdateArtwork(result.artwork)) {
@@ -322,6 +321,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         } catch (e: JSONException) {
                             e.printStackTrace()
                         } catch (e: NumberFormatException) {
+                            e.printStackTrace()
+                        } catch (e: Exception) {
                             e.printStackTrace()
                         }
                     }
