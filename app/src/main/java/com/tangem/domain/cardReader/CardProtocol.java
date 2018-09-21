@@ -9,6 +9,7 @@ import android.util.Log;
 import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.CoinEngineFactory;
 import com.tangem.domain.wallet.Issuer;
+import com.tangem.domain.wallet.LocalStorage;
 import com.tangem.domain.wallet.TangemCard;
 import com.tangem.domain.wallet.Manufacturer;
 import com.tangem.util.Util;
@@ -469,7 +470,6 @@ public class CardProtocol {
 
                 if( mCard.getBatch().equals("0017") )
                 {
-
                     mCard.setContractAddress("0x9Eef75bA8e81340da9D8d1fd06B2f313DB88839c");
                 }
                 else if( mCard.getBatch().equals("0019") )
@@ -523,6 +523,17 @@ public class CardProtocol {
                         mCard.setIssuer(Issuer.Unknown());
                     }
                 }
+
+                // substitutions for card, that was produced with wrong blockchain data (for example token contract was unknown)
+                try {
+                    LocalStorage localStorage = new LocalStorage(mContext);
+                    localStorage.applySubstitution(mCard);
+                }catch(Exception e)
+                {
+                    Log.e(logTag, "Can't apply card data substitution");
+                    e.printStackTrace();
+                }
+
 
                 try {
                     mCard.setSettingsMask(readResult.getTagAsInt(TLV.Tag.TAG_SettingsMask));
