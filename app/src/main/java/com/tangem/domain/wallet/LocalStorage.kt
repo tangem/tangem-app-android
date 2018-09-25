@@ -284,9 +284,9 @@ data class LocalStorage(
                 private val contractAddress: String?
         ) {
             fun applyToCard(card: TangemCard) {
-                if (tokenSymbol != null && card.tokenSymbol.isNullOrBlank()) card.tokenSymbol = tokenSymbol
+                if (tokenSymbol != null && (card.tokenSymbol.isNullOrBlank() || card.tokenSymbol.toLowerCase() == "not defined")) card.tokenSymbol = tokenSymbol
                 if (tokenDecimal != null && card.tokensDecimal == 0) card.tokensDecimal = tokenDecimal
-                if (contractAddress != null && card.contractAddress.isNullOrBlank()) card.contractAddress = contractAddress
+                if (contractAddress != null && (card.contractAddress.isNullOrBlank() || card.contractAddress.toLowerCase() == "not defined")) card.contractAddress = contractAddress
             }
 
             companion object {
