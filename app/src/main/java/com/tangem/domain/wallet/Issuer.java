@@ -126,7 +126,7 @@ public class Issuer {
     }
 
     public static Issuer FindIssuer(String ID, byte[] publicDataKey) {
-        for (int i = 0; i < instances.size(); i++) {
+        for (int i = 1; i < instances.size(); i++) {
             try {
                 if (instances.get(i).id.equals(ID) && Arrays.equals(instances.get(i).getPublicDataKey(), publicDataKey)) {
                     return instances.get(i);
