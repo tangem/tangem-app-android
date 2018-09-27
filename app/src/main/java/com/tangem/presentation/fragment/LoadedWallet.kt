@@ -245,11 +245,12 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     card!!.setBlockchainIDFromCard(Blockchain.Ethereum.id)
                 }
                 updateViews()
+                refresh()
             }
             if (result.artwork != null && localStorage.checkNeedUpdateArtwork(result.artwork)) {
                 Log.w(TAG, "Artwork '${result.artwork!!.id}' updated, need download")
                 serverApiHelper!!.requestArtwork(result.artwork!!.id, result.artwork!!.getUpdateDate(), card!!)
-                refresh()
+                updateViews()
             }
 //            Log.i(TAG, "setCardVerify " + it.results!![0].passed)
         }
