@@ -202,22 +202,22 @@ data class LocalStorage(
         // special cases (first series of cards, hardcode CID->artwork), on new series batch<->artwork
         val hexCID = Util.bytesToHex(card.cid)
         val artworkResourceId: Int? = when {
-            hexCID in "AA01000000000000".."AA0100000000 4999" -> R.drawable.card_ru006
-            hexCID in "AA01000000005000".."AA0100000000 9999" -> R.drawable.card_ru007
+            hexCID in "AA01000000000000".."AA01000000004999" -> R.drawable.card_ru006
+            hexCID in "AA01000000005000".."AA01000000009999" -> R.drawable.card_ru007
 
-            hexCID in "AE01000000000000".."AE010000 0000 4999" -> R.drawable.card_ru006
-            hexCID in "AE01000000005000".."AE010000 0000 9999" -> R.drawable.card_ru007
+            hexCID in "AE01000000000000".."AE01000000004999" -> R.drawable.card_ru006
+            hexCID in "AE01000000005000".."AE01000000009999" -> R.drawable.card_ru007
 
-            hexCID in "CB01000000000000".."CB010000 0000 9999" -> R.drawable.card_ru006
-            hexCID in "CB01000000010000".."CB010000 0001 9999" -> R.drawable.card_ru007
+            hexCID in "CB01000000000000".."CB01000000009999" -> R.drawable.card_ru006
+            hexCID in "CB01000000010000".."CB01000000019999" -> R.drawable.card_ru007
 
-            hexCID in "CB01000000020000".."CB010000 0003 9999" -> R.drawable.card_ru006
-            hexCID in "CB01000000040000".."CB010000 0005 9999" -> R.drawable.card_ru007
+            hexCID in "CB01000000020000".."CB01000000039999" -> R.drawable.card_ru006
+            hexCID in "CB01000000040000".."CB01000000059999" -> R.drawable.card_ru007
 
-            hexCID in "CB02000000000000".."CB020000 0002 4999" -> R.drawable.card_ru006
-            hexCID in "CB02000000025000".."CB020000 0004 9999" -> R.drawable.card_ru007
+            hexCID in "CB02000000000000".."CB02000000024999" -> R.drawable.card_ru006
+            hexCID in "CB02000000025000".."CB02000000049999" -> R.drawable.card_ru007
 
-            hexCID in "CB05000010000000".."CB050000 1000 9999" -> R.drawable.card_ru006
+            hexCID in "CB05000010000000".."CB05000010009999" -> R.drawable.card_ru006
 
             card.batch == "0004" -> R.drawable.card_ru006
             card.batch == "0006" -> R.drawable.card_ru006
