@@ -16,7 +16,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 27
         versionCode 80
-        versionName "0.89.1." + generateVersionName()
+        versionName "0.89.2." + generateVersionName()
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     androidExtensions {
