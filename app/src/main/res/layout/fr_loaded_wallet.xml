@@ -66,7 +66,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerInParent="true"
-                        android:alpha="0.8"
+                        android:alpha="1"
                         android:fontFamily="@font/maaxmedium"
                         android:text="@string/verifying"
                         android:textColor="@color/colorPrimary"
@@ -77,7 +77,7 @@
                         android:layout_width="@dimen/size_progress_bar_big"
                         android:layout_height="@dimen/size_progress_bar_big"
                         android:layout_centerInParent="true"
-                        android:alpha="0.8"
+                        android:alpha="1"
                         android:elevation="1dp"
                         android:progressTint="@color/colorPrimary" />
 
