@@ -38,6 +38,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class CardCrypto {
     public static PublicKey LoadPublicKey(byte[] publicKeyArray) throws Exception {
+        if( publicKeyArray==null ) throw new Exception("Public key not specified!");
         ECNamedCurveParameterSpec spec = ECNamedCurveTable.getParameterSpec("secp256k1");
         KeyFactory factory = KeyFactory.getInstance("EC", "SC");
 
