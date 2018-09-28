@@ -87,7 +87,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         sp = PreferenceManager.getDefaultSharedPreferences(activity)
 
-        card = TangemCard(activity!!.intent.getStringExtra(TangemCard.EXTRA_CARD))
+        card = TangemCard(activity!!.intent.getStringExtra(TangemCard.EXTRA_UID))
         card!!.loadFromBundle(activity!!.intent.extras.getBundle(TangemCard.EXTRA_CARD))
 
         lastTag = activity!!.intent.getParcelableExtra(MainActivity.EXTRA_LAST_DISCOVERED_TAG)

@@ -17,7 +17,7 @@ import com.tangem.wallet.R
 import java.io.InputStream
 import java.lang.Exception
 import java.nio.charset.StandardCharsets
-import java.time.Instant
+import java.util.*
 
 data class LocalStorage(
         val context: Context
@@ -119,7 +119,7 @@ data class LocalStorage(
         if (localArtwork.hash == artwork.hash) return false
 
 
-        return localArtwork.updateDate == null || localArtwork.updateDate < artwork.getUpdateDate()
+        return localArtwork.updateDate == null || localArtwork.updateDate.before(artwork.getUpdateDate())
     }
 
     fun checkBatchInfoChanged(card: TangemCard, result: CardVerifyAndGetInfo.Response.Item): Boolean {
@@ -141,7 +141,7 @@ data class LocalStorage(
         return false
     }
 
-    fun updateArtwork(artworkId: String, inputStream: InputStream, updateDate: Instant) {
+    fun updateArtwork(artworkId: String, inputStream: InputStream, updateDate: Date) {
         val data = inputStream.readBytes()
         saveArtworkBitmapToFile(artworkId.toLowerCase(), data)
         putArtworkToCatalog(artworkId, false, data, updateDate, true)
@@ -164,9 +164,9 @@ data class LocalStorage(
         context.resources.openRawResource(R.drawable.card_default).use { putArtworkToCatalog(context.resources.getResourceEntryName(resourceId), true, it.readBytes(), null, forceSave) }
     }
 
-    private fun putArtworkToCatalog(artworkId: String, isResource: Boolean, data: ByteArray, instant: Instant?, forceSave: Boolean = true) {
+    private fun putArtworkToCatalog(artworkId: String, isResource: Boolean, data: ByteArray, updateDate: Date?, forceSave: Boolean = true) {
         val artworkInfo = ArtworkInfo(
-                isResource, Util.bytesToHex(Util.calculateSHA256(data)), instant
+                isResource, Util.bytesToHex(Util.calculateSHA256(data)), updateDate
         )
         artworks[artworkId.toLowerCase()] = artworkInfo
         if (forceSave) {
@@ -258,7 +258,7 @@ data class LocalStorage(
     private data class ArtworkInfo(
             val isResource: Boolean,
             val hash: String,
-            val updateDate: Instant?
+            val updateDate: Date?
     )
 
     private data class BatchInfo(
@@ -294,7 +294,12 @@ data class LocalStorage(
                     if (substitutionData == null && substitutionSignature == null) return true
                     if (substitutionData == null || substitutionSignature == null) return false
                     val dataToSign = card.batch.toByteArray(StandardCharsets.UTF_8) + substitutionData.toByteArray(StandardCharsets.UTF_8)
-                    return CardCrypto.VerifySignature(card.issuer.publicDataKey, dataToSign, Util.hexToBytes(substitutionSignature))
+                    return try {
+                        CardCrypto.VerifySignature(card.issuerPublicDataKey, dataToSign, Util.hexToBytes(substitutionSignature))
+                    } catch (E: Exception) {
+                        E.printStackTrace()
+                        false
+                    }
                 }
             }
 
