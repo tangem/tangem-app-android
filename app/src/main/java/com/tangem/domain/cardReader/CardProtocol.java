@@ -498,19 +498,19 @@ public class CardProtocol {
 
                 try {
                     if (mCard.getFirmwareVersion().compareTo("1.05") < 0) {
-                        mCard.setIssuer(Issuer.FindIssuer(tlvCardData.getTLV(TLV.Tag.TAG_Issuer_ID).getAsString(), readResult.getTLV(TLV.Tag.TAG_Issuer_Transaction_PublicKey).Value));
+                        mCard.setIssuer(tlvCardData.getTLV(TLV.Tag.TAG_Issuer_ID).getAsString(), readResult.getTLV(TLV.Tag.TAG_Issuer_Transaction_PublicKey).Value);
                     } else {
-                        mCard.setIssuer(Issuer.FindIssuer(tlvCardData.getTLV(TLV.Tag.TAG_Issuer_ID).getAsString(), readResult.getTLV(TLV.Tag.TAG_Issuer_Data_PublicKey).Value));
+                        mCard.setIssuer(tlvCardData.getTLV(TLV.Tag.TAG_Issuer_ID).getAsString(), readResult.getTLV(TLV.Tag.TAG_Issuer_Data_PublicKey).Value);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                     Log.e(logTag, "Cannot get issuer, try a version for older cards");
                     try {
-                        mCard.setIssuer(Issuer.FindIssuer(tlvCardData.getTLV(TLV.Tag.TAG_Issuer_ID).getAsString(), readResult.getTLV(TLV.Tag.TAG_Issuer_Transaction_PublicKey).Value));
+                        mCard.setIssuer(tlvCardData.getTLV(TLV.Tag.TAG_Issuer_ID).getAsString(), readResult.getTLV(TLV.Tag.TAG_Issuer_Transaction_PublicKey).Value);
                     } catch (Exception ee) {
                         ee.printStackTrace();
                         Log.e(logTag, "Cannot get issuer");
-                        mCard.setIssuer(Issuer.Unknown());
+                        mCard.setIssuer(Issuer.Unknown().getID(), null);
                     }
                 }
 
