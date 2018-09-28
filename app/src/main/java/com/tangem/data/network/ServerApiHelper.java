@@ -25,9 +25,9 @@ import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
@@ -297,14 +297,14 @@ public class ServerApiHelper {
     private ArtworkListener artworkListener;
 
     public interface ArtworkListener {
-        void onArtwork(String artworkId, InputStream inputStream, Instant updateDate);
+        void onArtwork(String artworkId, InputStream inputStream, Date updateDate);
     }
 
     public void setArtworkListener(ArtworkListener listener) {
         artworkListener = listener;
     }
 
-    public void requestArtwork(String artworkId, Instant updateDate, TangemCard card) {
+    public void requestArtwork(String artworkId, Date updateDate, TangemCard card) {
 
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
@@ -548,9 +548,9 @@ public class ServerApiHelper {
                 if (response.code() == 200) {
                     String stringResponse;
                     try {
-                        stringResponse = response.body().string();
+                        stringResponse = response.body() != null ? response.body().string() : null;
                         lastVersionListener.onLastVersion(stringResponse);
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
