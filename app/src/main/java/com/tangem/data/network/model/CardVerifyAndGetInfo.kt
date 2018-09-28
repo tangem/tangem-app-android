@@ -1,11 +1,6 @@
 package com.tangem.data.network.model
 
-import android.os.Build
 import java.text.SimpleDateFormat
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 class CardVerifyAndGetInfo {
@@ -38,16 +33,12 @@ class CardVerifyAndGetInfo {
                     var hash: String = "",
                     var date: String = ""
             ) {
-                fun getUpdateDate(): Instant? {
-                    try {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            return LocalDateTime.parse(date, DateTimeFormatter.ISO_LOCAL_DATE_TIME).toInstant(ZoneOffset.UTC)
-                        } else {
-                            return SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US).parse(date).toInstant()
-                        }
+                fun getUpdateDate(): Date? {
+                    return try {
+                        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US).parse(date)
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        return null
+                        null
                     }
                 }
 
