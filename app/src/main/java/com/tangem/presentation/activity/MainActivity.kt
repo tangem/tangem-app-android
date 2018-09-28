@@ -160,13 +160,12 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         val apiHelper = ServerApiHelper()
         apiHelper.setLastVersionListener { response ->
             try {
-                val responseVersionName=response.trim(' ','\n','\r','\t')
-                val responseBuildVersion=responseVersionName.split('.').last()
-                val appBuildVersion=BuildConfig.VERSION_NAME.split('.').last()
-                if (responseBuildVersion.toInt()>appBuildVersion.toInt()) Toast.makeText(this, "There is a new application version: $responseVersionName", Toast.LENGTH_LONG).show()
-            }
-            catch (E: Exception)
-            {
+                if (response.isNullOrEmpty()) return@setLastVersionListener
+                val responseVersionName = response.trim(' ', '\n', '\r', '\t')
+                val responseBuildVersion = responseVersionName.split('.').last()
+                val appBuildVersion = BuildConfig.VERSION_NAME.split('.').last()
+                if (responseBuildVersion.toInt() > appBuildVersion.toInt()) Toast.makeText(this, "There is a new application version: $responseVersionName", Toast.LENGTH_LONG).show()
+            } catch (E: Exception) {
                 E.printStackTrace()
             }
         }
