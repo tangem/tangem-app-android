@@ -579,9 +579,27 @@ public class TangemCard {
     }
 
     private Issuer issuer = Issuer.Unknown();
+    private byte[] issuerPublicDataKey = null;
 
-    public void setIssuer(Issuer issuer) {
-        this.issuer = issuer;
+//    public void setIssuer(Issuer issuer) {
+//        this.issuer = issuer;
+//    }
+
+    public void setIssuer(String issuerID, byte[] issuerPublicDataKey) {
+        this.issuerPublicDataKey = issuerPublicDataKey;
+        this.issuer = Issuer.FindIssuer(issuerID, issuerPublicDataKey);
+    }
+
+    public Issuer getIssuer() {
+        return issuer;
+    }
+
+    public byte[] getIssuerPublicDataKey() {
+        return issuerPublicDataKey;
+    }
+
+    public String getIssuerDescription() {
+        return issuer.getOfficialName();
     }
 
     String contractAddress = "";
@@ -618,13 +636,6 @@ public class TangemCard {
         return tokensDecimal;
     }
 
-    public Issuer getIssuer() {
-        return issuer;
-    }
-
-    public String getIssuerDescription() {
-        return issuer.getOfficialName();
-    }
 
     private byte[] issuerData;
     private byte[] issuerDataSignature;
@@ -1274,6 +1285,7 @@ public class TangemCard {
         if (manufacturer != null) B.putString("Manufacturer", manufacturer.name());
         if (encryptionMode != null) B.putString("EncryptionMode", encryptionMode.name());
         if (issuer != null) B.putString("Issuer", issuer.getID());
+        if (issuerPublicDataKey != null) B.putByteArray("IssuerPublicDataKey", issuerPublicDataKey);
         if (firmwareVersion != null) B.putString("FirmwareVersion", firmwareVersion);
         if (balanceEqual != null) B.putBoolean("isBalanceEqual", balanceEqual);
         if (batch != null) B.putString("Batch", batch);
@@ -1411,6 +1423,8 @@ public class TangemCard {
         if (B.containsKey("FailedBalance"))
             failedBalanceRequestCounter = new AtomicInteger(B.getInt("FailedBalance"));
         if (B.containsKey("Issuer")) issuer = Issuer.FindIssuer(B.getString("Issuer"));
+        if (B.containsKey("IssuerPublicDataKey")) issuerPublicDataKey = B.getByteArray("IssuerPublicDataKey");
+
         if (B.containsKey("FirmwareVersion")) firmwareVersion = B.getString("FirmwareVersion");
         if (B.containsKey("Batch")) batch = B.getString("Batch");
 
