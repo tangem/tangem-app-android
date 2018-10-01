@@ -1,28 +1,28 @@
 package com.tangem.presentation.activity
 
 import android.content.Intent
+import android.nfc.NfcAdapter
+import android.nfc.Tag
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.KeyEvent
-import android.widget.ProgressBar
 import android.widget.Toast
 import com.tangem.data.network.ServerApiHelper
 import com.tangem.data.network.model.InfuraResponse
-
 import com.tangem.data.network.request.ElectrumRequest
-import com.tangem.data.network.request.InfuraRequest
 import com.tangem.data.network.task.send_transaction.ConnectTask
-import com.tangem.data.network.task.send_transaction.ETHRequestTask
+import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.LastSignStorage
 import com.tangem.domain.wallet.TangemCard
 import com.tangem.wallet.R
 import org.json.JSONException
+import java.io.IOException
 import java.math.BigInteger
 
-class SendTransactionActivity : AppCompatActivity() {
+class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback  {
 
     companion object {
         const val EXTRA_UID: String = "UID"
@@ -33,12 +33,15 @@ class SendTransactionActivity : AppCompatActivity() {
     private var serverApiHelper: ServerApiHelper? = null
     var card: TangemCard? = null
     private var tx: String? = null
+    private var nfcManager: NfcManager? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_send_transaction)
 
         MainActivity.commonInit(applicationContext)
+
+        nfcManager = NfcManager(this, this)
 
         serverApiHelper = ServerApiHelper()
 
@@ -156,6 +159,31 @@ class SendTransactionActivity : AppCompatActivity() {
         intent.putExtra("message", getString(R.string.transaction_has_been_successfully_signed))
         setResult(RESULT_OK, intent)
         finish()
+    }
+
+    public override fun onResume() {
+        super.onResume()
+        nfcManager!!.onResume()
+    }
+
+    public override fun onPause() {
+        super.onPause()
+        nfcManager!!.onPause()
+    }
+
+    public override fun onStop() {
+        super.onStop()
+        nfcManager!!.onStop()
+    }
+
+    override fun onTagDiscovered(tag: Tag) {
+        try {
+//            Log.w(javaClass.name, "Ignore discovered tag!")
+            nfcManager!!.ignoreTag(tag)
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+
     }
 
 }
