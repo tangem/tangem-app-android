@@ -132,8 +132,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/maaxmedium"
                     android:textAlignment="center"
-                    android:visibility="invisible"
-                    tools:text="Verification field" />
+                    android:visibility="invisible" />
 
                 <TextView
                     android:id="@+id/tvBalanceLine2"
@@ -144,8 +143,7 @@
                     android:paddingEnd="5dp"
                     android:paddingStart="5dp"
                     android:textAlignment="center"
-                    android:visibility="gone"
-                    tools:text="Do not accept! Wallet verification field. Tap again." />
+                    android:visibility="gone" />
 
             </LinearLayout>
 
