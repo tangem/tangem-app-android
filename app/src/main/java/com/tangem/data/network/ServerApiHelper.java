@@ -119,6 +119,7 @@ public class ServerApiHelper {
      */
     public static final String INFURA_ETH_GET_BALANCE = "eth_getBalance";
     public static final String INFURA_ETH_GET_TRANSACTION_COUNT = "eth_getTransactionCount";
+    public static final String INFURA_ETH_GET_PENDING_COUNT = "eth_getPendingCount";
     public static final String INFURA_ETH_CALL = "eth_call";
     public static final String INFURA_ETH_SEND_RAW_TRANSACTION = "eth_sendRawTransaction";
     public static final String INFURA_ETH_GAS_PRICE = "eth_gasPrice";
@@ -149,7 +150,9 @@ public class ServerApiHelper {
             case INFURA_ETH_GET_TRANSACTION_COUNT:
                 infuraBody = new InfuraBody(method, new String[]{wallet, "latest"}, id);
                 break;
-
+            case INFURA_ETH_GET_PENDING_COUNT:
+                infuraBody = new InfuraBody(INFURA_ETH_GET_TRANSACTION_COUNT, new String[]{wallet, "pending"}, id);
+                break;
             case INFURA_ETH_CALL:
                 String address = wallet.substring(2);
                 infuraBody = new InfuraBody(method, new Object[]{new InfuraBody.EthCallParams("0x70a08231000000000000000000000000" + address, contract), "latest"}, id);
