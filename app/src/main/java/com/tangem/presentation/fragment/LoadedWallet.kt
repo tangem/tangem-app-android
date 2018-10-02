@@ -43,6 +43,7 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
 import org.json.JSONException
 import java.math.BigInteger
+import java.time.Instant
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
 
@@ -74,7 +75,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private var newPIN2 = ""
     private var cardProtocol: CardProtocol? = null
     private var sp: SharedPreferences? = null
-    private val inactiveColor: ColorStateList by lazy { resources.getColorStateList(R.color.primary) }
+    private val inactiveColor: ColorStateList by lazy { resources.getColorStateList(R.color.btn_dark) }
     private val activeColor: ColorStateList by lazy { resources.getColorStateList(R.color.colorAccent) }
 
     private var timerRepeatRefresh: Timer? = null
@@ -87,7 +88,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         sp = PreferenceManager.getDefaultSharedPreferences(activity)
 
-        card = TangemCard(activity!!.intent.getStringExtra(TangemCard.EXTRA_CARD))
+        card = TangemCard(activity!!.intent.getStringExtra(TangemCard.EXTRA_UID))
         card!!.loadFromBundle(activity!!.intent.extras.getBundle(TangemCard.EXTRA_CARD))
 
         lastTag = activity!!.intent.getParcelableExtra(MainActivity.EXTRA_LAST_DISCOVERED_TAG)
@@ -245,6 +246,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
                         card!!.setBalanceConfirmed(balance)
                         card!!.balanceUnconfirmed = 0L
+                        card!!.isBalanceReceived = true
                         if (card!!.blockchain != Blockchain.Token)
                             card!!.decimalBalance = l.toString(10)
                         card!!.decimalBalanceAlter = l.toString(10)
@@ -256,9 +258,18 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         var nonce = infuraResponse.result
                         nonce = nonce.substring(2)
                         val count = BigInteger(nonce, 16)
-                        card!!.setConfirmTXCount(count)
+                        card!!.setConfirmedTXCount(count)
 
                         Log.i("$TAG eth_getTransCount", nonce)
+                    }
+
+                    ServerApiHelper.INFURA_ETH_GET_PENDING_COUNT -> {
+                        var pending = infuraResponse.result
+                        pending = pending.substring(2)
+                        val count = BigInteger(pending, 16)
+                        card!!.setUnconfirmedTXCount(count)
+
+                        Log.i("$TAG eth_getPendingTxCount", pending)
                     }
 
                     ServerApiHelper.INFURA_ETH_CALL -> {
@@ -275,6 +286,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //                            refresh()
                                 requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
                                 requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
+                                requestInfura(ServerApiHelper.INFURA_ETH_GET_PENDING_COUNT, "")
                                 return@onInfuraSuccess
                             }
                             card!!.setBalanceConfirmed(balance)
@@ -285,6 +297,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
                             requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
                             requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
+                            requestInfura(ServerApiHelper.INFURA_ETH_GET_PENDING_COUNT, "")
                         } catch (e: JSONException) {
                             e.printStackTrace()
                         } catch (e: NumberFormatException) {
@@ -315,9 +328,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
                             Log.e("$TAG TX_RESULT", hashTX)
 
-                            val nonce = card!!.GetConfirmTXCount()
+                            val nonce = card!!.getConfirmedTXCount()
                             nonce.add(BigInteger.valueOf(1))
-                            card!!.setConfirmTXCount(nonce)
+                            card!!.setConfirmedTXCount(nonce)
 
                             Log.e("$TAG TX_RESULT", hashTX)
 
@@ -654,13 +667,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             val engine = CoinEngineFactory.create(card!!.blockchain)
 
-            if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
-                val validator = BalanceValidator()
-                validator.Check(card)
-                tvBalanceLine1.text = validator.firstLine
-                tvBalanceLine2.text = validator.secondLine
-                tvBalanceLine1.setTextColor(ContextCompat.getColor(context!!, validator.color))
-            }
+            val validator = BalanceValidator()
+            validator.Check(card, false)
+            tvBalanceLine1.text = validator.firstLine
+            tvBalanceLine2.text = validator.getSecondLine(false)
+            tvBalanceLine1.setTextColor(ContextCompat.getColor(context!!, validator.color))
 
             if (engine!!.hasBalanceInfo(card) || card!!.offlineBalance == null) {
                 if (card!!.blockchain == Blockchain.Token) {
@@ -681,7 +692,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             tvBlockchain.text = card!!.blockchainName
 
-            if (card!!.hasBalanceInfo()) {
+            if (card!!.hasBalanceInfo() && (card!!.balance !=                                                                                                                                                                                                                          0L) ) {
                 btnExtract.isEnabled = true
                 btnExtract.backgroundTintList = activeColor
             } else {
@@ -777,6 +788,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
             requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
+            requestInfura(ServerApiHelper.INFURA_ETH_GET_PENDING_COUNT, "")
 
             requestRateInfo("ethereum")
         }
@@ -923,12 +935,15 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         startActivityForResult(intent, REQUEST_CODE_SWAP_PIN)
     }
 
+    var showTime: Date= Date()
+
     private fun showSingleToast(text: Int) {
-        if (singleToast == null || !singleToast!!.view.isShown) {
+        if (singleToast == null || !singleToast!!.view.isShown || showTime.time+2000<Date().time ) {
             if (singleToast != null)
                 singleToast!!.cancel()
             singleToast = Toast.makeText(context, text, Toast.LENGTH_LONG)
             singleToast!!.show()
+            showTime=Date()
         }
     }
 
