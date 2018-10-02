@@ -37,20 +37,19 @@ public class ETHRequestTask extends InfuraTask {
                     if (request.isMethod(InfuraRequest.METHOD_ETH_GetGasPrice)) {
                         try {
                             String gasPrice = request.getResultString();
-                            Log.i("sjjoefeff", gasPrice);
+                            Log.i("Gas Price 1", gasPrice);
                             gasPrice = gasPrice.substring(2);
                             BigInteger l = new BigInteger(gasPrice, 16);
 
 
-                            Log.i("sjjoefeff", gasPrice);
+                            Log.i("Gas Price 2", gasPrice);
 
-                            BigInteger m = confirmPaymentActivity.getCard().getBlockchain() == Blockchain.Token ? BigInteger.valueOf(55000) : BigInteger.valueOf(21000);
-                            l = l.multiply(m);
-                            String MinFeeInGwei = confirmPaymentActivity.getCard().getAmountInGwei(String.valueOf(l));
-                            String NormalFeeInGwei = confirmPaymentActivity.getCard().getAmountInGwei(String.valueOf(l.multiply(BigInteger.valueOf(12)).divide(BigInteger.valueOf(10))));
-                            String MaxFeeInGwei = confirmPaymentActivity.getCard().getAmountInGwei(String.valueOf(l.multiply(BigInteger.valueOf(15)).divide(BigInteger.valueOf(10))));
+                            BigInteger GasLimit = confirmPaymentActivity.getCard().getBlockchain() == Blockchain.Token ? BigInteger.valueOf(60000) : BigInteger.valueOf(21000);
+                            String MinFeeInGwei = confirmPaymentActivity.getCard().getAmountInGwei(String.valueOf(l.multiply(GasLimit)));
+                            String NormalFeeInGwei = confirmPaymentActivity.getCard().getAmountInGwei(String.valueOf(l.multiply(BigInteger.valueOf(12)).divide(BigInteger.valueOf(10).multiply(GasLimit))));
+                            String MaxFeeInGwei = confirmPaymentActivity.getCard().getAmountInGwei(String.valueOf(l.multiply(BigInteger.valueOf(15)).divide(BigInteger.valueOf(10).multiply(GasLimit))));
 
-                            Log.i("sjjoefeff", MinFeeInGwei);
+                            Log.i("Min Fee Gwei", MinFeeInGwei);
 
                             confirmPaymentActivity.setMinFee(MinFeeInGwei);
                             confirmPaymentActivity.setNormalFee(NormalFeeInGwei);
