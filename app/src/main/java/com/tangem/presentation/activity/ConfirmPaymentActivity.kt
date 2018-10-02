@@ -253,13 +253,13 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                     ServerApiHelper.INFURA_ETH_GAS_PRICE -> {
                         var gasPrice = infuraResponse.result
                         gasPrice = gasPrice.substring(2)
-                        var l = BigInteger(gasPrice, 16)
+                        // Rounding gas price to integer gweis
+                        var l = BigInteger(gasPrice, 16).divide(BigInteger.valueOf(1000000000L)).multiply(BigInteger.valueOf(1000000000L))
 
                         val m = if (card!!.blockchain == Blockchain.Token) BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
-                        l = l.multiply(m)
-                        val minFeeInGwei = card!!.getAmountInGwei(l.toString())
-                        val normalFeeInGwei = card!!.getAmountInGwei(l.multiply(BigInteger.valueOf(12)).divide(BigInteger.valueOf(10)).toString())
-                        val maxFeeInGwei = card!!.getAmountInGwei(l.multiply(BigInteger.valueOf(15)).divide(BigInteger.valueOf(10)).toString())
+                        val minFeeInGwei = card!!.getAmountInGwei(l.multiply(m).toString())
+                        val normalFeeInGwei = card!!.getAmountInGwei(l.multiply(BigInteger.valueOf(12)).divide(BigInteger.valueOf(10)).multiply(m).toString())
+                        val maxFeeInGwei = card!!.getAmountInGwei(l.multiply(BigInteger.valueOf(15)).divide(BigInteger.valueOf(10)).multiply(m).toString())
 
                         minFee = minFeeInGwei
                         normalFee = normalFeeInGwei
