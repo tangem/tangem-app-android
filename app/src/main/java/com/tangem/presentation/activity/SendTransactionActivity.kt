@@ -99,9 +99,9 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback  
                             Log.e("TX_RESULT", hashTX)
 
 
-                            val nonce = card!!.GetConfirmTXCount()
+                            val nonce = card!!.getConfirmedTXCount()
                             nonce.add(BigInteger.valueOf(1))
-                            card!!.setConfirmTXCount(nonce)
+                            card!!.setConfirmedTXCount(nonce)
                             Log.e("TX_RESULT", hashTX)
 
                             finishWithSuccess()
