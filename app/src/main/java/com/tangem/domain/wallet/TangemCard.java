@@ -47,19 +47,27 @@ public class TangemCard {
     private float rate = 0;
     private float rateAlter = 0;
 
-    private BigInteger countConfirmTX = null;
+    private BigInteger countConfirmedTX = null;
+    private BigInteger countUnconfirmedTX = BigInteger.valueOf(0);
 
-    public BigInteger GetConfirmTXCount() {
-        if (countConfirmTX == null) {
-            countConfirmTX = BigInteger.valueOf(0);
+    public BigInteger getConfirmedTXCount() {
+        if (countConfirmedTX == null) {
+            countConfirmedTX = BigInteger.valueOf(0);
         }
-        return countConfirmTX;
+        return countConfirmedTX;
     }
-
-    public void setConfirmTXCount(BigInteger count) {
-        countConfirmTX = count;
+    public void setConfirmedTXCount(BigInteger count) {
+        countConfirmedTX = count;
     }
-
+    public BigInteger getUnconfirmedTXCount() {
+        if (countUnconfirmedTX == null) {
+            countUnconfirmedTX = BigInteger.valueOf(0);
+        }
+        return countUnconfirmedTX;
+    }
+    public void setUnconfirmedTXCount(BigInteger count) {
+        countUnconfirmedTX = count;
+    }
     public float getRate() {
         return rate;
     }
@@ -1114,7 +1122,12 @@ public class TangemCard {
     }
 
     public Long getBalance() {
-        return balanceConfirmed + balanceUnconfirmed;
+        if (this.getBlockchain() == Blockchain.Bitcoin || this.getBlockchain() == Blockchain.BitcoinCash || this.getBlockchain() == Blockchain.BitcoinTestNet || this.getBlockchain() == Blockchain.BitcoinCashTestNet) {
+            return balanceConfirmed + balanceUnconfirmed;
+        } else if (this.getBlockchain() == Blockchain.Ethereum || this.getBlockchain() == Blockchain.EthereumTestNet) {
+            return 1L; // Todo: Workaround for eth, need to return BigDecimal everywhere
+        }
+        return 0L;
     }
 
     public Long getBalanceUnconfirmed() {
@@ -1329,7 +1342,8 @@ public class TangemCard {
         }
         B.putFloat("rate", rate);
         B.putFloat("rateAlter", rateAlter);
-        B.putString("confirmTx", GetConfirmTXCount().toString(16));
+        B.putString("confirmTx", getConfirmedTXCount().toString(16));
+        B.putString("unconfirmTx", getUnconfirmedTXCount().toString(16));
 
         if (codeConfirmed != null)
             B.putBoolean("codeConfirmed", codeConfirmed);
@@ -1484,7 +1498,9 @@ public class TangemCard {
         if (B.containsKey("rateAlter"))
             rateAlter = B.getFloat("rateAlter");
         if (B.containsKey("confirmTx"))
-            countConfirmTX = new BigInteger(B.getString("confirmTx"), 16);
+            countConfirmedTX = new BigInteger(B.getString("confirmTx"), 16);
+        if (B.containsKey("unconfirmTx"))
+            countUnconfirmedTX = new BigInteger(B.getString("unconfirmTx"), 16);
 
         if (B.containsKey("codeConfirmed"))
             codeConfirmed = B.getBoolean("codeConfirmed");
