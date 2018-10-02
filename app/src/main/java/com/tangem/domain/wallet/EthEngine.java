@@ -318,7 +318,7 @@ public class EthEngine extends CoinEngine {
 
     public byte[] sign(String feeValue, String amountValue, boolean IncFee, String toValue, TangemCard mCard, CardProtocol protocol) throws Exception {
 
-        BigInteger nonceValue = mCard.GetConfirmTXCount();
+        BigInteger nonceValue = mCard.getConfirmedTXCount();
         byte[] pbKey = mCard.getWalletPublicKey();
         boolean flag = (mCard.getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer);
         Issuer issuer = mCard.getIssuer();
