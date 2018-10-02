@@ -41,7 +41,6 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
 import org.json.JSONException
 import java.math.BigInteger
-import java.time.Instant
 import java.util.*
 
 class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, SharedPreferences.OnSharedPreferenceChangeListener {
@@ -219,12 +218,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
 
         // request card verify listener
-//        serverApiHelper!!.setCardVerify {
-//            card!!.isOnlineVerified = it.results!![0].passed
-//            srlLoadedWallet!!.isRefreshing = false
-//
-////            Log.i(TAG, "setCardVerify " + it.results!![0].passed)
-//        }
         serverApiHelper!!.setCardVerifyAndGetInfoListener {
             srlLoadedWallet!!.isRefreshing = false
             val result = it.results!![0]
