@@ -2,6 +2,8 @@ package com.tangem.domain.wallet;
 
 import com.tangem.wallet.R;
 
+import java.math.BigInteger;
+
 public class BalanceValidator {
     private String firstLine;
     private String secondLine;
@@ -11,7 +13,8 @@ public class BalanceValidator {
         return firstLine;
     }
 
-    public String getSecondLine() {
+    public String getSecondLine(Boolean recommend) {
+        if (!recommend) return secondLine;
         if (score > 89) {
             return "Safe to accept. " + secondLine;
         } else if (score > 74) {
@@ -35,77 +38,45 @@ public class BalanceValidator {
         }
     }
 
-    public void Check(TangemCard card) {
+    public void Check(TangemCard card, Boolean attest) {
         firstLine = "Verification failed";
         secondLine = "";
 
-        // rule 1
-        if ((!CheckOfflineBalance(card) && !CheckOnlineBalance(card)) || (!CheckOnlineBalance(card) && HasEverSigned(card))) {
-            score = 0;
-            firstLine = "Unknown balance";
-            secondLine = "Balance cannot be verified. Swipe down to refresh.";
-            return;
-        }
+        if (card.getBlockchain() == Blockchain.Bitcoin) {
 
-        // Workaround before new back-end
-//        if (!HasEverSigned(card)) {
+            if (((card.getOfflineBalance() == null) && !card.isBalanceReceived()) || (!card.isBalanceReceived() && (card.getRemainingSignatures() != card.getMaxSignatures()))) {
+                score = 0;
+                firstLine = "Unknown balance";
+                secondLine = "Balance cannot be verified. Swipe down to refresh.";
+                return;
+            }
+
+            // Workaround before new back-end
+//        if (card.getRemainingSignatures() == card.getMaxSignatures()) {
 //            firstLine = "Verified balance";
 //            secondLine = "Balance confirmed in blockchain. ";
 //            secondLine += "Verified note identity. ";
 //            return;
 //        }
 
-        // rule 2.a
-        if (!VerificationWalletKey(card)) {
-            score = 0;
-            firstLine = "Verification failed";
-            secondLine = "Wallet verification failed. Tap again.";
-            return;
-        }
-
-        // rule 2.c
-        if (!CheckAttestationServiceResult(card) && CheckAttestationServiceAvailable(card)) {
-            score = 0;
-            firstLine = "Not genuine banknote";
-            secondLine = "Tangem Attestation service says the banknote is not genuine.";
-            return;
-        }
-
-        // rule 6
-        if (NotConfirmTransaction(card)) {
-            score = 0;
-            firstLine = "Unguaranted balance";
-            secondLine = "Loading in progress. Wait for full confirmation in blockchain. ";
-            return;
-        }
-
-        // rule 5
-        if (!isCodeConfirmed(card)) {
-            score = 0;
-            firstLine = "Not genuine banknote";
-            secondLine = "Firmware binary code verification failed";
-            return;
-        }
-
-        // rule 5
-        if (card.PIN2 == TangemCard.PIN2_Mode.CustomPIN2) {
-            score = 0;
-            firstLine = "Locked with PIN2";
-            secondLine = "Ask the holder to disable PIN2 before accepting";
-            return;
-        }
-
-        if (card.isBalanceReceived() && card.isBalanceEqual()) {
-            score = 100;
-            firstLine = "Verified balance";
-            secondLine = "Balance confirmed in blockchain. ";
-            if (card.getBalance() == 0) {
-                firstLine = "";
+            if (card.getBalanceUnconfirmed() != 0) {
+                score = 0;
+                firstLine = "Unguaranted balance";
+                secondLine = "Loading in progress. Wait for full confirmation in blockchain. ";
+                return;
             }
-        }
 
-        // rule 4 TODO: need to check SignedHashed against number of outputs in blockchain
-//        if(HasEverSigned(card) && card.getBalance() != 0)
+            if (card.isBalanceReceived() && card.isBalanceEqual()) {
+                score = 100;
+                firstLine = "Verified balance";
+                secondLine = "Balance confirmed in blockchain. ";
+                if (card.getBalance() == 0) {
+                    firstLine = "";
+                }
+            }
+
+            // rule 4 TODO: need to check SignedHashed against number of outputs in blockchain
+//        if((card.getRemainingSignatures() != card.getMaxSignatures()) && card.getBalance() != 0)
 //        {
 //            score = 80;
 //            firstLine = "Unguaranteed balance";
@@ -113,20 +84,11 @@ public class BalanceValidator {
 //            return;
 //        }
 
-        // rule 7
-        if (CheckOfflineBalance(card) && !CheckOnlineBalance(card) && !HasEverSigned(card) && card.getBalance() != 0) {
-            score = 80;
-            firstLine = "Verified offline balance";
-            secondLine = "Can't obtain balance from blockchain. Restore internet connection to be more confident. ";
-        }
-
-        // rule 2.b
-        if (CheckAttestationServiceAvailable(card)) {
-            secondLine += "Verified note identity. ";
-        } else {
-            score = 80;
-            secondLine += "Card identity was not verified. Cannot reach Tangem attestation service. ";
-        }
+            if ((card.getOfflineBalance() != null) && !card.isBalanceReceived() && (card.getRemainingSignatures() == card.getMaxSignatures()) && card.getBalance() != 0) {
+                score = 80;
+                firstLine = "Verified offline balance";
+                secondLine = "Can't obtain balance from blockchain. Restore internet connection to be more confident. ";
+            }
 
 //            if(card.getFailedBalanceRequestCounter()!=0) {
 //                score -= 5 * card.getFailedBalanceRequestCounter();
@@ -135,47 +97,84 @@ public class BalanceValidator {
 //                    return;
 //            }
 
-        //
+            //
 //            if(card.isBalanceReceived() && !card.isBalanceEqual()) {
 //                score = 0;
 //                firstLine = "Disputed balance";
 //                secondLine += " Cannot obtain trusted balance at the moment. Try to tap and check this banknote later.";
 //                return;
 //            }
+        } else if ((card.getBlockchain()  == Blockchain.Ethereum) || (card.getBlockchain()  == Blockchain.Token)) {
 
+            if (card.getBalance() == null) {
+                score = 0;
+                firstLine = "Unknown balance";
+                secondLine = "Balance cannot be verified. Swipe down to refresh.";
+                return;
+            }
 
-    }
+            if (!card.getUnconfirmedTXCount().equals(card.getConfirmedTXCount())) {
+                score = 0;
+                firstLine = "Unguaranteed balance";
+                secondLine = "Transaction is in progress. Wait for confirmation in blockchain. ";
+                return;
+            }
 
-    boolean CheckOfflineBalance(TangemCard card) {
-        return card.getOfflineBalance() != null;
-    }
+            if (card.isBalanceReceived()) {
+                score = 100;
+                firstLine = "Verified balance";
+                secondLine = "Balance confirmed in blockchain. ";
+                if (card.getBalance() == 0) {
+                    firstLine = "";
+                }
+            }
 
-    boolean CheckOnlineBalance(TangemCard card) {
-        return card.isBalanceReceived();
-    }
+            if ((card.getOfflineBalance() != null) && !card.isBalanceReceived() && (card.getRemainingSignatures() == card.getMaxSignatures()) && card.getBalance() != 0) {
+                score = 80;
+                firstLine = "Verified offline balance";
+                secondLine = "Can't obtain balance from blockchain. Restore internet connection to be more confident. ";
+            }
+        }
 
-    boolean VerificationWalletKey(TangemCard card) {
-        return card.isWalletPublicKeyValid();
-    }
+        // Verify card?
+        if (attest) {
 
-    boolean HasEverSigned(TangemCard card) {
-//        return card.getSignedHashes() != 0 || card.getRemainingSignatures() != card.getMaxSignatures();
-        return card.getRemainingSignatures() != card.getMaxSignatures();
-    }
+            if (!card.isWalletPublicKeyValid()) {
+                score = 0;
+                firstLine = "Verification failed";
+                secondLine = "Wallet verification failed. Tap again.";
+                return;
+            }
 
-    boolean CheckAttestationServiceAvailable(TangemCard card) {
-        return card.isOnlineVerified() != null;
-    }
+            if (card.isOnlineVerified() != null && !card.isOnlineVerified()) {
+                score = 0;
+                firstLine = "Not genuine banknote";
+                secondLine = "Tangem Attestation service says the banknote is not genuine.";
+                return;
+            }
 
-    boolean CheckAttestationServiceResult(TangemCard card) {
-        return card.isOnlineVerified() != null && card.isOnlineVerified() == true;
-    }
+            if (card.isCodeConfirmed() != null && !card.isCodeConfirmed()) {
+                score = 0;
+                firstLine = "Not genuine banknote";
+                secondLine = "Firmware binary code verification failed";
+                return;
+            }
 
-    boolean NotConfirmTransaction(TangemCard card) {
-        return card.getBalanceUnconfirmed() != 0;
-    }
+            if (card.PIN2 == TangemCard.PIN2_Mode.CustomPIN2) {
+                score = 0;
+                firstLine = "Locked with PIN2";
+                secondLine = "Ask the holder to disable PIN2 before accepting";
+                return;
+            }
 
-    boolean isCodeConfirmed(TangemCard card) {
-        return card.isCodeConfirmed() == null || card.isCodeConfirmed();
+            // rule 2.b
+            if (card.isOnlineVerified()) {
+                secondLine += "Verified note identity. ";
+            } else {
+                score = 80;
+                secondLine += "Card identity was not verified. Cannot reach Tangem attestation service. ";
+            }
+        }
+
     }
 }
