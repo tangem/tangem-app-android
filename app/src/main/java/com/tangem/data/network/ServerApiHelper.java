@@ -17,7 +17,6 @@ import com.tangem.domain.wallet.TangemCard;
 import com.tangem.util.Util;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -190,52 +189,6 @@ public class ServerApiHelper {
             }
         });
     }
-
-    /**
-     * HTTP
-     * Card verify
-     */
-//    private CardVerifyListener cardVerifyListener;
-//
-//    public interface CardVerifyListener {
-//        void onCardVerify(CardVerifyResponse cardVerifyResponse);
-//    }
-//
-//    public void setCardVerify(CardVerifyListener listener) {
-//        cardVerifyListener = listener;
-//    }
-//
-//    public void cardVerify(TangemCard card) {
-//        Retrofit retrofit = new Retrofit.Builder()
-//                .baseUrl(Server.ApiTangem.URL_TANGEM)
-//                .addConverterFactory(GsonConverterFactory.create())
-//                .build();
-//
-//        TangemApi tangemApi = retrofit.create(TangemApi.class);
-//
-//        CardVerify[] requests = new CardVerify[1];
-//        requests[0] = new CardVerify(Util.bytesToHex(card.getCID()), Util.bytesToHex(card.getCardPublicKey()));
-//
-//        CardVerifyBody cardVerifyBody = new CardVerifyBody(requests);
-//
-//        Call<CardVerifyResponse> call = tangemApi.getCardVerify(cardVerifyBody);
-//        call.enqueue(new Callback<CardVerifyResponse>() {
-//            @Override
-//            public void onResponse(@NonNull Call<CardVerifyResponse> call, @NonNull Response<CardVerifyResponse> response) {
-//                if (response.code() == 200) {
-//                    CardVerifyResponse cardVerifyResponse = response.body();
-//                    cardVerifyListener.onCardVerify(cardVerifyResponse);
-//                    Log.i(TAG, "cardVerify onResponse " + response.code());
-//                } else
-//                    Log.e(TAG, "cardVerify onResponse " + response.code());
-//            }
-//
-//            @Override
-//            public void onFailure(@NonNull Call<CardVerifyResponse> call, @NonNull Throwable t) {
-//                Log.e(TAG, "cardVerify onFailure " + t.getMessage());
-//            }
-//        });
-//    }
 
 
     /**
