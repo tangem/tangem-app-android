@@ -217,12 +217,69 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
         }
 
+        // request electrum
+        serverApiHelper!!.setElectrumRequestData {
+            if (it.isMethod(ElectrumRequest.METHOD_GetBalance)) {
+                try {
+                    val walletAddress = it.params.getString(0)
+                    val confBalance = it.result.getLong("confirmed")
+                    val unconfirmedBalance = it.result.getLong("unconfirmed")
+                    card!!.isBalanceReceived = true
+                    card!!.setBalanceConfirmed(confBalance)
+                    card!!.balanceUnconfirmed = unconfirmedBalance
+                    card!!.decimalBalance = confBalance.toString()
+                    card!!.validationNodeDescription = serverApiHelper!!.validationNodeDescription
+                } catch (e: JSONException) {
+                    e.printStackTrace()
+                    engine.switchNode(card)
+                }
+            }
+
+            if (it.isMethod(ElectrumRequest.METHOD_ListUnspent)) {
+                try {
+                    val mWalletAddress = it.params.getString(0)
+                    val jsUnspentArray = it.resultArray
+                    try {
+                        card!!.unspentTransactions.clear()
+                        for (i in 0 until jsUnspentArray.length()) {
+                            val jsUnspent = jsUnspentArray.getJSONObject(i)
+                            val trUnspent = TangemCard.UnspentTransaction()
+                            trUnspent.txID = jsUnspent.getString("tx_hash")
+                            trUnspent.Amount = jsUnspent.getInt("value")
+                            trUnspent.Height = jsUnspent.getInt("height")
+                            card!!.unspentTransactions.add(trUnspent)
+                        }
+                    } catch (e: JSONException) {
+                        e.printStackTrace()
+                        engine.switchNode(card)
+                    }
+
+                    for (i in 0 until jsUnspentArray.length()) {
+                        val jsUnspent = jsUnspentArray.getJSONObject(i)
+                        val height = jsUnspent.getInt("height")
+                        val hash = jsUnspent.getString("tx_hash")
+                        if (height != -1) {
+                            val nodeAddress = engine.getNextNode(card)
+                            val nodePort = engine.getNextNodePort(card)
+                            val updateWalletInfoTask = UpdateWalletInfoTask(this, nodeAddress, nodePort)
+                            //                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
+                            updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.getHeader(mWalletAddress, height.toString()), ElectrumRequest.getTransaction(mWalletAddress, hash))
+                        }
+                    }
+                } catch (e: JSONException) {
+                    e.printStackTrace()
+                    engine.switchNode(card)
+                }
+
+            }
+        }
+
         // request card verify listener
         serverApiHelper!!.setCardVerifyAndGetInfoListener {
             srlLoadedWallet!!.isRefreshing = false
             val result = it.results!![0]
             if (result.error != null) {
-                Log.e(TAG, "Can't verify card: ${result.error}")
+//                Log.e(TAG, "Can't verify card: ${result.error}")
                 card!!.isOnlineVerified = false
                 return@setCardVerifyAndGetInfoListener
             }
@@ -290,18 +347,18 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         var nonce = infuraResponse.result
                         nonce = nonce.substring(2)
                         val count = BigInteger(nonce, 16)
-                        card!!.setConfirmedTXCount(count)
+                        card!!.confirmedTXCount = count
 
-                        Log.i("$TAG eth_getTransCount", nonce)
+//                        Log.i("$TAG eth_getTransCount", nonce)
                     }
 
                     ServerApiHelper.INFURA_ETH_GET_PENDING_COUNT -> {
                         var pending = infuraResponse.result
                         pending = pending.substring(2)
                         val count = BigInteger(pending, 16)
-                        card!!.setUnconfirmedTXCount(count)
+                        card!!.unconfirmedTXCount = count
 
-                        Log.i("$TAG eth_getPendingTxCount", pending)
+//                        Log.i("$TAG eth_getPendingTxCount", pending)
                     }
 
                     ServerApiHelper.INFURA_ETH_CALL -> {
@@ -319,13 +376,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                                 requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
                                 requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
                                 requestInfura(ServerApiHelper.INFURA_ETH_GET_PENDING_COUNT, "")
-                                return@onInfuraSuccess
+                                return
                             }
                             card!!.setBalanceConfirmed(balance)
                             card!!.balanceUnconfirmed = 0L
                             card!!.decimalBalance = l.toString(10)
 
-                            Log.i("$TAG eth_call", balanceCap)
+//                            Log.i("$TAG eth_call", balanceCap)
 
                             requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
                             requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
@@ -362,9 +419,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
                             Log.e("$TAG TX_RESULT", hashTX)
 
-                            val nonce = card!!.getConfirmedTXCount()
+                            val nonce = card!!.confirmedTXCount
                             nonce.add(BigInteger.valueOf(1))
-                            card!!.setConfirmedTXCount(nonce)
+                            card!!.confirmedTXCount = nonce
 
                             Log.e("$TAG TX_RESULT", hashTX)
 
@@ -387,6 +444,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
 
         serverApiHelper!!.setInfuraResponse(infuraBodyListener)
+    }
+
+    private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
+        serverApiHelper!!.electrumRequestData(card, electrumRequest)
     }
 
     private fun requestInfura(method: String, contract: String) {
@@ -726,7 +787,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             tvBlockchain.text = card!!.blockchainName
 
-            if (card!!.hasBalanceInfo() && (card!!.balance !=                                                                                                                                                                                                                          0L) ) {
+            if (card!!.hasBalanceInfo() && (card!!.balance != 0L)) {
                 btnExtract.isEnabled = true
                 btnExtract.backgroundTintList = activeColor
             } else {
@@ -758,50 +819,59 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         // Bitcoin
         if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
-            val data = SharedData(SharedData.COUNT_REQUEST)
+//            val data = SharedData(SharedData.COUNT_REQUEST)
+
             card!!.resetFailedBalanceRequestCounter()
             card!!.setIsBalanceEqual(true)
 
-            for (i in 0 until data.allRequest) {
-                val nodeAddress = engine!!.getNextNode(card)
-                val nodePort = engine.getNextNodePort(card)
+            requestElectrum(card!!, ElectrumRequest.checkBalance(card!!.wallet))
+            requestElectrum(card!!, ElectrumRequest.listUnspent(card!!.wallet))
 
-//                Log.i(TAG, nodeAddress)
-//                Log.i(TAG, nodePort.toString())
-//                Log.i(TAG, i.toString())
-
-                // check balance
-                val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.checkBalance(card!!.wallet))
-
-                // list unspent input
-                val updateWalletInfoTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-                updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.listUnspent(card!!.wallet))
-            }
+//            for (i in 0 until data.allRequest) {
+//                val nodeAddress = engine!!.getNextNode(card)
+//                val nodePort = engine.getNextNodePort(card)
+//
+////                Log.i(TAG, nodeAddress)
+////                Log.i(TAG, nodePort.toString())
+////                Log.i(TAG, i.toString())
+//
+//                // check balance
+//                val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
+//                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.checkBalance(card!!.wallet))
+//
+//                // list unspent input
+//                val updateWalletInfoTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
+//                updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.listUnspent(card!!.wallet))
+//            }
 
             requestRateInfo("bitcoin")
         }
 
         // BitcoinCash
         else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
+//            val data = SharedData(SharedData.COUNT_REQUEST)
+
             card!!.resetFailedBalanceRequestCounter()
-            val data = SharedData(SharedData.COUNT_REQUEST)
             card!!.setIsBalanceEqual(true)
-            for (i in 0 until data.allRequest) {
-                val nodeAddress = engine!!.getNextNode(card)
-                val nodePort = engine.getNextNodePort(card)
 
-                // check balance
-                val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.checkBalance(card!!.wallet))
-            }
+            requestElectrum(card!!, ElectrumRequest.checkBalance(card!!.wallet))
+            requestElectrum(card!!, ElectrumRequest.listUnspent(card!!.wallet))
 
-            val nodeAddress = engine!!.getNode(card)
-            val nodePort = engine.getNodePort(card)
-
-            // list unspent input
-            val updateWalletInfoTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-            updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.listUnspent(card!!.wallet))
+//            for (i in 0 until data.allRequest) {
+//                val nodeAddress = engine!!.getNextNode(card)
+//                val nodePort = engine.getNextNodePort(card)
+//
+//                // check balance
+//                val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
+//                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.checkBalance(card!!.wallet))
+//            }
+//
+//            val nodeAddress = engine!!.getNode(card)
+//            val nodePort = engine.getNodePort(card)
+//
+//            // list unspent input
+//            val updateWalletInfoTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
+//            updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.listUnspent(card!!.wallet))
 
             requestRateInfo("bitcoin-cash")
         }
@@ -969,15 +1039,15 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         startActivityForResult(intent, REQUEST_CODE_SWAP_PIN)
     }
 
-    var showTime: Date= Date()
+    var showTime: Date = Date()
 
     private fun showSingleToast(text: Int) {
-        if (singleToast == null || !singleToast!!.view.isShown || showTime.time+2000<Date().time ) {
+        if (singleToast == null || !singleToast!!.view.isShown || showTime.time + 2000 < Date().time) {
             if (singleToast != null)
                 singleToast!!.cancel()
             singleToast = Toast.makeText(context, text, Toast.LENGTH_LONG)
             singleToast!!.show()
-            showTime=Date()
+            showTime = Date()
         }
     }
 
