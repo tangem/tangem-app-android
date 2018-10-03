@@ -190,7 +190,6 @@ public class ServerApiHelper {
         });
     }
 
-
     /**
      * HTTP
      * Card verify
@@ -298,9 +297,7 @@ public class ServerApiHelper {
                 Log.e(TAG, "getArtwork onFailure " + t.getMessage());
             }
         });
-
     }
-
 
     /**
      * HTTP
