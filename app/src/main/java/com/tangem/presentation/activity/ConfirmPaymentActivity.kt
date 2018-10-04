@@ -121,8 +121,8 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             val engineCoin = CoinEngineFactory.create(card!!.blockchain)
 
             for (i in 0 until data.allRequest) {
-                val nodeAddress = engineCoin!!.getNextNode(card)
-                val nodePort = engineCoin.getNextNodePort(card)
+                val nodeAddress = engineCoin!!.getNode(card)
+                val nodePort = engineCoin.getNodePort(card)
                 val connectTaskEx = ConnectTask(this@ConfirmPaymentActivity, nodeAddress, nodePort, data)
                 connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.checkBalance(card!!.wallet))
             }
