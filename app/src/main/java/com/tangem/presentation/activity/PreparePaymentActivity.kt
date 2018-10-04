@@ -72,8 +72,8 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         // Bitcoin BitcoinTestNet
         else if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
-            val balance = engine.getBalanceLong(card)!! / (card!!.blockchain.multiplier / 1000.0)
-            tvCurrency.text = "m" + card!!.blockchain.currency
+            val balance = engine.getBalanceLong(card)!! / (card!!.blockchain.multiplier)
+            tvCurrency.text = card!!.blockchain.currency
             useCurrency = true
             val output = FormatUtil.DoubleToString(balance)
             etAmount.setText(output)
@@ -81,8 +81,8 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         // BitcoinCash BitcoinCashTestNet
         else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
-            val balance = engine.getBalanceLong(card)!! / (card!!.blockchain.multiplier / 1000.0)
-            tvCurrency.text = "m" + card!!.blockchain.currency
+            val balance = engine.getBalanceLong(card)!! / (card!!.blockchain.multiplier)
+            tvCurrency.text = card!!.blockchain.currency
             useCurrency = true
             val output = FormatUtil.DoubleToString(balance)
         } else {
@@ -92,7 +92,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
 
         if (card!!.blockchain == Blockchain.Bitcoin)
-            etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(5))
+            etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(8))
 
         if (card!!.blockchain == Blockchain.BitcoinCash)
             etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(8))
