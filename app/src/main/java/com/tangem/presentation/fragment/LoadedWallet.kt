@@ -407,7 +407,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //                        val err = msg!!.getJSONObject("error")
 //                        hashTX = err.getString("message")
 //                        LastSignStorage.setLastMessage(card!!.wallet, hashTX)
-                                return@onInfuraSuccess
+                                return
                             }
 
                             if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
