@@ -37,7 +37,6 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
         private const val REQUEST_CODE_SCAN_QR = 1
     }
 
-    private var useCurrencyX1000: Boolean = false
     private var card: TangemCard? = null
     private var nfcManager: NfcManager? = null
     private var kraken: Kraken? = null
@@ -67,16 +66,13 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
         when (card!!.blockchain) {
             Blockchain.Ethereum, Blockchain.EthereumTestNet -> {
                 tvCurrency.text = engine.getBalanceCurrency(card)
-                useCurrencyX1000 = false
 
             }
             Blockchain.Bitcoin, Blockchain.BitcoinTestNet, Blockchain.BitcoinCash, Blockchain.BitcoinCashTestNet -> {
-                tvCurrency.text = "m" + card!!.blockchain.currency
-                useCurrencyX1000 = true
+                tvCurrency.text = card!!.blockchain.currency
             }
             else -> {
                 tvCurrency.text = engine.getBalanceCurrency(card)
-                useCurrencyX1000 = false
             }
         }
 
@@ -110,8 +106,6 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
                 val strAmount: String = etAmount.text.toString().replace(",", ".")
 
                 var dblAmount: Double = strAmount.toDouble()
-                if (useCurrencyX1000) dblAmount /= 1000.0
-
                 rlProgressBar.visibility = View.VISIBLE
                 tvProgressDescription.text = getString(R.string.kraken_request_withdrawal)
 
@@ -206,7 +200,6 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
                         val strAmount: String = etAmount.text.toString().replace(",", ".")
 
                         var dblAmount: Double = strAmount.toDouble()
-                        if (useCurrencyX1000) dblAmount /= 1000.0
 
                         dblAmount+=fee!!.toDouble()
 
