@@ -75,7 +75,7 @@
             android:textColor="@color/black"
             android:textSize="@dimen/text_size_medium"
             android:textStyle="bold"
-            tools:text="4.51735 mBTC" />
+            tools:text="4.51735 BTC" />
 
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
@@ -275,7 +275,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintWidth_min="150dp"/>
+                app:layout_constraintWidth_min="150dp" />
 
             <TextView
                 android:id="@+id/tvCurrency2"
