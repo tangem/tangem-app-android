@@ -230,7 +230,7 @@ public class BtcCashEngine extends CoinEngine {
 
     public String getBalanceValue(TangemCard mCard) {
         if (mCard.hasBalanceInfo()) {
-            Double balance = mCard.getBalance() / (mCard.getBlockchain().getMultiplier() / 1000.0);
+            Double balance = mCard.getBalance() / (mCard.getBlockchain().getMultiplier());
 
             String output = FormatUtil.DoubleToString(balance);
             //String pattern = "#0.000"; // If you like 4 zeros
@@ -283,7 +283,7 @@ public class BtcCashEngine extends CoinEngine {
     public String convertByteArrayToAmount(TangemCard mCard, byte[] bytes) throws Exception {
         byte[] reversed = new byte[bytes.length];
         for (int i = 0; i < bytes.length; i++) reversed[i] = bytes[bytes.length - i - 1];
-        return FormatUtil.DoubleToString(1000.0 * mCard.AmountFromInternalUnits(Util.byteArrayToLong(reversed)));
+        return FormatUtil.DoubleToString(mCard.AmountFromInternalUnits(Util.byteArrayToLong(reversed)));
     }
 
     @Override
@@ -296,7 +296,7 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public String getAmountDescription(TangemCard mCard, String amount) throws Exception {
-        return mCard.getAmountDescription(Double.parseDouble(amount) / 1000.0);
+        return mCard.getAmountDescription(Double.parseDouble(amount));
     }
 
     public static String getAmountEquivalentDescriptionBTC(Double amount, float rate) {
@@ -308,7 +308,7 @@ public class BtcCashEngine extends CoinEngine {
     }
 
     public String getAmountEquivalentDescriptor(TangemCard mCard, String value) {
-        return getAmountEquivalentDescriptionBTC(Double.parseDouble(value) / 1000.0, mCard.getRate());
+        return getAmountEquivalentDescriptionBTC(Double.parseDouble(value), mCard.getRate());
     }
 
     public byte[] sign(String feeValue, String amountValue, boolean IncFee, String toValue, TangemCard mCard, CardProtocol protocol) throws Exception {
