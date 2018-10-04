@@ -30,7 +30,6 @@ class PrepareCryptonitOtherAPIWithdrawalActivity : AppCompatActivity(), NfcAdapt
         private const val REQUEST_CODE_SCAN_QR_USER_ID = 3
     }
 
-    private var useCurrencyX1000: Boolean = false
     private var card: TangemCard? = null
     private var nfcManager: NfcManager? = null
     private var cryptonit: Cryptonit_OtherAPI? = null
@@ -61,16 +60,12 @@ class PrepareCryptonitOtherAPIWithdrawalActivity : AppCompatActivity(), NfcAdapt
         when (card!!.blockchain) {
             Blockchain.Ethereum, Blockchain.EthereumTestNet -> {
                 tvCurrency.text = engine.getBalanceCurrency(card)
-                useCurrencyX1000 = false
-
             }
             Blockchain.Bitcoin, Blockchain.BitcoinTestNet, Blockchain.BitcoinCash, Blockchain.BitcoinCashTestNet -> {
-                tvCurrency.text = "m" + card!!.blockchain.currency
-                useCurrencyX1000 = true
+                tvCurrency.text = card!!.blockchain.currency
             }
             else -> {
                 tvCurrency.text = engine.getBalanceCurrency(card)
-                useCurrencyX1000 = false
             }
         }
 
@@ -94,7 +89,6 @@ class PrepareCryptonitOtherAPIWithdrawalActivity : AppCompatActivity(), NfcAdapt
 //                if (!engine.checkAmount(card, strAmount))
 //                    etAmount.error = getString(R.string.unknown_amount_format)
                 var dblAmount: Double = strAmount.toDouble()
-                if (useCurrencyX1000) dblAmount /= 1000.0
 
                 rlProgressBar.visibility = View.VISIBLE
                 tvProgressDescription.text = getString(R.string.cryptonit_request_withdrawal)
