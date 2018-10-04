@@ -13,10 +13,6 @@ import java.security.NoSuchProviderException;
 
 public abstract class CoinEngine {
 
-    public abstract String getNextNode(TangemCard card);
-
-    public abstract int getNextNodePort(TangemCard card);
-
     public abstract String getNode(TangemCard card);
 
     public abstract int getNodePort(TangemCard card);
