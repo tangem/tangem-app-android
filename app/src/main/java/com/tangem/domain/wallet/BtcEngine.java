@@ -32,41 +32,9 @@ import static com.tangem.util.FormatUtil.stringToBigDecimal;
  */
 
 public class BtcEngine extends CoinEngine {
-    public String getNextNode(TangemCard mCard) {
-        return getNextServiceHost(mCard);
-    }
-
-    public int getNextNodePort(TangemCard mCard) {
-        return getNextServicePort(mCard);
-    }
-
-    public String getNode(TangemCard mCard) {
-        return getServiceHost(mCard);
-    }
-
-    public int getNodePort(TangemCard mCard) {
-        return getServicePort(mCard);
-    }
-
-    public void switchNode(TangemCard mCard) {
-        SelectNextBitconServiceIndex();
-    }
 
     private static String[] getBitcoinServiceHosts() {
         return new String[]{
-//                BitcoinNode.n1.getHost(),
-//                BitcoinNode.n2.getHost(),
-//                BitcoinNode.n3.getHost(),
-//                BitcoinNode.n4.getHost(),
-//                BitcoinNode.n5.getHost(),
-//                BitcoinNode.n6.getHost(),
-//                BitcoinNode.n7.getHost(),
-//                BitcoinNode.n8.getHost(),
-//                BitcoinNode.n9.getHost(),
-//                BitcoinNode.n10.getHost(),
-//                BitcoinNode.n11.getHost(),
-//                BitcoinNode.n12.getHost(),
-
                 BitcoinNode.n13.getHost(),
                 BitcoinNode.n14.getHost(),
                 BitcoinNode.n15.getHost(),
@@ -78,19 +46,6 @@ public class BtcEngine extends CoinEngine {
 
     private static Integer[] getBitcoinServicePorts() {
         return new Integer[]{
-//                BitcoinNode.n1.getPort(),
-//                BitcoinNode.n2.getPort(),
-//                BitcoinNode.n3.getPort(),
-//                BitcoinNode.n4.getPort(),
-//                BitcoinNode.n5.getPort(),
-//                BitcoinNode.n6.getPort(),
-//                BitcoinNode.n7.getPort(),
-//                BitcoinNode.n8.getPort(),
-//                BitcoinNode.n9.getPort(),
-//                BitcoinNode.n10.getPort(),
-//                BitcoinNode.n11.getPort(),
-//                BitcoinNode.n12.getPort(),
-
                 BitcoinNode.n13.getPort(),
                 BitcoinNode.n14.getPort(),
                 BitcoinNode.n15.getPort(),
@@ -117,124 +72,28 @@ public class BtcEngine extends CoinEngine {
                 BitcoinNodeTestNet.n4.getPort()};
     }
 
-    static int serviceIndex = GetNextBitconMainNetServiceIndex();
+    static int serviceIndex = 0;
 
-    static int dynamicIndex = GetNextBitconMainNetServiceIndex();
-
-    static int serviceIndexTestNet = GetNextBitconTestNetServiceIndex();
-
-    static int dynamicTestNetIndex = GetNextBitconTestNetServiceIndex();
-
-    static long lastChangeServiceIndex = 0;
-
-    public static int GetNextBitconMainNetServiceIndex() {
-        Random r = new Random();
-        return r.nextInt(getBitcoinServiceHosts().length);
-    }
-
-    public static void SelectNextBitconMainNetServiceIndex() {
-        //serviceIndex = GetNextBitconMainNetServiceIndex();
-        serviceIndex++;
-        if (serviceIndex > getBitcoinServiceHosts().length - 1) serviceIndex = 0;
-    }
-
-    public static int GetNextBitconTestNetServiceIndex() {
-        Random r = new Random();
-        return r.nextInt(getBitcoinTestNetServiceHosts().length);
-    }
-
-    public static void SelectNextBitconTestNetServiceIndex() {
-        //serviceIndexTestNet = GetNextBitconTestNetServiceIndex();
-
-        serviceIndexTestNet++;
-        if (serviceIndexTestNet > getBitcoinTestNetServiceHosts().length - 1)
-            serviceIndexTestNet = 0;
-    }
-
-    public static void setNextDynamicIndex() {
-        //dynamicIndex = GetNextBitconMainNetServiceIndex();
-        dynamicIndex++;
-        if (dynamicIndex > getBitcoinServiceHosts().length - 1) dynamicIndex = 0;
-    }
-
-    public static void setNextDynamicTestNet() {
-        //dynamicTestNetIndex = GetNextBitconTestNetServiceIndex();
-        dynamicTestNetIndex++;
-        if (dynamicTestNetIndex > getBitcoinTestNetServiceHosts().length - 1)
-            dynamicTestNetIndex = 0;
-
-    }
-
-    public static void SelectNextBitconServiceIndex() {
-        long unixTime = System.currentTimeMillis() / 1000L;
-        long nextStampOffset = 5;
-        if (lastChangeServiceIndex == 0) {
-            lastChangeServiceIndex = unixTime;
-        } else if (lastChangeServiceIndex + nextStampOffset > unixTime) {
-            return;
-        }
-
-        lastChangeServiceIndex = unixTime;
-
-        SelectNextBitconMainNetServiceIndex();
-        SelectNextBitconTestNetServiceIndex();
-    }
-
-    public static String getServiceHost(TangemCard mCard) {
+    public String getNode(TangemCard mCard) {
         switch (mCard.getBlockchain()) {
             case Bitcoin:
-                return getBitcoinServiceHosts()[serviceIndex]; //"hsmiths.changeip.net";
-            case BitcoinTestNet:
-                return getBitcoinTestNetServiceHosts()[serviceIndexTestNet]; //"testnetnode.arihanc.com";
+                return getBitcoinServiceHosts()[serviceIndex]; //
         }
         return null;
     }
 
-    public static String getNextServiceHost(TangemCard mCard) {
-        switch (mCard.getBlockchain()) {
-            case Bitcoin: {
-                setNextDynamicIndex();
-                return getBitcoinServiceHosts()[dynamicIndex];
-            }
-            case BitcoinTestNet: {
-                setNextDynamicTestNet();
-                return getBitcoinTestNetServiceHosts()[dynamicTestNetIndex]; //"testnetnode.arihanc.com";
-            }
-            //case BitcoinCash:
-            //{
-            //  return GetBitcoinCashServiceHosts()[0];
-            //}
-            //case BitcoinCashTestNet: {
-            //  return GetBitcoinCashTestNetServiceHosts()[0];
-            //}
-        }
-        return null;
-    }
-
-    public static int getNextServicePort(TangemCard mCard) {
-        switch (mCard.getBlockchain()) {
-            case Bitcoin: {
-                setNextDynamicIndex();
-                return getBitcoinServicePorts()[dynamicIndex];//8080;
-            }
-            case BitcoinTestNet: {
-                setNextDynamicTestNet();
-                return getBitcoinTestNetServicePorts()[dynamicTestNetIndex];//51001;
-            }
-        }
-        return 8080;
-    }
-
-    public static int getServicePort(TangemCard mCard) {
+    public int getNodePort(TangemCard mCard) {
         switch (mCard.getBlockchain()) {
             case Bitcoin:
                 return getBitcoinServicePorts()[serviceIndex];//8080;
-            case BitcoinTestNet:
-                return getBitcoinTestNetServicePorts()[serviceIndexTestNet];//51001;
         }
         return 8080;
     }
 
+    public void switchNode(TangemCard mCard) {
+        serviceIndex++;
+        if (serviceIndex > getBitcoinServiceHosts().length - 1) serviceIndex = 0;
+    }
 
     public boolean inOutPutVisible() {
         return true;
@@ -525,7 +384,7 @@ public class BtcEngine extends CoinEngine {
         }
 
         if (amount + fees > fullAmount) {
-            throw new CardProtocol.TangemException_WrongAmount(String.format("Balance (%d) < amount (%d) + (%d)", fullAmount, change, amount));
+            throw new CardProtocol.TangemException_WrongAmount(String.format("Balance (%d) < change (%d) + amount (%d)", fullAmount, change, amount));
         }
 
         byte[][] dataForSign = new byte[unspentOutputs.size()][];
