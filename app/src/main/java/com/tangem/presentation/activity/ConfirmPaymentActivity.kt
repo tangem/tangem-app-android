@@ -264,7 +264,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         minFee = minFeeInGwei
                         normalFee = normalFeeInGwei
                         maxFee = maxFeeInGwei
-                        etFee!!.setText(normalFeeInGwei)
+                        etFee!!.setText(normalFeeInGwei.replace(',','.'))
                         etFee!!.error = null
                         btnSend!!.visibility = View.VISIBLE
                         feeRequestSuccess = true
@@ -449,23 +449,25 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     }
 
     fun doSetFee(checkedRadioButtonId: Int) {
+        var txtFee = ""
         when (checkedRadioButtonId) {
             R.id.rbMinimalFee ->
                 if (minFee != null)
-                    etFee!!.setText(minFee)
+                    txtFee = minFee.toString()
                 else
-                    etFee!!.setText("?")
+                    finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
             R.id.rbNormalFee ->
                 if (normalFee != null)
-                    etFee!!.setText(normalFee)
+                    txtFee = normalFee.toString()
                 else
-                    etFee!!.setText("?")
+                    finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
             R.id.rbMaximumFee ->
                 if (maxFee != null)
-                    etFee!!.setText(maxFee)
+                    txtFee = maxFee.toString()
                 else
-                    etFee!!.setText("?")
+                    finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
         }
+        etFee!!.setText(txtFee.replace(',','.'))
     }
 
 }
