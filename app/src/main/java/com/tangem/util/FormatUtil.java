@@ -25,7 +25,7 @@ public class FormatUtil {
         DecimalFormatSymbols symbols = new DecimalFormatSymbols();
         symbols.setDecimalSeparator('.');
 
-        String pattern = "#0.######";
+        String pattern = "#0.########";
 //        DecimalFormat myFormatter = new DecimalFormat(pattern, symbols);
         DecimalFormat myFormatter = new DecimalFormat(pattern);
 
@@ -77,7 +77,7 @@ public class FormatUtil {
     public static long ConvertStringToLong(String caption) throws Exception {
 //        BigDecimal d = new BigDecimal(caption);
         BigDecimal d = stringToBigDecimal(caption,Locale.US);
-        d = d.multiply(new BigDecimal(100000));
+        d = d.multiply(new BigDecimal(100000000));
         d = d.setScale(5);
         BigInteger b = d.toBigInteger();
         long l = b.longValue();
