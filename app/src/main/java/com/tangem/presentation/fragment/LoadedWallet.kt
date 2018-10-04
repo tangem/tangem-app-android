@@ -259,8 +259,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         val height = jsUnspent.getInt("height")
                         val hash = jsUnspent.getString("tx_hash")
                         if (height != -1) {
-                            val nodeAddress = engine.getNextNode(card)
-                            val nodePort = engine.getNextNodePort(card)
+                            val nodeAddress = engine.getNode(card)
+                            val nodePort = engine.getNodePort(card)
                             val updateWalletInfoTask = UpdateWalletInfoTask(this, nodeAddress, nodePort)
                             //                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
                             updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.getHeader(mWalletAddress, height.toString()), ElectrumRequest.getTransaction(mWalletAddress, hash))
