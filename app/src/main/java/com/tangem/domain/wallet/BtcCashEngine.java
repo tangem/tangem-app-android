@@ -29,15 +29,6 @@ import static com.tangem.util.FormatUtil.GetDecimalFormat;
  */
 
 public class BtcCashEngine extends CoinEngine {
-    public String getNextNode(TangemCard mCard) {
-
-        return "35.157.238.5";
-    }
-
-    public int getNextNodePort(TangemCard mCard) {
-
-        return 51001;
-    }
 
     public String getNode(TangemCard mCard) {
         return "35.157.238.5";
