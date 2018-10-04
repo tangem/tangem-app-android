@@ -87,7 +87,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback  
 //                                val err = msg!!.getJSONObject("error")
 //                                hashTX = err.getString("message")
 //                                LastSignStorage.setLastMessage(card!!.wallet, hashTX)
-                                return@onInfuraSuccess
+                                return
                             }
 
                             if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
@@ -96,13 +96,13 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback  
                             val bigInt = BigInteger(hashTX, 16) //TODO: очень плохой способ
                             LastSignStorage.setTxWasSend(card!!.wallet)
                             LastSignStorage.setLastMessage(card!!.wallet, "")
-                            Log.e("TX_RESULT", hashTX)
+//                            Log.e("TX_RESULT", hashTX)
 
 
-                            val nonce = card!!.getConfirmedTXCount()
+                            val nonce = card!!.confirmedTXCount
                             nonce.add(BigInteger.valueOf(1))
-                            card!!.setConfirmedTXCount(nonce)
-                            Log.e("TX_RESULT", hashTX)
+                            card!!.confirmedTXCount = nonce
+//                            Log.e("TX_RESULT", hashTX)
 
                             finishWithSuccess()
 
