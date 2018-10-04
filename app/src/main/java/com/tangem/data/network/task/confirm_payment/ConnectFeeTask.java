@@ -11,6 +11,7 @@ import com.tangem.presentation.activity.ConfirmPaymentActivity;
 import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -29,15 +30,11 @@ public class ConnectFeeTask extends FeeTask {
 
         for (FeeRequest request : requests) {
             if (request.error == null) {
-                long minFeeRate = 0;
+                BigDecimal Fee = BigDecimal.ZERO;
                 try {
                     try {
                         String tmpAnswer = request.getAsString();
-                        BigDecimal minFeeBD = new BigDecimal(tmpAnswer);
-                        BigDecimal multiplicator = new BigDecimal("100000000");
-                        minFeeBD = minFeeBD.multiply(multiplicator);
-                        BigInteger minFeeBI = minFeeBD.toBigInteger();
-                        minFeeRate = minFeeBI.longValue();
+                        Fee = new BigDecimal(tmpAnswer); // BTC per 1 kb
                     } catch (Exception e) {
 
                         if (sharedCounter != null) {
@@ -57,7 +54,7 @@ public class ConnectFeeTask extends FeeTask {
                         return;
                     }
 
-                    if (minFeeRate == 0) {
+                    if (Fee.equals(BigDecimal.ZERO)) {
                         confirmPaymentActivity.getProgressBar().setVisibility(View.INVISIBLE);
                         confirmPaymentActivity.finishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! Wrong data received from the node");
                         return;
@@ -66,9 +63,9 @@ public class ConnectFeeTask extends FeeTask {
                     long inputCount = request.txSize;
 
                     if (inputCount != 0) {
-                        minFeeRate = minFeeRate * inputCount;
+                        Fee = Fee.multiply(new BigDecimal(inputCount)).divide(new BigDecimal(1024)); // per Kb -> per byte
                     } else {
-                        minFeeRate = minFeeRate * 256;
+                        confirmPaymentActivity.finishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! Tx length unknown");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -87,17 +84,19 @@ public class ConnectFeeTask extends FeeTask {
 
                 confirmPaymentActivity.getProgressBar().setVisibility(View.INVISIBLE);
 
-                float finalFee = (float) minFeeRate / (float) 10000;
-
-                finalFee = Math.round(finalFee) / (float) 10000;
+                DecimalFormat df = new DecimalFormat();
+                df.setMaximumFractionDigits(7);
+                df.setMinimumFractionDigits(3);
+                df.setGroupingUsed(false);
+                String strFee = df.format(Fee);
 
                 if ((request.getBlockCount() == FeeRequest.MINIMAL) && (confirmPaymentActivity.getMinFee() == null)) {
-                    confirmPaymentActivity.setMinFee(String.valueOf(finalFee));
-                    confirmPaymentActivity.setMinFeeInInternalUnits(confirmPaymentActivity.getCard().internalUnitsFromString(String.valueOf(finalFee)));
+                    confirmPaymentActivity.setMinFee(strFee);
+                    confirmPaymentActivity.setMinFeeInInternalUnits(confirmPaymentActivity.getCard().internalUnitsFromString(strFee));
                 } else if ((request.getBlockCount() == FeeRequest.NORMAL) && (confirmPaymentActivity.getNormalFee() == null)) {
-                    confirmPaymentActivity.setNormalFee(String.valueOf(finalFee));
+                    confirmPaymentActivity.setNormalFee(strFee);
                 } else if ((request.getBlockCount() == FeeRequest.PRIORITY) && (confirmPaymentActivity.getMaxFee() == null)) {
-                    confirmPaymentActivity.setMaxFee(String.valueOf(finalFee));
+                    confirmPaymentActivity.setMaxFee(strFee);
                 }
 
                 confirmPaymentActivity.doSetFee(confirmPaymentActivity.getRgFee().getCheckedRadioButtonId());
