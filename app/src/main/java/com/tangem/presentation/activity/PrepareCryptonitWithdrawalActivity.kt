@@ -29,7 +29,6 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         val TAG: String = PrepareCryptonitWithdrawalActivity::class.java.simpleName
     }
 
-    private var useCurrencyX1000: Boolean = false
     private var card: TangemCard? = null
     private var nfcManager: NfcManager? = null
     private var cryptonit: Cryptonit? = null
@@ -60,16 +59,12 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         when (card!!.blockchain) {
             Blockchain.Ethereum -> {
                 tvCurrency.text = engine.getBalanceCurrency(card)
-                useCurrencyX1000 = false
-
             }
             Blockchain.Bitcoin, Blockchain.BitcoinCash -> {
-                tvCurrency.text = "m" + card!!.blockchain.currency
-                useCurrencyX1000 = true
+                tvCurrency.text = card!!.blockchain.currency
             }
             else -> {
                 tvCurrency.text = engine.getBalanceCurrency(card)
-                useCurrencyX1000 = false
             }
         }
         tvFeeCurrency.text = tvCurrency.text
@@ -109,10 +104,6 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
                 val strFee: String = etFee.text.toString().replace(",", ".")
                 var dblAmount: Double = strAmount.toDouble()
                 var dblFee: Double = strFee.toDouble()
-                if (useCurrencyX1000){
-                    dblAmount /= 1000.0
-                    dblFee /= 1000.0
-                }
                 cryptonit!!.fee=strFee
 
                 rlProgressBar.visibility = View.VISIBLE
