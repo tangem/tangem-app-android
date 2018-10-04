@@ -27,13 +27,6 @@ import static com.tangem.util.FormatUtil.GetDecimalFormat;
  */
 
 public class TokenEngine extends CoinEngine {
-    public String getNextNode(TangemCard mCard) {
-        return "abc1.hsmiths.com";
-    }
-
-    public int getNextNodePort(TangemCard mCard) {
-        return 60001;
-    }
 
     public String getNode(TangemCard mCard) {
         return "abc1.hsmiths.com";
