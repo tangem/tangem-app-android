@@ -85,7 +85,7 @@
                 android:textColor="@color/black"
                 android:textSize="@dimen/text_size_medium"
                 android:textStyle="bold"
-                tools:text="4.51735 mBtc"/>
+                tools:text="4.51735 Btc"/>
 
         </LinearLayout>
 
