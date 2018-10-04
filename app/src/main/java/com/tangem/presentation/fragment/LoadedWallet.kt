@@ -726,15 +726,24 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             tvBlockchain.text = card!!.blockchainName
 
-            if (card!!.hasBalanceInfo() && (card!!.balance !=                                                                                                                                                                                                                          0L) ) {
-                btnExtract.isEnabled = true
-                btnExtract.backgroundTintList = activeColor
-            } else {
+            if (card!!.blockchain != Blockchain.Token) {
+                        if (card!!.hasBalanceInfo() && (card!!.balance != 0L) ) {
+                            btnExtract.isEnabled = true
+                            btnExtract.backgroundTintList = activeColor
+                        } else {
+                            btnExtract.isEnabled = false
+                            btnExtract.backgroundTintList = inactiveColor
+                        }
+                    }
+            else if (card!!.decimalBalanceAlter == "") {
                 btnExtract.isEnabled = false
                 btnExtract.backgroundTintList = inactiveColor
+            } else {
+                btnExtract.isEnabled = true
+                btnExtract.backgroundTintList = activeColor
             }
 
-            card!!.error = null
+                card!!.error = null
             card!!.message = null
 
         } catch (e: Exception) {
