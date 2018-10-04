@@ -193,23 +193,8 @@ public class TangemCard {
     }
 
     public String getAmountDescription(Double amount) {
-        if (amount < 10) {
-            amount *= 1000.0; //todo: really?
-            //String pattern = "#0.000"; // If you like 4 zeros
-            //DecimalFormat myFormatter = new DecimalFormat(pattern);
-            //String output = myFormatter.format(amount);
-
-            String output = FormatUtil.DoubleToString(amount);
-
-            return output + " m" + getBlockchain().getCurrency();
-
-            //return String.format("%.3f m%s", amount, getBlockchain().getCurrency());
-        } else {
-            //return String.format("%.3f %s", amount, getBlockchain().getCurrency());
-            String output = FormatUtil.DoubleToString(amount);
-            return output + " " + getBlockchain().getCurrency();
-
-        }
+        String output = FormatUtil.DoubleToString(amount);
+        return output + " " + getBlockchain().getCurrency();
     }
 
     public String getAmountEquivalentDescription(Double amount) {
