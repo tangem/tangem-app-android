@@ -1,6 +1,7 @@
 package com.tangem.data.network.task.loaded_wallet;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import com.tangem.data.network.request.ElectrumRequest;
 import com.tangem.data.network.task.ElectrumTask;
@@ -144,8 +145,8 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                     Integer height = jsUnspent.getInt("height");
                                     String hash = jsUnspent.getString("tx_hash");
                                     if (height != -1) {
-                                        String nodeAddress = engine.getNextNode(loadedWallet.getCard());
-                                        int nodePort = engine.getNextNodePort(loadedWallet.getCard());
+                                        String nodeAddress = engine.getNode(loadedWallet.getCard());
+                                        int nodePort = engine.getNodePort(loadedWallet.getCard());
                                         UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(loadedWallet, nodeAddress, nodePort);
 //                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
                                         updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.getHeader(mWalletAddress, String.valueOf(height)), ElectrumRequest.getTransaction(mWalletAddress, hash));
@@ -239,7 +240,7 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                         } catch (BitcoinException e) {
                                             e.printStackTrace();
                                         }
-//                                    Log.e("TX", raw);
+                                    Log.e("TX", raw);
                                     }
                                 }
                             } catch (JSONException e) {
