@@ -1376,7 +1376,7 @@ public class TangemCard {
         return balanceReceived;
     }
 
-    private boolean balanceReceived;
+    private boolean balanceReceived = false;
 
     public void setBalanceReceived(boolean value) {
         balanceReceived = value;
