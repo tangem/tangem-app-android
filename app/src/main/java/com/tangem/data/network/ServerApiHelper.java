@@ -420,7 +420,7 @@ public class ServerApiHelper {
             socket.bind(new InetSocketAddress(0));
             socket.connect(new InetSocketAddress(serverAddress, port));
             try {
-                Log.i(TAG, "<< ");
+//                Log.i(TAG, "<< ");
                 OutputStream os = socket.getOutputStream();
                 OutputStreamWriter out = new OutputStreamWriter(os, "UTF-8");
                 InputStream is = socket.getInputStream();
@@ -436,10 +436,10 @@ public class ServerApiHelper {
                     electrumRequest.host = host;
                     electrumRequest.port = port;
                     if (electrumRequest.answerData != null) {
-                        Log.i(TAG, ">> " + electrumRequest.answerData);
+//                        Log.i(TAG, ">> " + electrumRequest.answerData);
                     } else {
                         electrumRequest.error = "No answer from server";
-                        Log.i(TAG, ">> <NULL>");
+//                        Log.i(TAG, ">> <NULL>");
                     }
                 } catch (Exception e) {
                     electrumRequest.error = e.toString();
@@ -447,9 +447,9 @@ public class ServerApiHelper {
 
             } catch (Exception e) {
                 e.printStackTrace();
-                Log.i(TAG, e.getMessage());
+//                Log.i(TAG, e.getMessage());
             } finally {
-                Log.i(TAG, "close");
+//                Log.i(TAG, "close");
                 socket.close();
             }
         } catch (Exception e) {
