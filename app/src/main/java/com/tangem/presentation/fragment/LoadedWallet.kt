@@ -270,7 +270,24 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     e.printStackTrace()
                     engine.switchNode(card)
                 }
+            }
 
+            if (it.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
+                try {
+                    var hashTX = it.resultString
+                    try {
+                        LastSignStorage.setLastMessage(card!!.wallet, hashTX)
+                        if (hashTX.startsWith("0x") || hashTX.startsWith("0X"))
+                            hashTX = hashTX.substring(2)
+                        val bigInt = BigInteger(hashTX, 16) //TODO: очень плохой способ
+                        LastSignStorage.setTxWasSend(card!!.wallet)
+                        LastSignStorage.setLastMessage(card!!.wallet, "")
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                } catch (e: JSONException) {
+                    e.printStackTrace()
+                }
             }
         }
 
@@ -1016,17 +1033,22 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             requestInfura(ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION, "")
 
         } else if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
-            val nodeAddress = engine!!.getNode(card)
-            val nodePort = engine.getNodePort(card)
+//            val nodeAddress = engine!!.getNode(card)
+//            val nodePort = engine.getNodePort(card)
+//
+//            val connectTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort)
+//            connectTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.broadcast(card!!.wallet, tx))
 
-            val connectTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort)
-            connectTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.broadcast(card!!.wallet, tx))
+            requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
+
         } else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
-            val nodeAddress = engine!!.getNode(card)
-            val nodePort = engine.getNodePort(card)
+//            val nodeAddress = engine!!.getNode(card)
+//            val nodePort = engine.getNodePort(card)
+//
+//            val connectTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort)
+//            connectTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.broadcast(card!!.wallet, tx))
 
-            val connectTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort)
-            connectTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.broadcast(card!!.wallet, tx))
+            requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
         }
     }
 
