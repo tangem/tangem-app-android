@@ -27,10 +27,6 @@ import java.util.Random;
 
 import static com.tangem.util.FormatUtil.stringToBigDecimal;
 
-/**
- * Created by Ilia on 15.02.2018.
- */
-
 public class BtcEngine extends CoinEngine {
 
     private static String[] getBitcoinServiceHosts() {
