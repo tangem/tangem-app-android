@@ -147,6 +147,7 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                     if (height != -1) {
                                         String nodeAddress = engine.getNode(loadedWallet.getCard());
                                         int nodePort = engine.getNodePort(loadedWallet.getCard());
+                                        engine.switchNode(loadedWallet.getCard());
                                         UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(loadedWallet, nodeAddress, nodePort);
 //                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
                                         updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.getHeader(mWalletAddress, String.valueOf(height)), ElectrumRequest.getTransaction(mWalletAddress, hash));
@@ -184,6 +185,7 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                     if (height != -1) {
                                         String nodeAddress = engine.getNode(loadedWallet.getCard());
                                         int nodePort = engine.getNodePort(loadedWallet.getCard());
+                                        engine.switchNode(loadedWallet.getCard());
                                         UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(loadedWallet, nodeAddress, nodePort);
 //                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
                                         updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.getHeader(mWalletAddress, String.valueOf(height)), ElectrumRequest.getTransaction(mWalletAddress, hash));
