@@ -280,10 +280,10 @@ public class ServerApiHelper {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                 Log.i(TAG, "getArtwork onResponse " + response.code());
-                if (response.code() == 200 ) {
+                if (response.code() == 200) {
                     try {
-                        ResponseBody body=response.body();
-                        if ( body!= null) {
+                        ResponseBody body = response.body();
+                        if (body != null) {
                             artworkListener.onArtwork(artworkId, body.byteStream(), updateDate);
                         }
                     } catch (Exception e) {
@@ -331,12 +331,11 @@ public class ServerApiHelper {
                                 for (RateInfoResponse rateInfoMode : rateInfoModelList) {
                                     if (rateInfoMode.getId().equals(cryptoId)) {
                                         rateInfoDataListener.onRateInfoDataData(rateInfoMode);
-                                        Log.i(TAG, "rateInfoData " + cryptoId + " onResponse " + "200");
+                                        Log.i(TAG, "rateInfoData        " + cryptoId + " onResponse " + "200");
                                     }
                                 }
                             } else
-                                Log.e(TAG, "rateInfoData " + cryptoId + " onResponse " + "Empty");
-
+                                Log.e(TAG, "rateInfoData        " + cryptoId + " onResponse " + "Empty");
                         },
                         // handle error
                         Throwable::printStackTrace);
@@ -377,20 +376,20 @@ public class ServerApiHelper {
             public void onNext(ElectrumRequest electrumRequest) {
                 if (electrumRequest.answerData != null) {
                     electrumRequestDataListener.onElectrumRequestData(electrumRequest);
+                    Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onNext != null");
                 } else {
-                    Log.i(TAG, "onNext ElectrumRequest == null");
+                    Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onNext == null");
                 }
-                Log.i(TAG, "onNext");
             }
 
             @Override
             public void onError(Throwable e) {
-                Log.i(TAG, "onError " + e.getMessage());
+                Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onError " + e.getMessage());
             }
 
             @Override
             public void onComplete() {
-                Log.i(TAG, "onComplete");
+                Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onComplete");
             }
         });
     }
@@ -413,7 +412,7 @@ public class ServerApiHelper {
         Collections.addAll(result, electrumRequest);
 
         try {
-            Log.i(TAG, "host " + host + " !!!!!!!!!!!! " + "port " + String.valueOf(port));
+//            Log.i(TAG, "host " + host + " !!!!!!!!!!!! " + "port " + String.valueOf(port));
             InetAddress serverAddress = InetAddress.getByName(host);
             Socket socket = new Socket();
             socket.setSoTimeout(5000);
@@ -497,7 +496,7 @@ public class ServerApiHelper {
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
-                Log.i(TAG, "lastVersion onResponse " + response.code());
+                Log.i(TAG, "requestLastVersion  onResponse " + response.code());
                 if (response.code() == 200) {
                     String stringResponse;
                     try {
