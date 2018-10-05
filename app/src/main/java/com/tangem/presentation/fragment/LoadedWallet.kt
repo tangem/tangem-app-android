@@ -9,7 +9,6 @@ import android.content.res.ColorStateList
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
-import android.os.AsyncTask
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.support.v4.app.Fragment
@@ -25,7 +24,6 @@ import com.google.zxing.WriterException
 import com.tangem.data.network.ServerApiHelper
 import com.tangem.data.network.model.InfuraResponse
 import com.tangem.data.network.request.ElectrumRequest
-import com.tangem.data.network.task.loaded_wallet.UpdateWalletInfoTask
 import com.tangem.data.nfc.VerifyCardTask
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.NfcManager
@@ -34,6 +32,7 @@ import com.tangem.presentation.activity.*
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.util.BTCUtils
 import com.tangem.util.Util
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.BuildConfig
@@ -259,16 +258,68 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         val height = jsUnspent.getInt("height")
                         val hash = jsUnspent.getString("tx_hash")
                         if (height != -1) {
-                            val nodeAddress = engine.getNode(card)
-                            val nodePort = engine.getNodePort(card)
-                            val updateWalletInfoTask = UpdateWalletInfoTask(this, nodeAddress, nodePort)
-                            //                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
-                            updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.getHeader(mWalletAddress, height.toString()), ElectrumRequest.getTransaction(mWalletAddress, hash))
+//                            val nodeAddress = engine.getNode(card)
+//                            val nodePort = engine.getNodePort(card)
+//                            val updateWalletInfoTask = UpdateWalletInfoTask(this, nodeAddress, nodePort)
+//                            //                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
+//                            updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.getHeader(mWalletAddress, height.toString()), ElectrumRequest.getTransaction(mWalletAddress, hash))
+
+
+                            requestElectrum(card!!, ElectrumRequest.getHeader(mWalletAddress, height.toString()))
+                            requestElectrum(card!!, ElectrumRequest.getTransaction(mWalletAddress, hash))
                         }
                     }
                 } catch (e: JSONException) {
                     e.printStackTrace()
                     engine.switchNode(card)
+                }
+            }
+
+            if (it.isMethod(ElectrumRequest.METHOD_GetHeader)) {
+                try {
+                    val jsHeader = it.result
+                    try {
+                        card!!.haedersInfo
+                        card!!.UpdateHeaderInfo(TangemCard.HeaderInfo(jsHeader.getInt("block_height"), jsHeader.getInt("timestamp")))
+                    } catch (e: JSONException) {
+                        e.printStackTrace()
+                    }
+                } catch (e: JSONException) {
+                    e.printStackTrace()
+                }
+            }
+
+            if (it.isMethod(ElectrumRequest.METHOD_GetTransaction)) {
+                try {
+                    val txHash = it.txHash
+                    val raw = it.resultString
+                    val listTx = card!!.unspentTransactions
+                    for (tx in listTx) {
+                        if (tx.txID == txHash)
+                            tx.Raw = raw
+                    }
+                    val listHTx = card!!.historyTransactions
+                    for (tx in listHTx) {
+                        if (tx.txID == txHash) {
+                            tx.Raw = raw
+                            try {
+                                val prevHashes = BTCUtils.getPrevTX(raw)
+                                var isOur = false
+                                for (hash in prevHashes) {
+                                    val checkID = BTCUtils.toHex(hash)
+                                    for (txForCheck in listHTx) {
+                                        if (txForCheck.txID == checkID)
+                                            isOur = true
+                                    }
+                                }
+                                tx.isInput = !isOur
+                            } catch (e: BitcoinException) {
+                                e.printStackTrace()
+                            }
+                        }
+                    }
+                } catch (e: JSONException) {
+                    e.printStackTrace()
                 }
             }
 
