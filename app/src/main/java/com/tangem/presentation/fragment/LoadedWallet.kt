@@ -34,6 +34,7 @@ import com.tangem.presentation.activity.*
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.util.BTCUtils
 import com.tangem.util.Util
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.BuildConfig
