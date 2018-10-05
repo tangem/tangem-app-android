@@ -158,6 +158,15 @@ public class ElectrumRequest {
         return request;
     }
 
+    public String getMethod() {
+        try {
+            return jsRequestData.getString("method");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
     public boolean isMethod(String methodName) throws JSONException {
         return jsRequestData.getString("method").equals(methodName);
     }
