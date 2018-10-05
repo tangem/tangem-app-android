@@ -42,7 +42,7 @@ public class BalanceValidator {
         firstLine = "Verification failed";
         secondLine = "";
 
-        if (card.getBlockchain() == Blockchain.Bitcoin) {
+        if (card.getBlockchain() == Blockchain.Bitcoin || card.getBlockchain() == Blockchain.BitcoinTestNet) {
 
             if (((card.getOfflineBalance() == null) && !card.isBalanceReceived()) || (!card.isBalanceReceived() && (card.getRemainingSignatures() != card.getMaxSignatures()))) {
                 score = 0;
@@ -61,8 +61,8 @@ public class BalanceValidator {
 
             if (card.getBalanceUnconfirmed() != 0) {
                 score = 0;
-                firstLine = "Unguaranted balance";
-                secondLine = "Loading in progress. Wait for full confirmation in blockchain. ";
+                firstLine = "Transaction in progress";
+                secondLine = "Wait for full confirmation in blockchain. ";
                 return;
             }
 
