@@ -132,7 +132,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/maaxmedium"
                     android:textAlignment="center"
-                    android:visibility="invisible" />
+                    android:visibility="visible" />
 
                 <TextView
                     android:id="@+id/tvBalanceLine2"
@@ -143,7 +143,7 @@
                     android:paddingEnd="5dp"
                     android:paddingStart="5dp"
                     android:textAlignment="center"
-                    android:visibility="gone" />
+                    android:visibility="visible" />
 
             </LinearLayout>
 
@@ -238,7 +238,6 @@
             android:elevation="2dp"
             android:fontFamily="@font/maax"
             android:padding="4dp"
-            android:text="@string/message"
             android:textAlignment="center"
             android:textColor="@color/black"
             android:textStyle="normal|bold"
@@ -256,7 +255,6 @@
             android:fontFamily="@font/maax"
             android:padding="4dp"
             android:shadowColor="@color/cardview_shadow_start_color"
-            android:text="@string/error"
             android:textAlignment="center"
             android:textColor="@color/white"
             android:textStyle="bold"
