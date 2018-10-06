@@ -40,7 +40,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
     private var amountStr: String? = null
     private var feeStr: String? = null
-    private var incfeeBool = true
+    private var isIncludeFee = true
     private var outAddressStr: String? = null
     private var lastReadSuccess = true
 
@@ -59,7 +59,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
         amountStr = intent.getStringExtra(EXTRA_AMOUNT)
         feeStr = intent.getStringExtra("Fee")
-        incfeeBool = intent.getBooleanExtra("IncFee", true)
+        isIncludeFee = intent.getBooleanExtra("IncFee", true)
         outAddressStr = intent.getStringExtra("Wallet")
 
         tvCardID.text = card!!.cidDescription
@@ -67,33 +67,6 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         progressBar = findViewById(R.id.progressBar)
         progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
         progressBar!!.visibility = View.INVISIBLE
-    }
-
-    override fun onTagDiscovered(tag: Tag) {
-        try {
-            // get IsoDep handle and run cardReader thread
-            val isoDep = IsoDep.get(tag)
-                    ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
-            val uid = tag.id
-            val sUID = Util.byteArrayToHexString(uid)
-//            Log.v(TAG, "UID: $sUID")
-
-            if (sUID == card!!.uid) {
-                if (lastReadSuccess) {
-                    isoDep.timeout = card!!.pauseBeforePIN2 + 5000
-                } else {
-                    isoDep.timeout = card!!.pauseBeforePIN2 + 65000
-                }
-                signPaymentTask = SignPaymentTask(this, card, nfcManager, isoDep, this, amountStr, feeStr,incfeeBool, outAddressStr)
-                signPaymentTask!!.start()
-            } else {
-//                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card!!.uid + ")")
-                nfcManager!!.ignoreTag(isoDep.tag)
-            }
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
     }
 
     public override fun onResume() {
@@ -135,6 +108,33 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
             }
         }
         return super.onKeyDown(keyCode, event)
+    }
+
+    override fun onTagDiscovered(tag: Tag) {
+        try {
+            // get IsoDep handle and run cardReader thread
+            val isoDep = IsoDep.get(tag)
+                    ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
+            val uid = tag.id
+            val sUID = Util.byteArrayToHexString(uid)
+//            Log.v(TAG, "UID: $sUID")
+
+            if (sUID == card!!.uid) {
+                if (lastReadSuccess) {
+                    isoDep.timeout = card!!.pauseBeforePIN2 + 5000
+                } else {
+                    isoDep.timeout = card!!.pauseBeforePIN2 + 65000
+                }
+                signPaymentTask = SignPaymentTask(this, card, nfcManager, isoDep, this, amountStr, feeStr, isIncludeFee, outAddressStr)
+                signPaymentTask!!.start()
+            } else {
+//                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card!!.uid + ")")
+                nfcManager!!.ignoreTag(isoDep.tag)
+            }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override fun onReadStart(cardProtocol: CardProtocol) {
