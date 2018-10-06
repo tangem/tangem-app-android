@@ -9,7 +9,6 @@ import android.content.res.ColorStateList
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
-import android.os.AsyncTask
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.support.v4.app.Fragment
@@ -25,7 +24,6 @@ import com.google.zxing.WriterException
 import com.tangem.data.network.ServerApiHelper
 import com.tangem.data.network.model.InfuraResponse
 import com.tangem.data.network.request.ElectrumRequest
-import com.tangem.data.network.task.loaded_wallet.UpdateWalletInfoTask
 import com.tangem.data.nfc.VerifyCardTask
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.NfcManager
@@ -834,7 +832,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val engine = CoinEngineFactory.create(card!!.blockchain)
 
             if (srlLoadedWallet!!.isRefreshing) {
-                tvBalanceLine1.setTextColor(getResources().getColor(R.color.primary))
+                tvBalanceLine1.setTextColor(resources.getColor(R.color.primary))
                 tvBalanceLine1.text = "Verifying in blockchain..."
                 tvBalanceLine2.text = ""
             } else {
