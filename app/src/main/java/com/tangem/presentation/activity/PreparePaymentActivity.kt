@@ -91,16 +91,15 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             etAmount.setText(engine.getBalanceValue(card))
         }
 
+        // limit number of symbols after comma
         if (card!!.blockchain == Blockchain.Bitcoin)
             etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(8))
-
         if (card!!.blockchain == Blockchain.BitcoinCash)
             etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(8))
-
         if (card!!.blockchain == Blockchain.Ethereum)
             etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(18))
 
-
+        // set listeners
         etAmount.setOnEditorActionListener { lv, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 val imm = lv.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -111,8 +110,6 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 false
             }
         }
-
-        // set listeners
         btnVerify.setOnClickListener {
             val strAmount: String = etAmount.text.toString().replace(",", ".")
 
@@ -154,7 +151,6 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             intent.putExtra(SignPaymentActivity.EXTRA_AMOUNT, strAmount)
             startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT)
         }
-
         ivCamera.setOnClickListener {
             val intent = Intent(baseContext, QrScanActivity::class.java)
             startActivityForResult(intent, REQUEST_CODE_SCAN_QR)
@@ -209,7 +205,6 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     override fun onTagDiscovered(tag: Tag) {
         try {
-//            Log.w(javaClass.name, "Ignore discovered tag!")
             nfcManager!!.ignoreTag(tag)
         } catch (e: IOException) {
             e.printStackTrace()
