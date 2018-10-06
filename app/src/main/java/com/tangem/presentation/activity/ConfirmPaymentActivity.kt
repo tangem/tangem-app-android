@@ -29,7 +29,9 @@ import com.tangem.util.Util
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_confirm_payment.*
 import java.io.IOException
+import java.math.BigDecimal
 import java.math.BigInteger
+import java.text.DecimalFormat
 import java.util.*
 
 class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
@@ -51,7 +53,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     var minFee: String? = null
     var maxFee: String? = null
     var normalFee: String? = null
-    var incFee: Boolean = true
+    private var isIncludeFee: Boolean = true
     var minFeeInInternalUnits: Long? = 0L
     private var requestPIN2Count = 0
     var nodeCheck = false
@@ -85,8 +87,8 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         } else
             tvBalance.text = balanceWithAlter
 
-        incFee = intent.getBooleanExtra("IncFee", true)
-        if (incFee)
+        isIncludeFee = intent.getBooleanExtra("IncFee", true)
+        if (isIncludeFee)
             tvIncFee.setText(R.string.including_fee)
         else
             tvIncFee.setText(R.string.not_including_fee)
@@ -139,17 +141,17 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
             progressBar!!.visibility = View.VISIBLE
 
-//            serverApiHelper!!.estimateFee(ServerApiHelper.ESTIMATE_FEE_PRIORITY)
-//            serverApiHelper!!.estimateFee(ServerApiHelper.ESTIMATE_FEE_NORMAL)
-//            serverApiHelper!!.estimateFee(ServerApiHelper.ESTIMATE_FEE_MINIMAL)
+            serverApiHelper!!.estimateFee(ServerApiHelper.ESTIMATE_FEE_PRIORITY)
+            serverApiHelper!!.estimateFee(ServerApiHelper.ESTIMATE_FEE_NORMAL)
+            serverApiHelper!!.estimateFee(ServerApiHelper.ESTIMATE_FEE_MINIMAL)
 
-            for (i in 0 until SharedData.COUNT_REQUEST) {
-                val feeTask = ConnectFeeTask(this@ConfirmPaymentActivity, sharedFee)
-                feeTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
-                        FeeRequest.GetFee(card!!.wallet, calcSize.toLong(), FeeRequest.NORMAL),
-                        FeeRequest.GetFee(card!!.wallet, calcSize.toLong(), FeeRequest.MINIMAL),
-                        FeeRequest.GetFee(card!!.wallet, calcSize.toLong(), FeeRequest.PRIORITY))
-            }
+//            for (i in 0 until SharedData.COUNT_REQUEST) {
+//                val feeTask = ConnectFeeTask(this@ConfirmPaymentActivity, sharedFee)
+//                feeTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
+//                        FeeRequest.GetFee(card!!.wallet, calcSize.toLong(), FeeRequest.NORMAL),
+//                        FeeRequest.GetFee(card!!.wallet, calcSize.toLong(), FeeRequest.MINIMAL),
+//                        FeeRequest.GetFee(card!!.wallet, calcSize.toLong(), FeeRequest.PRIORITY))
+//            }
         }
 
         // set listeners
@@ -214,7 +216,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 return@setOnClickListener
             }
 
-            if (!engineCoin.checkAmountValue(card, txAmount, txFee, minFeeInInternalUnits, incFee)) {
+            if (!engineCoin.checkAmountValue(card, txAmount, txFee, minFeeInInternalUnits, isIncludeFee)) {
                 finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.not_enough_funds_or_incorrect_amount))
                 return@setOnClickListener
             }
@@ -224,26 +226,44 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
             intent.putExtra("UID", card!!.uid)
             intent.putExtra("Card", card!!.asBundle)
-            intent.putExtra("IncFee", incFee)
+            intent.putExtra("IncFee", isIncludeFee)
             startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
         }
 
-
         // request estimate fee listener
         serverApiHelper!!.setEstimateFee { blockCount, estimateFeeResponse ->
+
+            val fee = BigDecimal(estimateFeeResponse)
+
+            progressBar!!.visibility = View.INVISIBLE
+
+            val df = DecimalFormat()
+            df.maximumFractionDigits = 7
+            df.minimumFractionDigits = 3
+            df.isGroupingUsed = false
+            val strFee = df.format(fee)
+
             when (blockCount) {
                 ServerApiHelper.ESTIMATE_FEE_PRIORITY -> {
-//                    Log.i("estimate_fee_PRIORITY", estimateFeeResponse)
+                    maxFee = strFee
                 }
 
                 ServerApiHelper.ESTIMATE_FEE_NORMAL -> {
-//                    Log.i("estimate_fee_NORMAL", estimateFeeResponse)
+                    normalFee = strFee
                 }
 
                 ServerApiHelper.ESTIMATE_FEE_MINIMAL -> {
-//                    Log.i("estimate_fee_MINIMAL", estimateFeeResponse)
+                    minFee = strFee
+                    minFeeInInternalUnits = card!!.internalUnitsFromString(strFee)
                 }
             }
+
+//            doSetFee(rgFee!!.checkedRadioButtonId)
+            etFee!!.error = null
+            feeRequestSuccess = true
+            if (feeRequestSuccess && balanceRequestSuccess)
+                btnSend!!.visibility = View.VISIBLE
+            dtVerified = Date()
         }
 
         // request eth gasPrice listener
@@ -253,8 +273,8 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                     ServerApiHelper.INFURA_ETH_GAS_PRICE -> {
                         var gasPrice = infuraResponse.result
                         gasPrice = gasPrice.substring(2)
-                        // Rounding gas price to integer gweis
-                        var l = BigInteger(gasPrice, 16).divide(BigInteger.valueOf(1000000000L)).multiply(BigInteger.valueOf(1000000000L))
+                        // Rounding gas price to integer gwei
+                        val l = BigInteger(gasPrice, 16).divide(BigInteger.valueOf(1000000000L)).multiply(BigInteger.valueOf(1000000000L))
 
                         val m = if (card!!.blockchain == Blockchain.Token) BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
                         val minFeeInGwei = card!!.getAmountInGwei(l.multiply(m).toString())
@@ -332,7 +352,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
                 intent.putExtra("UID", card!!.uid)
                 intent.putExtra("Card", card!!.asBundle)
-                intent.putExtra("IncFee", incFee)
+                intent.putExtra("IncFee", isIncludeFee)
                 startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
                 return
             }
@@ -346,7 +366,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 intent.putExtra("Wallet", etWallet!!.text.toString())
                 intent.putExtra(SignPaymentActivity.EXTRA_AMOUNT, etAmount!!.text.toString())
                 intent.putExtra("Fee", etFee!!.text.toString())
-                intent.putExtra("IncFee", incFee)
+                intent.putExtra("IncFee", isIncludeFee)
                 startActivityForResult(intent, REQUEST_CODE_SIGN_PAYMENT)
             } else
                 Toast.makeText(baseContext, R.string.pin_2_is_required_to_sign_the_payment, Toast.LENGTH_LONG).show()
