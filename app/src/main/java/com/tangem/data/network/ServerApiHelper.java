@@ -94,9 +94,9 @@ public class ServerApiHelper {
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
                 if (response.code() == 200) {
                     estimateFeeListener.onInfuraEthGasPrice(blockCount, response.body());
-                    Log.i(TAG, "estimateFee onResponse " + response.code());
+                    Log.i(TAG, "estimateFee         onResponse " + response.code() + "  " + response.body());
                 } else
-                    Log.e(TAG, "estimateFee onResponse " + response.code());
+                    Log.e(TAG, "estimateFee         onResponse " + response.code());
             }
 
             @Override
