@@ -216,7 +216,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
         }
 
-        // request electrum
+        // request electrum listener
         serverApiHelper!!.setElectrumRequestData {
             if (it.isMethod(ElectrumRequest.METHOD_GetBalance)) {
                 try {
