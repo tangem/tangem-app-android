@@ -11,7 +11,6 @@ import android.widget.Toast
 import com.tangem.data.network.ServerApiHelper
 import com.tangem.data.network.model.InfuraResponse
 import com.tangem.data.network.request.ElectrumRequest
-import com.tangem.data.network.task.send_transaction.ConnectTask
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
@@ -61,18 +60,50 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback  
             requestInfura(ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION, "")
 
         } else if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
-            val nodeAddress = engine!!.getNode(card)
-            val nodePort = engine.getNodePort(card)
-            val connectTask = ConnectTask(this@SendTransactionActivity, nodeAddress, nodePort, 3)
-            connectTask.execute(ElectrumRequest.broadcast(card!!.wallet, tx))
+//            val nodeAddress = engine!!.getNode(card)
+//            val nodePort = engine.getNodePort(card)
+//            val connectTask = ConnectTask(this@SendTransactionActivity, nodeAddress, nodePort, 3)
+//            connectTask.execute(ElectrumRequest.broadcast(card!!.wallet, tx))
+
+            requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
 
         } else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
-            val nodeAddress = engine!!.getNode(card)
-            val nodePort = engine.getNodePort(card)
-            val connectTask = ConnectTask(this@SendTransactionActivity, nodeAddress, nodePort, 3)
-            connectTask.execute(ElectrumRequest.broadcast(card!!.wallet, tx))
+//            val nodeAddress = engine!!.getNode(card)
+//            val nodePort = engine.getNodePort(card)
+//            val connectTask = ConnectTask(this@SendTransactionActivity, nodeAddress, nodePort, 3)
+//            connectTask.execute(ElectrumRequest.broadcast(card!!.wallet, tx))
 
+            requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
+        }
 
+        // request electrum listener
+        serverApiHelper!!.setElectrumRequestData {
+            if (it.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
+                try {
+                    var hashTX = it.resultString
+
+                    try {
+                        LastSignStorage.setLastMessage(card!!.wallet, hashTX)
+                        if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
+                            hashTX = hashTX.substring(2)
+                        }
+                        val bigInt = BigInteger(hashTX, 16) //TODO: очень плохой способ
+                        LastSignStorage.setTxWasSend(card!!.wallet)
+                        LastSignStorage.setLastMessage(card!!.wallet, "")
+                        Log.e("TX_RESULT", hashTX)
+                        finishWithSuccess()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+//                        finishWithError(hashTX)
+                        requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
+                    }
+
+                } catch (e: JSONException) {
+                    e.printStackTrace()
+//                    finishWithError(e.toString())
+                    requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
+                }
+            }
         }
 
         // request eth sendRawTransaction
@@ -148,6 +179,10 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback  
 
     private fun requestInfura(method: String, contract: String) {
         serverApiHelper!!.infura(method, 67, card!!.wallet, contract, tx)
+    }
+
+    private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
+        serverApiHelper!!.electrumRequestData(card, electrumRequest)
     }
 
     fun finishWithError(message: String) {
