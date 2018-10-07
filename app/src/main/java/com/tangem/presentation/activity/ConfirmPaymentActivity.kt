@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
-import android.os.AsyncTask
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.text.Editable
@@ -17,7 +16,6 @@ import android.widget.*
 import com.tangem.data.network.ServerApiHelper
 import com.tangem.data.network.model.InfuraResponse
 import com.tangem.data.network.request.ElectrumRequest
-import com.tangem.data.network.task.confirm_payment.ConnectTask
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
 import com.tangem.util.BTCUtils
@@ -26,6 +24,7 @@ import com.tangem.util.FormatUtil
 import com.tangem.util.Util
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_confirm_payment.*
+import org.json.JSONException
 import java.io.IOException
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -60,7 +59,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     var dtVerified: Date? = null
 
 
-    var calcSize: Int = 0
+    private var calcSize: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -122,15 +121,18 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         } else {
             rgFee!!.isEnabled = true
-            val data = SharedData(SharedData.COUNT_REQUEST)
-            val engineCoin = CoinEngineFactory.create(card!!.blockchain)
 
-            for (i in 0 until data.allRequest) {
-                val nodeAddress = engineCoin!!.getNode(card)
-                val nodePort = engineCoin.getNodePort(card)
-                val connectTaskEx = ConnectTask(this@ConfirmPaymentActivity, nodeAddress, nodePort, data)
-                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.checkBalance(card!!.wallet))
-            }
+//            val data = SharedData(SharedData.COUNT_REQUEST)
+//            val engineCoin = CoinEngineFactory.create(card!!.blockchain)
+
+//            for (i in 0 until data.allRequest) {
+//                val nodeAddress = engineCoin!!.getNode(card)
+//                val nodePort = engineCoin.getNodePort(card)
+//                val connectTaskEx = ConnectTask(this@ConfirmPaymentActivity, nodeAddress, nodePort, data)
+//                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.checkBalance(card!!.wallet))
+//            }
+
+            requestElectrum(card!!, ElectrumRequest.checkBalance(card!!.wallet))
 
             calcSize = 256
             try {
@@ -233,6 +235,29 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
         }
 
+        // request electrum listener
+        serverApiHelper!!.setElectrumRequestData {
+            if (it.isMethod(ElectrumRequest.METHOD_GetBalance)) {
+                try {
+                    etFee!!.setText("--")
+                    if ((it.result.getInt("confirmed") + it.result.getInt("unconfirmed")) / card!!.blockchain.multiplier * 1000000.0 < java.lang.Float.parseFloat(etAmount!!.text.toString())) {
+                        etFee!!.error = "Not enough funds"
+                    } else {
+                        etFee!!.error = null
+                        balanceRequestSuccess = true
+                        if (feeRequestSuccess && balanceRequestSuccess) {
+                            btnSend!!.visibility = View.VISIBLE
+                        }
+                        dtVerified = Date()
+                        nodeCheck = true
+                    }
+                } catch (e: JSONException) {
+                    e.printStackTrace()
+                    finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
+                }
+            }
+        }
+
         // request estimate fee listener
         serverApiHelper!!.setEstimateFee { blockCount, estimateFeeResponse ->
             var fee: BigDecimal?
@@ -240,13 +265,13 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
             if (fee == BigDecimal.ZERO) {
                 progressBar!!.visibility = View.INVISIBLE
-                finishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! Wrong data received from the node")
+                finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_calculate_fee_wrong_data_received_from_node))
             }
 
             if (calcSize.toLong() != 0L) {
                 fee = fee.multiply(BigDecimal(calcSize.toLong())).divide(BigDecimal(1024)) // per Kb -> per byte
             } else {
-                finishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! Tx length unknown")
+                finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_calculate_fee_tx_length_unknown))
             }
 
             progressBar!!.visibility = View.INVISIBLE
@@ -257,9 +282,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             df.isGroupingUsed = false
             val strFee = df.format(fee)
 
-            var txtFee = ""
             when (blockCount) {
-
                 ServerApiHelper.ESTIMATE_FEE_MINIMAL -> {
                     minFee = strFee
                     minFeeInInternalUnits = card!!.internalUnitsFromString(strFee)
@@ -332,6 +355,10 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
 
         serverApiHelper!!.setInfuraResponse(infuraBodyListener)
+    }
+
+    private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
+        serverApiHelper!!.electrumRequestData(card, electrumRequest)
     }
 
     private fun requestInfura(method: String) {
