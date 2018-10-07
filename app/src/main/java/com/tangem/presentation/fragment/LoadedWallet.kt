@@ -236,7 +236,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             if (it.isMethod(ElectrumRequest.METHOD_ListUnspent)) {
                 try {
-                    val mWalletAddress = it.params.getString(0)
+                    val walletAddress = it.params.getString(0)
                     val jsUnspentArray = it.resultArray
                     try {
                         card!!.unspentTransactions.clear()
@@ -250,7 +250,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         }
                     } catch (e: JSONException) {
                         e.printStackTrace()
-                        engine.switchNode(card)
                     }
 
                     for (i in 0 until jsUnspentArray.length()) {
@@ -265,13 +264,12 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //                            updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.getHeader(mWalletAddress, height.toString()), ElectrumRequest.getTransaction(mWalletAddress, hash))
 
 
-                            requestElectrum(card!!, ElectrumRequest.getHeader(mWalletAddress, height.toString()))
-                            requestElectrum(card!!, ElectrumRequest.getTransaction(mWalletAddress, hash))
+                            requestElectrum(card!!, ElectrumRequest.getHeader(walletAddress, height.toString()))
+                            requestElectrum(card!!, ElectrumRequest.getTransaction(walletAddress, hash))
                         }
                     }
                 } catch (e: JSONException) {
                     e.printStackTrace()
-                    engine.switchNode(card)
                 }
             }
 
@@ -348,7 +346,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             updateViews()
             val result = it.results!![0]
             if (result.error != null) {
-//                Log.e(TAG, "Can't verify card: ${result.error}")
                 card!!.isOnlineVerified = false
                 return@setCardVerifyAndGetInfoListener
             }
