@@ -17,8 +17,6 @@ import android.widget.*
 import com.tangem.data.network.ServerApiHelper
 import com.tangem.data.network.model.InfuraResponse
 import com.tangem.data.network.request.ElectrumRequest
-import com.tangem.data.network.request.FeeRequest
-import com.tangem.data.network.task.confirm_payment.ConnectFeeTask
 import com.tangem.data.network.task.confirm_payment.ConnectTask
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
@@ -50,14 +48,19 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     var rgFee: RadioGroup? = null
     var progressBar: ProgressBar? = null
     var btnSend: Button? = null
+
     var minFee: String? = null
     var maxFee: String? = null
     var normalFee: String? = null
+
     private var isIncludeFee: Boolean = true
     var minFeeInInternalUnits: Long? = 0L
     private var requestPIN2Count = 0
     var nodeCheck = false
     var dtVerified: Date? = null
+
+
+    var calcSize: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -129,7 +132,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.checkBalance(card!!.wallet))
             }
 
-            var calcSize = 256
+            calcSize = 256
             try {
                 calcSize = buildSize(etWallet!!.text.toString(), "0.00", etAmount!!.text.toString())
             } catch (ex: Exception) {
@@ -232,8 +235,19 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         // request estimate fee listener
         serverApiHelper!!.setEstimateFee { blockCount, estimateFeeResponse ->
+            var fee: BigDecimal?
+            fee = BigDecimal(estimateFeeResponse) // BTC per 1 kb
 
-            val fee = BigDecimal(estimateFeeResponse)
+            if (fee == BigDecimal.ZERO) {
+                progressBar!!.visibility = View.INVISIBLE
+                finishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! Wrong data received from the node")
+            }
+
+            if (calcSize.toLong() != 0L) {
+                fee = fee.multiply(BigDecimal(calcSize.toLong())).divide(BigDecimal(1024)) // per Kb -> per byte
+            } else {
+                finishActivityWithError(Activity.RESULT_CANCELED, "Cannot calculate fee! Tx length unknown")
+            }
 
             progressBar!!.visibility = View.INVISIBLE
 
@@ -243,22 +257,25 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             df.isGroupingUsed = false
             val strFee = df.format(fee)
 
+            var txtFee = ""
             when (blockCount) {
-                ServerApiHelper.ESTIMATE_FEE_PRIORITY -> {
-                    maxFee = strFee
-                }
-
-                ServerApiHelper.ESTIMATE_FEE_NORMAL -> {
-                    normalFee = strFee
-                }
 
                 ServerApiHelper.ESTIMATE_FEE_MINIMAL -> {
                     minFee = strFee
                     minFeeInInternalUnits = card!!.internalUnitsFromString(strFee)
                 }
+
+                ServerApiHelper.ESTIMATE_FEE_NORMAL -> {
+                    normalFee = strFee
+
+                    doSetFee(rgFee!!.checkedRadioButtonId)
+                }
+
+                ServerApiHelper.ESTIMATE_FEE_PRIORITY -> {
+                    maxFee = strFee
+                }
             }
 
-//            doSetFee(rgFee!!.checkedRadioButtonId)
             etFee!!.error = null
             feeRequestSuccess = true
             if (feeRequestSuccess && balanceRequestSuccess)
@@ -284,7 +301,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         minFee = minFeeInGwei
                         normalFee = normalFeeInGwei
                         maxFee = maxFeeInGwei
-                        etFee!!.setText(normalFeeInGwei.replace(',','.'))
+                        etFee!!.setText(normalFeeInGwei.replace(',', '.'))
                         etFee!!.error = null
                         btnSend!!.visibility = View.VISIBLE
                         feeRequestSuccess = true
@@ -487,7 +504,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 else
                     finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
         }
-        etFee!!.setText(txtFee.replace(',','.'))
+        etFee!!.setText(txtFee.replace(',', '.'))
     }
 
 }

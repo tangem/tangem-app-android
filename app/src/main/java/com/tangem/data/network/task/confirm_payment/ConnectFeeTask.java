@@ -84,8 +84,6 @@ public class ConnectFeeTask extends FeeTask {
 
 
 
-
-
                 confirmPaymentActivity.getProgressBar().setVisibility(View.INVISIBLE);
 
                 DecimalFormat df = new DecimalFormat();
