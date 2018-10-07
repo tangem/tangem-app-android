@@ -260,7 +260,6 @@ public class ServerApiHelper {
     }
 
     public void requestArtwork(String artworkId, Date updateDate, TangemCard card) {
-
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
