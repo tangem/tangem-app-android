@@ -138,7 +138,7 @@ public class EthEngine extends CoinEngine {
     @Override
     public String getBalance(TangemCard mCard) {
         if (!hasBalanceInfo(mCard)) {
-            return "-- -- -- " + getBalanceCurrency(mCard);
+            return "";
         }
 
         String output = getBalanceValue(mCard);
