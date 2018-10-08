@@ -289,7 +289,6 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
             tvCardRegistredDate.text = card!!.personalizationDateTimeDescription
             tvBlockchain.text = card!!.blockchainName
             tvValidationNode.text = card!!.validationNodeDescription
-            tvInputs.text = card!!.inputsDescription
 
             when {
                 card!!.lastInputDescription.contains("awaiting") -> tvInputs.setTextColor(ContextCompat.getColor(context!!, R.color.not_confirmed))
