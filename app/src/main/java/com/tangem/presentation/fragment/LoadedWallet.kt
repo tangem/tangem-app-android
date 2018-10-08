@@ -72,6 +72,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private var sp: SharedPreferences? = null
     private val inactiveColor: ColorStateList by lazy { resources.getColorStateList(R.color.btn_dark) }
     private val activeColor: ColorStateList by lazy { resources.getColorStateList(R.color.colorAccent) }
+    private var requestCounter = 0
 
     private var timerRepeatRefresh: Timer? = null
 
@@ -118,6 +119,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             e.printStackTrace()
         }
 
+        btnExtract.isEnabled = false
         btnExtract.backgroundTintList = inactiveColor
 
         refresh()
@@ -218,6 +220,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         // request electrum listener
         serverApiHelper!!.setElectrumRequestData {
+
+            requestCounter--
+            if (requestCounter == 0) srlLoadedWallet!!.isRefreshing = false
+
             if (it.isMethod(ElectrumRequest.METHOD_GetBalance)) {
                 try {
                     val walletAddress = it.params.getString(0)
@@ -257,13 +263,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         val height = jsUnspent.getInt("height")
                         val hash = jsUnspent.getString("tx_hash")
                         if (height != -1) {
-//                            val nodeAddress = engine.getNode(card)
-//                            val nodePort = engine.getNodePort(card)
-//                            val updateWalletInfoTask = UpdateWalletInfoTask(this, nodeAddress, nodePort)
-//                            //                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
-//                            updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.getHeader(mWalletAddress, height.toString()), ElectrumRequest.getTransaction(mWalletAddress, hash))
-
-
                             requestElectrum(card!!, ElectrumRequest.getHeader(walletAddress, height.toString()))
                             requestElectrum(card!!, ElectrumRequest.getTransaction(walletAddress, hash))
                         }
@@ -338,18 +337,25 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     e.printStackTrace()
                 }
             }
+
+            if (requestCounter == 0) updateViews()
+
         }
 
         // request card verify listener
         serverApiHelper!!.setCardVerifyAndGetInfoListener {
-            srlLoadedWallet!!.isRefreshing = false
-            updateViews()
+
+            requestCounter--
+            if (requestCounter == 0) srlLoadedWallet!!.isRefreshing = false
+
             val result = it.results!![0]
             if (result.error != null) {
                 card!!.isOnlineVerified = false
                 return@setCardVerifyAndGetInfoListener
             }
             card!!.isOnlineVerified = result.passed
+
+            if (requestCounter == 0) updateViews()
 
             if (!result.passed) return@setCardVerifyAndGetInfoListener
 
@@ -358,10 +364,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 ivTangemCard.setImageBitmap(localStorage.getCardArtworkBitmap(card!!))
                 localStorage.applySubstitution(card!!)
                 if (card!!.blockchain == Blockchain.Token || card!!.blockchain == Blockchain.Ethereum) {
-                    //TODO: change this very bad code - it need because we have switch to token from ethereum if token symbol specified
                     card!!.setBlockchainIDFromCard(Blockchain.Ethereum.id)
                 }
-                updateViews()
                 refresh()
             }
             if (result.artwork != null && localStorage.checkNeedUpdateArtwork(result.artwork)) {
@@ -383,8 +387,12 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val rate = it.priceUsd.toFloat()
             card!!.rate = rate
             card!!.rateAlter = rate
-            srlLoadedWallet!!.isRefreshing = false
-            updateViews()
+
+            requestCounter--
+            if (requestCounter == 0) {
+                srlLoadedWallet!!.isRefreshing = false
+                updateViews()
+            }
 //            Log.i(TAG, "setRateInfoData $rate")
         }
 
@@ -436,8 +444,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                             if (l.compareTo(BigInteger.ZERO) == 0) {
                                 card!!.blockchainID = Blockchain.Ethereum.id
                                 card!!.addTokenToBlockchainName()
-                                srlLoadedWallet!!.isRefreshing = false
-                                updateViews()
+
+                                requestCounter--
+                                if (requestCounter == 0) srlLoadedWallet!!.isRefreshing = false
+
                                 requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
                                 requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
                                 requestInfura(ServerApiHelper.INFURA_ETH_GET_PENDING_COUNT, "")
@@ -468,10 +478,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                                 val tmp = infuraResponse.result
                                 hashTX = tmp
                             } catch (e: JSONException) {
-//                        val msg = request.getAnswer()
-//                        val err = msg!!.getJSONObject("error")
-//                        hashTX = err.getString("message")
-//                        LastSignStorage.setLastMessage(card!!.wallet, hashTX)
                                 return
                             }
 
@@ -500,12 +506,19 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     }
                 }
 
-                updateViews()
+                requestCounter--
+                if (requestCounter == 0) {
+                    srlLoadedWallet!!.isRefreshing = false
+                    updateViews()
+                }
             }
 
             override fun onInfuraFail(method: String, message: String) {
-                srlLoadedWallet!!.isRefreshing = false
-                updateViews()
+                requestCounter--
+                if (requestCounter == 0) {
+                    srlLoadedWallet!!.isRefreshing = false
+                    updateViews()
+                }
             }
         }
 
@@ -513,19 +526,24 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
+        requestCounter++
         serverApiHelper!!.electrumRequestData(card, electrumRequest)
     }
 
     private fun requestInfura(method: String, contract: String) {
+        requestCounter++
         serverApiHelper!!.infura(method, 67, card!!.wallet, contract, LastSignStorage.getTxForSend(card!!.wallet))
     }
 
     private fun requestCardVerify() {
-        if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified))
-            serverApiHelper!!.cardVerifyAndGetInfo(card) //serverApiHelper!!.cardVerify(card)
+        if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified)) {
+            requestCounter++
+            serverApiHelper!!.cardVerifyAndGetInfo(card)
+        }
     }
 
     private fun requestRateInfo(cryptoId: String) {
+        requestCounter++
         serverApiHelper!!.rateInfoData(cryptoId)
     }
 
@@ -683,25 +701,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 updateViews()
             }
             REQUEST_CODE_SEND_PAYMENT, REQUEST_CODE_RECEIVE_PAYMENT -> {
-//                if (resultCode == Activity.RESULT_OK) {
-////                    srlLoadedWallet!!.postDelayed({ refresh() }, 10000)
-////                    srlLoadedWallet!!.isRefreshing = true
-//
-//                    timerRepeatRefresh = fixedRateTimer(name = "refresh", initialDelay = 2000, period = 5000) {
-//                        activity!!.runOnUiThread {
-//                            refresh()
-//                            Log.i("sfsf", "refresh")
-//                        }
-//                    }
-//                    card!!.clearInfo()
-//
-////                    updateViews()
-//                }
 
                 if (resultCode == Activity.RESULT_OK) {
+                    card!!.clearInfo()
                     srlLoadedWallet!!.postDelayed({ this.refresh() }, 5000)
                     srlLoadedWallet!!.isRefreshing = true
-                    card!!.clearInfo()
                     updateViews()
                 }
 
@@ -811,18 +815,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 tvError.text = card!!.error
             }
 
-            val needResendTX = LastSignStorage.getNeedTxSend(card!!.wallet)
-
-            if ((card!!.message == null || card!!.message.isEmpty()) && !needResendTX) {
+            if (card!!.message == null || card!!.message.isEmpty()) {
                 tvMessage!!.text = ""
                 tvMessage!!.visibility = View.GONE
             } else {
-                if (needResendTX) {
-
-                } else {
-                    tvMessage!!.text = card!!.message
-                }
-
+                tvMessage!!.text = card!!.message
                 tvMessage!!.visibility = View.VISIBLE
             }
 
@@ -841,7 +838,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
 
             if (engine!!.hasBalanceInfo(card) || card!!.offlineBalance == null) {
-                if (card!!.blockchain == Blockchain.Token) {
+                if ((card!!.blockchain == Blockchain.Token) && (engine.getBalanceWithAlter(card) != null)) {
                     val html = Html.fromHtml(engine.getBalanceWithAlter(card))
                     tvBalance.text = html
                 } else
@@ -859,7 +856,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             tvBlockchain.text = card!!.blockchainName
 
-            if (card!!.hasBalanceInfo() && (card!!.balance != 0L)) {
+            if (card!!.hasBalanceInfo() && (card!!.balance != 0L) && (card!!.balance != null)) {
                 btnExtract.isEnabled = true
                 btnExtract.backgroundTintList = activeColor
             } else {
@@ -876,13 +873,14 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     fun refresh() {
+
+        // Clear all card data and request again
+
         srlLoadedWallet!!.isRefreshing = true
         card!!.clearInfo()
         card!!.error = null
         card!!.message = null
-        card!!.isBalanceReceived = false
-
-        val needResendTX = LastSignStorage.getNeedTxSend(card!!.wallet)
+        requestCounter = 0
 
         updateViews()
 
@@ -892,113 +890,37 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         // Bitcoin
         if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
-//            val data = SharedData(SharedData.COUNT_REQUEST)
-
-            card!!.resetFailedBalanceRequestCounter()
             card!!.setIsBalanceEqual(true)
 
             requestElectrum(card!!, ElectrumRequest.checkBalance(card!!.wallet))
             requestElectrum(card!!, ElectrumRequest.listUnspent(card!!.wallet))
-
-//            for (i in 0 until data.allRequest) {
-//                val nodeAddress = engine!!.getNextNode(card)
-//                val nodePort = engine.getNextNodePort(card)
-//
-////                Log.i(TAG, nodeAddress)
-////                Log.i(TAG, nodePort.toString())
-////                Log.i(TAG, i.toString())
-//
-//                // check balance
-//                val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-//                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.checkBalance(card!!.wallet))
-//
-//                // list unspent input
-//                val updateWalletInfoTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-//                updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.listUnspent(card!!.wallet))
-//            }
-
             requestRateInfo("bitcoin")
         }
 
         // BitcoinCash
         else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
-//            val data = SharedData(SharedData.COUNT_REQUEST)
-
-            card!!.resetFailedBalanceRequestCounter()
             card!!.setIsBalanceEqual(true)
 
             requestElectrum(card!!, ElectrumRequest.checkBalance(card!!.wallet))
             requestElectrum(card!!, ElectrumRequest.listUnspent(card!!.wallet))
-
-//            for (i in 0 until data.allRequest) {
-//                val nodeAddress = engine!!.getNextNode(card)
-//                val nodePort = engine.getNextNodePort(card)
-//
-//                // check balance
-//                val connectTaskEx = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-//                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.checkBalance(card!!.wallet))
-//            }
-//
-//            val nodeAddress = engine!!.getNode(card)
-//            val nodePort = engine.getNodePort(card)
-//
-//            // list unspent input
-//            val updateWalletInfoTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort, data)
-//            updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.listUnspent(card!!.wallet))
-
             requestRateInfo("bitcoin-cash")
         }
 
         // Ethereum
         else if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet) {
-//            val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
-//
-//            val reqETH = InfuraRequest.GetBalance(card!!.wallet)
-//            reqETH.id = 67
-//            reqETH.setBlockchain(card!!.blockchain)
-//
-//            val reqNonce = InfuraRequest.GetOutTransactionCount(card!!.wallet)
-//            reqNonce.id = 67
-//            reqNonce.setBlockchain(card!!.blockchain)
-//
-//            updateETH.execute(reqETH, reqNonce)
 
             requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
             requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
             requestInfura(ServerApiHelper.INFURA_ETH_GET_PENDING_COUNT, "")
-
             requestRateInfo("ethereum")
         }
 
         // Token
         else if (card!!.blockchain == Blockchain.Token) {
 
-//            val updateETH = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
-//
-//            val reqETH = InfuraRequest.GetTokenBalance(card!!.wallet, engine!!.getContractAddress(card), engine.getTokenDecimals(card))
-//            reqETH.id = 67
-//            reqETH.setBlockchain(card!!.blockchain)
-//
-//            val reqBalance = InfuraRequest.GetBalance(card!!.wallet)
-//            reqBalance.id = 67
-//            reqBalance.setBlockchain(card!!.blockchain)
-//
-//            val reqNonce = InfuraRequest.GetOutTransactionCount(card!!.wallet)
-//            reqNonce.id = 67
-//            reqNonce.setBlockchain(card!!.blockchain)
-//
-//            updateETH.execute(reqETH, reqNonce, reqBalance)
-
             requestInfura(ServerApiHelper.INFURA_ETH_CALL, engine.getContractAddress(card))
-
             requestRateInfo("ethereum")
         }
-
-        //if (needResendTX)
-        //sendTransaction(LastSignStorage.getTxForSend(card!!.wallet))
-
-//        if (btnExtract.isEnabled)
-
 
     }
 
@@ -1074,37 +996,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val clipboard = activity!!.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
             clipboard.primaryClip = ClipData.newPlainText(txtShare, txtShare)
             Toast.makeText(context, R.string.copied_clipboard, Toast.LENGTH_LONG).show()
-        }
-    }
-
-    private fun sendTransaction(tx: String) {
-        val engine = CoinEngineFactory.create(card!!.blockchain)
-        if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet || card!!.blockchain == Blockchain.Token) {
-//            val task = ETHRequestTask(this@LoadedWallet, card!!.blockchain)
-//            val req = InfuraRequest.SendTransaction(card!!.wallet, tx)
-//            req.id = 67
-//            req.setBlockchain(card!!.blockchain)
-//            task.execute(req)
-
-            requestInfura(ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION, "")
-
-        } else if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
-//            val nodeAddress = engine!!.getNode(card)
-//            val nodePort = engine.getNodePort(card)
-//
-//            val connectTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort)
-//            connectTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.broadcast(card!!.wallet, tx))
-
-            requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
-
-        } else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
-//            val nodeAddress = engine!!.getNode(card)
-//            val nodePort = engine.getNodePort(card)
-//
-//            val connectTask = UpdateWalletInfoTask(this@LoadedWallet, nodeAddress, nodePort)
-//            connectTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.broadcast(card!!.wallet, tx))
-
-            requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
         }
     }
 
