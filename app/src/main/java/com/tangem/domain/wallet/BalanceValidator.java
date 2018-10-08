@@ -71,7 +71,8 @@ public class BalanceValidator {
                 firstLine = "Verified balance";
                 secondLine = "Balance confirmed in blockchain. ";
                 if (card.getBalance() == 0) {
-                    firstLine = "";
+                    firstLine = "Empty wallet";
+                    secondLine = "";
                 }
             }
 
@@ -125,14 +126,15 @@ public class BalanceValidator {
                 firstLine = "Verified balance";
                 secondLine = "Balance confirmed in blockchain. ";
                 if (card.getBalance() == 0) {
-                    firstLine = "";
+                    firstLine = "Empty wallet";
+                    secondLine = "";
                 }
             }
 
             if ((card.getOfflineBalance() != null) && !card.isBalanceReceived() && (card.getRemainingSignatures() == card.getMaxSignatures()) && card.getBalance() != 0) {
                 score = 80;
                 firstLine = "Verified offline balance";
-                secondLine = "Can't obtain balance from blockchain. Restore internet connection to be more confident. ";
+                secondLine = "Restore internet connection to obtain trusted balance from blockchain";
             }
         }
 

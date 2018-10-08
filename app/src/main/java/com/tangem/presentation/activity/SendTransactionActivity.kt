@@ -51,27 +51,14 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback  
 
         val engine = CoinEngineFactory.create(card!!.blockchain)
         if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet || card!!.blockchain == Blockchain.Token) {
-//            val task = ETHRequestTask(this@SendTransactionActivity, card!!.blockchain)
-//            val req = InfuraRequest.SendTransaction(card!!.wallet, tx)
-//            req.id = 67
-//            req.setBlockchain(card!!.blockchain)
-//            task.execute(req)
 
             requestInfura(ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION, "")
 
         } else if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
-//            val nodeAddress = engine!!.getNode(card)
-//            val nodePort = engine.getNodePort(card)
-//            val connectTask = ConnectTask(this@SendTransactionActivity, nodeAddress, nodePort, 3)
-//            connectTask.execute(ElectrumRequest.broadcast(card!!.wallet, tx))
 
             requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
 
         } else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
-//            val nodeAddress = engine!!.getNode(card)
-//            val nodePort = engine.getNodePort(card)
-//            val connectTask = ConnectTask(this@SendTransactionActivity, nodeAddress, nodePort, 3)
-//            connectTask.execute(ElectrumRequest.broadcast(card!!.wallet, tx))
 
             requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
         }
