@@ -372,7 +372,7 @@ public class ServerApiHelper {
                 .observeOn(AndroidSchedulers.mainThread());
         checkBalanceObserver.subscribe(new DefaultObserver<ElectrumRequest>() {
             @Override
-            public void onNext(ElectrumRequest electrumRequest) {
+            public void onNext(ElectrumRequest v) {
                 if (electrumRequest.answerData != null) {
                     electrumRequestDataListener.onElectrumRequestData(electrumRequest);
                     Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onNext != null");
@@ -390,6 +390,7 @@ public class ServerApiHelper {
             public void onComplete() {
                 Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onComplete");
             }
+
         });
     }
 
