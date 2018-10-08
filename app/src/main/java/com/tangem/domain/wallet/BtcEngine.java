@@ -262,7 +262,7 @@ public class BtcEngine extends CoinEngine {
             Double balance = mCard.AmountFromInternalUnits(mCard.getBalance());
             return mCard.getAmountDescription(balance);
         } else {
-            return "-- -- -- " + mCard.getBlockchain().getCurrency();
+            return "";
         }
     }
 
