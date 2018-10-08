@@ -108,7 +108,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         etWallet.setText(intent.getStringExtra("Wallet"))
 
-        etFee!!.setText("?")
+        etFee!!.setText("")
 
         btnSend!!.visibility = View.INVISIBLE
         feeRequestSuccess = false
