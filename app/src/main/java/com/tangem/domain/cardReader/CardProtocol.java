@@ -517,17 +517,17 @@ public class CardProtocol {
                 // substitutions for card, that was produced with wrong blockchain data (for example token contract was unknown)
                 // this method must be called after set issuer because substitution is verified by issuer data key
                 try {
-//                    if( mCard.getBatch().equals("0017") )
-//                    {
-//                        mCard.setContractAddress("0x9Eef75bA8e81340da9D8d1fd06B2f313DB88839c");
-//                    }
-//                    else if( mCard.getBatch().equals("0019") )
-//                    {
-//                        mCard.setContractAddress("0x0c056b0cda0763cc14b8b2d6c02465c91e33ec72");
-//                    }else {
+                    if( mCard.getBatch().equals("0017") )
+                    {
+                        mCard.setContractAddress("0x9Eef75bA8e81340da9D8d1fd06B2f313DB88839c");
+                    }
+                    else if( mCard.getBatch().equals("0019") )
+                    {
+                        mCard.setContractAddress("0x0c056b0cda0763cc14b8b2d6c02465c91e33ec72");
+                    } else {
                         LocalStorage localStorage = new LocalStorage(mContext);
                         localStorage.applySubstitution(mCard);
-//                    }
+                    }
                 }catch(Exception e)
                 {
                     Log.e(logTag, "Can't apply card data substitution");
