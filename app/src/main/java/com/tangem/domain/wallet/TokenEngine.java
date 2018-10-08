@@ -97,7 +97,7 @@ public class TokenEngine extends CoinEngine {
 
     public String GetBalanceAlterValue(TangemCard mCard) {
         String dec = mCard.getDecimalBalanceAlter();
-        if(dec.isEmpty()) return "-- -- --";
+        if(dec == null || dec.isEmpty()) return "";
         BigDecimal d = convertToEth(dec);
         String s = d.toString();
 
@@ -120,7 +120,7 @@ public class TokenEngine extends CoinEngine {
 
     public String getBalanceValue(TangemCard mCard) {
         if (!hasBalanceInfo(mCard))
-            return "-- -- -- " + getBalanceCurrency(mCard);
+            return "";
 
         String dec = mCard.getDecimalBalance();
         BigDecimal d = new BigDecimal(dec);
@@ -200,7 +200,7 @@ public class TokenEngine extends CoinEngine {
     @Override
     public String getBalanceEquivalent(TangemCard mCard) {
         if (!hasBalanceInfo(mCard)) {
-            return "-- -- -- ";
+            return "";
         }
         String dec = mCard.getDecimalBalance();
         BigDecimal d = convertToEth(dec);
@@ -210,7 +210,7 @@ public class TokenEngine extends CoinEngine {
     @Override
     public String getBalance(TangemCard mCard) {
         if (!hasBalanceInfo(mCard)) {
-            return "-- -- -- " + getBalanceCurrency(mCard);
+            return "";
         }
 
         String output = getBalanceValue(mCard);
@@ -221,7 +221,11 @@ public class TokenEngine extends CoinEngine {
 
     public String getBalanceWithAlter(TangemCard mCard) {
         //return getBalance(mCard) + "\n(" + GetBalanceAlterValue(mCard) + " ETH)";
-        return " " + getBalance(mCard) + " <br><small><small>  + " + GetBalanceAlterValue(mCard) + " ETH for gas</small></small>";
+        if (GetBalanceAlterValue(mCard) != "") {
+            return " " + getBalance(mCard) + " <br><small><small>  + " + GetBalanceAlterValue(mCard) + " ETH for gas</small></small>";
+        } else {
+            return "";
+        }
     }
 
     public String calculateAddress(TangemCard mCard, byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException {
