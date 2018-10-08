@@ -3,12 +3,14 @@ package com.tangem.domain.wallet;
 import android.os.Bundle;
 
 import com.google.common.base.Strings;
+import com.tangem.data.network.Kraken;
 import com.tangem.domain.cardReader.SettingsMask;
 import com.tangem.util.BTCUtils;
 import com.tangem.util.FormatUtil;
 import com.tangem.util.Util;
 import com.tangem.wallet.R;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -270,149 +272,6 @@ public class TangemCard {
         this.remainingSignatures = remainingSignatures;
     }
 
-    public String getTransactionList() {
-        try {
-            StringBuffer result = new StringBuffer();
-            if (hasUnspentInfo()) {
-                if (mUnspentTransactions.size() > 0) {
-
-                    for (int i = 0; i < mUnspentTransactions.size(); ++i) {
-                        if (i != 0) {
-                            result.append(" \n");
-                        }
-                        result.append(String.valueOf(i + 1));
-                        result.append(": ");
-                        long unix_time = GetTimestamp(mUnspentTransactions.get(i).Height);
-
-                        if (unix_time < UNIX_TIME_2017_01_01)
-                            return "-- -- --";
-                        unix_time = unix_time * 1000L;
-
-                        Date dt = new Date(unix_time);
-                        //java.util.Calendar cd = Calendar.getInstance();
-                        //cd.setTimeInMillis(unix_time);
-
-                        //result.append(String.format("%02d/%02d/%04d", cd.get(Calendar.DAY_OF_MONTH), cd.get(Calendar.MONTH) + 1, cd.get(Calendar.YEAR)));
-
-                        result.append(Util.formatDate(dt));
-
-
-                        result.append(" - Amount: ");
-                        result.append(getAmountDescription(AmountFromInternalUnits(mUnspentTransactions.get(i).Amount)));
-                        //result.append(String.valueOf((double) mUnspentTransactions.get(i).Amount / 100000));
-                        //result.append(",\nTx: "); This is only for developers
-                        //result.append(String.valueOf(mUnspentTransactions.get(i).txID));
-
-                    }
-
-//                if (hasHistoryInfo()) {
-//                    for (int i = 0; i < mHistoryTransactions.size(); ++i) {
-//                        result.append(" \n");
-//                        result.append("O");
-//                        result.append(String.valueOf(i + 1));
-//                        result.append(": ");
-//                        long unix_time = GetTimestamp(mHistoryTransactions.get(i).Height);
-//                        unix_time = unix_time * 1000L;
-//
-//                        java.util.Calendar cd = Calendar.getInstance();
-//                        cd.setTimeInMillis(unix_time);
-//
-//                        result.append(String.format("%02d/%02d/%04d", cd.get(Calendar.DAY_OF_MONTH), cd.get(Calendar.MONTH) + 1, cd.get(Calendar.YEAR)));
-//
-//
-//                    }
-//                }
-                } else {
-                    result.append("-- -- --");
-                }
-            } else {
-                result.append("-- -- --");
-            }
-            if (balanceUnconfirmed != 0) {
-                result.append("awaiting confirmation...");
-            }
-            return result.toString();
-        } catch (Exception e) {
-            return "?";
-        }
-    }
-
-    public String getInputsDescription() {
-
-        try {
-            StringBuffer result = new StringBuffer();
-            if (hasUnspentInfo()) {
-                if (mUnspentTransactions.size() == 1) {
-                    //
-                    if (balanceUnconfirmed != 0) {
-                        result.append(getAmountDescription(AmountFromInternalUnits(mUnspentTransactions.get(0).Amount)));
-                    } else {
-                        result.append("1 unspent");
-                    }
-                    long unix_time = GetTimestamp(mUnspentTransactions.get(0).Height);
-
-                    if (unix_time < UNIX_TIME_2017_01_01) {
-
-                    } else {
-                        result.append(", ");
-                        unix_time = unix_time * 1000L;
-                        result.append(Util.formatDateTime(new Date(unix_time)));
-                    }
-
-
-//                    java.util.Calendar cd = Calendar.getInstance();
-//                    cd.setTimeInMillis(unix_time);
-
-                    //result.append(String.format(" at %02d/%02d/%04d %02d:%02d:%02d", cd.get(Calendar.DAY_OF_MONTH), cd.get(Calendar.MONTH) + 1, cd.get(Calendar.YEAR), cd.get(Calendar.HOUR), cd.get(Calendar.MINUTE), cd.get(Calendar.SECOND)));
-
-
-                    if (balanceUnconfirmed != 0) {
-                        result.append("\nawaiting confirmation...");
-                    }
-                } else if (mUnspentTransactions.size() > 0) {
-                    long minDate = GetTimestamp(mUnspentTransactions.get(0).Height) * 1000L;
-                    long maxDate = minDate;
-                    int unspentAmount = mUnspentTransactions.get(0).Amount;
-
-                    for (int i = 1; i < mUnspentTransactions.size(); ++i) {
-                        long unix_time = GetTimestamp(mUnspentTransactions.get(i).Height);
-                        unix_time = unix_time * 1000L;
-
-                        if (unix_time < minDate) minDate = unix_time;
-                        if (unix_time > maxDate) maxDate = unix_time;
-                        unspentAmount += mUnspentTransactions.get(i).Amount;
-                    }
-
-                    Calendar cd = Calendar.getInstance();
-                    cd.setTimeInMillis(minDate);
-                    if (balanceUnconfirmed != 0) {
-                        result.append(getAmountDescription(AmountFromInternalUnits(unspentAmount)));
-                        result.append(" in ");
-                    }
-                    result.append(String.valueOf(mUnspentTransactions.size()));
-                    result.append(" unspents\n");
-
-                    result.append(String.format("between %s\n", Util.formatDateTime(new Date(minDate))));
-
-                    cd.setTimeInMillis(maxDate);
-                    result.append(String.format("and %s", Util.formatDateTime(new Date(maxDate))));
-
-                    if (balanceUnconfirmed != 0) {
-                        result.append("\nawaiting confirmation...");
-                    }
-                } else if (balanceUnconfirmed == 0) {
-                    result.append("-- -- --");
-                } else if (balanceUnconfirmed != 0) {
-                    result.append("awaiting confirmation...");
-                }
-            } else {
-                result.append("-- -- --");
-            }
-            return result.toString();
-        } catch (Exception e) {
-            return "?";
-        }
-    }
 
     public int getCountOutputs() {
         int count = 0;
@@ -422,16 +281,6 @@ public class TangemCard {
             ++count;
         }
         return count;
-    }
-
-    public String getOutputsDescription() {
-        if (hasUnspentInfo() && hasHistoryInfo() && mHistoryTransactions.size() - mUnspentTransactions.size() > 0) {
-            return String.valueOf(mHistoryTransactions.size() - mUnspentTransactions.size());
-        } else if (hasUnspentInfo() && hasHistoryInfo()) {
-            return "-- -- --";
-        } else {
-            return "-- -- --";
-        }
     }
 
     static int UNIX_TIME_2017_01_01 = 1483228800;
@@ -481,39 +330,6 @@ public class TangemCard {
 
     }
 
-    public String getLastOutputDescription() {
-        if (hasUnspentInfo() && hasHistoryInfo()) {
-            if (mHistoryTransactions.size() - mUnspentTransactions.size() > 0) {
-                long maxUDT = 0;
-
-                for (int i = 0; i < mHistoryTransactions.size(); ++i) {
-                    if (!mHistoryTransactions.get(i).isInput)
-                        continue;
-                    if (indexfOfUnspentTransaction(mHistoryTransactions.get(i).txID) != -1)
-                        continue;
-                    long unix_time = GetTimestamp(mHistoryTransactions.get(i).Height);
-                    if (unix_time == 1296688602L)
-                        unix_time = 0;
-                    if (unix_time < UNIX_TIME_2017_01_01)
-                        return "-- -- --";
-                    unix_time = unix_time * 1000L;
-                    if (unix_time > maxUDT) maxUDT = unix_time;
-                }
-
-                if (maxUDT == 0) {
-                    return "-- -- --";
-                } else {
-                    return Util.formatDateTime(new Date(maxUDT));
-                }
-
-            } else {
-                return "-- -- --";
-            }
-        } else {
-            return "-- -- --";
-        }
-    }
-
     private int indexfOfUnspentTransaction(String txID) {
         if (hasUnspentInfo()) {
             for (int i = 0; i < mUnspentTransactions.size(); i++) {
@@ -546,6 +362,9 @@ public class TangemCard {
         balanceUnconfirmed = null;
         mUnspentTransactions = null;
         mHistoryTransactions = null;
+        balanceDecimal = null;
+        balanceDecimalAlter = null;
+        setIsBalanceEqual(false);
     }
 
     public Date getPersonalizationDateTime() {
@@ -1118,12 +937,24 @@ public class TangemCard {
     }
 
     public Long getBalance() {
-        if (this.getBlockchain() == Blockchain.Bitcoin || this.getBlockchain() == Blockchain.BitcoinCash || this.getBlockchain() == Blockchain.BitcoinTestNet || this.getBlockchain() == Blockchain.BitcoinCashTestNet) {
-            return balanceConfirmed + balanceUnconfirmed;
-        } else if (this.getBlockchain() == Blockchain.Ethereum || this.getBlockchain() == Blockchain.EthereumTestNet) {
-            return 1L; // Todo: Workaround for eth, need to return BigDecimal everywhere
+
+        BigDecimal balance = null;
+
+        if ((this.getBlockchain() == Blockchain.Bitcoin || this.getBlockchain() == Blockchain.BitcoinCash || this.getBlockchain() == Blockchain.BitcoinTestNet || this.getBlockchain() == Blockchain.BitcoinCashTestNet) && balanceConfirmed != null && balanceUnconfirmed != null) {
+            balance = BigDecimal.valueOf(balanceConfirmed + balanceUnconfirmed);
+        } else if (this.getBlockchain() == Blockchain.Ethereum || this.getBlockchain() == Blockchain.EthereumTestNet || this.getBlockchain() == Blockchain.Token) {
+            if (balanceDecimal != null) {
+                balance =  new BigDecimal(balanceDecimal); // Returns ETH / token balance
+            } else if (balanceDecimalAlter != null) {
+                balance =  new BigDecimal(balanceDecimalAlter); // or ETH balance if there're no tokens on Token card
+            }
         }
-        return 0L;
+
+        if (balance != null) {
+            return balance.longValue(); // Will leave only lower 64 bits for ETH and Tokens
+        } else {
+            return null;
+        }
     }
 
     public Long getBalanceUnconfirmed() {
@@ -1139,7 +970,7 @@ public class TangemCard {
     }
 
     public boolean hasBalanceInfo() {
-        return balanceConfirmed != null && balanceUnconfirmed != null;
+        return balanceConfirmed != null || balanceUnconfirmed != null || balanceDecimal != "" || balanceDecimalAlter != "";
     }
 
     public String getDecimalBalance() {
