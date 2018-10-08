@@ -104,8 +104,6 @@ public class SignPaymentTask extends Thread {
                             txStr = String.format("0x%s", txStr);
                         }
 
-                        //LastSignStorage.setLastTX(mCard.getWallet(), txStr);
-
                         Intent intent = new Intent(mContext, SendTransactionActivity.class);
                         intent.putExtra(SendTransactionActivity.EXTRA_UID, mCard.getUID());
                         intent.putExtra(SendTransactionActivity.EXTRA_CARD, mCard.getAsBundle());
