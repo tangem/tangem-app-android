@@ -1,18 +1,14 @@
 package com.tangem.data.network.task.loaded_wallet;
 
 import android.os.AsyncTask;
-import android.util.Log;
 
 import com.tangem.data.network.request.ElectrumRequest;
 import com.tangem.data.network.task.ElectrumTask;
-import com.tangem.domain.wallet.BitcoinException;
 import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.CoinEngineFactory;
-import com.tangem.domain.wallet.LastSignStorage;
 import com.tangem.domain.wallet.SharedData;
 import com.tangem.domain.wallet.TangemCard;
 import com.tangem.presentation.fragment.LoadedWallet;
-import com.tangem.util.BTCUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -20,8 +16,6 @@ import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.List;
 
 public class UpdateWalletInfoTask extends ElectrumTask {
@@ -103,17 +97,6 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                         else if (request.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
                             try {
                                 String hashTX = request.getResultString();
-                                try {
-                                    LastSignStorage.setLastMessage(loadedWallet.getCard().getWallet(), hashTX);
-                                    if (hashTX.startsWith("0x") || hashTX.startsWith("0X"))
-                                        hashTX = hashTX.substring(2);
-                                    BigInteger bigInt = new BigInteger(hashTX, 16); //TODO: очень плохой способ
-                                    LastSignStorage.setTxWasSend(loadedWallet.getCard().getWallet());
-                                    LastSignStorage.setLastMessage(loadedWallet.getCard().getWallet(), "");
-//                                Log.e("TX_RESULT", hashTX);
-                                } catch (Exception e) {
-                                    engine.switchNode(loadedWallet.getCard());
-                                }
                             } catch (JSONException e) {
                                 e.printStackTrace();
                                 engine.switchNode(loadedWallet.getCard());
@@ -150,63 +133,8 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                         engine.switchNode(loadedWallet.getCard());
                                         UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(loadedWallet, nodeAddress, nodePort);
 //                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
-                                        updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.getHeader(mWalletAddress, String.valueOf(height)), ElectrumRequest.getTransaction(mWalletAddress, hash));
+                                        updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.getTransaction(mWalletAddress, hash));
                                     }
-                                }
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                                engine.switchNode(loadedWallet.getCard());
-                            }
-                        }
-
-                        // get history
-                        else if (request.isMethod(ElectrumRequest.METHOD_GetHistory)) {
-                            try {
-                                String mWalletAddress = request.getParams().getString(0);
-                                JSONArray jsHistoryArray = request.getResultArray();
-                                try {
-                                    loadedWallet.getCard().getHistoryTransactions().clear();
-                                    for (int i = 0; i < jsHistoryArray.length(); i++) {
-                                        JSONObject jsUnspent = jsHistoryArray.getJSONObject(i);
-                                        TangemCard.HistoryTransaction trHistory = new TangemCard.HistoryTransaction();
-                                        trHistory.txID = jsUnspent.getString("tx_hash");
-                                        trHistory.Height = jsUnspent.getInt("height");
-                                        loadedWallet.getCard().getHistoryTransactions().add(trHistory);
-                                    }
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                    engine.switchNode(loadedWallet.getCard());
-                                }
-
-                                for (int i = 0; i < jsHistoryArray.length(); i++) {
-                                    JSONObject jsUnspent = jsHistoryArray.getJSONObject(i);
-                                    Integer height = jsUnspent.getInt("height");
-                                    String hash = jsUnspent.getString("tx_hash");
-                                    if (height != -1) {
-                                        String nodeAddress = engine.getNode(loadedWallet.getCard());
-                                        int nodePort = engine.getNodePort(loadedWallet.getCard());
-                                        engine.switchNode(loadedWallet.getCard());
-                                        UpdateWalletInfoTask updateWalletInfoTask = new UpdateWalletInfoTask(loadedWallet, nodeAddress, nodePort);
-//                                    loadedWallet.updateTasks.add(updateWalletInfoTask);
-                                        updateWalletInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.getHeader(mWalletAddress, String.valueOf(height)), ElectrumRequest.getTransaction(mWalletAddress, hash));
-                                    }
-                                }
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                                engine.switchNode(loadedWallet.getCard());
-                            }
-                        }
-
-                        // get header
-                        else if (request.isMethod(ElectrumRequest.METHOD_GetHeader)) {
-                            try {
-                                JSONObject jsHeader = request.getResult();
-                                try {
-                                    loadedWallet.getCard().getHaedersInfo();
-                                    loadedWallet.getCard().UpdateHeaderInfo(new TangemCard.HeaderInfo(jsHeader.getInt("block_height"), jsHeader.getInt("timestamp")));
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                    engine.switchNode(loadedWallet.getCard());
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -223,27 +151,6 @@ public class UpdateWalletInfoTask extends ElectrumTask {
                                 for (TangemCard.UnspentTransaction tx : listTx) {
                                     if (tx.txID.equals(txHash))
                                         tx.Raw = raw;
-                                }
-                                List<TangemCard.HistoryTransaction> listHTx = loadedWallet.getCard().getHistoryTransactions();
-                                for (TangemCard.HistoryTransaction tx : listHTx) {
-                                    if (tx.txID.equals(txHash)) {
-                                        tx.Raw = raw;
-                                        try {
-                                            ArrayList<byte[]> prevHashes = BTCUtils.getPrevTX(raw);
-                                            boolean isOur = false;
-                                            for (byte[] hash : prevHashes) {
-                                                String checkID = BTCUtils.toHex(hash);
-                                                for (TangemCard.HistoryTransaction txForCheck : listHTx) {
-                                                    if (txForCheck.txID.equals(checkID))
-                                                        isOur = true;
-                                                }
-                                            }
-                                            tx.isInput = !isOur;
-                                        } catch (BitcoinException e) {
-                                            e.printStackTrace();
-                                        }
-                                    Log.e("TX", raw);
-                                    }
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
