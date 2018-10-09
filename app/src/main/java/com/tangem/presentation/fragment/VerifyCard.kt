@@ -290,12 +290,6 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
             tvBlockchain.text = card!!.blockchainName
             tvValidationNode.text = card!!.validationNodeDescription
 
-            when {
-                card!!.lastInputDescription.contains("awaiting") -> tvInputs.setTextColor(ContextCompat.getColor(context!!, R.color.not_confirmed))
-                card!!.lastInputDescription.contains("None") -> tvInputs.setTextColor(ContextCompat.getColor(context!!, R.color.primary_dark))
-                else -> tvInputs.setTextColor(ContextCompat.getColor(context!!, R.color.confirmed))
-            }
-
             ivBlockchain.setImageResource(card!!.blockchain.getLogoImageResource(card!!.blockchainID, card!!.tokenSymbol))
 
             if (card!!.isReusable!!)
@@ -307,7 +301,6 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
             if (card!!.status == TangemCard.Status.Loaded || card!!.status == TangemCard.Status.Purged) {
 
-                tvLastSigned.text = card!!.lastSignedDescription
                 when {
                     card!!.remainingSignatures == 0 -> {
                         tvRemainingSignatures.setTextColor(ContextCompat.getColor(context!!, R.color.not_confirmed))
