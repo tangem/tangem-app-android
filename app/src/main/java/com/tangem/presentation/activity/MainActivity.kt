@@ -57,9 +57,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
             if (PINStorage.needInit())
                 PINStorage.Init(context)
 
-            if (LastSignStorage.needInit())
-                LastSignStorage.Init(context)
-
             if (Issuer.needInit())
                 Issuer.Init(context)
 
