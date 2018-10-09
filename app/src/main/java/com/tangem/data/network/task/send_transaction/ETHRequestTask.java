@@ -5,7 +5,6 @@ import android.util.Log;
 import com.tangem.data.network.request.InfuraRequest;
 import com.tangem.data.network.task.InfuraTask;
 import com.tangem.domain.wallet.Blockchain;
-import com.tangem.domain.wallet.LastSignStorage;
 import com.tangem.presentation.activity.SendTransactionActivity;
 
 import org.json.JSONException;
@@ -41,7 +40,6 @@ public class ETHRequestTask extends InfuraTask {
                                 JSONObject msg = request.getAnswer();
                                 JSONObject err = msg.getJSONObject("error");
                                 hashTX = err.getString("message");
-                                LastSignStorage.setLastMessage(sendTransactionActivity.getCard().getWallet(), hashTX);
                                 Log.e("Send_TX_Error:", hashTX);
                                 sendTransactionActivity.finishWithError(hashTX);
                                 return;
@@ -51,9 +49,6 @@ public class ETHRequestTask extends InfuraTask {
                                 if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
                                     hashTX = hashTX.substring(2);
                                 }
-                                BigInteger bigInt = new BigInteger(hashTX, 16); //TODO: очень плохой способ
-                                LastSignStorage.setTxWasSend(sendTransactionActivity.getCard().getWallet());
-                                LastSignStorage.setLastMessage(sendTransactionActivity.getCard().getWallet(), "");
                                 BigInteger nonce = sendTransactionActivity.getCard().getConfirmedTXCount();
                                 nonce.add(BigInteger.valueOf(1));
                                 sendTransactionActivity.getCard().setConfirmedTXCount(nonce);
