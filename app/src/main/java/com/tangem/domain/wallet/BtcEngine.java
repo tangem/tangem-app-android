@@ -417,9 +417,6 @@ public class BtcEngine extends CoinEngine {
             // TODO slice signFromCard to hashes.length parts
         }
 
-        LastSignStorage.setLastSignDate(mCard.getWallet(), new Date());
-
-
         for (int i = 0; i < unspentOutputs.size(); ++i) {
             BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, 0 + i * 64, 32 + i * 64));
             BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, 32 + i * 64, 64 + i * 64));

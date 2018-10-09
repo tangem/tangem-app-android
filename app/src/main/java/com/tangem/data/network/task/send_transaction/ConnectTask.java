@@ -7,7 +7,6 @@ import com.tangem.data.network.task.ElectrumTask;
 import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.CoinEngineFactory;
-import com.tangem.domain.wallet.LastSignStorage;
 import com.tangem.domain.wallet.SharedData;
 import com.tangem.domain.wallet.TangemCard;
 import com.tangem.presentation.activity.SendTransactionActivity;
@@ -81,13 +80,9 @@ public class ConnectTask extends ElectrumTask {
                             String hashTX = request.getResultString();
 
                             try {
-                                LastSignStorage.setLastMessage(sendTransactionActivity.getCard().getWallet(), hashTX);
                                 if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
                                     hashTX = hashTX.substring(2);
                                 }
-                                BigInteger bigInt = new BigInteger(hashTX, 16); //TODO: очень плохой способ
-                                LastSignStorage.setTxWasSend(sendTransactionActivity.getCard().getWallet());
-                                LastSignStorage.setLastMessage(sendTransactionActivity.getCard().getWallet(), "");
                                 Log.e("TX_RESULT", hashTX);
                                 sendTransactionActivity.finishWithSuccess();
                             } catch (Exception e) {

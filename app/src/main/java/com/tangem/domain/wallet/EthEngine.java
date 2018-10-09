@@ -357,8 +357,6 @@ public class EthEngine extends CoinEngine {
             return null;
         }
 
-        LastSignStorage.setLastSignDate(mCard.getWallet(), new Date());
-
         BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, 0, 32));
         BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, 32, 64));
         s = CryptoUtil.toCanonicalised(s);
