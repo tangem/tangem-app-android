@@ -272,83 +272,6 @@ public class TangemCard {
         this.remainingSignatures = remainingSignatures;
     }
 
-
-    public int getCountOutputs() {
-        int count = 0;
-        for (int i = 0; i < mHistoryTransactions.size(); ++i) {
-            if (mHistoryTransactions.get(i).isInput)
-                continue;
-            ++count;
-        }
-        return count;
-    }
-
-    static int UNIX_TIME_2017_01_01 = 1483228800;
-
-    public String getLastInputDescription() {
-
-        if (hasUnspentInfo()) {
-            if (mUnspentTransactions.size() > 0) {
-
-                long maxUDT = 0;
-                int UnspentTransactionsAmount = 0;
-
-                for (int i = 0; i < mUnspentTransactions.size(); ++i) {
-                    UnspentTransactionsAmount += mUnspentTransactions.get(i).Amount;
-                    long unix_time = GetTimestamp(mUnspentTransactions.get(i).Height);
-
-                    if (unix_time < UNIX_TIME_2017_01_01) {
-                        return "-- -- --";
-                    }
-                    unix_time = unix_time * 1000L;
-                    if (unix_time > maxUDT) maxUDT = unix_time;
-                }
-
-                Calendar cd = Calendar.getInstance();
-                cd.setTimeInMillis(maxUDT);
-
-                StringBuilder sb = new StringBuilder();
-                //sb.append(String.format("%02d/%02d/%04d %02d:%02d:%02d", cd.get(Calendar.DAY_OF_MONTH), cd.get(Calendar.MONTH) + 1, cd.get(Calendar.YEAR), cd.get(Calendar.HOUR), cd.get(Calendar.MINUTE), cd.get(Calendar.SECOND)));
-                sb.append(Util.formatDateTime(new Date(maxUDT)));
-
-                if (balanceUnconfirmed != null && balanceUnconfirmed != 0) {
-                    return "awaiting confirmation...";
-                }
-                return sb.toString();
-
-            } else {
-                if (balanceUnconfirmed != null) {
-                    if (balanceUnconfirmed != 0) {
-                        return "awaiting confirmation...";
-                    } else {
-                        return "-- -- --";
-                    }
-                }
-            }
-        }
-        return "-- -- --";
-
-    }
-
-    private int indexfOfUnspentTransaction(String txID) {
-        if (hasUnspentInfo()) {
-            for (int i = 0; i < mUnspentTransactions.size(); i++) {
-                if (mUnspentTransactions.get(i).txID.equals(txID)) return i;
-            }
-        }
-        return -1;
-    }
-
-    public String getLastSignedDescription() {
-        Date dt = LastSignStorage.getLastSignDate(getWallet());
-        if (dt != null) {
-            return Util.formatDateTime(dt);
-
-        } else {
-            return "Not supported";
-        }
-    }
-
     public String getPIN() {
         return PIN;
     }
@@ -361,7 +284,6 @@ public class TangemCard {
         balanceConfirmed = null;
         balanceUnconfirmed = null;
         mUnspentTransactions = null;
-        mHistoryTransactions = null;
         balanceDecimal = null;
         balanceDecimalAlter = null;
         setIsBalanceEqual(false);
@@ -709,32 +631,6 @@ public class TangemCard {
         return signingMethod;
     }
 
-    public static class HeaderInfo {
-        public HeaderInfo() {
-
-        }
-
-        public HeaderInfo(Integer height, Integer timestamp) {
-            Height = height;
-            TmStamp = timestamp;
-        }
-
-        public Integer TmStamp;
-        public Integer Height;
-
-        public Bundle getAsBundle() {
-            Bundle B = new Bundle();
-            B.putInt("TmStamp", TmStamp);
-            B.putInt("Height", Height);
-            return B;
-        }
-
-        public void LoadFromBundle(Bundle B) {
-            TmStamp = B.getInt("TmStamp");
-            Height = B.getInt("Height");
-        }
-    }
-
     public static class UnspentTransaction {
         public String txID;
         public Integer Amount;
@@ -759,128 +655,11 @@ public class TangemCard {
         }
     }
 
-    public static int CountOurTx(List<HistoryTransaction> listHTx) {
-        int count = 0;
-        for (HistoryTransaction tx : listHTx) {
-
-            if (tx.Raw == null)
-                continue;
-
-            String raw = tx.Raw;
-            //Log.e("H", tx.txID + " - ?");
-            try {
-                ArrayList<byte[]> prevHashes = BTCUtils.getPrevTX(raw);
-
-                boolean isOur = false;
-                for (byte[] hash : prevHashes) {
-                    String checkID = BTCUtils.toHex(hash);
-
-                    for (HistoryTransaction txForCheck : listHTx) {
-                        String id = txForCheck.txID;
-                        //Log.e("H:", checkID + " - " + id);
-                        if (id.equals(checkID)) {
-                            isOur = true;
-                            //Log.e("H", tx.txID + " - Complete");
-                            break;
-                        }
-                    }
-                    if (isOur) {
-                        ++count;
-                        break;
-                    }
-                }
-
-                tx.isInput = !isOur;
-            } catch (BitcoinException e) {
-                e.printStackTrace();
-            }
-        }
-        return count;
-    }
-
-    public static class HistoryTransaction {
-        public String txID;
-        public Integer Height;
-        public String Raw = "";
-        public boolean isInput = false;
-
-        public Bundle getAsBundle() {
-            Bundle B = new Bundle();
-            B.putString("txID", txID);
-            B.putInt("Height", Height);
-            B.putString("Raw", Raw);
-            B.putBoolean("Input", isInput);
-            return B;
-        }
-
-        public void LoadFromBundle(Bundle B) {
-            txID = B.getString("txID");
-            Height = B.getInt("Height");
-            Raw = B.getString("Raw");
-            isInput = B.getBoolean("Input");
-        }
-    }
-
     private List<UnspentTransaction> mUnspentTransactions = null;
-    private List<HistoryTransaction> mHistoryTransactions = null;
-    private List<HeaderInfo> mHeaders = null;
 
     public List<UnspentTransaction> getUnspentTransactions() {
         if (mUnspentTransactions == null) mUnspentTransactions = new ArrayList<>();
         return mUnspentTransactions;
-    }
-
-    public boolean hasUnspentInfo() {
-        return mUnspentTransactions != null;
-    }
-
-    public List<HistoryTransaction> getHistoryTransactions() {
-        if (mHistoryTransactions == null) mHistoryTransactions = new ArrayList<>();
-        return mHistoryTransactions;
-    }
-
-    public List<HistoryTransaction> getOutputTransactions() {
-        if (mHistoryTransactions == null) mHistoryTransactions = new ArrayList<>();
-        return mHistoryTransactions;
-    }
-
-    public boolean hasHistoryInfo() {
-        return mHistoryTransactions != null;
-    }
-
-    public List<HeaderInfo> getHaedersInfo() {
-        if (mHeaders == null) mHeaders = new ArrayList<>();
-        return mHeaders;
-    }
-
-    public void UpdateHeaderInfo(HeaderInfo info) {
-        boolean newItem = true;
-        for (int i = 0; i < mHeaders.size(); ++i) {
-            if (mHeaders.get(i).Height == info.Height) {
-                newItem = false;
-                break;
-            }
-        }
-
-        if (newItem) {
-            mHeaders.add(info);
-        }
-    }
-
-    public int GetTimestamp(int height) {
-        if (mHeaders == null)
-            return 0;
-        for (int i = 0; i < mHeaders.size(); ++i) {
-            if (mHeaders.get(i).Height == height) {
-                return mHeaders.get(i).TmStamp;
-            }
-        }
-
-        return 0;
-    }
-
-    public boolean hasHeaderInfo() {
-        return mHeaders != null;
     }
 
     public TangemCard(String UID) {
@@ -1154,20 +933,6 @@ public class TangemCard {
             }
             B.putBundle("UnspentTransactions", BB);
         }
-        if (mHeaders != null) {
-            Bundle BB = new Bundle();
-            for (Integer i = 0; i < mHeaders.size(); i++) {
-                BB.putBundle(i.toString(), mHeaders.get(i).getAsBundle());
-            }
-            B.putBundle("Headers", BB);
-        }
-        if (mHistoryTransactions != null) {
-            Bundle BB = new Bundle();
-            for (Integer i = 0; i < mHistoryTransactions.size(); i++) {
-                BB.putBundle(i.toString(), mHistoryTransactions.get(i).getAsBundle());
-            }
-            B.putBundle("HistoryTransactions", BB);
-        }
         B.putFloat("rate", rate);
         B.putFloat("rateAlter", rateAlter);
         B.putString("confirmTx", getConfirmedTXCount().toString(16));
@@ -1298,28 +1063,6 @@ public class TangemCard {
                 UnspentTransaction t = new UnspentTransaction();
                 t.LoadFromBundle(BB.getBundle(i.toString()));
                 mUnspentTransactions.add(t);
-                i++;
-            }
-        }
-        if (B.containsKey("Headers")) {
-            mHeaders = new ArrayList<>();
-            Bundle BB = B.getBundle("Headers");
-            Integer i = 0;
-            while (BB.containsKey(i.toString())) {
-                HeaderInfo t = new HeaderInfo();
-                t.LoadFromBundle(BB.getBundle(i.toString()));
-                mHeaders.add(t);
-                i++;
-            }
-        }
-        if (B.containsKey("HistoryTransactions")) {
-            mHistoryTransactions = new ArrayList<>();
-            Bundle BB = B.getBundle("HistoryTransactions");
-            Integer i = 0;
-            while (BB.containsKey(i.toString())) {
-                HistoryTransaction t = new HistoryTransaction();
-                t.LoadFromBundle(BB.getBundle(i.toString()));
-                mHistoryTransactions.add(t);
                 i++;
             }
         }
