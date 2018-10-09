@@ -203,7 +203,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             } else if (!engine.isBalanceNotZero(card))
                 showSingleToast(R.string.wallet_empty)
             else if (!engine.isBalanceAlterNotZero(card))
-                showSingleToast(R.string.not_enough_funds_or_incorrect_amount)
+                showSingleToast(R.string.not_enough_eth_for_gas)
             else if (engine.awaitingConfirmation(card))
                 showSingleToast(R.string.please_wait_while_previous)
             else if (!engine.checkUnspentTransaction(card))
@@ -263,23 +263,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         val height = jsUnspent.getInt("height")
                         val hash = jsUnspent.getString("tx_hash")
                         if (height != -1) {
-                            requestElectrum(card!!, ElectrumRequest.getHeader(walletAddress, height.toString()))
                             requestElectrum(card!!, ElectrumRequest.getTransaction(walletAddress, hash))
                         }
-                    }
-                } catch (e: JSONException) {
-                    e.printStackTrace()
-                }
-            }
-
-            if (it.isMethod(ElectrumRequest.METHOD_GetHeader)) {
-                try {
-                    val jsHeader = it.result
-                    try {
-                        card!!.haedersInfo
-                        card!!.UpdateHeaderInfo(TangemCard.HeaderInfo(jsHeader.getInt("block_height"), jsHeader.getInt("timestamp")))
-                    } catch (e: JSONException) {
-                        e.printStackTrace()
                     }
                 } catch (e: JSONException) {
                     e.printStackTrace()
@@ -295,47 +280,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         if (tx.txID == txHash)
                             tx.Raw = raw
                     }
-                    val listHTx = card!!.historyTransactions
-                    for (tx in listHTx) {
-                        if (tx.txID == txHash) {
-                            tx.Raw = raw
-                            try {
-                                val prevHashes = BTCUtils.getPrevTX(raw)
-                                var isOur = false
-                                for (hash in prevHashes) {
-                                    val checkID = BTCUtils.toHex(hash)
-                                    for (txForCheck in listHTx) {
-                                        if (txForCheck.txID == checkID)
-                                            isOur = true
-                                    }
-                                }
-                                tx.isInput = !isOur
-                            } catch (e: BitcoinException) {
-                                e.printStackTrace()
-                            }
-                        }
-                    }
                 } catch (e: JSONException) {
                     e.printStackTrace()
                 }
             }
 
             if (it.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
-                try {
-                    var hashTX = it.resultString
-                    try {
-                        LastSignStorage.setLastMessage(card!!.wallet, hashTX)
-                        if (hashTX.startsWith("0x") || hashTX.startsWith("0X"))
-                            hashTX = hashTX.substring(2)
-                        val bigInt = BigInteger(hashTX, 16) //TODO: очень плохой способ
-                        LastSignStorage.setTxWasSend(card!!.wallet)
-                        LastSignStorage.setLastMessage(card!!.wallet, "")
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                } catch (e: JSONException) {
-                    e.printStackTrace()
-                }
+
             }
 
             if (requestCounter == 0) updateViews()
@@ -384,11 +335,12 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         // request rate info listener
         serverApiHelper!!.setRateInfoData {
+
+            requestCounter--
             val rate = it.priceUsd.toFloat()
             card!!.rate = rate
             card!!.rateAlter = rate
 
-            requestCounter--
             if (requestCounter == 0) {
                 srlLoadedWallet!!.isRefreshing = false
                 updateViews()
@@ -484,9 +436,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                             if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
                                 hashTX = hashTX.substring(2)
                             }
-                            val bigInt = BigInteger(hashTX, 16) //TODO: очень плохой способ
-                            LastSignStorage.setTxWasSend(card!!.wallet)
-                            LastSignStorage.setLastMessage(card!!.wallet, "")
 
                             Log.e("$TAG TX_RESULT", hashTX)
 
@@ -532,7 +481,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     private fun requestInfura(method: String, contract: String) {
         requestCounter++
-        serverApiHelper!!.infura(method, 67, card!!.wallet, contract, LastSignStorage.getTxForSend(card!!.wallet))
+        serverApiHelper!!.infura(method, 67, card!!.wallet, contract, "")
     }
 
     private fun requestCardVerify() {
