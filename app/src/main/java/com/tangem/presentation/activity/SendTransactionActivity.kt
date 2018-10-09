@@ -14,7 +14,6 @@ import com.tangem.data.network.request.ElectrumRequest
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
-import com.tangem.domain.wallet.LastSignStorage
 import com.tangem.domain.wallet.TangemCard
 import com.tangem.wallet.R
 import org.json.JSONException
@@ -70,13 +69,9 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback  
                     var hashTX = it.resultString
 
                     try {
-                        LastSignStorage.setLastMessage(card!!.wallet, hashTX)
                         if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
                             hashTX = hashTX.substring(2)
                         }
-                        val bigInt = BigInteger(hashTX, 16) //TODO: очень плохой способ
-                        LastSignStorage.setTxWasSend(card!!.wallet)
-                        LastSignStorage.setLastMessage(card!!.wallet, "")
                         Log.e("TX_RESULT", hashTX)
                         finishWithSuccess()
                     } catch (e: Exception) {
@@ -104,20 +99,12 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback  
                                 val tmp = infuraResponse.result
                                 hashTX = tmp
                             } catch (e: JSONException) {
-//                                val msg = request.getAnswer()
-//                                val err = msg!!.getJSONObject("error")
-//                                hashTX = err.getString("message")
-//                                LastSignStorage.setLastMessage(card!!.wallet, hashTX)
                                 return
                             }
 
                             if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
                                 hashTX = hashTX.substring(2)
                             }
-                            val bigInt = BigInteger(hashTX, 16) //TODO: очень плохой способ
-                            LastSignStorage.setTxWasSend(card!!.wallet)
-                            LastSignStorage.setLastMessage(card!!.wallet, "")
-//                            Log.e("TX_RESULT", hashTX)
 
 
                             val nonce = card!!.confirmedTXCount
