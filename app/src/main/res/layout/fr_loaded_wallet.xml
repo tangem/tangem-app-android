@@ -106,7 +106,6 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="3"
                         android:fontFamily="@font/maaxmedium"
-                        android:text="@string/no_data_string"
                         android:textAlignment="center"
                         android:textColor="@color/black"
                         android:textSize="@dimen/text_size_large"
