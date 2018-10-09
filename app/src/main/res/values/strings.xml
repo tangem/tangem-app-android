@@ -157,7 +157,7 @@
     <string name="cannot_sign_transaction_wrong_amount">Amount and fee exceed total wallet balance!</string>
 
     <!-- PreparePaymentActivity -->
-    <string name="not_enough_funds_on_your_card">Not enough funds on your card</string>
+    <string name="not_enough_funds_on_your_card">Not enough funds</string>
     <string name="unknown_amount_format">Unknown amount format</string>
     <string name="incorrect_destination_wallet_address">Incorrect destination wallet address</string>
     <string name="destination_wallet_address_equal_source_address">Destination wallet address equal source address</string>
@@ -181,7 +181,7 @@
     <string name="cannot_calculate_fee_wrong_data_received_from_node">Cannot calculate fee! Wrong data received from the node</string>
     <string name="the_wallet_is_empty">The wallet is empty</string>
     <string name="please_wait_for_confirmation_of_incoming_transaction">Please wait for confirmation of incoming transaction</string>
-    <string name="not_enough_funds_or_incorrect_amount">Not enough funds or incorrect amount</string>
+    <string name="not_enough_eth_for_gas">Not enough ETH funds for gas</string>
     <string name="pin_2_is_required_to_sign_the_payment">PIN2 is required to sign the payment</string>
 
 
