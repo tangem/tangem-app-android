@@ -222,7 +222,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             }
 
             if (!engineCoin.checkAmountValue(card, txAmount, txFee, minFeeInInternalUnits, isIncludeFee)) {
-                finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.not_enough_funds_or_incorrect_amount))
+                finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.not_enough_funds_on_your_card))
                 return@setOnClickListener
             }
 
@@ -344,7 +344,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             override fun onInfuraFail(method: String, message: String) {
                 when (method) {
                     ServerApiHelper.INFURA_ETH_GAS_PRICE -> {
-
+                        finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
                     }
 
                     else -> {
