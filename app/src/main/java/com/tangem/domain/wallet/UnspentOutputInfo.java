@@ -5,7 +5,7 @@ package com.tangem.domain.wallet;
  */
 
 @SuppressWarnings("WeakerAccess")
-public class UnspentOutputInfo {
+public class  UnspentOutputInfo {
     public final byte[] txHash;
     public final Transaction.Script script;
     public final long value;
