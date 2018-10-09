@@ -96,18 +96,6 @@ public class ElectrumRequest {
         return request;
     }
 
-    public static ElectrumRequest getHeader(String wallet, String height) {
-        ElectrumRequest request = new ElectrumRequest();
-        try {
-            request.walletAddress = wallet;
-            request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_GetHeader + "\", \"params\":[\"" + height + "\"] }");
-        } catch (JSONException e) {
-            e.printStackTrace();
-            request.error = e.toString();
-        }
-        return request;
-    }
-
     public static ElectrumRequest listUnspent(String wallet) {
         ElectrumRequest request = new ElectrumRequest();
         try {
@@ -126,18 +114,6 @@ public class ElectrumRequest {
             request.walletAddress = wallet;
             request.TX = tx;
             request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_SendTransaction + "\", \"params\":[\"" + tx + "\"] }");
-        } catch (JSONException e) {
-            e.printStackTrace();
-            request.error = e.toString();
-        }
-        return request;
-    }
-
-    public static ElectrumRequest listHistory(String wallet) {
-        ElectrumRequest request = new ElectrumRequest();
-        try {
-            request.walletAddress = wallet;
-            request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_GetHistory + "\", \"params\":[\"" + wallet + "\"] }");
         } catch (JSONException e) {
             e.printStackTrace();
             request.error = e.toString();
