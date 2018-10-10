@@ -122,16 +122,6 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         } else {
             rgFee!!.isEnabled = true
 
-//            val data = SharedData(SharedData.COUNT_REQUEST)
-//            val engineCoin = CoinEngineFactory.create(card!!.blockchain)
-
-//            for (i in 0 until data.allRequest) {
-//                val nodeAddress = engineCoin!!.getNode(card)
-//                val nodePort = engineCoin.getNodePort(card)
-//                val connectTaskEx = ConnectTask(this@ConfirmPaymentActivity, nodeAddress, nodePort, data)
-//                connectTaskEx.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ElectrumRequest.checkBalance(card!!.wallet))
-//            }
-
             requestElectrum(card!!, ElectrumRequest.checkBalance(card!!.wallet))
 
             calcSize = 256
@@ -149,14 +139,6 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             serverApiHelper!!.estimateFee(ServerApiHelper.ESTIMATE_FEE_PRIORITY)
             serverApiHelper!!.estimateFee(ServerApiHelper.ESTIMATE_FEE_NORMAL)
             serverApiHelper!!.estimateFee(ServerApiHelper.ESTIMATE_FEE_MINIMAL)
-
-//            for (i in 0 until SharedData.COUNT_REQUEST) {
-//                val feeTask = ConnectFeeTask(this@ConfirmPaymentActivity, sharedFee)
-//                feeTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
-//                        FeeRequest.GetFee(card!!.wallet, calcSize.toLong(), FeeRequest.NORMAL),
-//                        FeeRequest.GetFee(card!!.wallet, calcSize.toLong(), FeeRequest.MINIMAL),
-//                        FeeRequest.GetFee(card!!.wallet, calcSize.toLong(), FeeRequest.PRIORITY))
-//            }
         }
 
         // set listeners
