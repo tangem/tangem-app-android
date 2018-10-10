@@ -19,7 +19,7 @@ import javax.crypto.Cipher;
 
 public class PINStorage {
     private static String mSavedPIN, mUserPIN, mLastUsedPIN, mEncryptedPIN, mPIN2;
-    private static SharedPreferences sharedPreferences=null;
+    private static SharedPreferences sharedPreferences = null;
 
     public static void Init(Context context) {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
@@ -200,6 +200,7 @@ public class PINStorage {
     }
 
     public static boolean needInit() {
-        return sharedPreferences==null;
+        return sharedPreferences == null;
     }
+
 }
