@@ -88,20 +88,19 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
             }
         }
 
-        etAmount.setOnEditorActionListener{lv,actionId,event->
+        etAmount.setOnEditorActionListener { lv, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 val imm = lv.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.hideSoftInputFromWindow(lv.windowToken, 0)
                 lv.clearFocus()
                 true
-            }else {
+            } else {
                 false
             }
         }
 
         // set listeners
         btnLoad.setOnClickListener {
-
             try {
                 val strAmount: String = etAmount.text.toString().replace(",", ".")
 
@@ -159,7 +158,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
                 tvError.visibility = View.VISIBLE
                 tvError.text = Arrays.toString(response.error)
             } else {
-                Toast.makeText(this,"Withdrawal successful!", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Withdrawal successful!", Toast.LENGTH_LONG).show()
                 finish()
             }
         }
@@ -173,6 +172,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
                 showConfirmDialog()
             }
         }
+
         btnLoad.visibility = View.INVISIBLE
         doRequestBalance()
     }
@@ -190,7 +190,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
         builder.setTitle("Please confirm withdraw")
 
         // Set a message for alert dialog
-        builder.setMessage(String.format("Continue with fee %s %s?", fee!!.toString().trimEnd('0'),card!!.blockchain.currency))
+        builder.setMessage(String.format("Continue with fee %s %s?", fee!!.toString().trimEnd('0'), card!!.blockchain.currency))
 
         // On click listener for dialog buttons
         val dialogClickListener = DialogInterface.OnClickListener { _, which ->
@@ -201,7 +201,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
 
                         var dblAmount: Double = strAmount.toDouble()
 
-                        dblAmount+=fee!!.toDouble()
+                        dblAmount += fee!!.toDouble()
 
                         rlProgressBar.visibility = View.VISIBLE
                         tvProgressDescription.text = getString(R.string.kraken_request_withdrawal)
