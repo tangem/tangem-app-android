@@ -4,8 +4,10 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import com.tangem.App
 import com.tangem.presentation.fragment.LoadedWallet
 import com.tangem.wallet.R
+import retrofit2.Retrofit
 
 class LoadedWalletActivity : AppCompatActivity() {
 
@@ -27,13 +29,5 @@ class LoadedWalletActivity : AppCompatActivity() {
             }
         }
     }
-
-//    override fun onBackPressed() {
-//        val loadedWallet = supportFragmentManager.findFragmentById(R.id.loaded_wallet_fragment) as LoadedWallet
-//        val data = loadedWallet.prepareResultIntent()
-//        data.putExtra(EXTRA_MODIFICATION, "update")
-//        setResult(Activity.RESULT_OK, data)
-//        finish()
-//    }
 
 }
