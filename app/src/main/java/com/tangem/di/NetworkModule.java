@@ -1,5 +1,6 @@
 package com.tangem.di;
 
+import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import com.tangem.data.network.Server;
 
 import javax.inject.Named;
@@ -7,18 +8,17 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 @Module
 class NetworkModule {
 
-    final static String PROVIDE_RETROFIT_INFURA = "provideRetrofitInfura";
-    final static String PROVIDE_RETROFIT_ESTIMATEFEE = "provideRetrofitEstimatefee";
-
     @Singleton
     @Provides
-    @Named(PROVIDE_RETROFIT_INFURA)
+    @Named(Server.ApiInfura.URL_INFURA)
     Retrofit provideRetrofitInfura() {
         return new Retrofit.Builder()
                 .baseUrl(Server.ApiInfura.URL_INFURA)
@@ -28,11 +28,45 @@ class NetworkModule {
 
     @Singleton
     @Provides
-    @Named(PROVIDE_RETROFIT_ESTIMATEFEE)
+    @Named(Server.ApiEstimatefee.URL_ESTIMATEFEE)
     Retrofit provideRetrofitEstimatefee() {
         return new Retrofit.Builder()
                 .baseUrl(Server.ApiEstimatefee.URL_ESTIMATEFEE)
                 .addConverterFactory(GsonConverterFactory.create())
+                .build();
+    }
+
+    @Singleton
+    @Provides
+    @Named(Server.ApiTangem.URL_TANGEM)
+    Retrofit provideRetrofitTangem() {
+        return new Retrofit.Builder()
+                .baseUrl(Server.ApiTangem.URL_TANGEM)
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(createHttpClient())
+                .build();
+    }
+
+    private OkHttpClient createHttpClient() {
+        return new OkHttpClient.Builder().
+                addInterceptor(createLogging()).
+                build();
+    }
+
+    private HttpLoggingInterceptor createLogging() {
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+        return logging;
+    }
+
+    @Singleton
+    @Provides
+    @Named(Server.ApiCoinmarket.URL_COINMARKET)
+    Retrofit provideRetrofitCoinmarketcap() {
+        return new Retrofit.Builder()
+                .baseUrl(Server.ApiCoinmarket.URL_COINMARKET)
+                .addConverterFactory(GsonConverterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
     }
 
