@@ -196,21 +196,7 @@ public class ServerApiHelper {
     }
 
     public void cardVerifyAndGetInfo(TangemCard card) {
-
-        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-
-        OkHttpClient httpClient = new OkHttpClient.Builder().
-                addInterceptor(logging).
-                build();
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(Server.ApiTangem.URL_TANGEM)
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(httpClient)
-                .build();
-
-        TangemApi tangemApi = retrofit.create(TangemApi.class);
+        TangemApi tangemApi = App.getComponent().getRetrofitTangem().create(TangemApi.class);
 
         List<CardVerifyAndGetInfo.Request.Item> requests = new ArrayList<>();
         requests.add(new CardVerifyAndGetInfo.Request.Item(Util.bytesToHex(card.getCID()), Util.bytesToHex(card.getCardPublicKey())));
@@ -251,19 +237,7 @@ public class ServerApiHelper {
     }
 
     public void requestArtwork(String artworkId, Date updateDate, TangemCard card) {
-        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-
-        OkHttpClient httpClient = new OkHttpClient.Builder().
-                addInterceptor(logging).
-                build();
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(Server.ApiTangem.URL_TANGEM)
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(httpClient)
-                .build();
-
-        TangemApi tangemApi = retrofit.create(TangemApi.class);
+        TangemApi tangemApi = App.getComponent().getRetrofitTangem().create(TangemApi.class);
 
         Call<ResponseBody> call = tangemApi.getArtwork(artworkId, Util.bytesToHex(card.getCID()), Util.bytesToHex(card.getCardPublicKey()));
         call.enqueue(new Callback<ResponseBody>() {
@@ -305,13 +279,7 @@ public class ServerApiHelper {
 
     @SuppressLint("CheckResult")
     public void rateInfoData(String cryptoId) {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(Server.ApiCoinmarket.URL_COINMARKET)
-                .addConverterFactory(GsonConverterFactory.create())
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .build();
-
-        CoinmarketApi coinmarketApi = retrofit.create(CoinmarketApi.class);
+        CoinmarketApi coinmarketApi = App.getComponent().getRetrofitCoinmarketcap().create(CoinmarketApi.class);
 
         coinmarketApi.getRateInfoList()
                 .subscribeOn(Schedulers.io())
