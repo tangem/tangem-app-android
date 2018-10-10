@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
+import com.tangem.App;
 import com.tangem.data.network.model.CardVerifyAndGetInfo;
 import com.tangem.data.network.model.InfuraBody;
 import com.tangem.data.network.model.InfuraResponse;
@@ -64,12 +65,7 @@ public class ServerApiHelper {
     }
 
     public void estimateFee(int blockCount) {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(Server.ApiEstimatefee.URL_ESTIMATEFEE)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        EstimatefeeApi estimatefeeApi = retrofit.create(EstimatefeeApi.class);
+        EstimatefeeApi estimatefeeApi = App.getComponent().getRetrofitEstimatefee().create(EstimatefeeApi.class);
 
         Call<String> call;
         switch (blockCount) {
@@ -136,12 +132,7 @@ public class ServerApiHelper {
     }
 
     public void infura(String method, int id, String wallet, String contract, String tx) {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(Server.ApiInfura.URL_INFURA)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        InfuraApi infuraApi = retrofit.create(InfuraApi.class);
+        InfuraApi infuraApi = App.getComponent().getRetrofitInfura().create(InfuraApi.class);
 
         InfuraBody infuraBody;
         switch (method) {
