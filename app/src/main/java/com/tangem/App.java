@@ -3,14 +3,17 @@ package com.tangem;
 import android.app.Application;
 import android.support.v7.app.AppCompatDelegate;
 
-public class AppController extends Application {
+import com.tangem.di.AppComponent;
+import com.tangem.di.DaggerAppComponent;
+
+public class App extends Application {
 
     /**
      * A singleton instance of the application class for easy access in other places
      */
-    private static AppController sInstance;
+    private static App sInstance;
 
-    public AppController() {
+    public App() {
         super();
     }
 
@@ -18,18 +21,26 @@ public class AppController extends Application {
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
     }
 
+    private static AppComponent component;
+
     @Override
     public void onCreate() {
         super.onCreate();
         // initialize the singleton
         sInstance = this;
+
+        component = DaggerAppComponent.create();
     }
 
     /**
      * @return singleton instance
      */
-    public static synchronized AppController getInstance() {
+    public static synchronized App getInstance() {
         return sInstance;
+    }
+
+    public static AppComponent getComponent() {
+        return component;
     }
 
 }
