@@ -1,5 +1,7 @@
 package com.tangem.di;
 
+import com.tangem.data.network.Server;
+
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -10,9 +12,15 @@ import retrofit2.Retrofit;
 @Component(modules = {NetworkModule.class})
 public interface AppComponent {
 
-    @Named(NetworkModule.PROVIDE_RETROFIT_INFURA)
+    @Named(Server.ApiInfura.URL_INFURA)
     Retrofit getRetrofitInfura();
 
-    @Named(NetworkModule.PROVIDE_RETROFIT_ESTIMATEFEE)
+    @Named(Server.ApiEstimatefee.URL_ESTIMATEFEE)
     Retrofit getRetrofitEstimatefee();
+
+    @Named(Server.ApiTangem.URL_TANGEM)
+    Retrofit getRetrofitTangem();
+
+    @Named(Server.ApiCoinmarket.URL_COINMARKET)
+    Retrofit getRetrofitCoinmarketcap();
 }
