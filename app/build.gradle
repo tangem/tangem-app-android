@@ -68,4 +68,10 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxjava:2.2.0'
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
     implementation 'io.reactivex.rxjava2:rxkotlin:2.3.0'
+
+    implementation 'com.google.dagger:dagger:2.16'
+    annotationProcessor 'com.google.dagger:dagger-compiler:2.16'
+//    implementation 'com.google.dagger:dagger-android:2.16'
+//    implementation 'com.google.dagger:dagger-android-support:2.16' // if you use the support libraries
+//    annotationProcessor 'com.google.dagger:dagger-android-processor:2.16'
 }
