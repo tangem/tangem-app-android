@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -21,7 +22,10 @@ import java.util.List;
 import java.util.Random;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
 import io.reactivex.observers.DefaultObserver;
 import io.reactivex.schedulers.Schedulers;
 
@@ -47,26 +51,33 @@ public class ServerApiHelperElectrum {
     }
 
     public void electrumRequestData(TangemCard card, ElectrumRequest electrumRequest) {
-        Observable<ElectrumRequest> checkBalanceObserver = Observable.just(electrumRequest)
+        Observable<ElectrumRequest> checkElectrumDataObserver = Observable.just(electrumRequest)
+
                 .doOnNext(electrumRequest1 -> doElectrumRequest(card, electrumRequest))
+
                 .flatMap(electrumRequest1 -> {
-
-
-//                    if (electrumRequest1 throws NullPointerException)
-
-
                     if (electrumRequest1.answerData == null) {
                         Log.e(TAG, "NullPointerException " + electrumRequest.getMethod());
                         return Observable.error(new NullPointerException());
                     } else
                         return Observable.just(electrumRequest1);
                 })
+
                 .retryWhen(errors -> errors
                         .filter(throwable -> throwable instanceof NullPointerException)
                         .zipWith(Observable.range(1, 2), (n, i) -> i))
+
+                .retryWhen(errors -> errors
+                        .filter(throwable -> throwable instanceof Exception)
+                        .zipWith(Observable.range(1, 2), (n, i) -> i))
+
+                .retryWhen(errors -> errors
+                        .filter(throwable -> throwable instanceof ConnectException)
+                        .zipWith(Observable.range(1, 2), (n, i) -> i))
+
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
-        checkBalanceObserver.subscribe(new DefaultObserver<ElectrumRequest>() {
+        checkElectrumDataObserver.subscribe(new DefaultObserver<ElectrumRequest>() {
             @Override
             public void onNext(ElectrumRequest v) {
                 if (electrumRequest.answerData != null) {
@@ -91,7 +102,7 @@ public class ServerApiHelperElectrum {
         });
     }
 
-    private List<ElectrumRequest> doElectrumRequest(TangemCard card, ElectrumRequest electrumRequest) {
+    private List<ElectrumRequest> doElectrumRequest(TangemCard card, ElectrumRequest electrumRequest) throws ConnectException {
         BitcoinNode bitcoinNode = BitcoinNode.values()[new Random().nextInt(BitcoinNode.values().length)];
 
         if (card.getBlockchain() == Blockchain.BitcoinTestNet || card.getBlockchain() == Blockchain.BitcoinCashTestNet) {
@@ -112,6 +123,7 @@ public class ServerApiHelperElectrum {
             Socket socket = new Socket();
             socket.setSoTimeout(5000);
             socket.bind(new InetSocketAddress(0));
+            // TODO java.net.ConnectException: Connection refused
             socket.connect(new InetSocketAddress(serverAddress, port));
             try {
                 OutputStream os = socket.getOutputStream();
@@ -147,7 +159,10 @@ public class ServerApiHelperElectrum {
         } catch (Exception e) {
             e.printStackTrace();
             electrumRequestDataListener.onElectrumFail(electrumRequest.getMethod());
+
             Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " Exception 1 " + e.getMessage());
+
+//            throw new NullPointerException("Could not retrieve Data");
         }
         return result;
     }
