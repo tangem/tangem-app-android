@@ -2,6 +2,7 @@
 
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+    <string name="no_connection">Отсутствует подключение к сети</string>
     <string name="contin">Continue</string>
     <string name="not_found">Not found</string>
     <string name="wrong_tag_err">Not ISO tag!</string>
@@ -119,6 +120,7 @@
     <string name="copy">COPY</string>
     <string name="details">DETAILS</string>
     <string name="new_scan">NEW SCAN</string>
+    <string name="verifying_in_blockchain">Verifying in blockchain…</string>
 
     <!-- LogoActivity -->
     <string name="beta">BETA</string>
