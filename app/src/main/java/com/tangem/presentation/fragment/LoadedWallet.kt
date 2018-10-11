@@ -22,6 +22,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import com.google.zxing.WriterException
 import com.tangem.data.network.ServerApiHelper
+import com.tangem.data.network.ServerApiHelperElectrum
 import com.tangem.data.network.model.InfuraResponse
 import com.tangem.data.network.request.ElectrumRequest
 import com.tangem.data.nfc.VerifyCardTask
@@ -59,6 +60,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private var singleToast: Toast? = null
     private var nfcManager: NfcManager? = null
     private var serverApiHelper: ServerApiHelper? = null
+    private var serverApiHelperElectrum: ServerApiHelperElectrum? = null
     var card: TangemCard? = null
     private var lastTag: Tag? = null
     var srlLoadedWallet: SwipeRefreshLayout? = null
@@ -84,6 +86,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         nfcManager = NfcManager(activity, this)
 
         serverApiHelper = ServerApiHelper()
+        serverApiHelperElectrum = ServerApiHelperElectrum()
 
         sp = PreferenceManager.getDefaultSharedPreferences(activity)
 
@@ -219,7 +222,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
 
         // request electrum listener
-        serverApiHelper!!.setElectrumRequestData {
+        serverApiHelperElectrum!!.setElectrumRequestData {
 
             requestCounter--
             if (requestCounter == 0) srlLoadedWallet!!.isRefreshing = false
@@ -233,7 +236,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     card!!.setBalanceConfirmed(confBalance)
                     card!!.balanceUnconfirmed = unconfirmedBalance
                     card!!.decimalBalance = confBalance.toString()
-                    card!!.validationNodeDescription = serverApiHelper!!.validationNodeDescription
+                    card!!.validationNodeDescription = serverApiHelperElectrum!!.validationNodeDescription
                 } catch (e: JSONException) {
                     e.printStackTrace()
                     engine.switchNode(card)
@@ -476,7 +479,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
         requestCounter++
-        serverApiHelper!!.electrumRequestData(card, electrumRequest)
+        serverApiHelperElectrum!!.electrumRequestData(card, electrumRequest)
     }
 
     private fun requestInfura(method: String, contract: String) {
