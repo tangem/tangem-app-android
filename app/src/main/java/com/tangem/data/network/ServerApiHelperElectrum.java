@@ -38,6 +38,8 @@ public class ServerApiHelperElectrum {
 
     public interface ElectrumRequestDataListener {
         void onElectrumSuccess(ElectrumRequest electrumRequest);
+
+        void onElectrumFail(String method);
     }
 
     public void setElectrumRequestData(ElectrumRequestDataListener listener) {
@@ -46,13 +48,8 @@ public class ServerApiHelperElectrum {
 
     public void electrumRequestData(TangemCard card, ElectrumRequest electrumRequest) {
         Observable<ElectrumRequest> checkBalanceObserver = Observable.just(electrumRequest)
-                .doOnNext(electrumRequest1 ->
-
-                        doElectrumRequest(card, electrumRequest))
-
+                .doOnNext(electrumRequest1 -> doElectrumRequest(card, electrumRequest))
                 .flatMap(electrumRequest1 -> {
-
-
                     if (electrumRequest1.answerData == null)
                         return Observable.error(new NullPointerException());
                     else
@@ -70,6 +67,7 @@ public class ServerApiHelperElectrum {
                     electrumRequestDataListener.onElectrumSuccess(electrumRequest);
 //                    Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onNext != null");
                 } else {
+//                    electrumRequestDataListener.onElectrumFail(electrumRequest.getMethod());
                     Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onNext == null");
                 }
             }
@@ -88,7 +86,6 @@ public class ServerApiHelperElectrum {
     }
 
     private List<ElectrumRequest> doElectrumRequest(TangemCard card, ElectrumRequest electrumRequest) {
-
         BitcoinNode bitcoinNode = BitcoinNode.values()[new Random().nextInt(BitcoinNode.values().length)];
 
         if (card.getBlockchain() == Blockchain.BitcoinTestNet || card.getBlockchain() == Blockchain.BitcoinCashTestNet) {
@@ -143,6 +140,7 @@ public class ServerApiHelperElectrum {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            electrumRequestDataListener.onElectrumFail(electrumRequest.getMethod());
             Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " Exception 1 " + e.getMessage());
         }
         return result;
