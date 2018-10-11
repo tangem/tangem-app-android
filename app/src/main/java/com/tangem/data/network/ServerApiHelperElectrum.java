@@ -37,7 +37,7 @@ public class ServerApiHelperElectrum {
     private ElectrumRequestDataListener electrumRequestDataListener;
 
     public interface ElectrumRequestDataListener {
-        void onElectrumRequestData(ElectrumRequest electrumRequest);
+        void onElectrumSuccess(ElectrumRequest electrumRequest);
     }
 
     public void setElectrumRequestData(ElectrumRequestDataListener listener) {
@@ -46,8 +46,13 @@ public class ServerApiHelperElectrum {
 
     public void electrumRequestData(TangemCard card, ElectrumRequest electrumRequest) {
         Observable<ElectrumRequest> checkBalanceObserver = Observable.just(electrumRequest)
-                .doOnNext(electrumRequest1 -> doElectrumRequest(card, electrumRequest))
+                .doOnNext(electrumRequest1 ->
+
+                        doElectrumRequest(card, electrumRequest))
+
                 .flatMap(electrumRequest1 -> {
+
+
                     if (electrumRequest1.answerData == null)
                         return Observable.error(new NullPointerException());
                     else
@@ -62,8 +67,8 @@ public class ServerApiHelperElectrum {
             @Override
             public void onNext(ElectrumRequest v) {
                 if (electrumRequest.answerData != null) {
-                    electrumRequestDataListener.onElectrumRequestData(electrumRequest);
-                    Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onNext != null");
+                    electrumRequestDataListener.onElectrumSuccess(electrumRequest);
+//                    Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onNext != null");
                 } else {
                     Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onNext == null");
                 }
@@ -76,7 +81,7 @@ public class ServerApiHelperElectrum {
 
             @Override
             public void onComplete() {
-                Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onComplete");
+//                Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onComplete");
             }
 
         });
@@ -100,21 +105,17 @@ public class ServerApiHelperElectrum {
         Collections.addAll(result, electrumRequest);
 
         try {
-//            Log.i(TAG, "host " + host + " !!!!!!!!!!!! " + "port " + String.valueOf(port));
             InetAddress serverAddress = InetAddress.getByName(host);
             Socket socket = new Socket();
             socket.setSoTimeout(5000);
             socket.bind(new InetSocketAddress(0));
             socket.connect(new InetSocketAddress(serverAddress, port));
             try {
-//                Log.i(TAG, "<< ");
                 OutputStream os = socket.getOutputStream();
                 OutputStreamWriter out = new OutputStreamWriter(os, "UTF-8");
                 InputStream is = socket.getInputStream();
                 BufferedReader in = new BufferedReader(new InputStreamReader(is));
                 electrumRequest.setID(1);
-
-                // do request
                 try {
                     out.write(electrumRequest.getAsString() + "\n");
                     out.flush();
@@ -129,18 +130,20 @@ public class ServerApiHelperElectrum {
 //                        Log.i(TAG, ">> <NULL>");
                     }
                 } catch (Exception e) {
+                    e.printStackTrace();
                     electrumRequest.error = e.toString();
+                    Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " Exception 3 " + e.getMessage());
                 }
-
             } catch (Exception e) {
                 e.printStackTrace();
-//                Log.i(TAG, e.getMessage());
+                Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " Exception 2 " + e.getMessage());
             } finally {
-//                Log.i(TAG, "close");
+                Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " CLOSE");
                 socket.close();
             }
         } catch (Exception e) {
             e.printStackTrace();
+            Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " Exception 1 " + e.getMessage());
         }
         return result;
     }
