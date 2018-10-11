@@ -1,7 +1,11 @@
 package com.tangem.util
 
+import android.app.Activity
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.net.ConnectivityManager
+import android.net.NetworkInfo
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.WriterException
@@ -30,6 +34,18 @@ object UtilHelper {
             }
         }
         return bmp
+    }
+
+    fun isOnline(context: Activity): Boolean {
+        return try {
+            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val netInfo: NetworkInfo?
+            netInfo = cm.activeNetworkInfo
+            netInfo != null && netInfo.isConnectedOrConnecting
+        } catch (e: NullPointerException) {
+            e.printStackTrace()
+            false
+        }
     }
 
 }
