@@ -12,10 +12,9 @@
     tools:showIn="@layout/activity_loaded_wallet">
 
     <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/srlLoadedWallet"
+        android:id="@+id/srl"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:padding="0dp"
         app:layout_constraintBottom_toTopOf="@+id/rlToolButtons"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
