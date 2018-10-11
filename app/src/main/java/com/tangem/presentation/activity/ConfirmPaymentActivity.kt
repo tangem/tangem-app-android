@@ -14,6 +14,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.*
 import com.tangem.data.network.ServerApiHelper
+import com.tangem.data.network.ServerApiHelperElectrum
 import com.tangem.data.network.model.InfuraResponse
 import com.tangem.data.network.request.ElectrumRequest
 import com.tangem.domain.cardReader.NfcManager
@@ -39,6 +40,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     private var nfcManager: NfcManager? = null
     private var serverApiHelper: ServerApiHelper? = null
+    private var serverApiHelperElectrum: ServerApiHelperElectrum? = null
     var card: TangemCard? = null
     var feeRequestSuccess = false
     var balanceRequestSuccess = false
@@ -218,7 +220,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
 
         // request electrum listener
-        serverApiHelper!!.setElectrumRequestData {
+        serverApiHelperElectrum!!.setElectrumRequestData {
             if (it.isMethod(ElectrumRequest.METHOD_GetBalance)) {
                 try {
                     etFee!!.setText("--")
@@ -340,7 +342,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     }
 
     private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
-        serverApiHelper!!.electrumRequestData(card, electrumRequest)
+        serverApiHelperElectrum!!.electrumRequestData(card, electrumRequest)
     }
 
     private fun requestInfura(method: String) {
