@@ -4,10 +4,8 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import com.tangem.App
 import com.tangem.presentation.fragment.LoadedWallet
 import com.tangem.wallet.R
-import retrofit2.Retrofit
 
 class LoadedWalletActivity : AppCompatActivity() {
 
