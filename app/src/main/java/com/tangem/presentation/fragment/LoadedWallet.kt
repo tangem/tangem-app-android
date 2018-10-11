@@ -220,79 +220,87 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
 
         // request electrum listener
-        serverApiHelperElectrum!!.setElectrumRequestData {
+        val electrumBodyListener: ServerApiHelperElectrum.ElectrumRequestDataListener = object : ServerApiHelperElectrum.ElectrumRequestDataListener {
+            override fun onElectrumSuccess(electrumRequest: ElectrumRequest?) {
+                requestCounter--
+                if (requestCounter == 0) srl.isRefreshing = false
 
-            requestCounter--
-            if (requestCounter == 0) srl.isRefreshing = false
-
-            if (it.isMethod(ElectrumRequest.METHOD_GetBalance)) {
-                try {
-                    val walletAddress = it.params.getString(0)
-                    val confBalance = it.result.getLong("confirmed")
-                    val unconfirmedBalance = it.result.getLong("unconfirmed")
-                    card!!.isBalanceReceived = true
-                    card!!.setBalanceConfirmed(confBalance)
-                    card!!.balanceUnconfirmed = unconfirmedBalance
-                    card!!.decimalBalance = confBalance.toString()
-                    card!!.validationNodeDescription = serverApiHelperElectrum!!.validationNodeDescription
-                } catch (e: JSONException) {
-                    e.printStackTrace()
-                    engine.switchNode(card)
-                }
-            }
-
-            if (it.isMethod(ElectrumRequest.METHOD_ListUnspent)) {
-                try {
-                    val walletAddress = it.params.getString(0)
-                    val jsUnspentArray = it.resultArray
+                if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_GetBalance)) {
                     try {
-                        card!!.unspentTransactions.clear()
+                        val walletAddress = electrumRequest.params.getString(0)
+                        val confBalance = electrumRequest.result.getLong("confirmed")
+                        val unconfirmedBalance = electrumRequest.result.getLong("unconfirmed")
+                        card!!.isBalanceReceived = true
+                        card!!.setBalanceConfirmed(confBalance)
+                        card!!.balanceUnconfirmed = unconfirmedBalance
+                        card!!.decimalBalance = confBalance.toString()
+                        card!!.validationNodeDescription = serverApiHelperElectrum!!.validationNodeDescription
+                    } catch (e: JSONException) {
+                        e.printStackTrace()
+                        Log.e(TAG, "FAIL METHOD_GetBalance JSONException")
+                    }
+                }
+
+                if (electrumRequest.isMethod(ElectrumRequest.METHOD_ListUnspent)) {
+                    try {
+                        val walletAddress = electrumRequest.params.getString(0)
+                        val jsUnspentArray = electrumRequest.resultArray
+                        try {
+                            card!!.unspentTransactions.clear()
+                            for (i in 0 until jsUnspentArray.length()) {
+                                val jsUnspent = jsUnspentArray.getJSONObject(i)
+                                val trUnspent = TangemCard.UnspentTransaction()
+                                trUnspent.txID = jsUnspent.getString("tx_hash")
+                                trUnspent.Amount = jsUnspent.getInt("value")
+                                trUnspent.Height = jsUnspent.getInt("height")
+                                card!!.unspentTransactions.add(trUnspent)
+                            }
+                        } catch (e: JSONException) {
+                            e.printStackTrace()
+                            Log.e(TAG, "FAIL METHOD_ListUnspent JSONException")
+                        }
+
                         for (i in 0 until jsUnspentArray.length()) {
                             val jsUnspent = jsUnspentArray.getJSONObject(i)
-                            val trUnspent = TangemCard.UnspentTransaction()
-                            trUnspent.txID = jsUnspent.getString("tx_hash")
-                            trUnspent.Amount = jsUnspent.getInt("value")
-                            trUnspent.Height = jsUnspent.getInt("height")
-                            card!!.unspentTransactions.add(trUnspent)
+                            val height = jsUnspent.getInt("height")
+                            val hash = jsUnspent.getString("tx_hash")
+                            if (height != -1) {
+                                requestElectrum(card!!, ElectrumRequest.getTransaction(walletAddress, hash))
+                            }
                         }
                     } catch (e: JSONException) {
                         e.printStackTrace()
                     }
+                }
 
-                    for (i in 0 until jsUnspentArray.length()) {
-                        val jsUnspent = jsUnspentArray.getJSONObject(i)
-                        val height = jsUnspent.getInt("height")
-                        val hash = jsUnspent.getString("tx_hash")
-                        if (height != -1) {
-                            requestElectrum(card!!, ElectrumRequest.getTransaction(walletAddress, hash))
+                if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetTransaction)) {
+                    try {
+                        val txHash = electrumRequest.txHash
+                        val raw = electrumRequest.resultString
+                        val listTx = card!!.unspentTransactions
+                        for (tx in listTx) {
+                            if (tx.txID == txHash)
+                                tx.Raw = raw
                         }
+                    } catch (e: JSONException) {
+                        e.printStackTrace()
                     }
-                } catch (e: JSONException) {
-                    e.printStackTrace()
                 }
-            }
 
-            if (it.isMethod(ElectrumRequest.METHOD_GetTransaction)) {
-                try {
-                    val txHash = it.txHash
-                    val raw = it.resultString
-                    val listTx = card!!.unspentTransactions
-                    for (tx in listTx) {
-                        if (tx.txID == txHash)
-                            tx.Raw = raw
-                    }
-                } catch (e: JSONException) {
-                    e.printStackTrace()
+                if (electrumRequest.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
+
                 }
+
+                if (requestCounter == 0) updateViews()
             }
 
-            if (it.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
-
+            override fun onElectrumFail(method: String?) {
+                srl.isRefreshing = false
+                Log.e(TAG, "FAIL $method")
             }
-
-            if (requestCounter == 0) updateViews()
-
         }
+
+        serverApiHelperElectrum!!.setElectrumRequestData(electrumBodyListener)
 
         // request card verify listener
         serverApiHelper!!.setCardVerifyAndGetInfoListener {
