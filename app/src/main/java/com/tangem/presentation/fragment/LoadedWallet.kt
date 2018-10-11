@@ -265,7 +265,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                             val height = jsUnspent.getInt("height")
                             val hash = jsUnspent.getString("tx_hash")
                             if (height != -1) {
-//                                requestElectrum(card!!, ElectrumRequest.getTransaction(walletAddress, hash))
+                                requestElectrum(card!!, ElectrumRequest.getTransaction(walletAddress, hash))
                             }
                         }
                     } catch (e: JSONException) {
@@ -819,7 +819,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     val html = Html.fromHtml(engine.getBalanceWithAlter(card))
                     tvBalance.text = html
                 } else
-                    tvBalance.text = engine.getBalanceWithAlter(card)
+//                    tvBalance.text = engine.getBalanceWithAlter(card)
+                    tvBalance.text = engine.getBalance(card)
 
             } else {
                 val offlineAmount = engine.convertByteArrayToAmount(card, card!!.offlineBalance)
@@ -868,7 +869,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             card!!.setIsBalanceEqual(true)
 
             requestElectrum(card!!, ElectrumRequest.checkBalance(card!!.wallet))
-//            requestElectrum(card!!, ElectrumRequest.listUnspent(card!!.wallet))
+            requestElectrum(card!!, ElectrumRequest.listUnspent(card!!.wallet))
             requestRateInfo("bitcoin")
         }
 
@@ -896,7 +897,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             requestInfura(ServerApiHelper.INFURA_ETH_CALL, engine.getContractAddress(card))
             requestRateInfo("ethereum")
         }
-
     }
 
     fun prepareResultIntent(): Intent {
