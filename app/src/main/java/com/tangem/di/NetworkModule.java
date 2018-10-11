@@ -43,7 +43,7 @@ class NetworkModule {
         return new Retrofit.Builder()
                 .baseUrl(Server.ApiTangem.URL_TANGEM)
                 .addConverterFactory(GsonConverterFactory.create())
-                .client(createHttpClient())
+                .client(createOkHttpClient())
                 .build();
     }
 
@@ -54,7 +54,7 @@ class NetworkModule {
         return new Retrofit.Builder()
                 .baseUrl(Server.ApiUpdateVersion.URL_UPDATE_VERSION)
                 .addConverterFactory(GsonConverterFactory.create())
-                .client(createHttpClient())
+                .client(createOkHttpClient())
                 .build();
     }
 
@@ -69,13 +69,13 @@ class NetworkModule {
                 .build();
     }
 
-    private OkHttpClient createHttpClient() {
+    private OkHttpClient createOkHttpClient() {
         return new OkHttpClient.Builder().
-                addInterceptor(createLogging()).
+                addInterceptor(createHttpLoggingInterceptor()).
                 build();
     }
 
-    private HttpLoggingInterceptor createLogging() {
+    private HttpLoggingInterceptor createHttpLoggingInterceptor() {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
         return logging;
