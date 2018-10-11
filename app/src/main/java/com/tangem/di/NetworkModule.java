@@ -47,16 +47,15 @@ class NetworkModule {
                 .build();
     }
 
-    private OkHttpClient createHttpClient() {
-        return new OkHttpClient.Builder().
-                addInterceptor(createLogging()).
-                build();
-    }
-
-    private HttpLoggingInterceptor createLogging() {
-        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-        return logging;
+    @Singleton
+    @Provides
+    @Named(Server.ApiUpdateVersion.URL_UPDATE_VERSION)
+    Retrofit provideGithubusercontent() {
+        return new Retrofit.Builder()
+                .baseUrl(Server.ApiUpdateVersion.URL_UPDATE_VERSION)
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(createHttpClient())
+                .build();
     }
 
     @Singleton
@@ -68,6 +67,18 @@ class NetworkModule {
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
+    }
+
+    private OkHttpClient createHttpClient() {
+        return new OkHttpClient.Builder().
+                addInterceptor(createLogging()).
+                build();
+    }
+
+    private HttpLoggingInterceptor createLogging() {
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+        return logging;
     }
 
 }
