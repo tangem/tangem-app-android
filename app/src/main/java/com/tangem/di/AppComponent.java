@@ -24,4 +24,7 @@ public interface AppComponent {
     @Named(Server.ApiCoinmarket.URL_COINMARKET)
     Retrofit getRetrofitCoinmarketcap();
 
+    @Named(Server.ApiUpdateVersion.URL_UPDATE_VERSION)
+    Retrofit getRetrofitGithubusercontent();
+
 }
