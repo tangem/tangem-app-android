@@ -20,10 +20,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Random;
 
 import static com.tangem.util.FormatUtil.stringToBigDecimal;
 
@@ -70,23 +68,23 @@ public class BtcEngine extends CoinEngine {
 
     static int serviceIndex = 0;
 
-    public String getNode(TangemCard mCard) {
-        switch (mCard.getBlockchain()) {
+    public String getNode(TangemCard card) {
+        switch (card.getBlockchain()) {
             case Bitcoin:
                 return getBitcoinServiceHosts()[serviceIndex]; //
         }
         return null;
     }
 
-    public int getNodePort(TangemCard mCard) {
-        switch (mCard.getBlockchain()) {
+    public int getNodePort(TangemCard card) {
+        switch (card.getBlockchain()) {
             case Bitcoin:
                 return getBitcoinServicePorts()[serviceIndex];//8080;
         }
         return 8080;
     }
 
-    public void switchNode(TangemCard mCard) {
+    public void switchNode(TangemCard card) {
         serviceIndex++;
         if (serviceIndex > getBitcoinServiceHosts().length - 1) serviceIndex = 0;
     }
@@ -99,16 +97,16 @@ public class BtcEngine extends CoinEngine {
         return card.getBalanceUnconfirmed() != 0;
     }
 
-    public String getBalanceWithAlter(TangemCard mCard) {
-        return getBalance(mCard);
+    public String getBalanceWithAlter(TangemCard card) {
+        return getBalance(card);
     }
 
     public boolean isBalanceAlterNotZero(TangemCard card) {
         return true;
     }
 
-    public Long getBalanceLong(TangemCard mCard) {
-        return mCard.getBalance();
+    public Long getBalanceLong(TangemCard card) {
+        return card.getBalance();
     }
 
     public boolean isBalanceNotZero(TangemCard card) {
@@ -134,8 +132,8 @@ public class BtcEngine extends CoinEngine {
         return "BTC";
     }
 
-    public boolean checkUnspentTransaction(TangemCard mCard) {
-        return mCard.getUnspentTransactions().size() != 0;
+    public boolean checkUnspentTransaction(TangemCard card) {
+        return card.getUnspentTransactions().size() != 0;
     }
 
     public String getFeeCurrency() {
@@ -201,20 +199,20 @@ public class BtcEngine extends CoinEngine {
         return true;
     }
 
-    public Uri getShareWalletUriExplorer(TangemCard mCard) {
-        return Uri.parse((mCard.getBlockchain() == Blockchain.Bitcoin ? "https://blockchain.info/address/" : "https://testnet.blockchain.info/address/") + mCard.getWallet());
+    public Uri getShareWalletUriExplorer(TangemCard card) {
+        return Uri.parse((card.getBlockchain() == Blockchain.Bitcoin ? "https://blockchain.info/address/" : "https://testnet.blockchain.info/address/") + card.getWallet());
     }
 
-    public Uri getShareWalletUri(TangemCard mCard) {
-        if (mCard.getDenomination() != null) {
-            return Uri.parse("bitcoin:" + mCard.getWallet() + "?amount=" + BTCUtils.satoshiToBtc(mCard.getDenomination()));
+    public Uri getShareWalletUri(TangemCard card) {
+        if (card.getDenomination() != null) {
+            return Uri.parse("bitcoin:" + card.getWallet() + "?amount=" + BTCUtils.satoshiToBtc(card.getDenomination()));
         } else {
-            return Uri.parse("bitcoin:" + mCard.getWallet());
+            return Uri.parse("bitcoin:" + card.getWallet());
         }
     }
 
 
-    public boolean checkAmountValue(TangemCard card, String amountValue, String feeValue, Long minFeeInInternalUnits, Boolean incfee) {
+    public boolean checkAmountValue(TangemCard card, String amountValue, String feeValue, Long minFeeInInternalUnits, Boolean isIncludeFee) {
         Long fee;
         Long amount;
         try {
@@ -231,44 +229,44 @@ public class BtcEngine extends CoinEngine {
         if (fee == 0 || amount == 0)
             return false;
 
-        if (incfee && amount > card.getBalance())
+        if (isIncludeFee && amount > card.getBalance())
             return false;
 
-        if (!incfee && amount + fee > card.getBalance())
+        if (!isIncludeFee && amount + fee > card.getBalance())
             return false;
 
         return true;
     }
 
-    public String evaluateFeeEquivalent(TangemCard mCard, String fee) {
-        return getAmountEquivalentDescriptor(mCard, fee);
+    public String evaluateFeeEquivalent(TangemCard card, String fee) {
+        return getAmountEquivalentDescriptor(card, fee);
     }
 
     @Override
-    public String getBalanceEquivalent(TangemCard mCard) {
+    public String getBalanceEquivalent(TangemCard card) {
         Double balance = Double.NaN;
         try {
-            Long val = mCard.getBalance();
-            balance = mCard.AmountFromInternalUnits(val);
+            Long val = card.getBalance();
+            balance = card.amountFromInternalUnits(val);
         } catch (Exception ex) {
-            mCard.setRate(0);
+            card.setRate(0);
         }
 
-        return mCard.getAmountEquivalentDescription(balance);
+        return card.getAmountEquivalentDescription(balance);
     }
 
-    public String getBalance(TangemCard mCard) {
-        if (mCard.hasBalanceInfo()) {
-            Double balance = mCard.AmountFromInternalUnits(mCard.getBalance());
-            return mCard.getAmountDescription(balance);
+    public String getBalance(TangemCard card) {
+        if (card.hasBalanceInfo()) {
+            Double balance = card.amountFromInternalUnits(card.getBalance());
+            return card.getAmountDescription(balance);
         } else {
             return "";
         }
     }
 
-    public String getBalanceValue(TangemCard mCard) {
-        if (mCard.hasBalanceInfo()) {
-            Double balance = mCard.getBalance() / (mCard.getBlockchain().getMultiplier());
+    public String getBalanceValue(TangemCard card) {
+        if (card.hasBalanceInfo()) {
+            Double balance = card.getBalance() / (card.getBlockchain().getMultiplier());
 
             String output = FormatUtil.DoubleToString(balance);
             //String pattern = "#0.000"; // If you like 4 zeros
@@ -282,10 +280,9 @@ public class BtcEngine extends CoinEngine {
         }
     }
 
-    public String calculateAddress(TangemCard mCard, byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException {
-
+    public String calculateAddress(TangemCard card, byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException {
         byte netSelectionByte;
-        switch (mCard.getBlockchain()) {
+        switch (card.getBlockchain()) {
             case Bitcoin:
                 netSelectionByte = (byte) 0x00; //0 - MainNet 0x6f - TestNet
                 break;
@@ -314,28 +311,27 @@ public class BtcEngine extends CoinEngine {
         BB.put(hash4[3]);
 
         return org.bitcoinj.core.Base58.encode(BB.array());
-
     }
 
     @Override
-    public String convertByteArrayToAmount(TangemCard mCard, byte[] bytes) throws Exception {
+    public String convertByteArrayToAmount(TangemCard card, byte[] bytes) throws Exception {
         if (bytes == null) return "";
         byte[] reversed = new byte[bytes.length];
         for (int i = 0; i < bytes.length; i++) reversed[i] = bytes[bytes.length - i - 1];
-        return FormatUtil.DoubleToString(mCard.AmountFromInternalUnits(Util.byteArrayToLong(reversed)));
+        return FormatUtil.DoubleToString(card.amountFromInternalUnits(Util.byteArrayToLong(reversed)));
     }
 
     @Override
-    public byte[] convertAmountToByteArray(TangemCard mCard, String amount) throws Exception {
-        byte[] bytes = Util.longToByteArray(mCard.internalUnitsFromString(amount));
+    public byte[] convertAmountToByteArray(TangemCard card, String amount) throws Exception {
+        byte[] bytes = Util.longToByteArray(card.internalUnitsFromString(amount));
         byte[] reversed = new byte[bytes.length];
         for (int i = 0; i < bytes.length; i++) reversed[i] = bytes[bytes.length - i - 1];
         return reversed;
     }
 
     @Override
-    public String getAmountDescription(TangemCard mCard, String amount) throws Exception {
-        return mCard.getAmountDescription(Double.parseDouble(amount));
+    public String getAmountDescription(TangemCard card, String amount) throws Exception {
+        return card.getAmountDescription(Double.parseDouble(amount));
     }
 
     public static String getAmountEquivalentDescriptionBTC(Double amount, float rate) {
@@ -346,19 +342,19 @@ public class BtcEngine extends CoinEngine {
         }
     }
 
-    public String getAmountEquivalentDescriptor(TangemCard mCard, String value) {
-        return getAmountEquivalentDescriptionBTC(Double.parseDouble(value), mCard.getRate());
+    public String getAmountEquivalentDescriptor(TangemCard card, String value) {
+        return getAmountEquivalentDescriptionBTC(Double.parseDouble(value), card.getRate());
     }
 
-    public byte[] sign(String feeValue, String amountValue, boolean IncFee, String toValue, TangemCard mCard, CardProtocol protocol) throws Exception {
+    public byte[] sign(String feeValue, String amountValue, boolean IncFee, String toValue, TangemCard card, CardProtocol protocol) throws Exception {
 
-        String myAddress = mCard.getWallet();
-        byte[] pbKey = mCard.getWalletPublicKey();
+        String myAddress = card.getWallet();
+        byte[] pbKey = card.getWalletPublicKey();
         String outputAddress = toValue;
         String changeAddress = myAddress;
 
         // Build script for our address
-        List<TangemCard.UnspentTransaction> rawTxList = mCard.getUnspentTransactions();
+        List<TangemCard.UnspentTransaction> rawTxList = card.getUnspentTransactions();
         byte[] outputScriptWeAreAbleToSpend = Transaction.Script.buildOutput(myAddress).bytes;
 
         // Collect unspent
@@ -394,7 +390,7 @@ public class BtcEngine extends CoinEngine {
             unspentOutputs.get(i).bodyDoubleHash = doubleHashData;
             unspentOutputs.get(i).bodyHash = hashData;
 
-            if (mCard.getSigningMethod() == TangemCard.SigningMethod.Sign_Raw || mCard.getSigningMethod() == TangemCard.SigningMethod.Sign_Raw_Validated_By_Issuer) {
+            if (card.getSigningMethod() == TangemCard.SigningMethod.Sign_Raw || card.getSigningMethod() == TangemCard.SigningMethod.Sign_Raw_Validated_By_Issuer) {
                 dataForSign[i] = newTX;
             } else {
                 dataForSign[i] = doubleHashData;
@@ -402,8 +398,8 @@ public class BtcEngine extends CoinEngine {
 
         }
 
-        byte[] signFromCard = null;
-        if (mCard.getSigningMethod() == TangemCard.SigningMethod.Sign_Raw || mCard.getSigningMethod() == TangemCard.SigningMethod.Sign_Raw_Validated_By_Issuer) {
+        byte[] signFromCard;
+        if (card.getSigningMethod() == TangemCard.SigningMethod.Sign_Raw || card.getSigningMethod() == TangemCard.SigningMethod.Sign_Raw_Validated_By_Issuer) {
             ByteArrayOutputStream bs = new ByteArrayOutputStream();
             if (dataForSign.length > 10) throw new Exception("To much hashes in one transaction!");
             for (int i = 0; i < dataForSign.length; i++) {
@@ -413,7 +409,7 @@ public class BtcEngine extends CoinEngine {
             }
             signFromCard = protocol.run_SignRaw(PINStorage.getPIN2(), bs.toByteArray()).getTLV(TLV.Tag.TAG_Signature).Value;
         } else {
-            signFromCard = protocol.run_SignHashes(PINStorage.getPIN2(), dataForSign, mCard.getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer, null, mCard.getIssuer()).getTLV(TLV.Tag.TAG_Signature).Value;
+            signFromCard = protocol.run_SignHashes(PINStorage.getPIN2(), dataForSign, card.getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer, null, card.getIssuer()).getTLV(TLV.Tag.TAG_Signature).Value;
             // TODO slice signFromCard to hashes.length parts
         }
 
@@ -429,4 +425,5 @@ public class BtcEngine extends CoinEngine {
         byte[] realTX = BTCUtils.buildTXForSend(outputAddress, changeAddress, unspentOutputs, amount, change);
         return realTX;
     }
+
 }
