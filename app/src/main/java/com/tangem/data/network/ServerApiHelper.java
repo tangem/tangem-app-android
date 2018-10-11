@@ -4,45 +4,25 @@ import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import com.tangem.App;
 import com.tangem.data.network.model.CardVerifyAndGetInfo;
 import com.tangem.data.network.model.InfuraBody;
 import com.tangem.data.network.model.InfuraResponse;
 import com.tangem.data.network.model.RateInfoResponse;
-import com.tangem.data.network.request.ElectrumRequest;
-import com.tangem.domain.BitcoinNode;
-import com.tangem.domain.BitcoinNodeTestNet;
-import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.TangemCard;
 import com.tangem.util.Util;
 
-import java.io.BufferedReader;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 
-import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.observers.DefaultObserver;
 import io.reactivex.schedulers.Schedulers;
-import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
-import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ServerApiHelper {
     private static String TAG = ServerApiHelper.class.getSimpleName();
