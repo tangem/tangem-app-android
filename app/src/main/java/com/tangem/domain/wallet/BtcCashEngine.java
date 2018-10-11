@@ -19,7 +19,6 @@ import java.security.NoSuchProviderException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 import static com.tangem.util.FormatUtil.GetDecimalFormat;
@@ -202,7 +201,7 @@ public class BtcCashEngine extends CoinEngine {
         Double balance = Double.NaN;
         try {
             Long val = mCard.getBalance();
-            balance = mCard.AmountFromInternalUnits(val);
+            balance = mCard.amountFromInternalUnits(val);
         } catch (Exception ex) {
             mCard.setRate(0);
         }
@@ -212,7 +211,7 @@ public class BtcCashEngine extends CoinEngine {
 
     public String getBalance(TangemCard mCard) {
         if (mCard.hasBalanceInfo()) {
-            Double balance = mCard.AmountFromInternalUnits(mCard.getBalance());
+            Double balance = mCard.amountFromInternalUnits(mCard.getBalance());
             return mCard.getAmountDescription(balance);
         } else {
             return "";
@@ -274,7 +273,7 @@ public class BtcCashEngine extends CoinEngine {
     public String convertByteArrayToAmount(TangemCard mCard, byte[] bytes) throws Exception {
         byte[] reversed = new byte[bytes.length];
         for (int i = 0; i < bytes.length; i++) reversed[i] = bytes[bytes.length - i - 1];
-        return FormatUtil.DoubleToString(mCard.AmountFromInternalUnits(Util.byteArrayToLong(reversed)));
+        return FormatUtil.DoubleToString(mCard.amountFromInternalUnits(Util.byteArrayToLong(reversed)));
     }
 
     @Override
