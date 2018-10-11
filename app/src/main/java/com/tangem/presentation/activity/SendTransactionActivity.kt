@@ -68,10 +68,11 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
 
         // request electrum listener
-        serverApiHelperElectrum!!.setElectrumRequestData {
-            if (it.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
+        val electrumBodyListener: ServerApiHelperElectrum.ElectrumRequestDataListener = object : ServerApiHelperElectrum.ElectrumRequestDataListener {
+            override fun onElectrumSuccess(electrumRequest: ElectrumRequest?) {
+                if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
                 try {
-                    var hashTX = it.resultString
+                    var hashTX = electrumRequest.resultString
 
                     try {
                         if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
@@ -91,7 +92,14 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                     requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
                 }
             }
+            }
+
+            override fun onElectrumFail(message: String?) {
+
+            }
         }
+
+        serverApiHelperElectrum!!.setElectrumRequestData(electrumBodyListener)
 
         // request eth sendRawTransaction
         val infuraBodyListener: ServerApiHelper.InfuraBodyListener = object : ServerApiHelper.InfuraBodyListener {
@@ -110,7 +118,6 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                             if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
                                 hashTX = hashTX.substring(2)
                             }
-
 
                             val nonce = card!!.confirmedTXCount
                             nonce.add(BigInteger.valueOf(1))
