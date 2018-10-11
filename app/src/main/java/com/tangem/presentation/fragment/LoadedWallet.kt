@@ -13,7 +13,6 @@ import android.os.Bundle
 import android.preference.PreferenceManager
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
-import android.support.v4.widget.SwipeRefreshLayout
 import android.text.Html
 import android.util.Log
 import android.view.LayoutInflater
@@ -33,7 +32,6 @@ import com.tangem.presentation.activity.*
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
-import com.tangem.util.BTCUtils
 import com.tangem.util.Util
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.BuildConfig
@@ -63,7 +61,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private var serverApiHelperElectrum: ServerApiHelperElectrum? = null
     var card: TangemCard? = null
     private var lastTag: Tag? = null
-    var srlLoadedWallet: SwipeRefreshLayout? = null
     private var lastReadSuccess = true
     private var verifyCardTask: VerifyCardTask? = null
     private var requestPIN2Count = 0
@@ -99,9 +96,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val v = inflater.inflate(R.layout.fr_loaded_wallet, container, false)
-        srlLoadedWallet = v.findViewById(R.id.srlLoadedWallet)
-        return v
+        return inflater.inflate(R.layout.fr_loaded_wallet, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -132,7 +127,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         tvWallet.text = card!!.wallet
 
         // set listeners
-        srlLoadedWallet!!.setOnRefreshListener { refresh() }
+        srl.setOnRefreshListener { refresh() }
         btnLookup.setOnClickListener {
             val engineClick = CoinEngineFactory.create(card!!.blockchain)
             val browserIntent = Intent(Intent.ACTION_VIEW, engineClick.getShareWalletUriExplorer(card))
@@ -201,31 +196,34 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             startActivity(intent)
         }
         btnExtract.setOnClickListener {
-            if (!card!!.hasBalanceInfo()) {
-                showSingleToast(R.string.cannot_obtain_data_from_blockchain)
-            } else if (!engine.isBalanceNotZero(card))
-                showSingleToast(R.string.wallet_empty)
-            else if (!engine.isBalanceAlterNotZero(card))
-                showSingleToast(R.string.not_enough_eth_for_gas)
-            else if (engine.awaitingConfirmation(card))
-                showSingleToast(R.string.please_wait_while_previous)
-            else if (!engine.checkUnspentTransaction(card))
-                showSingleToast(R.string.please_wait_for_confirmation)
-            else if (card!!.remainingSignatures == 0)
-                showSingleToast(R.string.card_has_no_remaining_signature)
-            else {
-                val intent = Intent(context, PreparePaymentActivity::class.java)
-                intent.putExtra("UID", card!!.uid)
-                intent.putExtra("Card", card!!.asBundle)
-                startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT)
-            }
+            if (UtilHelper.isOnline(activity!!)) {
+                if (!card!!.hasBalanceInfo()) {
+                    showSingleToast(R.string.cannot_obtain_data_from_blockchain)
+                } else if (!engine.isBalanceNotZero(card))
+                    showSingleToast(R.string.wallet_empty)
+                else if (!engine.isBalanceAlterNotZero(card))
+                    showSingleToast(R.string.not_enough_eth_for_gas)
+                else if (engine.awaitingConfirmation(card))
+                    showSingleToast(R.string.please_wait_while_previous)
+                else if (!engine.checkUnspentTransaction(card))
+                    showSingleToast(R.string.please_wait_for_confirmation)
+                else if (card!!.remainingSignatures == 0)
+                    showSingleToast(R.string.card_has_no_remaining_signature)
+                else {
+                    val intent = Intent(context, PreparePaymentActivity::class.java)
+                    intent.putExtra("UID", card!!.uid)
+                    intent.putExtra("Card", card!!.asBundle)
+                    startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT)
+                }
+            } else
+                Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
         }
 
         // request electrum listener
         serverApiHelperElectrum!!.setElectrumRequestData {
 
             requestCounter--
-            if (requestCounter == 0) srlLoadedWallet!!.isRefreshing = false
+            if (requestCounter == 0) srl.isRefreshing = false
 
             if (it.isMethod(ElectrumRequest.METHOD_GetBalance)) {
                 try {
@@ -300,7 +298,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         serverApiHelper!!.setCardVerifyAndGetInfoListener {
 
             requestCounter--
-            if (requestCounter == 0) srlLoadedWallet!!.isRefreshing = false
+            if (requestCounter == 0) srl.isRefreshing = false
 
             val result = it.results!![0]
             if (result.error != null) {
@@ -345,7 +343,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             card!!.rateAlter = rate
 
             if (requestCounter == 0) {
-                srlLoadedWallet!!.isRefreshing = false
+                srl.isRefreshing = false
                 updateViews()
             }
 //            Log.i(TAG, "setRateInfoData $rate")
@@ -401,7 +399,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                                 card!!.addTokenToBlockchainName()
 
                                 requestCounter--
-                                if (requestCounter == 0) srlLoadedWallet!!.isRefreshing = false
+                                if (requestCounter == 0) srl.isRefreshing = false
 
                                 requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
                                 requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
@@ -460,7 +458,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
                 requestCounter--
                 if (requestCounter == 0) {
-                    srlLoadedWallet!!.isRefreshing = false
+                    srl.isRefreshing = false
                     updateViews()
                 }
             }
@@ -468,7 +466,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             override fun onInfuraFail(method: String, message: String) {
                 requestCounter--
                 if (requestCounter == 0) {
-                    srlLoadedWallet!!.isRefreshing = false
+                    srl.isRefreshing = false
                     updateViews()
                 }
             }
@@ -478,25 +476,44 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
-        requestCounter++
-        serverApiHelperElectrum!!.electrumRequestData(card, electrumRequest)
+        if (UtilHelper.isOnline(activity!!)) {
+            requestCounter++
+            serverApiHelperElectrum!!.electrumRequestData(card, electrumRequest)
+        } else {
+            Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+            srl.isRefreshing = false
+        }
+
     }
 
     private fun requestInfura(method: String, contract: String) {
-        requestCounter++
-        serverApiHelper!!.infura(method, 67, card!!.wallet, contract, "")
+        if (UtilHelper.isOnline(activity!!)) {
+            requestCounter++
+            serverApiHelper!!.infura(method, 67, card!!.wallet, contract, "")
+        } else {
+            Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+            srl.isRefreshing = false
+        }
     }
 
     private fun requestCardVerify() {
         if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified)) {
             requestCounter++
             serverApiHelper!!.cardVerifyAndGetInfo(card)
+        } else {
+            Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+            srl.isRefreshing = false
         }
     }
 
     private fun requestRateInfo(cryptoId: String) {
-        requestCounter++
-        serverApiHelper!!.rateInfoData(cryptoId)
+        if (UtilHelper.isOnline(activity!!)) {
+            requestCounter++
+            serverApiHelper!!.rateInfoData(cryptoId)
+        } else {
+            Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+            srl.isRefreshing = false
+        }
     }
 
     override fun onResume() {
@@ -653,11 +670,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 updateViews()
             }
             REQUEST_CODE_SEND_PAYMENT, REQUEST_CODE_RECEIVE_PAYMENT -> {
-
                 if (resultCode == Activity.RESULT_OK) {
                     card!!.clearInfo()
-                    srlLoadedWallet!!.postDelayed({ this.refresh() }, 5000)
-                    srlLoadedWallet!!.isRefreshing = true
+                    srl.postDelayed({ this.refresh() }, 5000)
+                    srl.isRefreshing = true
                     updateViews()
                 }
 
@@ -777,9 +793,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             val engine = CoinEngineFactory.create(card!!.blockchain)
 
-            if (srlLoadedWallet!!.isRefreshing) {
+            if (srl.isRefreshing) {
                 tvBalanceLine1.setTextColor(resources.getColor(R.color.primary))
-                tvBalanceLine1.text = "Verifying in blockchain..."
+                tvBalanceLine1.text = getString(R.string.verifying_in_blockchain)
                 tvBalanceLine2.text = ""
             } else {
                 val validator = BalanceValidator()
@@ -824,11 +840,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
     }
 
-    fun refresh() {
-
-        // Clear all card data and request again
-
-        srlLoadedWallet!!.isRefreshing = true
+    private fun refresh() {
+        // clear all card data and request again
+        srl.isRefreshing = true
         card!!.clearInfo()
         card!!.error = null
         card!!.message = null
