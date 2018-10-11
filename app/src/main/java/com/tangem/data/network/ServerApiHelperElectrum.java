@@ -2,6 +2,7 @@ package com.tangem.data.network;
 
 import android.util.Log;
 
+import com.tangem.App;
 import com.tangem.domain.BitcoinNode;
 import com.tangem.domain.BitcoinNodeTestNet;
 import com.tangem.domain.wallet.Blockchain;
@@ -33,6 +34,7 @@ public class ServerApiHelperElectrum {
     /**
      * TCP
      * Used in BTC
+     * https://sidstudio.com.ua/sidstudio-blog/%D0%BF%D0%B5%D1%80%D0%B5%D0%B4%D0%B0%D1%87%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%BF%D0%BE-%D1%81%D0%B5%D1%82%D0%B8-%D0%BF%D1%80%D0%B8-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D0%B8-socket-%D0%BF%D1%80%D0%B8-%D1%80%D0%B0%D0%B7%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%BA%D0%B5-android-%D0%BF%D1%80%D0%B8%D0%BB%D0%BE%D0%B6%D0%B5%D0%BD%D0%B8%D1%8F
      */
     private String host;
     private int port;
@@ -65,13 +67,6 @@ public class ServerApiHelperElectrum {
                         .filter(throwable -> throwable instanceof NullPointerException)
                         .zipWith(Observable.range(1, 2), (n, i) -> i))
 
-//                .retryWhen(errors -> errors
-//                        .filter(throwable -> throwable instanceof Exception)
-//                        .zipWith(Observable.range(1, 2), (n, i) -> i))
-//
-//                .retryWhen(errors -> errors
-//                        .filter(throwable -> throwable instanceof ConnectException)
-//                        .zipWith(Observable.range(1, 2), (n, i) -> i))
 
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
@@ -117,12 +112,14 @@ public class ServerApiHelperElectrum {
         Collections.addAll(result, electrumRequest);
 
         try {
-            InetAddress serverAddress = InetAddress.getByName(host);
+//            Socket socket = App.getComponent().getSocket();
+
             Socket socket = new Socket();
             socket.setSoTimeout(5000);
             socket.bind(new InetSocketAddress(0));
-            // TODO java.net.ConnectException: Connection refused
-            socket.connect(new InetSocketAddress(serverAddress, port));
+
+
+            socket.connect(new InetSocketAddress(InetAddress.getByName(host), port));
             try {
                 OutputStream os = socket.getOutputStream();
                 OutputStreamWriter out = new OutputStreamWriter(os, "UTF-8");
