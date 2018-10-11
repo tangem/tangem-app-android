@@ -33,8 +33,8 @@ public class BtcEngine extends CoinEngine {
                 BitcoinNode.n14.getHost(),
                 BitcoinNode.n15.getHost(),
                 BitcoinNode.n16.getHost(),
-                BitcoinNode.n17.getHost(),
-                BitcoinNode.n18.getHost(),
+//                BitcoinNode.n17.getHost(),
+//                BitcoinNode.n18.getHost(),
         };
     }
 
@@ -44,8 +44,8 @@ public class BtcEngine extends CoinEngine {
                 BitcoinNode.n14.getPort(),
                 BitcoinNode.n15.getPort(),
                 BitcoinNode.n16.getPort(),
-                BitcoinNode.n17.getPort(),
-                BitcoinNode.n18.getPort(),
+//                BitcoinNode.n17.getPort(),
+//                BitcoinNode.n18.getPort(),
 
         };
     }
