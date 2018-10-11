@@ -177,11 +177,11 @@ public class TangemCard {
         return cardPublicKeyValid;
     }
 
-    public Double AmountFromInternalUnits(Long internalAmount) {
+    public Double amountFromInternalUnits(Long internalAmount) {
         return ((double) internalAmount) / getBlockchain().getMultiplier();
     }
 
-    private Double AmountFromInternalUnits(Integer internalAmount) {
+    public Double amountFromInternalUnits(Integer internalAmount) {
         return ((double) internalAmount) / getBlockchain().getMultiplier();
     }
 
