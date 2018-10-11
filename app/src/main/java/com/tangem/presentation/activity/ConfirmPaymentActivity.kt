@@ -217,27 +217,36 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
 
         // request electrum listener
-        serverApiHelperElectrum!!.setElectrumRequestData {
-            if (it.isMethod(ElectrumRequest.METHOD_GetBalance)) {
-                try {
-                    etFee!!.setText("--")
-                    if ((it.result.getInt("confirmed") + it.result.getInt("unconfirmed")) / card!!.blockchain.multiplier * 1000000.0 < java.lang.Float.parseFloat(etAmount!!.text.toString())) {
-                        etFee!!.error = "Not enough funds"
-                    } else {
-                        etFee!!.error = null
-                        balanceRequestSuccess = true
-                        if (feeRequestSuccess && balanceRequestSuccess) {
-                            btnSend!!.visibility = View.VISIBLE
+        val electrumBodyListener: ServerApiHelperElectrum.ElectrumRequestDataListener = object : ServerApiHelperElectrum.ElectrumRequestDataListener {
+            override fun onElectrumSuccess(electrumRequest: ElectrumRequest?) {
+                if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_GetBalance)) {
+                    try {
+                        etFee!!.setText("--")
+                        if ((electrumRequest.result.getInt("confirmed") + electrumRequest.result.getInt("unconfirmed")) / card!!.blockchain.multiplier * 1000000.0 < java.lang.Float.parseFloat(etAmount!!.text.toString())) {
+                            etFee!!.error = "Not enough funds"
+                        } else {
+                            etFee!!.error = null
+                            balanceRequestSuccess = true
+                            if (feeRequestSuccess && balanceRequestSuccess) {
+                                btnSend!!.visibility = View.VISIBLE
+                            }
+                            dtVerified = Date()
+                            nodeCheck = true
                         }
-                        dtVerified = Date()
-                        nodeCheck = true
+                    } catch (e: JSONException) {
+                        e.printStackTrace()
+                        finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
                     }
-                } catch (e: JSONException) {
-                    e.printStackTrace()
-                    finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
                 }
             }
+
+            override fun onElectrumFail(message: String?) {
+
+            }
+
         }
+
+        serverApiHelperElectrum!!.setElectrumRequestData(electrumBodyListener)
 
         // request estimate fee listener
         serverApiHelper!!.setEstimateFee { blockCount, estimateFeeResponse ->
