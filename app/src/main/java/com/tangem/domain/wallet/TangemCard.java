@@ -178,7 +178,9 @@ public class TangemCard {
     }
 
     public Double amountFromInternalUnits(Long internalAmount) {
-        return ((double) internalAmount) / getBlockchain().getMultiplier();
+        // TODO java.lang.NullPointerException: Attempt to invoke virtual method 'long java.lang.Long.longValue()' on a null object reference
+        return ((double) internalAmount) /
+                getBlockchain().getMultiplier();
     }
 
     public Double amountFromInternalUnits(Integer internalAmount) {
