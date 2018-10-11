@@ -1,4 +1,4 @@
-package com.tangem.data.network.request;
+package com.tangem.data.network;
 
 import org.json.JSONArray;
 import org.json.JSONException;
