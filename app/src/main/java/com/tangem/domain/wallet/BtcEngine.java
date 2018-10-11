@@ -395,7 +395,6 @@ public class BtcEngine extends CoinEngine {
             } else {
                 dataForSign[i] = doubleHashData;
             }
-
         }
 
         byte[] signFromCard;
