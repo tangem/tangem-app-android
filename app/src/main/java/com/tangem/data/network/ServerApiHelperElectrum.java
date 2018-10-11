@@ -22,15 +22,13 @@ import java.util.List;
 import java.util.Random;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
 import io.reactivex.observers.DefaultObserver;
 import io.reactivex.schedulers.Schedulers;
 
 public class ServerApiHelperElectrum {
-    private static String TAG = ServerApiHelper.class.getSimpleName();
+//    private static String TAG = ServerApiHelper.class.getSimpleName();
+    private static String TAG = ServerApiHelperElectrum.class.getSimpleName();
 
     /**
      * TCP
@@ -67,13 +65,13 @@ public class ServerApiHelperElectrum {
                         .filter(throwable -> throwable instanceof NullPointerException)
                         .zipWith(Observable.range(1, 2), (n, i) -> i))
 
-                .retryWhen(errors -> errors
-                        .filter(throwable -> throwable instanceof Exception)
-                        .zipWith(Observable.range(1, 2), (n, i) -> i))
-
-                .retryWhen(errors -> errors
-                        .filter(throwable -> throwable instanceof ConnectException)
-                        .zipWith(Observable.range(1, 2), (n, i) -> i))
+//                .retryWhen(errors -> errors
+//                        .filter(throwable -> throwable instanceof Exception)
+//                        .zipWith(Observable.range(1, 2), (n, i) -> i))
+//
+//                .retryWhen(errors -> errors
+//                        .filter(throwable -> throwable instanceof ConnectException)
+//                        .zipWith(Observable.range(1, 2), (n, i) -> i))
 
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
