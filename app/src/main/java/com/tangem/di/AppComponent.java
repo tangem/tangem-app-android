@@ -2,6 +2,8 @@ package com.tangem.di;
 
 import com.tangem.data.network.Server;
 
+import java.net.Socket;
+
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -26,5 +28,8 @@ public interface AppComponent {
 
     @Named(Server.ApiUpdateVersion.URL_UPDATE_VERSION)
     Retrofit getRetrofitGithubusercontent();
+
+    @Named("socket")
+    Socket getSocket();
 
 }
