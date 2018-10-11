@@ -50,9 +50,15 @@ public class ServerApiHelperElectrum {
         Observable<ElectrumRequest> checkBalanceObserver = Observable.just(electrumRequest)
                 .doOnNext(electrumRequest1 -> doElectrumRequest(card, electrumRequest))
                 .flatMap(electrumRequest1 -> {
-                    if (electrumRequest1.answerData == null)
+
+
+//                    if (electrumRequest1 throws NullPointerException)
+
+
+                    if (electrumRequest1.answerData == null) {
+                        Log.e(TAG, "NullPointerException " + electrumRequest.getMethod());
                         return Observable.error(new NullPointerException());
-                    else
+                    } else
                         return Observable.just(electrumRequest1);
                 })
                 .retryWhen(errors -> errors
