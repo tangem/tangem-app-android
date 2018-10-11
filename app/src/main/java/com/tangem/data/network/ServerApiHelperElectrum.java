@@ -2,7 +2,6 @@ package com.tangem.data.network;
 
 import android.util.Log;
 
-import com.tangem.data.network.request.ElectrumRequest;
 import com.tangem.domain.BitcoinNode;
 import com.tangem.domain.BitcoinNodeTestNet;
 import com.tangem.domain.wallet.Blockchain;
