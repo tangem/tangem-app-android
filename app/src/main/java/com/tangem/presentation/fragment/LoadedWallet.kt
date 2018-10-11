@@ -296,7 +296,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         // request card verify listener
         serverApiHelper!!.setCardVerifyAndGetInfoListener {
-
             requestCounter--
             if (requestCounter == 0) srl.isRefreshing = false
 
@@ -497,9 +496,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     private fun requestCardVerify() {
-        if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified)) {
-            requestCounter++
-            serverApiHelper!!.cardVerifyAndGetInfo(card)
+        if (UtilHelper.isOnline(activity!!)) {
+            if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified)) {
+                requestCounter++
+                serverApiHelper!!.cardVerifyAndGetInfo(card)
+            }
         } else {
             Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
             srl.isRefreshing = false
