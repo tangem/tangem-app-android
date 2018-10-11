@@ -265,7 +265,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                             val height = jsUnspent.getInt("height")
                             val hash = jsUnspent.getString("tx_hash")
                             if (height != -1) {
-                                requestElectrum(card!!, ElectrumRequest.getTransaction(walletAddress, hash))
+//                                requestElectrum(card!!, ElectrumRequest.getTransaction(walletAddress, hash))
                             }
                         }
                     } catch (e: JSONException) {
@@ -869,7 +869,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             card!!.setIsBalanceEqual(true)
 
             requestElectrum(card!!, ElectrumRequest.checkBalance(card!!.wallet))
-            requestElectrum(card!!, ElectrumRequest.listUnspent(card!!.wallet))
+//            requestElectrum(card!!, ElectrumRequest.listUnspent(card!!.wallet))
             requestRateInfo("bitcoin")
         }
 
