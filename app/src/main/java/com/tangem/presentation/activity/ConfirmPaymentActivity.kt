@@ -19,10 +19,7 @@ import com.tangem.data.network.model.InfuraResponse
 import com.tangem.data.network.ElectrumRequest
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
-import com.tangem.util.BTCUtils
-import com.tangem.util.DerEncodingUtil
-import com.tangem.util.FormatUtil
-import com.tangem.util.Util
+import com.tangem.util.*
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_confirm_payment.*
 import org.json.JSONException
@@ -342,11 +339,19 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     }
 
     private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
-        serverApiHelperElectrum!!.electrumRequestData(card, electrumRequest)
+        if (UtilHelper.isOnline(this)) {
+            serverApiHelperElectrum!!.electrumRequestData(card, electrumRequest)
+        } else {
+            Toast.makeText(this, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun requestInfura(method: String) {
-        serverApiHelper!!.infura(method, 67, card!!.wallet, "", "")
+        if (UtilHelper.isOnline(this)) {
+            serverApiHelper!!.infura(method, 67, card!!.wallet, "", "")
+        } else {
+            Toast.makeText(this, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+        }
     }
 
     public override fun onResume() {
