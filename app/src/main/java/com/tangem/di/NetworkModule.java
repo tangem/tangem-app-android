@@ -3,6 +3,11 @@ package com.tangem.di;
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import com.tangem.data.network.Server;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketException;
+
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -79,6 +84,24 @@ class NetworkModule {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
         return logging;
+    }
+
+    @Provides
+    @Named("socket")
+    Socket provideSocket() {
+        Socket socket = new Socket();
+        try {
+            socket.setSoTimeout(5000);
+            try {
+                socket.bind(new InetSocketAddress(0));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+
+        return socket;
     }
 
 }
