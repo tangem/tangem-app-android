@@ -16,12 +16,13 @@ import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemCard
+import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import org.json.JSONException
 import java.io.IOException
 import java.math.BigInteger
 
-class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback  {
+class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     companion object {
         const val EXTRA_UID: String = "UID"
@@ -156,11 +157,19 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback  
     }
 
     private fun requestInfura(method: String, contract: String) {
-        serverApiHelper!!.infura(method, 67, card!!.wallet, contract, tx)
+        if (UtilHelper.isOnline(this)) {
+            serverApiHelper!!.infura(method, 67, card!!.wallet, contract, tx)
+        } else {
+            Toast.makeText(this, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
-        serverApiHelperElectrum!!.electrumRequestData(card, electrumRequest)
+        if (UtilHelper.isOnline(this)) {
+            serverApiHelperElectrum!!.electrumRequestData(card, electrumRequest)
+        } else {
+            Toast.makeText(this, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+        }
     }
 
     fun finishWithError(message: String) {
