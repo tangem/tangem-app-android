@@ -11,7 +11,7 @@ import android.widget.Toast
 import com.tangem.data.network.ServerApiHelper
 import com.tangem.data.network.ServerApiHelperElectrum
 import com.tangem.data.network.model.InfuraResponse
-import com.tangem.data.network.request.ElectrumRequest
+import com.tangem.data.network.ElectrumRequest
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
