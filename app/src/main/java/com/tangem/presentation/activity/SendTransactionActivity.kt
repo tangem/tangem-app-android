@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
 import com.tangem.data.network.ServerApiHelper
+import com.tangem.data.network.ServerApiHelperElectrum
 import com.tangem.data.network.model.InfuraResponse
 import com.tangem.data.network.request.ElectrumRequest
 import com.tangem.domain.cardReader.NfcManager
@@ -29,6 +30,8 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback  
     }
 
     private var serverApiHelper: ServerApiHelper? = null
+    private var serverApiHelperElectrum: ServerApiHelperElectrum? = null
+
     var card: TangemCard? = null
     private var tx: String? = null
     private var nfcManager: NfcManager? = null
@@ -42,6 +45,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback  
         nfcManager = NfcManager(this, this)
 
         serverApiHelper = ServerApiHelper()
+        serverApiHelperElectrum = ServerApiHelperElectrum()
 
         val intent = intent
         card = TangemCard(getIntent().getStringExtra(EXTRA_UID))
@@ -63,7 +67,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback  
         }
 
         // request electrum listener
-        serverApiHelper!!.setElectrumRequestData {
+        serverApiHelperElectrum!!.setElectrumRequestData {
             if (it.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
                 try {
                     var hashTX = it.resultString
@@ -156,7 +160,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback  
     }
 
     private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
-        serverApiHelper!!.electrumRequestData(card, electrumRequest)
+        serverApiHelperElectrum!!.electrumRequestData(card, electrumRequest)
     }
 
     fun finishWithError(message: String) {
