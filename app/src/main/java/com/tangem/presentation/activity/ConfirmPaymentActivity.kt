@@ -69,6 +69,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         nfcManager = NfcManager(this, this)
 
         serverApiHelper = ServerApiHelper()
+        serverApiHelperElectrum = ServerApiHelperElectrum()
 
         card = TangemCard(intent.getStringExtra("UID"))
         card!!.loadFromBundle(intent.extras!!.getBundle("Card"))
