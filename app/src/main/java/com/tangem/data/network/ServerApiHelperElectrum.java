@@ -9,6 +9,7 @@ import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.TangemCard;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -17,6 +18,7 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -112,42 +114,31 @@ public class ServerApiHelperElectrum {
 
         try {
             Socket socket = App.getComponent().getSocket();
-
-//            Socket socket = new Socket();
-//            socket.setSoTimeout(5000);
-//            socket.bind(new InetSocketAddress(0));
-
-
-            Log.i(TAG, host + " " + port);
-
             socket.connect(new InetSocketAddress(InetAddress.getByName(host), port));
+            Log.i(TAG, host + " " + port);
             try {
                 OutputStream os = socket.getOutputStream();
                 OutputStreamWriter out = new OutputStreamWriter(os, "UTF-8");
                 InputStream is = socket.getInputStream();
                 BufferedReader in = new BufferedReader(new InputStreamReader(is));
                 electrumRequest.setID(1);
-                try {
-                    out.write(electrumRequest.getAsString() + "\n");
-                    out.flush();
 
-                    electrumRequest.answerData = in.readLine();
-                    electrumRequest.host = host;
-                    electrumRequest.port = port;
-                    if (electrumRequest.answerData != null) {
+                out.write(electrumRequest.getAsString() + "\n");
+                out.flush();
+
+                electrumRequest.answerData = in.readLine();
+                electrumRequest.host = host;
+                electrumRequest.port = port;
+                if (electrumRequest.answerData != null) {
 //                        Log.i(TAG, ">> " + electrumRequest.answerData);
-                    } else {
-                        electrumRequest.error = "No answer from server";
+                } else {
+                    electrumRequest.error = "No answer from server";
 //                        Log.i(TAG, ">> <NULL>");
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    electrumRequest.error = e.toString();
-                    Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " Exception 3 " + e.getMessage());
                 }
-            } catch (Exception e) {
+
+            } catch (ConnectException e) {
                 e.printStackTrace();
-                Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " Exception 2 " + e.getMessage());
+                Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " ConnectException " + e.getMessage());
             } finally {
                 Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " CLOSE");
                 socket.close();
@@ -155,10 +146,7 @@ public class ServerApiHelperElectrum {
         } catch (Exception e) {
             e.printStackTrace();
             electrumRequestDataListener.onElectrumFail(electrumRequest.getMethod());
-
-            Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " Exception 1 " + e.getMessage());
-
-//            throw new NullPointerException("Could not retrieve Data");
+            Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " Exception " + e.getMessage());
         }
         return result;
     }
