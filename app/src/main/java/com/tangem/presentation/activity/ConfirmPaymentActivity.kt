@@ -36,8 +36,10 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     }
 
     private var nfcManager: NfcManager? = null
-    private var serverApiHelper: ServerApiHelper? = null
-    private var serverApiHelperElectrum: ServerApiHelperElectrum? = null
+
+    private var serverApiHelper: ServerApiHelper = ServerApiHelper()
+    private var serverApiHelperElectrum: ServerApiHelperElectrum = ServerApiHelperElectrum()
+
     var card: TangemCard? = null
     var feeRequestSuccess = false
     var balanceRequestSuccess = false
@@ -67,9 +69,6 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         MainActivity.commonInit(applicationContext)
 
         nfcManager = NfcManager(this, this)
-
-        serverApiHelper = ServerApiHelper()
-        serverApiHelperElectrum = ServerApiHelperElectrum()
 
         card = TangemCard(intent.getStringExtra("UID"))
         card!!.loadFromBundle(intent.extras!!.getBundle("Card"))
@@ -136,9 +135,9 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
             progressBar!!.visibility = View.VISIBLE
 
-            serverApiHelper!!.estimateFee(ServerApiHelper.ESTIMATE_FEE_PRIORITY)
-            serverApiHelper!!.estimateFee(ServerApiHelper.ESTIMATE_FEE_NORMAL)
-            serverApiHelper!!.estimateFee(ServerApiHelper.ESTIMATE_FEE_MINIMAL)
+            serverApiHelper.estimateFee(ServerApiHelper.ESTIMATE_FEE_PRIORITY)
+            serverApiHelper.estimateFee(ServerApiHelper.ESTIMATE_FEE_NORMAL)
+            serverApiHelper.estimateFee(ServerApiHelper.ESTIMATE_FEE_MINIMAL)
         }
 
         // set listeners
@@ -247,10 +246,10 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         }
 
-        serverApiHelperElectrum!!.setElectrumRequestData(electrumBodyListener)
+        serverApiHelperElectrum.setElectrumRequestData(electrumBodyListener)
 
         // request estimate fee listener
-        serverApiHelper!!.setEstimateFee { blockCount, estimateFeeResponse ->
+        serverApiHelper.setEstimateFee { blockCount, estimateFeeResponse ->
             var fee: BigDecimal?
             fee = BigDecimal(estimateFeeResponse) // BTC per 1 kb
 
@@ -345,12 +344,12 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             }
         }
 
-        serverApiHelper!!.setInfuraResponse(infuraBodyListener)
+        serverApiHelper.setInfuraResponse(infuraBodyListener)
     }
 
     private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
         if (UtilHelper.isOnline(this)) {
-            serverApiHelperElectrum!!.electrumRequestData(card, electrumRequest)
+            serverApiHelperElectrum.electrumRequestData(card, electrumRequest)
         } else {
             Toast.makeText(this, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
         }
@@ -358,7 +357,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     private fun requestInfura(method: String) {
         if (UtilHelper.isOnline(this)) {
-            serverApiHelper!!.infura(method, 67, card!!.wallet, "", "")
+            serverApiHelper.infura(method, 67, card!!.wallet, "", "")
         } else {
             Toast.makeText(this, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
         }
