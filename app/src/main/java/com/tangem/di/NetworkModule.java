@@ -91,7 +91,7 @@ class NetworkModule {
     Socket provideSocket() {
         Socket socket = new Socket();
         try {
-            socket.setSoTimeout(5000);
+            socket.setSoTimeout(2000);
             try {
                 socket.bind(new InetSocketAddress(0));
             } catch (IOException e) {
