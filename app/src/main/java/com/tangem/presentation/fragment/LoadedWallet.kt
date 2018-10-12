@@ -57,8 +57,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     private var singleToast: Toast? = null
     private var nfcManager: NfcManager? = null
-    private var serverApiHelper: ServerApiHelper? = null
-    private var serverApiHelperElectrum: ServerApiHelperElectrum? = null
+
+    private var serverApiHelper: ServerApiHelper = ServerApiHelper()
+    private var serverApiHelperElectrum: ServerApiHelperElectrum = ServerApiHelperElectrum()
+
     var card: TangemCard? = null
     private var lastTag: Tag? = null
     private var lastReadSuccess = true
@@ -81,9 +83,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         super.onCreate(savedInstanceState)
 
         nfcManager = NfcManager(activity, this)
-
-        serverApiHelper = ServerApiHelper()
-        serverApiHelperElectrum = ServerApiHelperElectrum()
 
         sp = PreferenceManager.getDefaultSharedPreferences(activity)
 
@@ -234,7 +233,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         card!!.setBalanceConfirmed(confBalance)
                         card!!.balanceUnconfirmed = unconfirmedBalance
                         card!!.decimalBalance = confBalance.toString()
-                        card!!.validationNodeDescription = serverApiHelperElectrum!!.validationNodeDescription
+                        card!!.validationNodeDescription = serverApiHelperElectrum.validationNodeDescription
                     } catch (e: JSONException) {
                         e.printStackTrace()
                         Log.e(TAG, "FAIL METHOD_GetBalance JSONException")
@@ -300,10 +299,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
         }
 
-        serverApiHelperElectrum!!.setElectrumRequestData(electrumBodyListener)
+        serverApiHelperElectrum.setElectrumRequestData(electrumBodyListener)
 
         // request card verify listener
-        serverApiHelper!!.setCardVerifyAndGetInfoListener {
+        serverApiHelper.setCardVerifyAndGetInfoListener {
             requestCounter--
             if (requestCounter == 0) srl!!.isRefreshing = false
 
@@ -329,20 +328,20 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
             if (result.artwork != null && localStorage.checkNeedUpdateArtwork(result.artwork)) {
                 Log.w(TAG, "Artwork '${result.artwork!!.id}' updated, need download")
-                serverApiHelper!!.requestArtwork(result.artwork!!.id, result.artwork!!.getUpdateDate(), card!!)
+                serverApiHelper.requestArtwork(result.artwork!!.id, result.artwork!!.getUpdateDate(), card!!)
                 updateViews()
             }
 //            Log.i(TAG, "setCardVerify " + it.results!![0].passed)
         }
 
-        serverApiHelper!!.setArtworkListener { artworkId, inputStream, updateDate ->
+        serverApiHelper.setArtworkListener { artworkId, inputStream, updateDate ->
             Log.w(TAG, "Artwork '$artworkId' downloaded")
             localStorage.updateArtwork(artworkId, inputStream, updateDate)
             ivTangemCard.setImageBitmap(localStorage.getCardArtworkBitmap(card!!))
         }
 
         // request rate info listener
-        serverApiHelper!!.setRateInfoData {
+        serverApiHelper.setRateInfoData {
 
             requestCounter--
             val rate = it.priceUsd.toFloat()
@@ -479,13 +478,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
         }
 
-        serverApiHelper!!.setInfuraResponse(infuraBodyListener)
+        serverApiHelper.setInfuraResponse(infuraBodyListener)
     }
 
     private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
         if (UtilHelper.isOnline(activity!!)) {
             requestCounter++
-            serverApiHelperElectrum!!.electrumRequestData(card, electrumRequest)
+            serverApiHelperElectrum.electrumRequestData(card, electrumRequest)
         } else {
             Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
             srl!!.isRefreshing = false
@@ -496,7 +495,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private fun requestInfura(method: String, contract: String) {
         if (UtilHelper.isOnline(activity!!)) {
             requestCounter++
-            serverApiHelper!!.infura(method, 67, card!!.wallet, contract, "")
+            serverApiHelper.infura(method, 67, card!!.wallet, contract, "")
         } else {
             Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
             srl!!.isRefreshing = false
@@ -507,7 +506,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         if (UtilHelper.isOnline(activity!!)) {
             if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified)) {
                 requestCounter++
-                serverApiHelper!!.cardVerifyAndGetInfo(card)
+                serverApiHelper.cardVerifyAndGetInfo(card)
             }
         } else {
             Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
@@ -518,7 +517,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private fun requestRateInfo(cryptoId: String) {
         if (UtilHelper.isOnline(activity!!)) {
             requestCounter++
-            serverApiHelper!!.rateInfoData(cryptoId)
+            serverApiHelper.rateInfoData(cryptoId)
         } else {
             Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
             srl!!.isRefreshing = false
