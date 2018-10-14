@@ -55,13 +55,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         private const val REQUEST_CODE_RECEIVE_PAYMENT = 9
     }
 
-    private var singleToast: Toast? = null
     private var nfcManager: NfcManager? = null
 
     private var serverApiHelper: ServerApiHelper = ServerApiHelper()
     private var serverApiHelperElectrum: ServerApiHelperElectrum = ServerApiHelperElectrum()
 
-    var card: TangemCard? = null
+    private var singleToast: Toast? = null
+    private var card: TangemCard? = null
     private var lastTag: Tag? = null
     private var lastReadSuccess = true
     private var verifyCardTask: VerifyCardTask? = null
@@ -74,9 +74,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private val inactiveColor: ColorStateList by lazy { resources.getColorStateList(R.color.btn_dark) }
     private val activeColor: ColorStateList by lazy { resources.getColorStateList(R.color.colorAccent) }
     private var requestCounter = 0
-
     private var timerRepeatRefresh: Timer? = null
-
     private lateinit var localStorage: LocalStorage
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,7 +102,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         if (card!!.blockchain == Blockchain.Token)
             tvBalance.setSingleLine(false)
 
-        //ivTangemCard.setImageResource(card!!.cardImageResource)
         ivTangemCard.setImageBitmap(localStorage.getCardArtworkBitmap(card!!))
 
         val engine = CoinEngineFactory.create(card!!.blockchain)
@@ -171,7 +168,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         else -> {
                         }
                     }
-
                 }
                 dialog.show()
             } else {
@@ -294,8 +290,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
 
             override fun onElectrumFail(method: String?) {
-//                srl.isRefreshing = false
-                Log.e(TAG, "FAIL $method")
+                srl!!.isRefreshing = false
+//                Log.e(TAG, "FAIL $method")
             }
         }
 
@@ -456,10 +452,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                             e.printStackTrace()
                         }
                     }
-
-                    else -> {
-
-                    }
                 }
 
                 requestCounter--
@@ -490,38 +482,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             srl!!.isRefreshing = false
         }
 
-    }
-
-    private fun requestInfura(method: String, contract: String) {
-        if (UtilHelper.isOnline(activity!!)) {
-            requestCounter++
-            serverApiHelper.infura(method, 67, card!!.wallet, contract, "")
-        } else {
-            Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            srl!!.isRefreshing = false
-        }
-    }
-
-    private fun requestCardVerify() {
-        if (UtilHelper.isOnline(activity!!)) {
-            if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified)) {
-                requestCounter++
-                serverApiHelper.cardVerifyAndGetInfo(card)
-            }
-        } else {
-            Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            srl!!.isRefreshing = false
-        }
-    }
-
-    private fun requestRateInfo(cryptoId: String) {
-        if (UtilHelper.isOnline(activity!!)) {
-            requestCounter++
-            serverApiHelper.rateInfoData(cryptoId)
-        } else {
-            Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            srl!!.isRefreshing = false
-        }
     }
 
     override fun onResume() {
@@ -883,7 +843,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         // Ethereum
         else if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet) {
-
             requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
             requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
             requestInfura(ServerApiHelper.INFURA_ETH_GET_PENDING_COUNT, "")
@@ -892,18 +851,49 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         // Token
         else if (card!!.blockchain == Blockchain.Token) {
-
             requestInfura(ServerApiHelper.INFURA_ETH_CALL, engine.getContractAddress(card))
             requestRateInfo("ethereum")
         }
     }
 
-    fun prepareResultIntent(): Intent {
-        val data = Intent()
-        data.putExtra("UID", card!!.uid)
-        data.putExtra("Card", card!!.asBundle)
-        return data
+    private fun requestInfura(method: String, contract: String) {
+        if (UtilHelper.isOnline(activity!!)) {
+            requestCounter++
+            serverApiHelper.infura(method, 67, card!!.wallet, contract, "")
+        } else {
+            Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+            srl!!.isRefreshing = false
+        }
     }
+
+    private fun requestCardVerify() {
+        if (UtilHelper.isOnline(activity!!)) {
+            if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified)) {
+                requestCounter++
+                serverApiHelper.cardVerifyAndGetInfo(card)
+            }
+        } else {
+            Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+            srl!!.isRefreshing = false
+        }
+    }
+
+    private fun requestRateInfo(cryptoId: String) {
+        if (UtilHelper.isOnline(activity!!)) {
+            requestCounter++
+            serverApiHelper.rateInfoData(cryptoId)
+        } else {
+            Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+            srl!!.isRefreshing = false
+        }
+    }
+
+//    private fun prepareResultIntent(): Intent {
+//        val data = Intent()
+//        data.putExtra("UID", card!!.uid)
+//        data.putExtra("Card", card!!.asBundle)
+//        return data
+//    }
 
     private fun openVerifyCard(cardProtocol: CardProtocol) {
         val intent = Intent(context, VerifyCardActivity::class.java)
