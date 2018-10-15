@@ -62,14 +62,14 @@ public class BalanceValidator {
             if (card.getBalanceUnconfirmed() != 0) {
                 score = 0;
                 firstLine = "Transaction in progress";
-                secondLine = "Wait for full confirmation in blockchain. ";
+                secondLine = "Wait for confirmation in blockchain";
                 return;
             }
 
             if (card.isBalanceReceived() && card.isBalanceEqual()) {
                 score = 100;
                 firstLine = "Verified balance";
-                secondLine = "Balance confirmed in blockchain. ";
+                secondLine = "Balance confirmed in blockchain";
                 if (card.getBalance() == 0) {
                     firstLine = "Empty wallet";
                     secondLine = "";
@@ -117,14 +117,14 @@ public class BalanceValidator {
             if (!card.getUnconfirmedTXCount().equals(card.getConfirmedTXCount())) {
                 score = 0;
                 firstLine = "Unguaranteed balance";
-                secondLine = "Transaction is in progress. Wait for confirmation in blockchain. ";
+                secondLine = "Transaction is in progress. Wait for confirmation in blockchain.";
                 return;
             }
 
             if (card.isBalanceReceived()) {
                 score = 100;
                 firstLine = "Verified balance";
-                secondLine = "Balance confirmed in blockchain. ";
+                secondLine = "Balance confirmed in blockchain";
                 if (card.getBalance() == 0) {
                     firstLine = "Empty wallet";
                     secondLine = "";
