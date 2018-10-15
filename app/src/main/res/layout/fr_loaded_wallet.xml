@@ -27,21 +27,23 @@
             android:layout_height="match_parent"
             android:layout_alignParentBottom="false"
             android:background="@color/white"
-            android:gravity="center"
             android:orientation="vertical">
 
             <RelativeLayout
                 android:id="@+id/loCard"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
+                android:maxHeight="200dp"
+                android:padding="3dp"
                 app:layout_constraintBottom_toTopOf="@+id/loBalance"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintHeight_max="200dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0">
 
                 <ImageView
                     android:id="@+id/ivTangemCard"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:padding="5dp"
                     tools:src="@drawable/card_default" />
 
                 <RelativeLayout
@@ -69,7 +71,7 @@
                         android:fontFamily="@font/maaxmedium"
                         android:text="@string/verifying"
                         android:textColor="@color/colorPrimary"
-                        android:textSize="@dimen/text_size_small"
+                        android:textSize="10sp"
                         android:textStyle="bold" />
 
                     <ProgressBar
@@ -88,13 +90,14 @@
                 android:id="@+id/loBalance"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="center_vertical"
                 android:orientation="vertical"
                 app:layout_constraintBottom_toTopOf="@+id/loWallet"
                 tools:layout_editor_absoluteX="5dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_marginBottom="10dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
@@ -113,7 +116,7 @@
                     <TextView
                         android:id="@+id/tvBlockchain"
                         android:layout_width="0dp"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_marginEnd="10dp"
                         android:layout_weight="1"
                         android:fontFamily="@font/maax"
@@ -129,6 +132,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/maaxmedium"
+                    android:text=" "
                     android:textAlignment="center"
                     android:visibility="visible" />
 
@@ -140,6 +144,7 @@
                     android:fontFamily="@font/maax"
                     android:paddingEnd="5dp"
                     android:paddingStart="5dp"
+                    android:text=" "
                     android:textAlignment="center"
                     android:visibility="visible" />
 
@@ -151,7 +156,6 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="horizontal"
-                android:paddingLeft="8dp"
                 app:layout_constraintBottom_toBottomOf="parent">
 
                 <ImageView
@@ -173,7 +177,6 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="10dp"
                         android:layout_marginEnd="4dp"
-                        android:layout_marginStart="4dp"
                         android:fontFamily="@font/maax"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
