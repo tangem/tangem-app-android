@@ -2,7 +2,7 @@
 
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
-    <string name="no_connection">No network connection</string>
+    <string name="no_connection">No connection with blockchain nodes</string>
     <string name="contin">Continue</string>
     <string name="not_found">Not found</string>
     <string name="wrong_tag_err">Not ISO tag!</string>
