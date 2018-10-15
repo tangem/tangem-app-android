@@ -473,17 +473,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         serverApiHelper.setInfuraResponse(infuraBodyListener)
     }
 
-    private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
-        if (UtilHelper.isOnline(activity!!)) {
-            requestCounter++
-            serverApiHelperElectrum.electrumRequestData(card, electrumRequest)
-        } else {
-            Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            srl!!.isRefreshing = false
-        }
-
-    }
-
     override fun onResume() {
         super.onResume()
         nfcManager!!.onResume()
@@ -854,6 +843,17 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             requestInfura(ServerApiHelper.INFURA_ETH_CALL, engine.getContractAddress(card))
             requestRateInfo("ethereum")
         }
+    }
+
+    private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
+        if (UtilHelper.isOnline(activity!!)) {
+            requestCounter++
+            serverApiHelperElectrum.electrumRequestData(card, electrumRequest)
+        } else {
+            Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+            srl!!.isRefreshing = false
+        }
+
     }
 
     private fun requestInfura(method: String, contract: String) {
