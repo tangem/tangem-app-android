@@ -289,6 +289,7 @@ public class TangemCard {
         balanceDecimal = null;
         balanceDecimalAlter = null;
         setIsBalanceEqual(false);
+        if (tokenSymbol.length() > 1) blockchainID = Blockchain.Token.getID(); // Reset blockchain to Token from ETH for token cards with zero token balance on it
     }
 
     public Date getPersonalizationDateTime() {
