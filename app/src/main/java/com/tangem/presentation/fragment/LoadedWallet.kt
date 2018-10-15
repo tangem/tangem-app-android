@@ -799,49 +799,54 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     private fun refresh() {
-        // clear all card data and request again
-        srl!!.isRefreshing = true
-        card!!.clearInfo()
-        card!!.error = null
-        card!!.message = null
-        requestCounter = 0
+        if ((srl == null) || (card == null)) return;
+        try {
+            // clear all card data and request again
+            srl!!.isRefreshing = true
+            card!!.clearInfo()
+            card!!.error = null
+            card!!.message = null
+            requestCounter = 0
 
-        updateViews()
+            updateViews()
 
-        val engine = CoinEngineFactory.create(card!!.blockchain)
+            val engine = CoinEngineFactory.create(card!!.blockchain)
 
-        requestCardVerify()
+            requestCardVerify()
 
-        // Bitcoin
-        if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
-            card!!.setIsBalanceEqual(true)
+            // Bitcoin
+            if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
+                card!!.setIsBalanceEqual(true)
 
-            requestElectrum(card!!, ElectrumRequest.checkBalance(card!!.wallet))
-            requestElectrum(card!!, ElectrumRequest.listUnspent(card!!.wallet))
-            requestRateInfo("bitcoin")
-        }
+                requestElectrum(card!!, ElectrumRequest.checkBalance(card!!.wallet))
+                requestElectrum(card!!, ElectrumRequest.listUnspent(card!!.wallet))
+                requestRateInfo("bitcoin")
+            }
 
-        // BitcoinCash
-        else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
-            card!!.setIsBalanceEqual(true)
+            // BitcoinCash
+            else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
+                card!!.setIsBalanceEqual(true)
 
-            requestElectrum(card!!, ElectrumRequest.checkBalance(card!!.wallet))
-            requestElectrum(card!!, ElectrumRequest.listUnspent(card!!.wallet))
-            requestRateInfo("bitcoin-cash")
-        }
+                requestElectrum(card!!, ElectrumRequest.checkBalance(card!!.wallet))
+                requestElectrum(card!!, ElectrumRequest.listUnspent(card!!.wallet))
+                requestRateInfo("bitcoin-cash")
+            }
 
-        // Ethereum
-        else if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet) {
-            requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
-            requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
-            requestInfura(ServerApiHelper.INFURA_ETH_GET_PENDING_COUNT, "")
-            requestRateInfo("ethereum")
-        }
+            // Ethereum
+            else if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet) {
+                requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
+                requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
+                requestInfura(ServerApiHelper.INFURA_ETH_GET_PENDING_COUNT, "")
+                requestRateInfo("ethereum")
+            }
 
-        // Token
-        else if (card!!.blockchain == Blockchain.Token) {
-            requestInfura(ServerApiHelper.INFURA_ETH_CALL, engine.getContractAddress(card))
-            requestRateInfo("ethereum")
+            // Token
+            else if (card!!.blockchain == Blockchain.Token) {
+                requestInfura(ServerApiHelper.INFURA_ETH_CALL, engine.getContractAddress(card))
+                requestRateInfo("ethereum")
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -975,13 +980,14 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     var showTime: Date = Date()
 
     private fun showSingleToast(text: Int) {
-        if (singleToast == null || !singleToast!!.view.isShown || showTime.time + 2000 < Date().time) {
-            if (singleToast != null)
-                singleToast!!.cancel()
-            singleToast = Toast.makeText(context, text, Toast.LENGTH_LONG)
-            singleToast!!.show()
-            showTime = Date()
-        }
+//        if (singleToast == null || !singleToast!!.view.isShown || showTime.time + 2000 < Date().time) {
+//            if (singleToast != null)
+//                singleToast!!.cancel()
+//            singleToast = Toast.makeText(context, text, Toast.LENGTH_LONG)
+//            singleToast!!.show()
+//            showTime = Date()
+//        }
+        singleToast = Toast.makeText(context, text, Toast.LENGTH_LONG)
     }
 
 }
