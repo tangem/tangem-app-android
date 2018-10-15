@@ -107,6 +107,7 @@
                     android:alpha="1"
                     android:text="@string/reading"
                     android:textColor="@color/colorPrimary"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <ProgressBar
@@ -123,18 +124,22 @@
         <TextView
             android:id="@+id/tvNFCHint"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="24dp"
-            android:layout_marginRight="24dp"
-            android:layout_marginTop="24dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="12dp"
+            android:background="@color/primary_dark"
             android:fontFamily="@font/maax"
-            android:gravity="top"
+            android:gravity="center"
             android:lineSpacingExtra="8sp"
+            android:minHeight="200dp"
+            android:paddingBottom="20dp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:paddingTop="20dp"
             android:text="@string/tap_tangem_card"
             android:textAlignment="center"
             android:textAllCaps="false"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:textColor="@color/primary_dark"
+            android:textColor="@color/white"
             android:textSize="@dimen/text_size_medium" />
 
     </LinearLayout>
