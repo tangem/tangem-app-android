@@ -66,7 +66,10 @@
     <string name="via_cryptonit">via CRYPTONIT</string>
     <string name="via_cryptonit2">via CRYPTONIT2</string>
     <string name="via_kraken">via KRAKEN</string>
-    <string name="in_app">In-App</string>
+    <string name="in_app">Another wallet app</string>
+    <string name="load_via_share_address">Share address</string>
+    <string name="load_via_qr">Show QR-code</string>
+    <string name="show_wallet_qr_code">LOAD</string>
     <!-- menu main -->
     <string name="clean_up">Clean up</string>
     <string name="manage_user_pin_1">Manage user PIN1…</string>
@@ -92,7 +95,7 @@
 
     <!-- LoadedWalletActivity, LoadedWallet -->
     <string name="wallet_empty">The wallet is empty</string>
-    <string name="no_compatible_wallet">No compatible wallet installed</string>
+    <string name="no_compatible_wallet">No compatible wallets installed</string>
     <string name="please_wait_while_previous">Please wait while previous transaction is confirmed in blockchain</string>
     <string name="please_wait_for_confirmation">Could not obtain all inputs. Swipe down to refresh.</string>
     <string name="card_has_no_remaining_signature">Card has no remaining signature!</string>
