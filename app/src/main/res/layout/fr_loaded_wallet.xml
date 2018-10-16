@@ -35,10 +35,8 @@
                 android:layout_height="0dp"
                 android:maxHeight="200dp"
                 android:padding="3dp"
-                app:layout_constraintBottom_toTopOf="@+id/loBalance"
                 app:layout_constraintHeight_max="200dp"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0">
+                app:layout_constraintTop_toTopOf="parent">
 
                 <ImageView
                     android:id="@+id/ivTangemCard"
@@ -89,10 +87,12 @@
             <LinearLayout
                 android:id="@+id/loBalance"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
                 android:gravity="center_vertical"
                 android:orientation="vertical"
                 app:layout_constraintBottom_toTopOf="@+id/loWallet"
+                app:layout_constraintHeight_min="wrap"
+                app:layout_constraintTop_toBottomOf="@+id/loCard"
                 tools:layout_editor_absoluteX="5dp">
 
                 <LinearLayout
@@ -142,8 +142,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
                     android:fontFamily="@font/maax"
-                    android:paddingEnd="5dp"
                     android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
                     android:text=" "
                     android:textAlignment="center"
                     android:visibility="visible" />
@@ -175,8 +175,8 @@
                         android:id="@+id/tvWallet"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="10dp"
                         android:layout_marginEnd="4dp"
+                        android:layout_marginBottom="10dp"
                         android:fontFamily="@font/maax"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
@@ -188,8 +188,8 @@
                         style="@style/AppTheme.RoundedCornerMaterialButton"
                         android:layout_width="match_parent"
                         android:layout_height="34dp"
-                        android:layout_marginBottom="5dp"
                         android:layout_marginTop="10dp"
+                        android:layout_marginBottom="5dp"
                         android:layout_weight="1"
                         android:backgroundTint="@color/white"
                         android:drawableStart="@drawable/ic_explore_black_24dp"
@@ -205,8 +205,8 @@
                         style="@style/AppTheme.RoundedCornerMaterialButton"
                         android:layout_width="match_parent"
                         android:layout_height="34dp"
-                        android:layout_marginBottom="5dp"
                         android:layout_marginTop="10dp"
+                        android:layout_marginBottom="5dp"
                         android:layout_weight="1"
                         android:backgroundTint="@color/white"
                         android:drawableStart="@drawable/ic_content_copy_black_24dp"
