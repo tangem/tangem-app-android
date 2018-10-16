@@ -685,7 +685,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     override fun onReadStart(cardProtocol: CardProtocol) {
-        rlProgressBar.post { rlProgressBar.visibility = View.VISIBLE }
+        if (rlProgressBar != null)
+            rlProgressBar.post { rlProgressBar.visibility = View.VISIBLE }
     }
 
     override fun onReadProgress(protocol: CardProtocol, progress: Int) {
