@@ -72,5 +72,10 @@
         <item name="android:textSize">@dimen/text_size_pin</item>
     </style>
 
+    <style name="AlertDialogTheme" parent="android:Theme.Dialog">
+        <item name="android:textSize">@dimen/text_size_medium</item>
+        <item name="android:fontFamily">@font/maax</item>
+        <item name="android:textAlignment">center</item>
+    </style>
 
 </resources>
