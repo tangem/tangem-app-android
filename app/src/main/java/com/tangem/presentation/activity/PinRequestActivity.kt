@@ -82,11 +82,11 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         else if (mode == Mode.ConfirmNewPIN2)
             tvPinPrompt.setText(R.string.confirm_new_pin_2)
         else if (mode == Mode.RequestPIN2) {
-            val uid = intent.getStringExtra("UID")
-            val mCard = TangemCard(uid)
-            mCard.loadFromBundle(intent.getBundleExtra("Card"))
+            val uid = intent.getStringExtra(TangemCard.EXTRA_UID)
+            val card = TangemCard(uid)
+            card.loadFromBundle(intent.getBundleExtra(TangemCard.EXTRA_CARD))
 
-            if (mCard.PIN2 == TangemCard.PIN2_Mode.DefaultPIN2 || mCard.PIN2 == TangemCard.PIN2_Mode.Unchecked) {
+            if (card.PIN2 == TangemCard.PIN2_Mode.DefaultPIN2 || card.PIN2 == TangemCard.PIN2_Mode.Unchecked) {
                 // if we know PIN2 or not try default previously - use it
                 PINStorage.setPIN2(PINStorage.getDefaultPIN2())
                 setResult(Activity.RESULT_OK)
