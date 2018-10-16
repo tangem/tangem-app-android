@@ -433,7 +433,7 @@ public class TangemCard {
         return failedBalanceRequestCounter.get();
     }
 
-    Boolean balanceEqual;
+    private Boolean balanceEqual;
 
     public Boolean isBalanceEqual() {
         return balanceEqual;
@@ -451,22 +451,22 @@ public class TangemCard {
 
     public Boolean isReusable() {
         if (settingsMask == null) return null;
-        return (settingsMask.intValue() & SettingsMask.IsReusable) != 0;
+        return (settingsMask & SettingsMask.IsReusable) != 0;
     }
 
     public Boolean allowSwapPIN() {
         if (settingsMask == null) return null;
-        return (settingsMask.intValue() & SettingsMask.AllowSwapPIN) != 0;
+        return (settingsMask & SettingsMask.AllowSwapPIN) != 0;
     }
 
     public Boolean allowSwapPIN2() {
         if (settingsMask == null) return null;
-        return (settingsMask.intValue() & SettingsMask.AllowSwapPIN2) != 0;
+        return (settingsMask & SettingsMask.AllowSwapPIN2) != 0;
     }
 
     public Boolean needCVC() {
         if (settingsMask == null) return null;
-        return (settingsMask.intValue() & SettingsMask.UseCVC) != 0;
+        return (settingsMask & SettingsMask.UseCVC) != 0;
     }
 
     public Boolean useDefaultPIN1() {
@@ -475,7 +475,7 @@ public class TangemCard {
 
     public Boolean useSmartSecurityDelay() {
         if (settingsMask == null) return null;
-        return (settingsMask.intValue() & SettingsMask.SmartSecurityDelay) != 0;
+        return (settingsMask & SettingsMask.SmartSecurityDelay) != 0;
     }
 
     public enum PIN2_Mode {Unchecked, DefaultPIN2, CustomPIN2}
@@ -501,22 +501,22 @@ public class TangemCard {
 
     public Boolean supportNDEF() {
         if (settingsMask == null) return null;
-        return (settingsMask.intValue() & SettingsMask.UseNDEF) != 0;
+        return (settingsMask & SettingsMask.UseNDEF) != 0;
     }
 
     public Boolean supportOnlyOneCommandAtTime() {
         if (settingsMask == null) return null;
-        return supportNDEF() && ((settingsMask.intValue() & SettingsMask.UseOneCommandAtTime) != 0);
+        return supportNDEF() && ((settingsMask & SettingsMask.UseOneCommandAtTime) != 0);
     }
 
     public Boolean supportDynamicNDEF() {
         if (settingsMask == null) return null;
-        return supportNDEF() && ((settingsMask.intValue() & SettingsMask.UseDynamicNDEF) != 0);
+        return supportNDEF() && ((settingsMask & SettingsMask.UseDynamicNDEF) != 0);
     }
 
     public Boolean supportBlock() {
         if (settingsMask == null) return null;
-        return (settingsMask.intValue() & SettingsMask.UseBlock) != 0;
+        return (settingsMask & SettingsMask.UseBlock) != 0;
     }
 
     public int getMaxSignatures() {
@@ -541,7 +541,7 @@ public class TangemCard {
         return getFirmwareVersion().endsWith("d") || getFirmwareVersion().endsWith("SDK");
     }
 
-    public static String getFirmwareVersionNumber(String version) throws Exception {
+    private static String getFirmwareVersionNumber(String version) throws Exception {
         if (version == null || version.length() < 4) {
             throw new Exception("Firmware version has unsupported format!");
         }
@@ -554,7 +554,7 @@ public class TangemCard {
         }
     }
 
-    public static int[] getFirmwareVersionNumbers(String version) throws Exception {
+    private static int[] getFirmwareVersionNumbers(String version) throws Exception {
         String fwNumber = getFirmwareVersionNumber(version);
         String[] strNumbers = fwNumber.split("\\.");
 
@@ -650,12 +650,11 @@ public class TangemCard {
             return B;
         }
 
-        public void LoadFromBundle(Bundle B) {
+        public void loadFromBundle(Bundle B) {
             txID = B.getString("txID");
             Amount = B.getInt("Amount");
             Height = B.getInt("Height");
             Raw = B.getString("Raw");
-
         }
     }
 
@@ -871,11 +870,11 @@ public class TangemCard {
 
     public Bundle getAsBundle() {
         Bundle B = new Bundle();
-        SaveToBundle(B);
+        saveToBundle(B);
         return B;
     }
 
-    public void SaveToBundle(Bundle B) {
+    public void saveToBundle(Bundle B) {
         B.putString("UID", UID);
         B.putByteArray("CID", CID);
         B.putString("PIN", PIN);
@@ -1066,7 +1065,7 @@ public class TangemCard {
             Integer i = 0;
             while (BB.containsKey(i.toString())) {
                 UnspentTransaction t = new UnspentTransaction();
-                t.LoadFromBundle(BB.getBundle(i.toString()));
+                t.loadFromBundle(BB.getBundle(i.toString()));
                 unspentTransactions.add(t);
                 i++;
             }
