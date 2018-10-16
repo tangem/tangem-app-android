@@ -698,15 +698,16 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
-                rlProgressBar.post {
-                    rlProgressBar.visibility = View.GONE
+
+                rlProgressBar?.post {
+                    rlProgressBar?.visibility = View.GONE
                     this.cardProtocol = cardProtocol
                     if (!cardProtocol.card.isWalletPublicKeyValid) refresh()
                     else updateViews()
                 }
             } else {
                 // remove last UIDs because of error and no card read
-                rlProgressBar.post {
+                rlProgressBar?.post {
                     lastReadSuccess = false
                     if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported)
                         if (!NoExtendedLengthSupportDialog.allReadyShowed)
@@ -717,9 +718,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
         }
 
-        rlProgressBar.postDelayed({
+        rlProgressBar?.postDelayed({
             try {
-                rlProgressBar.visibility = View.GONE
+                rlProgressBar?.visibility = View.GONE
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -728,9 +729,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     override fun onReadCancel() {
         verifyCardTask = null
-        rlProgressBar.postDelayed({
+        rlProgressBar?.postDelayed({
             try {
-                rlProgressBar.visibility = View.GONE
+                rlProgressBar?.visibility = View.GONE
             } catch (e: Exception) {
                 e.printStackTrace()
             }
