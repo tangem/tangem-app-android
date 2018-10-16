@@ -43,8 +43,8 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
 
         MainActivity.commonInit(applicationContext)
 
-        card = TangemCard(intent.getStringExtra("UID"))
-        card!!.loadFromBundle(intent.extras!!.getBundle("Card"))
+        card = TangemCard(intent.getStringExtra(TangemCard.EXTRA_UID))
+        card!!.loadFromBundle(intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
 
         tvCardID.text = card!!.cidDescription
         progressBar.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
