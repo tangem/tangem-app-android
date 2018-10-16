@@ -24,8 +24,6 @@ import java.math.BigInteger
 class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     companion object {
-        const val EXTRA_UID: String = "UID"
-        const val EXTRA_CARD: String = "Card"
         const val EXTRA_TX: String = "TX"
     }
 
@@ -45,8 +43,8 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         nfcManager = NfcManager(this, this)
 
         val intent = intent
-        card = TangemCard(getIntent().getStringExtra(EXTRA_UID))
-        card!!.loadFromBundle(intent.extras!!.getBundle(EXTRA_CARD))
+        card = TangemCard(getIntent().getStringExtra(TangemCard.EXTRA_UID))
+        card!!.loadFromBundle(intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
         tx = intent.getStringExtra(EXTRA_TX)
 
         val engine = CoinEngineFactory.create(card!!.blockchain)
