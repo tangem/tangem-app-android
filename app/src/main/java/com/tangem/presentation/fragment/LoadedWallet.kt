@@ -24,6 +24,7 @@ import com.tangem.data.network.ServerApiHelper
 import com.tangem.data.network.ServerApiHelperElectrum
 import com.tangem.data.network.model.InfuraResponse
 import com.tangem.data.network.ElectrumRequest
+import com.tangem.data.network.model.CardVerifyAndGetInfo
 import com.tangem.data.nfc.VerifyCardTask
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.NfcManager
@@ -38,6 +39,7 @@ import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
 import org.json.JSONException
+import java.io.InputStream
 import java.math.BigInteger
 import java.util.*
 
@@ -286,59 +288,75 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
                 }
 
-                if (requestCounter == 0) updateViews()
+                if (requestCounter == 0)
+                    updateViews()
             }
 
             override fun onElectrumFail(method: String?) {
                 srl!!.isRefreshing = false
-//                Log.e(TAG, "FAIL $method")
             }
         }
 
         serverApiHelperElectrum.setElectrumRequestData(electrumBodyListener)
 
-        // request card verify listener
-        serverApiHelper.setCardVerifyAndGetInfoListener {
-            requestCounter--
-            if (requestCounter == 0) srl!!.isRefreshing = false
+        // request card verify and get info listener
+        val cardVerifyAndGetInfoListener: ServerApiHelper.CardVerifyAndGetInfoListener = object : ServerApiHelper.CardVerifyAndGetInfoListener {
+            override fun onSuccess(cardVerifyAndGetArtworkResponse: CardVerifyAndGetInfo.Response?) {
+                requestCounter--
+                if (requestCounter == 0) srl!!.isRefreshing = false
 
-            val result = it.results!![0]
-            if (result.error != null) {
-                card!!.isOnlineVerified = false
-                return@setCardVerifyAndGetInfoListener
-            }
-            card!!.isOnlineVerified = result.passed
-
-            if (requestCounter == 0) updateViews()
-
-            if (!result.passed) return@setCardVerifyAndGetInfoListener
-
-            if (localStorage.checkBatchInfoChanged(card!!, result)) {
-                Log.w(TAG, "Batch ${result.batch} info  changed to '$result'")
-                ivTangemCard.setImageBitmap(localStorage.getCardArtworkBitmap(card!!))
-                localStorage.applySubstitution(card!!)
-                if (card!!.blockchain == Blockchain.Token || card!!.blockchain == Blockchain.Ethereum) {
-                    card!!.setBlockchainIDFromCard(Blockchain.Ethereum.id)
+                val result = cardVerifyAndGetArtworkResponse?.results!![0]
+                if (result.error != null) {
+                    card!!.isOnlineVerified = false
+                    return
                 }
-                refresh()
-            }
-            if (result.artwork != null && localStorage.checkNeedUpdateArtwork(result.artwork)) {
-                Log.w(TAG, "Artwork '${result.artwork!!.id}' updated, need download")
-                serverApiHelper.requestArtwork(result.artwork!!.id, result.artwork!!.getUpdateDate(), card!!)
-                updateViews()
-            }
-//            Log.i(TAG, "setCardVerify " + it.results!![0].passed)
-        }
+                card!!.isOnlineVerified = result.passed
 
-        serverApiHelper.setArtworkListener { artworkId, inputStream, updateDate ->
-            Log.w(TAG, "Artwork '$artworkId' downloaded")
-            localStorage.updateArtwork(artworkId, inputStream, updateDate)
-            ivTangemCard.setImageBitmap(localStorage.getCardArtworkBitmap(card!!))
+                if (requestCounter == 0) updateViews()
+
+                if (!result.passed) return
+
+                if (localStorage.checkBatchInfoChanged(card!!, result)) {
+                    Log.w(TAG, "Batch ${result.batch} info  changed to '$result'")
+                    ivTangemCard.setImageBitmap(localStorage.getCardArtworkBitmap(card!!))
+                    localStorage.applySubstitution(card!!)
+                    if (card!!.blockchain == Blockchain.Token || card!!.blockchain == Blockchain.Ethereum) {
+                        card!!.setBlockchainIDFromCard(Blockchain.Ethereum.id)
+                    }
+                    refresh()
+                }
+                if (result.artwork != null && localStorage.checkNeedUpdateArtwork(result.artwork)) {
+                    Log.w(TAG, "Artwork '${result.artwork!!.id}' updated, need download")
+                    serverApiHelper.requestArtwork(result.artwork!!.id, result.artwork!!.getUpdateDate(), card!!)
+                    updateViews()
+                }
+//            Log.i(TAG, "setCardVerify " + it.results!![0].passed)
+            }
+
+            override fun onFail(message: String?) {
+                requestCounter--
+                if (requestCounter == 0)
+                    srl!!.isRefreshing = false
+            }
         }
+        serverApiHelper.setCardVerifyAndGetInfoListener(cardVerifyAndGetInfoListener)
+
+        // request artwork listener
+        val artworkListener: ServerApiHelper.ArtworkListener = object : ServerApiHelper.ArtworkListener {
+            override fun onSuccess(artworkId: String?, inputStream: InputStream?, updateDate: Date?) {
+                localStorage.updateArtwork(artworkId!!, inputStream!!, updateDate!!)
+                ivTangemCard.setImageBitmap(localStorage.getCardArtworkBitmap(card!!))
+                Log.w(TAG, "Artwork '$artworkId' downloaded")
+            }
+
+            override fun onFail(message: String?) {
+
+            }
+        }
+        serverApiHelper.setArtworkListener(artworkListener)
 
         // request rate info listener
         serverApiHelper.setRateInfoData {
-
             requestCounter--
             val rate = it.priceUsd.toFloat()
             card!!.rate = rate
@@ -348,7 +366,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 srl!!.isRefreshing = false
                 updateViews()
             }
-//            Log.i(TAG, "setRateInfoData $rate")
         }
 
         // request eth get balance, eth get transaction count, eth call, eth sendRawTransaction listener
@@ -469,7 +486,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 }
             }
         }
-
         serverApiHelper.setInfuraResponse(infuraBodyListener)
     }
 
