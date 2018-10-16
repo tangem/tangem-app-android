@@ -147,12 +147,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         // set listeners
         fab.setOnClickListener { showMenu(it) }
 
-//        if (BuildConfig.DEBUG) {
-//            fab.setOnLongClickListener {
-//                startActivity(Intent(this, SettingsDebugActivity::class.java))
-//                false
-//            }
-//        }
 
         val apiHelper = ServerApiHelper()
         apiHelper.setLastVersionListener { response ->
@@ -315,7 +309,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                     val cardInfo = Bundle()
                     cardInfo.putString("UID", cardProtocol.card.uid)
                     val bCard = Bundle()
-                    cardProtocol.card.SaveToBundle(bCard)
+                    cardProtocol.card.saveToBundle(bCard)
                     cardInfo.putBundle("Card", bCard)
 
                     val uid = cardInfo.getString("UID")
