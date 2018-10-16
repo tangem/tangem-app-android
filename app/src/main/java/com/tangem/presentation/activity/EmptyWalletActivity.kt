@@ -45,8 +45,8 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
         nfcManager = NfcManager(this, this)
 
-        card = TangemCard(intent.getStringExtra("UID"))
-        card!!.loadFromBundle(intent.extras!!.getBundle("Card"))
+        card = TangemCard(intent.getStringExtra(TangemCard.EXTRA_UID))
+        card!!.loadFromBundle(intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
 
         tvIssuer.text = card!!.issuerDescription
         tvBlockchain.text = card!!.blockchainName
