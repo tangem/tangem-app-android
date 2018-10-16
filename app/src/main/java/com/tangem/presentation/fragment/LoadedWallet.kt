@@ -13,11 +13,10 @@ import android.os.Bundle
 import android.preference.PreferenceManager
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
+import android.support.v7.view.ContextThemeWrapper
 import android.text.Html
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.Toast
 import com.google.zxing.WriterException
 import com.tangem.data.network.ServerApiHelper
@@ -32,6 +31,7 @@ import com.tangem.domain.wallet.*
 import com.tangem.presentation.activity.*
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.PINSwapWarningDialog
+import com.tangem.presentation.dialog.ShowQRCodeDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.util.Util
 import com.tangem.util.UtilHelper
@@ -135,9 +135,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         tvWallet.setOnClickListener { doShareWallet(false) }
         ivQR.setOnClickListener { doShareWallet(true) }
         btnLoad.setOnClickListener {
-            if (BuildConfig.DEBUG) {
-                val items = arrayOf<CharSequence>(getString(R.string.in_app), getString(R.string.via_cryptonit), getString(R.string.via_kraken))
-                val dialog = AlertDialog.Builder(activity).setTitle(getString(R.string.select_loading_method)).setItems(items
+            //if (BuildConfig.DEBUG) {
+            if (true) {
+                val items = arrayOf<CharSequence>(getString(R.string.in_app), getString(R.string.load_via_share_address), getString(R.string.load_via_qr))//, getString(R.string.via_cryptonit), getString(R.string.via_kraken))
+                val cw = android.view.ContextThemeWrapper(activity, R.style.AlertDialogTheme)
+                val dialog = AlertDialog.Builder(cw).setItems(items
                 ) { _, which ->
                     when (items[which]) {
                         getString(R.string.in_app) -> {
@@ -148,6 +150,12 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                             } catch (e: ActivityNotFoundException) {
                                 showSingleToast(R.string.no_compatible_wallet)
                             }
+                        }
+                        getString(R.string.load_via_share_address) -> {
+                            doShareWallet(true)
+                        }
+                        getString(R.string.load_via_qr) -> {
+                            ShowQRCodeDialog.show(activity, engine.getShareWalletUri(card).toString())
                         }
 //                        getString(R.string.via_cryptonit2) -> {
 //                            val intent = Intent(context, PrepareCryptonitOtherAPIWithdrawalActivity::class.java)
@@ -171,7 +179,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         }
                     }
                 }
-                dialog.show()
+                val dlg = dialog.show()
+                val wlp = dlg.window.attributes
+                wlp.gravity = Gravity.BOTTOM
+                dlg.window.attributes = wlp
             } else {
                 try {
                     val intent = Intent(Intent.ACTION_VIEW, CoinEngineFactory.create(card!!.blockchain)!!.getShareWalletUri(card))
@@ -996,14 +1007,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     var showTime: Date = Date()
 
     private fun showSingleToast(text: Int) {
-//        if (singleToast == null || !singleToast!!.view.isShown || showTime.time + 2000 < Date().time) {
-//            if (singleToast != null)
-//                singleToast!!.cancel()
-//            singleToast = Toast.makeText(context, text, Toast.LENGTH_LONG)
-//            singleToast!!.show()
-//            showTime = Date()
-//        }
-        singleToast = Toast.makeText(context, text, Toast.LENGTH_LONG)
+        if (singleToast == null || !singleToast!!.view.isShown || showTime.time + 2000 < Date().time) {
+            if (singleToast != null)
+                singleToast!!.cancel()
+            singleToast = Toast.makeText(context, text, Toast.LENGTH_LONG)
+            singleToast!!.show()
+            showTime = Date()
+        }
     }
 
 }
