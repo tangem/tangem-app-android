@@ -3,17 +3,13 @@ package com.tangem.domain.wallet;
 import android.os.Bundle;
 
 import com.google.common.base.Strings;
-import com.tangem.data.network.Kraken;
 import com.tangem.domain.cardReader.SettingsMask;
-import com.tangem.util.BTCUtils;
 import com.tangem.util.FormatUtil;
 import com.tangem.util.Util;
-import com.tangem.wallet.R;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -58,18 +54,22 @@ public class TangemCard {
         }
         return countConfirmedTX;
     }
+
     public void setConfirmedTXCount(BigInteger count) {
         countConfirmedTX = count;
     }
+
     public BigInteger getUnconfirmedTXCount() {
         if (countUnconfirmedTX == null) {
             countUnconfirmedTX = BigInteger.valueOf(0);
         }
         return countUnconfirmedTX;
     }
+
     public void setUnconfirmedTXCount(BigInteger count) {
         countUnconfirmedTX = count;
     }
+
     public float getRate() {
         return rate;
     }
@@ -107,17 +107,17 @@ public class TangemCard {
         setBlockchainName(newName);
     }
 
-    private String blochchainName = "";
+    private String blockchainName = "";
 
     public void setBlockchainName(String name) {
-        blochchainName = name;
+        blockchainName = name;
     }
 
 
     public String getBlockchainName() {
-        if (Strings.isNullOrEmpty(blochchainName))
+        if (Strings.isNullOrEmpty(blockchainName))
             return getBlockchain().getOfficialName();
-        return blochchainName;
+        return blockchainName;
     }
 
     public void setBlockchainIDFromCard(String blockchainID) {
@@ -285,11 +285,12 @@ public class TangemCard {
     public void clearInfo() {
         balanceConfirmed = null;
         balanceUnconfirmed = null;
-        mUnspentTransactions = null;
+        unspentTransactions = null;
         balanceDecimal = null;
         balanceDecimalAlter = null;
         setIsBalanceEqual(false);
-        if (tokenSymbol.length() > 1) blockchainID = Blockchain.Token.getID(); // Reset blockchain to Token from ETH for token cards with zero token balance on it
+        if (tokenSymbol.length() > 1)
+            blockchainID = Blockchain.Token.getID(); // Reset blockchain to Token from ETH for token cards with zero token balance on it
     }
 
     public Date getPersonalizationDateTime() {
@@ -658,11 +659,11 @@ public class TangemCard {
         }
     }
 
-    private List<UnspentTransaction> mUnspentTransactions = null;
+    private List<UnspentTransaction> unspentTransactions = null;
 
     public List<UnspentTransaction> getUnspentTransactions() {
-        if (mUnspentTransactions == null) mUnspentTransactions = new ArrayList<>();
-        return mUnspentTransactions;
+        if (unspentTransactions == null) unspentTransactions = new ArrayList<>();
+        return unspentTransactions;
     }
 
     public TangemCard(String UID) {
@@ -726,9 +727,9 @@ public class TangemCard {
             balance = BigDecimal.valueOf(balanceConfirmed + balanceUnconfirmed);
         } else if (this.getBlockchain() == Blockchain.Ethereum || this.getBlockchain() == Blockchain.EthereumTestNet || this.getBlockchain() == Blockchain.Token) {
             if (balanceDecimal != null) {
-                balance =  new BigDecimal(balanceDecimal); // Returns ETH / token balance
+                balance = new BigDecimal(balanceDecimal); // Returns ETH / token balance
             } else if (balanceDecimalAlter != null) {
-                balance =  new BigDecimal(balanceDecimalAlter); // or ETH balance if there're no tokens on Token card
+                balance = new BigDecimal(balanceDecimalAlter); // or ETH balance if there're no tokens on Token card
             }
         }
 
@@ -881,7 +882,7 @@ public class TangemCard {
         B.putString("PIN2", PIN2.name());
         B.putString("Status", status.name());
         B.putString("Blockchain", blockchainID);
-        B.putString("BlockchainName", blochchainName);
+        B.putString("BlockchainName", blockchainName);
         B.putInt("TokensDecimal", tokensDecimal);
         B.putString("TokenSymbol", tokenSymbol);
         B.putString("ContractAddress", contractAddress);
@@ -929,10 +930,10 @@ public class TangemCard {
             B.putBoolean("NeedWriteIssuerData", getNeedWriteIssuerData());
         }
 
-        if (mUnspentTransactions != null) {
+        if (unspentTransactions != null) {
             Bundle BB = new Bundle();
-            for (Integer i = 0; i < mUnspentTransactions.size(); i++) {
-                BB.putBundle(i.toString(), mUnspentTransactions.get(i).getAsBundle());
+            for (Integer i = 0; i < unspentTransactions.size(); i++) {
+                BB.putBundle(i.toString(), unspentTransactions.get(i).getAsBundle());
             }
             B.putBundle("UnspentTransactions", BB);
         }
@@ -994,7 +995,7 @@ public class TangemCard {
         tokenSymbol = B.getString("TokenSymbol", "");
         contractAddress = B.getString("ContractAddress", "");
         if (B.containsKey("BlockchainName"))
-            blochchainName = B.getString("BlockchainName", "");
+            blockchainName = B.getString("BlockchainName", "");
         validationNodeDescription = B.getString("validationNodeDescription");
         if (B.containsKey("dtPersonalization")) {
             dtPersonalization = new Date(B.getLong("dtPersonalization"));
@@ -1021,7 +1022,8 @@ public class TangemCard {
         if (B.containsKey("FailedBalance"))
             failedBalanceRequestCounter = new AtomicInteger(B.getInt("FailedBalance"));
         if (B.containsKey("Issuer")) issuer = Issuer.FindIssuer(B.getString("Issuer"));
-        if (B.containsKey("IssuerPublicDataKey")) issuerPublicDataKey = B.getByteArray("IssuerPublicDataKey");
+        if (B.containsKey("IssuerPublicDataKey"))
+            issuerPublicDataKey = B.getByteArray("IssuerPublicDataKey");
 
         if (B.containsKey("FirmwareVersion")) firmwareVersion = B.getString("FirmwareVersion");
         if (B.containsKey("Batch")) batch = B.getString("Batch");
@@ -1059,13 +1061,13 @@ public class TangemCard {
         }
 
         if (B.containsKey("UnspentTransactions")) {
-            mUnspentTransactions = new ArrayList<>();
+            unspentTransactions = new ArrayList<>();
             Bundle BB = B.getBundle("UnspentTransactions");
             Integer i = 0;
             while (BB.containsKey(i.toString())) {
                 UnspentTransaction t = new UnspentTransaction();
                 t.LoadFromBundle(BB.getBundle(i.toString()));
-                mUnspentTransactions.add(t);
+                unspentTransactions.add(t);
                 i++;
             }
         }
