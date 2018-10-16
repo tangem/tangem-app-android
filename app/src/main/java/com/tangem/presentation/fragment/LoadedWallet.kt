@@ -10,20 +10,21 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
-import android.support.v7.view.ContextThemeWrapper
 import android.text.Html
 import android.util.Log
-import android.view.*
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import com.google.zxing.WriterException
+import com.tangem.data.network.ElectrumRequest
 import com.tangem.data.network.ServerApiHelper
 import com.tangem.data.network.ServerApiHelperElectrum
-import com.tangem.data.network.model.InfuraResponse
-import com.tangem.data.network.ElectrumRequest
 import com.tangem.data.network.model.CardVerifyAndGetInfo
+import com.tangem.data.network.model.InfuraResponse
 import com.tangem.data.nfc.VerifyCardTask
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.NfcManager
@@ -35,7 +36,6 @@ import com.tangem.presentation.dialog.ShowQRCodeDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.util.Util
 import com.tangem.util.UtilHelper
-import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
 import org.json.JSONException
@@ -72,7 +72,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private var newPIN = ""
     private var newPIN2 = ""
     private var cardProtocol: CardProtocol? = null
-    private var sp: SharedPreferences? = null
     private val inactiveColor: ColorStateList by lazy { resources.getColorStateList(R.color.btn_dark) }
     private val activeColor: ColorStateList by lazy { resources.getColorStateList(R.color.colorAccent) }
     private var requestCounter = 0
@@ -81,10 +80,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         nfcManager = NfcManager(activity, this)
-
-        sp = PreferenceManager.getDefaultSharedPreferences(activity)
 
         card = TangemCard(activity!!.intent.getStringExtra(TangemCard.EXTRA_UID))
         card!!.loadFromBundle(activity!!.intent.extras.getBundle(TangemCard.EXTRA_CARD))
