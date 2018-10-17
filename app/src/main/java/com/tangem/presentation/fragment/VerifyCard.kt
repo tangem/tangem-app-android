@@ -7,6 +7,7 @@ import android.nfc.Tag
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
+import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -287,7 +288,13 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
             tvIssuer.text = card!!.issuerDescription
             tvCardRegistredDate.text = card!!.personalizationDateTimeDescription
-            tvBlockchain.text = card!!.blockchainName
+            //tvBlockchain.text = card!!.blockchainName
+            if (card!!.tokenSymbol.length > 1) {
+                val html = Html.fromHtml(card!!.blockchainName)
+                tvBlockchain.text = html
+            } else
+                tvBlockchain.text = card!!.blockchainName
+
             tvValidationNode.text = card!!.validationNodeDescription
 
             ivBlockchain.setImageResource(card!!.blockchain.getLogoImageResource(card!!.blockchainID, card!!.tokenSymbol))
