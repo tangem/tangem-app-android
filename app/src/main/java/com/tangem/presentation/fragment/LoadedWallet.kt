@@ -38,6 +38,7 @@ import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
 import org.json.JSONException
+import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.*
 
@@ -110,12 +111,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         val engine = CoinEngineFactory.create(card!!.blockchain)
         val visibleFlag = engine?.inOutPutVisible() ?: true
 
-        try {
-            ivQR.setImageBitmap(UtilHelper.generateQrCode(engine.getShareWalletUri(card).toString()))
-        } catch (e: WriterException) {
-            e.printStackTrace()
-        }
-
         btnExtract.isEnabled = false
         btnExtract.backgroundTintList = inactiveColor
 
@@ -134,7 +129,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
         btnCopy.setOnClickListener { doShareWallet(false) }
         tvWallet.setOnClickListener { doShareWallet(false) }
-        ivQR.setOnClickListener { doShareWallet(true) }
         btnLoad.setOnClickListener {
             //if (BuildConfig.DEBUG) {
             if (true) {
@@ -842,9 +836,14 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             tvWallet.text = card!!.wallet
 
-            tvBlockchain.text = card!!.blockchainName
+//            tvBlockchain.text = card!!.blockchainName
+            if (card!!.tokenSymbol.length > 1) {
+                val html = Html.fromHtml(card!!.blockchainName)
+                tvBlockchain.text = html
+            } else
+                tvBlockchain.text = card!!.blockchainName
 
-            if (card!!.hasBalanceInfo() && (card!!.balance != 0L) && (card!!.balance != null)) {
+            if (card!!.hasBalanceInfo()) {
                 btnExtract.isEnabled = true
                 btnExtract.backgroundTintList = activeColor
             } else {
