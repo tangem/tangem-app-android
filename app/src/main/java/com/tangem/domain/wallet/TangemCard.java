@@ -103,8 +103,10 @@ public class TangemCard {
         if (Strings.isNullOrEmpty(token))
             return;
         String oldName = getBlockchain().getOfficialName();
-        String newName = String.format("%s (%s)", oldName, token);
+        //String newName = String.format("%s - %s ERC20 token", token, oldName);
+        String newName = token + " <br><small><small> " + oldName + " ERC20 token</small></small>";
         setBlockchainName(newName);
+
     }
 
     private String blochchainName = "";
