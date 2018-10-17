@@ -54,8 +54,8 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
         nfcManager = NfcManager(this, this)
 
-        card = TangemCard(intent.getStringExtra("UID"))
-        card!!.loadFromBundle(intent.extras!!.getBundle("Card"))
+        card = TangemCard(intent.getStringExtra(TangemCard.EXTRA_UID))
+        card!!.loadFromBundle(intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
 
         amountStr = intent.getStringExtra(EXTRA_AMOUNT)
         feeStr = intent.getStringExtra("Fee")
