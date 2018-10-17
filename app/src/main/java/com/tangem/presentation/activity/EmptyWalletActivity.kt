@@ -9,6 +9,7 @@ import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.text.Html
 import android.view.View
 import android.widget.Toast
 import com.tangem.data.nfc.VerifyCardTask
@@ -49,7 +50,13 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         card!!.loadFromBundle(intent.extras!!.getBundle("Card"))
 
         tvIssuer.text = card!!.issuerDescription
-        tvBlockchain.text = card!!.blockchainName
+        //tvBlockchain.text = card!!.blockchainName
+        if (card!!.tokenSymbol.length > 1) {
+            val html = Html.fromHtml(card!!.blockchainName)
+            tvBlockchain.text = html
+        } else
+            tvBlockchain.text = card!!.blockchainName
+
         tvCardID.text = card!!.cidDescription
         imgBlockchain.setImageResource(card!!.blockchain.getImageResource(this, card!!.tokenSymbol))
 
