@@ -48,8 +48,8 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
 
         nfcManager = NfcManager(this, this)
 
-        card = TangemCard(intent.getStringExtra("UID"))
-        card!!.loadFromBundle(intent.extras!!.getBundle("Card"))
+        card = TangemCard(intent.getStringExtra(TangemCard.EXTRA_UID))
+        card!!.loadFromBundle(intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
 
         newPIN = intent.getStringExtra("newPIN")
         newPIN2 = intent.getStringExtra("newPIN2")
