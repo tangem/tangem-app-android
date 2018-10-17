@@ -103,7 +103,6 @@ public class ServerApiHelper {
 
     public interface InfuraBodyListener {
         void onInfuraSuccess(String method, InfuraResponse infuraResponse);
-
         void onInfuraFail(String method, String message);
     }
 
@@ -168,7 +167,8 @@ public class ServerApiHelper {
     private CardVerifyAndGetInfoListener cardVerifyAndGetInfoListener;
 
     public interface CardVerifyAndGetInfoListener {
-        void onCardVerifyAndGetInfo(CardVerifyAndGetInfo.Response cardVerifyAndGetArtworkResponse);
+        void onSuccess(CardVerifyAndGetInfo.Response cardVerifyAndGetArtworkResponse);
+        void onFail(String message);
     }
 
     public void setCardVerifyAndGetInfoListener(CardVerifyAndGetInfoListener listener) {
@@ -189,14 +189,17 @@ public class ServerApiHelper {
             public void onResponse(@NonNull Call<CardVerifyAndGetInfo.Response> call, @NonNull Response<CardVerifyAndGetInfo.Response> response) {
                 if (response.code() == 200) {
                     CardVerifyAndGetInfo.Response cardVerifyAndGetArtworkResponse = response.body();
-                    cardVerifyAndGetInfoListener.onCardVerifyAndGetInfo(cardVerifyAndGetArtworkResponse);
+                    cardVerifyAndGetInfoListener.onSuccess(cardVerifyAndGetArtworkResponse);
                     Log.i(TAG, "cardVerifyAndGeInfo onResponse " + response.code());
-                } else
+                } else {
+                    cardVerifyAndGetInfoListener.onFail(String.valueOf(response.code()));
                     Log.e(TAG, "cardVerifyAndGetInfo onResponse " + response.code());
+                }
             }
 
             @Override
             public void onFailure(@NonNull Call<CardVerifyAndGetInfo.Response> call, @NonNull Throwable t) {
+                cardVerifyAndGetInfoListener.onFail(t.getMessage());
                 Log.e(TAG, "cardVerifyAndGetInfo onFailure " + t.getMessage());
             }
         });
@@ -209,7 +212,8 @@ public class ServerApiHelper {
     private ArtworkListener artworkListener;
 
     public interface ArtworkListener {
-        void onArtwork(String artworkId, InputStream inputStream, Date updateDate);
+        void onSuccess(String artworkId, InputStream inputStream, Date updateDate);
+        void onFail(String message);
     }
 
     public void setArtworkListener(ArtworkListener listener) {
@@ -228,7 +232,7 @@ public class ServerApiHelper {
                     try {
                         ResponseBody body = response.body();
                         if (body != null) {
-                            artworkListener.onArtwork(artworkId, body.byteStream(), updateDate);
+                            artworkListener.onSuccess(artworkId, body.byteStream(), updateDate);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -238,6 +242,7 @@ public class ServerApiHelper {
 
             @Override
             public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                artworkListener.onFail(t.getMessage());
                 Log.e(TAG, "getArtwork onFailure " + t.getMessage());
             }
         });
