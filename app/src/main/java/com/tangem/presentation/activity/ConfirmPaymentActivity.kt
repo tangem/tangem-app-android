@@ -40,26 +40,22 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     private var serverApiHelper: ServerApiHelper = ServerApiHelper()
     private var serverApiHelperElectrum: ServerApiHelperElectrum = ServerApiHelperElectrum()
 
-    var card: TangemCard? = null
-    var feeRequestSuccess = false
-    var balanceRequestSuccess = false
-    var etAmount: EditText? = null
-    var etFee: EditText? = null
-    var rgFee: RadioGroup? = null
-    var progressBar: ProgressBar? = null
-    var btnSend: Button? = null
-
-    var minFee: String? = null
-    var maxFee: String? = null
-    var normalFee: String? = null
-
+    private var card: TangemCard? = null
+    private var feeRequestSuccess = false
+    private var balanceRequestSuccess = false
+    private var etAmount: EditText? = null
+    private var etFee: EditText? = null
+    private var rgFee: RadioGroup? = null
+    private var progressBar: ProgressBar? = null
+    private var btnSend: Button? = null
+    private var minFee: String? = null
+    private var maxFee: String? = null
+    private var normalFee: String? = null
     private var isIncludeFee: Boolean = true
-    var minFeeInInternalUnits: Long? = 0L
+    private var minFeeInInternalUnits: Long? = 0L
     private var requestPIN2Count = 0
-    var nodeCheck = false
-    var dtVerified: Date? = null
-
-
+    private var nodeCheck = false
+    private var dtVerified: Date? = null
     private var calcSize: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -175,7 +171,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             calendar.add(Calendar.MINUTE, -1)
 
             if (dtVerified == null || dtVerified!!.before(calendar.time)) {
-                finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.the_obtained_data_is_outdated_try_again))
+                finishWithError(Activity.RESULT_CANCELED, getString(R.string.the_obtained_data_is_outdated_try_again))
                 return@setOnClickListener
             }
 
@@ -190,20 +186,20 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             val txAmount = etAmount!!.text.toString()
 
             if (!engineCoin.hasBalanceInfo(card)) {
-                finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
+                finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
                 return@setOnClickListener
 
             } else if (!engineCoin.isBalanceNotZero(card)) {
-                finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.the_wallet_is_empty))
+                finishWithError(Activity.RESULT_CANCELED, getString(R.string.the_wallet_is_empty))
                 return@setOnClickListener
 
             } else if (!engineCoin.checkUnspentTransaction(card)) {
-                finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.please_wait_for_confirmation_of_incoming_transaction))
+                finishWithError(Activity.RESULT_CANCELED, getString(R.string.please_wait_for_confirmation_of_incoming_transaction))
                 return@setOnClickListener
             }
 
             if (!engineCoin.checkAmountValue(card, txAmount, txFee, minFeeInInternalUnits, isIncludeFee)) {
-                finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.not_enough_funds_on_your_card))
+                finishWithError(Activity.RESULT_CANCELED, getString(R.string.not_enough_funds_on_your_card))
                 return@setOnClickListener
             }
 
@@ -235,7 +231,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         }
                     } catch (e: JSONException) {
                         e.printStackTrace()
-                        finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
+                        finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
                     }
                 }
             }
@@ -255,13 +251,13 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
             if (fee == BigDecimal.ZERO) {
                 progressBar!!.visibility = View.INVISIBLE
-                finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_calculate_fee_wrong_data_received_from_node))
+                finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_calculate_fee_wrong_data_received_from_node))
             }
 
             if (calcSize.toLong() != 0L) {
                 fee = fee.multiply(BigDecimal(calcSize.toLong())).divide(BigDecimal(1024)) // per Kb -> per byte
             } else {
-                finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_calculate_fee_tx_length_unknown))
+                finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_calculate_fee_tx_length_unknown))
             }
 
             progressBar!!.visibility = View.INVISIBLE
@@ -303,7 +299,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                     ServerApiHelper.INFURA_ETH_GAS_PRICE -> {
                         var gasPrice = infuraResponse.result
                         gasPrice = gasPrice.substring(2)
-                        // Rounding gas price to integer gwei
+                        // rounding gas price to integer gwei
                         val l = BigInteger(gasPrice, 16).divide(BigInteger.valueOf(1000000000L)).multiply(BigInteger.valueOf(1000000000L))
 
                         val m = if (card!!.blockchain == Blockchain.Token) BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
@@ -322,11 +318,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         dtVerified = Date()
                         minFeeInInternalUnits = card!!.internalUnitsFromString(normalFeeInGwei)
 
-                        Log.i("eth_gas_price", gasPrice)
-                    }
-
-                    else -> {
-
+//                        Log.i("eth_gas_price", gasPrice)
                     }
                 }
             }
@@ -334,33 +326,13 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             override fun onInfuraFail(method: String, message: String) {
                 when (method) {
                     ServerApiHelper.INFURA_ETH_GAS_PRICE -> {
-                        finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
-                    }
-
-                    else -> {
-
+                        finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
                     }
                 }
             }
         }
 
         serverApiHelper.setInfuraResponse(infuraBodyListener)
-    }
-
-    private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
-        if (UtilHelper.isOnline(this)) {
-            serverApiHelperElectrum.electrumRequestData(card, electrumRequest)
-        } else {
-            Toast.makeText(this, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun requestInfura(method: String) {
-        if (UtilHelper.isOnline(this)) {
-            serverApiHelper.infura(method, 67, card!!.wallet, "", "")
-        } else {
-            Toast.makeText(this, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-        }
     }
 
     public override fun onResume() {
@@ -427,16 +399,8 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         return super.onKeyDown(keyCode, event)
     }
 
-    fun finishActivityWithError(errorCode: Int, message: String) {
-        val intent = Intent()
-        intent.putExtra("message", message)
-        setResult(errorCode, intent)
-        finish()
-    }
-
     override fun onTagDiscovered(tag: Tag) {
         try {
-//            Log.w(getClass().getName(), "Ignore discovered tag!");
             nfcManager!!.ignoreTag(tag)
         } catch (e: IOException) {
             e.printStackTrace()
@@ -461,7 +425,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             fullAmount += unspentOutputs[i].value
         }
 
-        // Get first unspent
+        // get first unspent
         val outPut = unspentOutputs[0]
         val outPutIndex = outPut.outputIndex
 
@@ -470,7 +434,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         val fees = FormatUtil.ConvertStringToLong(outFee)
         var amount = FormatUtil.ConvertStringToLong(outAmount)
-        amount = amount - fees
+        amount -= fees
 
         val change = fullAmount - fees - amount
 
@@ -482,17 +446,14 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         for (i in unspentOutputs.indices) {
             val newTX = BTCUtils.buildTXForSign(myAddress, outputAddress, myAddress, unspentOutputs, i, amount, change)
-
             val hashData = Util.calculateSHA256(newTX)
             val doubleHashData = Util.calculateSHA256(hashData)
-
-            //            Log.e("TX_BODY_1", BTCUtils.toHex(newTX));
-            //            Log.e("TX_HASH_1", BTCUtils.toHex(hashData));
-            //            Log.e("TX_HASH_2", BTCUtils.toHex(doubleHashData));
+//            Log.e("TX_BODY_1", BTCUtils.toHex(newTX))
+//            Log.e("TX_HASH_1", BTCUtils.toHex(hashData))
+//            Log.e("TX_HASH_2", BTCUtils.toHex(doubleHashData))
 
             unspentOutputs[i].bodyDoubleHash = doubleHashData
             unspentOutputs[i].bodyHash = hashData
-
             hashesForSign[i] = doubleHashData
         }
 
@@ -510,26 +471,47 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         return realTX.size
     }
 
-    fun doSetFee(checkedRadioButtonId: Int) {
+    private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
+        if (UtilHelper.isOnline(this)) {
+            serverApiHelperElectrum.electrumRequestData(card, electrumRequest)
+        } else
+            finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+    }
+
+    private fun requestInfura(method: String) {
+        if (UtilHelper.isOnline(this)) {
+            serverApiHelper.infura(method, 67, card!!.wallet, "", "")
+        } else
+            finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+    }
+
+    private fun doSetFee(checkedRadioButtonId: Int) {
         var txtFee = ""
         when (checkedRadioButtonId) {
             R.id.rbMinimalFee ->
                 if (minFee != null)
                     txtFee = minFee.toString()
                 else
-                    finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
             R.id.rbNormalFee ->
                 if (normalFee != null)
                     txtFee = normalFee.toString()
                 else
-                    finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
             R.id.rbMaximumFee ->
                 if (maxFee != null)
                     txtFee = maxFee.toString()
                 else
-                    finishActivityWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
         }
         etFee!!.setText(txtFee.replace(',', '.'))
+    }
+
+    private fun finishWithError(errorCode: Int, message: String) {
+        val intent = Intent()
+        intent.putExtra("message", message)
+        setResult(errorCode, intent)
+        finish()
     }
 
 }
