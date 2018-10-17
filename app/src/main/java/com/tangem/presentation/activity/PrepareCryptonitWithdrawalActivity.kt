@@ -43,8 +43,8 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
 
         nfcManager = NfcManager(this, this)
 
-        card = TangemCard(intent.getStringExtra("UID"))
-        card!!.loadFromBundle(intent.extras!!.getBundle("Card"))
+        card = TangemCard(intent.getStringExtra(TangemCard.EXTRA_UID))
+        card!!.loadFromBundle(intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
 
         cryptonit = Cryptonit(this)
 
@@ -70,12 +70,12 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         tvFeeCurrency.text = tvCurrency.text
 
         etAmount.setText(engine.convertByteArrayToAmount(card!!, card!!.denomination))
-        etAmount.setOnEditorActionListener{lv,actionId,event->
+        etAmount.setOnEditorActionListener { lv, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 val imm = lv.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.hideSoftInputFromWindow(lv.windowToken, 0)
                 true
-            }else {
+            } else {
                 false
             }
         }
@@ -104,7 +104,7 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
                 val strFee: String = etFee.text.toString().replace(",", ".")
                 var dblAmount: Double = strAmount.toDouble()
                 var dblFee: Double = strFee.toDouble()
-                cryptonit!!.fee=strFee
+                cryptonit!!.fee = strFee
 
                 rlProgressBar.visibility = View.VISIBLE
                 tvProgressDescription.text = getString(R.string.cryptonit_request_withdrawal)
@@ -116,8 +116,8 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         }
 
         ivRefreshBalance.setOnClickListener {
-            cryptonit!!.username=etUsername.text.toString()
-            cryptonit!!.password=etPassword.text.toString()
+            cryptonit!!.username = etUsername.text.toString()
+            cryptonit!!.password = etPassword.text.toString()
             cryptonit!!.saveAccountInfo()
             doRequestBalance()
         }
@@ -137,11 +137,10 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         }
         cryptonit!!.setWithdrawalListener { response ->
             rlProgressBar.visibility = View.INVISIBLE
-            if (response.success != null && response.success!!){
-                Toast.makeText(this,"Withdrawal successful!", Toast.LENGTH_LONG).show();
+            if (response.success != null && response.success!!) {
+                Toast.makeText(this, "Withdrawal successful!", Toast.LENGTH_LONG).show();
                 finish()
-            }
-            else {
+            } else {
                 tvError.visibility = View.VISIBLE
                 tvError.text = response.errors.toString()
             }
