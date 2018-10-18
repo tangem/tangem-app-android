@@ -96,7 +96,7 @@ public class EthEngine extends CoinEngine {
         BigDecimal d = convertToEth(dec);
         String s = d.toString();
 
-        String pattern = "#0.000###############"; // If you like 4 zeros
+        String pattern = "#0.##################"; // If you like 4 zeros
         DecimalFormat myFormatter = new DecimalFormat(pattern);
         String output = myFormatter.format(d);
         return output;
