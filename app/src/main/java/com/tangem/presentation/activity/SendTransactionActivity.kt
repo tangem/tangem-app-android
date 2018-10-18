@@ -63,7 +63,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         // request electrum listener
         val electrumBodyListener: ServerApiHelperElectrum.ElectrumRequestDataListener = object : ServerApiHelperElectrum.ElectrumRequestDataListener {
-            override fun onElectrumSuccess(electrumRequest: ElectrumRequest?) {
+            override fun onSuccess(electrumRequest: ElectrumRequest?) {
                 if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
                     try {
                         var hashTX = electrumRequest.resultString
@@ -85,7 +85,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 }
             }
 
-            override fun onElectrumFail(message: String?) {
+            override fun onFail(message: String?) {
                 finishWithError(message!!)
             }
         }
@@ -94,7 +94,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         // request eth sendRawTransaction
         val infuraBodyListener: ServerApiHelper.InfuraBodyListener = object : ServerApiHelper.InfuraBodyListener {
-            override fun onInfuraSuccess(method: String, infuraResponse: InfuraResponse) {
+            override fun onSuccess(method: String, infuraResponse: InfuraResponse) {
                 when (method) {
                     ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION -> {
                         try {
@@ -124,7 +124,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 }
             }
 
-            override fun onInfuraFail(method: String, message: String) {
+            override fun onFail(method: String, message: String) {
                 when (method) {
                     ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION -> {
                         finishWithError(message)
