@@ -217,10 +217,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         // request electrum listener
         val electrumBodyListener: ServerApiHelperElectrum.ElectrumRequestDataListener = object : ServerApiHelperElectrum.ElectrumRequestDataListener {
-            override fun onElectrumSuccess(electrumRequest: ElectrumRequest?) {
-                requestCounter--
-                if (requestCounter == 0) srl?.isRefreshing = false
-
+            override fun onSuccess(electrumRequest: ElectrumRequest?) {
                 if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_GetBalance)) {
                     try {
                         val walletAddress = electrumRequest.params.getString(0)
@@ -287,93 +284,18 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
                 }
 
-                if (requestCounter == 0)
-                    updateViews()
+                counterMinus()
             }
 
-            override fun onElectrumFail(method: String?) {
-                requestCounter--
-                if (requestCounter == 0) {
-                    srl!!.isRefreshing = false
-                    updateViews()
-                }
+            override fun onFail(method: String?) {
+
             }
         }
-
         serverApiHelperElectrum.setElectrumRequestData(electrumBodyListener)
 
-        // request card verify and get info listener
-        val cardVerifyAndGetInfoListener: ServerApiHelper.CardVerifyAndGetInfoListener = object : ServerApiHelper.CardVerifyAndGetInfoListener {
-            override fun onSuccess(cardVerifyAndGetArtworkResponse: CardVerifyAndGetInfo.Response?) {
-                requestCounter--
-                if (requestCounter == 0) srl!!.isRefreshing = false
-
-                val result = cardVerifyAndGetArtworkResponse?.results!![0]
-                if (result.error != null) {
-                    card!!.isOnlineVerified = false
-                    return
-                }
-                card!!.isOnlineVerified = result.passed
-
-                if (requestCounter == 0) updateViews()
-
-                if (!result.passed) return
-
-                if (localStorage.checkBatchInfoChanged(card!!, result)) {
-                    Log.w(TAG, "Batch ${result.batch} info  changed to '$result'")
-                    ivTangemCard.setImageBitmap(localStorage.getCardArtworkBitmap(card!!))
-                    localStorage.applySubstitution(card!!)
-                    if (card!!.blockchain == Blockchain.Token || card!!.blockchain == Blockchain.Ethereum) {
-                        card!!.setBlockchainIDFromCard(Blockchain.Ethereum.id)
-                    }
-                    refresh()
-                }
-                if (result.artwork != null && localStorage.checkNeedUpdateArtwork(result.artwork)) {
-                    Log.w(TAG, "Artwork '${result.artwork!!.id}' updated, need download")
-                    serverApiHelper.requestArtwork(result.artwork!!.id, result.artwork!!.getUpdateDate(), card!!)
-                    updateViews()
-                }
-//            Log.i(TAG, "setCardVerify " + it.results!![0].passed)
-            }
-
-            override fun onFail(message: String?) {
-                requestCounter--
-                if (requestCounter == 0)
-                    srl!!.isRefreshing = false
-            }
-        }
-        serverApiHelper.setCardVerifyAndGetInfoListener(cardVerifyAndGetInfoListener)
-
-        // request artwork listener
-        val artworkListener: ServerApiHelper.ArtworkListener = object : ServerApiHelper.ArtworkListener {
-            override fun onSuccess(artworkId: String?, inputStream: InputStream?, updateDate: Date?) {
-                localStorage.updateArtwork(artworkId!!, inputStream!!, updateDate!!)
-                ivTangemCard.setImageBitmap(localStorage.getCardArtworkBitmap(card!!))
-                Log.w(TAG, "Artwork '$artworkId' downloaded")
-            }
-
-            override fun onFail(message: String?) {
-
-            }
-        }
-        serverApiHelper.setArtworkListener(artworkListener)
-
-        // request rate info listener
-        serverApiHelper.setRateInfoData {
-            requestCounter--
-            val rate = it.priceUsd.toFloat()
-            card!!.rate = rate
-            card!!.rateAlter = rate
-
-            if (requestCounter == 0) {
-                srl!!.isRefreshing = false
-                updateViews()
-            }
-        }
-
-        // request eth get balance, eth get transaction count, eth call, eth sendRawTransaction listener
+        // request infura listener
         val infuraBodyListener: ServerApiHelper.InfuraBodyListener = object : ServerApiHelper.InfuraBodyListener {
-            override fun onInfuraSuccess(method: String, infuraResponse: InfuraResponse) {
+            override fun onSuccess(method: String, infuraResponse: InfuraResponse) {
                 when (method) {
                     ServerApiHelper.INFURA_ETH_GET_BALANCE -> {
                         var balanceCap = infuraResponse.result
@@ -389,7 +311,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                             card!!.decimalBalance = l.toString(10)
                         card!!.decimalBalanceAlter = l.toString(10)
 
-                        Log.i("$TAG eth_get_balance", balanceCap)
+//                        Log.i("$TAG eth_get_balance", balanceCap)
                     }
 
                     ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT -> {
@@ -474,22 +396,79 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     }
                 }
 
-                requestCounter--
-                if (requestCounter == 0) {
-                    srl!!.isRefreshing = false
-                    updateViews()
-                }
+                counterMinus()
             }
 
-            override fun onInfuraFail(method: String, message: String) {
-                requestCounter--
-                if (requestCounter == 0) {
-                    srl!!.isRefreshing = false
-                    updateViews()
-                }
+            override fun onFail(method: String, message: String) {
+
             }
         }
         serverApiHelper.setInfuraResponse(infuraBodyListener)
+
+        // request card verify and get info listener
+        val cardVerifyAndGetInfoListener: ServerApiHelper.CardVerifyAndGetInfoListener = object : ServerApiHelper.CardVerifyAndGetInfoListener {
+            override fun onSuccess(cardVerifyAndGetArtworkResponse: CardVerifyAndGetInfo.Response?) {
+                val result = cardVerifyAndGetArtworkResponse?.results!![0]
+                if (result.error != null) {
+                    card!!.isOnlineVerified = false
+                    return
+                }
+                card!!.isOnlineVerified = result.passed
+
+                if (requestCounter == 0) updateViews()
+
+                if (!result.passed) return
+
+                if (localStorage.checkBatchInfoChanged(card!!, result)) {
+                    Log.w(TAG, "Batch ${result.batch} info  changed to '$result'")
+                    ivTangemCard.setImageBitmap(localStorage.getCardArtworkBitmap(card!!))
+                    localStorage.applySubstitution(card!!)
+                    if (card!!.blockchain == Blockchain.Token || card!!.blockchain == Blockchain.Ethereum) {
+                        card!!.setBlockchainIDFromCard(Blockchain.Ethereum.id)
+                    }
+                    refresh()
+                }
+                if (result.artwork != null && localStorage.checkNeedUpdateArtwork(result.artwork)) {
+                    Log.w(TAG, "Artwork '${result.artwork!!.id}' updated, need download")
+                    serverApiHelper.requestArtwork(result.artwork!!.id, result.artwork!!.getUpdateDate(), card!!)
+                    updateViews()
+                }
+//            Log.i(TAG, "setCardVerify " + it.results!![0].passed)
+            }
+
+            override fun onFail(message: String?) {
+
+            }
+        }
+        serverApiHelper.setCardVerifyAndGetInfoListener(cardVerifyAndGetInfoListener)
+
+        // request artwork listener
+        val artworkListener: ServerApiHelper.ArtworkListener = object : ServerApiHelper.ArtworkListener {
+            override fun onSuccess(artworkId: String?, inputStream: InputStream?, updateDate: Date?) {
+                localStorage.updateArtwork(artworkId!!, inputStream!!, updateDate!!)
+                ivTangemCard.setImageBitmap(localStorage.getCardArtworkBitmap(card!!))
+            }
+
+            override fun onFail(message: String?) {
+
+            }
+        }
+        serverApiHelper.setArtworkListener(artworkListener)
+
+        // request rate info listener
+        serverApiHelper.setRateInfoData {
+            val rate = it.priceUsd.toFloat()
+            card!!.rate = rate
+            card!!.rateAlter = rate
+        }
+    }
+
+    private fun counterMinus() {
+        requestCounter--
+        if (requestCounter == 0) {
+            srl!!.isRefreshing = false
+            updateViews()
+        }
     }
 
     override fun onResume() {
@@ -800,7 +779,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
 
             tvWallet.text = card!!.wallet
-
 //            tvBlockchain.text = card!!.blockchainName
 
             if (card!!.tokenSymbol.length > 1) {
@@ -885,7 +863,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
             srl!!.isRefreshing = false
         }
-
     }
 
     private fun requestInfura(method: String, contract: String) {
@@ -901,7 +878,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private fun requestVerifyAndGetInfo() {
         if (UtilHelper.isOnline(activity)) {
             if ((card!!.isOnlineVerified == null || !card!!.isOnlineVerified)) {
-//                requestCounter++
                 serverApiHelper.cardVerifyAndGetInfo(card)
             }
         } else {
@@ -912,7 +888,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     private fun requestRateInfo(cryptoId: String) {
         if (UtilHelper.isOnline(activity)) {
-            requestCounter++
             serverApiHelper.rateInfoData(cryptoId)
         } else {
             Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
