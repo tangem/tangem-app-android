@@ -14,6 +14,7 @@ import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.Toast
 import com.tangem.domain.cardReader.NfcManager
+import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.PINStorage
 import com.tangem.domain.wallet.TangemCard
@@ -296,6 +297,16 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 tvBlockchain.text = card!!.blockchainName
 
             tvValidationNode.text = card!!.validationNodeDescription
+
+            if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet  || card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
+                var gatheredUnspents = 0
+                for (i in 0 until card!!.unspentTransactions.size) {
+                    if (card!!.unspentTransactions[i].Raw.length > 1)  gatheredUnspents++
+                }
+                tvInputs.text = card!!.unspentTransactions.size.toString() + " unspents (" + gatheredUnspents.toString() + " recieved)"
+            }
+            else
+                tvInputs.text = ""
 
             ivBlockchain.setImageResource(card!!.blockchain.getLogoImageResource(card!!.blockchainID, card!!.tokenSymbol))
 
