@@ -138,13 +138,13 @@ public class WaitSecurityDelayDialog extends DialogFragment {
                 timerToShowDelayDialog = null;
             }
 
-            if (msec == 0) {
-                if (instance != null) {
-                    instance.dismiss();
-                    instance = null;
-                }
-                return;
-            }
+//            if (msec == 0) {
+//                if (instance != null) {
+//                    instance.dismiss();
+//                    instance = null;
+//                }
+//                return;
+//            }
             if (instance == null) {
                 if (msec > MinRemainingDelayToShowDialog) {
                     instance = new WaitSecurityDelayDialog();
