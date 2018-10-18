@@ -307,7 +307,7 @@ public class CardProtocol {
                         mNotifications.onReadAfterRequest();
                     }
                 } catch (IOException e) {
-                    if (e.getMessage().contains("length exceeds supported maximum") && mIsoDep.isExtendedLengthApduSupported()) {
+                    if (e.getMessage().contains("length")) {
                         throw new TangemException_ExtendedLengthNotSupported(e.getMessage());
                     }
                     throw e;
