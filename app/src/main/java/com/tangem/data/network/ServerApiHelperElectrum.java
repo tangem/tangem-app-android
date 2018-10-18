@@ -9,7 +9,6 @@ import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.TangemCard;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -18,7 +17,6 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -42,9 +40,8 @@ public class ServerApiHelperElectrum {
     private ElectrumRequestDataListener electrumRequestDataListener;
 
     public interface ElectrumRequestDataListener {
-        void onElectrumSuccess(ElectrumRequest electrumRequest);
-
-        void onElectrumFail(String method);
+        void onSuccess(ElectrumRequest electrumRequest);
+        void onFail(String method);
     }
 
     public void setElectrumRequestData(ElectrumRequestDataListener listener) {
@@ -75,16 +72,17 @@ public class ServerApiHelperElectrum {
             @Override
             public void onNext(ElectrumRequest v) {
                 if (electrumRequest.answerData != null) {
-                    electrumRequestDataListener.onElectrumSuccess(electrumRequest);
+                    electrumRequestDataListener.onSuccess(electrumRequest);
 //                    Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onNext != null");
                 } else {
-//                    electrumRequestDataListener.onElectrumFail(electrumRequest.getMethod());
+                    electrumRequestDataListener.onFail(electrumRequest.getMethod());
                     Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onNext == null");
                 }
             }
 
             @Override
             public void onError(Throwable e) {
+                electrumRequestDataListener.onFail(electrumRequest.getMethod());
                 Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onError " + e.getMessage());
             }
 
@@ -114,7 +112,7 @@ public class ServerApiHelperElectrum {
 
         try {
             Socket socket = App.getComponent().getSocket();
-            socket.connect(new InetSocketAddress(InetAddress.getByName(host), port));
+             socket.connect(new InetSocketAddress(InetAddress.getByName(host), port));
             Log.i(TAG, host + " " + port);
             try {
                 OutputStream os = socket.getOutputStream();
@@ -145,7 +143,7 @@ public class ServerApiHelperElectrum {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            electrumRequestDataListener.onElectrumFail(electrumRequest.getMethod());
+            electrumRequestDataListener.onFail(electrumRequest.getMethod());
             Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " Exception " + e.getMessage());
         }
         return result;
