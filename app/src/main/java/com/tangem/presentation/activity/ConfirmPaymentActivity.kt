@@ -214,7 +214,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         // request electrum listener
         val electrumBodyListener: ServerApiHelperElectrum.ElectrumRequestDataListener = object : ServerApiHelperElectrum.ElectrumRequestDataListener {
-            override fun onElectrumSuccess(electrumRequest: ElectrumRequest?) {
+            override fun onSuccess(electrumRequest: ElectrumRequest?) {
                 if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_GetBalance)) {
                     try {
                         etFee!!.setText("--")
@@ -236,7 +236,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 }
             }
 
-            override fun onElectrumFail(message: String?) {
+            override fun onFail(message: String?) {
 
             }
 
@@ -294,7 +294,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         // request eth gasPrice listener
         val infuraBodyListener: ServerApiHelper.InfuraBodyListener = object : ServerApiHelper.InfuraBodyListener {
-            override fun onInfuraSuccess(method: String, infuraResponse: InfuraResponse) {
+            override fun onSuccess(method: String, infuraResponse: InfuraResponse) {
                 when (method) {
                     ServerApiHelper.INFURA_ETH_GAS_PRICE -> {
                         var gasPrice = infuraResponse.result
@@ -323,7 +323,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 }
             }
 
-            override fun onInfuraFail(method: String, message: String) {
+            override fun onFail(method: String, message: String) {
                 when (method) {
                     ServerApiHelper.INFURA_ETH_GAS_PRICE -> {
                         finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
