@@ -102,8 +102,8 @@ public class ServerApiHelper {
     private InfuraBodyListener infuraBodyListener;
 
     public interface InfuraBodyListener {
-        void onInfuraSuccess(String method, InfuraResponse infuraResponse);
-        void onInfuraFail(String method, String message);
+        void onSuccess(String method, InfuraResponse infuraResponse);
+        void onFail(String method, String message);
     }
 
     public void setInfuraResponse(InfuraBodyListener listener) {
@@ -144,17 +144,17 @@ public class ServerApiHelper {
             @Override
             public void onResponse(@NonNull Call<InfuraResponse> call, @NonNull Response<InfuraResponse> response) {
                 if (response.code() == 200) {
-                    infuraBodyListener.onInfuraSuccess(method, response.body());
+                    infuraBodyListener.onSuccess(method, response.body());
                     Log.i(TAG, "infura " + method + " onResponse " + response.code());
                 } else {
-                    infuraBodyListener.onInfuraFail(method, String.valueOf(response.code()));
+                    infuraBodyListener.onFail(method, String.valueOf(response.code()));
                     Log.e(TAG, "infura " + method + " onResponse " + response.code());
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<InfuraResponse> call, @NonNull Throwable t) {
-                infuraBodyListener.onInfuraFail(method, String.valueOf(t.getMessage()));
+                infuraBodyListener.onFail(method, String.valueOf(t.getMessage()));
                 Log.e(TAG, "infura " + method + " onFailure " + t.getMessage());
             }
         });
@@ -255,7 +255,7 @@ public class ServerApiHelper {
     private RateInfoDataListener rateInfoDataListener;
 
     public interface RateInfoDataListener {
-        void onRateInfoDataData(RateInfoResponse rateInfoResponse);
+        void onSuccess(RateInfoResponse rateInfoResponse);
     }
 
     public void setRateInfoData(RateInfoDataListener listener) {
@@ -273,7 +273,7 @@ public class ServerApiHelper {
                             if (!rateInfoModelList.isEmpty()) {
                                 for (RateInfoResponse rateInfoMode : rateInfoModelList) {
                                     if (rateInfoMode.getId().equals(cryptoId)) {
-                                        rateInfoDataListener.onRateInfoDataData(rateInfoMode);
+                                        rateInfoDataListener.onSuccess(rateInfoMode);
                                         Log.i(TAG, "rateInfoData        " + cryptoId + " onResponse " + "200");
                                     }
                                 }
