@@ -15,6 +15,8 @@ import com.tangem.presentation.activity.SendTransactionActivity;
 import com.tangem.presentation.activity.SignPaymentActivity;
 import com.tangem.util.BTCUtils;
 
+import java.io.IOException;
+
 public class SignPaymentTask extends Thread {
     public static final String TAG = SignPaymentTask.class.getSimpleName();
 
@@ -90,13 +92,16 @@ public class SignPaymentTask extends Thread {
                         mNotifications.onReadWait(mCard.getPauseBeforePIN2());
                     }
 
-                    byte[] tx;
-//                        try {
-                    tx = engine.sign(txFee, txAmount, txIncFee, txOutAddress, mCard, protocol);
-//                        }
-//                        finally {
-//                            mNotifications.onReadWait(0);
-//                        }
+                    byte[] tx = null;
+                    try {
+                        tx = engine.sign(txFee, txAmount, txIncFee, txOutAddress, mCard, protocol);
+                    }
+                    catch (IOException e) {
+                        e.printStackTrace();
+                        protocol.setError(e);
+                    } finally {
+                        mNotifications.onReadWait(0);
+                    }
 
                     if (tx != null) {
                         String txStr = BTCUtils.toHex(tx);
