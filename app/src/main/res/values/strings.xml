@@ -56,7 +56,8 @@
     <string name="got_it">Got it</string>
     <string name="warning">Warning</string>
     <string name="security_delay">Security delay</string>
-    <string name="the_nfc_adapter_length_apdu">The NFC adapter of the device does not support extended length APDU, it\'s possible that some functions will not work!</string>
+    <string name="the_nfc_adapter_length_apdu">Oops.. It seems your smartphone does not support such long NFC packets.</string>
+    <string name="the_nfc_adapter_length_apdu_advice">Try sending smaller amount or use a smartphone with full NFC support.</string>
     <string name="your_money_is_at_risk">Your money is at risk!</string>
     <string name="this_banknote_has_enforced_security_delay">This banknote has enforced security delay</string>
     <string name="please_hold_banknote">Please hold the banknote firmly\n until the operation is completed…</string>
