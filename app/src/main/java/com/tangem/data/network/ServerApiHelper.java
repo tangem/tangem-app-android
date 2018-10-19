@@ -37,7 +37,8 @@ public class ServerApiHelper {
     private EstimateFeeListener estimateFeeListener;
 
     public interface EstimateFeeListener {
-        void onInfuraEthGasPrice(int blockCount, String estimateFeeResponse);
+        void onSuccess(int blockCount, String estimateFeeResponse);
+        void onFail(String message);
     }
 
     public void setEstimateFee(EstimateFeeListener listener) {
@@ -69,14 +70,16 @@ public class ServerApiHelper {
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
                 if (response.code() == 200) {
-                    estimateFeeListener.onInfuraEthGasPrice(blockCount, response.body());
+                    estimateFeeListener.onSuccess(blockCount, response.body());
                     Log.i(TAG, "estimateFee         onResponse " + response.code() + "  " + response.body());
                 } else
-                    Log.e(TAG, "estimateFee         onResponse " + response.code());
+                    estimateFeeListener.onFail(response.body());
+                Log.e(TAG, "estimateFee         onResponse " + response.code());
             }
 
             @Override
             public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+                estimateFeeListener.onFail(t.getMessage());
                 Log.e(TAG, "estimateFee onFailure " + t.getMessage());
             }
         });
@@ -291,7 +294,7 @@ public class ServerApiHelper {
     private LastVersionListener lastVersionListener;
 
     public interface LastVersionListener {
-        void onLastVersion(String lastVersion);
+        void onSuccess(String lastVersion);
     }
 
     public void setLastVersionListener(LastVersionListener listener) {
@@ -310,7 +313,7 @@ public class ServerApiHelper {
                     String stringResponse;
                     try {
                         stringResponse = response.body() != null ? response.body().string() : null;
-                        lastVersionListener.onLastVersion(stringResponse);
+                        lastVersionListener.onSuccess(stringResponse);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
