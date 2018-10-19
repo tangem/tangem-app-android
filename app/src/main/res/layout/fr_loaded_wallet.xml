@@ -22,7 +22,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0">
 
-        <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_alignParentBottom="false"
@@ -268,8 +268,8 @@
             android:id="@+id/tvError"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="false"
             android:layout_below="@+id/tvMessage"
+            android:layout_alignParentBottom="false"
             android:background="@color/msg_err"
             android:elevation="3dp"
             android:fontFamily="@font/maax"
@@ -336,8 +336,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:paddingBottom="10dp"
         android:paddingTop="10dp"
+        android:paddingBottom="10dp"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <android.support.v7.widget.AppCompatButton
@@ -345,8 +345,8 @@
             style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="0dp"
             android:layout_height="34dp"
-            android:layout_marginBottom="5dp"
             android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
             android:layout_weight="1"
             android:backgroundTint="@color/white"
             android:drawableStart="@drawable/ic_settings_black_24dp"
@@ -362,8 +362,8 @@
             style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="0dp"
             android:layout_height="34dp"
-            android:layout_marginBottom="5dp"
             android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
             android:layout_weight="1"
             android:backgroundTint="@color/white"
             android:drawableStart="@drawable/ic_nfc_white_24dp"
