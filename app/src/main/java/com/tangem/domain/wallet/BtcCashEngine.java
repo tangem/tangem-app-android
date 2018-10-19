@@ -290,10 +290,10 @@ public class BtcCashEngine extends CoinEngine {
     }
 
     public static String getAmountEquivalentDescriptionBTC(Double amount, float rate) {
-        if (rate > 0) {
+        if ((rate > 0) && (amount > 0)) {
             return String.format("≈ USD %.2f", amount * rate);
         } else {
-            return "≈ USD  ---";
+            return "";
         }
     }
 
