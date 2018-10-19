@@ -105,7 +105,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="10dp"
+                        android:layout_marginBottom="5dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
@@ -121,6 +121,18 @@
                             tools:text="0.05 BTC" />
 
                     </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvBalanceEquivalent"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="5dp"
+                        android:fontFamily="@font/maax"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="5dp"
+                        android:textAlignment="center"
+                        android:textColor="@color/primary"
+                        android:textSize="@dimen/text_size_2_small" />
 
                     <TextView
                         android:id="@+id/tvBalanceLine1"
