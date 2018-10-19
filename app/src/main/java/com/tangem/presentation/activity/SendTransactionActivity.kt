@@ -48,18 +48,13 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         tx = intent.getStringExtra(EXTRA_TX)
 
         val engine = CoinEngineFactory.create(card!!.blockchain)
-        if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet || card!!.blockchain == Blockchain.Token) {
 
+        if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet || card!!.blockchain == Blockchain.Token)
             requestInfura(ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION, "")
-
-        } else if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
-
+        else if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet)
             requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
-
-        } else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
-
+        else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet)
             requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
-        }
 
         // request electrum listener
         val electrumBodyListener: ServerApiHelperElectrum.ElectrumRequestDataListener = object : ServerApiHelperElectrum.ElectrumRequestDataListener {
@@ -74,12 +69,10 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                             finishWithSuccess()
                         } catch (e: Exception) {
                             e.printStackTrace()
-                            finishWithError(hashTX)
                             requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
                         }
                     } catch (e: JSONException) {
                         e.printStackTrace()
-                        finishWithError(e.toString())
                         requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
                     }
                 }
@@ -89,10 +82,9 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 finishWithError(message!!)
             }
         }
-
         serverApiHelperElectrum.setElectrumRequestData(electrumBodyListener)
 
-        // request eth sendRawTransaction
+        // request infura listener
         val infuraBodyListener: ServerApiHelper.InfuraBodyListener = object : ServerApiHelper.InfuraBodyListener {
             override fun onSuccess(method: String, infuraResponse: InfuraResponse) {
                 when (method) {
@@ -103,7 +95,8 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                                 val tmp = infuraResponse.result
                                 hashTX = tmp
                             } catch (e: JSONException) {
-                                finishWithError(e.message!!)
+                                e.printStackTrace()
+                                requestInfura(ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION, "")
                                 return
                             }
 
@@ -118,7 +111,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                             finishWithSuccess()
                         } catch (e: Exception) {
                             e.printStackTrace()
-                            finishWithError(e.message!!)
+                            requestInfura(ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION, "")
                         }
                     }
                 }
@@ -132,7 +125,6 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 }
             }
         }
-
         serverApiHelper.setInfuraResponse(infuraBodyListener)
     }
 
