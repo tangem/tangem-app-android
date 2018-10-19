@@ -1,6 +1,7 @@
 package com.tangem.domain.wallet;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import com.google.common.base.Strings;
 import com.tangem.domain.cardReader.SettingsMask;
@@ -877,99 +878,103 @@ public class TangemCard {
     }
 
     public void saveToBundle(Bundle B) {
-        B.putString("UID", UID);
-        B.putByteArray("CID", CID);
-        B.putString("PIN", PIN);
-        B.putString("PIN2", PIN2.name());
-        B.putString("Status", status.name());
-        B.putString("Blockchain", blockchainID);
-        B.putString("BlockchainName", blockchainName);
-        B.putInt("TokensDecimal", tokensDecimal);
-        B.putString("TokenSymbol", tokenSymbol);
-        B.putString("ContractAddress", contractAddress);
-        B.putString("validationNodeDescription", validationNodeDescription);
-        if (dtPersonalization != null) B.putLong("dtPersonalization", dtPersonalization.getTime());
-        B.putInt("RemainingSignatures", remainingSignatures);
-        B.putInt("MaxSignatures", maxSignatures);
-        B.putInt("Health", health);
-        if (settingsMask != null) B.putInt("settingsMask", settingsMask);
-        B.putInt("pauseBeforePIN2", pauseBeforePIN2);
-        if (signingMethod != null) B.putString("signingMethod", signingMethod.name());
-        if (manufacturer != null) B.putString("Manufacturer", manufacturer.name());
-        if (encryptionMode != null) B.putString("EncryptionMode", encryptionMode.name());
-        if (issuer != null) B.putString("Issuer", issuer.getID());
-        if (issuerPublicDataKey != null) B.putByteArray("IssuerPublicDataKey", issuerPublicDataKey);
-        if (firmwareVersion != null) B.putString("FirmwareVersion", firmwareVersion);
-        if (balanceEqual != null) B.putBoolean("isBalanceEqual", balanceEqual);
-        if (batch != null) B.putString("Batch", batch);
-        B.putString("BalanceDecimal", balanceDecimal);
-        B.putString("BalanceDecimalAlter", balanceDecimalAlter);
-        B.putBoolean("ManufacturerConfirmed", manufacturerConfirmed);
-        B.putBoolean("CardPublicKeyValid", isCardPublicKeyValid());
-        B.putByteArray("CardPublicKey", getCardPublicKey());
+        try {
+            B.putString("UID", UID);
+            B.putByteArray("CID", CID);
+            B.putString("PIN", PIN);
+            B.putString("PIN2", PIN2.name());
+            B.putString("Status", status.name());
+            B.putString("Blockchain", blockchainID);
+            B.putString("BlockchainName", blockchainName);
+            B.putInt("TokensDecimal", tokensDecimal);
+            B.putString("TokenSymbol", tokenSymbol);
+            B.putString("ContractAddress", contractAddress);
+            B.putString("validationNodeDescription", validationNodeDescription);
+            if (dtPersonalization != null) B.putLong("dtPersonalization", dtPersonalization.getTime());
+            B.putInt("RemainingSignatures", remainingSignatures);
+            B.putInt("MaxSignatures", maxSignatures);
+            B.putInt("Health", health);
+            if (settingsMask != null) B.putInt("settingsMask", settingsMask);
+            B.putInt("pauseBeforePIN2", pauseBeforePIN2);
+            if (signingMethod != null) B.putString("signingMethod", signingMethod.name());
+            if (manufacturer != null) B.putString("Manufacturer", manufacturer.name());
+            if (encryptionMode != null) B.putString("EncryptionMode", encryptionMode.name());
+            if (issuer != null) B.putString("Issuer", issuer.getID());
+            if (issuerPublicDataKey != null) B.putByteArray("IssuerPublicDataKey", issuerPublicDataKey);
+            if (firmwareVersion != null) B.putString("FirmwareVersion", firmwareVersion);
+            if (balanceEqual != null) B.putBoolean("isBalanceEqual", balanceEqual);
+            if (batch != null) B.putString("Batch", batch);
+            B.putString("BalanceDecimal", balanceDecimal);
+            B.putString("BalanceDecimalAlter", balanceDecimalAlter);
+            B.putBoolean("ManufacturerConfirmed", manufacturerConfirmed);
+            B.putBoolean("CardPublicKeyValid", isCardPublicKeyValid());
+            B.putByteArray("CardPublicKey", getCardPublicKey());
 
-        if (failedBalanceRequestCounter != null)
-            B.putInt("FailedBalance", failedBalanceRequestCounter.get());
-        B.putInt("SignedHashes", getSignedHashes());
-        B.putString("Wallet", wallet);
-        B.putString("Error", error);
-        B.putBoolean("WalletPublicKeyValid", isWalletPublicKeyValid());
-        if (pbWalletKey != null)
-            B.putByteArray("PublicKey", pbWalletKey);
-        if (pbWalletKeyRar != null)
-            B.putByteArray("PublicKeyRar", pbWalletKeyRar);
-        if (balanceConfirmed != null) B.putLong("BalanceConfirmed", balanceConfirmed);
-        if (balanceUnconfirmed != null) B.putLong("BalanceUnconfirmed", balanceUnconfirmed);
+            if (failedBalanceRequestCounter != null)
+                B.putInt("FailedBalance", failedBalanceRequestCounter.get());
+            B.putInt("SignedHashes", getSignedHashes());
+            B.putString("Wallet", wallet);
+            B.putString("Error", error);
+            B.putBoolean("WalletPublicKeyValid", isWalletPublicKeyValid());
+            if (pbWalletKey != null)
+                B.putByteArray("PublicKey", pbWalletKey);
+            if (pbWalletKeyRar != null)
+                B.putByteArray("PublicKeyRar", pbWalletKeyRar);
+            if (balanceConfirmed != null) B.putLong("BalanceConfirmed", balanceConfirmed);
+            if (balanceUnconfirmed != null) B.putLong("BalanceUnconfirmed", balanceUnconfirmed);
 
-        if (getOfflineBalance() != null) B.putByteArray("OfflineBalance", getOfflineBalance());
+            if (getOfflineBalance() != null) B.putByteArray("OfflineBalance", getOfflineBalance());
 
-        if (getDenomination() != null) B.putByteArray("Denomination", getDenomination());
+            if (getDenomination() != null) B.putByteArray("Denomination", getDenomination());
 
-        if (getIssuerData() != null && getIssuerDataSignature() != null) {
-            B.putByteArray("IssuerData", getIssuerData());
-            B.putByteArray("IssuerDataSignature", getIssuerDataSignature());
-            B.putBoolean("NeedWriteIssuerData", getNeedWriteIssuerData());
-        }
-
-        if (unspentTransactions != null) {
-            Bundle BB = new Bundle();
-            for (Integer i = 0; i < unspentTransactions.size(); i++) {
-                BB.putBundle(i.toString(), unspentTransactions.get(i).getAsBundle());
+            if (getIssuerData() != null && getIssuerDataSignature() != null) {
+                B.putByteArray("IssuerData", getIssuerData());
+                B.putByteArray("IssuerDataSignature", getIssuerDataSignature());
+                B.putBoolean("NeedWriteIssuerData", getNeedWriteIssuerData());
             }
-            B.putBundle("UnspentTransactions", BB);
+
+            if (unspentTransactions != null) {
+                Bundle BB = new Bundle();
+                for (Integer i = 0; i < unspentTransactions.size(); i++) {
+                    BB.putBundle(i.toString(), unspentTransactions.get(i).getAsBundle());
+                }
+                B.putBundle("UnspentTransactions", BB);
+            }
+            B.putFloat("rate", rate);
+            B.putFloat("rateAlter", rateAlter);
+            B.putString("confirmTx", getConfirmedTXCount().toString(16));
+            B.putString("unconfirmTx", getUnconfirmedTXCount().toString(16));
+
+            if (codeConfirmed != null)
+                B.putBoolean("codeConfirmed", codeConfirmed);
+
+            if (codeConfirmed != null)
+                B.putBoolean("codeConfirmed", codeConfirmed);
+
+            if (onlineVerified != null)
+                B.putBoolean("onlineVerified", onlineVerified);
+
+            B.putBoolean("balanceReceived", balanceReceived);
+
+
+            if (onlineValidated != null)
+                B.putBoolean("onlineValidated", onlineValidated);
+
+
+            if (codeConfirmed != null)
+                B.putBoolean("codeConfirmed", codeConfirmed);
+
+            if (codeConfirmed != null)
+                B.putBoolean("codeConfirmed", codeConfirmed);
+
+            if (onlineVerified != null)
+                B.putBoolean("onlineVerified", onlineVerified);
+
+            if (onlineValidated != null)
+                B.putBoolean("onlineValidated", onlineValidated);
+        } catch (Exception e) {
+            Log.e("Can't save to bundle ", e.getMessage());
         }
-        B.putFloat("rate", rate);
-        B.putFloat("rateAlter", rateAlter);
-        B.putString("confirmTx", getConfirmedTXCount().toString(16));
-        B.putString("unconfirmTx", getUnconfirmedTXCount().toString(16));
-
-        if (codeConfirmed != null)
-            B.putBoolean("codeConfirmed", codeConfirmed);
-
-        if (codeConfirmed != null)
-            B.putBoolean("codeConfirmed", codeConfirmed);
-
-        if (onlineVerified != null)
-            B.putBoolean("onlineVerified", onlineVerified);
-
-        B.putBoolean("balanceReceived", balanceReceived);
-
-
-        if (onlineValidated != null)
-            B.putBoolean("onlineValidated", onlineValidated);
-
-
-        if (codeConfirmed != null)
-            B.putBoolean("codeConfirmed", codeConfirmed);
-
-        if (codeConfirmed != null)
-            B.putBoolean("codeConfirmed", codeConfirmed);
-
-        if (onlineVerified != null)
-            B.putBoolean("onlineVerified", onlineVerified);
-
-        if (onlineValidated != null)
-            B.putBoolean("onlineValidated", onlineValidated);
 
     }
 
