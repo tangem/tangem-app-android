@@ -776,6 +776,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 tvBalanceLine1.setTextColor(resources.getColor(R.color.primary))
                 tvBalanceLine1.text = getString(R.string.verifying_in_blockchain)
                 tvBalanceLine2.text = ""
+                tvBalance.text = ""
+                tvBalanceEquivalent.text = ""
             } else {
                 val validator = BalanceValidator()
                 validator.Check(card, false)
@@ -788,10 +790,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 if ((card!!.blockchain == Blockchain.Token) && (engine.getBalanceWithAlter(card) != null)) {
                     val html = Html.fromHtml(engine.getBalanceWithAlter(card))
                     tvBalance.text = html
-                } else
+                } else {
 //                    tvBalance.text = engine.getBalanceWithAlter(card)
                     tvBalance.text = engine.getBalance(card)
-
+                    tvBalanceEquivalent.text = engine.getBalanceEquivalent(card)
+                }
             } else {
                 val offlineAmount = engine.convertByteArrayToAmount(card, card!!.offlineBalance)
                 if (card!!.blockchain == Blockchain.Token) {
