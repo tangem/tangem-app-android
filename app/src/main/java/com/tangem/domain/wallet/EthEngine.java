@@ -112,7 +112,7 @@ public class EthEngine extends CoinEngine {
             exchangeCurs = exchangeCurs.setScale(2, RoundingMode.DOWN);
             return "≈ USD  " + exchangeCurs.toString();
         } else {
-            return "≈ USD  ---";
+            return "";
         }
     }
 
@@ -123,8 +123,9 @@ public class EthEngine extends CoinEngine {
         if (rate > 0) {
             return String.format("≈ USD %.2f", amount * rate);
         } else {
-            return "≈ USD  ---";
+            return "";
         }
+
     }
 
 
