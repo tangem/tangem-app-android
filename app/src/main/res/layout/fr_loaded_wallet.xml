@@ -295,13 +295,6 @@
 
     </RelativeLayout>
 
-    <View
-        android:id="@+id/vSplitLine2"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@android:color/darker_gray"
-        app:layout_constraintBottom_toTopOf="@+id/rlToolButtons" />
-
     <LinearLayout
         android:id="@+id/rlToolButtons"
         android:layout_width="match_parent"
