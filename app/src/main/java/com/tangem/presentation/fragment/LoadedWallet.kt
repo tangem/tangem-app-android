@@ -466,7 +466,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private fun counterMinus() {
         requestCounter--
         if (requestCounter == 0) {
-            srl!!.isRefreshing = false
+            if (srl != null) srl!!.isRefreshing = false
             updateViews()
         }
     }
