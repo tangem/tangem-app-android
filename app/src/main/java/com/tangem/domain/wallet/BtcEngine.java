@@ -29,24 +29,35 @@ public class BtcEngine extends CoinEngine {
 
     private static String[] getBitcoinServiceHosts() {
         return new String[]{
-                BitcoinNode.n13.getHost(),
-                BitcoinNode.n14.getHost(),
-                BitcoinNode.n15.getHost(),
-                BitcoinNode.n16.getHost(),
-//                BitcoinNode.n17.getHost(),
-//                BitcoinNode.n18.getHost(),
+                BitcoinNode.n1.getHost(),
+                BitcoinNode.n2.getHost(),
+                BitcoinNode.n3.getHost(),
+                BitcoinNode.n4.getHost(),
+                BitcoinNode.n5.getHost(),
+                BitcoinNode.n6.getHost(),
+                BitcoinNode.n7.getHost(),
+                BitcoinNode.n8.getHost(),
+                BitcoinNode.n9.getHost(),
+                BitcoinNode.n10.getHost(),
+                BitcoinNode.n11.getHost(),
+                BitcoinNode.n12.getHost(),
         };
     }
 
     private static Integer[] getBitcoinServicePorts() {
         return new Integer[]{
-                BitcoinNode.n13.getPort(),
-                BitcoinNode.n14.getPort(),
-                BitcoinNode.n15.getPort(),
-                BitcoinNode.n16.getPort(),
-//                BitcoinNode.n17.getPort(),
-//                BitcoinNode.n18.getPort(),
-
+                BitcoinNode.n1.getPort(),
+                BitcoinNode.n2.getPort(),
+                BitcoinNode.n3.getPort(),
+                BitcoinNode.n4.getPort(),
+                BitcoinNode.n5.getPort(),
+                BitcoinNode.n6.getPort(),
+                BitcoinNode.n7.getPort(),
+                BitcoinNode.n8.getPort(),
+                BitcoinNode.n9.getPort(),
+                BitcoinNode.n10.getPort(),
+                BitcoinNode.n11.getPort(),
+                BitcoinNode.n12.getPort(),
         };
     }
 
