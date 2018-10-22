@@ -579,10 +579,11 @@
             android:id="@+id/imgPIN2orSecurityDelay"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentEnd="true"
             android:layout_alignParentStart="false"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
             android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
             android:src="@drawable/unlock_pin2" />
 
         <ImageView
