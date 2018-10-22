@@ -166,4 +166,7 @@ enum class NFCLocation(val codename: String, val fullName: String, val orientati
     model163("polaris", "Xiaomi Mi MIX 2S", 0, 45, 20, 0),
     model164("scorpio", "Xiaomi Mi Note 2", 0, 50, 20, 0),
     model165("jason", "Xiaomi Mi Note 3", 0, 50, 20, 0),
+	model166("htc_ocluhljapan", "HTC U11 Life", 1, 50, 25, 0),
+	model167("PL2_sprout", "Nokia 6.1", 0, 50, 0, 0),
+	model168("a5y17lte", "Samsung Galaxy A5 (2017)", 1, 65, 45, 0)
 }
