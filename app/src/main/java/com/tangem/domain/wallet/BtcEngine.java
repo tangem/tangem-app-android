@@ -110,6 +110,7 @@ public class BtcEngine extends CoinEngine {
     }
 
     public boolean isBalanceNotZero(TangemCard card) {
+        if (card.getBalance() == null) return false;
         return card.getBalance() > 0;
     }
 
