@@ -17,6 +17,7 @@ import com.tangem.data.nfc.SignPaymentTask
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.TangemCard
+import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.util.Util
@@ -36,7 +37,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
     }
 
     private var nfcManager: NfcManager? = null
-    private var card: TangemCard? = null
+    private lateinit var ctx: TangemContext
 
     private var signPaymentTask: SignPaymentTask? = null
 
@@ -56,15 +57,14 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
         nfcManager = NfcManager(this, this)
 
-        card = TangemCard(intent.getStringExtra(TangemCard.EXTRA_UID))
-        card!!.loadFromBundle(intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
+        ctx=TangemContext.loadFromBundle(this, intent.extras)
 
         amountStr = intent.getStringExtra(EXTRA_AMOUNT)
         feeStr = intent.getStringExtra("Fee")
         isIncludeFee = intent.getBooleanExtra("IncFee", true)
         outAddressStr = intent.getStringExtra("Wallet")
 
-        tvCardID.text = card!!.cidDescription
+        tvCardID.text = ctx.card!!.cidDescription
 
         progressBar = findViewById(R.id.progressBar)
         progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
@@ -121,13 +121,13 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
             val sUID = Util.byteArrayToHexString(uid)
 //            Log.v(TAG, "UID: $sUID")
 
-            if (sUID == card!!.uid) {
+            if (sUID == ctx.card!!.uid) {
                 if (lastReadSuccess) {
-                    isoDep.timeout = card!!.pauseBeforePIN2 + 5000
+                    isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 5000
                 } else {
-                    isoDep.timeout = card!!.pauseBeforePIN2 + 65000
+                    isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 65000
                 }
-                signPaymentTask = SignPaymentTask(this, card, nfcManager, isoDep, this, amountStr, feeStr, isIncludeFee, outAddressStr)
+                signPaymentTask = SignPaymentTask(this, ctx, nfcManager, isoDep, this, amountStr, feeStr, isIncludeFee, outAddressStr)
                 signPaymentTask!!.start()
             } else {
 //                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card!!.uid + ")")
