@@ -9,7 +9,7 @@ import android.util.Log;
 import com.tangem.domain.wallet.Base58;
 import com.tangem.domain.wallet.BitcoinException;
 import com.tangem.domain.wallet.BitcoinOutputStream;
-import com.tangem.domain.wallet.TangemCard;
+import com.tangem.domain.wallet.BtcData;
 import com.tangem.domain.wallet.Transaction;
 import com.tangem.domain.wallet.UnspentOutputInfo;
 
@@ -325,10 +325,10 @@ public final class BTCUtils {
         }
         return false;
     }
-    public static ArrayList<UnspentOutputInfo> getOutputs(List<TangemCard.UnspentTransaction> rawTxList, byte[] outputScriptWeAreAbleToSpend) throws BitcoinException {
+    public static ArrayList<UnspentOutputInfo> getOutputs(List<BtcData.UnspentTransaction> rawTxList, byte[] outputScriptWeAreAbleToSpend) throws BitcoinException {
         ArrayList<UnspentOutputInfo> unspentOutputs = new ArrayList<>();
 
-        for(TangemCard.UnspentTransaction current: rawTxList)
+        for(BtcData.UnspentTransaction current: rawTxList)
         {
             byte[] rawTxByte = BTCUtils.fromHex(current.Raw);
             if (rawTxByte == null || current.Raw.isEmpty())
