@@ -46,7 +46,7 @@ public class ServerApiHelper {
     }
 
     public void estimateFee(int blockCount) {
-        EstimatefeeApi estimatefeeApi = App.getComponent().getRetrofitEstimatefee().create(EstimatefeeApi.class);
+        EstimatefeeApi estimatefeeApi = App.getNetworkComponent().getRetrofitEstimatefee().create(EstimatefeeApi.class);
 
         Call<String> call;
         switch (blockCount) {
@@ -114,7 +114,7 @@ public class ServerApiHelper {
     }
 
     public void infura(String method, int id, String wallet, String contract, String tx) {
-        InfuraApi infuraApi = App.getComponent().getRetrofitInfura().create(InfuraApi.class);
+        InfuraApi infuraApi = App.getNetworkComponent().getRetrofitInfura().create(InfuraApi.class);
 
         InfuraBody infuraBody;
         switch (method) {
@@ -179,7 +179,7 @@ public class ServerApiHelper {
     }
 
     public void cardVerifyAndGetInfo(TangemCard card) {
-        TangemApi tangemApi = App.getComponent().getRetrofitTangem().create(TangemApi.class);
+        TangemApi tangemApi = App.getNetworkComponent().getRetrofitTangem().create(TangemApi.class);
 
         List<CardVerifyAndGetInfo.Request.Item> requests = new ArrayList<>();
         requests.add(new CardVerifyAndGetInfo.Request.Item(Util.bytesToHex(card.getCID()), Util.bytesToHex(card.getCardPublicKey())));
@@ -224,7 +224,7 @@ public class ServerApiHelper {
     }
 
     public void requestArtwork(String artworkId, Date updateDate, TangemCard card) {
-        TangemApi tangemApi = App.getComponent().getRetrofitTangem().create(TangemApi.class);
+        TangemApi tangemApi = App.getNetworkComponent().getRetrofitTangem().create(TangemApi.class);
 
         Call<ResponseBody> call = tangemApi.getArtwork(artworkId, Util.bytesToHex(card.getCID()), Util.bytesToHex(card.getCardPublicKey()));
         call.enqueue(new Callback<ResponseBody>() {
@@ -267,7 +267,7 @@ public class ServerApiHelper {
 
     @SuppressLint("CheckResult")
     public void rateInfoData(String cryptoId) {
-        CoinmarketApi coinmarketApi = App.getComponent().getRetrofitCoinmarketcap().create(CoinmarketApi.class);
+        CoinmarketApi coinmarketApi = App.getNetworkComponent().getRetrofitCoinmarketcap().create(CoinmarketApi.class);
 
         coinmarketApi.getRateInfoList()
                 .subscribeOn(Schedulers.io())
@@ -302,7 +302,7 @@ public class ServerApiHelper {
     }
 
     public void requestLastVersion() {
-        UpdateVersionApi updateVersionApi = App.getComponent().getRetrofitGithubusercontent().create(UpdateVersionApi.class);
+        UpdateVersionApi updateVersionApi = App.getNetworkComponent().getRetrofitGithubusercontent().create(UpdateVersionApi.class);
 
         Call<ResponseBody> call = updateVersionApi.getLastVersion();
         call.enqueue(new Callback<ResponseBody>() {
