@@ -1,27 +1,25 @@
 package com.tangem.domain.wallet;
 
 import android.net.Uri;
+import android.text.InputFilter;
 
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.TLV;
 import com.tangem.util.BTCUtils;
 import com.tangem.util.CryptoUtil;
+import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.util.DerEncodingUtil;
 import com.tangem.util.FormatUtil;
 import com.tangem.util.Util;
 
 import java.io.ByteArrayOutputStream;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static com.tangem.util.FormatUtil.GetDecimalFormat;
 
 /**
  * Created by Ilia on 15.02.2018.
@@ -29,77 +27,90 @@ import static com.tangem.util.FormatUtil.GetDecimalFormat;
 
 public class BtcCashEngine extends CoinEngine {
 
-    public String getNode(TangemCard mCard) {
-        return "35.157.238.5";
+    public BtcData btcData = null;
+
+    public BtcCashEngine(TangemContext context) throws Exception {
+        super(context);
+        if (context.getCoinData() == null) {
+            btcData = new BtcData();
+            context.setCoinData(btcData);
+        } else if (context.getCoinData() instanceof BtcData) {
+            btcData = (BtcData) context.getCoinData();
+        } else {
+            throw new Exception("Invalid type of Blockchain data for BtcEngine");
+        }
     }
 
-    public int getNodePort(TangemCard mCard) {
-        return 51001;
+    public BtcCashEngine() {
+
     }
 
-    public void switchNode(TangemCard mCard) {
+    private void checkBlockchainDataExists() throws Exception {
+        if (btcData == null) throw new Exception("No blockchain data");
     }
 
-    public boolean inOutPutVisible() {
+    @Override
+    public boolean awaitingConfirmation(){
+        if( btcData==null ) return false;
+        return btcData.getBalanceUnconfirmed() != 0;
+    }
+
+    @Override
+    public String getBalanceHTML() {
+        if (hasBalanceInfo()) {
+            Amount balance = convertToAmount(btcData.getBalanceInInternalUnits());
+            return balance.toString();
+        } else {
+            return "";
+        }
+    }
+
+    @Override
+    public String getBalanceCurrencyHTML() {
+        return "mBCH";
+    }
+
+    @Override
+    public boolean isBalanceAlterNotZero() {
         return true;
     }
 
-    public boolean awaitingConfirmation(TangemCard card) {
-        return card.getBalanceUnconfirmed() != 0;
+
+    @Override
+    public boolean isBalanceNotZero() {
+        if( btcData==null ) return false;
+        if (btcData.getBalanceInInternalUnits() == null) return false;
+        return btcData.getBalanceInInternalUnits().notZero();
     }
 
-    public String getBalanceWithAlter(TangemCard mCard) {
-        return getBalance(mCard);
-    }
-
-    public boolean isBalanceAlterNotZero(TangemCard card) {
-        return true;
-    }
-
-    public Long getBalanceLong(TangemCard mCard) {
-        return mCard.getBalance();
-    }
-
-    public boolean isBalanceNotZero(TangemCard card) {
-        return card.getBalance() > 0;
-    }
-
-    public boolean checkAmount(TangemCard card, String amount) throws Exception {
-        DecimalFormat decimalFormat = GetDecimalFormat();
-        BigDecimal amountValue = (BigDecimal) decimalFormat.parse(amount);
-
-        // Convert Balance to BigDecimal
-        BigDecimal maxValue = new BigDecimal(getBalanceValue(card));
-        maxValue = maxValue.divide(new BigDecimal(1000));
-
-        //if (use_mCurrency) {
-        amountValue = amountValue.divide(new BigDecimal(1000));
-        //}
-
-        if (amountValue.compareTo(maxValue) > 0) {
+    @Override
+    public boolean checkAmount(Amount amount) throws Exception {
+        checkBlockchainDataExists();
+        if (amount.compareTo(convertToAmount(btcData.getBalanceInInternalUnits())) > 0) {
             return false;
         }
-
         return true;
     }
 
-    public boolean hasBalanceInfo(TangemCard card) {
-        return card.hasBalanceInfo();
+    @Override
+    public boolean hasBalanceInfo(){
+        if( btcData==null ) return false;
+        return btcData.hasBalanceInfo();
     }
 
-    public String getBalanceCurrency(TangemCard card) {
+    @Override
+    public boolean checkUnspentTransaction() throws Exception {
+        checkBlockchainDataExists();
+        return btcData.getUnspentTransactions().size() != 0;
+    }
+
+    @Override
+    public String getFeeCurrencyHTML() {
         return "mBCH";
     }
 
-    public boolean checkUnspentTransaction(TangemCard mCard) {
-        return mCard.getUnspentTransactions().size() != 0;
-    }
-
-    public String getFeeCurrency() {
-        return "mBCH";
-    }
-
-    public boolean validateAddress(String address, TangemCard card) {
+    @Override
+    public boolean validateAddress(String address) {
         if (address == null || address.isEmpty()) {
             return false;
         }
@@ -134,44 +145,46 @@ public class BtcCashEngine extends CoinEngine {
                 return false;
         }
 
-        if (card.getBlockchain() != Blockchain.BitcoinCashTestNet && card.getBlockchain() != Blockchain.BitcoinCash) {
+        if (ctx.getBlockchain() != Blockchain.BitcoinCashTestNet && ctx.getBlockchain() != Blockchain.BitcoinCash) {
             return false;
         }
 
-        if (card.getBlockchain() == Blockchain.BitcoinCashTestNet && (address.startsWith("1") || address.startsWith("3"))) {
+        if (ctx.getBlockchain() == Blockchain.BitcoinCashTestNet && (address.startsWith("1") || address.startsWith("3"))) {
             return false;
         }
 
         return true;
     }
 
-
-    public int getTokenDecimals(TangemCard card) {
-        return 0;
-    }
-
-    public String getContractAddress(TangemCard card) {
-        return "";
-    }
-
+    @Override
     public boolean isNeedCheckNode() {
         return true;
     }
 
-    public Uri getShareWalletUriExplorer(TangemCard mCard) {
-        return Uri.parse((mCard.getBlockchain() == Blockchain.BitcoinCash ? "https://bitcoincash.blockexplorer.com/address/" : "https://testnet.blockexplorer.com/address/") + mCard.getWallet());
+    @Override
+    public Uri getShareWalletUriExplorer() {
+        return Uri.parse((ctx.getBlockchain() == Blockchain.BitcoinCash ? "https://bitcoincash.blockexplorer.com/address/" : "https://testnet.blockexplorer.com/address/") + ctx.getCard().getWallet());
     }
 
-    public Uri getShareWalletUri(TangemCard mCard) {
-        return Uri.parse("bitcoincash:" + mCard.getWallet());
+    @Override
+    public Uri getShareWalletUri() {
+        return Uri.parse("bitcoincash:" + ctx.getCard().getWallet());
     }
 
-    public boolean checkAmountValue(TangemCard card, String amountValue, String feeValue, Long minFeeInInternalUnits, Boolean incfee) {
-        Long fee;
-        Long amount;
+    @Override
+    public InputFilter[] getAmountInputFilters() {
+        return new InputFilter[] { new DecimalDigitsInputFilter(8) };
+    }
+
+    @Override
+    public boolean checkAmountValue(String amountValue, String feeValue, InternalAmount minFeeInInternalUnits, Boolean isIncludeFee) {
+        InternalAmount fee;
+        InternalAmount amount;
+
         try {
-            amount = card.internalUnitsFromString(amountValue);
-            fee = card.internalUnitsFromString(feeValue);
+            checkBlockchainDataExists();
+            amount = convertToInternalAmount(new Amount(amountValue, ctx.getBlockchain()));
+            fee = convertToInternalAmount(new Amount(feeValue, ctx.getBlockchain()));
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -180,64 +193,106 @@ public class BtcCashEngine extends CoinEngine {
         if (fee == null || amount == null)
             return false;
 
-        if (fee == 0 || amount == 0)
+        if (fee.isZero() || amount.isZero())
             return false;
 
-        if (incfee && amount > card.getBalance())
+        if (isIncludeFee && amount.compareTo(btcData.getBalanceInInternalUnits())>0)
             return false;
 
-        if (!incfee && amount + fee > card.getBalance())
+        if (!isIncludeFee && amount.add(fee).compareTo(btcData.getBalanceInInternalUnits())>0)
             return false;
 
         return true;
     }
 
-    public String evaluateFeeEquivalent(TangemCard mCard, String fee) {
-        return getAmountEquivalentDescriptor(mCard, fee);
+    @Override
+    public boolean validateBalance(BalanceValidator balanceValidator) {
+        if (((ctx.getCard().getOfflineBalance() == null) && !ctx.getCoinData().isBalanceReceived()) || (!ctx.getCoinData().isBalanceReceived() && (ctx.getCard().getRemainingSignatures() != ctx.getCard().getMaxSignatures()))) {
+            balanceValidator.setScore(0);
+            balanceValidator.setFirstLine("Unknown balance");
+            balanceValidator.setSecondLine("Balance cannot be verified. Swipe down to refresh.");
+            return false;
+        }
+
+        // Workaround before new back-end
+//        if (card.getRemainingSignatures() == card.getMaxSignatures()) {
+//            firstLine = "Verified balance";
+//            secondLine = "Balance confirmed in blockchain. ";
+//            secondLine += "Verified note identity. ";
+//            return;
+//        }
+
+        if (btcData.getBalanceUnconfirmed() != 0) {
+            balanceValidator.setScore(0);
+            balanceValidator.setFirstLine("Transaction in progress");
+            balanceValidator.setSecondLine("Wait for confirmation in blockchain");
+            return false;
+        }
+
+        if (btcData.isBalanceReceived() && btcData.isBalanceEqual()) {
+            balanceValidator.setScore(100);
+            balanceValidator.setFirstLine("Verified balance");
+            balanceValidator.setSecondLine("Balance confirmed in blockchain");
+            if (btcData.getBalanceInInternalUnits().isZero()) {
+                balanceValidator.setFirstLine("Empty wallet");
+                balanceValidator.setSecondLine("");
+            }
+        }
+
+        // rule 4 TODO: need to check SignedHashed against number of outputs in blockchain
+//        if((card.getRemainingSignatures() != card.getMaxSignatures()) && card.getBalance() != 0)
+//        {
+//            score = 80;
+//            firstLine = "Unguaranteed balance";
+//            secondLine = "Potential unsent transaction. Redeem immediately if accept. ";
+//            return;
+//        }
+
+        if ((ctx.getCard().getOfflineBalance() != null) && !btcData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && btcData.getBalanceInInternalUnits().notZero() ) {
+            balanceValidator.setScore(80);
+            balanceValidator.setFirstLine("Verified offline balance");
+            balanceValidator.setSecondLine("Can't obtain balance from blockchain. Restore internet connection to be more confident. ");
+        }
+
+//            if(card.getFailedBalanceRequestCounter()!=0) {
+//                score -= 5 * card.getFailedBalanceRequestCounter();
+//                secondLine += "Not all nodes have returned balance. Swipe down or tap again. ";
+//                if(score <= 0)
+//                    return;
+//            }
+
+        //
+//            if(card.isBalanceReceived() && !card.isBalanceEqual()) {
+//                score = 0;
+//                firstLine = "Disputed balance";
+//                secondLine += " Cannot obtain trusted balance at the moment. Try to tap and check this banknote later.";
+//                return;
+//            }
+
+        return true;
     }
 
     @Override
-    public String getBalanceEquivalent(TangemCard mCard) {
-        Double balance = Double.NaN;
-        try {
-            Long val = mCard.getBalance();
-            balance = mCard.amountFromInternalUnits(val);
-        } catch (Exception ex) {
-            mCard.setRate(0);
-        }
-
-        return mCard.getAmountEquivalentDescription(balance);
+    public Amount getBalance() {
+        return convertToAmount(btcData.getBalanceInInternalUnits());
     }
 
-    public String getBalance(TangemCard mCard) {
-        if (mCard.hasBalanceInfo()) {
-            Double balance = mCard.amountFromInternalUnits(mCard.getBalance());
-            return mCard.getAmountDescription(balance);
-        } else {
-            return "";
-        }
+    @Override
+    public String evaluateFeeEquivalent(String fee) {
+        return getAmountEquivalentDescriptor(ctx.getCard(), fee);
     }
 
-    public String getBalanceValue(TangemCard mCard) {
-        if (mCard.hasBalanceInfo()) {
-            Double balance = mCard.getBalance() / (mCard.getBlockchain().getMultiplier());
-
-            String output = FormatUtil.DoubleToString(balance);
-            //String pattern = "#0.000"; // If you like 4 zeros
-            //DecimalFormat myFormatter = new DecimalFormat(pattern);
-            //String output = myFormatter.format(balance);
-            return output;
-
-            //return Double.toString(balance);
-        } else {
-            return "0";
-        }
+    @Override
+    public String getBalanceEquivalent() {
+        if( btcData==null ) return "";
+        return btcData.getAmountEquivalentDescription(getBalance());
     }
 
-    public String calculateAddress(TangemCard mCard, byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException {
+    @Override
+    public String calculateAddress(byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException {
 
         byte netSelectionByte;
-        switch (mCard.getBlockchain()) {
+        switch (ctx.getBlockchain()) {
             case BitcoinCash:
                 netSelectionByte = (byte) 0x00; //0 - MainNet 0x6f - TestNet
                 break;
@@ -266,28 +321,48 @@ public class BtcCashEngine extends CoinEngine {
         BB.put(hash4[3]);
 
         return org.bitcoinj.core.Base58.encode(BB.array());
-
     }
 
     @Override
-    public String convertByteArrayToAmount(TangemCard mCard, byte[] bytes) throws Exception {
+    public Amount convertToAmount(InternalAmount internalAmount) {
+        return null;
+    }
+
+    @Override
+    public InternalAmount convertToInternalAmount(Amount amount) throws Exception {
+        return null;
+    }
+
+    @Override
+    public InternalAmount convertToInternalAmount(byte[] bytes) {
+        if (bytes == null) return null;
         byte[] reversed = new byte[bytes.length];
         for (int i = 0; i < bytes.length; i++) reversed[i] = bytes[bytes.length - i - 1];
-        return FormatUtil.DoubleToString(mCard.amountFromInternalUnits(Util.byteArrayToLong(reversed)));
+        return new InternalAmount(Util.byteArrayToLong(reversed));
     }
 
     @Override
-    public byte[] convertAmountToByteArray(TangemCard card, String amount) throws Exception {
-        byte[] bytes = Util.longToByteArray(card.internalUnitsFromString(amount));
+    public byte[] convertToByteArray(InternalAmount internalAmount) throws Exception {
+        byte[] bytes = Util.longToByteArray(internalAmount.longValueExact());
         byte[] reversed = new byte[bytes.length];
         for (int i = 0; i < bytes.length; i++) reversed[i] = bytes[bytes.length - i - 1];
         return reversed;
     }
 
     @Override
-    public String getAmountDescription(TangemCard mCard, String amount) throws Exception {
-        return mCard.getAmountDescription(Double.parseDouble(amount));
+    public CoinData createCoinData() {
+        return new BtcData();
     }
+
+    @Override
+    public String getUnspentInputsDescription() {
+        return btcData.getUnspentInputsDescription();
+    }
+
+//    @Override
+//    public String getAmountDescription(TangemCard mCard, String amount) throws Exception {
+//        return mCard.getAmountDescription(Double.parseDouble(amount));
+//    }
 
     public static String getAmountEquivalentDescriptionBTC(Double amount, float rate) {
         if ((rate > 0) && (amount > 0)) {
@@ -298,18 +373,21 @@ public class BtcCashEngine extends CoinEngine {
     }
 
     public String getAmountEquivalentDescriptor(TangemCard mCard, String value) {
-        return getAmountEquivalentDescriptionBTC(Double.parseDouble(value), mCard.getRate());
+        return getAmountEquivalentDescriptionBTC(Double.parseDouble(value), btcData.getRate());
     }
 
-    public byte[] sign(String feeValue, String amountValue, boolean IncFee, String toValue, TangemCard mCard, CardProtocol protocol) throws Exception {
+    @Override
+    public byte[] sign(String feeValue, String amountValue, boolean IncFee, String toValue, CardProtocol protocol) throws Exception {
 
-        String myAddress = mCard.getWallet();
-        byte[] pbKey = mCard.getWalletPublicKeyRar(); //ALWAYS USING COMPRESS KEY
+        checkBlockchainDataExists();
+
+        String myAddress = ctx.getCard().getWallet();
+        byte[] pbKey = ctx.getCard().getWalletPublicKeyRar(); //ALWAYS USING COMPRESS KEY
         String outputAddress = toValue;
         String changeAddress = myAddress;
 
         // Build script for our address
-        List<TangemCard.UnspentTransaction> rawTxList = mCard.getUnspentTransactions();
+        List<BtcData.UnspentTransaction> rawTxList = btcData.getUnspentTransactions();
         byte[] outputScriptWeAreAbleToSpend = Transaction.Script.buildOutput(myAddress).bytes;
 
         // Collect unspent
@@ -345,7 +423,7 @@ public class BtcCashEngine extends CoinEngine {
             unspentOutputs.get(i).bodyDoubleHash = doubleHashData;
             unspentOutputs.get(i).bodyHash = hashData;
 
-            if (mCard.getSigningMethod() == TangemCard.SigningMethod.Sign_Raw || mCard.getSigningMethod() == TangemCard.SigningMethod.Sign_Raw_Validated_By_Issuer) {
+            if (ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Raw || ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Raw_Validated_By_Issuer) {
                 dataForSign[i] = newTX;
             } else {
                 dataForSign[i] = doubleHashData;
@@ -353,8 +431,8 @@ public class BtcCashEngine extends CoinEngine {
 
         }
 
-        byte[] signFromCard = null;
-        if (mCard.getSigningMethod() == TangemCard.SigningMethod.Sign_Raw || mCard.getSigningMethod() == TangemCard.SigningMethod.Sign_Raw_Validated_By_Issuer) {
+        byte[] signFromCard;
+        if (ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Raw || ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Raw_Validated_By_Issuer) {
             ByteArrayOutputStream bs = new ByteArrayOutputStream();
             if (dataForSign.length > 10) throw new Exception("To much hashes in one transaction!");
             for (int i = 0; i < dataForSign.length; i++) {
@@ -364,20 +442,18 @@ public class BtcCashEngine extends CoinEngine {
             }
             signFromCard = protocol.run_SignRaw(PINStorage.getPIN2(), bs.toByteArray()).getTLV(TLV.Tag.TAG_Signature).Value;
         } else {
-            signFromCard = protocol.run_SignHashes(PINStorage.getPIN2(), dataForSign, mCard.getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer, null, mCard.getIssuer()).getTLV(TLV.Tag.TAG_Signature).Value;
+            signFromCard = protocol.run_SignHashes(PINStorage.getPIN2(), dataForSign, ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer, null, ctx.getCard().getIssuer()).getTLV(TLV.Tag.TAG_Signature).Value;
             // TODO slice signFromCard to hashes.length parts
         }
 
         for (int i = 0; i < unspentOutputs.size(); ++i) {
-            BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, 0 + i * 64, 32 + i * 64));
+            BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, i * 64, 32 + i * 64));
             BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, 32 + i * 64, 64 + i * 64));
             s = CryptoUtil.toCanonicalised(s);
-            byte[] encodingSign = DerEncodingUtil.packSignDerBitcoinCash(r, s, pbKey);
 
-            unspentOutputs.get(i).scriptForBuild = encodingSign;
+            unspentOutputs.get(i).scriptForBuild = DerEncodingUtil.packSignDerBitcoinCash(r, s, pbKey);
         }
 
-        byte[] realTX = BTCUtils.buildTXForSend(outputAddress, changeAddress, unspentOutputs, amount, change);
-        return realTX;
+        return BTCUtils.buildTXForSend(outputAddress, changeAddress, unspentOutputs, amount, change);
     }
 }
