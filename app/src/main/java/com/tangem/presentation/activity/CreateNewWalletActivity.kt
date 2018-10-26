@@ -16,6 +16,7 @@ import com.tangem.data.nfc.CreateNewWalletTask
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.TangemCard
+import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.util.Util
@@ -30,7 +31,7 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
     }
 
-    private var card: TangemCard? = null
+    private lateinit var ctx: TangemContext
     private var nfcManager: NfcManager? = null
 
     private var createNewWalletTask: CreateNewWalletTask? = null
@@ -46,10 +47,9 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
 
         nfcManager = NfcManager(this, this)
 
-        card = TangemCard(intent.getStringExtra(TangemCard.EXTRA_UID))
-        card!!.loadFromBundle(intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
+        ctx = TangemContext.loadFromBundle(this, intent.extras)
 
-        tvCardId.text = card!!.cidDescription
+        tvCardId.text = ctx.card!!.cidDescription
 
         progressBar = findViewById(R.id.progressBar)
         progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
@@ -65,13 +65,13 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
             val sUID = Util.byteArrayToHexString(uid)
 //            Log.v(TAG, "UID: " + sUID);
 
-            if (sUID == card!!.uid) {
+            if (sUID == ctx.card!!.uid) {
                 if (lastReadSuccess) {
-                    isoDep.timeout = card!!.pauseBeforePIN2 + 5000
+                    isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 5000
                 } else {
-                    isoDep.timeout = card!!.pauseBeforePIN2 + 65000
+                    isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 65000
                 }
-                createNewWalletTask = CreateNewWalletTask(this, card, nfcManager, isoDep, this)
+                createNewWalletTask = CreateNewWalletTask(this, ctx.card, nfcManager, isoDep, this)
                 createNewWalletTask!!.start()
             } else {
 //                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + mCard.getUID() + ")");
