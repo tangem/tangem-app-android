@@ -1,0 +1,175 @@
+package com.tangem.domain.wallet;
+
+import android.os.Bundle;
+import android.util.Log;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class CoinData {
+
+    public CoinData() {
+    }
+
+    public boolean isBalanceReceived() {
+        return balanceReceived;
+    }
+
+    private boolean balanceReceived = false;
+
+    public void setBalanceReceived(boolean value) {
+        balanceReceived = value;
+    }
+
+    public void loadFromBundle(Bundle B) {
+        if (B.containsKey("balanceReceived")) setBalanceReceived(B.getBoolean("balanceReceived"));
+
+        validationNodeDescription = B.getString("validationNodeDescription");
+
+        if (B.containsKey("FailedBalance"))
+            failedBalanceRequestCounter = new AtomicInteger(B.getInt("FailedBalance"));
+
+        if (B.containsKey("isBalanceEqual")) setIsBalanceEqual(B.getBoolean("isBalanceEqual"));
+
+        if (B.containsKey("rate"))
+            rate = B.getFloat("rate");
+        if (B.containsKey("rateAlter"))
+            rateAlter = B.getFloat("rateAlter");
+    }
+
+    public void saveToBundle(Bundle B) {
+        try {
+            if (balanceEqual != null) B.putBoolean("isBalanceEqual", balanceEqual);
+
+            if (failedBalanceRequestCounter != null)
+                B.putInt("FailedBalance", failedBalanceRequestCounter.get());
+
+            B.putFloat("rate", rate);
+            B.putFloat("rateAlter", rateAlter);
+
+            B.putBoolean("balanceReceived", balanceReceived);
+            B.putString("validationNodeDescription", validationNodeDescription);
+        } catch (Exception e) {
+            Log.e("Can't save to bundle ", e.getMessage());
+        }
+
+    }
+
+    public Bundle asBundle() {
+        Bundle bundle = new Bundle();
+        saveToBundle(bundle);
+        return bundle;
+    }
+
+    public static CoinData fromBundle(Blockchain blockchain, Bundle bundle) {
+        CoinEngine engine=CoinEngineFactory.create(blockchain);
+        if( engine==null ) return null;
+        CoinData result = engine.createCoinData();
+        result.loadFromBundle(bundle);
+        return result;
+    }
+
+    //TODO - move all to special engines
+    private float rate = 0;
+    private float rateAlter = 0;
+
+    public float getRate() {
+        return rate;
+    }
+
+    public float getRateAlter() {
+        return rateAlter;
+    }
+
+    public void setRate(float rate) {
+        this.rate = rate;
+    }
+
+    public void setRateAlter(float rate) {
+        this.rateAlter = rate;
+    }
+
+//        public Double amountFromInternalUnits(Long internalAmount) {
+//            // TODO java.lang.NullPointerException: Attempt to invoke virtual method 'long java.lang.Long.longValue()' on a null object reference
+//            return ((double) internalAmount) /
+//                    getBlockchain().getMultiplier();
+//        }
+//
+//        public Double amountFromInternalUnits(Integer internalAmount) {
+//            return ((double) internalAmount) / getBlockchain().getMultiplier();
+//        }
+//
+//        // TODO разобраться с балансами, привести к единому интерфейсу
+//        public Long internalUnitsFromString(String caption) {
+//            try {
+//                return FormatUtil.ConvertStringToLong(caption);
+//            } catch (Exception e) {
+//                return null;
+//            }
+//        }
+//
+//        public String getAmountDescription(Double amount) {
+//            String output = FormatUtil.DoubleToString(amount);
+//            return output + " " + getBlockchain().getCurrency();
+//        }
+
+    public String getAmountEquivalentDescription(CoinEngine.Amount amount) {
+        if (getBlockchain() == Blockchain.Ethereum || getBlockchain() == Blockchain.EthereumTestNet || getBlockchain() == Blockchain.Token) {
+            return EthEngine.getAmountEquivalentDescriptionETH(amount, rate);
+        }
+
+        return BtcEngine.getAmountEquivalentDescriptionBTC(amount.doubleValue(), rate);
+    }
+
+    public boolean getAmountEquivalentDescriptionAvailable() {
+        return rate > 0;
+    }
+
+
+    public void clearInfo() {
+        setIsBalanceEqual(false);
+    }
+
+    private AtomicInteger failedBalanceRequestCounter;
+
+    public int incFailedBalanceRequestCounter() {
+        if (failedBalanceRequestCounter == null)
+            failedBalanceRequestCounter = new AtomicInteger(0);
+        return failedBalanceRequestCounter.incrementAndGet();
+    }
+
+    public void resetFailedBalanceRequestCounter() {
+        failedBalanceRequestCounter = new AtomicInteger(0);
+    }
+
+    public int getFailedBalanceRequestCounter() {
+        if (failedBalanceRequestCounter == null)
+            return 0;
+        return failedBalanceRequestCounter.get();
+    }
+
+    private Boolean balanceEqual;
+
+    public Boolean isBalanceEqual() {
+        return balanceEqual;
+    }
+
+    public void setIsBalanceEqual(boolean isEqual) {
+        balanceEqual = isEqual;
+    }
+
+    private String validationNodeDescription = "";
+
+    public String getValidationNodeDescription() {
+        return validationNodeDescription;
+    }
+
+    public void setValidationNodeDescription(String validationNodeDescription) {
+        this.validationNodeDescription = validationNodeDescription;
+    }
+
+
+
+
+}
