@@ -84,7 +84,7 @@ public enum Blockchain {
         return resourceId;
     }
 
-    public int getLogoImageResource(String blockchainID, String symbolName) {
+    public static int getLogoImageResource(String blockchainID, String symbolName) {
         switch (blockchainID) {
             case "BTC":
                 return R.drawable.ic_logo_bitcoin;
