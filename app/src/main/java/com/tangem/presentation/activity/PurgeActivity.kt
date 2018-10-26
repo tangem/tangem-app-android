@@ -16,6 +16,7 @@ import com.tangem.data.nfc.PurgeTask
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.TangemCard
+import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.util.Util
@@ -29,7 +30,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
         const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
     }
 
-    private var card: TangemCard? = null
+    private lateinit var ctx: TangemContext
     private var nfcManager: NfcManager? = null
     private var purgeTask: PurgeTask? = null
 
@@ -43,10 +44,9 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
 
         MainActivity.commonInit(applicationContext)
 
-        card = TangemCard(intent.getStringExtra(TangemCard.EXTRA_UID))
-        card!!.loadFromBundle(intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
+        ctx = TangemContext.loadFromBundle(this, intent.extras)
 
-        tvCardID.text = card!!.cidDescription
+        tvCardID.text = ctx.card!!.cidDescription
         progressBar.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
         progressBar.visibility = View.INVISIBLE
     }
@@ -82,9 +82,9 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
             val sUID = Util.byteArrayToHexString(uid)
 //            Log.v(TAG, "UID: $sUID")
 
-            if (sUID == card!!.uid) {
-                isoDep.timeout = card!!.pauseBeforePIN2 + 65000
-                purgeTask = PurgeTask(this, card, nfcManager, isoDep, this)
+            if (sUID == ctx.card!!.uid) {
+                isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 65000
+                purgeTask = PurgeTask(this, ctx.card, nfcManager, isoDep, this)
                 purgeTask!!.start()
             } else {
                 //               this Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card.getUID() + ")");
