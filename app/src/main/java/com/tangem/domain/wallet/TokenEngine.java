@@ -8,6 +8,7 @@ import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.TLV;
 import com.tangem.util.BTCUtils;
 import com.tangem.util.CryptoUtil;
+import com.tangem.wallet.R;
 
 import org.bitcoinj.core.ECKey;
 
@@ -28,24 +29,23 @@ import static com.tangem.util.FormatUtil.GetDecimalFormat;
 
 public class TokenEngine extends CoinEngine {
 
-    public String getNode(TangemCard mCard) {
-        return "abc1.hsmiths.com";
+    @Override
+    public String getOfflineBalanceHTML() {
+        return ctx.getString(R.string.not_implemented);
     }
 
-    public int getNodePort(TangemCard mCard) {
-        return 60001;
+    public TokenEngine(TangemContext context) {
+        super(context);
     }
 
-    public void switchNode(TangemCard mCard) {
+    public TokenEngine() {
+
     }
 
     public boolean awaitingConfirmation(TangemCard card) {
         return false;
     }
 
-    public boolean inOutPutVisible() {
-        return false;
-    }
 
     public String getBalanceCurrency(TangemCard card) {
         String currency = card.getTokenSymbol();
@@ -219,7 +219,7 @@ public class TokenEngine extends CoinEngine {
     }
 
 
-    public String getBalanceWithAlter(TangemCard mCard) {
+    public String getBalanceHTML(TangemCard mCard) {
         //return getBalance(mCard) + "\n(" + GetBalanceAlterValue(mCard) + " ETH)";
         if (GetBalanceAlterValue(mCard) != "") {
             return " " + getBalance(mCard) + " <br><small><small>  + " + GetBalanceAlterValue(mCard) + " ETH for gas</small></small>";
