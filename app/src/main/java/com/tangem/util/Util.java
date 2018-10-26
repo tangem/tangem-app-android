@@ -406,7 +406,7 @@ public class Util {
                 (byte) value};
     }
 
-    public static int byteArrayToInt(byte[] byteArray) {
+    public static int byteArrayToInt(byte[] byteArray) throws IllegalArgumentException {
         if( byteArray.length==1 ) return byteArray[0]&0xFF;
         java.nio.ByteBuffer BB=java.nio.ByteBuffer.wrap(byteArray);
         switch (byteArray.length)
@@ -417,7 +417,7 @@ public class Util {
         }
     }
 
-    public static long byteArrayToLong(byte[] byteArray) {
+    public static long byteArrayToLong(byte[] byteArray) throws IllegalArgumentException {
         if( byteArray.length==1 ) return byteArray[0]&0xFF;
         java.nio.ByteBuffer BB=java.nio.ByteBuffer.wrap(byteArray);
         switch (byteArray.length)
@@ -442,7 +442,7 @@ public class Util {
                 (byte) value};
     }
 
-    public static int byteArrayToInt(byte[] byteArray, int startPos, int length) {
+    public static int byteArrayToInt(byte[] byteArray, int startPos, int length) throws IllegalArgumentException {
         if (byteArray == null) {
             throw new IllegalArgumentException("Parameter 'byteArray' cannot be null");
         }
@@ -459,7 +459,7 @@ public class Util {
         return value;
     }
     
-    public static long byteArrayToLong(byte[] byteArray, int startPos, int length) {
+    public static long byteArrayToLong(byte[] byteArray, int startPos, int length) throws IllegalArgumentException {
         if (byteArray == null) {
             throw new IllegalArgumentException("Parameter 'byteArray' cannot be null");
         }
