@@ -7,6 +7,7 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.text.Html
 import android.text.InputFilter
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -17,6 +18,7 @@ import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemCard
+import com.tangem.domain.wallet.TangemContext
 import com.tangem.util.DecimalDigitsInputFilter
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_cryptonit_withdrawal.*
@@ -29,7 +31,7 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         val TAG: String = PrepareCryptonitWithdrawalActivity::class.java.simpleName
     }
 
-    private var card: TangemCard? = null
+    private lateinit var ctx: TangemContext
     private var nfcManager: NfcManager? = null
     private var cryptonit: Cryptonit? = null
 
@@ -43,8 +45,7 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
 
         nfcManager = NfcManager(this, this)
 
-        card = TangemCard(intent.getStringExtra(TangemCard.EXTRA_UID))
-        card!!.loadFromBundle(intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
+        ctx = TangemContext.loadFromBundle(this, intent.extras)
 
         cryptonit = Cryptonit(this)
 
@@ -52,24 +53,16 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         etPassword.setText(cryptonit!!.password)
         etFee.setText(cryptonit!!.fee)
 
-        tvCardID.text = card!!.cidDescription
-        tvWallet.text = card!!.wallet
-        val engine = CoinEngineFactory.create(card!!.blockchain)
+        tvCardID.text = ctx.card!!.cidDescription
+        tvWallet.text = ctx.card!!.wallet
+        val engine = CoinEngineFactory.create(ctx)
 
-        when (card!!.blockchain) {
-            Blockchain.Ethereum -> {
-                tvCurrency.text = engine.getBalanceCurrency(card)
-            }
-            Blockchain.Bitcoin, Blockchain.BitcoinCash -> {
-                tvCurrency.text = card!!.blockchain.currency
-            }
-            else -> {
-                tvCurrency.text = engine.getBalanceCurrency(card)
-            }
-        }
+        tvCurrency.text = Html.fromHtml(engine.balanceCurrencyHTML)
         tvFeeCurrency.text = tvCurrency.text
 
-        etAmount.setText(engine.convertByteArrayToAmount(card!!, card!!.denomination))
+        etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toString())
+        etAmount.filters=engine.amountInputFilters
+
         etAmount.setOnEditorActionListener { lv, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 val imm = lv.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -79,7 +72,7 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
                 false
             }
         }
-        when (card!!.blockchain) {
+        when (ctx.blockchain) {
             Blockchain.Bitcoin -> {
                 etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(5))
                 etFee.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(5))
@@ -109,7 +102,7 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
                 rlProgressBar.visibility = View.VISIBLE
                 tvProgressDescription.text = getString(R.string.cryptonit_request_withdrawal)
 
-                cryptonit!!.requestWithdrawCoins(card!!.blockchain.currency, dblAmount, card!!.wallet)
+                cryptonit!!.requestWithdrawCoins(ctx.blockchain.currency, dblAmount, ctx.card!!.wallet)
             } catch (e: Exception) {
                 etAmount.error = getString(R.string.unknown_amount_format)
             }
@@ -154,7 +147,7 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
             rlProgressBar.visibility = View.VISIBLE
             tvProgressDescription.text = getString(R.string.cryptonit_request_balance)
             tvError.visibility = View.INVISIBLE
-            cryptonit!!.requestBalance(card!!.blockchain.currency)
+            cryptonit!!.requestBalance(ctx.card!!.blockchain.currency)
         } else {
             tvError.visibility = View.VISIBLE
             tvError.text = getString(R.string.cryptonit_not_enough_account_data)
