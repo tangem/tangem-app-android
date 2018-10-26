@@ -11,6 +11,7 @@ import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.CoinEngineFactory;
 import com.tangem.domain.wallet.TangemCard;
+import com.tangem.domain.wallet.TangemContext;
 import com.tangem.presentation.activity.SendTransactionActivity;
 import com.tangem.presentation.activity.SignPaymentActivity;
 import com.tangem.util.BTCUtils;
@@ -32,14 +33,14 @@ public class SignPaymentTask extends Thread {
 
     private String txOutAddress;
     private Activity mContext;
-    private TangemCard mCard;
+    private TangemContext mCtx;
     private NfcManager mNfcManager;
     private IsoDep mIsoDep;
     private CardProtocol.Notifications mNotifications;
     private boolean isCancelled = false;
 
-    public SignPaymentTask(Activity context, TangemCard card, NfcManager nfcManager, IsoDep isoDep, CardProtocol.Notifications notifications, String amount, String fee, Boolean IncFee, String outAddress) {
-        mCard = card;
+    public SignPaymentTask(Activity context, TangemContext ctx, NfcManager nfcManager, IsoDep isoDep, CardProtocol.Notifications notifications, String amount, String fee, Boolean IncFee, String outAddress) {
+        mCtx=ctx;
         mContext = context;
         mNfcManager = nfcManager;
         mIsoDep = isoDep;
@@ -53,7 +54,7 @@ public class SignPaymentTask extends Thread {
         if (mIsoDep == null) {
             return;
         }
-        CardProtocol protocol = new CardProtocol(mContext, mIsoDep, mCard, mNotifications);
+        CardProtocol protocol = new CardProtocol(mContext, mIsoDep, mCtx.getCard(), mNotifications);
 
         mNotifications.onReadStart(protocol);
         try {
@@ -86,15 +87,15 @@ public class SignPaymentTask extends Thread {
 //                        SignBTC_TX(protocol);
 //                    }
 
-                CoinEngine engine = CoinEngineFactory.create(mCard.getBlockchain());
+                CoinEngine engine = CoinEngineFactory.create(mCtx.getCard().getBlockchain());
                 if (engine != null) {
-                    if (mCard.getPauseBeforePIN2() > 0) {
-                        mNotifications.onReadWait(mCard.getPauseBeforePIN2());
+                    if (mCtx.getCard().getPauseBeforePIN2() > 0) {
+                        mNotifications.onReadWait(mCtx.getCard().getPauseBeforePIN2());
                     }
 
                     byte[] tx = null;
                     try {
-                        tx = engine.sign(txFee, txAmount, txIncFee, txOutAddress, mCard, protocol);
+                        tx = engine.sign(txFee, txAmount, txIncFee, txOutAddress, protocol);
                     }
                     catch (IOException e) {
                         e.printStackTrace();
@@ -104,14 +105,14 @@ public class SignPaymentTask extends Thread {
                     }
 
                     if (tx != null) {
+                        // TODO - move to engine!!!
                         String txStr = BTCUtils.toHex(tx);
-                        if (mCard.getBlockchain() == Blockchain.Ethereum || mCard.getBlockchain() == Blockchain.EthereumTestNet || mCard.getBlockchain() == Blockchain.Token) {
+                        if (mCtx.getBlockchain() == Blockchain.Ethereum || mCtx.getBlockchain() == Blockchain.EthereumTestNet || mCtx.getBlockchain() == Blockchain.Token) {
                             txStr = String.format("0x%s", txStr);
                         }
 
                         Intent intent = new Intent(mContext, SendTransactionActivity.class);
-                        intent.putExtra(TangemCard.EXTRA_UID, mCard.getUID());
-                        intent.putExtra(TangemCard.EXTRA_CARD, mCard.getAsBundle());
+                        mCtx.saveToBundle(intent.getExtras());
                         intent.putExtra(SendTransactionActivity.EXTRA_TX, txStr);
                         mContext.startActivityForResult(intent, SignPaymentActivity.REQUEST_CODE_SEND_PAYMENT);
                     }
