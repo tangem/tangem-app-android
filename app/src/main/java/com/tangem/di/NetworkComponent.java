@@ -12,7 +12,7 @@ import retrofit2.Retrofit;
 
 @Singleton
 @Component(modules = {NetworkModule.class})
-public interface AppComponent {
+public interface NetworkComponent {
 
     @Named(Server.ApiInfura.URL_INFURA)
     Retrofit getRetrofitInfura();
