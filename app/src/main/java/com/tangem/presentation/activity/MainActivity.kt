@@ -53,6 +53,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
         const val EXTRA_LAST_DISCOVERED_TAG = "extra_last_tag"
 
+        fun callingIntent(context: Context) = Intent(context, MainActivity::class.java)
+
         fun commonInit(context: Context) {
             if (PINStorage.needInit())
                 PINStorage.Init(context)
