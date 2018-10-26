@@ -16,6 +16,7 @@ import com.tangem.data.nfc.VerifyCardTask
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.TangemCard
+import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.util.Util
@@ -33,7 +34,7 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
     }
 
     private var nfcManager: NfcManager? = null
-    private var card: TangemCard? = null
+    private lateinit var ctx: TangemContext
     private var lastReadSuccess = true
     private var verifyCardTask: VerifyCardTask? = null
     private var requestPIN2Count = 0
@@ -46,21 +47,20 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
         nfcManager = NfcManager(this, this)
 
-        card = TangemCard(intent.getStringExtra(TangemCard.EXTRA_UID))
-        card!!.loadFromBundle(intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
+        ctx = TangemContext.loadFromBundle(this, intent.extras)
 
-        tvIssuer.text = card!!.issuerDescription
-        //tvBlockchain.text = card!!.blockchainName
-        if (card!!.tokenSymbol.length > 1) {
-            val html = Html.fromHtml(card!!.blockchainName)
+        tvIssuer.text = ctx.card!!.issuerDescription
+        //tvBlockchain.text = ctx.card!!.blockchainName
+        if (ctx.card!!.tokenSymbol.length > 1) {
+            val html = Html.fromHtml(ctx.card!!.blockchainName)
             tvBlockchain.text = html
         } else
-            tvBlockchain.text = card!!.blockchainName
+            tvBlockchain.text = ctx.card!!.blockchainName
 
-        tvCardID.text = card!!.cidDescription
-        imgBlockchain.setImageResource(card!!.blockchain.getImageResource(this, card!!.tokenSymbol))
+        tvCardID.text = ctx.card!!.cidDescription
+        imgBlockchain.setImageResource(ctx.card!!.blockchain.getImageResource(this, ctx.card!!.tokenSymbol))
 
-        if (card!!.useDefaultPIN1()!!) {
+        if (ctx.card!!.useDefaultPIN1()!!) {
             imgPIN.setImageResource(R.drawable.unlock_pin1)
             imgPIN.setOnClickListener { Toast.makeText(this@EmptyWalletActivity, R.string.this_banknote_protected_default_PIN1_code, Toast.LENGTH_LONG).show() }
         } else {
@@ -68,11 +68,11 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
             imgPIN.setOnClickListener { Toast.makeText(this@EmptyWalletActivity, R.string.this_banknote_protected_user_PIN1_code, Toast.LENGTH_LONG).show() }
         }
 
-        if (card!!.pauseBeforePIN2 > 0 && (card!!.useDefaultPIN2()!! || !card!!.useSmartSecurityDelay())) {
+        if (ctx.card!!.pauseBeforePIN2 > 0 && (ctx.card!!.useDefaultPIN2()!! || !ctx.card!!.useSmartSecurityDelay())) {
             imgPIN2orSecurityDelay.setImageResource(R.drawable.timer)
-            imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(this@EmptyWalletActivity, String.format(getString(R.string.this_banknote_will_enforce), card!!.pauseBeforePIN2 / 1000.0), Toast.LENGTH_LONG).show() }
+            imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(this@EmptyWalletActivity, String.format(getString(R.string.this_banknote_will_enforce), ctx.card!!.pauseBeforePIN2 / 1000.0), Toast.LENGTH_LONG).show() }
 
-        } else if (card!!.useDefaultPIN2()!!) {
+        } else if (ctx.card!!.useDefaultPIN2()!!) {
             imgPIN2orSecurityDelay.setImageResource(R.drawable.unlock_pin2)
             imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(this@EmptyWalletActivity, R.string.this_banknote_protected_default_PIN2_code, Toast.LENGTH_LONG).show() }
         } else {
@@ -80,7 +80,7 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
             imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(this@EmptyWalletActivity, R.string.this_banknote_protected_user_PIN2_code, Toast.LENGTH_LONG).show() }
         }
 
-        if (card!!.useDevelopersFirmware()!!) {
+        if (ctx.card!!.useDevelopersFirmware()!!) {
             imgDeveloperVersion.setImageResource(R.drawable.ic_developer_version)
             imgDeveloperVersion.visibility = View.VISIBLE
             imgDeveloperVersion.setOnClickListener { Toast.makeText(this@EmptyWalletActivity, R.string.unlocked_banknote_only_development_use, Toast.LENGTH_LONG).show() }
@@ -92,8 +92,8 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
             requestPIN2Count = 0
             val intent = Intent(baseContext, PinRequestActivity::class.java)
             intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-            intent.putExtra("UID", card!!.uid)
-            intent.putExtra("Card", card!!.asBundle)
+            intent.putExtra("UID", ctx.card!!.uid)
+            intent.putExtra("Card", ctx.card!!.asBundle)
             startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
         }
     }
@@ -127,14 +127,14 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                 if (data != null && data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
                     val updatedCard = TangemCard(data.getStringExtra("UID"))
                     updatedCard.loadFromBundle(data.getBundleExtra("Card"))
-                    card = updatedCard
+                    ctx.card = updatedCard
                 }
                 if (resultCode == CreateNewWalletActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
                     val intent = Intent(baseContext, PinRequestActivity::class.java)
                     intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                    intent.putExtra("UID", card!!.uid)
-                    intent.putExtra("Card", card!!.asBundle)
+                    intent.putExtra("UID", ctx.card!!.uid)
+                    intent.putExtra("Card", ctx.card!!.asBundle)
                     startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
                     return
                 }
@@ -154,7 +154,7 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                     ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag.id
             val sUID = Util.byteArrayToHexString(uid)
-            if (card!!.uid != sUID) {
+            if (ctx.card!!.uid != sUID) {
 //                Log.d(TAG, "Invalid UID: " + sUID);
                 nfcManager!!.ignoreTag(isoDep.tag)
                 return
@@ -168,7 +168,7 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                 isoDep.timeout = 65000
             }
             //lastTag = tag;
-            verifyCardTask = VerifyCardTask(this, card, nfcManager, isoDep, this)
+            verifyCardTask = VerifyCardTask(this, ctx.card, nfcManager, isoDep, this)
             verifyCardTask!!.start()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -254,8 +254,8 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
     private fun doCreateNewWallet() {
         val intent = Intent(this, CreateNewWalletActivity::class.java)
-        intent.putExtra("UID", card!!.uid)
-        intent.putExtra("Card", card!!.asBundle)
+        intent.putExtra("UID", ctx.card!!.uid)
+        intent.putExtra("Card", ctx.card!!.asBundle)
         startActivityForResult(intent, REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY)
     }
 
