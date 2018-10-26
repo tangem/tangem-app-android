@@ -40,14 +40,16 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     private var serverApiHelper: ServerApiHelper = ServerApiHelper()
     private var serverApiHelperElectrum: ServerApiHelperElectrum = ServerApiHelperElectrum()
 
-    private var card: TangemCard? = null
+    //private var card: TangemCard? = null
+    private lateinit var ctx: TangemContext
+
     private var feeRequestSuccess = false
     private var balanceRequestSuccess = false
     private var minFee: String? = null
     private var maxFee: String? = null
     private var normalFee: String? = null
     private var isIncludeFee: Boolean = true
-    private var minFeeInInternalUnits: Long? = 0L
+    private var minFeeInInternalUnits: CoinEngine.InternalAmount? = CoinEngine.InternalAmount(0)
     private var requestPIN2Count = 0
     private var nodeCheck = false
     private var dtVerified: Date? = null
@@ -61,18 +63,14 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         nfcManager = NfcManager(this, this)
 
-        card = TangemCard(intent.getStringExtra("UID"))
-        card!!.loadFromBundle(intent.extras!!.getBundle("Card"))
+        ctx = TangemContext.loadFromBundle(this, intent.extras)
+//        card = TangemCard(intent.getStringExtra("UID"))
+//        card!!.loadFromBundle(intent.extras!!.getBundle("Card"))
+//
+        val engine = CoinEngineFactory.create(ctx)
 
-        val engine = CoinEngineFactory.create(card!!.blockchain)
-
-        val balanceWithAlter = engine!!.getBalanceWithAlter(card).replace(",", ".")
-
-        if (card!!.blockchain == Blockchain.Token) {
-            val html = Html.fromHtml(balanceWithAlter)
+            val html = Html.fromHtml(engine!!.balanceHTML)
             tvBalance.text = html
-        } else
-            tvBalance.text = balanceWithAlter
 
         isIncludeFee = intent.getBooleanExtra("IncFee", true)
 
@@ -80,14 +78,14 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             tvIncFee.setText(R.string.including_fee)
         else
             tvIncFee.setText(R.string.not_including_fee)
-        if (card!!.blockchain == Blockchain.Token)
+        if (ctx.blockchain == Blockchain.Token)
             tvIncFee.visibility = View.INVISIBLE
         else
             tvIncFee.visibility = View.VISIBLE
         etAmount.setText(intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT))
-        tvCurrency.text = engine.getBalanceCurrency(card)
-        tvCurrency2.text = engine.feeCurrency
-        tvCardID.text = card!!.cidDescription
+        tvCurrency.text = Html.fromHtml(engine.balanceCurrencyHTML)
+        tvCurrency2.text = Html.fromHtml(engine.feeCurrencyHTML)
+        tvCardID.text = ctx.card!!.cidDescription
         etWallet.setText(intent.getStringExtra("Wallet"))
         etFee.setText("")
 
@@ -95,7 +93,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         feeRequestSuccess = false
         balanceRequestSuccess = false
 
-        if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet || card!!.blockchain == Blockchain.Token) {
+        if (ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token) {
             rgFee.isEnabled = false
 
             requestInfura(ServerApiHelper.INFURA_ETH_GAS_PRICE)
@@ -103,7 +101,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         } else {
             rgFee.isEnabled = true
 
-            requestElectrum(card!!, ElectrumRequest.checkBalance(card!!.wallet))
+            requestElectrum(ctx.card, ElectrumRequest.checkBalance(ctx.card!!.wallet))
 
             calcSize = 256
             try {
@@ -112,7 +110,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 Log.e("Build Fee error", ex.message)
             }
 
-            card!!.resetFailedBalanceRequestCounter()
+            ctx.coinData!!.resetFailedBalanceRequestCounter()
 
             progressBar.visibility = View.VISIBLE
 
@@ -128,11 +126,11 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
                 try {
-                    val engine = CoinEngineFactory.create(card!!.blockchain)
-                    val eqFee = engine!!.evaluateFeeEquivalent(card, etFee!!.text.toString())
+                    val engine = CoinEngineFactory.create(ctx.blockchain)
+                    val eqFee = engine!!.evaluateFeeEquivalent(etFee!!.text.toString())
                     tvFeeEquivalent.text = eqFee
 
-                    if (!card!!.amountEquivalentDescriptionAvailable) {
+                    if (!ctx.coinData!!.amountEquivalentDescriptionAvailable) {
                         tvFeeEquivalent.error = "Service unavailable"
                         tvCurrency2.visibility = View.GONE
                         tvFeeEquivalent.visibility = View.GONE
@@ -158,30 +156,30 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 return@setOnClickListener
             }
 
-            val engineCoin = CoinEngineFactory.create(card!!.blockchain)
+            val engineCoin = CoinEngineFactory.create(ctx)
 
             if (engineCoin!!.isNeedCheckNode && !nodeCheck) {
                 Toast.makeText(baseContext, getString(R.string.cannot_reach_current_active_blockchain_node_try_again), Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
 
-            val txFee = etFee.text.toString()
-            val txAmount = etAmount.text.toString()
+            val txFee = engineCoin.convertToAmount(etFee.text.toString())
+            val txAmount = engineCoin.convertToAmount(etAmount.text.toString())
 
-            if (!engineCoin.hasBalanceInfo(card)) {
+            if (!engineCoin.hasBalanceInfo()) {
                 finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
                 return@setOnClickListener
 
-            } else if (!engineCoin.isBalanceNotZero(card)) {
+            } else if (!engineCoin.isBalanceNotZero) {
                 finishWithError(Activity.RESULT_CANCELED, getString(R.string.the_wallet_is_empty))
                 return@setOnClickListener
 
-            } else if (!engineCoin.checkUnspentTransaction(card)) {
+            } else if (!engineCoin.checkUnspentTransaction()) {
                 finishWithError(Activity.RESULT_CANCELED, getString(R.string.please_wait_for_confirmation_of_incoming_transaction))
                 return@setOnClickListener
             }
 
-            if (!engineCoin.checkAmountValue(card, txAmount, txFee, minFeeInInternalUnits, isIncludeFee)) {
+            if (!engineCoin.checkNewTransactionAmountAndFee(txAmount, txFee, isIncludeFee, minFeeInInternalUnits)) {
                 finishWithError(Activity.RESULT_CANCELED, getString(R.string.not_enough_funds_on_your_card))
                 return@setOnClickListener
             }
@@ -189,8 +187,9 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             requestPIN2Count = 0
             val intent = Intent(baseContext, PinRequestActivity::class.java)
             intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-            intent.putExtra(TangemCard.EXTRA_UID, card!!.uid)
-            intent.putExtra(TangemCard.EXTRA_CARD, card!!.asBundle)
+            ctx.saveToBundle(intent.extras)
+//            intent.putExtra(TangemCard.EXTRA_UID, card!!.uid)
+//            intent.putExtra(TangemCard.EXTRA_CARD, card!!.asBundle)
             intent.putExtra("IncFee", isIncludeFee)
             startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
         }
@@ -201,7 +200,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_GetBalance)) {
                     try {
                         etFee.setText(getString(R.string.empty))
-                        if ((electrumRequest.result.getInt("confirmed") + electrumRequest.result.getInt("unconfirmed")) / card!!.blockchain.multiplier * 1000000.0 < java.lang.Float.parseFloat(etAmount.text.toString())) {
+                        if ((electrumRequest.result.getInt("confirmed") + electrumRequest.result.getInt("unconfirmed")) / ctx.blockchain.multiplier * 1000000.0 < java.lang.Float.parseFloat(etAmount.text.toString())) {
                             etFee.error = getString(R.string.not_enough_funds)
                         } else {
                             etFee.error = null
@@ -214,7 +213,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         }
                     } catch (e: JSONException) {
                         e.printStackTrace()
-                        requestElectrum(card!!, ElectrumRequest.checkBalance(card!!.wallet))
+                        requestElectrum(ctx.card!!, ElectrumRequest.checkBalance(ctx.card!!.wallet))
                     }
                 }
             }
@@ -236,10 +235,10 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         // rounding gas price to integer gwei
                         val l = BigInteger(gasPrice, 16).divide(BigInteger.valueOf(1000000000L)).multiply(BigInteger.valueOf(1000000000L))
 
-                        val m = if (card!!.blockchain == Blockchain.Token) BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
-                        val minFeeInGwei = card!!.getAmountInGwei(l.multiply(m).toString())
-                        val normalFeeInGwei = card!!.getAmountInGwei(l.multiply(BigInteger.valueOf(12)).divide(BigInteger.valueOf(10)).multiply(m).toString())
-                        val maxFeeInGwei = card!!.getAmountInGwei(l.multiply(BigInteger.valueOf(15)).divide(BigInteger.valueOf(10)).multiply(m).toString())
+                        val m = if (ctx.blockchain == Blockchain.Token) BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
+                        val minFeeInGwei = (ctx.coinData!! as EthData).getAmountInGwei(l.multiply(m).toString())
+                        val normalFeeInGwei = (ctx.coinData!! as EthData).getAmountInGwei(l.multiply(BigInteger.valueOf(12)).divide(BigInteger.valueOf(10)).multiply(m).toString())
+                        val maxFeeInGwei = (ctx.coinData!! as EthData).getAmountInGwei(l.multiply(BigInteger.valueOf(15)).divide(BigInteger.valueOf(10)).multiply(m).toString())
 
                         minFee = minFeeInGwei
                         normalFee = normalFeeInGwei
@@ -250,7 +249,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         feeRequestSuccess = true
                         balanceRequestSuccess = true
                         dtVerified = Date()
-                        minFeeInInternalUnits = card!!.internalUnitsFromString(normalFeeInGwei)
+                        minFeeInInternalUnits = CoinEngine.InternalAmount(normalFeeInGwei)
                     }
                 }
             }
@@ -293,7 +292,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 when (blockCount) {
                     ServerApiHelper.ESTIMATE_FEE_MINIMAL -> {
                         minFee = strFee
-                        minFeeInInternalUnits = card!!.internalUnitsFromString(strFee)
+                        minFeeInInternalUnits = CoinEngine.InternalAmount(strFee)
                     }
 
                     ServerApiHelper.ESTIMATE_FEE_NORMAL -> {
@@ -343,15 +342,16 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 if (data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
                     val updatedCard = TangemCard(data.getStringExtra("UID"))
                     updatedCard.loadFromBundle(data.getBundleExtra("Card"))
-                    card = updatedCard
+                    ctx.card = updatedCard
                 }
             }
             if (resultCode == SignPaymentActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                 requestPIN2Count++
                 val intent = Intent(baseContext, PinRequestActivity::class.java)
                 intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                intent.putExtra("UID", card!!.uid)
-                intent.putExtra("Card", card!!.asBundle)
+                ctx.saveToBundle(intent.extras)
+//                intent.putExtra("UID", card!!.uid)
+//                intent.putExtra("Card", card!!.asBundle)
                 intent.putExtra("IncFee", isIncludeFee)
                 startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
                 return
@@ -361,8 +361,9 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         } else if (requestCode == REQUEST_CODE_REQUEST_PIN2) {
             if (resultCode == Activity.RESULT_OK) {
                 val intent = Intent(baseContext, SignPaymentActivity::class.java)
-                intent.putExtra("UID", card!!.uid)
-                intent.putExtra("Card", card!!.asBundle)
+                ctx.saveToBundle(intent.extras)
+//                intent.putExtra("UID", card!!.uid)
+//                intent.putExtra("Card", card!!.asBundle)
                 intent.putExtra("Wallet", etWallet!!.text.toString())
                 intent.putExtra(SignPaymentActivity.EXTRA_AMOUNT, etAmount.text.toString())
                 intent.putExtra("Fee", etFee.text.toString())
@@ -393,14 +394,15 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
     }
 
+    // TODO - move to BtcEngine
     @Throws(Exception::class)
     internal fun buildSize(outputAddress: String, outFee: String, outAmount: String): Int {
-        val myAddress = card!!.wallet
-        val pbKey = card!!.walletPublicKey
-        val pbComprKey = card!!.walletPublicKeyRar
+        val myAddress = ctx.card!!.wallet
+        val pbKey = ctx.card!!.walletPublicKey
+        val pbComprKey = ctx.card!!.walletPublicKeyRar
 
         // build script for our address
-        val rawTxList = card!!.unspentTransactions
+        val rawTxList = (ctx.coinData!! as BtcData).unspentTransactions
         val outputScriptWeAreAbleToSpend = Transaction.Script.buildOutput(myAddress).bytes
 
         // collect unspent
@@ -466,7 +468,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     private fun requestInfura(method: String) {
         if (UtilHelper.isOnline(this)) {
-            serverApiHelper.infura(method, 67, card!!.wallet, "", "")
+            serverApiHelper.infura(method, 67, ctx.card!!.wallet, "", "")
         } else
             finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
     }
