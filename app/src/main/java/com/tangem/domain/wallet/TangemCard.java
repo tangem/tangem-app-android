@@ -5,15 +5,9 @@ import android.util.Log;
 
 import com.google.common.base.Strings;
 import com.tangem.domain.cardReader.SettingsMask;
-import com.tangem.util.FormatUtil;
 import com.tangem.util.Util;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by dvol on 16.07.2017.
@@ -28,11 +22,6 @@ public class TangemCard {
     private Status status;
     private String wallet;
     private String UID;
-    private String error;
-    private String message;
-    private String balanceDecimal;
-    private String balanceDecimalAlter = "";
-    private Long balanceConfirmed, balanceUnconfirmed;
     private String blockchainID;
     private Manufacturer manufacturer = Manufacturer.Unknown;
     private boolean manufacturerConfirmed = false;
@@ -43,49 +32,6 @@ public class TangemCard {
     private byte[] pbCardKey = null;
     private byte[] pbWalletKeyRar = null;
     private Date dtPersonalization = null;
-    private float rate = 0;
-    private float rateAlter = 0;
-
-    private BigInteger countConfirmedTX = null;
-    private BigInteger countUnconfirmedTX = BigInteger.valueOf(0);
-
-    public BigInteger getConfirmedTXCount() {
-        if (countConfirmedTX == null) {
-            countConfirmedTX = BigInteger.valueOf(0);
-        }
-        return countConfirmedTX;
-    }
-
-    public void setConfirmedTXCount(BigInteger count) {
-        countConfirmedTX = count;
-    }
-
-    public BigInteger getUnconfirmedTXCount() {
-        if (countUnconfirmedTX == null) {
-            countUnconfirmedTX = BigInteger.valueOf(0);
-        }
-        return countUnconfirmedTX;
-    }
-
-    public void setUnconfirmedTXCount(BigInteger count) {
-        countUnconfirmedTX = count;
-    }
-
-    public float getRate() {
-        return rate;
-    }
-
-    public float getRateAlter() {
-        return rateAlter;
-    }
-
-    public void setRate(float rate) {
-        this.rate = rate;
-    }
-
-    public void setRateAlter(float rate) {
-        this.rateAlter = rate;
-    }
 
     public String getBlockchainID() {
         return blockchainID;
@@ -93,6 +39,10 @@ public class TangemCard {
 
     public Blockchain getBlockchain() {
         return Blockchain.fromId(blockchainID);
+    }
+
+    public void setBlockchain(Blockchain blockchain) {
+        blockchainID=blockchain.getID();
     }
 
     public void setBlockchainID(String blockchainID) {
@@ -106,16 +56,11 @@ public class TangemCard {
         String oldName = getBlockchain().getOfficialName();
         //String newName = String.format("%s - %s ERC20 token", token, oldName);
         String newName = token + " <br><small><small> " + oldName + " ERC20 token</small></small>";
-        setBlockchainName(newName);
+        blockchainName=newName;
 
     }
 
     private String blockchainName = "";
-
-    public void setBlockchainName(String name) {
-        blockchainName = name;
-    }
-
 
     public String getBlockchainName() {
         if (Strings.isNullOrEmpty(blockchainName))
@@ -180,47 +125,6 @@ public class TangemCard {
         return cardPublicKeyValid;
     }
 
-    public Double amountFromInternalUnits(Long internalAmount) {
-        // TODO java.lang.NullPointerException: Attempt to invoke virtual method 'long java.lang.Long.longValue()' on a null object reference
-        return ((double) internalAmount) /
-                getBlockchain().getMultiplier();
-    }
-
-    public Double amountFromInternalUnits(Integer internalAmount) {
-        return ((double) internalAmount) / getBlockchain().getMultiplier();
-    }
-
-    // TODO разобраться с балансами, привести к единому интерфейсу
-    public Long internalUnitsFromString(String caption) {
-        try {
-            return FormatUtil.ConvertStringToLong(caption);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    public String getAmountDescription(Double amount) {
-        String output = FormatUtil.DoubleToString(amount);
-        return output + " " + getBlockchain().getCurrency();
-    }
-
-    public String getAmountEquivalentDescription(Double amount) {
-        if (getBlockchain() == Blockchain.Ethereum || getBlockchain() == Blockchain.EthereumTestNet || getBlockchain() == Blockchain.Token) {
-            return EthEngine.getAmountEquivalentDescriptionETH(amount, rate);
-        }
-
-        return BtcEngine.getAmountEquivalentDescriptionBTC(amount, rate);
-    }
-
-    public boolean getAmountEquivalentDescriptionAvailable() {
-        return rate > 0;
-    }
-
-    public String getAmountInGwei(String amount) {
-        BigInteger d = new BigInteger(amount, 10);
-        BigInteger m = d.divide(BigInteger.valueOf(1000000000L));
-        return m.toString(10);
-    }
 
     public Manufacturer getManufacturer() {
         return manufacturer;
@@ -285,13 +189,7 @@ public class TangemCard {
         this.PIN = PIN;
     }
 
-    public void clearInfo() {
-        balanceConfirmed = null;
-        balanceUnconfirmed = null;
-        unspentTransactions = null;
-        balanceDecimal = null;
-        balanceDecimalAlter = null;
-        setIsBalanceEqual(false);
+    public void switchToInitialBlockchain() {
         if (tokenSymbol.length() > 1)
             blockchainID = Blockchain.Token.getID(); // Reset blockchain to Token from ETH for token cards with zero token balance on it
     }
@@ -306,7 +204,6 @@ public class TangemCard {
 
     public String getPersonalizationDateTimeDescription() {
         return Util.formatDate(dtPersonalization);
-
     }
 
     private int health = 0;
@@ -416,34 +313,6 @@ public class TangemCard {
 
     public int getPauseBeforePIN2() {
         return pauseBeforePIN2;
-    }
-
-    private AtomicInteger failedBalanceRequestCounter;
-
-    public int incFailedBalanceRequestCounter() {
-        if (failedBalanceRequestCounter == null)
-            failedBalanceRequestCounter = new AtomicInteger(0);
-        return failedBalanceRequestCounter.incrementAndGet();
-    }
-
-    public void resetFailedBalanceRequestCounter() {
-        failedBalanceRequestCounter = new AtomicInteger(0);
-    }
-
-    public int getFailedBalanceRequestCounter() {
-        if (failedBalanceRequestCounter == null)
-            return 0;
-        return failedBalanceRequestCounter.get();
-    }
-
-    private Boolean balanceEqual;
-
-    public Boolean isBalanceEqual() {
-        return balanceEqual;
-    }
-
-    public void setIsBalanceEqual(boolean isEqual) {
-        balanceEqual = isEqual;
     }
 
     private Integer settingsMask = null;
@@ -591,16 +460,6 @@ public class TangemCard {
         return batch;
     }
 
-    private String validationNodeDescription = "";
-
-    public String getValidationNodeDescription() {
-        return validationNodeDescription;
-    }
-
-    public void setValidationNodeDescription(String validationNodeDescription) {
-        this.validationNodeDescription = validationNodeDescription;
-    }
-
     public enum SigningMethod {
         Sign_Hash(0, "sign hash"),
         Sign_Raw(1, "sign raw tx"),
@@ -638,38 +497,30 @@ public class TangemCard {
         return signingMethod;
     }
 
-    public static class UnspentTransaction {
-        public String txID;
-        public Integer Amount;
-        public Integer Height;
-        public String Raw = "";
-
-        public Bundle getAsBundle() {
-            Bundle B = new Bundle();
-            B.putString("txID", txID);
-            B.putInt("Amount", Amount);
-            B.putInt("Height", Height);
-            B.putString("Raw", Raw);
-            return B;
-        }
-
-        public void loadFromBundle(Bundle B) {
-            txID = B.getString("txID");
-            Amount = B.getInt("Amount");
-            Height = B.getInt("Height");
-            Raw = B.getString("Raw");
-        }
-    }
-
-    private List<UnspentTransaction> unspentTransactions = null;
-
-    public List<UnspentTransaction> getUnspentTransactions() {
-        if (unspentTransactions == null) unspentTransactions = new ArrayList<>();
-        return unspentTransactions;
-    }
-
     public TangemCard(String UID) {
         this.UID = UID;
+    }
+
+
+    public enum Status {
+        NotPersonalized(0), Empty(1), Loaded(2), Purged(3);
+
+        Status(int Code) {
+            mCode = Code;
+        }
+
+        private int mCode;
+
+        public int getCode() {
+            return mCode;
+        }
+
+        public static Status fromCode(int code) {
+            for (Status s : values()) {
+                if (s.getCode() == code) return s;
+            }
+            return null;
+        }
     }
 
     public void setStatus(Status status) {
@@ -721,58 +572,6 @@ public class TangemCard {
         this.UID = UID;
     }
 
-    public Long getBalance() {
-
-        BigDecimal balance = null;
-
-        if ((this.getBlockchain() == Blockchain.Bitcoin || this.getBlockchain() == Blockchain.BitcoinCash || this.getBlockchain() == Blockchain.BitcoinTestNet || this.getBlockchain() == Blockchain.BitcoinCashTestNet) && balanceConfirmed != null && balanceUnconfirmed != null) {
-            balance = BigDecimal.valueOf(balanceConfirmed + balanceUnconfirmed);
-        } else if (this.getBlockchain() == Blockchain.Ethereum || this.getBlockchain() == Blockchain.EthereumTestNet || this.getBlockchain() == Blockchain.Token) {
-            if (balanceDecimal != null) {
-                balance = new BigDecimal(balanceDecimal); // Returns ETH / token balance
-            } else if (balanceDecimalAlter != null) {
-                balance = new BigDecimal(balanceDecimalAlter); // or ETH balance if there're no tokens on Token card
-            }
-        }
-
-        if (balance != null) {
-            return balance.longValue(); // Will leave only lower 64 bits for ETH and Tokens
-        } else {
-            return null;
-        }
-    }
-
-    public Long getBalanceUnconfirmed() {
-        return balanceUnconfirmed;
-    }
-
-    public void setBalanceConfirmed(Long balance) {
-        this.balanceConfirmed = balance;
-    }
-
-    public void setBalanceUnconfirmed(Long balance) {
-        this.balanceUnconfirmed = balance;
-    }
-
-    public boolean hasBalanceInfo() {
-        return balanceConfirmed != null || balanceUnconfirmed != null || balanceDecimal != "" || balanceDecimalAlter != "";
-    }
-
-    public String getDecimalBalance() {
-        return balanceDecimal;
-    }
-
-    public String getDecimalBalanceAlter() {
-        return balanceDecimalAlter;
-    }
-
-    public void setDecimalBalance(String value) {
-        balanceDecimal = value;
-    }
-
-    public void setDecimalBalanceAlter(String value) {
-        balanceDecimalAlter = value;
-    }
 
     private byte[] offlineBalance;
 
@@ -799,7 +598,10 @@ public class TangemCard {
     public void setDenomination(byte[] denomination) {
         this.Denomination = denomination;
         try {
-            this.DenominationText = CoinEngineFactory.create(getBlockchain()).convertByteArrayToAmount(this, denomination);
+            CoinEngine engine=CoinEngineFactory.create(getBlockchain());
+            CoinEngine.InternalAmount internalAmount=engine.convertToInternalAmount(denomination);
+            CoinEngine.Amount amount=engine.convertToAmount(internalAmount);
+            this.DenominationText = amount.toString();
         } catch (Exception e) {
             e.printStackTrace();
             this.DenominationText = "N/A";
@@ -834,43 +636,6 @@ public class TangemCard {
         DenominationText = null;
     }
 
-    public void setError(String error) {
-        this.error = error;
-    }
-
-    public String getError() {
-        return error;
-    }
-
-    public void setMessage(String value) {
-        this.message = value;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public enum Status {
-        NotPersonalized(0), Empty(1), Loaded(2), Purged(3);
-
-        Status(int Code) {
-            mCode = Code;
-        }
-
-        private int mCode;
-
-        public int getCode() {
-            return mCode;
-        }
-
-        public static Status fromCode(int code) {
-            for (Status s : values()) {
-                if (s.getCode() == code) return s;
-            }
-            return null;
-        }
-    }
-
     public Bundle getAsBundle() {
         Bundle B = new Bundle();
         saveToBundle(B);
@@ -889,7 +654,6 @@ public class TangemCard {
             B.putInt("TokensDecimal", tokensDecimal);
             B.putString("TokenSymbol", tokenSymbol);
             B.putString("ContractAddress", contractAddress);
-            B.putString("validationNodeDescription", validationNodeDescription);
             if (dtPersonalization != null) B.putLong("dtPersonalization", dtPersonalization.getTime());
             B.putInt("RemainingSignatures", remainingSignatures);
             B.putInt("MaxSignatures", maxSignatures);
@@ -902,26 +666,18 @@ public class TangemCard {
             if (issuer != null) B.putString("Issuer", issuer.getID());
             if (issuerPublicDataKey != null) B.putByteArray("IssuerPublicDataKey", issuerPublicDataKey);
             if (firmwareVersion != null) B.putString("FirmwareVersion", firmwareVersion);
-            if (balanceEqual != null) B.putBoolean("isBalanceEqual", balanceEqual);
             if (batch != null) B.putString("Batch", batch);
-            B.putString("BalanceDecimal", balanceDecimal);
-            B.putString("BalanceDecimalAlter", balanceDecimalAlter);
             B.putBoolean("ManufacturerConfirmed", manufacturerConfirmed);
             B.putBoolean("CardPublicKeyValid", isCardPublicKeyValid());
             B.putByteArray("CardPublicKey", getCardPublicKey());
 
-            if (failedBalanceRequestCounter != null)
-                B.putInt("FailedBalance", failedBalanceRequestCounter.get());
             B.putInt("SignedHashes", getSignedHashes());
             B.putString("Wallet", wallet);
-            B.putString("Error", error);
             B.putBoolean("WalletPublicKeyValid", isWalletPublicKeyValid());
             if (pbWalletKey != null)
                 B.putByteArray("PublicKey", pbWalletKey);
             if (pbWalletKeyRar != null)
                 B.putByteArray("PublicKeyRar", pbWalletKeyRar);
-            if (balanceConfirmed != null) B.putLong("BalanceConfirmed", balanceConfirmed);
-            if (balanceUnconfirmed != null) B.putLong("BalanceUnconfirmed", balanceUnconfirmed);
 
             if (getOfflineBalance() != null) B.putByteArray("OfflineBalance", getOfflineBalance());
 
@@ -933,18 +689,6 @@ public class TangemCard {
                 B.putBoolean("NeedWriteIssuerData", getNeedWriteIssuerData());
             }
 
-            if (unspentTransactions != null) {
-                Bundle BB = new Bundle();
-                for (Integer i = 0; i < unspentTransactions.size(); i++) {
-                    BB.putBundle(i.toString(), unspentTransactions.get(i).getAsBundle());
-                }
-                B.putBundle("UnspentTransactions", BB);
-            }
-            B.putFloat("rate", rate);
-            B.putFloat("rateAlter", rateAlter);
-            B.putString("confirmTx", getConfirmedTXCount().toString(16));
-            B.putString("unconfirmTx", getUnconfirmedTXCount().toString(16));
-
             if (codeConfirmed != null)
                 B.putBoolean("codeConfirmed", codeConfirmed);
 
@@ -954,12 +698,8 @@ public class TangemCard {
             if (onlineVerified != null)
                 B.putBoolean("onlineVerified", onlineVerified);
 
-            B.putBoolean("balanceReceived", balanceReceived);
-
-
             if (onlineValidated != null)
                 B.putBoolean("onlineValidated", onlineValidated);
-
 
             if (codeConfirmed != null)
                 B.putBoolean("codeConfirmed", codeConfirmed);
@@ -978,16 +718,6 @@ public class TangemCard {
 
     }
 
-    public boolean isBalanceReceived() {
-        return balanceReceived;
-    }
-
-    private boolean balanceReceived = false;
-
-    public void setBalanceReceived(boolean value) {
-        balanceReceived = value;
-    }
-
     public void loadFromBundle(Bundle B) {
         UID = B.getString("UID");
         CID = B.getByteArray("CID");
@@ -995,19 +725,15 @@ public class TangemCard {
         PIN2 = PIN2_Mode.valueOf(B.getString("PIN2"));
         status = Status.valueOf(B.getString("Status"));
         wallet = B.getString("Wallet");
-        error = B.getString("Error");
         blockchainID = B.getString("Blockchain");
         tokensDecimal = B.getInt("TokensDecimal", 18);
         tokenSymbol = B.getString("TokenSymbol", "");
         contractAddress = B.getString("ContractAddress", "");
         if (B.containsKey("BlockchainName"))
             blockchainName = B.getString("BlockchainName", "");
-        validationNodeDescription = B.getString("validationNodeDescription");
         if (B.containsKey("dtPersonalization")) {
             dtPersonalization = new Date(B.getLong("dtPersonalization"));
         }
-        balanceDecimal = B.getString("BalanceDecimal");
-        balanceDecimalAlter = B.getString("BalanceDecimalAlter");
         remainingSignatures = B.getInt("RemainingSignatures");
         maxSignatures = B.getInt("MaxSignatures");
         health = B.getInt("health");
@@ -1025,8 +751,6 @@ public class TangemCard {
 
         if (B.containsKey("SignedHashes")) setSignedHashes(B.getInt("SignedHashes"));
 
-        if (B.containsKey("FailedBalance"))
-            failedBalanceRequestCounter = new AtomicInteger(B.getInt("FailedBalance"));
         if (B.containsKey("Issuer")) issuer = Issuer.FindIssuer(B.getString("Issuer"));
         if (B.containsKey("IssuerPublicDataKey"))
             issuerPublicDataKey = B.getByteArray("IssuerPublicDataKey");
@@ -1034,16 +758,8 @@ public class TangemCard {
         if (B.containsKey("FirmwareVersion")) firmwareVersion = B.getString("FirmwareVersion");
         if (B.containsKey("Batch")) batch = B.getString("Batch");
 
-        if (B.containsKey("isBalanceEqual")) setIsBalanceEqual(B.getBoolean("isBalanceEqual"));
         cardPublicKeyValid = B.getBoolean("CardPublicKeyValid");
         if (B.containsKey("CardPublicKey")) setCardPublicKey(B.getByteArray("CardPublicKey"));
-
-        if (B.containsKey("balanceReceived")) setBalanceReceived(B.getBoolean("balanceReceived"));
-        if (B.containsKey("BalanceConfirmed")) balanceConfirmed = B.getLong("BalanceConfirmed");
-        else balanceConfirmed = null;
-        if (B.containsKey("BalanceUnconfirmed"))
-            balanceUnconfirmed = B.getLong("BalanceUnconfirmed");
-        else balanceUnconfirmed = null;
 
         if (B.containsKey("OfflineBalance")) setOfflineBalance(B.getByteArray("OfflineBalance"));
         else clearOfflineBalance();
@@ -1066,26 +782,6 @@ public class TangemCard {
             pbWalletKeyRar = B.getByteArray("PublicKeyRar");
         }
 
-        if (B.containsKey("UnspentTransactions")) {
-            unspentTransactions = new ArrayList<>();
-            Bundle BB = B.getBundle("UnspentTransactions");
-            Integer i = 0;
-            while (BB.containsKey(i.toString())) {
-                UnspentTransaction t = new UnspentTransaction();
-                t.loadFromBundle(BB.getBundle(i.toString()));
-                unspentTransactions.add(t);
-                i++;
-            }
-        }
-        if (B.containsKey("rate"))
-            rate = B.getFloat("rate");
-        if (B.containsKey("rateAlter"))
-            rateAlter = B.getFloat("rateAlter");
-        if (B.containsKey("confirmTx"))
-            countConfirmedTX = new BigInteger(B.getString("confirmTx"), 16);
-        if (B.containsKey("unconfirmTx"))
-            countUnconfirmedTX = new BigInteger(B.getString("unconfirmTx"), 16);
-
         if (B.containsKey("codeConfirmed"))
             codeConfirmed = B.getBoolean("codeConfirmed");
 
@@ -1094,19 +790,6 @@ public class TangemCard {
 
         if (B.containsKey("onlineValidated"))
             onlineValidated = B.getBoolean("onlineValidated");
-    }
-
-    private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
-
-    public static String bytesToHex(byte[] bytes) {
-        if (bytes == null) return "";
-        char[] hexChars = new char[bytes.length * 2];
-        for (int j = 0; j < bytes.length; j++) {
-            int v = bytes[j] & 0xFF;
-            hexChars[j * 2] = hexArray[v >>> 4];
-            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
-        }
-        return new String(hexChars);
     }
 
     public enum EncryptionMode {

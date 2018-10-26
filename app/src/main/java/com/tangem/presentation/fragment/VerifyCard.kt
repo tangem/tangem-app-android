@@ -14,10 +14,7 @@ import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.Toast
 import com.tangem.domain.cardReader.NfcManager
-import com.tangem.domain.wallet.Blockchain
-import com.tangem.domain.wallet.CoinEngineFactory
-import com.tangem.domain.wallet.PINStorage
-import com.tangem.domain.wallet.TangemCard
+import com.tangem.domain.wallet.*
 import com.tangem.presentation.activity.CreateNewWalletActivity
 import com.tangem.presentation.activity.PurgeActivity
 import com.tangem.presentation.activity.PinRequestActivity
@@ -45,7 +42,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
     }
 
     private var nfcManager: NfcManager? = null
-    private var card: TangemCard? = null
+    private lateinit var ctx: TangemContext
 
     private var requestPIN2Count = 0
     private var timerHideErrorAndMessage: Timer? = null
@@ -56,8 +53,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
         super.onCreate(savedInstanceState)
         nfcManager = NfcManager(activity, this)
 
-        card = TangemCard(activity!!.intent.getStringExtra("UID"))
-        card!!.loadFromBundle(activity!!.intent.extras!!.getBundle("Card"))
+        ctx = TangemContext.loadFromBundle(activity, activity!!.intent.extras)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -105,8 +101,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                     if (data.extras!!.containsKey("confirmPIN")) {
                         val intent = Intent(context, PinRequestActivity::class.java)
                         intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                        intent.putExtra("UID", card!!.uid)
-                        intent.putExtra("Card", card!!.asBundle)
+                        ctx.saveToBundle(intent.extras)
                         newPIN = data.getStringExtra("newPIN")
                         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
                     } else {
@@ -122,8 +117,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                     if (data.extras!!.containsKey("confirmPIN2")) {
                         val intent = Intent(context, PinRequestActivity::class.java)
                         intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                        intent.putExtra("UID", card!!.uid)
-                        intent.putExtra("Card", card!!.asBundle)
+                        ctx.saveToBundle(intent.extras)
                         newPIN2 = data.getStringExtra("newPIN2")
                         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
                     } else {
@@ -135,7 +129,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 }
             }
             REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
-                if (newPIN == "") newPIN = card!!.pin
+                if (newPIN == "") newPIN = ctx.card!!.pin
 
                 if (newPIN2 == "") newPIN2 = PINStorage.getPIN2()
 
@@ -153,8 +147,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
             REQUEST_CODE_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
                     data = Intent()
-                    data.putExtra("UID", card!!.uid)
-                    data.putExtra("Card", card!!.asBundle)
+                    ctx.saveToBundle(data.extras)
                     data.putExtra("modification", "delete")
                 } else
                     data.putExtra("modification", "update")
@@ -164,34 +157,31 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 if (data != null && data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
                     val updatedCard = TangemCard(data.getStringExtra("UID"))
                     updatedCard.loadFromBundle(data.getBundleExtra("Card"))
-                    card = updatedCard
+                    ctx.card = updatedCard
                 }
                 if (resultCode == CreateNewWalletActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
                     val intent = Intent(context, PinRequestActivity::class.java)
                     intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                    intent.putExtra("UID", card!!.uid)
-                    intent.putExtra("Card", card!!.asBundle)
+                    ctx.saveToBundle(intent.extras)
                     startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
                     return
                 } else {
                     if (data != null && data.extras!!.containsKey("message")) {
-                        card!!.error = data.getStringExtra("message")
+                        ctx.error = data.getStringExtra("message")
                     }
                 }
             }
             REQUEST_CODE_REQUEST_PIN2_FOR_PURGE -> if (resultCode == Activity.RESULT_OK) {
                 val intent = Intent(context, PurgeActivity::class.java)
-                intent.putExtra("UID", card!!.uid)
-                intent.putExtra("Card", card!!.asBundle)
+                ctx.saveToBundle(intent.extras)
                 startActivityForResult(intent, REQUEST_CODE_PURGE)
             }
             REQUEST_CODE_PURGE -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
                     data = Intent()
 
-                    data.putExtra("UID", card!!.uid)
-                    data.putExtra("Card", card!!.asBundle)
+                    ctx.saveToBundle(data.extras)
                     data.putExtra("modification", "delete")
                 } else {
                     data.putExtra("modification", "update")
@@ -202,19 +192,18 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 if (data != null && data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
                     val updatedCard = TangemCard(data.getStringExtra("UID"))
                     updatedCard.loadFromBundle(data.getBundleExtra("Card"))
-                    card = updatedCard
+                    ctx.card = updatedCard
                 }
                 if (resultCode == CreateNewWalletActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
                     val intent = Intent(context, PinRequestActivity::class.java)
                     intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                    intent.putExtra("UID", card!!.uid)
-                    intent.putExtra("Card", card!!.asBundle)
+                    ctx.saveToBundle(intent.extras)
                     startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_PURGE)
                     return
                 } else {
                     if (data != null && data.extras!!.containsKey("message")) {
-                        card!!.error = data.getStringExtra("message")
+                        ctx.error = data.getStringExtra("message")
                     }
                 }
                 updateViews()
@@ -222,7 +211,8 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
             REQUEST_CODE_SEND_PAYMENT -> {
                 if (resultCode == Activity.RESULT_OK) {
                     srlVerifyCard.isRefreshing = true
-                    card!!.clearInfo()
+                    ctx.coinData!!.clearInfo()
+                    ctx.card!!.switchToInitialBlockchain()
                     updateViews()
                 }
 
@@ -230,13 +220,13 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                     if (data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
                         val updatedCard = TangemCard(data.getStringExtra("UID"))
                         updatedCard.loadFromBundle(data.getBundleExtra("Card"))
-                        card = updatedCard
+                        ctx.card = updatedCard
                     }
                     if (data.extras!!.containsKey("message")) {
                         if (resultCode == Activity.RESULT_OK)
-                            card!!.message = data.getStringExtra("message")
+                            ctx.message = data.getStringExtra("message")
                         else
-                            card!!.error = data.getStringExtra("message")
+                            ctx.error = data.getStringExtra("message")
                     }
                     updateViews()
                 }
@@ -259,26 +249,26 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 timerHideErrorAndMessage!!.cancel()
                 timerHideErrorAndMessage = null
             }
-            tvCardID.text = card!!.cidDescription
+            tvCardID.text = ctx.card!!.cidDescription
 
-            if (card!!.error == null || card!!.error.isEmpty()) {
+            if (ctx.error == null || ctx.error.isEmpty()) {
                 tvError.visibility = View.GONE
                 tvError.text = ""
             } else {
                 tvError.visibility = View.VISIBLE
-                tvError.text = card!!.error
+                tvError.text = ctx.error
             }
-            if (card!!.message == null || card!!.message.isEmpty()) {
+            if (ctx.message == null || ctx.message.isEmpty()) {
                 tvMessage.visibility = View.GONE
                 tvMessage.text = ""
             } else {
                 tvMessage.visibility = View.VISIBLE
-                tvMessage.text = card!!.message
+                tvMessage.text = ctx.message
             }
 
-            tvManufacturerInfo.text = card!!.manufacturer.officialName
+            tvManufacturerInfo.text = ctx.card!!.manufacturer.officialName
 
-            if (card!!.isManufacturerConfirmed && card!!.isCardPublicKeyValid) {
+            if (ctx.card!!.isManufacturerConfirmed && ctx.card!!.isCardPublicKeyValid) {
                 tvCardIdentity.setText(R.string.attested)
                 tvCardIdentity.setTextColor(ContextCompat.getColor(context!!, R.color.confirmed))
 
@@ -287,18 +277,17 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 tvCardIdentity.setTextColor(ContextCompat.getColor(context!!, R.color.not_confirmed))
             }
 
-            tvIssuer.text = card!!.issuerDescription
-            tvCardRegistredDate.text = card!!.personalizationDateTimeDescription
-            //tvBlockchain.text = card!!.blockchainName
-            if (card!!.tokenSymbol.length > 1) {
-                val html = Html.fromHtml(card!!.blockchainName)
+            tvIssuer.text = ctx.card!!.issuerDescription
+            tvCardRegistredDate.text = ctx.card!!.personalizationDateTimeDescription
+                val html = Html.fromHtml(ctx.card!!.blockchainName)
                 tvBlockchain.text = html
-            } else
-                tvBlockchain.text = card!!.blockchainName
 
-            tvValidationNode.text = card!!.validationNodeDescription
+            tvValidationNode.text = ctx.coinData!!.validationNodeDescription
 
-            if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet  || card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
+            val engine = CoinEngineFactory.create(ctx)
+
+            tvInputs.text = engine.unspentInputsDescription
+            if (.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet  || card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
                 var gatheredUnspents = 0
                 for (i in 0 until card!!.unspentTransactions.size) {
                     if (card!!.unspentTransactions[i].Raw.length > 1)  gatheredUnspents++
@@ -308,70 +297,70 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
             else
                 tvInputs.text = ""
 
-            ivBlockchain.setImageResource(card!!.blockchain.getLogoImageResource(card!!.blockchainID, card!!.tokenSymbol))
+            ivBlockchain.setImageResource(Blockchain.getLogoImageResource(ctx.card!!.blockchainID, ctx.card!!.tokenSymbol))
 
-            if (card!!.isReusable!!)
+            if (ctx.card!!.isReusable!!)
                 tvReusable.setText(R.string.reusable)
             else
                 tvReusable.setText(R.string.one_off_banknote)
 
-            tvSigningMethod.text = card!!.signingMethod.description
+            tvSigningMethod.text = ctx.card!!.signingMethod.description
 
-            if (card!!.status == TangemCard.Status.Loaded || card!!.status == TangemCard.Status.Purged) {
+            if (ctx.card!!.status == TangemCard.Status.Loaded || ctx.card!!.status == TangemCard.Status.Purged) {
 
                 when {
-                    card!!.remainingSignatures == 0 -> {
+                    ctx.card!!.remainingSignatures == 0 -> {
                         tvRemainingSignatures.setTextColor(ContextCompat.getColor(context!!, R.color.not_confirmed))
                         tvRemainingSignatures.setText(R.string.none)
                     }
-                    card!!.remainingSignatures == 1 -> {
+                    ctx.card!!.remainingSignatures == 1 -> {
                         tvRemainingSignatures.setTextColor(ContextCompat.getColor(context!!, R.color.not_confirmed))
                         tvRemainingSignatures.setText(R.string.last_one)
                     }
-                    card!!.remainingSignatures > 1000 -> {
+                    ctx.card!!.remainingSignatures > 1000 -> {
                         tvRemainingSignatures.setTextColor(ContextCompat.getColor(context!!, R.color.confirmed))
                         tvRemainingSignatures.setText(R.string.unlimited)
                     }
                     else -> {
                         tvRemainingSignatures.setTextColor(ContextCompat.getColor(context!!, R.color.confirmed))
-                        tvRemainingSignatures.text = card!!.remainingSignatures.toString()
+                        tvRemainingSignatures.text = ctx.card!!.remainingSignatures.toString()
                     }
                 }
-                tvSignedTx.text = (card!!.maxSignatures - card!!.remainingSignatures).toString()
+                tvSignedTx.text = (ctx.card!!.maxSignatures - ctx.card!!.remainingSignatures).toString()
             } else {
                 tvLastSigned.text = ""
                 tvRemainingSignatures.text = ""
                 tvSignedTx.text = ""
             }
 
-            tvFirmware.text = card!!.firmwareVersion
+            tvFirmware.text = ctx.card!!.firmwareVersion
 
             var features = ""
 
-            features += if (card!!.allowSwapPIN()!! && card!!.allowSwapPIN2()!!) {
+            features += if (ctx.card!!.allowSwapPIN()!! && ctx.card!!.allowSwapPIN2()!!) {
                 "Allows change PIN1 and PIN2\n"
-            } else if (card!!.allowSwapPIN()!!) {
+            } else if (ctx.card!!.allowSwapPIN()!!) {
                 "Allows change PIN1\n"
-            } else if (card!!.allowSwapPIN2()!!) {
+            } else if (ctx.card!!.allowSwapPIN2()!!) {
                 "Allows change PIN2\n"
             } else {
                 "Fixed PIN1 and PIN2\n"
             }
 
-            if (card!!.needCVC()!!)
+            if (ctx.card!!.needCVC()!!)
                 features += "Requires CVC\n"
 
 
-            if (card!!.supportDynamicNDEF()!!) {
+            if (ctx.card!!.supportDynamicNDEF()!!) {
                 features += "Dynamic NDEF for iOS\n"
-            } else if (card!!.supportNDEF()!!)
+            } else if (ctx.card!!.supportNDEF()!!)
                 features += "NDEF\n"
 
-            if (card!!.supportBlock()!!)
+            if (ctx.card!!.supportBlock()!!)
                 features += "Blockable\n"
 
 
-            if (card!!.supportOnlyOneCommandAtTime()!!)
+            if (ctx.card!!.supportOnlyOneCommandAtTime()!!)
                 features += "Atomic command mode"
 
             if (features.endsWith("\n"))
@@ -379,7 +368,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
             tvFeatures.text = features
 
-            if (card!!.useDefaultPIN1()!!) {
+            if (ctx.card!!.useDefaultPIN1()!!) {
                 imgPIN.setImageResource(R.drawable.unlock_pin1)
                 imgPIN.setOnClickListener { Toast.makeText(context, R.string.this_banknote_protected_default_PIN1_code, Toast.LENGTH_LONG).show() }
             } else {
@@ -387,10 +376,10 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 imgPIN.setOnClickListener { Toast.makeText(context, R.string.this_banknote_protected_user_PIN1_code, Toast.LENGTH_LONG).show() }
             }
 
-            if (card!!.pauseBeforePIN2 > 0 && (card!!.useDefaultPIN2()!! || !card!!.useSmartSecurityDelay())) {
+            if (ctx.card!!.pauseBeforePIN2 > 0 && (ctx.card!!.useDefaultPIN2()!! || !ctx.card!!.useSmartSecurityDelay())) {
                 imgPIN2orSecurityDelay.setImageResource(R.drawable.timer)
-                imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, String.format(getString(R.string.this_banknote_will_enforce), card!!.pauseBeforePIN2 / 1000.0), Toast.LENGTH_LONG).show() }
-            } else if (card!!.useDefaultPIN2()!!) {
+                imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, String.format(getString(R.string.this_banknote_will_enforce), ctx.card!!.pauseBeforePIN2 / 1000.0), Toast.LENGTH_LONG).show() }
+            } else if (ctx.card!!.useDefaultPIN2()!!) {
                 imgPIN2orSecurityDelay.setImageResource(R.drawable.unlock_pin2)
                 imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, R.string.this_banknote_protected_default_PIN2_code, Toast.LENGTH_LONG).show() }
             } else {
@@ -398,16 +387,16 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, R.string.this_banknote_protected_user_PIN2_code, Toast.LENGTH_LONG).show() }
             }
 
-            if (card!!.useDevelopersFirmware()!!) {
+            if (ctx.card!!.useDevelopersFirmware()!!) {
                 imgDeveloperVersion.setImageResource(R.drawable.ic_developer_version)
                 imgDeveloperVersion.visibility = View.VISIBLE
                 imgDeveloperVersion.setOnClickListener { Toast.makeText(context, R.string.unlocked_banknote_only_development_use, Toast.LENGTH_LONG).show() }
             } else
                 imgDeveloperVersion.visibility = View.INVISIBLE
 
-            if (card!!.status == TangemCard.Status.Loaded) {
-                tvWallet.text = card!!.shortWalletString
-                if (card!!.isWalletPublicKeyValid) {
+            if (ctx.card!!.status == TangemCard.Status.Loaded) {
+                tvWallet.text = ctx.card!!.shortWalletString
+                if (ctx.card!!.isWalletPublicKeyValid) {
                     tvWalletIdentity.setText(R.string.possession_proved)
                     tvWalletIdentity.setTextColor(ContextCompat.getColor(context!!, R.color.confirmed))
                 } else {
@@ -450,8 +439,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
         requestPIN2Count = 0
         val intent = Intent(context, PinRequestActivity::class.java)
         intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-        intent.putExtra("UID", card!!.uid)
-        intent.putExtra("Card", card!!.asBundle)
+        ctx.saveToBundle(intent.extras)
         newPIN = PINStorage.getDefaultPIN()
         newPIN2 = ""
         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
@@ -461,8 +449,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
         requestPIN2Count = 0
         val intent = Intent(context, PinRequestActivity::class.java)
         intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-        intent.putExtra("UID", card!!.uid)
-        intent.putExtra("Card", card!!.asBundle)
+        ctx.saveToBundle(intent.extras)
         newPIN = ""
         newPIN2 = PINStorage.getDefaultPIN2()
         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
@@ -472,8 +459,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
         requestPIN2Count = 0
         val intent = Intent(context, PinRequestActivity::class.java)
         intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-        intent.putExtra("UID", card!!.uid)
-        intent.putExtra("Card", card!!.asBundle)
+        ctx.saveToBundle(intent.extras)
         newPIN = PINStorage.getDefaultPIN()
         newPIN2 = PINStorage.getDefaultPIN2()
         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
@@ -490,25 +476,23 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
     private fun doPurge() {
         requestPIN2Count = 0
-        val engine = CoinEngineFactory.create(card!!.blockchain)
-        if (!card!!.hasBalanceInfo()) {
+        val engine=CoinEngineFactory.create(ctx)
+        if (!engine.hasBalanceInfo()) {
             return
-        } else if (engine != null && engine.isBalanceNotZero(card)) {
+        } else if (engine.isBalanceNotZero) {
             Toast.makeText(context, R.string.cannot_erase_wallet_with_non_zero_balance, Toast.LENGTH_LONG).show()
             return
         }
 
         val intent = Intent(context, PinRequestActivity::class.java)
         intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-        intent.putExtra("UID", card!!.uid)
-        intent.putExtra("Card", card!!.asBundle)
+        ctx.saveToBundle(intent.extras)
         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_PURGE)
     }
 
     private fun startSwapPINActivity() {
         val intent = Intent(context, PinSwapActivity::class.java)
-        intent.putExtra("UID", card!!.uid)
-        intent.putExtra("Card", card!!.asBundle)
+        ctx.saveToBundle(intent.extras)
         intent.putExtra("newPIN", newPIN)
         intent.putExtra("newPIN2", newPIN2)
         startActivityForResult(intent, REQUEST_CODE_SWAP_PIN)
@@ -516,8 +500,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
     fun prepareResultIntent(): Intent {
         val data = Intent()
-        data.putExtra("UID", card!!.uid)
-        data.putExtra("Card", card!!.asBundle)
+        ctx.saveToBundle(data.extras)
         return data
     }
 
@@ -526,12 +509,12 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
         val inflater = popup.menuInflater
         inflater.inflate(R.menu.menu_loaded_wallet, popup.menu)
 
-        popup.menu.findItem(R.id.action_set_PIN1).isVisible = card!!.allowSwapPIN()!!
-        popup.menu.findItem(R.id.action_reset_PIN1).isVisible = card!!.allowSwapPIN()!! && !card!!.useDefaultPIN1()
-        popup.menu.findItem(R.id.action_set_PIN2).isVisible = card!!.allowSwapPIN2()!!
-        popup.menu.findItem(R.id.action_reset_PIN2).isVisible = card!!.allowSwapPIN2()!! && !card!!.useDefaultPIN2()
-        popup.menu.findItem(R.id.action_reset_PINs).isVisible = card!!.allowSwapPIN()!! && card!!.allowSwapPIN2()!! && !card!!.useDefaultPIN1() && !card!!.useDefaultPIN2()
-        if (!card!!.isReusable || card!!.status != TangemCard.Status.Loaded)
+        popup.menu.findItem(R.id.action_set_PIN1).isVisible = ctx.card!!.allowSwapPIN()!!
+        popup.menu.findItem(R.id.action_reset_PIN1).isVisible = ctx.card!!.allowSwapPIN()!! && !ctx.card!!.useDefaultPIN1()
+        popup.menu.findItem(R.id.action_set_PIN2).isVisible = ctx.card!!.allowSwapPIN2()!!
+        popup.menu.findItem(R.id.action_reset_PIN2).isVisible = ctx.card!!.allowSwapPIN2()!! && !ctx.card!!.useDefaultPIN2()
+        popup.menu.findItem(R.id.action_reset_PINs).isVisible = ctx.card!!.allowSwapPIN()!! && ctx.card!!.allowSwapPIN2()!! && !ctx.card!!.useDefaultPIN1() && !ctx.card!!.useDefaultPIN2()
+        if (!ctx.card!!.isReusable || ctx.card!!.status != TangemCard.Status.Loaded)
             popup.menu.findItem(R.id.action_purge).isVisible = false
 
         popup.setOnMenuItemClickListener { item ->
