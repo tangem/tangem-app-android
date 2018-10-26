@@ -13,6 +13,10 @@ public class BalanceValidator {
         return firstLine;
     }
 
+    public void setFirstLine(String value) {
+        firstLine=value;
+    }
+
     public String getSecondLine(Boolean recommend) {
         if (!recommend) return secondLine;
         if (score > 89) {
@@ -24,6 +28,14 @@ public class BalanceValidator {
         } else {
             return "Do not accept! " + secondLine;
         }
+    }
+
+    public void setSecondLine(String value) {
+        secondLine=value;
+    }
+
+    public void setScore(int score) {
+        this.score = score;
     }
 
     public int getColor() {
@@ -38,73 +50,14 @@ public class BalanceValidator {
         }
     }
 
-    public void Check(TangemCard card, Boolean attest) {
+    public void Check(TangemContext ctx, Boolean attest) {
         firstLine = "Verification failed";
         secondLine = "";
+        TangemCard card=ctx.getCard();
+        CoinEngine engine=CoinEngineFactory.create(ctx);
 
-        if (card.getBlockchain() == Blockchain.Bitcoin || card.getBlockchain() == Blockchain.BitcoinTestNet) {
-
-            if (((card.getOfflineBalance() == null) && !card.isBalanceReceived()) || (!card.isBalanceReceived() && (card.getRemainingSignatures() != card.getMaxSignatures()))) {
-                score = 0;
-                firstLine = "Unknown balance";
-                secondLine = "Balance cannot be verified. Swipe down to refresh.";
-                return;
-            }
-
-            // Workaround before new back-end
-//        if (card.getRemainingSignatures() == card.getMaxSignatures()) {
-//            firstLine = "Verified balance";
-//            secondLine = "Balance confirmed in blockchain. ";
-//            secondLine += "Verified note identity. ";
-//            return;
-//        }
-
-            if (card.getBalanceUnconfirmed() != 0) {
-                score = 0;
-                firstLine = "Transaction in progress";
-                secondLine = "Wait for confirmation in blockchain";
-                return;
-            }
-
-            if (card.isBalanceReceived() && card.isBalanceEqual()) {
-                score = 100;
-                firstLine = "Verified balance";
-                secondLine = "Balance confirmed in blockchain";
-                if (card.getBalance() == 0) {
-                    firstLine = "Empty wallet";
-                    secondLine = "";
-                }
-            }
-
-            // rule 4 TODO: need to check SignedHashed against number of outputs in blockchain
-//        if((card.getRemainingSignatures() != card.getMaxSignatures()) && card.getBalance() != 0)
-//        {
-//            score = 80;
-//            firstLine = "Unguaranteed balance";
-//            secondLine = "Potential unsent transaction. Redeem immediately if accept. ";
-//            return;
-//        }
-
-            if ((card.getOfflineBalance() != null) && !card.isBalanceReceived() && (card.getRemainingSignatures() == card.getMaxSignatures()) && card.getBalance() != 0) {
-                score = 80;
-                firstLine = "Verified offline balance";
-                secondLine = "Can't obtain balance from blockchain. Restore internet connection to be more confident. ";
-            }
-
-//            if(card.getFailedBalanceRequestCounter()!=0) {
-//                score -= 5 * card.getFailedBalanceRequestCounter();
-//                secondLine += "Not all nodes have returned balance. Swipe down or tap again. ";
-//                if(score <= 0)
-//                    return;
-//            }
-
-            //
-//            if(card.isBalanceReceived() && !card.isBalanceEqual()) {
-//                score = 0;
-//                firstLine = "Disputed balance";
-//                secondLine += " Cannot obtain trusted balance at the moment. Try to tap and check this banknote later.";
-//                return;
-//            }
+        if (ctx.getBlockchain() == Blockchain.Bitcoin || ctx.getBlockchain() == Blockchain.BitcoinTestNet) {
+            if( !engine.validateBalance(this) ) return;
         } else if ((card.getBlockchain()  == Blockchain.Ethereum) || (card.getBlockchain()  == Blockchain.Token)) {
 
             if (card.getBalance() == null) {
