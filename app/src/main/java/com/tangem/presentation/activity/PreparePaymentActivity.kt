@@ -17,6 +17,7 @@ import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemCard
+import com.tangem.domain.wallet.TangemContext
 import com.tangem.util.DecimalDigitsInputFilter
 import com.tangem.util.FormatUtil
 import com.tangem.wallet.R
@@ -32,8 +33,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         private const val REQUEST_CODE_SEND_PAYMENT = 2
     }
 
-    private var useCurrency: Boolean = false
-    private var card: TangemCard? = null
+    private lateinit var ctx: TangemContext
     private var nfcManager: NfcManager? = null
 
     @SuppressLint("SetTextI18n")
@@ -45,59 +45,29 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         nfcManager = NfcManager(this, this)
 
-        card = TangemCard(intent.getStringExtra(TangemCard.EXTRA_UID))
-        card!!.loadFromBundle(intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
+        ctx= TangemContext.loadFromBundle(this, intent.extras)
 
-        tvCardID.text = card!!.cidDescription
-        val engine = CoinEngineFactory.create(card!!.blockchain)
+        tvCardID.text = ctx.card!!.cidDescription
+        val engine = CoinEngineFactory.create(ctx)
 
-        if (card!!.blockchain == Blockchain.Token) {
-            val html = Html.fromHtml(engine!!.getBalanceWithAlter(card))
-            tvBalance.text = html
+        val html = Html.fromHtml(engine!!.balanceHTML)
+        tvBalance.text = html
+
+        //TODO - to engine
+        if (ctx.card!!.blockchain == Blockchain.Token) {
             rgIncFee!!.visibility = View.INVISIBLE
         } else {
-            tvBalance.text = engine!!.getBalanceWithAlter(card)
             rgIncFee!!.visibility = View.VISIBLE
         }
 
-        if (card!!.remainingSignatures < 2)
+        if (ctx.card!!.remainingSignatures < 2)
             etAmount.isEnabled = false
 
-        // Ethereum EthereumTestNet
-        if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet) {
-            tvCurrency.text = engine.getBalanceCurrency(card)
-            useCurrency = false
-            etAmount.setText(engine.getBalanceValue(card))
-        }
-
-        // Bitcoin BitcoinTestNet
-        else if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet) {
-            val balance = engine.getBalanceLong(card)!! / (card!!.blockchain.multiplier)
-            tvCurrency.text = card!!.blockchain.currency
-            useCurrency = true
-            val output = FormatUtil.DoubleToString(balance)
-            etAmount.setText(output)
-        }
-
-        // BitcoinCash BitcoinCashTestNet
-        else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
-            val balance = engine.getBalanceLong(card)!! / (card!!.blockchain.multiplier)
-            tvCurrency.text = card!!.blockchain.currency
-            useCurrency = true
-            val output = FormatUtil.DoubleToString(balance)
-        } else {
-            tvCurrency.text = engine.getBalanceCurrency(card)
-            useCurrency = false
-            etAmount.setText(engine.getBalanceValue(card))
-        }
+        tvCurrency.text = engine.balance.currency
+        etAmount.setText(engine.balance.stringToEdit)
 
         // limit number of symbols after comma
-        if (card!!.blockchain == Blockchain.Bitcoin)
-            etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(8))
-        if (card!!.blockchain == Blockchain.BitcoinCash)
-            etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(8))
-        if (card!!.blockchain == Blockchain.Ethereum)
-            etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(18))
+        etAmount.filters = engine.amountInputFilters
 
         // set listeners
         etAmount.setOnEditorActionListener { lv, actionId, event ->
@@ -111,12 +81,14 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             }
         }
         btnVerify.setOnClickListener {
-            val strAmount: String = etAmount.text.toString().replace(",", ".")
 
-            val engine1 = CoinEngineFactory.create(card!!.blockchain)
+            val engine1 = CoinEngineFactory.create(ctx.card!!.blockchain)
+
+            val strAmount: String = etAmount.text.toString().replace(",", ".")
+            val amount=engine1.convertToAmount(etAmount.text.toString())
 
             try {
-                if (!engine.checkAmount(card, etAmount.text.toString()))
+                if (!engine.checkNewTransactionAmount(amount))
                     etAmount.error = getString(R.string.not_enough_funds_on_your_card)
             } catch (e: Exception) {
                 etAmount.error = getString(R.string.unknown_amount_format)
@@ -124,7 +96,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
             var checkAddress = false
             if (engine1 != null)
-                checkAddress = engine1.validateAddress(etWallet.text.toString(), card)
+                checkAddress = engine1.validateAddress(etWallet.text.toString())
 
             // check wallet address
             if (!checkAddress) {
@@ -132,20 +104,20 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 return@setOnClickListener
             }
 
-            if (etWallet.text.toString() == card!!.wallet) {
+            if (etWallet.text.toString() == ctx.card!!.wallet) {
                 etWallet.error = getString(R.string.destination_wallet_address_equal_source_address)
                 return@setOnClickListener
             }
 
             // check enough funds
-            if (etAmount.text.toString().replace(",", ".").toDouble() > engine.getBalanceValue(card).replace(",", ".").toDouble()) {
-                etAmount.error = getString(R.string.not_enough_funds_on_your_card)
-                return@setOnClickListener
-            }
+            // TODO - double with engin.checkAmount
+//            if (etAmount.text.toString().replace(",", ".").toDouble() > engine.getBalanceValue(card).replace(",", ".").toDouble()) {
+//                etAmount.error = getString(R.string.not_enough_funds_on_your_card)
+//                return@setOnClickListener
+//            }
 
             val intent = Intent(baseContext, ConfirmPaymentActivity::class.java)
-            intent.putExtra("UID", card!!.uid)
-            intent.putExtra("Card", card!!.asBundle)
+            ctx.saveToBundle(intent.extras)
             intent.putExtra("Wallet", etWallet!!.text.toString())
             intent.putExtra("IncFee", (rgIncFee!!.checkedRadioButtonId == R.id.rbFeeIn))
             intent.putExtra(SignPaymentActivity.EXTRA_AMOUNT, strAmount)
@@ -176,7 +148,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE_SCAN_QR && resultCode == Activity.RESULT_OK && data != null && data.extras!!.containsKey("QRCode")) {
             var code = data.getStringExtra("QRCode")
-            when (card!!.blockchain) {
+            when (ctx.card!!.blockchain) {
                 Blockchain.Bitcoin -> {
                     if (code.contains("bitcoin:")) {
                         val tmp = code.split("bitcoin:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
