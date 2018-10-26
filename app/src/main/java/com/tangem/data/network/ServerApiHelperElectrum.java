@@ -111,7 +111,7 @@ public class ServerApiHelperElectrum {
         Collections.addAll(result, electrumRequest);
 
         try {
-            Socket socket = App.getComponent().getSocket();
+            Socket socket = App.getNetworkComponent().getSocket();
              socket.connect(new InetSocketAddress(InetAddress.getByName(host), port));
             Log.i(TAG, host + " " + port);
             try {
