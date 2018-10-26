@@ -11,6 +11,7 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.text.Html
 import android.text.InputFilter
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -21,6 +22,7 @@ import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemCard
+import com.tangem.domain.wallet.TangemContext
 import com.tangem.util.DecimalDigitsInputFilter
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_kraken_withdrawal.*
@@ -37,7 +39,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
         private const val REQUEST_CODE_SCAN_QR = 1
     }
 
-    private var card: TangemCard? = null
+    private lateinit var ctx: TangemContext
     private var nfcManager: NfcManager? = null
     private var kraken: Kraken? = null
     private var fee: BigDecimal? = null
@@ -51,42 +53,21 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
 
         nfcManager = NfcManager(this, this)
 
-        card = TangemCard(intent.getStringExtra(TangemCard.EXTRA_UID))
-        card!!.loadFromBundle(intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
+        ctx = TangemContext.loadFromBundle(this, intent.extras)
 
         kraken = Kraken(this)
 
         tvKey.text = kraken!!.key
         tvSecret.text = kraken!!.secretDescription
 
-        tvCardID.text = card!!.cidDescription
-        tvWallet.text = card!!.wallet
-        val engine = CoinEngineFactory.create(card!!.blockchain)
+        tvCardID.text = ctx.card!!.cidDescription
+        tvWallet.text = ctx.card!!.wallet
+        val engine = CoinEngineFactory.create(ctx)
 
-        when (card!!.blockchain) {
-            Blockchain.Ethereum, Blockchain.EthereumTestNet -> {
-                tvCurrency.text = engine.getBalanceCurrency(card)
+        tvCurrency.text = Html.fromHtml(engine.balanceCurrencyHTML)
 
-            }
-            Blockchain.Bitcoin, Blockchain.BitcoinTestNet, Blockchain.BitcoinCash, Blockchain.BitcoinCashTestNet -> {
-                tvCurrency.text = card!!.blockchain.currency
-            }
-            else -> {
-                tvCurrency.text = engine.getBalanceCurrency(card)
-            }
-        }
-
-        etAmount.setText(engine.convertByteArrayToAmount(card!!, card!!.denomination))
-        when (card!!.blockchain) {
-            Blockchain.Bitcoin ->
-                etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(5))
-            Blockchain.BitcoinCash ->
-                etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(8))
-            Blockchain.Ethereum ->
-                etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(18))
-            else -> {
-            }
-        }
+        etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toString())
+        etAmount.filters=engine.amountInputFilters
 
         etAmount.setOnEditorActionListener { lv, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
@@ -108,7 +89,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
                 rlProgressBar.visibility = View.VISIBLE
                 tvProgressDescription.text = getString(R.string.kraken_request_withdrawal)
 
-                kraken!!.requestWithdrawInfo(card!!.blockchain.currency, dblAmount.toString(), card!!.wallet)
+                kraken!!.requestWithdrawInfo(ctx.blockchain.currency, dblAmount.toString(), ctx.card!!.wallet)
             } catch (e: Exception) {
                 etAmount.error = getString(R.string.unknown_amount_format)
             }
@@ -126,7 +107,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
                 tvError.visibility = View.VISIBLE
                 tvError.text = Arrays.toString(response.error)
             } else {
-                when (card!!.blockchain) {
+                when (ctx.blockchain) {
                     Blockchain.Ethereum -> {
                         tvBalance.text = response.result.XETH.trimEnd('0')
                     }
@@ -140,7 +121,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
                         tvBalance.text = "???"
                     }
                 }
-                tvBalanceCurrency.text = card!!.blockchain.currency
+                tvBalanceCurrency.text = ctx.blockchain.currency
                 tvBalance.setTextColor(Color.BLACK)
                 btnLoad.visibility = View.VISIBLE
             }
@@ -190,7 +171,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
         builder.setTitle("Please confirm withdraw")
 
         // Set a message for alert dialog
-        builder.setMessage(String.format("Continue with fee %s %s?", fee!!.toString().trimEnd('0'), card!!.blockchain.currency))
+        builder.setMessage(String.format("Continue with fee %s %s?", fee!!.toString().trimEnd('0'), ctx.blockchain.currency))
 
         // On click listener for dialog buttons
         val dialogClickListener = DialogInterface.OnClickListener { _, which ->
@@ -207,7 +188,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
                         tvProgressDescription.text = getString(R.string.kraken_request_withdrawal)
 
                         //Toast.makeText(this, String.format("Withdraw %s!",dblAmount.toString()), Toast.LENGTH_LONG).show()
-                        kraken!!.requestWithdraw(card!!.blockchain.currency, dblAmount.toString(), card!!.wallet)
+                        kraken!!.requestWithdraw(ctx.blockchain.currency, dblAmount.toString(), ctx.card!!.wallet)
                     } catch (e: Exception) {
                         etAmount.error = getString(R.string.unknown_amount_format)
                     }

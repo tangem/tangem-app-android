@@ -12,6 +12,7 @@ import com.tangem.domain.wallet.Issuer;
 import com.tangem.domain.wallet.LocalStorage;
 import com.tangem.domain.wallet.TangemCard;
 import com.tangem.domain.wallet.Manufacturer;
+import com.tangem.domain.wallet.TangemContext;
 import com.tangem.util.Util;
 
 import org.spongycastle.jce.ECNamedCurveTable;
@@ -584,8 +585,9 @@ public class CardProtocol {
             mCard.setWalletPublicKey(pkUncompressed);
             mCard.setWalletPublicKeyRar(pkCompresses);
 
-            CoinEngine engineCoin = CoinEngineFactory.create(mCard.getBlockchain());
-            String wallet = engineCoin.calculateAddress(mCard, pkUncompressed);
+            TangemContext ctx=new TangemContext(mCard);
+            CoinEngine engineCoin = CoinEngineFactory.create(ctx);
+            String wallet = engineCoin.calculateAddress(pkUncompressed);
             mCard.setWallet(wallet);
             //mCard.setWallet(Blockchain.calculateWalletAddress(mCard, pkUncompressed));
 
