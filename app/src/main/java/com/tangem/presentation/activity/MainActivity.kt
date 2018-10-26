@@ -306,6 +306,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                 rlProgressBar.post {
                     rlProgressBar.visibility = View.GONE
 
+                    // TODO - ??? remove save and load???
                     val cardInfo = Bundle()
                     cardInfo.putString("UID", cardProtocol.card.uid)
                     val bCard = Bundle()
