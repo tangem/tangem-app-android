@@ -1,9 +1,13 @@
 package com.tangem.domain.wallet;
 
 import android.net.Uri;
+import android.text.InputFilter;
 
 import com.tangem.domain.cardReader.CardProtocol;
 
+import org.jetbrains.annotations.Nullable;
+
+import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 
@@ -13,66 +17,150 @@ import java.security.NoSuchProviderException;
 
 public abstract class CoinEngine {
 
-    public abstract String getNode(TangemCard card);
+    @Nullable
+    public static final String EXTRA_ENGINE = "CoinEngine";
 
-    public abstract int getNodePort(TangemCard card);
+    public static class InternalAmount extends BigDecimal {
+        public InternalAmount() {
+            super(0);
+        }
 
-    public abstract void switchNode(TangemCard card);
+        public InternalAmount(String amountString) {
+            super(amountString);
+        }
 
-    public abstract boolean awaitingConfirmation(TangemCard card);
+        public InternalAmount(long amount) {
+            super(amount);
+        }
 
-    public abstract boolean hasBalanceInfo(TangemCard card);
+        public InternalAmount(BigDecimal amount) {
+            super(amount.unscaledValue(), amount.scale());
+        }
 
-    public abstract boolean isBalanceNotZero(TangemCard card);
+        public boolean notZero()
+        {
+            return compareTo(BigDecimal.ZERO)>0;
+        }
 
-    public abstract boolean isBalanceAlterNotZero(TangemCard card);
+        public boolean isZero() {
+            return compareTo(BigDecimal.ZERO)==0;
+        }
+    }
 
-    public abstract boolean checkAmount(TangemCard card, String amount) throws Exception;
+    public static class Amount extends BigDecimal {
+        private Blockchain blockchain;
 
-    public abstract int getTokenDecimals(TangemCard card);
+        public Amount() {
+            super(0);
+            blockchain = Blockchain.Unknown;
+        }
 
-    public abstract String getContractAddress(TangemCard card);
+        public Amount(String amountString, Blockchain blockchain) {
+            super(amountString);
+            this.blockchain = blockchain;
+        }
 
-    public abstract byte[] sign(String feeValue, String amountValue, boolean IncFee, String toValue, TangemCard mCard, CardProtocol protocol) throws Exception;
+        public Amount(Long amount, Blockchain blockchain) {
+            super(amount);
+            this.blockchain=blockchain;
+        }
 
-    public abstract boolean checkUnspentTransaction(TangemCard card);
+        public String getCurrency() {
+            return blockchain.getCurrency();
+        }
 
-    public abstract Uri getShareWalletUriExplorer(TangemCard card);
+        @Override
+        public String toString() {
+            return super.toString() + " " + blockchain.getCurrency();
+        }
 
-    public abstract Long getBalanceLong(TangemCard card);
+        public boolean notZero()
+        {
+            return compareTo(BigDecimal.ZERO)>0;
+        }
 
-    public abstract Uri getShareWalletUri(TangemCard card);
+        public String getStringToEdit() {
+            return super.toString();
+        }
 
-    public abstract String evaluateFeeEquivalent(TangemCard card, String fee);
+    }
 
-    public abstract boolean checkAmountValue(TangemCard card, String amount, String fee, Long minFeeInInternalUnits, Boolean incfee);
+    protected TangemContext ctx;
 
-    public abstract boolean inOutPutVisible();
+    public CoinEngine() {
 
-    public abstract String getBalance(TangemCard card);
+    }
 
-    public abstract String getBalanceWithAlter(TangemCard card);
+    public CoinEngine(TangemContext ctx) {
+        this.ctx = ctx;
+    }
 
-    public abstract String getBalanceCurrency(TangemCard card);
+    public abstract boolean awaitingConfirmation();
 
-    public abstract String getFeeCurrency();
+    public abstract boolean hasBalanceInfo();
+
+    public abstract boolean isBalanceNotZero();
+
+    public abstract boolean isBalanceAlterNotZero();
+
+    public abstract byte[] sign(String feeValue, String amountValue, boolean IncFee, String toValue, CardProtocol protocol) throws Exception;
+
+    public abstract boolean checkUnspentTransaction() throws Exception;
+
+    public abstract Uri getShareWalletUriExplorer();
+
+    public abstract Uri getShareWalletUri();
+
+//    public abstract Long getBalanceLong(TangemCard card);
+
+    public abstract boolean checkNewTransactionAmount(Amount amount);
+
+    // TODO - move minFeeInInternalUnits to CoinData
+    public abstract boolean checkNewTransactionAmountAndFee(Amount amount, Amount fee, Boolean isFeeIncluded, InternalAmount minFeeInInternalUnits);
+
+    public abstract boolean validateBalance(BalanceValidator balanceValidator);
+
+    public abstract Amount getBalance();
+
+    public abstract String getBalanceHTML();
+
+    public abstract String getBalanceCurrencyHTML();
+
+    public abstract InputFilter[] getAmountInputFilters();
+
+    public abstract String getOfflineBalanceHTML();
+
+    public abstract String evaluateFeeEquivalent(String fee);
+
+    public abstract String getFeeCurrencyHTML();
 
     public abstract boolean isNeedCheckNode();
 
-    public abstract String getBalanceEquivalent(TangemCard card);
+    public abstract String getBalanceEquivalent();
 
-    public abstract String getBalanceValue(TangemCard card);
+//    public abstract String getBalanceValue(TangemCard card);
 
-    public abstract String getAmountDescription(TangemCard card, String amount) throws Exception;
+//    public abstract String getAmountDescription(TangemCard card, String amount) throws Exception;
 
-    public abstract String getAmountEquivalentDescriptor(TangemCard card, String value);
+//    public abstract String getAmountEquivalentDescriptor(TangemCard card, String value);
 
-    public abstract boolean validateAddress(String address, TangemCard card);
+    public abstract boolean validateAddress(String address);
 
-    public abstract String calculateAddress(TangemCard card, byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException;
+    public abstract String calculateAddress(byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException;
 
-    public abstract String convertByteArrayToAmount(TangemCard card, byte[] bytes) throws Exception;
+    public abstract Amount convertToAmount(InternalAmount internalAmount);
+    public abstract Amount convertToAmount(String strAmount);
 
-    public abstract byte[] convertAmountToByteArray(TangemCard card, String amount) throws Exception;
+    public abstract InternalAmount convertToInternalAmount(Amount amount) throws Exception;
+    public abstract InternalAmount convertToInternalAmount(byte[] bytes) throws Exception;
+
+    public abstract byte[] convertToByteArray(InternalAmount internalAmount) throws Exception;
+
+
+//    public abstract CoinEngine swithToBaseEngine();
+
+    public abstract CoinData createCoinData();
+
+    public abstract String getUnspentInputsDescription();
 
 }
