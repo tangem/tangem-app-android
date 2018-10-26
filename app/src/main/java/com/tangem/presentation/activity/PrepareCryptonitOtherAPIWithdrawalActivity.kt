@@ -8,6 +8,7 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.text.Html
 import android.text.InputFilter
 import android.view.View
 import com.tangem.data.network.Cryptonit_OtherAPI
@@ -15,6 +16,7 @@ import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemCard
+import com.tangem.domain.wallet.TangemContext
 import com.tangem.util.DecimalDigitsInputFilter
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_cryptonit_other_api_withdrawal.*
@@ -30,7 +32,7 @@ class PrepareCryptonitOtherAPIWithdrawalActivity : AppCompatActivity(), NfcAdapt
         private const val REQUEST_CODE_SCAN_QR_USER_ID = 3
     }
 
-    private var card: TangemCard? = null
+    private lateinit var ctx: TangemContext
     private var nfcManager: NfcManager? = null
     private var cryptonit: Cryptonit_OtherAPI? = null
 
@@ -44,8 +46,7 @@ class PrepareCryptonitOtherAPIWithdrawalActivity : AppCompatActivity(), NfcAdapt
 
         nfcManager = NfcManager(this, this)
 
-        card = TangemCard(intent.getStringExtra(TangemCard.EXTRA_UID))
-        card!!.loadFromBundle(intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
+        ctx = TangemContext.loadFromBundle(this, intent.extras)
 
         cryptonit = Cryptonit_OtherAPI(this)
 
@@ -53,33 +54,14 @@ class PrepareCryptonitOtherAPIWithdrawalActivity : AppCompatActivity(), NfcAdapt
         tvUserID.text = cryptonit!!.userId
         tvSecret.text = cryptonit!!.secretDescription
 
-        tvCardID.text = card!!.cidDescription
-        tvWallet.text = card!!.wallet
-        val engine = CoinEngineFactory.create(card!!.blockchain)
+        tvCardID.text = ctx.card!!.cidDescription
+        tvWallet.text = ctx.card!!.wallet
+        val engine = CoinEngineFactory.create(ctx)
 
-        when (card!!.blockchain) {
-            Blockchain.Ethereum, Blockchain.EthereumTestNet -> {
-                tvCurrency.text = engine.getBalanceCurrency(card)
-            }
-            Blockchain.Bitcoin, Blockchain.BitcoinTestNet, Blockchain.BitcoinCash, Blockchain.BitcoinCashTestNet -> {
-                tvCurrency.text = card!!.blockchain.currency
-            }
-            else -> {
-                tvCurrency.text = engine.getBalanceCurrency(card)
-            }
-        }
+        tvCurrency.text = Html.fromHtml(engine.balanceCurrencyHTML)
 
-        etAmount.setText(engine.convertByteArrayToAmount(card!!, card!!.denomination))
-        when (card!!.blockchain) {
-            Blockchain.Bitcoin ->
-                etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(5))
-            Blockchain.BitcoinCash ->
-                etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(8))
-            Blockchain.Ethereum ->
-                etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(18))
-            else -> {
-            }
-        }
+        etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toString())
+        etAmount.filters=engine.amountInputFilters
 
         // set listeners
         btnLoad.setOnClickListener {
@@ -93,7 +75,7 @@ class PrepareCryptonitOtherAPIWithdrawalActivity : AppCompatActivity(), NfcAdapt
                 rlProgressBar.visibility = View.VISIBLE
                 tvProgressDescription.text = getString(R.string.cryptonit_request_withdrawal)
 
-                cryptonit!!.requestCryptoWithdrawal(card!!.blockchain.currency, dblAmount.toString(), card!!.wallet)
+                cryptonit!!.requestCryptoWithdrawal(ctx.blockchain.currency, dblAmount.toString(), ctx.card!!.wallet)
             } catch (e: Exception) {
                 etAmount.error = getString(R.string.unknown_amount_format)
             }
@@ -122,7 +104,7 @@ class PrepareCryptonitOtherAPIWithdrawalActivity : AppCompatActivity(), NfcAdapt
         ivRefreshBalance.setOnClickListener { doRequestBalance() }
 
         cryptonit!!.setBalanceListener { response ->
-            when (card!!.blockchain) {
+            when (ctx.blockchain) {
                 Blockchain.Ethereum, Blockchain.EthereumTestNet -> {
                     tvBalance.text = response.eth_available
                 }
@@ -133,7 +115,7 @@ class PrepareCryptonitOtherAPIWithdrawalActivity : AppCompatActivity(), NfcAdapt
                 }
             }
 
-            tvBalanceCurrency.text = card!!.blockchain.currency
+            tvBalanceCurrency.text = ctx.blockchain.currency
             tvBalance.setTextColor(Color.BLACK)
             rlProgressBar.visibility = View.INVISIBLE
             btnLoad.isActivated = true
@@ -161,7 +143,7 @@ class PrepareCryptonitOtherAPIWithdrawalActivity : AppCompatActivity(), NfcAdapt
             rlProgressBar.visibility = View.VISIBLE
             tvProgressDescription.text = getString(R.string.cryptonit_request_balance)
             tvError.visibility = View.INVISIBLE
-            cryptonit!!.requestBalance(card!!.blockchain.currency, "USD")
+            cryptonit!!.requestBalance(ctx.blockchain.currency, "USD")
         } else {
             tvError.visibility = View.VISIBLE
             tvError.text = getString(R.string.cryptonit_not_enough_account_data)
