@@ -5,17 +5,37 @@ package com.tangem.domain.wallet;
  */
 
 public class CoinEngineFactory {
-    public static CoinEngine create(Blockchain chain) {
-        if (Blockchain.BitcoinCash == chain || Blockchain.BitcoinCashTestNet == chain) {
-            return new BtcCashEngine();
-        } else if (Blockchain.Bitcoin == chain || Blockchain.BitcoinTestNet == chain) {
-            return new BtcEngine(); //TODO: ВРЕМЕНГГО!!!!
-        } else if (Blockchain.Ethereum == chain || Blockchain.EthereumTestNet == chain) {
-            return new EthEngine();
-        } else if (Blockchain.Token == chain) {
-            return new TokenEngine();
+    public static CoinEngine create(Blockchain blockchain) {
+        switch (blockchain) {
+            case Bitcoin:
+            case BitcoinTestNet:
+                return new BtcEngine();
+            case BitcoinCash:
+            case BitcoinCashTestNet:
+                return new BtcCashEngine();
+            case Ethereum:
+            case EthereumTestNet:
+                return new EthEngine();
+            case Token:
+                return new TokenEngine();
+            default:
+                return null;
+        }
+    }
+
+    public static CoinEngine create(TangemContext context) {
+        CoinEngine result;
+        if (Blockchain.BitcoinCash == context.getBlockchain() || Blockchain.BitcoinCashTestNet == context.getBlockchain()) {
+            result = new BtcCashEngine(context);
+        } else if (Blockchain.Bitcoin == context.getBlockchain() || Blockchain.BitcoinTestNet == context.getBlockchain()) {
+            result = new BtcEngine(context);
+        } else if (Blockchain.Ethereum == context.getBlockchain() || Blockchain.EthereumTestNet == context.getBlockchain()) {
+            result = new EthEngine(context);
+        } else if (Blockchain.Token == context.getBlockchain()) {
+            result = new TokenEngine(context);
         } else {
             return null;
         }
+        return result;
     }
 }
