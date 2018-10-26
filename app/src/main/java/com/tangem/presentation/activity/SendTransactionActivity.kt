@@ -12,9 +12,7 @@ import com.tangem.data.network.ServerApiHelper
 import com.tangem.data.network.ServerApiHelperElectrum
 import com.tangem.data.network.model.InfuraResponse
 import com.tangem.domain.cardReader.NfcManager
-import com.tangem.domain.wallet.Blockchain
-import com.tangem.domain.wallet.CoinEngineFactory
-import com.tangem.domain.wallet.TangemCard
+import com.tangem.domain.wallet.*
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import org.json.JSONException
@@ -30,7 +28,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     private var serverApiHelper: ServerApiHelper = ServerApiHelper()
     private var serverApiHelperElectrum: ServerApiHelperElectrum = ServerApiHelperElectrum()
 
-    private var card: TangemCard? = null
+    private lateinit var ctx: TangemContext
     private var tx: String? = null
     private var nfcManager: NfcManager? = null
 
@@ -42,19 +40,18 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         nfcManager = NfcManager(this, this)
 
-        val intent = intent
-        card = TangemCard(getIntent().getStringExtra(TangemCard.EXTRA_UID))
-        card!!.loadFromBundle(intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
+
+        ctx=TangemContext.loadFromBundle(this, intent.extras)
         tx = intent.getStringExtra(EXTRA_TX)
 
-        val engine = CoinEngineFactory.create(card!!.blockchain)
+        val engine = CoinEngineFactory.create(ctx)
 
-        if (card!!.blockchain == Blockchain.Ethereum || card!!.blockchain == Blockchain.EthereumTestNet || card!!.blockchain == Blockchain.Token)
+        if (ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token)
             requestInfura(ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION, "")
-        else if (card!!.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet)
-            requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
-        else if (card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet)
-            requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
+        else if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet)
+            requestElectrum(ctx.card!!, ElectrumRequest.broadcast(ctx.card!!.wallet, tx))
+        else if (ctx.blockchain == Blockchain.BitcoinCash || ctx.blockchain == Blockchain.BitcoinCashTestNet)
+            requestElectrum(ctx.card!!, ElectrumRequest.broadcast(ctx.card!!.wallet, tx))
 
         // request electrum listener
         val electrumBodyListener: ServerApiHelperElectrum.ElectrumRequestDataListener = object : ServerApiHelperElectrum.ElectrumRequestDataListener {
@@ -69,11 +66,11 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                             finishWithSuccess()
                         } catch (e: Exception) {
                             e.printStackTrace()
-                            requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
+                            requestElectrum(ctx.card!!, ElectrumRequest.broadcast(ctx.card!!.wallet, tx))
                         }
                     } catch (e: JSONException) {
                         e.printStackTrace()
-                        requestElectrum(card!!, ElectrumRequest.broadcast(card!!.wallet, tx))
+                        requestElectrum(ctx.card!!, ElectrumRequest.broadcast(ctx.card!!.wallet, tx))
                     }
                 }
             }
@@ -104,9 +101,9 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                                 hashTX = hashTX.substring(2)
                             }
 
-                            val nonce = card!!.confirmedTXCount
+                            val nonce = (ctx.coinData!! as EthData).confirmedTXCount
                             nonce.add(BigInteger.valueOf(1))
-                            card!!.confirmedTXCount = nonce
+                            (ctx.coinData!! as EthData).confirmedTXCount = nonce
 
                             finishWithSuccess()
                         } catch (e: Exception) {
@@ -163,7 +160,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     private fun requestInfura(method: String, contract: String) {
         if (UtilHelper.isOnline(this)) {
-            serverApiHelper.infura(method, 67, card!!.wallet, contract, tx)
+            serverApiHelper.infura(method, 67, ctx.card!!.wallet, contract, tx)
         } else
             finishWithError(getString(R.string.no_connection))
     }
