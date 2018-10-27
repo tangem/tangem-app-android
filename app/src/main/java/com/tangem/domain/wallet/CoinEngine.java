@@ -65,6 +65,11 @@ public abstract class CoinEngine {
             this.blockchain=blockchain;
         }
 
+        public Amount(BigDecimal amount, Blockchain blockchain) {
+            super(amount.unscaledValue(), amount.scale());
+            this.blockchain=blockchain;
+        }
+
         public String getCurrency() {
             return blockchain.getCurrency();
         }
@@ -83,6 +88,9 @@ public abstract class CoinEngine {
             return super.toString();
         }
 
+        public boolean isZero() {
+            return compareTo(BigDecimal.ZERO)==0;
+        }
     }
 
     protected TangemContext ctx;
