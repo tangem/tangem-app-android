@@ -60,35 +60,6 @@ public class BalanceValidator {
             if( !engine.validateBalance(this) ) return;
         } else if ((card.getBlockchain()  == Blockchain.Ethereum) || (card.getBlockchain()  == Blockchain.Token)) {
 
-            if (card.getBalance() == null) {
-                score = 0;
-                firstLine = "Unknown balance";
-                secondLine = "Balance cannot be verified. Swipe down to refresh.";
-                return;
-            }
-
-            if (!card.getUnconfirmedTXCount().equals(card.getConfirmedTXCount())) {
-                score = 0;
-                firstLine = "Unguaranteed balance";
-                secondLine = "Transaction is in progress. Wait for confirmation in blockchain.";
-                return;
-            }
-
-            if (card.isBalanceReceived()) {
-                score = 100;
-                firstLine = "Verified balance";
-                secondLine = "Balance confirmed in blockchain";
-                if (card.getBalance() == 0) {
-                    firstLine = "Empty wallet";
-                    secondLine = "";
-                }
-            }
-
-            if ((card.getOfflineBalance() != null) && !card.isBalanceReceived() && (card.getRemainingSignatures() == card.getMaxSignatures()) && card.getBalance() != 0) {
-                score = 80;
-                firstLine = "Verified offline balance";
-                secondLine = "Restore internet connection to obtain trusted balance from blockchain";
-            }
         }
 
         // Verify card?
