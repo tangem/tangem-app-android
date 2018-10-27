@@ -107,10 +107,10 @@ public class BtcEngine extends CoinEngine {
 
     @Override
     public String getBalanceHTML() {
-        if (hasBalanceInfo()) {
-            Amount balance = convertToAmount(btcData.getBalanceInInternalUnits());
+        Amount balance=getBalance();
+        if( balance!=null ) {
             return balance.toString();
-        } else {
+        }else{
             return "";
         }
     }
