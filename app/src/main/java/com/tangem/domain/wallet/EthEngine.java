@@ -53,11 +53,19 @@ public class EthEngine extends CoinEngine {
     }
 
     @Override
+    public Amount getBalance() {
+        if (!hasBalanceInfo()) {
+            return null;
+        }
+        return convertToAmount(ethData.getBalanceInInternalUnits());
+    }
+
+    @Override
     public String getBalanceHTML() {
-        if (hasBalanceInfo()) {
-            Amount balance = convertToAmount(ethData.getBalanceInInternalUnits());
+        Amount balance=getBalance();
+        if( balance!=null ) {
             return balance.toString();
-        } else {
+        }else{
             return "";
         }
     }
@@ -74,12 +82,13 @@ public class EthEngine extends CoinEngine {
         return offlineAmount.toString();
     }
 
-
     @Override
     public boolean isBalanceAlterNotZero() {
-        return true;
+        return true; //TODO ???
+//        if( ethData==null ) return false;
+//        if (ethData.getBalanceAlterInInternalUnits() == null) return false;
+//        return ethData.getBalanceAlterInInternalUnits().notZero();
     }
-
 
     @Override
     public boolean isBalanceNotZero() {
@@ -90,26 +99,34 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public String getFeeCurrencyHTML() {
-        return "Gwei";
+        return "ETH";
     }
 
     public boolean isNeedCheckNode() {
         return false;
     }
 
-    BigDecimal convertToEth(String value) {
-        BigInteger m = new BigInteger(value, 10);
-        BigDecimal n = new BigDecimal(m);
-        BigDecimal d = n.divide(new BigDecimal("1000000000000000000"));
-        d = d.setScale(8, RoundingMode.DOWN);
-        return d;
+
+    @Override
+    public CoinData createCoinData() {
+        return new EthData();
     }
 
-    public String getContractAddress(TangemCard card) {
+    @Override
+    public String getUnspentInputsDescription() {
         return "";
     }
 
-    public boolean validateAddress(String address, TangemCard card) {
+//    BigDecimal convertToEth(String value) {
+//        BigInteger m = new BigInteger(value, 10);
+//        BigDecimal n = new BigDecimal(m);
+//        BigDecimal d = n.divide(new BigDecimal("1000000000000000000"));
+//        d = d.setScale(8, RoundingMode.DOWN);
+//        return d;
+//    }
+
+    @Override
+    public boolean validateAddress(String address) {
 
         if (address == null || address.isEmpty()) {
             return false;
@@ -126,18 +143,18 @@ public class EthEngine extends CoinEngine {
         return true;
     }
 
-    public String getBalanceValue(TangemCard mCard) {
-        String dec = mCard.getDecimalBalance();
-        BigDecimal d = convertToEth(dec);
-        String s = d.toString();
+//    public String getBalanceValue(TangemCard mCard) {
+//        String dec = ethData.getBalanceInInternalUnits();
+//        BigDecimal d = convertToEth(dec);
+//        String s = d.toString();
+//
+//        String pattern = "#0.##################"; // If you like 4 zeros
+//        DecimalFormat myFormatter = new DecimalFormat(pattern);
+//        String output = myFormatter.format(d);
+//        return output;
+//    }
 
-        String pattern = "#0.##################"; // If you like 4 zeros
-        DecimalFormat myFormatter = new DecimalFormat(pattern);
-        String output = myFormatter.format(d);
-        return output;
-    }
-
-    public static String getAmountEquivalentDescriptionETH(BigDecimal amount, float rateValue) {
+    public static String getAmountEquivalentDescription(Amount amount, double rateValue) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) == 0)
             return "";
 
@@ -151,137 +168,96 @@ public class EthEngine extends CoinEngine {
         }
     }
 
-    public static String getAmountEquivalentDescriptionETH(Double amount, float rate) {
-        if (amount == 0)
-            return "";
-        amount = amount / 100000;
-        if (rate > 0) {
-            return String.format("≈ USD %.2f", amount * rate);
-        } else {
-            return "";
-        }
+//    public static String getAmountEquivalentDescriptionETH(Double amount, float rate) {
+//        if (amount == 0)
+//            return "";
+//        amount = amount / 100000;
+//        if (rate > 0) {
+//            return String.format("≈ USD %.2f", amount * rate);
+//        } else {
+//            return "";
+//        }
+//
+//    }
 
+
+    @Override
+    public String getBalanceEquivalent() {
+        return getAmountEquivalentDescription(getBalance(), ethData.getRate());
+    }
+
+    @Override
+    public Amount convertToAmount(InternalAmount internalAmount) {
+        BigDecimal d = internalAmount.divide(new BigDecimal("1000000000000000000"), 8, RoundingMode.DOWN);
+        return new Amount(d, ctx.getBlockchain());
+    }
+
+    @Override
+    public Amount convertToAmount(String strAmount) {
+        return new Amount(strAmount, ctx.getBlockchain());
+    }
+
+    @Override
+    public InternalAmount convertToInternalAmount(Amount amount){
+        return new InternalAmount(amount.multiply(new BigDecimal("1000000000000000000")));
+    }
+
+    @Override
+    public InternalAmount convertToInternalAmount(byte[] bytes) {
+        //throw new Exception("Not implemented");
+        return null;
     }
 
 
     @Override
-    public String getBalanceEquivalent(TangemCard mCard) {
-        String dec = mCard.getDecimalBalance();
-        BigDecimal d = convertToEth(dec);
-        return getAmountEquivalentDescriptionETH(d, mCard.getRate());
-    }
-
-    @Override
-    public String getBalance(TangemCard mCard) {
-        if (!hasBalanceInfo(mCard)) {
-            return "";
-        }
-
-        String output = getBalanceValue(mCard);
-        String s = output + " " + getBalanceCurrency(mCard);
-        return s;
-    }
-
-    public Long getBalanceLong(TangemCard mCard) {
-        return mCard.getBalance();
-    }
-
-    public String getBalanceHTML(TangemCard mCard) {
-        return getBalance(mCard);
-    }
-
-    public boolean isBalanceAlterNotZero(TangemCard card) {
-        return true;
-    }
-
-    public boolean isBalanceNotZero(TangemCard card) {
-        String balance = card.getDecimalBalance();
-        if (balance == null || balance == "")
-            return false;
-
-        BigDecimal bi = new BigDecimal(balance);
-
-        if (BigDecimal.ZERO.compareTo(bi) == 0)
-            return false;
-
-        return true;
-    }
-
-    @Override
-    public String convertByteArrayToAmount(TangemCard mCard, byte[] bytes) throws Exception {
+    public byte[] convertToByteArray(InternalAmount amount) throws Exception {
         throw new Exception("Not implemented");
-    }
-
-    @Override
-    public byte[] convertAmountToByteArray(TangemCard mCard, String amount) throws Exception {
-        throw new Exception("Not implemented");
-    }
-
-    @Override
-    public String getAmountDescription(TangemCard mCard, String amount) throws Exception {
-        throw new Exception("Not implemented");
-    }
-
-    public String getAmountEquivalentDescriptor(TangemCard card, String value) {
-        BigDecimal d = new BigDecimal(value);
-        return getAmountEquivalentDescriptionETH(d, card.getRate());
-    }
-
-    public BigDecimal GetBalanceAlterValueBigDecimal(TangemCard mCard) {
-        String dec = mCard.getDecimalBalanceAlter();
-        BigDecimal d = convertToEth(dec);
-//        String s = d.toString();
-
-//        String pattern = "#0.000"; // If you like 4 zeros
-//        DecimalFormat myFormatter = new DecimalFormat(pattern);
-//        String output = myFormatter.format(d);
-        return d;
-    }
-
-    public boolean checkAmount(TangemCard card, String amount) throws Exception {
-        DecimalFormat decimalFormat = GetDecimalFormat();
-        BigDecimal amountValue = (BigDecimal) decimalFormat.parse(amount); //new BigDecimal(strAmount);
-//        BigDecimal maxValue = new BigDecimal(getBalanceValue(card));
-        BigDecimal maxValue = GetBalanceAlterValueBigDecimal(card);
-        if (amountValue.compareTo(maxValue) > 0) {
-            return false;
-        }
-
-        return true;
     }
 
     @Override
     public boolean hasBalanceInfo() {
-        return ethData.hasBalanceInfo();
+        return ethData.getBalanceInInternalUnits()!=null;
     }
 
-    public Uri getShareWalletUri(TangemCard mCard) {
-        if (mCard.getDenomination() != null) {
-            return Uri.parse("ethereum:" + mCard.getWallet());// + "?value=" + mCard.getDenomination() +"e18");
+    @Override
+    public Uri getShareWalletUri() {
+        if (ctx.getCard().getDenomination() != null) {
+            return Uri.parse("ethereum:" + ctx.getCard().getWallet());// + "?value=" + mCard.getDenomination() +"e18");
         } else {
-            return Uri.parse("ethereum:" + mCard.getWallet());
+            return Uri.parse("ethereum:" + ctx.getCard().getWallet());
         }
     }
 
-    public Uri getShareWalletUriExplorer(TangemCard mCard) {
-        if (mCard.getBlockchain() == Blockchain.EthereumTestNet)
-            return Uri.parse("https://rinkeby.etherscan.io/address/" + mCard.getWallet());
+    @Override
+    public Uri getShareWalletUriExplorer() {
+        if (ctx.getCard().getBlockchain() == Blockchain.EthereumTestNet)
+            return Uri.parse("https://rinkeby.etherscan.io/address/" + ctx.getCard().getWallet());
         else
-            return Uri.parse("https://etherscan.io/address/" + mCard.getWallet());
+            return Uri.parse("https://etherscan.io/address/" + ctx.getCard().getWallet());
     }
 
-    public boolean checkUnspentTransaction(TangemCard mCard) {
+    @Override
+    public boolean checkUnspentTransaction() {
         return true;
     }
-
 
     @Override
     public InputFilter[] getAmountInputFilters() {
         return new InputFilter[] { new DecimalDigitsInputFilter(18) };
     }
 
+    @Override
+    public boolean checkNewTransactionAmount(Amount amount){
+        if( ethData==null ) return false;
+        Amount balance=getBalance();
+        if (balance==null || amount.compareTo(balance) > 0) {
+            return false;
+        }
+        return true;
+    }
 
-    public boolean checkAmountValue(TangemCard mCard, String amountValue, String feeValue, Long minFeeInInternalUnits, Boolean incfee) {
+    @Override
+    public boolean checkNewTransactionAmountAndFee(Amount amount, Amount fee, Boolean isFeeIncluded, InternalAmount minFeeInInternalUnits) {
 //        Long fee = null;
 //        Long amount = null;
 //        try {
@@ -303,18 +279,12 @@ public class EthEngine extends CoinEngine {
 //            return false;
 
         try {
-            BigDecimal tmpFee = new BigDecimal(feeValue);
-            BigDecimal tmpAmount = new BigDecimal(amountValue);
-            BigDecimal cardBalance = new BigDecimal(ethData.getDecimalBalance());
-            tmpAmount = tmpAmount.multiply(new BigDecimal("1000000000"));
-            cardBalance = cardBalance.divide(new BigDecimal("1000000000"));
-            //if (tmpFee.compareTo(tmpAmount) > 0)
-            //    return false;
+            BigDecimal cardBalance = getBalance();
 
-            if (incfee && tmpAmount.compareTo(cardBalance) > 0 )
+            if (isFeeIncluded && amount.compareTo(cardBalance) > 0 )
                 return false;
 
-            if (!incfee && tmpAmount.add(tmpFee).compareTo(cardBalance) > 0)
+            if (!isFeeIncluded && amount.add(fee).compareTo(cardBalance) > 0)
                 return false;
 
         } catch (NumberFormatException e) {
@@ -324,14 +294,50 @@ public class EthEngine extends CoinEngine {
         return true;
     }
 
-    public String evaluateFeeEquivalent(TangemCard card, String fee) {
-        BigDecimal gweFee = new BigDecimal(fee);
-        gweFee = gweFee.divide(new BigDecimal("1000000000"));
-        gweFee = gweFee.setScale(18, RoundingMode.DOWN);
-        return getAmountEquivalentDescriptor(card, gweFee.toString());
+    @Override
+    public boolean validateBalance(BalanceValidator balanceValidator) {
+        if (getBalance() == null) {
+            balanceValidator.setScore(0);
+            balanceValidator.setFirstLine("Unknown balance");
+            balanceValidator.setSecondLine("Balance cannot be verified. Swipe down to refresh.");
+            return false;
+        }
+
+        if (!ethData.getUnconfirmedTXCount().equals(ethData.getConfirmedTXCount())) {
+            balanceValidator.setScore(0);
+            balanceValidator.setFirstLine("Unguaranteed balance");
+            balanceValidator.setSecondLine("Transaction is in progress. Wait for confirmation in blockchain.");
+            return false;
+        }
+
+        if (ethData.isBalanceReceived()) {
+            balanceValidator.setScore(100);
+            balanceValidator.setFirstLine("Verified balance");
+            balanceValidator.setSecondLine("Balance confirmed in blockchain");
+            if (getBalance().isZero()) {
+                balanceValidator.setFirstLine("Empty wallet");
+                balanceValidator.setSecondLine("");
+            }
+        }
+
+        if ((ctx.getCard().getOfflineBalance() != null) && !ethData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && getBalance().notZero()) {
+            balanceValidator.setScore(80);
+            balanceValidator.setFirstLine("Verified offline balance");
+            balanceValidator.setSecondLine("Restore internet connection to obtain trusted balance from blockchain");
+        }
+
+        return true;
+
     }
 
-    public String calculateAddress(TangemCard mCard, byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException {
+    @Override
+    public String evaluateFeeEquivalent(String fee) {
+        Amount feeValue = new Amount(fee, ctx.getBlockchain());
+        return getAmountEquivalentDescription(feeValue, ethData.getRate());
+    }
+
+    @Override
+    public String calculateAddress(byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException {
         Keccak256 kec = new Keccak256();
         int lenPk = pkUncompressed.length;
         if (lenPk < 2) {
@@ -351,12 +357,13 @@ public class EthEngine extends CoinEngine {
         return String.format("0x%s", BTCUtils.toHex(address));
     }
 
-    public byte[] sign(String feeValue, String amountValue, boolean IncFee, String toValue, TangemCard mCard, CardProtocol protocol) throws Exception {
+    @Override
+    public byte[] sign(String feeValue, String amountValue, boolean IncFee, String toValue, CardProtocol protocol) throws Exception {
 
         BigInteger nonceValue = ethData.getConfirmedTXCount();
-        byte[] pbKey = mCard.getWalletPublicKey();
-        boolean flag = (mCard.getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer);
-        Issuer issuer = mCard.getIssuer();
+        byte[] pbKey = ctx.getCard().getWalletPublicKey();
+        boolean flag = (ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer);
+        Issuer issuer = ctx.getCard().getIssuer();
 
 
         BigInteger fee = new BigInteger(feeValue, 10);
@@ -373,7 +380,7 @@ public class EthEngine extends CoinEngine {
         BigInteger nonce = nonceValue;
         BigInteger gasPrice = fee.divide(BigInteger.valueOf(21000));
         BigInteger gasLimit = BigInteger.valueOf(21000);
-        Integer chainId = mCard.getBlockchain() == Blockchain.Ethereum ? EthTransaction.ChainEnum.Mainnet.getValue() : EthTransaction.ChainEnum.Rinkeby.getValue();
+        Integer chainId = ctx.getBlockchain() == Blockchain.Ethereum ? EthTransaction.ChainEnum.Mainnet.getValue() : EthTransaction.ChainEnum.Rinkeby.getValue();
 
         Long multiplicator = 1000000000L;
         amount = amount.multiply(BigInteger.valueOf(multiplicator));
