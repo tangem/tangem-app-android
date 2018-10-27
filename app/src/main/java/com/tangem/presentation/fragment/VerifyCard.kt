@@ -287,15 +287,6 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
             val engine = CoinEngineFactory.create(ctx)
 
             tvInputs.text = engine.unspentInputsDescription
-            if (.blockchain == Blockchain.Bitcoin || card!!.blockchain == Blockchain.BitcoinTestNet  || card!!.blockchain == Blockchain.BitcoinCash || card!!.blockchain == Blockchain.BitcoinCashTestNet) {
-                var gatheredUnspents = 0
-                for (i in 0 until card!!.unspentTransactions.size) {
-                    if (card!!.unspentTransactions[i].Raw.length > 1)  gatheredUnspents++
-                }
-                tvInputs.text = card!!.unspentTransactions.size.toString() + " unspents (" + gatheredUnspents.toString() + " recieved)"
-            }
-            else
-                tvInputs.text = ""
 
             ivBlockchain.setImageResource(Blockchain.getLogoImageResource(ctx.card!!.blockchainID, ctx.card!!.tokenSymbol))
 
