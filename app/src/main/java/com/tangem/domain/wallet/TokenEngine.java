@@ -42,7 +42,8 @@ public class TokenEngine extends CoinEngine {
 
     }
 
-    public boolean awaitingConfirmation(TangemCard card) {
+    @Override
+    public boolean awaitingConfirmation() {
         return false;
     }
 
@@ -95,55 +96,55 @@ public class TokenEngine extends CoinEngine {
         return true;
     }
 
-    public String GetBalanceAlterValue(TangemCard mCard) {
-        String dec = mCard.getDecimalBalanceAlter();
-        if(dec == null || dec.isEmpty()) return "";
-        BigDecimal d = convertToEth(dec);
-        String s = d.toString();
-
-        String pattern = "#0.##################"; // If you like 4 zeros
-        DecimalFormat myFormatter = new DecimalFormat(pattern);
-        String output = myFormatter.format(d);
-        return output;
-    }
-
-    public BigDecimal getBalanceAlterValueBigDecimal(TangemCard card) {
-        String dec = card.getDecimalBalanceAlter();
-        BigDecimal d = convertToEth(dec);
+//    public String GetBalanceAlterValue(TangemCard mCard) {
+//        String dec = mCard.getDecimalBalanceAlter();
+//        if(dec == null || dec.isEmpty()) return "";
+//        BigDecimal d = convertToEth(dec);
 //        String s = d.toString();
-
-//        String pattern = "#0.000"; // If you like 4 zeros
+//
+//        String pattern = "#0.##################"; // If you like 4 zeros
 //        DecimalFormat myFormatter = new DecimalFormat(pattern);
 //        String output = myFormatter.format(d);
-        return d;
-    }
-
-    public String getBalanceValue(TangemCard mCard) {
-        if (!hasBalanceInfo(mCard))
-            return "";
-
-        String dec = mCard.getDecimalBalance();
-        BigDecimal d = new BigDecimal(dec);
-        BigDecimal p = new BigDecimal(10);
-        p = p.pow(getTokenDecimals(mCard));
-        BigDecimal l = d.divide(p);
-
-        String pattern = "#0.##################"; // If you like 4 zeros
-        DecimalFormat myFormatter = new DecimalFormat(pattern);
-        String output = myFormatter.format(l);
-        return output;
-    }
-
-    public BigDecimal GetBalanceValueBigDecimal(TangemCard mCard) {
-
-        String dec = mCard.getDecimalBalance();
-        BigDecimal d = new BigDecimal(dec);
-        BigDecimal p = new BigDecimal(10);
-        p = p.pow(getTokenDecimals(mCard));
-        BigDecimal l = d.divide(p);
-
-        return l;
-    }
+//        return output;
+//    }
+//
+//    public BigDecimal getBalanceAlterValueBigDecimal(TangemCard card) {
+//        String dec = card.getDecimalBalanceAlter();
+//        BigDecimal d = convertToEth(dec);
+////        String s = d.toString();
+//
+////        String pattern = "#0.000"; // If you like 4 zeros
+////        DecimalFormat myFormatter = new DecimalFormat(pattern);
+////        String output = myFormatter.format(d);
+//        return d;
+//    }
+//
+//    public String getBalanceValue(TangemCard mCard) {
+//        if (!hasBalanceInfo(mCard))
+//            return "";
+//
+//        String dec = mCard.getDecimalBalance();
+//        BigDecimal d = new BigDecimal(dec);
+//        BigDecimal p = new BigDecimal(10);
+//        p = p.pow(getTokenDecimals(mCard));
+//        BigDecimal l = d.divide(p);
+//
+//        String pattern = "#0.##################"; // If you like 4 zeros
+//        DecimalFormat myFormatter = new DecimalFormat(pattern);
+//        String output = myFormatter.format(l);
+//        return output;
+//    }
+//
+//    public BigDecimal GetBalanceValueBigDecimal(TangemCard mCard) {
+//
+//        String dec = mCard.getDecimalBalance();
+//        BigDecimal d = new BigDecimal(dec);
+//        BigDecimal p = new BigDecimal(10);
+//        p = p.pow(getTokenDecimals(mCard));
+//        BigDecimal l = d.divide(p);
+//
+//        return l;
+//    }
 
     public boolean checkAmount(TangemCard card, String amount) throws Exception {
         DecimalFormat decimalFormat = GetDecimalFormat();
