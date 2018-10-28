@@ -114,7 +114,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         tvWallet.text = card!!.wallet
 
         // set listeners
-        srl!!.setOnRefreshListener { refresh() }
+        srl?.setOnRefreshListener { refresh() }
         btnLookup.setOnClickListener {
             val engineClick = CoinEngineFactory.create(card!!.blockchain)
             val browserIntent = Intent(Intent.ACTION_VIEW, engineClick.getShareWalletUriExplorer(card))
@@ -343,7 +343,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                                 card!!.addTokenToBlockchainName()
 
                                 requestCounter--
-                                if (requestCounter == 0) srl!!.isRefreshing = false
+                                if (requestCounter == 0) srl?.isRefreshing = false
 
                                 requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
                                 requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
@@ -466,7 +466,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private fun counterMinus() {
         requestCounter--
         if (requestCounter == 0) {
-            if (srl != null) srl!!.isRefreshing = false
+            srl?.isRefreshing = false
             updateViews()
         }
     }
@@ -626,9 +626,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
             REQUEST_CODE_SEND_PAYMENT, REQUEST_CODE_RECEIVE_PAYMENT -> {
                 if (resultCode == Activity.RESULT_OK) {
-                    card!!.clearInfo()
-                    srl!!.postDelayed({ this.refresh() }, 5000)
-                    srl!!.isRefreshing = true
+                    card?.clearInfo()
+                    srl?.postDelayed({ this.refresh() }, 5000)
+                    srl?.isRefreshing = true
                     updateViews()
                 }
 
@@ -810,7 +810,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         if ((srl == null) || (card == null)) return;
         try {
             // clear all card data and request again
-            srl!!.isRefreshing = true
+            srl?.isRefreshing = true
             card!!.clearInfo()
             card!!.error = null
             card!!.message = null
@@ -864,7 +864,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             serverApiHelperElectrum.electrumRequestData(card, electrumRequest)
         } else {
             Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            srl!!.isRefreshing = false
+            srl?.isRefreshing = false
         }
     }
 
@@ -874,7 +874,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             serverApiHelper.infura(method, 67, card!!.wallet, contract, "")
         } else {
             Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            srl!!.isRefreshing = false
+            srl?.isRefreshing = false
         }
     }
 
@@ -885,7 +885,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
         } else {
             Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            srl!!.isRefreshing = false
+            srl?.isRefreshing = false
         }
     }
 
@@ -894,7 +894,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             serverApiHelper.rateInfoData(cryptoId)
         } else {
             Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            srl!!.isRefreshing = false
+            srl?.isRefreshing = false
         }
     }
 
