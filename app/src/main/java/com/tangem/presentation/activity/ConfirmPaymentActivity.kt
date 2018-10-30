@@ -49,7 +49,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     private var maxFee: String? = null
     private var normalFee: String? = null
     private var isIncludeFee: Boolean = true
-    private var minFeeInInternalUnits: CoinEngine.InternalAmount? = CoinEngine.InternalAmount(0)
+    private var minFeeInInternalUnits: CoinEngine.InternalAmount? = CoinEngine.InternalAmount(0, "")
     private var requestPIN2Count = 0
     private var nodeCheck = false
     private var dtVerified: Date? = null
@@ -163,8 +163,8 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 return@setOnClickListener
             }
 
-            val txFee = engineCoin.convertToAmount(etFee.text.toString())
-            val txAmount = engineCoin.convertToAmount(etAmount.text.toString())
+            val txFee = engineCoin.convertToAmount(etFee.text.toString(), tvCurrency2.text.toString())
+            val txAmount = engineCoin.convertToAmount(etAmount.text.toString(), tvCurrency.text.toString())
 
             if (!engineCoin.hasBalanceInfo()) {
                 finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
@@ -200,7 +200,10 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_GetBalance)) {
                     try {
                         etFee.setText(getString(R.string.empty))
-                        if ((electrumRequest.result.getInt("confirmed") + electrumRequest.result.getInt("unconfirmed")) / ctx.blockchain.multiplier * 1000000.0 < java.lang.Float.parseFloat(etAmount.text.toString())) {
+                        val engine = CoinEngineFactory.create(ctx)
+                        val balance= engine.convertToAmount(CoinEngine.InternalAmount(electrumRequest.result.getLong("confirmed") + electrumRequest.result.getLong("unconfirmed"), "Satoshi"))
+                        val amount = CoinEngine.Amount(etAmount.text.toString(), ctx.blockchain.currency)
+                        if (balance < amount) {
                             etFee.error = getString(R.string.not_enough_funds)
                         } else {
                             etFee.error = null
@@ -232,6 +235,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                     ServerApiHelper.INFURA_ETH_GAS_PRICE -> {
                         var gasPrice = infuraResponse.result
                         gasPrice = gasPrice.substring(2)
+                        //TODO - remove Gwei
                         // rounding gas price to integer gwei
                         val l = BigInteger(gasPrice, 16).divide(BigInteger.valueOf(1000000000L)).multiply(BigInteger.valueOf(1000000000L))
 
@@ -249,7 +253,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         feeRequestSuccess = true
                         balanceRequestSuccess = true
                         dtVerified = Date()
-                        minFeeInInternalUnits = CoinEngine.InternalAmount(normalFeeInGwei)
+                        minFeeInInternalUnits = CoinEngine.InternalAmount(normalFeeInGwei,"Gwei")
                     }
                 }
             }
@@ -292,7 +296,8 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 when (blockCount) {
                     ServerApiHelper.ESTIMATE_FEE_MINIMAL -> {
                         minFee = strFee
-                        minFeeInInternalUnits = CoinEngine.InternalAmount(strFee)
+                        //TODO - we must know currency of fee
+                        minFeeInInternalUnits = CoinEngine.InternalAmount(strFee, tvCurrency2.text.toString())
                     }
 
                     ServerApiHelper.ESTIMATE_FEE_NORMAL -> {
