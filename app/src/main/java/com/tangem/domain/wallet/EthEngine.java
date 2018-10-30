@@ -17,10 +17,7 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.text.DecimalFormat;
 import java.util.Arrays;
-
-import static com.tangem.util.FormatUtil.GetDecimalFormat;
 
 /**
  * Created by Ilia on 15.02.2018.
@@ -28,17 +25,17 @@ import static com.tangem.util.FormatUtil.GetDecimalFormat;
 
 public class EthEngine extends CoinEngine {
 
-    public EthData ethData = null;
+    public EthData coinData = null;
 
     public EthEngine(TangemContext ctx) throws Exception {
         super(ctx);
         if (ctx.getCoinData() == null) {
-            ethData = new EthData();
-            ctx.setCoinData(ethData);
+            coinData = new EthData();
+            ctx.setCoinData(coinData);
         } else if (ctx.getCoinData() instanceof BtcData) {
-            ethData = (EthData) ctx.getCoinData();
+            coinData = (EthData) ctx.getCoinData();
         } else {
-            throw new Exception("Invalid type of Blockchain data for BtcEngine");
+            throw new Exception("Invalid type of Blockchain data for EthEngine");
         }
     }
 
@@ -46,6 +43,9 @@ public class EthEngine extends CoinEngine {
         super();
     }
 
+    private static int getDecimals() {
+        return 18;
+    }
 
     @Override
     public boolean awaitingConfirmation(){
@@ -57,14 +57,14 @@ public class EthEngine extends CoinEngine {
         if (!hasBalanceInfo()) {
             return null;
         }
-        return convertToAmount(ethData.getBalanceInInternalUnits());
+        return convertToAmount(coinData.getBalanceInInternalUnits());
     }
 
     @Override
     public String getBalanceHTML() {
         Amount balance=getBalance();
         if( balance!=null ) {
-            return balance.toString();
+            return balance.toDescriptionString(getDecimals());
         }else{
             return "";
         }
@@ -79,22 +79,22 @@ public class EthEngine extends CoinEngine {
     public String getOfflineBalanceHTML() {
         InternalAmount offlineInternalAmount = convertToInternalAmount(ctx.getCard().getOfflineBalance());
         Amount offlineAmount = convertToAmount(offlineInternalAmount);
-        return offlineAmount.toString();
+        return offlineAmount.toDescriptionString(getDecimals());
     }
 
     @Override
     public boolean isBalanceAlterNotZero() {
         return true; //TODO ???
-//        if( ethData==null ) return false;
-//        if (ethData.getBalanceAlterInInternalUnits() == null) return false;
-//        return ethData.getBalanceAlterInInternalUnits().notZero();
+//        if( coinData==null ) return false;
+//        if (coinData.getBalanceAlterInInternalUnits() == null) return false;
+//        return coinData.getBalanceAlterInInternalUnits().notZero();
     }
 
     @Override
     public boolean isBalanceNotZero() {
-        if( ethData==null ) return false;
-        if (ethData.getBalanceInInternalUnits() == null) return false;
-        return ethData.getBalanceInInternalUnits().notZero();
+        if( coinData ==null ) return false;
+        if (coinData.getBalanceInInternalUnits() == null) return false;
+        return coinData.getBalanceInInternalUnits().notZero();
     }
 
     @Override
@@ -127,7 +127,6 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public boolean validateAddress(String address) {
-
         if (address == null || address.isEmpty()) {
             return false;
         }
@@ -144,7 +143,7 @@ public class EthEngine extends CoinEngine {
     }
 
 //    public String getBalanceValue(TangemCard mCard) {
-//        String dec = ethData.getBalanceInInternalUnits();
+//        String dec = coinData.getBalanceInInternalUnits();
 //        BigDecimal d = convertToEth(dec);
 //        String s = d.toString();
 //
@@ -154,19 +153,19 @@ public class EthEngine extends CoinEngine {
 //        return output;
 //    }
 
-    public static String getAmountEquivalentDescription(Amount amount, double rateValue) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) == 0)
-            return "";
-
-        if (rateValue > 0) {
-            BigDecimal biRate = new BigDecimal(rateValue);
-            BigDecimal exchangeCurs = biRate.multiply(amount);
-            exchangeCurs = exchangeCurs.setScale(2, RoundingMode.DOWN);
-            return "≈ USD  " + exchangeCurs.toString();
-        } else {
-            return "";
-        }
-    }
+//    public static String getAmountEquivalentDescription(Amount amount, double rateValue) {
+//        if (amount == null || amount.compareTo(BigDecimal.ZERO) == 0)
+//            return "";
+//
+//        if (rateValue > 0) {
+//            BigDecimal biRate = new BigDecimal(rateValue);
+//            BigDecimal exchangeCurs = biRate.multiply(amount);
+//            exchangeCurs = exchangeCurs.setScale(2, RoundingMode.DOWN);
+//            return "≈ USD  " + exchangeCurs.toString();
+//        } else {
+//            return "";
+//        }
+//    }
 
 //    public static String getAmountEquivalentDescriptionETH(Double amount, float rate) {
 //        if (amount == 0)
@@ -183,23 +182,23 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public String getBalanceEquivalent() {
-        return getAmountEquivalentDescription(getBalance(), ethData.getRate());
+        return getBalance().toEquivalentString(coinData.getRate());
     }
 
     @Override
     public Amount convertToAmount(InternalAmount internalAmount) {
-        BigDecimal d = internalAmount.divide(new BigDecimal("1000000000000000000"), 8, RoundingMode.DOWN);
-        return new Amount(d, ctx.getBlockchain());
+        BigDecimal d = internalAmount.divide(new BigDecimal("1000000000000000000"), getDecimals(), RoundingMode.DOWN);
+        return new Amount(d, ctx.getBlockchain().getCurrency());
     }
 
     @Override
-    public Amount convertToAmount(String strAmount) {
-        return new Amount(strAmount, ctx.getBlockchain());
+    public Amount convertToAmount(String strAmount, String currency) {
+        return new Amount(strAmount, currency);
     }
 
     @Override
     public InternalAmount convertToInternalAmount(Amount amount){
-        return new InternalAmount(amount.multiply(new BigDecimal("1000000000000000000")));
+        return new InternalAmount(amount.multiply(new BigDecimal("1000000000000000000")),"wei");
     }
 
     @Override
@@ -216,7 +215,7 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public boolean hasBalanceInfo() {
-        return ethData.getBalanceInInternalUnits()!=null;
+        return coinData.getBalanceInInternalUnits()!=null;
     }
 
     @Override
@@ -243,12 +242,12 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public InputFilter[] getAmountInputFilters() {
-        return new InputFilter[] { new DecimalDigitsInputFilter(18) };
+        return new InputFilter[] { new DecimalDigitsInputFilter(getDecimals()) };
     }
 
     @Override
     public boolean checkNewTransactionAmount(Amount amount){
-        if( ethData==null ) return false;
+        if( coinData ==null ) return false;
         Amount balance=getBalance();
         if (balance==null || amount.compareTo(balance) > 0) {
             return false;
@@ -303,14 +302,14 @@ public class EthEngine extends CoinEngine {
             return false;
         }
 
-        if (!ethData.getUnconfirmedTXCount().equals(ethData.getConfirmedTXCount())) {
+        if (!coinData.getUnconfirmedTXCount().equals(coinData.getConfirmedTXCount())) {
             balanceValidator.setScore(0);
             balanceValidator.setFirstLine("Unguaranteed balance");
             balanceValidator.setSecondLine("Transaction is in progress. Wait for confirmation in blockchain.");
             return false;
         }
 
-        if (ethData.isBalanceReceived()) {
+        if (coinData.isBalanceReceived()) {
             balanceValidator.setScore(100);
             balanceValidator.setFirstLine("Verified balance");
             balanceValidator.setSecondLine("Balance confirmed in blockchain");
@@ -320,7 +319,7 @@ public class EthEngine extends CoinEngine {
             }
         }
 
-        if ((ctx.getCard().getOfflineBalance() != null) && !ethData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && getBalance().notZero()) {
+        if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && getBalance().notZero()) {
             balanceValidator.setScore(80);
             balanceValidator.setFirstLine("Verified offline balance");
             balanceValidator.setSecondLine("Restore internet connection to obtain trusted balance from blockchain");
@@ -332,8 +331,8 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public String evaluateFeeEquivalent(String fee) {
-        Amount feeValue = new Amount(fee, ctx.getBlockchain());
-        return getAmountEquivalentDescription(feeValue, ethData.getRate());
+        Amount feeValue = new Amount(fee, ctx.getBlockchain().getCurrency());
+        return feeValue.toEquivalentString(coinData.getRate());
     }
 
     @Override
@@ -360,7 +359,7 @@ public class EthEngine extends CoinEngine {
     @Override
     public byte[] sign(String feeValue, String amountValue, boolean IncFee, String toValue, CardProtocol protocol) throws Exception {
 
-        BigInteger nonceValue = ethData.getConfirmedTXCount();
+        BigInteger nonceValue = coinData.getConfirmedTXCount();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
         boolean flag = (ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer);
         Issuer issuer = ctx.getCard().getIssuer();
