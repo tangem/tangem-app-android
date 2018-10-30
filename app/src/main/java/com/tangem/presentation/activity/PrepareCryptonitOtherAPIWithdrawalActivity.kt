@@ -60,7 +60,7 @@ class PrepareCryptonitOtherAPIWithdrawalActivity : AppCompatActivity(), NfcAdapt
 
         tvCurrency.text = Html.fromHtml(engine.balanceCurrencyHTML)
 
-        etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toString())
+        etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toEditString())
         etAmount.filters=engine.amountInputFilters
 
         // set listeners
