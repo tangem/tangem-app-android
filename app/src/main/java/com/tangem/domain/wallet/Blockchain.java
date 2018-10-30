@@ -19,13 +19,13 @@ public enum Blockchain {
     Blockchain(String ID, String currency, double multiplier, int imageResource, String officialName) {
         mID = ID;
         mCurrency = currency;
-        mMultiplier = multiplier;
+//        mMultiplier = multiplier;
         mImageResource = imageResource;
         mOfficialName = officialName;
     }
 
     private String mID, mOfficialName;
-    private double mMultiplier;
+    //private double mMultiplier;
     private String mCurrency;
     private int mImageResource;
 
@@ -37,9 +37,9 @@ public enum Blockchain {
         return mOfficialName;
     }
 
-    public double getMultiplier() {
-        return mMultiplier;
-    }
+//    public double getMultiplier() {
+//        return mMultiplier;
+//    }
 
     public String getCurrency() {
         return mCurrency;
