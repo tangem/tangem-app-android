@@ -8,8 +8,10 @@ import com.tangem.domain.cardReader.CardProtocol;
 import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.text.DecimalFormat;
 
 /**
  * Created by Ilia on 15.02.2018.
@@ -21,20 +23,26 @@ public abstract class CoinEngine {
     public static final String EXTRA_ENGINE = "CoinEngine";
 
     public static class InternalAmount extends BigDecimal {
+        private String currency;
+
         public InternalAmount() {
             super(0);
+            currency="";
         }
 
-        public InternalAmount(String amountString) {
+        public InternalAmount(String amountString, String currency) {
             super(amountString);
+            this.currency=currency;
         }
 
-        public InternalAmount(long amount) {
+        public InternalAmount(long amount, String currency) {
             super(amount);
+            this.currency=currency;
         }
 
-        public InternalAmount(BigDecimal amount) {
+        public InternalAmount(BigDecimal amount, String currency) {
             super(amount.unscaledValue(), amount.scale());
+            this.currency=currency;
         }
 
         public boolean notZero()
@@ -45,38 +53,42 @@ public abstract class CoinEngine {
         public boolean isZero() {
             return compareTo(BigDecimal.ZERO)==0;
         }
+
+        public String getCurrency() {
+            return currency;
+        }
     }
 
     public static class Amount extends BigDecimal {
-        private Blockchain blockchain;
+        private String currency;
 
         public Amount() {
             super(0);
-            blockchain = Blockchain.Unknown;
+            currency="";
         }
 
-        public Amount(String amountString, Blockchain blockchain) {
+        public Amount(String amountString, String currency) {
             super(amountString);
-            this.blockchain = blockchain;
+            this.currency = currency;
         }
 
-        public Amount(Long amount, Blockchain blockchain) {
+        public Amount(Long amount, String currency) {
             super(amount);
-            this.blockchain=blockchain;
+            this.currency = currency;
         }
 
-        public Amount(BigDecimal amount, Blockchain blockchain) {
+        public Amount(BigDecimal amount, String currency) {
             super(amount.unscaledValue(), amount.scale());
-            this.blockchain=blockchain;
+            this.currency = currency;
         }
 
         public String getCurrency() {
-            return blockchain.getCurrency();
+            return currency;
         }
 
         @Override
         public String toString() {
-            return super.toString() + " " + blockchain.getCurrency();
+            return super.toString() + " " + currency;
         }
 
         public boolean notZero()
@@ -84,8 +96,25 @@ public abstract class CoinEngine {
             return compareTo(BigDecimal.ZERO)>0;
         }
 
-        public String getStringToEdit() {
+        public String toDescriptionString(int decimals) {
+            String pattern = "#0.#######################################"; // If you like 4 zeros
+            DecimalFormat myFormatter = new DecimalFormat(pattern.substring(0,3+decimals));
+            return myFormatter.format(this) + " " + currency;
+        }
+
+        public String toEditString() {
             return super.toString();
+        }
+
+        public String toEquivalentString(double rateValue) {
+            if (rateValue > 0) {
+                BigDecimal biRate = new BigDecimal(rateValue);
+                BigDecimal exchangeCurs = biRate.multiply(this);
+                exchangeCurs = exchangeCurs.setScale(2, RoundingMode.DOWN);
+                return "≈ USD  " + exchangeCurs.toString();
+            } else {
+                return "";
+            }
         }
 
         public boolean isZero() {
@@ -156,8 +185,8 @@ public abstract class CoinEngine {
 
     public abstract String calculateAddress(byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException;
 
-    public abstract Amount convertToAmount(InternalAmount internalAmount);
-    public abstract Amount convertToAmount(String strAmount);
+    public abstract Amount convertToAmount(InternalAmount internalAmount) throws Exception;
+    public abstract Amount convertToAmount(String strAmount, String currency);
 
     public abstract InternalAmount convertToInternalAmount(Amount amount) throws Exception;
     public abstract InternalAmount convertToInternalAmount(byte[] bytes) throws Exception;
