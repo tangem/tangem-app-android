@@ -585,10 +585,16 @@ public class CardProtocol {
             mCard.setWalletPublicKey(pkUncompressed);
             mCard.setWalletPublicKeyRar(pkCompresses);
 
-            TangemContext ctx=new TangemContext(mCard);
-            CoinEngine engineCoin = CoinEngineFactory.create(ctx);
-            String wallet = engineCoin.calculateAddress(pkUncompressed);
-            mCard.setWallet(wallet);
+            TangemContext ctx = new TangemContext(mCard);
+            try {
+                CoinEngine engineCoin = CoinEngineFactory.create(ctx);
+                if( engineCoin==null ) throw new Exception("Can't create CoinEngine!");
+                String wallet = engineCoin.calculateAddress(pkUncompressed);
+                mCard.setWallet(wallet);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new TangemException("Can't define wallet address");
+            }
             //mCard.setWallet(Blockchain.calculateWalletAddress(mCard, pkUncompressed));
 
             mCard.setRemainingSignatures(readResult.getTagAsInt(TLV.Tag.TAG_RemainingSignatures));

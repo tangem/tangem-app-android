@@ -13,6 +13,7 @@ import com.tangem.util.FormatUtil;
 import com.tangem.util.Util;
 
 import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
@@ -27,15 +28,15 @@ import java.util.List;
 
 public class BtcCashEngine extends CoinEngine {
 
-    public BtcData btcData = null;
+    public BtcData coinData = null;
 
     public BtcCashEngine(TangemContext context) throws Exception {
         super(context);
         if (context.getCoinData() == null) {
-            btcData = new BtcData();
-            context.setCoinData(btcData);
+            coinData = new BtcData();
+            context.setCoinData(coinData);
         } else if (context.getCoinData() instanceof BtcData) {
-            btcData = (BtcData) context.getCoinData();
+            coinData = (BtcData) context.getCoinData();
         } else {
             throw new Exception("Invalid type of Blockchain data for BtcEngine");
         }
@@ -45,21 +46,25 @@ public class BtcCashEngine extends CoinEngine {
 
     }
 
+    private static int getDecimals() {
+        return 8;
+    }
+
     private void checkBlockchainDataExists() throws Exception {
-        if (btcData == null) throw new Exception("No blockchain data");
+        if (coinData == null) throw new Exception("No blockchain data");
     }
 
     @Override
     public boolean awaitingConfirmation(){
-        if( btcData==null ) return false;
-        return btcData.getBalanceUnconfirmed() != 0;
+        if( coinData ==null ) return false;
+        return coinData.getBalanceUnconfirmed() != 0;
     }
 
     @Override
     public String getBalanceHTML() {
-        if (hasBalanceInfo()) {
-            Amount balance = convertToAmount(btcData.getBalanceInInternalUnits());
-            return balance.toString();
+        Amount balance=getBalance();
+        if( balance!=null ) {
+            return balance.toDescriptionString(getDecimals());
         } else {
             return "";
         }
@@ -67,7 +72,14 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public String getBalanceCurrencyHTML() {
-        return "mBCH";
+        return "BTH";
+    }
+
+    @Override
+    public String getOfflineBalanceHTML() {
+            InternalAmount offlineInternalAmount = convertToInternalAmount(ctx.getCard().getOfflineBalance());
+            Amount offlineAmount = convertToAmount(offlineInternalAmount);
+       return offlineAmount.toDescriptionString(getDecimals());
     }
 
     @Override
@@ -78,30 +90,21 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public boolean isBalanceNotZero() {
-        if( btcData==null ) return false;
-        if (btcData.getBalanceInInternalUnits() == null) return false;
-        return btcData.getBalanceInInternalUnits().notZero();
-    }
-
-    @Override
-    public boolean checkAmount(Amount amount) throws Exception {
-        checkBlockchainDataExists();
-        if (amount.compareTo(convertToAmount(btcData.getBalanceInInternalUnits())) > 0) {
-            return false;
-        }
-        return true;
+        if( coinData ==null ) return false;
+        if (coinData.getBalanceInInternalUnits() == null) return false;
+        return coinData.getBalanceInInternalUnits().notZero();
     }
 
     @Override
     public boolean hasBalanceInfo(){
-        if( btcData==null ) return false;
-        return btcData.hasBalanceInfo();
+        if( coinData ==null ) return false;
+        return coinData.hasBalanceInfo();
     }
 
     @Override
     public boolean checkUnspentTransaction() throws Exception {
         checkBlockchainDataExists();
-        return btcData.getUnspentTransactions().size() != 0;
+        return coinData.getUnspentTransactions().size() != 0;
     }
 
     @Override
@@ -173,18 +176,27 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public InputFilter[] getAmountInputFilters() {
-        return new InputFilter[] { new DecimalDigitsInputFilter(8) };
+        return new InputFilter[] { new DecimalDigitsInputFilter(getDecimals()) };
     }
 
     @Override
-    public boolean checkAmountValue(String amountValue, String feeValue, InternalAmount minFeeInInternalUnits, Boolean isIncludeFee) {
+    public boolean checkNewTransactionAmount(Amount amount){
+        if( coinData ==null ) return false;
+        if (amount.compareTo(convertToAmount(coinData.getBalanceInInternalUnits())) > 0) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean checkNewTransactionAmountAndFee(Amount amountValue, Amount feeValue, Boolean isIncludeFee, InternalAmount minFeeInInternalUnits) {
         InternalAmount fee;
         InternalAmount amount;
 
         try {
             checkBlockchainDataExists();
-            amount = convertToInternalAmount(new Amount(amountValue, ctx.getBlockchain()));
-            fee = convertToInternalAmount(new Amount(feeValue, ctx.getBlockchain()));
+            amount = convertToInternalAmount(amountValue);
+            fee = convertToInternalAmount(feeValue);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -196,10 +208,10 @@ public class BtcCashEngine extends CoinEngine {
         if (fee.isZero() || amount.isZero())
             return false;
 
-        if (isIncludeFee && amount.compareTo(btcData.getBalanceInInternalUnits())>0)
+        if (isIncludeFee && amount.compareTo(coinData.getBalanceInInternalUnits())>0)
             return false;
 
-        if (!isIncludeFee && amount.add(fee).compareTo(btcData.getBalanceInInternalUnits())>0)
+        if (!isIncludeFee && amount.add(fee).compareTo(coinData.getBalanceInInternalUnits())>0)
             return false;
 
         return true;
@@ -222,18 +234,18 @@ public class BtcCashEngine extends CoinEngine {
 //            return;
 //        }
 
-        if (btcData.getBalanceUnconfirmed() != 0) {
+        if (coinData.getBalanceUnconfirmed() != 0) {
             balanceValidator.setScore(0);
             balanceValidator.setFirstLine("Transaction in progress");
             balanceValidator.setSecondLine("Wait for confirmation in blockchain");
             return false;
         }
 
-        if (btcData.isBalanceReceived() && btcData.isBalanceEqual()) {
+        if (coinData.isBalanceReceived() && coinData.isBalanceEqual()) {
             balanceValidator.setScore(100);
             balanceValidator.setFirstLine("Verified balance");
             balanceValidator.setSecondLine("Balance confirmed in blockchain");
-            if (btcData.getBalanceInInternalUnits().isZero()) {
+            if (coinData.getBalanceInInternalUnits().isZero()) {
                 balanceValidator.setFirstLine("Empty wallet");
                 balanceValidator.setSecondLine("");
             }
@@ -248,7 +260,7 @@ public class BtcCashEngine extends CoinEngine {
 //            return;
 //        }
 
-        if ((ctx.getCard().getOfflineBalance() != null) && !btcData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && btcData.getBalanceInInternalUnits().notZero() ) {
+        if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && coinData.getBalanceInInternalUnits().notZero() ) {
             balanceValidator.setScore(80);
             balanceValidator.setFirstLine("Verified offline balance");
             balanceValidator.setSecondLine("Can't obtain balance from blockchain. Restore internet connection to be more confident. ");
@@ -274,7 +286,7 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public Amount getBalance() {
-        return convertToAmount(btcData.getBalanceInInternalUnits());
+        return convertToAmount(coinData.getBalanceInInternalUnits());
     }
 
     @Override
@@ -284,8 +296,8 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public String getBalanceEquivalent() {
-        if( btcData==null ) return "";
-        return btcData.getAmountEquivalentDescription(getBalance());
+        if( coinData ==null || !coinData.getAmountEquivalentDescriptionAvailable() ) return "";
+        return getBalance().toEquivalentString(coinData.getRate());
     }
 
     @Override
@@ -325,12 +337,19 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public Amount convertToAmount(InternalAmount internalAmount) {
-        return null;
+        BigDecimal d=internalAmount.divide(new BigDecimal("100000000"));
+        return new Amount(d, getBalanceCurrencyHTML());
+    }
+
+    @Override
+    public Amount convertToAmount(String strAmount, String currency) {
+        return new Amount(strAmount, currency);
     }
 
     @Override
     public InternalAmount convertToInternalAmount(Amount amount) throws Exception {
-        return null;
+        BigDecimal d=amount.multiply(new BigDecimal("100000000"));
+        return new InternalAmount(d, getBalanceCurrencyHTML());
     }
 
     @Override
@@ -338,7 +357,7 @@ public class BtcCashEngine extends CoinEngine {
         if (bytes == null) return null;
         byte[] reversed = new byte[bytes.length];
         for (int i = 0; i < bytes.length; i++) reversed[i] = bytes[bytes.length - i - 1];
-        return new InternalAmount(Util.byteArrayToLong(reversed));
+        return new InternalAmount(Util.byteArrayToLong(reversed),"Satoshi");
     }
 
     @Override
@@ -356,7 +375,7 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public String getUnspentInputsDescription() {
-        return btcData.getUnspentInputsDescription();
+        return coinData.getUnspentInputsDescription();
     }
 
 //    @Override
@@ -372,8 +391,9 @@ public class BtcCashEngine extends CoinEngine {
         }
     }
 
-    public String getAmountEquivalentDescriptor(TangemCard mCard, String value) {
-        return getAmountEquivalentDescriptionBTC(Double.parseDouble(value), btcData.getRate());
+    public String getAmountEquivalentDescriptor(TangemCard card, String value) {
+
+        return getAmountEquivalentDescriptionBTC(Double.parseDouble(value), coinData.getRate());
     }
 
     @Override
@@ -387,7 +407,7 @@ public class BtcCashEngine extends CoinEngine {
         String changeAddress = myAddress;
 
         // Build script for our address
-        List<BtcData.UnspentTransaction> rawTxList = btcData.getUnspentTransactions();
+        List<BtcData.UnspentTransaction> rawTxList = coinData.getUnspentTransactions();
         byte[] outputScriptWeAreAbleToSpend = Transaction.Script.buildOutput(myAddress).bytes;
 
         // Collect unspent
@@ -409,7 +429,7 @@ public class BtcCashEngine extends CoinEngine {
         }
 
         if (amount + fees > fullAmount) {
-            throw new CardProtocol.TangemException_WrongAmount(String.format("Balance (%d) < amount (%d) + (%d)", fullAmount, change, amount));
+            throw new CardProtocol.TangemException_WrongAmount(String.format("Balance (%d) < change (%d) + amount (%d)", fullAmount, change, amount));
         }
 
         byte[][] dataForSign = new byte[unspentOutputs.size()][];
