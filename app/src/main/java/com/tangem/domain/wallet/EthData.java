@@ -2,14 +2,10 @@ package com.tangem.domain.wallet;
 
 import android.os.Bundle;
 import android.util.Log;
-
-import java.math.BigDecimal;
 import java.math.BigInteger;
 
-public class EthData extends CoinData
-{
-    private CoinEngine.InternalAmount balance=null;
-    private CoinEngine.InternalAmount balanceAlter=null;
+public class EthData extends CoinData {
+    private CoinEngine.InternalAmount balance = null;
 
     private BigInteger countConfirmedTX = null;
     private BigInteger countUnconfirmedTX = BigInteger.valueOf(0);
@@ -46,15 +42,10 @@ public class EthData extends CoinData
     public void clearInfo() {
         super.clearInfo();
         balance = null;
-        balanceAlter = null;
     }
 
     public CoinEngine.InternalAmount getBalanceInInternalUnits() {
         return balance;
-
-    }
-    public CoinEngine.InternalAmount getBalanceAlterInInternalUnits() {
-        return balanceAlter;
 
     }
 
@@ -62,32 +53,13 @@ public class EthData extends CoinData
         balance = value;
     }
 
-    public void setBalanceAlterInInternalUnits(CoinEngine.InternalAmount value) {
-        balanceAlter = value;
-    }
-
-    public Long getBalanceETH() {
-
-        BigDecimal b = null;
-            if (balance != null) {
-                b = balance; // Returns ETH / token balance
-            } else if (balanceAlter != null) {
-                b = balanceAlter; // or ETH balance if there're no tokens on Token card
-            }
-
-            if (b != null) {
-                return b.longValue(); // Will leave only lower 64 bits for ETH and Tokens
-            } else {
-                return null;
-            }
-    }
 
     @Override
     public void loadFromBundle(Bundle B) {
         super.loadFromBundle(B);
 
-        balance = new CoinEngine.InternalAmount(B.getString("BalanceDecimal"));
-        balanceAlter =new CoinEngine.InternalAmount(B.getString("BalanceDecimalAlter"));
+        String currency = B.getString("BalanceCurrency");
+        balance = new CoinEngine.InternalAmount(B.getString("BalanceDecimal"), currency);
 
         if (B.containsKey("confirmTx"))
             countConfirmedTX = new BigInteger(B.getString("confirmTx"), 16);
@@ -97,9 +69,10 @@ public class EthData extends CoinData
 
     @Override
     public void saveToBundle(Bundle B) {
+        super.saveToBundle(B);
         try {
+            B.putString("BalanceCurrency", balance.getCurrency());
             B.putString("BalanceDecimal", balance.toString());
-            B.putString("BalanceDecimalAlter", balance.toString());
 
             B.putString("confirmTx", getConfirmedTXCount().toString(16));
             B.putString("unconfirmTx", getUnconfirmedTXCount().toString(16));
@@ -109,6 +82,5 @@ public class EthData extends CoinData
         }
 
     }
-
 
 }
