@@ -203,6 +203,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         btnExtract.setOnClickListener {
             val engine=CoinEngineFactory.create(ctx)
             if (UtilHelper.isOnline(activity)) {
+                // TODO - move checks to engine
                 if (!engine!!.hasBalanceInfo()) {
                     showSingleToast(R.string.cannot_obtain_data_from_blockchain)
                 } else if (!engine!!.isBalanceNotZero)
@@ -237,7 +238,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         ctx.coinData!!.isBalanceReceived = true
                         (ctx.coinData!! as BtcData).setBalanceConfirmed(confBalance)
                         (ctx.coinData!! as BtcData).balanceUnconfirmed = unconfirmedBalance
-                        (ctx.coinData!! as BtcData).decimalBalance = confBalance.toString()
                         (ctx.coinData!! as BtcData).validationNodeDescription = serverApiHelperElectrum.validationNodeDescription
                     } catch (e: JSONException) {
                         e.printStackTrace()
@@ -312,15 +312,19 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         var balanceCap = infuraResponse.result
                         balanceCap = balanceCap.substring(2)
                         val l = BigInteger(balanceCap, 16)
-                        val d = l.divide(BigInteger("1000000000000000000", 10))
-                        val balance = d.toLong()
+//                        val d = l.divide(BigInteger("1000000000000000000", 10))
+//                        val balance = d.toLong()
 
-                        ctx.coinData!!.setBalanceConfirmed(balance)
-                        ctx.coinData!!.balanceUnconfirmed = 0L
-                        ctx.coinData!!.isBalanceReceived = true
-                        if (ctx.coinData!!.blockchain != Blockchain.Token)
-                            ctx.coinData!!.decimalBalance = l.toString(10)
-                        ctx.coinData!!.decimalBalanceAlter = l.toString(10)
+//                        (ctx.coinData!! as EthData).setBalanceConfirmed(balance)
+//                        (ctx.coinData!! as EthData).balanceUnconfirmed = 0L
+                        if (ctx.blockchain != Blockchain.Token) {
+                            (ctx.coinData!! as EthData).isBalanceReceived = true
+                            (ctx.coinData!! as EthData).balanceInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(),"wei")
+                        }else{
+                            (ctx.coinData!! as TokenData).isBalanceReceived = true
+                            (ctx.coinData!! as TokenData).balanceInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(),ctx.card.tokenSymbol)
+                            (ctx.coinData!! as TokenData).balanceAlterInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(), "wei")
+                        }
 
 //                        Log.i("$TAG eth_get_balance", balanceCap)
                     }
@@ -329,7 +333,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         var nonce = infuraResponse.result
                         nonce = nonce.substring(2)
                         val count = BigInteger(nonce, 16)
-                        ctx.coinData!!.confirmedTXCount = count
+                        (ctx.coinData!! as EthData).confirmedTXCount = count
+
 
 //                        Log.i("$TAG eth_getTransCount", nonce)
                     }
@@ -338,7 +343,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         var pending = infuraResponse.result
                         pending = pending.substring(2)
                         val count = BigInteger(pending, 16)
-                        ctx.coinData!!.unconfirmedTXCount = count
+                        (ctx.coinData!! as EthData).unconfirmedTXCount = count
 
 //                        Log.i("$TAG eth_getPendingTxCount", pending)
                     }
@@ -353,7 +358,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                                 ctx.card!!.blockchainID = Blockchain.Ethereum.id
                                 ctx.card!!.addTokenToBlockchainName()
 
-                                ctx.blockchain=Blockchain.Ethereum
+                                //TODO check
+                                //ctx.blockchain=Blockchain.Ethereum
 
                                 requestCounter--
                                 if (requestCounter == 0) srl!!.isRefreshing = false
@@ -363,9 +369,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                                 requestInfura(ServerApiHelper.INFURA_ETH_GET_PENDING_COUNT, "")
                                 return
                             }
-                            ctx.coinData!!.setBalanceConfirmed(balance)
-                            ctx.coinData!!.balanceUnconfirmed = 0L
-                            ctx.coinData!!.decimalBalance = l.toString(10)
+                            (ctx.coinData!! as EthData).balanceInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(),ctx.card.tokenSymbol)
 
 //                            Log.i("$TAG eth_call", balanceCap)
 
@@ -397,9 +401,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
                             Log.e("$TAG TX_RESULT", hashTX)
 
-                            val nonce = ctx.coinData!!.confirmedTXCount
+                            val nonce = (ctx.coinData!! as EthData).confirmedTXCount
                             nonce.add(BigInteger.valueOf(1))
-                            ctx.coinData!!.confirmedTXCount = nonce
+                            (ctx.coinData!! as EthData).confirmedTXCount = nonce
 
                             Log.e("$TAG TX_RESULT", hashTX)
 
@@ -649,7 +653,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             REQUEST_CODE_SEND_PAYMENT, REQUEST_CODE_RECEIVE_PAYMENT -> {
                 if (resultCode == Activity.RESULT_OK) {
                     ctx.coinData!!.clearInfo()
-                    ctx.card.clearInfo();
                     srl!!.postDelayed({ this.refresh() }, 5000)
                     srl!!.isRefreshing = true
                     updateViews()
@@ -779,7 +782,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 tvBalanceEquivalent.text = ""
             } else {
                 val validator = BalanceValidator()
-                validator.Check(ctx.card, false)
+                validator.Check(ctx, false)
                 tvBalanceLine1.setTextColor(ContextCompat.getColor(activity, validator.color))
                 tvBalanceLine1.text = validator.firstLine
                 tvBalanceLine2.text = validator.getSecondLine(false)
@@ -828,8 +831,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             // clear all card data and request again
             srl!!.isRefreshing = true
             ctx.coinData.clearInfo();
-            ctx.card!!.clearInfo()
-            //engine=engine!!.swithToBaseEngine()
             ctx.error = null
             ctx.message = null
             requestCounter = 0
@@ -917,8 +918,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     private fun openVerifyCard(cardProtocol: CardProtocol) {
         val intent = Intent(activity, VerifyCardActivity::class.java)
-        intent.putExtra(TangemCard.EXTRA_UID, cardProtocol.card.uid)
-        intent.putExtra(TangemCard.EXTRA_CARD, cardProtocol.card.asBundle)
+        ctx.saveToBundle(intent.extras)
         startActivityForResult(intent, REQUEST_CODE_VERIFY_CARD)
     }
 

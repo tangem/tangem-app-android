@@ -9,17 +9,13 @@ import android.nfc.Tag
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.text.Html
-import android.text.InputFilter
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
-import com.tangem.domain.wallet.TangemCard
 import com.tangem.domain.wallet.TangemContext
-import com.tangem.util.DecimalDigitsInputFilter
-import com.tangem.util.FormatUtil
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_payment.*
 import java.io.IOException
@@ -64,7 +60,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             etAmount.isEnabled = false
 
         tvCurrency.text = engine.balance.currency
-        etAmount.setText(engine.balance.stringToEdit)
+        etAmount.setText(engine.balance.toEditString())
 
         // limit number of symbols after comma
         etAmount.filters = engine.amountInputFilters
@@ -85,7 +81,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             val engine1 = CoinEngineFactory.create(ctx.card!!.blockchain)
 
             val strAmount: String = etAmount.text.toString().replace(",", ".")
-            val amount=engine1.convertToAmount(etAmount.text.toString())
+            val amount=engine1.convertToAmount(etAmount.text.toString(), tvCurrency.text.toString())
 
             try {
                 if (!engine.checkNewTransactionAmount(amount))
