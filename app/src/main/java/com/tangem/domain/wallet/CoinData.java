@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class CoinData {
+public abstract class CoinData {
 
     public CoinData() {
     }
@@ -113,14 +113,6 @@ public class CoinData {
 //            String output = FormatUtil.DoubleToString(amount);
 //            return output + " " + getBlockchain().getCurrency();
 //        }
-
-    public String getAmountEquivalentDescription(CoinEngine.Amount amount) {
-        if (getBlockchain() == Blockchain.Ethereum || getBlockchain() == Blockchain.EthereumTestNet || getBlockchain() == Blockchain.Token) {
-            return EthEngine.getAmountEquivalentDescriptionETH(amount, rate);
-        }
-
-        return BtcEngine.getAmountEquivalentDescriptionBTC(amount.doubleValue(), rate);
-    }
 
     public boolean getAmountEquivalentDescriptionAvailable() {
         return rate > 0;
