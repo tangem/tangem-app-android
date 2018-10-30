@@ -66,7 +66,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
 
         tvCurrency.text = Html.fromHtml(engine.balanceCurrencyHTML)
 
-        etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toString())
+        etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toEditString())
         etAmount.filters=engine.amountInputFilters
 
         etAmount.setOnEditorActionListener { lv, actionId, event ->
