@@ -101,7 +101,7 @@ public class BtcData extends CoinData {
     }
 
     public CoinEngine.InternalAmount getBalanceInInternalUnits() {
-        return new CoinEngine.InternalAmount(BigDecimal.valueOf(balanceConfirmed).add(BigDecimal.valueOf(balanceUnconfirmed)));
+        return new CoinEngine.InternalAmount(BigDecimal.valueOf(balanceConfirmed).add(BigDecimal.valueOf(balanceUnconfirmed)),"Satoshi");
     }
 
     public Long getBalanceUnconfirmed() {
