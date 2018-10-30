@@ -56,11 +56,7 @@ public class BalanceValidator {
         TangemCard card=ctx.getCard();
         CoinEngine engine=CoinEngineFactory.create(ctx);
 
-        if (ctx.getBlockchain() == Blockchain.Bitcoin || ctx.getBlockchain() == Blockchain.BitcoinTestNet) {
-            if( !engine.validateBalance(this) ) return;
-        } else if ((card.getBlockchain()  == Blockchain.Ethereum) || (card.getBlockchain()  == Blockchain.Token)) {
-
-        }
+        if( !engine.validateBalance(this) ) return;
 
         // Verify card?
         if (attest) {
