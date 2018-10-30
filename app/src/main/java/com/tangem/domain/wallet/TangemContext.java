@@ -81,10 +81,13 @@ public class TangemContext {
             tangemContext.card.loadFromBundle(bundle.getBundle(TangemCard.EXTRA_CARD));
         }
 
-        if (tangemContext.getBlockchain() != null && bundle.containsKey(EXTRA_BLOCKCHAIN_DATA)) {
-            tangemContext.coinData=CoinData.fromBundle(tangemContext.getBlockchain(), bundle.getBundle(EXTRA_BLOCKCHAIN_DATA));
+        if (tangemContext.getBlockchain() != null) {
+            if (bundle.containsKey(EXTRA_BLOCKCHAIN_DATA)) {
+                tangemContext.coinData = CoinData.fromBundle(tangemContext.getBlockchain(), bundle.getBundle(EXTRA_BLOCKCHAIN_DATA));
+            } else {
+                tangemContext.coinData = CoinEngineFactory.create(tangemContext).createCoinData();
+            }
         }
-
         tangemContext.error = bundle.getString("Error");
         tangemContext.message = bundle.getString("Message");
 
@@ -108,7 +111,7 @@ public class TangemContext {
     }
 
     public String getString(int stringId) {
-        if( context!=null ) return getContext().getResources().getString(stringId);
-        return "context.resources.string["+stringId+"]";
+        if (context != null) return getContext().getResources().getString(stringId);
+        return "context.resources.string[" + stringId + "]";
     }
 }
