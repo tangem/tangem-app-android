@@ -21,11 +21,11 @@ import java.io.IOException;
 public class SignPaymentTask extends Thread {
     public static final String TAG = SignPaymentTask.class.getSimpleName();
 
-    private String txAmount = "";
-    private String txFee = "";
+    private CoinEngine.Amount txAmount;
+    private CoinEngine.Amount txFee;
     private Boolean txIncFee = true;
 
-    public void SetTransactionValue(String amount, String fee, Boolean incfee) {
+    public void SetTransactionValue(CoinEngine.Amount amount, CoinEngine.Amount fee, Boolean incfee) {
         txAmount = amount;
         txFee = fee;
         txIncFee = incfee;
@@ -39,7 +39,7 @@ public class SignPaymentTask extends Thread {
     private CardProtocol.Notifications mNotifications;
     private boolean isCancelled = false;
 
-    public SignPaymentTask(Activity context, TangemContext ctx, NfcManager nfcManager, IsoDep isoDep, CardProtocol.Notifications notifications, String amount, String fee, Boolean IncFee, String outAddress) {
+    public SignPaymentTask(Activity context, TangemContext ctx, NfcManager nfcManager, IsoDep isoDep, CardProtocol.Notifications notifications, CoinEngine.Amount amount, CoinEngine.Amount fee, Boolean IncFee, String outAddress) {
         mCtx=ctx;
         mContext = context;
         mNfcManager = nfcManager;
@@ -87,7 +87,7 @@ public class SignPaymentTask extends Thread {
 //                        SignBTC_TX(protocol);
 //                    }
 
-                CoinEngine engine = CoinEngineFactory.create(mCtx.getCard().getBlockchain());
+                CoinEngine engine = CoinEngineFactory.create(mCtx);
                 if (engine != null) {
                     if (mCtx.getCard().getPauseBeforePIN2() > 0) {
                         mNotifications.onReadWait(mCtx.getCard().getPauseBeforePIN2());
@@ -112,7 +112,7 @@ public class SignPaymentTask extends Thread {
                         }
 
                         Intent intent = new Intent(mContext, SendTransactionActivity.class);
-                        mCtx.saveToBundle(intent.getExtras());
+                        mCtx.saveToIntent(intent);
                         intent.putExtra(SendTransactionActivity.EXTRA_TX, txStr);
                         mContext.startActivityForResult(intent, SignPaymentActivity.REQUEST_CODE_SEND_PAYMENT);
                     }
