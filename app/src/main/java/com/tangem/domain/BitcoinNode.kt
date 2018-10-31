@@ -12,5 +12,6 @@ enum class BitcoinNode(val host: String, val port: Int) {
 	n9("electrumx.nmdps.net", 50001),
 	n10("kirsche.emzy.de", 50001),
 	n11("electrum.petrkr.net", 50001),
-	n12("electrum.dk", 50001)
+	n12("electrum.dk", 50001),
+//	n13("electrum.hsmiths.com", 50002)
 }
