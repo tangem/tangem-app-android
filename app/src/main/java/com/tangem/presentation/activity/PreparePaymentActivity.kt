@@ -78,7 +78,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
         btnVerify.setOnClickListener {
 
-            val engine1 = CoinEngineFactory.create(ctx.card!!.blockchain)
+            val engine1 = CoinEngineFactory.create(ctx)
 
             val strAmount: String = etAmount.text.toString().replace(",", ".")
             val amount=engine1.convertToAmount(etAmount.text.toString(), tvCurrency.text.toString())
@@ -113,10 +113,11 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 //            }
 
             val intent = Intent(baseContext, ConfirmPaymentActivity::class.java)
-            ctx.saveToBundle(intent.extras)
-            intent.putExtra("Wallet", etWallet!!.text.toString())
-            intent.putExtra("IncFee", (rgIncFee!!.checkedRadioButtonId == R.id.rbFeeIn))
+            ctx.saveToIntent(intent)
+            intent.putExtra(SignPaymentActivity.EXTRA_TARGET_ADDRESS, etWallet!!.text.toString())
+            intent.putExtra(SignPaymentActivity.EXTRA_FEE_INCLUDED, (rgIncFee!!.checkedRadioButtonId == R.id.rbFeeIn))
             intent.putExtra(SignPaymentActivity.EXTRA_AMOUNT, strAmount)
+            intent.putExtra(SignPaymentActivity.EXTRA_AMOUNT_CURRENCY, tvCurrency.text.toString())
             startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT)
         }
         ivCamera.setOnClickListener {
