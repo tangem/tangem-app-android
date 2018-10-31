@@ -34,7 +34,7 @@ public class TokenEngine extends CoinEngine {
         if (ctx.getCoinData() == null) {
             coinData = new TokenData();
             ctx.setCoinData(coinData);
-        } else if (ctx.getCoinData() instanceof BtcData) {
+        } else if (ctx.getCoinData() instanceof TokenData) {
             coinData = (TokenData) ctx.getCoinData();
         } else {
             throw new Exception("Invalid type of Blockchain data for TokenEngine");
@@ -83,7 +83,7 @@ public class TokenEngine extends CoinEngine {
     }
 
     @Override
-    public String getBalanceCurrencyHTML() {
+    public String getBalanceCurrency() {
         String currency = ctx.getCard().getTokenSymbol();
         if (Strings.isNullOrEmpty(currency))
             return "NoN";
@@ -109,7 +109,7 @@ public class TokenEngine extends CoinEngine {
     }
 
     @Override
-    public String getFeeCurrencyHTML() {
+    public String getFeeCurrency() {
         return "ETH";
     }
 
@@ -151,7 +151,6 @@ public class TokenEngine extends CoinEngine {
         return true;
     }
 
-    @Override
     public boolean isBalanceAlterNotZero() {
         if (coinData == null) return false;
         if (coinData.getBalanceAlterInInternalUnits() == null) return false;
@@ -284,8 +283,19 @@ public class TokenEngine extends CoinEngine {
     }
 
     @Override
-    public boolean checkUnspentTransaction() {
-        return true;
+    public boolean isExtractPossible() {
+        if (!hasBalanceInfo()) {
+            ctx.setMessage(R.string.cannot_obtain_data_from_blockchain);
+        } else if (!isBalanceNotZero()) {
+            ctx.setMessage(R.string.wallet_empty);
+        } else if (awaitingConfirmation()) {
+            ctx.setMessage(R.string.please_wait_while_previous);
+        } else if (!isBalanceAlterNotZero()) {
+            ctx.setMessage(ctx.getString(R.string.not_enough_eth_for_gas));
+        } else {
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -300,9 +310,7 @@ public class TokenEngine extends CoinEngine {
             } else {
                 return false;
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
@@ -395,8 +403,13 @@ public class TokenEngine extends CoinEngine {
 
     @Override
     public String evaluateFeeEquivalent(String fee) {
-        Amount feeValue = new Amount(fee, getFeeCurrencyHTML());
-        return feeValue.toEquivalentString(coinData.getRate());
+        try {
+            Amount feeValue = new Amount(fee, getFeeCurrency());
+            return feeValue.toEquivalentString(coinData.getRate());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
 
 //
 //        BigDecimal gweFee = new BigDecimal(fee);
@@ -406,41 +419,104 @@ public class TokenEngine extends CoinEngine {
     }
 
     @Override
-    public byte[] sign(String feeValue, String amountValue, boolean IncFee, String toValue, CardProtocol protocol) throws Exception {
+    public byte[] sign(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress, CardProtocol protocol) throws Exception {
+        if (amountValue.getCurrency().equals("ETH")) {
+            return signETH(feeValue, amountValue, IncFee, targetAddress, protocol);
+        } else {
+            return signToken(feeValue, amountValue, IncFee, targetAddress, protocol);
+        }
+    }
+
+    public byte[] signETH(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress, CardProtocol protocol) throws Exception {
+
         BigInteger nonceValue = coinData.getConfirmedTXCount();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
         boolean flag = (ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer);
         Issuer issuer = ctx.getCard().getIssuer();
 
 
-        BigInteger fee = new BigInteger(feeValue, 10);
+        BigInteger gigaK = BigInteger.valueOf(1000000000L);
 
-        BigDecimal amountDecValue = new BigDecimal(amountValue);
+        BigInteger weiFee = convertToInternalAmount(feeValue).toBigIntegerExact();
+        BigInteger weiAmount = convertToInternalAmount(amountValue).toBigIntegerExact();
 
-        int d = getTokenDecimals();
-        BigDecimal amountDec = new BigDecimal("10");
-        amountDec = amountDec.pow(d);
-        amountDec = amountDecValue.multiply(amountDec);
+        if (IncFee) {
+            weiAmount = weiAmount.subtract(weiFee);
+        }
 
-        //amountDec = amountDec.multiply(new BigDecimal("1000000000"));
+        BigInteger nonce = nonceValue;
+        BigInteger gasPrice = weiFee.divide(gigaK).divide(BigInteger.valueOf(21000)).multiply(gigaK);
+        BigInteger gasLimit = BigInteger.valueOf(21000);
+        Integer chainId = ctx.getBlockchain() == Blockchain.Ethereum ? EthTransaction.ChainEnum.Mainnet.getValue() : EthTransaction.ChainEnum.Rinkeby.getValue();
+
+        String to = targetAddress;
+
+        if (to.startsWith("0x") || to.startsWith("0X")) {
+            to = to.substring(2);
+        }
+
+        EthTransaction tx = EthTransaction.create(to, weiAmount, nonce, gasPrice, gasLimit, chainId);
+
+        byte[][] hashesForSign = new byte[1][];
+        byte[] for_hash = tx.getRawHash();
+        hashesForSign[0] = for_hash;
+
+        byte[] signFromCard = null;
+        try {
+            signFromCard = protocol.run_SignHashes(PINStorage.getPIN2(), hashesForSign, flag, null, issuer).getTLV(TLV.Tag.TAG_Signature).Value;
+            // TODO slice signFromCard to hashes.length parts
+        } catch (Exception ex) {
+            Log.e("ETH", ex.getMessage());
+            return null;
+        }
+
+        BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, 0, 32));
+        BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, 32, 64));
+        s = CryptoUtil.toCanonicalised(s);
+
+        boolean f = ECKey.verify(for_hash, new ECKey.ECDSASignature(r, s), pbKey);
+
+        if (!f) {
+            Log.e("ETH-CHECK", "sign Failed.");
+        }
+
+        tx.signature = new ECDSASignatureETH(r, s);
+        int v = tx.BruteRecoveryID2(tx.signature, for_hash, pbKey);
+        if (v != 27 && v != 28) {
+            Log.e("ETH", "invalid v");
+            return null;
+        }
+        tx.signature.v = (byte) v;
+        Log.e("ETH_v", String.valueOf(v));
+
+        byte[] realTX = tx.getEncoded();
+        return realTX;
+    }
+
+    public byte[] signToken(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress, CardProtocol protocol) throws Exception {
+        BigInteger nonceValue = coinData.getConfirmedTXCount();
+        byte[] pbKey = ctx.getCard().getWalletPublicKey();
+        boolean flag = (ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer);
+        Issuer issuer = ctx.getCard().getIssuer();
 
 
+        BigInteger gigaK = BigInteger.valueOf(1000000000L);
+
+        BigInteger weiFee = convertToInternalAmount(feeValue).toBigIntegerExact();
+
+        InternalAmount amountDec=convertToInternalAmount(amountValue);
         BigInteger amount = amountDec.toBigInteger(); //new BigInteger(amountValue, 10);
 
 
         //amount = amount.subtract(fee);
 
         BigInteger nonce = nonceValue;
-        BigInteger gasPrice = fee.divide(BigInteger.valueOf(60000));
+        BigInteger gasPrice = weiFee.divide(gigaK).divide(BigInteger.valueOf(60000)).multiply(gigaK);
         BigInteger gasLimit = BigInteger.valueOf(60000);
         Integer chainId = EthTransaction.ChainEnum.Mainnet.getValue();
         BigInteger amountZero = BigInteger.ZERO;
 
-        Long multiplicator = 1000000000L;
-
-        gasPrice = gasPrice.multiply(BigInteger.valueOf(multiplicator));
-
-        String to = toValue;
+        String to = targetAddress;
 
         if (to.startsWith("0x") || to.startsWith("0X")) {
             to = to.substring(2);
