@@ -5,22 +5,19 @@ import android.text.InputFilter;
 
 import com.tangem.domain.cardReader.CardProtocol;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 /**
  * Created by Ilia on 15.02.2018.
  */
 
 public abstract class CoinEngine {
-
-    @Nullable
-    public static final String EXTRA_ENGINE = "CoinEngine";
 
     public static class InternalAmount extends BigDecimal {
         private String currency;
@@ -31,7 +28,7 @@ public abstract class CoinEngine {
         }
 
         public InternalAmount(String amountString, String currency) {
-            super(amountString);
+            super(amountString.replace(',','.'));
             this.currency=currency;
         }
 
@@ -68,7 +65,7 @@ public abstract class CoinEngine {
         }
 
         public Amount(String amountString, String currency) {
-            super(amountString);
+            super(amountString.replace(',','.'));
             this.currency = currency;
         }
 
@@ -97,9 +94,19 @@ public abstract class CoinEngine {
         }
 
         public String toDescriptionString(int decimals) {
-            String pattern = "#0.#######################################"; // If you like 4 zeros
-            DecimalFormat myFormatter = new DecimalFormat(pattern.substring(0,3+decimals));
-            return myFormatter.format(this) + " " + currency;
+            DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.US);
+            symbols.setDecimalSeparator('.');
+            DecimalFormat df = new DecimalFormat();
+            df.setDecimalFormatSymbols(symbols);
+            df.setMaximumFractionDigits(decimals);
+
+            df.setMinimumFractionDigits(0);
+
+            df.setGroupingUsed(false);
+
+            BigDecimal bd=new BigDecimal(unscaledValue(), scale());
+            bd.setScale(decimals, ROUND_DOWN);
+            return df.format(bd)+ " " + currency;
         }
 
         public String toEditString() {
@@ -138,17 +145,14 @@ public abstract class CoinEngine {
 
     public abstract boolean isBalanceNotZero();
 
-    public abstract boolean isBalanceAlterNotZero();
+    public abstract byte[] sign(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress, CardProtocol protocol) throws Exception;
 
-    public abstract byte[] sign(String feeValue, String amountValue, boolean IncFee, String toValue, CardProtocol protocol) throws Exception;
-
-    public abstract boolean checkUnspentTransaction() throws Exception;
+    // TODO - change isExtractPossible to isExtractPossible and if not - return string message
+    public abstract boolean isExtractPossible();
 
     public abstract Uri getShareWalletUriExplorer();
 
     public abstract Uri getShareWalletUri();
-
-//    public abstract Long getBalanceLong(TangemCard card);
 
     public abstract boolean checkNewTransactionAmount(Amount amount);
 
@@ -161,7 +165,7 @@ public abstract class CoinEngine {
 
     public abstract String getBalanceHTML();
 
-    public abstract String getBalanceCurrencyHTML();
+    public abstract String getBalanceCurrency();
 
     public abstract InputFilter[] getAmountInputFilters();
 
@@ -169,17 +173,11 @@ public abstract class CoinEngine {
 
     public abstract String evaluateFeeEquivalent(String fee);
 
-    public abstract String getFeeCurrencyHTML();
+    public abstract String getFeeCurrency();
 
     public abstract boolean isNeedCheckNode();
 
     public abstract String getBalanceEquivalent();
-
-//    public abstract String getBalanceValue(TangemCard card);
-
-//    public abstract String getAmountDescription(TangemCard card, String amount) throws Exception;
-
-//    public abstract String getAmountEquivalentDescriptor(TangemCard card, String value);
 
     public abstract boolean validateAddress(String address);
 
@@ -192,9 +190,6 @@ public abstract class CoinEngine {
     public abstract InternalAmount convertToInternalAmount(byte[] bytes) throws Exception;
 
     public abstract byte[] convertToByteArray(InternalAmount internalAmount) throws Exception;
-
-
-//    public abstract CoinEngine swithToBaseEngine();
 
     public abstract CoinData createCoinData();
 
