@@ -16,6 +16,7 @@ import android.widget.Toast
 import com.tangem.data.nfc.SignPaymentTask
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.NfcManager
+import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.TangemCard
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
@@ -32,6 +33,11 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         val TAG: String = SignPaymentActivity::class.java.simpleName
 
         const val EXTRA_AMOUNT = "Amount"
+        const val EXTRA_AMOUNT_CURRENCY = "AmountCurrency"
+        const val EXTRA_FEE = "Fee"
+        const val EXTRA_FEE_CURRENCY = "FeeCurrency"
+        const val EXTRA_FEE_INCLUDED = "FeeIncluded"
+        const val EXTRA_TARGET_ADDRESS = "TargetAddress"
         const val REQUEST_CODE_SEND_PAYMENT = 1
         const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
     }
@@ -41,8 +47,8 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
     private var signPaymentTask: SignPaymentTask? = null
 
-    private var amountStr: String? = null
-    private var feeStr: String? = null
+    private var amount: CoinEngine.Amount? = null
+    private var fee: CoinEngine.Amount? = null
     private var isIncludeFee = true
     private var outAddressStr: String? = null
     private var lastReadSuccess = true
@@ -59,10 +65,10 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
         ctx=TangemContext.loadFromBundle(this, intent.extras)
 
-        amountStr = intent.getStringExtra(EXTRA_AMOUNT)
-        feeStr = intent.getStringExtra("Fee")
-        isIncludeFee = intent.getBooleanExtra("IncFee", true)
-        outAddressStr = intent.getStringExtra("Wallet")
+        amount =  CoinEngine.Amount(intent.getStringExtra(EXTRA_AMOUNT), intent.getStringExtra(EXTRA_AMOUNT_CURRENCY))
+        fee = CoinEngine.Amount(intent.getStringExtra(EXTRA_FEE), intent.getStringExtra(EXTRA_FEE_CURRENCY))
+        isIncludeFee = intent.getBooleanExtra(EXTRA_FEE_INCLUDED, true)
+        outAddressStr = intent.getStringExtra(EXTRA_TARGET_ADDRESS)
 
         tvCardID.text = ctx.card!!.cidDescription
 
@@ -127,7 +133,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                 } else {
                     isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 65000
                 }
-                signPaymentTask = SignPaymentTask(this, ctx, nfcManager, isoDep, this, amountStr, feeStr, isIncludeFee, outAddressStr)
+                signPaymentTask = SignPaymentTask(this, ctx, nfcManager, isoDep, this, amount, fee, isIncludeFee, outAddressStr)
                 signPaymentTask!!.start()
             } else {
 //                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card!!.uid + ")")
