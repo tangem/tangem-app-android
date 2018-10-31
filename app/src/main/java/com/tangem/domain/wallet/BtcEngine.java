@@ -13,6 +13,7 @@ import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.util.DerEncodingUtil;
 import com.tangem.util.FormatUtil;
 import com.tangem.util.Util;
+import com.tangem.wallet.R;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
@@ -48,57 +49,6 @@ public class BtcEngine extends CoinEngine {
         return 8;
     }
 
-    private static String[] getBitcoinServiceHosts() {
-        return new String[]{
-                BitcoinNode.n1.getHost(),
-                BitcoinNode.n2.getHost(),
-                BitcoinNode.n3.getHost(),
-                BitcoinNode.n4.getHost(),
-                BitcoinNode.n5.getHost(),
-                BitcoinNode.n6.getHost(),
-                BitcoinNode.n7.getHost(),
-                BitcoinNode.n8.getHost(),
-                BitcoinNode.n9.getHost(),
-                BitcoinNode.n10.getHost(),
-                BitcoinNode.n11.getHost(),
-                BitcoinNode.n12.getHost(),
-        };
-    }
-
-    private static Integer[] getBitcoinServicePorts() {
-        return new Integer[]{
-                BitcoinNode.n1.getPort(),
-                BitcoinNode.n2.getPort(),
-                BitcoinNode.n3.getPort(),
-                BitcoinNode.n4.getPort(),
-                BitcoinNode.n5.getPort(),
-                BitcoinNode.n6.getPort(),
-                BitcoinNode.n7.getPort(),
-                BitcoinNode.n8.getPort(),
-                BitcoinNode.n9.getPort(),
-                BitcoinNode.n10.getPort(),
-                BitcoinNode.n11.getPort(),
-                BitcoinNode.n12.getPort(),
-        };
-    }
-
-    private static String[] getBitcoinTestNetServiceHosts() {
-        return new String[]{
-                BitcoinNodeTestNet.n1.getHost(),
-                BitcoinNodeTestNet.n2.getHost(),
-                BitcoinNodeTestNet.n3.getHost(),
-                BitcoinNodeTestNet.n4.getHost()};
-    }
-
-    private static Integer[] getBitcoinTestNetServicePorts() {
-        return new Integer[]{
-                BitcoinNodeTestNet.n1.getPort(),
-                BitcoinNodeTestNet.n2.getPort(),
-                BitcoinNodeTestNet.n3.getPort(),
-                BitcoinNodeTestNet.n4.getPort()};
-    }
-
-    static int serviceIndex = 0;
 
     private void checkBlockchainDataExists() throws Exception {
         if (coinData == null) throw new Exception("No blockchain data");
@@ -121,7 +71,7 @@ public class BtcEngine extends CoinEngine {
     }
 
     @Override
-    public String getBalanceCurrencyHTML() {
+    public String getBalanceCurrency() {
         return "BTC";
     }
 
@@ -130,11 +80,6 @@ public class BtcEngine extends CoinEngine {
             InternalAmount offlineInternalAmount = convertToInternalAmount(ctx.getCard().getOfflineBalance());
             Amount offlineAmount = convertToAmount(offlineInternalAmount);
        return offlineAmount.toDescriptionString(getDecimals());
-    }
-
-    @Override
-    public boolean isBalanceAlterNotZero() {
-        return true;
     }
 
     @Override
@@ -152,13 +97,23 @@ public class BtcEngine extends CoinEngine {
 
 
     @Override
-    public boolean checkUnspentTransaction() throws Exception {
-        checkBlockchainDataExists();
-        return coinData.getUnspentTransactions().size() != 0;
+    public boolean isExtractPossible() {
+        if (!hasBalanceInfo()) {
+            ctx.setMessage(R.string.cannot_obtain_data_from_blockchain);
+        } else if (!isBalanceNotZero()) {
+            ctx.setMessage(R.string.wallet_empty);
+        } else if (awaitingConfirmation()) {
+            ctx.setMessage(R.string.please_wait_while_previous);
+        } else if (coinData.getUnspentTransactions().size() == 0) {
+            ctx.setMessage(R.string.please_wait_for_confirmation);
+        } else {
+            return true;
+        }
+        return false;
     }
 
     @Override
-    public String getFeeCurrencyHTML() {
+    public String getFeeCurrency() {
         return "BTC";
     }
 
@@ -348,8 +303,14 @@ public class BtcEngine extends CoinEngine {
     @Override
     public String evaluateFeeEquivalent(String fee) {
         if( !coinData.getAmountEquivalentDescriptionAvailable() ) return "";
-        Amount feeAmount=new Amount(fee, getFeeCurrencyHTML());
-        return feeAmount.toEquivalentString(coinData.getRate());
+        try {
+            Amount feeAmount = new Amount(fee, getFeeCurrency());
+            return feeAmount.toEquivalentString(coinData.getRate());
+        }
+        catch (Exception e)
+        {
+            return "";
+        }
     }
 
     @Override
@@ -395,7 +356,7 @@ public class BtcEngine extends CoinEngine {
     @Override
     public Amount convertToAmount(InternalAmount internalAmount) {
         BigDecimal d=internalAmount.divide(new BigDecimal("100000000"));
-        return new Amount(d, getBalanceCurrencyHTML());
+        return new Amount(d, getBalanceCurrency());
     }
 
     @Override
@@ -406,7 +367,7 @@ public class BtcEngine extends CoinEngine {
     @Override
     public InternalAmount convertToInternalAmount(Amount amount) throws Exception {
         BigDecimal d=amount.multiply(new BigDecimal("100000000"));
-        return new InternalAmount(d, getBalanceCurrencyHTML());
+        return new InternalAmount(d, getBalanceCurrency());
     }
 
     @Override
@@ -436,14 +397,12 @@ public class BtcEngine extends CoinEngine {
     }
 
     @Override
-    public byte[] sign(String feeValue, String amountValue, boolean IncFee, String toValue, CardProtocol protocol) throws Exception {
+    public byte[] sign(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress, CardProtocol protocol) throws Exception {
 
         checkBlockchainDataExists();
 
         String myAddress = ctx.getCard().getWallet();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
-        String outputAddress = toValue;
-        String changeAddress = myAddress;
 
         // Build script for our address
         List<BtcData.UnspentTransaction> rawTxList = coinData.getUnspentTransactions();
@@ -458,8 +417,8 @@ public class BtcEngine extends CoinEngine {
         }
 
 
-        long fees = FormatUtil.ConvertStringToLong(feeValue);
-        long amount = FormatUtil.ConvertStringToLong(amountValue);
+        long fees = convertToInternalAmount(feeValue).longValueExact();
+        long amount = convertToInternalAmount(amountValue).longValueExact();
         long change = fullAmount - amount;
         if (IncFee) {
             amount = amount - fees;
@@ -474,7 +433,7 @@ public class BtcEngine extends CoinEngine {
         byte[][] dataForSign = new byte[unspentOutputs.size()][];
 
         for (int i = 0; i < unspentOutputs.size(); ++i) {
-            byte[] newTX = BTCUtils.buildTXForSign(myAddress, outputAddress, changeAddress, unspentOutputs, i, amount, change);
+            byte[] newTX = BTCUtils.buildTXForSign(myAddress, targetAddress, myAddress, unspentOutputs, i, amount, change);
 
             byte[] hashData = Util.calculateSHA256(newTX);
             byte[] doubleHashData = Util.calculateSHA256(hashData);
@@ -512,7 +471,7 @@ public class BtcEngine extends CoinEngine {
             unspentOutputs.get(i).scriptForBuild = DerEncodingUtil.packSignDer(r, s, pbKey);
         }
 
-        return BTCUtils.buildTXForSend(outputAddress, changeAddress, unspentOutputs, amount, change);
+        return BTCUtils.buildTXForSend(targetAddress, myAddress, unspentOutputs, amount, change);
     }
 
 }
