@@ -72,7 +72,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             val html = Html.fromHtml(engine!!.balanceHTML)
             tvBalance.text = html
 
-        isIncludeFee = intent.getBooleanExtra("IncFee", true)
+        isIncludeFee = intent.getBooleanExtra(SignPaymentActivity.EXTRA_FEE_INCLUDED, true)
 
         if (isIncludeFee)
             tvIncFee.setText(R.string.including_fee)
@@ -83,10 +83,10 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         else
             tvIncFee.visibility = View.VISIBLE
         etAmount.setText(intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT))
-        tvCurrency.text = Html.fromHtml(engine.balanceCurrencyHTML)
-        tvCurrency2.text = Html.fromHtml(engine.feeCurrencyHTML)
+        tvCurrency.text = engine.balanceCurrency
+        tvCurrency2.text = engine.feeCurrency
         tvCardID.text = ctx.card!!.cidDescription
-        etWallet.setText(intent.getStringExtra("Wallet"))
+        etWallet.setText(intent.getStringExtra(SignPaymentActivity.EXTRA_TARGET_ADDRESS))
         etFee.setText("")
 
         btnSend.visibility = View.INVISIBLE
@@ -126,7 +126,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
                 try {
-                    val engine = CoinEngineFactory.create(ctx.blockchain)
+                    val engine = CoinEngineFactory.create(ctx)
                     val eqFee = engine!!.evaluateFeeEquivalent(etFee!!.text.toString())
                     tvFeeEquivalent.text = eqFee
 
@@ -174,7 +174,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 finishWithError(Activity.RESULT_CANCELED, getString(R.string.the_wallet_is_empty))
                 return@setOnClickListener
 
-            } else if (!engineCoin.checkUnspentTransaction()) {
+            } else if (!engineCoin.isExtractPossible()) {
                 finishWithError(Activity.RESULT_CANCELED, getString(R.string.please_wait_for_confirmation_of_incoming_transaction))
                 return@setOnClickListener
             }
@@ -187,10 +187,10 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             requestPIN2Count = 0
             val intent = Intent(baseContext, PinRequestActivity::class.java)
             intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-            ctx.saveToBundle(intent.extras)
+            ctx.saveToIntent(intent)
 //            intent.putExtra(TangemCard.EXTRA_UID, card!!.uid)
 //            intent.putExtra(TangemCard.EXTRA_CARD, card!!.asBundle)
-            intent.putExtra("IncFee", isIncludeFee)
+            intent.putExtra(SignPaymentActivity.EXTRA_FEE_INCLUDED, isIncludeFee)
             startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
         }
 
@@ -354,10 +354,8 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 requestPIN2Count++
                 val intent = Intent(baseContext, PinRequestActivity::class.java)
                 intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                ctx.saveToBundle(intent.extras)
-//                intent.putExtra("UID", card!!.uid)
-//                intent.putExtra("Card", card!!.asBundle)
-                intent.putExtra("IncFee", isIncludeFee)
+                ctx.saveToIntent(intent)
+                intent.putExtra(SignPaymentActivity.EXTRA_FEE_INCLUDED, isIncludeFee)
                 startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
                 return
             }
@@ -366,13 +364,13 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         } else if (requestCode == REQUEST_CODE_REQUEST_PIN2) {
             if (resultCode == Activity.RESULT_OK) {
                 val intent = Intent(baseContext, SignPaymentActivity::class.java)
-                ctx.saveToBundle(intent.extras)
-//                intent.putExtra("UID", card!!.uid)
-//                intent.putExtra("Card", card!!.asBundle)
-                intent.putExtra("Wallet", etWallet!!.text.toString())
+                ctx.saveToIntent(intent)
+                intent.putExtra(SignPaymentActivity.EXTRA_TARGET_ADDRESS, etWallet!!.text.toString())
                 intent.putExtra(SignPaymentActivity.EXTRA_AMOUNT, etAmount.text.toString())
-                intent.putExtra("Fee", etFee.text.toString())
-                intent.putExtra("IncFee", isIncludeFee)
+                intent.putExtra(SignPaymentActivity.EXTRA_AMOUNT_CURRENCY, tvCurrency.text.toString())
+                intent.putExtra(SignPaymentActivity.EXTRA_FEE, etFee.text.toString())
+                intent.putExtra(SignPaymentActivity.EXTRA_FEE_CURRENCY, tvCurrency2.text.toString())
+                intent.putExtra(SignPaymentActivity.EXTRA_FEE_INCLUDED, isIncludeFee)
                 startActivityForResult(intent, REQUEST_CODE_SIGN_PAYMENT)
             } else
                 Toast.makeText(baseContext, R.string.pin_2_is_required_to_sign_the_payment, Toast.LENGTH_LONG).show()
