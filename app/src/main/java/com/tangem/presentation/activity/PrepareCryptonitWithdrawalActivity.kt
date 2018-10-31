@@ -17,7 +17,6 @@ import com.tangem.data.network.Cryptonit
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
-import com.tangem.domain.wallet.TangemCard
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.util.DecimalDigitsInputFilter
 import com.tangem.wallet.R
@@ -57,8 +56,8 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         tvWallet.text = ctx.card!!.wallet
         val engine = CoinEngineFactory.create(ctx)
 
-        tvCurrency.text = Html.fromHtml(engine.balanceCurrencyHTML)
-        tvFeeCurrency.text = tvCurrency.text
+        tvCurrency.text = engine.balanceCurrency
+        tvFeeCurrency.text = engine.feeCurrency
 
         etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toEditString())
         etAmount.filters=engine.amountInputFilters
