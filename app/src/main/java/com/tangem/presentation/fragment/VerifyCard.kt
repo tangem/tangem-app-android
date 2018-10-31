@@ -101,7 +101,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                     if (data.extras!!.containsKey("confirmPIN")) {
                         val intent = Intent(context, PinRequestActivity::class.java)
                         intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                        ctx.saveToBundle(intent.extras)
+                        ctx.saveToIntent(intent)
                         newPIN = data.getStringExtra("newPIN")
                         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
                     } else {
@@ -117,7 +117,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                     if (data.extras!!.containsKey("confirmPIN2")) {
                         val intent = Intent(context, PinRequestActivity::class.java)
                         intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                        ctx.saveToBundle(intent.extras)
+                        ctx.saveToIntent(intent)
                         newPIN2 = data.getStringExtra("newPIN2")
                         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
                     } else {
@@ -147,7 +147,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
             REQUEST_CODE_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
                     data = Intent()
-                    ctx.saveToBundle(data.extras)
+                    ctx.saveToIntent(data)
                     data.putExtra("modification", "delete")
                 } else
                     data.putExtra("modification", "update")
@@ -163,7 +163,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                     requestPIN2Count++
                     val intent = Intent(context, PinRequestActivity::class.java)
                     intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                    ctx.saveToBundle(intent.extras)
+                    ctx.saveToIntent(intent)
                     startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
                     return
                 } else {
@@ -174,14 +174,13 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
             }
             REQUEST_CODE_REQUEST_PIN2_FOR_PURGE -> if (resultCode == Activity.RESULT_OK) {
                 val intent = Intent(context, PurgeActivity::class.java)
-                ctx.saveToBundle(intent.extras)
+                ctx.saveToIntent(intent)
                 startActivityForResult(intent, REQUEST_CODE_PURGE)
             }
             REQUEST_CODE_PURGE -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
                     data = Intent()
-
-                    ctx.saveToBundle(data.extras)
+                    ctx.saveToIntent(data)
                     data.putExtra("modification", "delete")
                 } else {
                     data.putExtra("modification", "update")
@@ -198,7 +197,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                     requestPIN2Count++
                     val intent = Intent(context, PinRequestActivity::class.java)
                     intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                    ctx.saveToBundle(intent.extras)
+                    ctx.saveToIntent(intent)
                     startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_PURGE)
                     return
                 } else {
@@ -430,7 +429,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
         requestPIN2Count = 0
         val intent = Intent(context, PinRequestActivity::class.java)
         intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-        ctx.saveToBundle(intent.extras)
+        ctx.saveToIntent(intent)
         newPIN = PINStorage.getDefaultPIN()
         newPIN2 = ""
         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
@@ -440,7 +439,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
         requestPIN2Count = 0
         val intent = Intent(context, PinRequestActivity::class.java)
         intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-        ctx.saveToBundle(intent.extras)
+        ctx.saveToIntent(intent)
         newPIN = ""
         newPIN2 = PINStorage.getDefaultPIN2()
         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
@@ -450,7 +449,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
         requestPIN2Count = 0
         val intent = Intent(context, PinRequestActivity::class.java)
         intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-        ctx.saveToBundle(intent.extras)
+        ctx.saveToIntent(intent)
         newPIN = PINStorage.getDefaultPIN()
         newPIN2 = PINStorage.getDefaultPIN2()
         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
@@ -477,13 +476,13 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
         val intent = Intent(context, PinRequestActivity::class.java)
         intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-        ctx.saveToBundle(intent.extras)
+        ctx.saveToIntent(intent)
         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_PURGE)
     }
 
     private fun startSwapPINActivity() {
         val intent = Intent(context, PinSwapActivity::class.java)
-        ctx.saveToBundle(intent.extras)
+        ctx.saveToIntent(intent)
         intent.putExtra("newPIN", newPIN)
         intent.putExtra("newPIN2", newPIN2)
         startActivityForResult(intent, REQUEST_CODE_SWAP_PIN)
@@ -491,7 +490,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
     fun prepareResultIntent(): Intent {
         val data = Intent()
-        ctx.saveToBundle(data.extras)
+        ctx.saveToIntent(data)
         return data
     }
 
