@@ -159,16 +159,12 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //                        }
                         getString(R.string.via_cryptonit) -> {
                             val intent = Intent(activity, PrepareCryptonitWithdrawalActivity::class.java)
-                            ctx.saveToBundle(intent.extras)
-//                            intent.putExtra("UID", card!!.uid)
-//                            intent.putExtra("Card", card!!.asBundle)
+                            ctx.saveToIntent(intent)
                             startActivityForResult(intent, REQUEST_CODE_RECEIVE_PAYMENT)
                         }
                         getString(R.string.via_kraken) -> {
                             val intent = Intent(activity, PrepareKrakenWithdrawalActivity::class.java)
-                            ctx.saveToBundle(intent.extras)
-//                            intent.putExtra("UID", card!!.uid)
-//                            intent.putExtra("Card", card!!.asBundle)
+                            ctx.saveToIntent(intent)
                             startActivityForResult(intent, REQUEST_CODE_RECEIVE_PAYMENT)
                         }
                         else -> {
@@ -203,24 +199,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         btnExtract.setOnClickListener {
             val engine=CoinEngineFactory.create(ctx)
             if (UtilHelper.isOnline(activity)) {
-                // TODO - move checks to engine
-                if (!engine!!.hasBalanceInfo()) {
-                    showSingleToast(R.string.cannot_obtain_data_from_blockchain)
-                } else if (!engine!!.isBalanceNotZero)
-                    showSingleToast(R.string.wallet_empty)
-                else if (!engine!!.isBalanceAlterNotZero)
-                    showSingleToast(R.string.not_enough_eth_for_gas)
-                else if (engine!!.awaitingConfirmation())
-                    showSingleToast(R.string.please_wait_while_previous)
-                else if (!engine!!.checkUnspentTransaction())
-                    showSingleToast(R.string.please_wait_for_confirmation)
+                if (!engine!!.isExtractPossible)
+                    showSingleToast(ctx.message)
                 else if (ctx.card!!.remainingSignatures == 0)
                     showSingleToast(R.string.card_has_no_remaining_signature)
                 else {
                     val intent = Intent(activity, PreparePaymentActivity::class.java)
-                    ctx.saveToBundle(intent.extras)
-//                    intent.putExtra("UID", card!!.uid)
-//                    intent.putExtra("Card", card!!.asBundle)
+                    ctx.saveToIntent(intent)
                     startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT)
                 }
             } else
@@ -523,9 +508,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     if (data.extras != null && data.extras!!.containsKey("confirmPIN")) {
                         val intent = Intent(activity, PinRequestActivity::class.java)
                         intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                        ctx.saveToBundle(intent.extras)
-//                        intent.putExtra(TangemCard.EXTRA_UID, card!!.uid)
-//                        intent.putExtra(TangemCard.EXTRA_CARD, card!!.asBundle)
+                        ctx.saveToIntent(intent)
                         newPIN = data.getStringExtra("newPIN")
                         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
                     } else {
@@ -541,9 +524,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     if (data.extras != null && data.extras!!.containsKey("confirmPIN2")) {
                         val intent = Intent(activity, PinRequestActivity::class.java)
                         intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                        ctx.saveToBundle(intent.extras)
-//                        intent.putExtra(TangemCard.EXTRA_UID, card!!.uid)
-//                        intent.putExtra(TangemCard.EXTRA_CARD, card!!.asBundle)
+                        ctx.saveToIntent(intent)
                         newPIN2 = data.getStringExtra("newPIN2")
                         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
                     } else {
@@ -575,9 +556,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             REQUEST_CODE_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
                     data = Intent()
-                    ctx.saveToBundle(data.extras)
-//                    data.putExtra(TangemCard.EXTRA_UID, card!!.uid)
-//                    data.putExtra(TangemCard.EXTRA_CARD, card!!.asBundle)
+                    ctx.saveToIntent(data)
                     data.putExtra("modification", "delete")
                 } else
                     data.putExtra("modification", "update")
@@ -596,9 +575,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     requestPIN2Count++
                     val intent = Intent(activity, PinRequestActivity::class.java)
                     intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                    ctx.saveToBundle(intent.extras)
-//                    intent.putExtra("UID", card!!.uid)
-//                    intent.putExtra(TangemCard.EXTRA_CARD, card!!.asBundle)
+                    ctx.saveToIntent(intent)
                     startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
                     return
                 } else {
@@ -609,17 +586,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
             REQUEST_CODE_REQUEST_PIN2_FOR_PURGE -> if (resultCode == Activity.RESULT_OK) {
                 val intent = Intent(activity, PurgeActivity::class.java)
-                ctx.saveToBundle(intent.extras)
-//                intent.putExtra(TangemCard.EXTRA_UID, card!!.uid)
-//                intent.putExtra(TangemCard.EXTRA_CARD, card!!.asBundle)
+                ctx.saveToIntent(intent)
                 startActivityForResult(intent, REQUEST_CODE_PURGE)
             }
             REQUEST_CODE_PURGE -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
                     data = Intent()
-                    ctx.saveToBundle(data.extras)
-//                    data.putExtra(TangemCard.EXTRA_UID, card!!.uid)
-//                    data.putExtra(TangemCard.EXTRA_CARD, card!!.asBundle)
+                    ctx.saveToIntent(data)
                     data.putExtra("modification", "delete")
                 } else {
                     data.putExtra("modification", "update")
@@ -638,9 +611,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     requestPIN2Count++
                     val intent = Intent(activity, PinRequestActivity::class.java)
                     intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                    ctx.saveToBundle(intent.extras)
-//                    intent.putExtra(TangemCard.EXTRA_UID, card!!.uid)
-//                    intent.putExtra(TangemCard.EXTRA_CARD, card!!.asBundle)
+                    ctx.saveToIntent(intent)
                     startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_PURGE)
                     return
                 } else {
@@ -918,7 +889,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     private fun openVerifyCard(cardProtocol: CardProtocol) {
         val intent = Intent(activity, VerifyCardActivity::class.java)
-        ctx.saveToBundle(intent.extras)
+        ctx.saveToIntent(intent)
         startActivityForResult(intent, REQUEST_CODE_VERIFY_CARD)
     }
 
@@ -986,9 +957,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     private fun startSwapPINActivity() {
         val intent = Intent(activity, PinSwapActivity::class.java)
-        ctx.saveToBundle(intent.extras)
-//        intent.putExtra(TangemCard.EXTRA_UID, card!!.uid)
-//        intent.putExtra(TangemCard.EXTRA_CARD, card!!.asBundle)
+        ctx.saveToIntent(intent)
         intent.putExtra("newPIN", newPIN)
         intent.putExtra("newPIN2", newPIN2)
         startActivityForResult(intent, REQUEST_CODE_SWAP_PIN)
@@ -1006,4 +975,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
     }
 
+    private fun showSingleToast(text: String) {
+        if (singleToast == null || !singleToast!!.view.isShown || showTime.time + 2000 < Date().time) {
+            if (singleToast != null)
+                singleToast!!.cancel()
+            singleToast = Toast.makeText(activity, text, Toast.LENGTH_LONG)
+            singleToast!!.show()
+            showTime = Date()
+        }
+    }
 }
