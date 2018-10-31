@@ -1,6 +1,7 @@
 package com.tangem.domain.wallet;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 
 
@@ -67,6 +68,10 @@ public class TangemContext {
         this.message = value;
     }
 
+    public void setMessage(int valueId) {
+        this.message = getString(valueId);
+    }
+
     public String getMessage() {
         return message;
     }
@@ -94,19 +99,19 @@ public class TangemContext {
         return tangemContext;
     }
 
-    public void saveToBundle(Bundle bundle) {
+    public void saveToIntent(Intent intent) {
 
         if (card != null) {
-            bundle.putString(TangemCard.EXTRA_UID, card.getUID());
-            bundle.putBundle(TangemCard.EXTRA_CARD, card.getAsBundle());
+            intent.putExtra(TangemCard.EXTRA_UID, card.getUID());
+            intent.putExtra(TangemCard.EXTRA_CARD, card.getAsBundle());
         }
 
         if (coinData != null) {
-            bundle.putBundle(EXTRA_BLOCKCHAIN_DATA, coinData.asBundle());
+            intent.putExtra(EXTRA_BLOCKCHAIN_DATA, coinData.asBundle());
         }
 
-        bundle.putString("Error", error);
-        bundle.putString("Message", message);
+        intent.putExtra("Error", error);
+        intent.putExtra("Message", message);
 
     }
 
