@@ -12,7 +12,6 @@ import android.nfc.Tag
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.text.Html
-import android.text.InputFilter
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -21,9 +20,7 @@ import com.tangem.data.network.Kraken
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
-import com.tangem.domain.wallet.TangemCard
 import com.tangem.domain.wallet.TangemContext
-import com.tangem.util.DecimalDigitsInputFilter
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_kraken_withdrawal.*
 import java.io.IOException
@@ -64,7 +61,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
         tvWallet.text = ctx.card!!.wallet
         val engine = CoinEngineFactory.create(ctx)
 
-        tvCurrency.text = Html.fromHtml(engine.balanceCurrencyHTML)
+        tvCurrency.text = engine.balanceCurrency
 
         etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toEditString())
         etAmount.filters=engine.amountInputFilters
