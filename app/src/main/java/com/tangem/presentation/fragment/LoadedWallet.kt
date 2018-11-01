@@ -344,7 +344,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                                 ctx.card!!.addTokenToBlockchainName()
 
                                 //TODO check
-                                //ctx.blockchain=Blockchain.Ethereum
+                                //ctx.blockchain=lBlockchain.Ethereum
 
                                 requestCounter--
                                 if (requestCounter == 0) srl!!.isRefreshing = false
@@ -427,7 +427,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     localStorage.applySubstitution(ctx.card!!)
                     if (ctx.card!!.blockchain == Blockchain.Token || ctx.card!!.blockchain == Blockchain.Ethereum) {
                         ctx.card!!.setBlockchainIDFromCard(Blockchain.Ethereum.id)
-                        ctx.blockchain=Blockchain.Ethereum
+                        //ctx.blockchain=Blockchain.Ethereum
                         //engine=engine!!.swithToOtherEngine(Blockchain.Ethereum)
                     }
                     refresh()
