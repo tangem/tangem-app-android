@@ -40,14 +40,13 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     private var serverApiHelper: ServerApiHelper = ServerApiHelper()
     private var serverApiHelperElectrum: ServerApiHelperElectrum = ServerApiHelperElectrum()
 
-    //private var card: TangemCard? = null
     private lateinit var ctx: TangemContext
 
     private var feeRequestSuccess = false
     private var balanceRequestSuccess = false
-    private var minFee: String? = null
-    private var maxFee: String? = null
-    private var normalFee: String? = null
+    private var minFee: CoinEngine.Amount? = null
+    private var maxFee: CoinEngine.Amount? = null
+    private var normalFee: CoinEngine.Amount? = null
     private var isIncludeFee: Boolean = true
     private var minFeeInInternalUnits: CoinEngine.InternalAmount? = CoinEngine.InternalAmount(0, "")
     private var requestPIN2Count = 0
@@ -69,8 +68,8 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 //
         val engine = CoinEngineFactory.create(ctx)
 
-            val html = Html.fromHtml(engine!!.balanceHTML)
-            tvBalance.text = html
+        val html = Html.fromHtml(engine!!.balanceHTML)
+        tvBalance.text = html
 
         isIncludeFee = intent.getBooleanExtra(SignPaymentActivity.EXTRA_FEE_INCLUDED, true)
 
@@ -82,7 +81,9 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             tvIncFee.visibility = View.INVISIBLE
         else
             tvIncFee.visibility = View.VISIBLE
-        etAmount.setText(intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT))
+
+        val amount=CoinEngine.Amount(intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT), intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT_CURRENCY))
+        etAmount.setText(amount.toValueString())
         tvCurrency.text = engine.balanceCurrency
         tvCurrency2.text = engine.feeCurrency
         tvCardID.text = ctx.card!!.cidDescription
@@ -188,8 +189,6 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             val intent = Intent(baseContext, PinRequestActivity::class.java)
             intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
             ctx.saveToIntent(intent)
-//            intent.putExtra(TangemCard.EXTRA_UID, card!!.uid)
-//            intent.putExtra(TangemCard.EXTRA_CARD, card!!.asBundle)
             intent.putExtra(SignPaymentActivity.EXTRA_FEE_INCLUDED, isIncludeFee)
             startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
         }
@@ -201,7 +200,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                     try {
                         etFee.setText(getString(R.string.empty))
                         val engine = CoinEngineFactory.create(ctx)
-                        val balance= engine.convertToAmount(CoinEngine.InternalAmount(electrumRequest.result.getLong("confirmed") + electrumRequest.result.getLong("unconfirmed"), "Satoshi"))
+                        val balance = engine.convertToAmount(CoinEngine.InternalAmount(electrumRequest.result.getLong("confirmed") + electrumRequest.result.getLong("unconfirmed"), "Satoshi"))
                         val amount = CoinEngine.Amount(etAmount.text.toString(), ctx.blockchain.currency)
                         if (balance < amount) {
                             etFee.error = getString(R.string.not_enough_funds)
@@ -240,20 +239,21 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         val l = BigInteger(gasPrice, 16).divide(BigInteger.valueOf(1000000000L)).multiply(BigInteger.valueOf(1000000000L))
 
                         val m = if (ctx.blockchain == Blockchain.Token) BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
-                        val minFeeInGwei = (ctx.coinData!! as EthData).getAmountInGwei(l.multiply(m).toString())
-                        val normalFeeInGwei = (ctx.coinData!! as EthData).getAmountInGwei(l.multiply(BigInteger.valueOf(12)).divide(BigInteger.valueOf(10)).multiply(m).toString())
-                        val maxFeeInGwei = (ctx.coinData!! as EthData).getAmountInGwei(l.multiply(BigInteger.valueOf(15)).divide(BigInteger.valueOf(10)).multiply(m).toString())
+                        val weiMinFee = CoinEngine.InternalAmount(l.multiply(m), "wei")
+                        val weiNormalFee = CoinEngine.InternalAmount(weiMinFee.multiply(BigDecimal.valueOf(12)).divide(BigDecimal.valueOf(10)), "wei")
+                        val weiMaxFee = CoinEngine.InternalAmount(weiMinFee.multiply(BigDecimal.valueOf(15)).divide(BigDecimal.valueOf(10)), "wei")
 
-                        minFee = minFeeInGwei
-                        normalFee = normalFeeInGwei
-                        maxFee = maxFeeInGwei
-                        etFee.setText(normalFeeInGwei.replace(',', '.'))
+                        minFee = engine.convertToAmount(weiMinFee)
+                        normalFee = engine.convertToAmount(weiNormalFee)
+                        maxFee = engine.convertToAmount(weiMaxFee)
+                        doSetFee(rgFee.checkedRadioButtonId)
+                        //etFee.setText(weiNormalFee.toValueString())
                         etFee.error = null
                         btnSend.visibility = View.VISIBLE
                         feeRequestSuccess = true
                         balanceRequestSuccess = true
                         dtVerified = Date()
-                        minFeeInInternalUnits = CoinEngine.InternalAmount(normalFeeInGwei,"Gwei")
+                        minFeeInInternalUnits = weiNormalFee // TODO why not weiMinFee ???
                     }
                 }
             }
@@ -291,25 +291,23 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 df.maximumFractionDigits = 7
                 df.minimumFractionDigits = 3
                 df.isGroupingUsed = false
-                val strFee = df.format(fee)
 
                 when (blockCount) {
                     ServerApiHelper.ESTIMATE_FEE_MINIMAL -> {
-                        minFee = strFee
-                        //TODO - we must know currency of fee
-                        minFeeInInternalUnits = CoinEngine.InternalAmount(strFee, tvCurrency2.text.toString())
+                        minFee = CoinEngine.Amount(fee, engine.feeCurrency)
+                        minFeeInInternalUnits = engine.convertToInternalAmount(minFee)
                     }
 
                     ServerApiHelper.ESTIMATE_FEE_NORMAL -> {
-                        normalFee = strFee
+                        normalFee = CoinEngine.Amount(fee, engine.feeCurrency)
 
-                        doSetFee(rgFee.checkedRadioButtonId)
                     }
 
                     ServerApiHelper.ESTIMATE_FEE_PRIORITY -> {
-                        maxFee = strFee
+                        maxFee = CoinEngine.Amount(fee, engine.feeCurrency)
                     }
                 }
+                doSetFee(rgFee.checkedRadioButtonId)
 
                 etFee.error = null
                 feeRequestSuccess = true
