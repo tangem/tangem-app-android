@@ -175,7 +175,9 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public String getBalanceEquivalent() {
-        return getBalance().toEquivalentString(coinData.getRate());
+        Amount balance=getBalance();
+        if( balance==null ) return "";
+        return balance.toEquivalentString(coinData.getRate());
     }
 
     @Override
@@ -258,7 +260,7 @@ public class EthEngine extends CoinEngine {
     }
 
     @Override
-    public boolean checkNewTransactionAmountAndFee(Amount amount, Amount fee, Boolean isFeeIncluded, InternalAmount minFeeInInternalUnits) {
+    public boolean checkNewTransactionAmountAndFee(Amount amount, Amount fee, Boolean isFeeIncluded) {
 //        Long fee = null;
 //        Long amount = null;
 //        try {
