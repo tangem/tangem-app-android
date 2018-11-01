@@ -41,7 +41,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         nfcManager = NfcManager(this, this)
 
-        ctx= TangemContext.loadFromBundle(this, intent.extras)
+        ctx = TangemContext.loadFromBundle(this, intent.extras)
 
         tvCardID.text = ctx.card!!.cidDescription
         val engine = CoinEngineFactory.create(ctx)
@@ -60,7 +60,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             etAmount.isEnabled = false
 
         tvCurrency.text = engine.balance.currency
-        etAmount.setText(engine.balance.toEditString())
+        etAmount.setText(engine.balance.toValueString())
 
         // limit number of symbols after comma
         etAmount.filters = engine.amountInputFilters
@@ -81,11 +81,13 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             val engine1 = CoinEngineFactory.create(ctx)
 
             val strAmount: String = etAmount.text.toString().replace(",", ".")
-            val amount=engine1.convertToAmount(etAmount.text.toString(), tvCurrency.text.toString())
+            val amount = engine1.convertToAmount(etAmount.text.toString(), tvCurrency.text.toString())
 
             try {
                 if (!engine.checkNewTransactionAmount(amount))
                     etAmount.error = getString(R.string.not_enough_funds_on_your_card)
+                else
+                    etAmount.error = null
             } catch (e: Exception) {
                 etAmount.error = getString(R.string.unknown_amount_format)
             }
@@ -98,6 +100,8 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             if (!checkAddress) {
                 etWallet.error = getString(R.string.incorrect_destination_wallet_address)
                 return@setOnClickListener
+            } else {
+                etWallet.error = null
             }
 
             if (etWallet.text.toString() == ctx.card!!.wallet) {
@@ -111,6 +115,9 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 //                etAmount.error = getString(R.string.not_enough_funds_on_your_card)
 //                return@setOnClickListener
 //            }
+            if (!etAmount.error.isNullOrEmpty() || !etWallet.error.isNullOrEmpty()) {
+                return@setOnClickListener
+            }
 
             val intent = Intent(baseContext, ConfirmPaymentActivity::class.java)
             ctx.saveToIntent(intent)
