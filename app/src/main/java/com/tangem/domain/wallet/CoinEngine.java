@@ -5,7 +5,11 @@ import android.text.InputFilter;
 
 import com.tangem.domain.cardReader.CardProtocol;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -42,6 +46,11 @@ public abstract class CoinEngine {
             this.currency=currency;
         }
 
+        public InternalAmount(BigInteger amount, String currency) {
+            super(new BigDecimal(amount).unscaledValue(), new BigDecimal(amount).scale());
+            this.currency=currency;
+        }
+
         public boolean notZero()
         {
             return compareTo(BigDecimal.ZERO)>0;
@@ -54,6 +63,32 @@ public abstract class CoinEngine {
         public String getCurrency() {
             return currency;
         }
+
+        public String toValueString(int decimals) {
+            DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.US);
+            symbols.setDecimalSeparator('.');
+            DecimalFormat df = new DecimalFormat();
+            df.setDecimalFormatSymbols(symbols);
+            df.setMaximumFractionDigits(decimals);
+
+            df.setMinimumFractionDigits(0);
+
+            df.setGroupingUsed(false);
+
+            BigDecimal bd=new BigDecimal(unscaledValue(), scale());
+            bd.setScale(decimals, ROUND_DOWN);
+            return df.format(bd);
+        }
+
+        public String toValueString() {
+            return toValueString(scale());
+        }
+
+        @Override
+        public String toString() {
+            return super.toString();
+        }
+
     }
 
     public static class Amount extends BigDecimal {
@@ -94,6 +129,10 @@ public abstract class CoinEngine {
         }
 
         public String toDescriptionString(int decimals) {
+            return toValueString(decimals)+ " " + currency;
+        }
+
+        public String toValueString(int decimals) {
             DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.US);
             symbols.setDecimalSeparator('.');
             DecimalFormat df = new DecimalFormat();
@@ -106,11 +145,11 @@ public abstract class CoinEngine {
 
             BigDecimal bd=new BigDecimal(unscaledValue(), scale());
             bd.setScale(decimals, ROUND_DOWN);
-            return df.format(bd)+ " " + currency;
+            return df.format(bd);
         }
 
-        public String toEditString() {
-            return super.toString();
+        public String toValueString() {
+            return toValueString(scale());
         }
 
         public String toEquivalentString(double rateValue) {
