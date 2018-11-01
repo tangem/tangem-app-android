@@ -62,8 +62,8 @@ public class ServerApiHelperElectrum {
     public void electrumRequestData(TangemCard card, ElectrumRequest electrumRequest) {
         Observable<ElectrumRequest> checkElectrumDataObserver = Observable.just(electrumRequest)
 
-//                .doOnNext(electrumRequest1 -> doElectrumRequest(card, electrumRequest))
-                .doOnNext(electrumRequest1 -> testSslSocket(card, electrumRequest))
+                .doOnNext(electrumRequest1 -> doElectrumRequest(card, electrumRequest))
+//                .doOnNext(electrumRequest1 -> testSslSocket(card, electrumRequest))
 
                 .flatMap(electrumRequest1 -> {
                     if (electrumRequest1.answerData == null) {
@@ -158,8 +158,6 @@ public class ServerApiHelperElectrum {
         }
 
         return result;
-
-
     }
 
     private List<ElectrumRequest> doElectrumRequest(TangemCard card, ElectrumRequest electrumRequest) {
