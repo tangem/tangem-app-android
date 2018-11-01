@@ -9,7 +9,6 @@ import com.tangem.util.BTCUtils;
 import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.util.DerEncodingUtil;
-import com.tangem.util.FormatUtil;
 import com.tangem.util.Util;
 import com.tangem.wallet.R;
 
@@ -194,7 +193,7 @@ public class BtcCashEngine extends CoinEngine {
     }
 
     @Override
-    public boolean checkNewTransactionAmountAndFee(Amount amountValue, Amount feeValue, Boolean isIncludeFee, InternalAmount minFeeInInternalUnits) {
+    public boolean checkNewTransactionAmountAndFee(Amount amountValue, Amount feeValue, Boolean isIncludeFee) {
         InternalAmount fee;
         InternalAmount amount;
 
@@ -308,7 +307,9 @@ public class BtcCashEngine extends CoinEngine {
     @Override
     public String getBalanceEquivalent() {
         if (coinData == null || !coinData.getAmountEquivalentDescriptionAvailable()) return "";
-        return getBalance().toEquivalentString(coinData.getRate());
+        Amount balance=getBalance();
+        if( balance==null ) return "";
+        return balance.toEquivalentString(coinData.getRate());
     }
 
     @Override
