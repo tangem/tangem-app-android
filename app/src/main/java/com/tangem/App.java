@@ -3,8 +3,8 @@ package com.tangem;
 import android.app.Application;
 import android.support.v7.app.AppCompatDelegate;
 
-import com.tangem.di.AppComponent;
-import com.tangem.di.DaggerAppComponent;
+import com.tangem.di.DaggerNetworkComponent;
+import com.tangem.di.NetworkComponent;
 
 public class App extends Application {
 
@@ -21,7 +21,7 @@ public class App extends Application {
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
     }
 
-    private static AppComponent component;
+    private static NetworkComponent networkComponent;
 
     @Override
     public void onCreate() {
@@ -29,7 +29,7 @@ public class App extends Application {
         // initialize the singleton
         sInstance = this;
 
-        component = DaggerAppComponent.create();
+        networkComponent = DaggerNetworkComponent.create();
     }
 
     /**
@@ -39,8 +39,8 @@ public class App extends Application {
         return sInstance;
     }
 
-    public static AppComponent getComponent() {
-        return component;
+    public static NetworkComponent getNetworkComponent() {
+        return networkComponent;
     }
 
 }
