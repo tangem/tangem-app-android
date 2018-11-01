@@ -307,7 +307,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                             (ctx.coinData!! as EthData).balanceInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(),"wei")
                         }else{
                             (ctx.coinData!! as TokenData).isBalanceReceived = true
-                            (ctx.coinData!! as TokenData).balanceInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(),ctx.card.tokenSymbol)
+                            //(ctx.coinData!! as TokenData).balanceInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(),ctx.card.tokenSymbol)
                             (ctx.coinData!! as TokenData).balanceAlterInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(), "wei")
                         }
 
@@ -339,21 +339,21 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                             balanceCap = balanceCap.substring(2)
                             val l = BigInteger(balanceCap, 16)
                             val balance = l.toLong()
-                            if (l.compareTo(BigInteger.ZERO) == 0) {
-                                ctx.card!!.blockchainID = Blockchain.Ethereum.id
-                                ctx.card!!.addTokenToBlockchainName()
-
-                                //TODO check
-                                //ctx.blockchain=lBlockchain.Ethereum
-
-                                requestCounter--
-                                if (requestCounter == 0) srl!!.isRefreshing = false
-
-                                requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
-                                requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
-                                requestInfura(ServerApiHelper.INFURA_ETH_GET_PENDING_COUNT, "")
-                                return
-                            }
+//                            if (l.compareTo(BigInteger.ZERO) == 0) {
+//                                //ctx.card!!.blockchainID = Blockchain.Ethereum.id
+//                                ctx.card!!.addTokenToBlockchainName()
+//
+//                                //TODO check
+//                                //ctx.blockchain=lBlockchain.Ethereum
+//
+//                                requestCounter--
+//                                if (requestCounter == 0) srl!!.isRefreshing = false
+//
+//                                requestInfura(ServerApiHelper.INFURA_ETH_GET_BALANCE, "")
+//                                requestInfura(ServerApiHelper.INFURA_ETH_GET_TRANSACTION_COUNT, "")
+//                                requestInfura(ServerApiHelper.INFURA_ETH_GET_PENDING_COUNT, "")
+//                                return
+//                            }
                             (ctx.coinData!! as EthData).balanceInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(),ctx.card.tokenSymbol)
 
 //                            Log.i("$TAG eth_call", balanceCap)
