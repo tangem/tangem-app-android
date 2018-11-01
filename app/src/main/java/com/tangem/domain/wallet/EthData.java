@@ -31,12 +31,12 @@ public class EthData extends CoinData {
     public void setUnconfirmedTXCount(BigInteger count) {
         countUnconfirmedTX = count;
     }
-
-    public String getAmountInGwei(String amount) {
-        BigInteger d = new BigInteger(amount, 10);
-        BigInteger m = d.divide(BigInteger.valueOf(1000000000L));
-        return m.toString(10);
-    }
+//
+//    public String getAmountInGwei(String amount) {
+//        BigInteger d = new BigInteger(amount, 10);
+//        BigInteger m = d.divide(BigInteger.valueOf(1000000000L));
+//        return m.toString(10);
+//    }
 
     @Override
     public void clearInfo() {
