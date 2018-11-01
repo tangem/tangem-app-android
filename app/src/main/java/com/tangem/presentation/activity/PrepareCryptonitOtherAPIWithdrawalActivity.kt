@@ -8,7 +8,6 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.text.Html
 import android.view.View
 import com.tangem.data.network.Cryptonit_OtherAPI
 import com.tangem.domain.cardReader.NfcManager
@@ -57,7 +56,7 @@ class PrepareCryptonitOtherAPIWithdrawalActivity : AppCompatActivity(), NfcAdapt
 
         tvCurrency.text = engine.balanceCurrency
 
-        etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toEditString())
+        etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toValueString())
         etAmount.filters=engine.amountInputFilters
 
         // set listeners
