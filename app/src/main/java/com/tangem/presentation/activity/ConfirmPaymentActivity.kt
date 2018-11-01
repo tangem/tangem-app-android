@@ -26,6 +26,7 @@ import org.json.JSONException
 import java.io.IOException
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.util.*
 
@@ -48,7 +49,6 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     private var maxFee: CoinEngine.Amount? = null
     private var normalFee: CoinEngine.Amount? = null
     private var isIncludeFee: Boolean = true
-    private var minFeeInInternalUnits: CoinEngine.InternalAmount? = CoinEngine.InternalAmount(0, "")
     private var requestPIN2Count = 0
     private var nodeCheck = false
     private var dtVerified: Date? = null
@@ -63,9 +63,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         nfcManager = NfcManager(this, this)
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
-//        card = TangemCard(intent.getStringExtra("UID"))
-//        card!!.loadFromBundle(intent.extras!!.getBundle("Card"))
-//
+
         val engine = CoinEngineFactory.create(ctx)
 
         val html = Html.fromHtml(engine!!.balanceHTML)
@@ -82,7 +80,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         else
             tvIncFee.visibility = View.VISIBLE
 
-        val amount=CoinEngine.Amount(intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT), intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT_CURRENCY))
+        val amount = CoinEngine.Amount(intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT), intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT_CURRENCY))
         etAmount.setText(amount.toValueString())
         tvCurrency.text = engine.balanceCurrency
         tvCurrency2.text = engine.feeCurrency
@@ -180,7 +178,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 return@setOnClickListener
             }
 
-            if (!engineCoin.checkNewTransactionAmountAndFee(txAmount, txFee, isIncludeFee, minFeeInInternalUnits)) {
+            if (!engineCoin.checkNewTransactionAmountAndFee(txAmount, txFee, isIncludeFee)) {
                 finishWithError(Activity.RESULT_CANCELED, getString(R.string.not_enough_funds_on_your_card))
                 return@setOnClickListener
             }
@@ -198,7 +196,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             override fun onSuccess(electrumRequest: ElectrumRequest?) {
                 if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_GetBalance)) {
                     try {
-                        etFee.setText(getString(R.string.empty))
+                        if( etFee.text.toString().isEmpty() ) etFee.setText(getString(R.string.empty))
                         val engine = CoinEngineFactory.create(ctx)
                         val balance = engine.convertToAmount(CoinEngine.InternalAmount(electrumRequest.result.getLong("confirmed") + electrumRequest.result.getLong("unconfirmed"), "Satoshi"))
                         val amount = CoinEngine.Amount(etAmount.text.toString(), ctx.blockchain.currency)
@@ -253,7 +251,6 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         feeRequestSuccess = true
                         balanceRequestSuccess = true
                         dtVerified = Date()
-                        minFeeInInternalUnits = weiNormalFee // TODO why not weiMinFee ???
                     }
                 }
             }
@@ -287,27 +284,24 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
                 progressBar.visibility = View.INVISIBLE
 
-                val df = DecimalFormat()
-                df.maximumFractionDigits = 7
-                df.minimumFractionDigits = 3
-                df.isGroupingUsed = false
+                fee = fee!!.setScale(8, RoundingMode.DOWN)
 
                 when (blockCount) {
                     ServerApiHelper.ESTIMATE_FEE_MINIMAL -> {
                         minFee = CoinEngine.Amount(fee, engine.feeCurrency)
-                        minFeeInInternalUnits = engine.convertToInternalAmount(minFee)
+                        if (rgFee.checkedRadioButtonId == R.id.rbMinimalFee) doSetFee(rgFee.checkedRadioButtonId)
                     }
 
                     ServerApiHelper.ESTIMATE_FEE_NORMAL -> {
                         normalFee = CoinEngine.Amount(fee, engine.feeCurrency)
-
+                        if (rgFee.checkedRadioButtonId == R.id.rbNormalFee) doSetFee(rgFee.checkedRadioButtonId)
                     }
 
                     ServerApiHelper.ESTIMATE_FEE_PRIORITY -> {
                         maxFee = CoinEngine.Amount(fee, engine.feeCurrency)
+                        if (rgFee.checkedRadioButtonId == R.id.rbMaximumFee) doSetFee(rgFee.checkedRadioButtonId)
                     }
                 }
-                doSetFee(rgFee.checkedRadioButtonId)
 
                 etFee.error = null
                 feeRequestSuccess = true
@@ -481,21 +475,22 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     }
 
     private fun doSetFee(checkedRadioButtonId: Int) {
+        Log.e("DEBUG", "doSetFee")
         var txtFee = ""
         when (checkedRadioButtonId) {
             R.id.rbMinimalFee ->
                 if (minFee != null)
-                    txtFee = minFee.toString()
+                    txtFee = minFee!!.toValueString()
                 else
                     finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
             R.id.rbNormalFee ->
                 if (normalFee != null)
-                    txtFee = normalFee.toString()
+                    txtFee = normalFee!!.toValueString()
                 else
                     finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
             R.id.rbMaximumFee ->
                 if (maxFee != null)
-                    txtFee = maxFee.toString()
+                    txtFee = maxFee!!.toValueString()
                 else
                     finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
         }
