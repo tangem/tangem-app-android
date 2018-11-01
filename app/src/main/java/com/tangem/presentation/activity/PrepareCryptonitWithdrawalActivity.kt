@@ -7,7 +7,6 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.text.Html
 import android.text.InputFilter
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -59,7 +58,7 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         tvCurrency.text = engine.balanceCurrency
         tvFeeCurrency.text = engine.feeCurrency
 
-        etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toEditString())
+        etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toValueString())
         etAmount.filters=engine.amountInputFilters
 
         etAmount.setOnEditorActionListener { lv, actionId, event ->
