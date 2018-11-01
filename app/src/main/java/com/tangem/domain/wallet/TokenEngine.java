@@ -75,7 +75,7 @@ public class TokenEngine extends CoinEngine {
                 return " " + convertToAmount(coinData.getBalanceInInternalUnits()).toDescriptionString(getTokenDecimals()) + " <br><small><small>  + " + convertToAmount(coinData.getBalanceAlterInInternalUnits()).toDescriptionString(getEthDecimals()) + " for gas</small></small>";
             } catch (Exception e) {
                 e.printStackTrace();
-                return null;
+                return "";
             }
         } else {
             return "";
