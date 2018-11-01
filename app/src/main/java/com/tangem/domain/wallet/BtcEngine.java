@@ -3,15 +3,12 @@ package com.tangem.domain.wallet;
 import android.net.Uri;
 import android.text.InputFilter;
 
-import com.tangem.domain.BitcoinNode;
-import com.tangem.domain.BitcoinNodeTestNet;
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.TLV;
 import com.tangem.util.BTCUtils;
 import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.util.DerEncodingUtil;
-import com.tangem.util.FormatUtil;
 import com.tangem.util.Util;
 import com.tangem.wallet.R;
 
@@ -199,7 +196,7 @@ public class BtcEngine extends CoinEngine {
     }
 
     @Override
-    public boolean checkNewTransactionAmountAndFee(Amount amountValue, Amount feeValue, Boolean isIncludeFee, InternalAmount minFeeInInternalUnits) {
+    public boolean checkNewTransactionAmountAndFee(Amount amountValue, Amount feeValue, Boolean isIncludeFee) {
         InternalAmount fee;
         InternalAmount amount;
 
@@ -316,7 +313,9 @@ public class BtcEngine extends CoinEngine {
     @Override
     public String getBalanceEquivalent() {
         if( coinData ==null || !coinData.getAmountEquivalentDescriptionAvailable() ) return "";
-        return getBalance().toEquivalentString(coinData.getRate());
+        Amount balance=getBalance();
+        if( balance==null ) return "";
+        return balance.toEquivalentString(coinData.getRate());
     }
 
     @Override
@@ -367,7 +366,7 @@ public class BtcEngine extends CoinEngine {
     @Override
     public InternalAmount convertToInternalAmount(Amount amount) throws Exception {
         BigDecimal d=amount.multiply(new BigDecimal("100000000"));
-        return new InternalAmount(d, getBalanceCurrency());
+        return new InternalAmount(d, "Satoshi");
     }
 
     @Override
