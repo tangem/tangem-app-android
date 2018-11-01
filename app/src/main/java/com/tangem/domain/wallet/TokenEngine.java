@@ -172,8 +172,10 @@ public class TokenEngine extends CoinEngine {
         }
         try {
             if (coinData.getBalanceInInternalUnits().notZero()) {
-                return convertToAmount(coinData.getBalanceInInternalUnits()).toEquivalentString(coinData.getRate());
+                // TODO: check why Rate=EthRate
+                return "";//convertToAmount(coinData.getBalanceInInternalUnits()).toEquivalentString(coinData.getRate());
             } else {
+                if( coinData.getBalanceAlterInInternalUnits()==null ) return "";
                 return convertToAmount(coinData.getBalanceAlterInInternalUnits()).toEquivalentString(coinData.getRateAlter());
             }
         } catch (Exception e) {
@@ -318,7 +320,7 @@ public class TokenEngine extends CoinEngine {
     }
 
     @Override
-    public boolean checkNewTransactionAmountAndFee(Amount amount, Amount fee, Boolean isFeeIncluded, InternalAmount minFeeInInternalUnits) {
+    public boolean checkNewTransactionAmountAndFee(Amount amount, Amount fee, Boolean isFeeIncluded) {
         if (!hasBalanceInfo()) return false;
 
         try {
@@ -330,14 +332,8 @@ public class TokenEngine extends CoinEngine {
 
             if (amount.getCurrency().equals(ctx.getCard().tokenSymbol)) {
                 // token transaction
-                //TODO ???
-//        BigDecimal tmpFee = new BigDecimal(feeValue);
-//        BigDecimal tmpAmount = amount;
-//        tmpAmount = tmpAmount.multiply(new BigDecimal("1000000000"));
-//
-//        if (tmpFee.compareTo(tmpAmount) > 0)
-//            return false;
-
+                if( fee.compareTo(balance)>0 )
+                    return false;
             } else if (amount.getCurrency().equals("ETH") && coinData.getBalanceInInternalUnits().isZero()) {
                 // standart ETH transaction
                 try {
