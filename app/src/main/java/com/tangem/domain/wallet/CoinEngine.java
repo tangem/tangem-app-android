@@ -5,9 +5,6 @@ import android.text.InputFilter;
 
 import com.tangem.domain.cardReader.CardProtocol;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -196,7 +193,7 @@ public abstract class CoinEngine {
     public abstract boolean checkNewTransactionAmount(Amount amount);
 
     // TODO - move minFeeInInternalUnits to CoinData
-    public abstract boolean checkNewTransactionAmountAndFee(Amount amount, Amount fee, Boolean isFeeIncluded, InternalAmount minFeeInInternalUnits);
+    public abstract boolean checkNewTransactionAmountAndFee(Amount amount, Amount fee, Boolean isFeeIncluded);
 
     public abstract boolean validateBalance(BalanceValidator balanceValidator);
 
