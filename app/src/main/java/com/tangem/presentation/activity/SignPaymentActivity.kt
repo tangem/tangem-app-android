@@ -17,15 +17,12 @@ import com.tangem.data.nfc.SignPaymentTask
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.CoinEngine
-import com.tangem.domain.wallet.TangemCard
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.util.Util
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_sign_payment.*
-import kotlinx.android.synthetic.main.notification_template_lines_media.*
-import java.io.IOException
 
 class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
 
