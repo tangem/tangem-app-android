@@ -308,7 +308,7 @@ public class TokenEngine extends CoinEngine {
             if (amount.getCurrency().equals(ctx.getCard().tokenSymbol)) {
                 balance = convertToAmount(coinData.getBalanceInInternalUnits());
             } else if (amount.getCurrency().equals("ETH") && coinData.getBalanceInInternalUnits().isZero()) {
-                balance = convertToAmount(coinData.getBalanceInInternalUnits());
+                balance = convertToAmount(coinData.getBalanceAlterInInternalUnits());
             } else {
                 return false;
             }
