@@ -160,8 +160,8 @@ public class TokenEngine extends CoinEngine {
     @Override
     public boolean isBalanceNotZero() {
         if (coinData == null) return false;
-        if (coinData.getBalanceInInternalUnits() == null) return false;
-        return coinData.getBalanceInInternalUnits().notZero();
+        if (coinData.getBalanceInInternalUnits() == null && coinData.getBalanceAlterInInternalUnits() == null ) return false;
+        return coinData.getBalanceInInternalUnits().notZero() || coinData.getBalanceAlterInInternalUnits().notZero();
     }
 
 
