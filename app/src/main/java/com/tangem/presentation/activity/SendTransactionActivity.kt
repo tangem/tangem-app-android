@@ -66,11 +66,9 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                             finishWithSuccess()
                         } catch (e: Exception) {
                             e.printStackTrace()
-                            requestElectrum(ctx.card!!, ElectrumRequest.broadcast(ctx.card!!.wallet, tx))
                         }
                     } catch (e: JSONException) {
                         e.printStackTrace()
-                        requestElectrum(ctx.card!!, ElectrumRequest.broadcast(ctx.card!!.wallet, tx))
                     }
                 }
             }
@@ -93,7 +91,6 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                                 hashTX = tmp
                             } catch (e: JSONException) {
                                 e.printStackTrace()
-                                requestInfura(ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION, "")
                                 return
                             }
 
@@ -108,7 +105,6 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                             finishWithSuccess()
                         } catch (e: Exception) {
                             e.printStackTrace()
-                            requestInfura(ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION, "")
                         }
                     }
                 }
