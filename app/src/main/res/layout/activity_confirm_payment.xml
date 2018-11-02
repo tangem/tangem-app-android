@@ -108,6 +108,7 @@
             android:inputType="text"
             android:maxLines="2"
             android:padding="12dp"
+            android:singleLine="false"
             android:textColor="@color/black"
             android:textSize="@dimen/text_size_1_small"
             android:textStyle="bold" />
