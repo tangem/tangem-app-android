@@ -72,7 +72,7 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public String getBalanceCurrency() {
-        return "BTH";
+        return "BCH";
     }
 
     @Override
