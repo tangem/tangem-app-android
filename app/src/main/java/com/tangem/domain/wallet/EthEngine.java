@@ -284,7 +284,7 @@ public class EthEngine extends CoinEngine {
         try {
             BigDecimal cardBalance = getBalance();
 
-            if (isFeeIncluded && amount.compareTo(cardBalance) > 0 )
+            if (isFeeIncluded && (amount.compareTo(cardBalance) > 0 || amount.compareTo(fee)<0))
                 return false;
 
             if (!isFeeIncluded && amount.add(fee).compareTo(cardBalance) > 0)
