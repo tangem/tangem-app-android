@@ -12,11 +12,11 @@ import android.text.TextWatcher
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
-import android.widget.*
+import android.widget.Toast
+import com.tangem.data.network.ElectrumRequest
 import com.tangem.data.network.ServerApiHelper
 import com.tangem.data.network.ServerApiHelperElectrum
 import com.tangem.data.network.model.InfuraResponse
-import com.tangem.data.network.ElectrumRequest
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
 import com.tangem.util.*
@@ -27,7 +27,6 @@ import java.io.IOException
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
-import java.text.DecimalFormat
 import java.util.*
 
 class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
@@ -42,6 +41,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     private var serverApiHelperElectrum: ServerApiHelperElectrum = ServerApiHelperElectrum()
 
     private lateinit var ctx: TangemContext
+    private lateinit var amount: CoinEngine.Amount
 
     private var feeRequestSuccess = false
     private var balanceRequestSuccess = false
@@ -75,12 +75,14 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             tvIncFee.setText(R.string.including_fee)
         else
             tvIncFee.setText(R.string.not_including_fee)
-        if (ctx.blockchain == Blockchain.Token)
+
+        amount = CoinEngine.Amount(intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT), intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT_CURRENCY))
+
+        if (ctx.blockchain == Blockchain.Token && amount.currency!="ETH")
             tvIncFee.visibility = View.INVISIBLE
         else
             tvIncFee.visibility = View.VISIBLE
 
-        val amount = CoinEngine.Amount(intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT), intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT_CURRENCY))
         etAmount.setText(amount.toValueString())
         tvCurrency.text = engine.balanceCurrency
         tvCurrency2.text = engine.feeCurrency
@@ -173,7 +175,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 finishWithError(Activity.RESULT_CANCELED, getString(R.string.the_wallet_is_empty))
                 return@setOnClickListener
 
-            } else if (!engineCoin.isExtractPossible()) {
+            } else if (!engineCoin.isExtractPossible) {
                 finishWithError(Activity.RESULT_CANCELED, getString(R.string.please_wait_for_confirmation_of_incoming_transaction))
                 return@setOnClickListener
             }
@@ -196,7 +198,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             override fun onSuccess(electrumRequest: ElectrumRequest?) {
                 if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_GetBalance)) {
                     try {
-                        if( etFee.text.toString().isEmpty() ) etFee.setText(getString(R.string.empty))
+                        if (etFee.text.toString().isEmpty()) etFee.setText(getString(R.string.empty))
                         val engine = CoinEngineFactory.create(ctx)
                         val balance = engine.convertToAmount(CoinEngine.InternalAmount(electrumRequest.result.getLong("confirmed") + electrumRequest.result.getLong("unconfirmed"), "Satoshi"))
                         val amount = CoinEngine.Amount(etAmount.text.toString(), ctx.blockchain.currency)
@@ -236,7 +238,8 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         // rounding gas price to integer gwei
                         val l = BigInteger(gasPrice, 16).divide(BigInteger.valueOf(1000000000L)).multiply(BigInteger.valueOf(1000000000L))
 
-                        val m = if (ctx.blockchain == Blockchain.Token) BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
+                        //val m = if (ctx.blockchain==Blockchain.Token) BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
+                        val m = if (amount.currency != "ETH") BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
                         val weiMinFee = CoinEngine.InternalAmount(l.multiply(m), "wei")
                         val weiNormalFee = CoinEngine.InternalAmount(weiMinFee.multiply(BigDecimal.valueOf(12)).divide(BigDecimal.valueOf(10)), "wei")
                         val weiMaxFee = CoinEngine.InternalAmount(weiMinFee.multiply(BigDecimal.valueOf(15)).divide(BigDecimal.valueOf(10)), "wei")
@@ -475,7 +478,6 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     }
 
     private fun doSetFee(checkedRadioButtonId: Int) {
-        Log.e("DEBUG", "doSetFee")
         var txtFee = ""
         when (checkedRadioButtonId) {
             R.id.rbMinimalFee ->
