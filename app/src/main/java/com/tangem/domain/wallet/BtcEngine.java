@@ -215,7 +215,7 @@ public class BtcEngine extends CoinEngine {
         if (fee.isZero() || amount.isZero())
             return false;
 
-        if (isIncludeFee && amount.compareTo(coinData.getBalanceInInternalUnits())>0)
+        if (isIncludeFee && (amount.compareTo(coinData.getBalanceInInternalUnits())>0 || amount.compareTo(fee)<0))
             return false;
 
         if (!isIncludeFee && amount.add(fee).compareTo(coinData.getBalanceInInternalUnits())>0)
