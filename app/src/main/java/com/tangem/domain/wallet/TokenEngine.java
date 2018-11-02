@@ -424,7 +424,6 @@ public class TokenEngine extends CoinEngine {
     }
 
     public byte[] signETH(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress, CardProtocol protocol) throws Exception {
-
         BigInteger nonceValue = coinData.getConfirmedTXCount();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
         boolean flag = (ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer);
@@ -443,7 +442,9 @@ public class TokenEngine extends CoinEngine {
         BigInteger nonce = nonceValue;
         BigInteger gasPrice = weiFee.divide(gigaK).divide(BigInteger.valueOf(21000)).multiply(gigaK);
         BigInteger gasLimit = BigInteger.valueOf(21000);
-        Integer chainId = ctx.getBlockchain() == Blockchain.Ethereum ? EthTransaction.ChainEnum.Mainnet.getValue() : EthTransaction.ChainEnum.Rinkeby.getValue();
+
+//        Integer chainId = ctx.getBlockchain() == Blockchain.Ethereum ? EthTransaction.ChainEnum.Mainnet.getValue() : EthTransaction.ChainEnum.Rinkeby.getValue();
+        Integer chainId = EthTransaction.ChainEnum.Mainnet.getValue(); // Token support on main net only!!!
 
         String to = targetAddress;
 
