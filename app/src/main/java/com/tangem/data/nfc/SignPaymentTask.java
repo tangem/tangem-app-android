@@ -10,7 +10,6 @@ import com.tangem.domain.cardReader.NfcManager;
 import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.CoinEngineFactory;
-import com.tangem.domain.wallet.TangemCard;
 import com.tangem.domain.wallet.TangemContext;
 import com.tangem.presentation.activity.SendTransactionActivity;
 import com.tangem.presentation.activity.SignPaymentActivity;
