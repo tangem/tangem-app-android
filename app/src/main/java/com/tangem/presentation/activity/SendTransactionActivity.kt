@@ -83,7 +83,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         try {
                             //infuraResponse.result - it's HashTX
                             if (infuraResponse.result.isEmpty()) {
-                                finishWithError("rejected by server")
+                                finishWithError("Rejected by server: " + infuraResponse.error)
                             }
 
                             val nonce = (ctx.coinData!! as EthData).confirmedTXCount
