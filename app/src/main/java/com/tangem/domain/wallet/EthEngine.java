@@ -375,9 +375,6 @@ public class EthEngine extends CoinEngine {
         boolean flag = (ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer);
         Issuer issuer = ctx.getCard().getIssuer();
 
-
-        BigInteger gigaK = BigInteger.valueOf(1000000000L);
-
         BigInteger weiFee=convertToInternalAmount(feeValue).toBigIntegerExact();
         BigInteger weiAmount=convertToInternalAmount(amountValue).toBigIntegerExact();
 
@@ -386,7 +383,7 @@ public class EthEngine extends CoinEngine {
         }
 
         BigInteger nonce = nonceValue;
-        BigInteger gasPrice = weiFee.divide(gigaK).divide(BigInteger.valueOf(21000)).multiply(gigaK);
+        BigInteger gasPrice = weiFee.divide(BigInteger.valueOf(21000));
         BigInteger gasLimit = BigInteger.valueOf(21000);
         Integer chainId = ctx.getBlockchain() == Blockchain.Ethereum ? EthTransaction.ChainEnum.Mainnet.getValue() : EthTransaction.ChainEnum.Rinkeby.getValue();
 
