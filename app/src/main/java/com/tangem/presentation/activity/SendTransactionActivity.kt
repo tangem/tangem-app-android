@@ -41,7 +41,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         nfcManager = NfcManager(this, this)
 
 
-        ctx=TangemContext.loadFromBundle(this, intent.extras)
+        ctx = TangemContext.loadFromBundle(this, intent.extras)
         tx = intent.getStringExtra(EXTRA_TX)
 
         val engine = CoinEngineFactory.create(ctx)
@@ -58,16 +58,11 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             override fun onSuccess(electrumRequest: ElectrumRequest?) {
                 if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
                     try {
-                        //TODO error processing
-                        var hashTX = electrumRequest.resultString
-                        try {
-                            if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
-                                hashTX = hashTX.substring(2)
-                            }
+                        val hashTX = electrumRequest.resultString
+                        if (hashTX.length > 1)
                             finishWithSuccess()
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
+                        else
+                            finishWithError("empty hash")
                     } catch (e: JSONException) {
                         e.printStackTrace()
                     }
@@ -87,8 +82,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                     ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION -> {
                         try {
                             //infuraResponse.result - it's HashTX
-                            if( infuraResponse.result.isEmpty() )
-                            {
+                            if (infuraResponse.result.isEmpty()) {
                                 finishWithError("rejected by server")
                             }
 
