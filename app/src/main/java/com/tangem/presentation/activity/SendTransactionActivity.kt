@@ -40,7 +40,6 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         nfcManager = NfcManager(this, this)
 
-
         ctx = TangemContext.loadFromBundle(this, intent.extras)
         tx = intent.getStringExtra(EXTRA_TX)
 
@@ -57,14 +56,10 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         val electrumBodyListener: ServerApiHelperElectrum.ElectrumRequestDataListener = object : ServerApiHelperElectrum.ElectrumRequestDataListener {
             override fun onSuccess(electrumRequest: ElectrumRequest?) {
                 if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
-                    try {
-                        if (electrumRequest.resultString.isEmpty())
-                            finishWithError("Rejected by node: " + electrumRequest.getError())
-
+                    if (electrumRequest.resultString.isEmpty())
+                        finishWithError("Rejected by node: " + electrumRequest.getError())
+                    else
                         finishWithSuccess()
-                    } catch (e: JSONException) {
-                        e.printStackTrace()
-                    }
                 }
             }
 
@@ -79,18 +74,13 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             override fun onSuccess(method: String, infuraResponse: InfuraResponse) {
                 when (method) {
                     ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION -> {
-                        try {
-                            //infuraResponse.result - it's HashTX
-                            if (infuraResponse.result.isEmpty())
-                                finishWithError("Rejected by node: " + infuraResponse.error)
-
+                        if (infuraResponse.result.isEmpty())
+                            finishWithError("Rejected by node: " + infuraResponse.error)
+                        else {
                             val nonce = (ctx.coinData!! as EthData).confirmedTXCount
                             nonce.add(BigInteger.valueOf(1))
                             (ctx.coinData!! as EthData).confirmedTXCount = nonce
-
                             finishWithSuccess()
-                        } catch (e: Exception) {
-                            e.printStackTrace()
                         }
                     }
                 }
