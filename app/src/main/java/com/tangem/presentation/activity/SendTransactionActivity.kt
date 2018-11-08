@@ -58,11 +58,10 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             override fun onSuccess(electrumRequest: ElectrumRequest?) {
                 if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
                     try {
-                        val hashTX = electrumRequest.resultString
-                        if (hashTX.length > 1)
-                            finishWithSuccess()
-                        else
-                            finishWithError("empty hash")
+                        if (electrumRequest.resultString.isEmpty())
+                            finishWithError("Rejected by node: " + electrumRequest.getError())
+
+                        finishWithSuccess()
                     } catch (e: JSONException) {
                         e.printStackTrace()
                     }
@@ -82,9 +81,8 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                     ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION -> {
                         try {
                             //infuraResponse.result - it's HashTX
-                            if (infuraResponse.result.isEmpty()) {
-                                finishWithError("Rejected by server: " + infuraResponse.error)
-                            }
+                            if (infuraResponse.result.isEmpty())
+                                finishWithError("Rejected by node: " + infuraResponse.error)
 
                             val nonce = (ctx.coinData!! as EthData).confirmedTXCount
                             nonce.add(BigInteger.valueOf(1))
