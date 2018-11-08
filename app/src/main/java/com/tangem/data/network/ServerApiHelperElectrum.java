@@ -202,14 +202,15 @@ public class ServerApiHelperElectrum {
 
             } catch (ConnectException e) {
                 e.printStackTrace();
+                electrumRequestDataListener.onFail(e.getMessage());
                 Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " ConnectException " + e.getMessage());
             } finally {
                 Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " CLOSE");
                 socket.close();
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
-            electrumRequestDataListener.onFail(electrumRequest.getMethod());
+            electrumRequestDataListener.onFail(e.getMessage());
             Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " Exception " + e.getMessage());
         }
         return result;
