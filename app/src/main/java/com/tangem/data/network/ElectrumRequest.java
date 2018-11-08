@@ -155,6 +155,10 @@ public class ElectrumRequest {
         return getAnswer().getJSONObject("result");
     }
 
+    public JSONObject getError() throws JSONException {
+        return getAnswer().getJSONObject("error");
+    }
+
     public String getResultString() throws JSONException {
         return getAnswer().getString("result");
     }
