@@ -1,4 +1,4 @@
-package com.tangem.data.network.task.request_pin;
+package com.tangem.data.fingerprint;
 
 import android.annotation.TargetApi;
 import android.hardware.fingerprint.FingerprintManager;
@@ -8,7 +8,6 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 
-import com.tangem.domain.wallet.FingerprintHelper;
 import com.tangem.data.db.PINStorage;
 import com.tangem.presentation.activity.PinRequestActivity;
 
