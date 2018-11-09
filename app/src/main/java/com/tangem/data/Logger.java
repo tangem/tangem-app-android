@@ -1,4 +1,4 @@
-package com.tangem.domain.wallet;
+package com.tangem.data;
 
 import android.content.Context;
 import android.util.Log;

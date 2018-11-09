@@ -19,6 +19,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import com.tangem.data.db.PINStorage
 import com.tangem.data.network.ElectrumRequest
 import com.tangem.data.network.ServerApiHelper
 import com.tangem.data.network.ServerApiHelperElectrum
