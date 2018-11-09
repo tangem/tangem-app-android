@@ -13,9 +13,9 @@ import com.tangem.data.network.ServerApiHelperElectrum
 import com.tangem.data.network.model.InfuraResponse
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
+import com.tangem.domain.wallet.eth.EthData
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
-import org.json.JSONException
 import java.io.IOException
 import java.math.BigInteger
 
