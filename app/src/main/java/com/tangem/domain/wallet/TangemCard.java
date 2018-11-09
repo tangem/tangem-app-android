@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.google.common.base.Strings;
+import com.tangem.data.db.PINStorage;
 import com.tangem.domain.cardReader.SettingsMask;
 import com.tangem.util.Util;
 
