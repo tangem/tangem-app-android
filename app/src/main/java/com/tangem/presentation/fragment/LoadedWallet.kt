@@ -19,6 +19,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import com.tangem.data.db.LocalStorage
 import com.tangem.data.db.PINStorage
 import com.tangem.data.network.ElectrumRequest
 import com.tangem.data.network.ServerApiHelper
@@ -29,6 +30,10 @@ import com.tangem.data.nfc.VerifyCardTask
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
+import com.tangem.domain.wallet.btc.BtcData
+import com.tangem.domain.wallet.eth.EthData
+import com.tangem.domain.wallet.token.TokenData
+import com.tangem.domain.wallet.token.TokenEngine
 import com.tangem.presentation.activity.*
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.PINSwapWarningDialog
@@ -121,7 +126,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         // set listeners
         srl!!.setOnRefreshListener { refresh() }
         btnLookup.setOnClickListener {
-            val engine=CoinEngineFactory.create(ctx)
+            val engine = CoinEngineFactory.create(ctx)
             val browserIntent = Intent(Intent.ACTION_VIEW, engine!!.shareWalletUriExplorer)
             startActivity(browserIntent)
         }
@@ -137,7 +142,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     when (items[which]) {
                         getString(R.string.in_app) -> {
                             try {
-                                val engine=CoinEngineFactory.create(ctx)
+                                val engine = CoinEngineFactory.create(ctx)
                                 val intent = Intent(Intent.ACTION_VIEW, engine!!.shareWalletUri)
                                 intent.addCategory(Intent.CATEGORY_DEFAULT)
                                 startActivity(intent)
@@ -149,7 +154,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                             doShareWallet(true)
                         }
                         getString(R.string.load_via_qr) -> {
-                            val engine=CoinEngineFactory.create(ctx)
+                            val engine = CoinEngineFactory.create(ctx)
                             ShowQRCodeDialog.show(activity, engine!!.shareWalletUri.toString())
                         }
 //                        getString(R.string.via_cryptonit2) -> {
@@ -178,7 +183,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 dlg.window.attributes = wlp
             } else {
                 try {
-                    val engine=CoinEngineFactory.create(ctx)
+                    val engine = CoinEngineFactory.create(ctx)
                     val intent = Intent(Intent.ACTION_VIEW, engine!!.shareWalletUri)
                     intent.addCategory(Intent.CATEGORY_DEFAULT)
                     startActivity(intent)
@@ -198,7 +203,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             startActivity(intent)
         }
         btnExtract.setOnClickListener {
-            val engine=CoinEngineFactory.create(ctx)
+            val engine = CoinEngineFactory.create(ctx)
             if (UtilHelper.isOnline(activity)) {
                 if (!engine!!.isExtractPossible)
                     showSingleToast(ctx.message)
@@ -305,8 +310,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //                        (ctx.coinData!! as EthData).balanceUnconfirmed = 0L
                         if (ctx.blockchain != Blockchain.Token) {
                             (ctx.coinData!! as EthData).isBalanceReceived = true
-                            (ctx.coinData!! as EthData).balanceInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(),"wei")
-                        }else{
+                            (ctx.coinData!! as EthData).balanceInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(), "wei")
+                        } else {
                             (ctx.coinData!! as TokenData).isBalanceReceived = true
                             //(ctx.coinData!! as TokenData).balanceInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(),ctx.card.tokenSymbol)
                             (ctx.coinData!! as TokenData).balanceAlterInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(), "wei")
@@ -355,7 +360,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //                                requestInfura(ServerApiHelper.INFURA_ETH_GET_PENDING_COUNT, "")
 //                                return
 //                            }
-                            (ctx.coinData!! as EthData).balanceInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(),ctx.card.tokenSymbol)
+                            (ctx.coinData!! as EthData).balanceInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(), ctx.card.tokenSymbol)
 
 //                            Log.i("$TAG eth_call", balanceCap)
 
@@ -760,7 +765,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 tvBalanceLine2.text = validator.getSecondLine(false)
             }
 
-            val engine=CoinEngineFactory.create(ctx)
+            val engine = CoinEngineFactory.create(ctx)
             if (engine!!.hasBalanceInfo() || ctx.card!!.offlineBalance == null) {
                 val html = Html.fromHtml(engine!!.balanceHTML)
                 tvBalance.text = html
