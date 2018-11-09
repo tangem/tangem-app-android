@@ -4,6 +4,7 @@ import android.net.Uri;
 import android.text.InputFilter;
 import android.util.Log;
 
+import com.tangem.data.db.PINStorage;
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.TLV;
 import com.tangem.util.BTCUtils;
