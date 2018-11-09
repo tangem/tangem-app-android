@@ -13,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.Toast
+import com.tangem.data.db.PINStorage
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
 import com.tangem.presentation.activity.CreateNewWalletActivity
