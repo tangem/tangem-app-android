@@ -1,4 +1,4 @@
-package com.tangem.domain.wallet;
+package com.tangem.domain.wallet.btc;
 
 /**
  * Created by Ilia on 29.09.2017.
