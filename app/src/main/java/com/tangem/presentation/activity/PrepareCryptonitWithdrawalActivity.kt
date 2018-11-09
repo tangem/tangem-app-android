@@ -55,7 +55,7 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         tvWallet.text = ctx.card!!.wallet
         val engine = CoinEngineFactory.create(ctx)
 
-        tvCurrency.text = engine.balanceCurrency
+        tvCurrency.text = engine!!.balanceCurrency
         tvFeeCurrency.text = engine.feeCurrency
 
         etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toValueString())
