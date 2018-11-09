@@ -2,8 +2,6 @@ package com.tangem.domain.wallet;
 
 import com.tangem.wallet.R;
 
-import java.math.BigInteger;
-
 public class BalanceValidator {
     private String firstLine;
     private String secondLine;
@@ -14,7 +12,7 @@ public class BalanceValidator {
     }
 
     public void setFirstLine(String value) {
-        firstLine=value;
+        firstLine = value;
     }
 
     public String getSecondLine(Boolean recommend) {
@@ -31,7 +29,7 @@ public class BalanceValidator {
     }
 
     public void setSecondLine(String value) {
-        secondLine=value;
+        secondLine = value;
     }
 
     public void setScore(int score) {
@@ -53,10 +51,10 @@ public class BalanceValidator {
     public void Check(TangemContext ctx, Boolean attest) {
         firstLine = "Verification failed";
         secondLine = "";
-        TangemCard card=ctx.getCard();
-        CoinEngine engine=CoinEngineFactory.create(ctx);
+        TangemCard card = ctx.getCard();
+        CoinEngine engine = CoinEngineFactory.INSTANCE.create(ctx);
 
-        if( !engine.validateBalance(this) ) return;
+        if (!engine.validateBalance(this)) return;
 
         // Verify card?
         if (attest) {
@@ -97,6 +95,6 @@ public class BalanceValidator {
                 secondLine += "Card identity was not verified. Cannot reach Tangem attestation service. ";
             }
         }
-
     }
+
 }

@@ -63,7 +63,7 @@ public abstract class CoinData {
     }
 
     public static CoinData fromBundle(Blockchain blockchain, Bundle bundle) {
-        CoinEngine engine=CoinEngineFactory.create(blockchain);
+        CoinEngine engine= CoinEngineFactory.INSTANCE.create(blockchain);
         if( engine==null ) return null;
         CoinData result = engine.createCoinData();
         result.loadFromBundle(bundle);
