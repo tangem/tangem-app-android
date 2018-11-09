@@ -90,7 +90,7 @@ public class TangemContext {
             if (bundle.containsKey(EXTRA_BLOCKCHAIN_DATA)) {
                 tangemContext.coinData = CoinData.fromBundle(tangemContext.getBlockchain(), bundle.getBundle(EXTRA_BLOCKCHAIN_DATA));
             } else {
-                tangemContext.coinData = CoinEngineFactory.create(tangemContext).createCoinData();
+                tangemContext.coinData = CoinEngineFactory.INSTANCE.create(tangemContext).createCoinData();
             }
         }
         tangemContext.error = bundle.getString("Error");

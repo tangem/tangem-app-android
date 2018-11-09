@@ -3,8 +3,8 @@ package com.tangem.data.network;
 import android.util.Log;
 
 import com.tangem.App;
-import com.tangem.domain.BitcoinNode;
-import com.tangem.domain.BitcoinNodeTestNet;
+import com.tangem.domain.wallet.btc.BitcoinNode;
+import com.tangem.domain.wallet.btc.BitcoinNodeTestNet;
 import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.TangemCard;
 
@@ -26,8 +26,6 @@ import java.util.Random;
 import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLHandshakeException;
-import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
