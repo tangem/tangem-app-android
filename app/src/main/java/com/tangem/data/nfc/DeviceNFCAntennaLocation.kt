@@ -1,7 +1,6 @@
-package com.tangem.domain.wallet
+package com.tangem.data.nfc
 
 import android.os.Build
-import com.tangem.data.NFCLocation
 
 class DeviceNFCAntennaLocation {
     companion object {
