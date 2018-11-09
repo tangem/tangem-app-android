@@ -1,4 +1,4 @@
-package com.tangem.domain
+package com.tangem.domain.wallet.btc
 
 enum class BitcoinNodeTestNet(val host: String, val port: Int) {
     n1("testnetnode.arihanc.com", 51001),
