@@ -286,7 +286,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
             val engine = CoinEngineFactory.create(ctx)
 
-            tvInputs.text = engine.unspentInputsDescription
+            tvInputs.text = engine!!.unspentInputsDescription
 
             ivBlockchain.setImageResource(Blockchain.getLogoImageResource(ctx.card!!.blockchainID, ctx.card!!.tokenSymbol))
 
@@ -468,7 +468,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
     private fun doPurge() {
         requestPIN2Count = 0
         val engine=CoinEngineFactory.create(ctx)
-        if (!engine.hasBalanceInfo()) {
+        if (!engine!!.hasBalanceInfo()) {
             return
         } else if (engine.isBalanceNotZero) {
             Toast.makeText(context, R.string.cannot_erase_wallet_with_non_zero_balance, Toast.LENGTH_LONG).show()
