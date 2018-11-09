@@ -1,4 +1,4 @@
-package com.tangem.domain.wallet
+package com.tangem.data.db
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -12,6 +12,7 @@ import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
 import com.tangem.data.network.model.CardVerifyAndGetInfo
 import com.tangem.domain.cardReader.CardCrypto
+import com.tangem.domain.wallet.TangemCard
 import com.tangem.util.Util
 import com.tangem.wallet.R
 import java.io.InputStream
