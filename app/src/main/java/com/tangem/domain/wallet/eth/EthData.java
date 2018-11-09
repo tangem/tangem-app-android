@@ -1,7 +1,11 @@
-package com.tangem.domain.wallet;
+package com.tangem.domain.wallet.eth;
 
 import android.os.Bundle;
 import android.util.Log;
+
+import com.tangem.domain.wallet.CoinData;
+import com.tangem.domain.wallet.CoinEngine;
+
 import java.math.BigInteger;
 
 public class EthData extends CoinData {
