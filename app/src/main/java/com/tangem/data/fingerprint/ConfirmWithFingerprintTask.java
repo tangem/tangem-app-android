@@ -1,9 +1,8 @@
-package com.tangem.data.network.task.save_pin;
+package com.tangem.data.fingerprint;
 
 import android.os.AsyncTask;
 import android.widget.Toast;
 
-import com.tangem.domain.wallet.FingerprintHelper;
 import com.tangem.presentation.activity.PinSaveActivity;
 import com.tangem.wallet.R;
 
