@@ -19,9 +19,9 @@ import android.text.TextUtils
 import android.util.Log
 import android.view.View
 import android.widget.Button
-import com.tangem.data.network.task.request_pin.StartFingerprintReaderTask
+import com.tangem.data.fingerprint.StartFingerprintReaderTask
 import com.tangem.domain.cardReader.NfcManager
-import com.tangem.domain.wallet.FingerprintHelper
+import com.tangem.data.fingerprint.FingerprintHelper
 import com.tangem.data.db.PINStorage
 import com.tangem.domain.wallet.TangemCard
 import com.tangem.wallet.R
