@@ -1,10 +1,10 @@
-package com.tangem.domain.wallet;
+package com.tangem.domain.wallet.token;
 
 import android.os.Bundle;
 import android.util.Log;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
+import com.tangem.domain.wallet.CoinEngine;
+import com.tangem.domain.wallet.eth.EthData;
 
 public class TokenData extends EthData {
     private CoinEngine.InternalAmount balanceAlter = null;
