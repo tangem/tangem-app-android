@@ -4,7 +4,9 @@ package com.tangem.domain.wallet;
  * Created by Ilia on 29.09.2017.
  */
 
-import com.tangem.util.BTCUtils;
+import com.tangem.domain.wallet.btc.BitcoinException;
+import com.tangem.domain.wallet.btc.BitcoinInputStream;
+import com.tangem.domain.wallet.btc.BitcoinOutputStream;
 import com.tangem.util.CryptoUtil;
 
 import java.io.ByteArrayOutputStream;
