@@ -9,7 +9,7 @@ import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 
 import com.tangem.domain.wallet.FingerprintHelper;
-import com.tangem.domain.wallet.PINStorage;
+import com.tangem.data.db.PINStorage;
 import com.tangem.presentation.activity.PinRequestActivity;
 
 import java.io.IOException;
