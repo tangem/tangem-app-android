@@ -19,6 +19,7 @@ import com.tangem.data.network.ServerApiHelperElectrum
 import com.tangem.data.network.model.InfuraResponse
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
+import com.tangem.domain.wallet.btc.BtcData
 import com.tangem.util.*
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_confirm_payment.*
@@ -200,7 +201,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                     try {
                         if (etFee.text.toString().isEmpty()) etFee.setText(getString(R.string.empty))
                         val engine = CoinEngineFactory.create(ctx)
-                        val balance = engine.convertToAmount(CoinEngine.InternalAmount(electrumRequest.result.getLong("confirmed") + electrumRequest.result.getLong("unconfirmed"), "Satoshi"))
+                        val balance = engine!!.convertToAmount(CoinEngine.InternalAmount(electrumRequest.result.getLong("confirmed") + electrumRequest.result.getLong("unconfirmed"), "Satoshi"))
                         val amount = CoinEngine.Amount(etAmount.text.toString(), ctx.blockchain.currency)
                         if (balance < amount) {
                             etFee.error = getString(R.string.not_enough_funds)
