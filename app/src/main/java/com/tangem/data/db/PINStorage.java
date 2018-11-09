@@ -1,4 +1,4 @@
-package com.tangem.domain.wallet;
+package com.tangem.data.db;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -66,7 +66,7 @@ public class PINStorage {
 
     public static void deletePIN() {
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        if (mSavedPIN != null && mLastUsedPIN != null && mSavedPIN.equals(mLastUsedPIN)) {
+        if (mSavedPIN != null && mSavedPIN.equals(mLastUsedPIN)) {
             mLastUsedPIN = null;
         }
         mSavedPIN = null;
@@ -118,7 +118,7 @@ public class PINStorage {
     }
 
     public static void deleteEncryptedPIN() {
-        if (mEncryptedPIN != null && mLastUsedPIN != null && mEncryptedPIN.equals(mLastUsedPIN)) {
+        if (mEncryptedPIN != null && mEncryptedPIN.equals(mLastUsedPIN)) {
             mLastUsedPIN = null;
         }
         mEncryptedPIN = null;
@@ -149,13 +149,11 @@ public class PINStorage {
     public static byte[] loadEncryptedIV2() {
         String sIV = sharedPreferences.getString("EncryptedIV2", "");
 //        Log.d("PINStorage", String.format("loadEncryptedIV: %s",sIV));
-
         return Base64.decode(sIV, Base64.NO_WRAP);
     }
 
     public static String loadEncryptedPIN2(Cipher cipher) {
         String encryptedPIN = sharedPreferences.getString("EncryptedPIN2", null);
-
         try {
             byte[] bytes = Base64.decode(encryptedPIN, Base64.NO_WRAP);
             mPIN2 = new String(cipher.doFinal(bytes));
@@ -184,11 +182,11 @@ public class PINStorage {
     }
 
     public static boolean isDefaultPIN(String pin) {
-        return (pin != null) && (CardProtocol.DefaultPIN.equals(pin));
+        return (CardProtocol.DefaultPIN.equals(pin));
     }
 
     public static boolean isDefaultPIN2(String pin2) {
-        return (pin2 != null) && (CardProtocol.DefaultPIN2.equals(pin2));
+        return (CardProtocol.DefaultPIN2.equals(pin2));
     }
 
     public static String getDefaultPIN() {
