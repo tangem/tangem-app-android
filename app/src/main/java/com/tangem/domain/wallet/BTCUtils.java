@@ -1,4 +1,4 @@
-package com.tangem.util;
+package com.tangem.domain.wallet;
 
 /**
  * Created by Ilia on 29.09.2017.
@@ -6,12 +6,12 @@ package com.tangem.util;
 
 import android.util.Log;
 
-import com.tangem.domain.wallet.Base58;
-import com.tangem.domain.wallet.BitcoinException;
-import com.tangem.domain.wallet.BitcoinOutputStream;
-import com.tangem.domain.wallet.BtcData;
-import com.tangem.domain.wallet.Transaction;
-import com.tangem.domain.wallet.UnspentOutputInfo;
+import com.tangem.domain.wallet.btc.BitcoinException;
+import com.tangem.domain.wallet.btc.BitcoinOutputStream;
+import com.tangem.domain.wallet.btc.BtcData;
+import com.tangem.util.CryptoUtil;
+import com.tangem.util.FormatUtil;
+import com.tangem.util.Util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -103,8 +103,7 @@ public final class BTCUtils {
         return new String(hexChars);
     }
 
-    public static String satoshiToBtc(byte[] satoshi)
-    {
+    public static String satoshiToBtc(byte[] satoshi) {
         satoshi = reverse(satoshi);
 
         BigInteger num = new BigInteger(1, satoshi);
@@ -114,7 +113,7 @@ public final class BTCUtils {
 
         String pattern = "#0.00000000";
         DecimalFormat myFormatter = new DecimalFormat(pattern);
-        String output = myFormatter.format(dec).replace(",",".");
+        String output = myFormatter.format(dec).replace(",", ".");
         return output;
     }
 
@@ -147,34 +146,30 @@ public final class BTCUtils {
         forSign.writeInt32(0x01);//write(new byte[]{0x02, 0x00, 0x00, 0x00}); // version
 
         //01
-        byte inputCount = (byte)unspentOutputs.size();
+        byte inputCount = (byte) unspentOutputs.size();
         forSign.write(inputCount); // input count
         //hex str hash prev btc
 
-        for(int i = 0; i < inputCount; ++i)
-        {
+        for (int i = 0; i < inputCount; ++i) {
             UnspentOutputInfo outPut = unspentOutputs.get(i);
             int outputIndex = outPut.outputIndex;
             byte[] txHash = BTCUtils.reverse(Util.hexToBytes(outPut.txHashForBuild));//Sha256Hash.hash(rawTxByte);
             forSign.write(txHash);
             forSign.writeInt32(outputIndex); //output index in prev tx
-            if(inputPos ==-1 || i == inputPos)
-            {
+            if (inputPos == -1 || i == inputPos) {
                 // hex str 1976a914....88ac
-                forSign.write((byte)outPut.scriptForBuild.length);
+                forSign.write((byte) outPut.scriptForBuild.length);
                 forSign.write(outPut.scriptForBuild);
-            }
-            else
-            {
+            } else {
                 forSign.write(0x00);
             }
             //ffffffff
-            forSign.write(new byte[]{(byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff}); // sequence
+            forSign.write(new byte[]{(byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff}); // sequence
         }
 
 
         //02
-        byte outputCount = (byte)((change==0) ? 1 : 2); // outputCount
+        byte outputCount = (byte) ((change == 0) ? 1 : 2); // outputCount
         forSign.write(outputCount);
 
         //8 bytes
@@ -182,15 +177,15 @@ public final class BTCUtils {
         forSign.writeInt64(amount); //amount
         byte[] sendScript = Transaction.Script.buildOutput(outputAddress).bytes; // build out
         //hex str 1976a914....88ac
-        forSign.write((byte)sendScript.length);
+        forSign.write((byte) sendScript.length);
         forSign.write(sendScript);
 
-        if(change!=0){
+        if (change != 0) {
             //8 bytes
             forSign.writeInt64(change); // change
             //hex str 1976a914....88ac
             byte[] chancheScript = Transaction.Script.buildOutput(changeAddress).bytes; //build out
-            forSign.write((byte)chancheScript.length);
+            forSign.write((byte) chancheScript.length);
             forSign.write(chancheScript);
 
         }
@@ -207,16 +202,14 @@ public final class BTCUtils {
         return rawData;
     }
 
-    int calculateSize(int inputCount, int outputCount)
-    {
+    int calculateSize(int inputCount, int outputCount) {
         int size = 0;
         size += 4; // header
         size += 1; //inputCount
 
         //hex str hash prev btc
 
-        for(int i = 0; i < inputCount; ++i)
-        {
+        for (int i = 0; i < inputCount; ++i) {
             size += 32; //prevtx
             size += 4; //outputIndex;
             size += 1; //scriptLength
@@ -224,22 +217,20 @@ public final class BTCUtils {
             size += 4; //ffffffff
         }
 
-        size+=1; //outputCount
-        size+=8; //amount
-        size+=1;
+        size += 1; //outputCount
+        size += 8; //amount
+        size += 1;
         // size+=script;
 
-        if(outputCount > 1)
-        {
-            size+=8;
-            size+=1;
+        if (outputCount > 1) {
+            size += 8;
+            size += 1;
             //scriptLen;
         }
 
-        size+=4;
+        size += 4;
         return size;
     }
-
 
     public static byte[] buildBodyTX(String outputAddress, String changeAddress, int outputIndex, String prevID, long amount, long change, byte[] script) throws BitcoinException, IOException {
 
@@ -260,14 +251,14 @@ public final class BTCUtils {
         //forSign.write(0x00);
 
         // hex str 1976a914....88ac
-        forSign.write((byte)script.length);
+        forSign.write((byte) script.length);
         forSign.write(script);
 
         //ffffffff
-        forSign.write(new byte[]{(byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff}); // sequence
+        forSign.write(new byte[]{(byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff}); // sequence
 
         //02
-        byte outputCount = (byte)((change==0) ? 1 : 2); // outputCount
+        byte outputCount = (byte) ((change == 0) ? 1 : 2); // outputCount
         forSign.write(outputCount);
 
         //8 bytes
@@ -275,15 +266,15 @@ public final class BTCUtils {
         forSign.writeInt64(amount); //amount
         byte[] sendScript = Transaction.Script.buildOutput(outputAddress).bytes; // build out
         //hex str 1976a914....88ac
-        forSign.write((byte)sendScript.length);
+        forSign.write((byte) sendScript.length);
         forSign.write(sendScript);
 
-        if(change!=0){
+        if (change != 0) {
             //8 bytes
             forSign.writeInt64(change); // change
             //hex str 1976a914....88ac
             byte[] chancheScript = Transaction.Script.buildOutput(changeAddress).bytes; //build out
-            forSign.write((byte)chancheScript.length);
+            forSign.write((byte) chancheScript.length);
             forSign.write(chancheScript);
 
         }
@@ -301,8 +292,7 @@ public final class BTCUtils {
         byte[] rawTxByte = fromHex(hex);
         Transaction baseTx = new Transaction(rawTxByte);
         ArrayList<byte[]> prevHashes = new ArrayList<byte[]>();
-        for(int i =0; i < baseTx.inputs.length; ++i)
-        {
+        for (int i = 0; i < baseTx.inputs.length; ++i) {
             Transaction.Input input = baseTx.inputs[i];
             prevHashes.add(input.outPoint.hash);
         }
@@ -313,32 +303,30 @@ public final class BTCUtils {
         byte[] rawTxByte = fromHex(hex);
         Transaction baseTx = new Transaction(rawTxByte);
         byte[] myScript = Transaction.Script.buildOutput(myAddress).bytes;
-        for(int i =0; i < baseTx.inputs.length; ++i)
-        {
+        for (int i = 0; i < baseTx.inputs.length; ++i) {
             Transaction.Input input = baseTx.inputs[i];
             byte[] script = input.script.bytes;
 
             // find outputs
-            if (Arrays.equals(myScript, script)){
+            if (Arrays.equals(myScript, script)) {
                 return true;
             }
         }
         return false;
     }
+
     public static ArrayList<UnspentOutputInfo> getOutputs(List<BtcData.UnspentTransaction> rawTxList, byte[] outputScriptWeAreAbleToSpend) throws BitcoinException {
         ArrayList<UnspentOutputInfo> unspentOutputs = new ArrayList<>();
 
-        for(BtcData.UnspentTransaction current: rawTxList)
-        {
+        for (BtcData.UnspentTransaction current : rawTxList) {
             byte[] rawTxByte = BTCUtils.fromHex(current.Raw);
-            if (rawTxByte == null || current.Raw.isEmpty())
-            {
+            if (rawTxByte == null || current.Raw.isEmpty()) {
                 continue;
             }
 
             Transaction baseTx = new Transaction(rawTxByte);
 
-            if(baseTx.inputs.length == 0 || baseTx.outputs.length == 0)
+            if (baseTx.inputs.length == 0 || baseTx.outputs.length == 0)
                 throw new IllegalArgumentException("Unable to decode given transaction");
 
             byte[] txHash = BTCUtils.reverse(CryptoUtil.doubleSha256(rawTxByte));
