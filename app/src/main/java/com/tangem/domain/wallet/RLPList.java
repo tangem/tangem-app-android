@@ -1,7 +1,5 @@
 package com.tangem.domain.wallet;
 
-import com.tangem.util.BTCUtils;
-
 import java.util.ArrayList;
 
 /**
