@@ -1,6 +1,6 @@
 package com.tangem.util;
 
-import com.tangem.domain.wallet.BitcoinOutputStream;
+import com.tangem.domain.wallet.btc.BitcoinOutputStream;
 
 import org.spongycastle.asn1.ASN1Integer;
 import org.spongycastle.asn1.DERSequenceGenerator;
