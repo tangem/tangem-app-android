@@ -1,4 +1,4 @@
-package com.tangem.domain.wallet;
+package com.tangem.domain.wallet.token;
 
 import android.net.Uri;
 import android.text.InputFilter;
@@ -8,7 +8,16 @@ import com.google.common.base.Strings;
 import com.tangem.data.db.PINStorage;
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.TLV;
-import com.tangem.util.BTCUtils;
+import com.tangem.domain.wallet.BalanceValidator;
+import com.tangem.domain.wallet.CoinData;
+import com.tangem.domain.wallet.CoinEngine;
+import com.tangem.domain.wallet.ECDSASignatureETH;
+import com.tangem.domain.wallet.EthTransaction;
+import com.tangem.domain.wallet.Issuer;
+import com.tangem.domain.wallet.Keccak256;
+import com.tangem.domain.wallet.TangemCard;
+import com.tangem.domain.wallet.TangemContext;
+import com.tangem.domain.wallet.BTCUtils;
 import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.wallet.R;
