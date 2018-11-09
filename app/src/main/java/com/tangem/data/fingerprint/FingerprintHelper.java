@@ -1,4 +1,4 @@
-package com.tangem.domain.wallet;
+package com.tangem.data.fingerprint;
 
 import android.annotation.TargetApi;
 import android.hardware.fingerprint.FingerprintManager;
