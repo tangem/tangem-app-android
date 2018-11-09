@@ -22,7 +22,7 @@ import android.widget.Button
 import com.tangem.data.network.task.request_pin.StartFingerprintReaderTask
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.FingerprintHelper
-import com.tangem.domain.wallet.PINStorage
+import com.tangem.data.db.PINStorage
 import com.tangem.domain.wallet.TangemCard
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_pin_request.*

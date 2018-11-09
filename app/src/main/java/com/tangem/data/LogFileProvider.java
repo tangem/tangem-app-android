@@ -46,7 +46,7 @@ public class LogFileProvider extends ContentProvider {
     public ParcelFileDescriptor openFile(Uri uri, String mode)
             throws FileNotFoundException {
 
-        String LOG_TAG = CLASS_NAME+"-oF";
+        String LOG_TAG = CLASS_NAME + "-oF";
 
         Log.v(LOG_TAG,
                 "Called with uri: '" + uri + "'." + uri.getLastPathSegment());
