@@ -1,4 +1,4 @@
-package com.tangem.domain.wallet;
+package com.tangem.util;
 
 /**
  * Created by Ilia on 20.04.2018.
