@@ -62,17 +62,17 @@ public class BtcEngine extends CoinEngine {
     }
 
     @Override
-    public boolean awaitingConfirmation(){
-        if( coinData ==null ) return false;
+    public boolean awaitingConfirmation() {
+        if (coinData == null) return false;
         return coinData.getBalanceUnconfirmed() != 0;
     }
 
     @Override
     public String getBalanceHTML() {
-        Amount balance=getBalance();
-        if( balance!=null ) {
+        Amount balance = getBalance();
+        if (balance != null) {
             return balance.toDescriptionString(getDecimals());
-        }else{
+        } else {
             return "";
         }
     }
@@ -84,21 +84,21 @@ public class BtcEngine extends CoinEngine {
 
     @Override
     public String getOfflineBalanceHTML() {
-            InternalAmount offlineInternalAmount = convertToInternalAmount(ctx.getCard().getOfflineBalance());
-            Amount offlineAmount = convertToAmount(offlineInternalAmount);
-       return offlineAmount.toDescriptionString(getDecimals());
+        InternalAmount offlineInternalAmount = convertToInternalAmount(ctx.getCard().getOfflineBalance());
+        Amount offlineAmount = convertToAmount(offlineInternalAmount);
+        return offlineAmount.toDescriptionString(getDecimals());
     }
 
     @Override
     public boolean isBalanceNotZero() {
-        if( coinData ==null ) return false;
+        if (coinData == null) return false;
         if (coinData.getBalanceInInternalUnits() == null) return false;
         return coinData.getBalanceInInternalUnits().notZero();
     }
 
     @Override
-    public boolean hasBalanceInfo(){
-        if( coinData ==null ) return false;
+    public boolean hasBalanceInfo() {
+        if (coinData == null) return false;
         return coinData.hasBalanceInfo();
     }
 
@@ -193,12 +193,12 @@ public class BtcEngine extends CoinEngine {
 
     @Override
     public InputFilter[] getAmountInputFilters() {
-        return new InputFilter[] { new DecimalDigitsInputFilter(getDecimals()) };
+        return new InputFilter[]{new DecimalDigitsInputFilter(getDecimals())};
     }
 
     @Override
-    public boolean checkNewTransactionAmount(Amount amount){
-        if( coinData ==null ) return false;
+    public boolean checkNewTransactionAmount(Amount amount) {
+        if (coinData == null) return false;
         if (amount.compareTo(convertToAmount(coinData.getBalanceInInternalUnits())) > 0) {
             return false;
         }
@@ -225,10 +225,10 @@ public class BtcEngine extends CoinEngine {
         if (fee.isZero() || amount.isZero())
             return false;
 
-        if (isIncludeFee && (amount.compareTo(coinData.getBalanceInInternalUnits())>0 || amount.compareTo(fee)<0))
+        if (isIncludeFee && (amount.compareTo(coinData.getBalanceInInternalUnits()) > 0 || amount.compareTo(fee) < 0))
             return false;
 
-        if (!isIncludeFee && amount.add(fee).compareTo(coinData.getBalanceInInternalUnits())>0)
+        if (!isIncludeFee && amount.add(fee).compareTo(coinData.getBalanceInInternalUnits()) > 0)
             return false;
 
         return true;
@@ -277,7 +277,7 @@ public class BtcEngine extends CoinEngine {
 //            return;
 //        }
 
-        if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && coinData.getBalanceInInternalUnits().notZero() ) {
+        if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && coinData.getBalanceInInternalUnits().notZero()) {
             balanceValidator.setScore(80);
             balanceValidator.setFirstLine("Verified offline balance");
             balanceValidator.setSecondLine("Can't obtain balance from blockchain. Restore internet connection to be more confident. ");
@@ -303,28 +303,26 @@ public class BtcEngine extends CoinEngine {
 
     @Override
     public Amount getBalance() {
-        if( !hasBalanceInfo() ) return null;
+        if (!hasBalanceInfo()) return null;
         return convertToAmount(coinData.getBalanceInInternalUnits());
     }
 
     @Override
     public String evaluateFeeEquivalent(String fee) {
-        if( !coinData.getAmountEquivalentDescriptionAvailable() ) return "";
+        if (!coinData.getAmountEquivalentDescriptionAvailable()) return "";
         try {
             Amount feeAmount = new Amount(fee, getFeeCurrency());
             return feeAmount.toEquivalentString(coinData.getRate());
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             return "";
         }
     }
 
     @Override
     public String getBalanceEquivalent() {
-        if( coinData ==null || !coinData.getAmountEquivalentDescriptionAvailable() ) return "";
-        Amount balance=getBalance();
-        if( balance==null ) return "";
+        if (coinData == null || !coinData.getAmountEquivalentDescriptionAvailable()) return "";
+        Amount balance = getBalance();
+        if (balance == null) return "";
         return balance.toEquivalentString(coinData.getRate());
     }
 
@@ -364,7 +362,7 @@ public class BtcEngine extends CoinEngine {
 
     @Override
     public Amount convertToAmount(InternalAmount internalAmount) {
-        BigDecimal d=internalAmount.divide(new BigDecimal("100000000"));
+        BigDecimal d = internalAmount.divide(new BigDecimal("100000000"));
         return new Amount(d, getBalanceCurrency());
     }
 
@@ -375,7 +373,7 @@ public class BtcEngine extends CoinEngine {
 
     @Override
     public InternalAmount convertToInternalAmount(Amount amount) throws Exception {
-        BigDecimal d=amount.multiply(new BigDecimal("100000000"));
+        BigDecimal d = amount.multiply(new BigDecimal("100000000"));
         return new InternalAmount(d, "Satoshi");
     }
 
@@ -384,7 +382,7 @@ public class BtcEngine extends CoinEngine {
         if (bytes == null) return null;
         byte[] reversed = new byte[bytes.length];
         for (int i = 0; i < bytes.length; i++) reversed[i] = bytes[bytes.length - i - 1];
-        return new InternalAmount(Util.byteArrayToLong(reversed),"Satoshi");
+        return new InternalAmount(Util.byteArrayToLong(reversed), "Satoshi");
     }
 
     @Override
