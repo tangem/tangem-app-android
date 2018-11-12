@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dmmatrix.epro.core.exception
+package com.tangem.data.network.exception
 
 /**
  * Base Class for handling errors/failures/exceptions.
