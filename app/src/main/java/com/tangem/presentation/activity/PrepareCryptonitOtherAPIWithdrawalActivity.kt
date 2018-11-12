@@ -9,7 +9,7 @@ import android.nfc.Tag
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
-import com.tangem.data.network.Cryptonit_OtherAPI
+import com.tangem.data.network.CryptonitOtherApi
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
@@ -30,7 +30,7 @@ class PrepareCryptonitOtherAPIWithdrawalActivity : AppCompatActivity(), NfcAdapt
 
     private lateinit var ctx: TangemContext
     private var nfcManager: NfcManager? = null
-    private var cryptonit: Cryptonit_OtherAPI? = null
+    private var cryptonit: CryptonitOtherApi? = null
 
 
     @SuppressLint("SetTextI18n")
@@ -44,7 +44,7 @@ class PrepareCryptonitOtherAPIWithdrawalActivity : AppCompatActivity(), NfcAdapt
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
-        cryptonit = Cryptonit_OtherAPI(this)
+        cryptonit = CryptonitOtherApi(this)
 
         tvKey.text = cryptonit!!.key
         tvUserID.text = cryptonit!!.userId
