@@ -35,9 +35,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DefaultObserver;
 import io.reactivex.schedulers.Schedulers;
 
-public class ServerApiHelperElectrum {
-    //    private static String TAG = ServerApiHelper.class.getSimpleName();
-    private static String TAG = ServerApiHelperElectrum.class.getSimpleName();
+public class ServerApiElectrum {
+    private static String TAG = ServerApiElectrum.class.getSimpleName();
 
     /**
      * TCP
