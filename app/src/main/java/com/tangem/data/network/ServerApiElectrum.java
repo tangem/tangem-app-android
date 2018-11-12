@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.tangem.App;
 import com.tangem.domain.wallet.btc.BitcoinNode;
+import com.tangem.domain.wallet.btc.BitcoinNodeSsl;
 import com.tangem.domain.wallet.btc.BitcoinNodeTestNet;
 import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.TangemCard;
@@ -104,6 +105,8 @@ public class ServerApiElectrum {
     }
 
     private List<ElectrumRequest> testSslSocket(TangemCard card, ElectrumRequest electrumRequest) {
+        BitcoinNodeSsl bitcoinNodeSsl = BitcoinNodeSsl.values()[new Random().nextInt(BitcoinNodeSsl.values().length)];
+
         SocketFactory sf = SSLSocketFactory.getDefault();
         SSLSocket socket;
 
