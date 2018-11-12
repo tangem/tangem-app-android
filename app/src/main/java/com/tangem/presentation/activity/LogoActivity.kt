@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import com.tangem.data.network.ServerApiHelperElectrum
+import com.tangem.data.network.ServerApiElectrum
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_logo.*
@@ -18,7 +18,7 @@ class LogoActivity : AppCompatActivity() {
         const val MILLIS_AUTO_HIDE = 1000
     }
 
-    private var serverApiHelperElectrum: ServerApiHelperElectrum = ServerApiHelperElectrum()
+    private var serverApiElectrum: ServerApiElectrum = ServerApiElectrum()
 
     private val hideRunnable = Runnable { this.hide() }
 
