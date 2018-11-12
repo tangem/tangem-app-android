@@ -17,7 +17,7 @@ package com.tangem.presentation.viewmodel
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
-import com.dmmatrix.epro.core.exception.Failure
+import com.tangem.data.network.exception.Failure
 
 /**
  * Base ViewModel class with default Failure handling.
