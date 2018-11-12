@@ -37,9 +37,9 @@ import retrofit2.http.Path;
 
 /**
  * HTTP
- * Used in Cryptonit_OtherAPI service
+ * Used in CryptonitOtherApi service
  */
-public class Cryptonit_OtherAPI {
+public class CryptonitOtherApi {
     private static final String SERVER_URL = "https://api.cryptonit.net/api/";
 
     private static class Method {
@@ -115,7 +115,7 @@ public class Cryptonit_OtherAPI {
     private ErrorListener errorListener;
     private Context context;
 
-    public Cryptonit_OtherAPI(Context context) {
+    public CryptonitOtherApi(Context context) {
         this.context = context;
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         key = sp.getString(context.getResources().getString(R.string.key_cryptonit_key), "");
