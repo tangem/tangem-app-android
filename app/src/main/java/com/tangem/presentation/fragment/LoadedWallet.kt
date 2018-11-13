@@ -70,8 +70,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private var serverApiElectrum: ServerApiElectrum = ServerApiElectrum()
 
     private var singleToast: Toast? = null
-    //private var card: TangemCard? = null
-    //private var engine: CoinEngine? = null
     private lateinit var ctx: TangemContext
 
     private var lastTag: Tag? = null
@@ -93,11 +91,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         nfcManager = NfcManager(activity, this)
 
         ctx = TangemContext.loadFromBundle(activity, activity.intent.extras)
-
-//        card = TangemCard(activity.intent.getStringExtra(TangemCard.EXTRA_UID))
-//        card!!.loadFromBundle(activity.intent.extras.getBundle(TangemCard.EXTRA_CARD))
-//
-//        engine = CoinEngineFactory.create(activity, card!!, activity.intent.extras.getBundle(CoinEngine.EXTRA_ENGINE))
 
         lastTag = activity.intent.getParcelableExtra(MainActivity.EXTRA_LAST_DISCOVERED_TAG)
 
