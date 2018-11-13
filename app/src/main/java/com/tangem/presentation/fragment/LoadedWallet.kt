@@ -153,7 +153,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                             ShowQRCodeDialog.show(activity, engine!!.shareWalletUri.toString())
                         }
 //                        getString(R.string.via_cryptonit2) -> {
-//                            val intent = Intent(ctx, PrepareCryptonitOtherAPIWithdrawalActivity::class.java)
+//                            val intent = Intent(ctx, PrepareCryptonitOtherApiWithdrawalActivity::class.java)
 //                            intent.putExtra("UID", card!!.uid)
 //                            intent.putExtra("Card", card!!.asBundle)
 //                            startActivityForResult(intent, REQUEST_CODE_RECEIVE_PAYMENT)
