@@ -128,7 +128,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         // set listeners
         srl!!.setOnRefreshListener { refresh() }
         btnLookup.setOnClickListener {
-            val engine =  CoinEngineFactory.create(ctx)
+            val engine = CoinEngineFactory.create(ctx)
             val browserIntent = Intent(Intent.ACTION_VIEW, engine!!.shareWalletUriExplorer)
             startActivity(browserIntent)
         }
@@ -731,127 +731,119 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     fun updateViews() {
-        try {
-            if (timerHideErrorAndMessage != null) {
-                timerHideErrorAndMessage!!.cancel()
-                timerHideErrorAndMessage = null
-            }
+        if (timerHideErrorAndMessage != null) {
+            timerHideErrorAndMessage!!.cancel()
+            timerHideErrorAndMessage = null
+        }
 
-            if (ctx.error == null || ctx.error.isEmpty()) {
-                tvError.visibility = View.GONE
-                tvError.text = ""
-            } else {
-                tvError.visibility = View.VISIBLE
-                tvError.text = ctx.error
-            }
+        if (ctx.error == null || ctx.error.isEmpty()) {
+            tvError.visibility = View.GONE
+            tvError.text = ""
+        } else {
+            tvError.visibility = View.VISIBLE
+            tvError.text = ctx.error
+        }
 
-            if (ctx.message == null || ctx.message.isEmpty()) {
-                tvMessage!!.text = ""
-                tvMessage!!.visibility = View.GONE
-            } else {
-                tvMessage!!.text = ctx.message
-                tvMessage!!.visibility = View.VISIBLE
-            }
+        if (ctx.message == null || ctx.message.isEmpty()) {
+            tvMessage!!.text = ""
+            tvMessage!!.visibility = View.GONE
+        } else {
+            tvMessage!!.text = ctx.message
+            tvMessage!!.visibility = View.VISIBLE
+        }
 
-            if (srl!!.isRefreshing) {
-                tvBalanceLine1.setTextColor(resources.getColor(R.color.primary))
-                tvBalanceLine1.text = getString(R.string.verifying_in_blockchain)
-                tvBalanceLine2.text = ""
-                tvBalance.text = ""
-                tvBalanceEquivalent.text = ""
-            } else {
-                val validator = BalanceValidator()
-                validator.Check(ctx, false)
-                tvBalanceLine1.setTextColor(ContextCompat.getColor(activity, validator.color))
-                tvBalanceLine1.text = validator.firstLine
-                tvBalanceLine2.text = validator.getSecondLine(false)
-            }
+        if (srl!!.isRefreshing) {
+            tvBalanceLine1.setTextColor(resources.getColor(R.color.primary))
+            tvBalanceLine1.text = getString(R.string.verifying_in_blockchain)
+            tvBalanceLine2.text = ""
+            tvBalance.text = ""
+            tvBalanceEquivalent.text = ""
+        } else {
+            val validator = BalanceValidator()
+            validator.Check(ctx, false)
+            tvBalanceLine1.setTextColor(ContextCompat.getColor(activity, validator.color))
+            tvBalanceLine1.text = validator.firstLine
+            tvBalanceLine2.text = validator.getSecondLine(false)
+        }
 
-            val engine = CoinEngineFactory.create(ctx)
-            if (engine!!.hasBalanceInfo() || ctx.card!!.offlineBalance == null) {
-                val html = Html.fromHtml(engine!!.balanceHTML)
-                tvBalance.text = html
-                // TODO???
-                tvBalanceEquivalent.text = engine!!.balanceEquivalent
-            } else {
-                // TODO
-                val html = Html.fromHtml(engine!!.offlineBalanceHTML)
-                tvBalance.text = html
-            }
+        val engine = CoinEngineFactory.create(ctx)
+        if (engine!!.hasBalanceInfo() || ctx.card!!.offlineBalance == null) {
+            val html = Html.fromHtml(engine.balanceHTML)
+            tvBalance.text = html
+            // TODO???
+            tvBalanceEquivalent.text = engine.balanceEquivalent
+        } else {
+            // TODO
+            val html = Html.fromHtml(engine.offlineBalanceHTML)
+            tvBalance.text = html
+        }
 
-            tvWallet.text = ctx.card!!.wallet
+        tvWallet.text = ctx.card!!.wallet
 //            tvBlockchain.text = card!!.blockchainName
 
-            if (ctx.card!!.tokenSymbol.length > 1) {
-                val html = Html.fromHtml(ctx.card!!.blockchainName)
-                tvBlockchain.text = html
-            } else
-                tvBlockchain.text = ctx.card!!.blockchainName
+        if (ctx.card!!.tokenSymbol.length > 1) {
+            val html = Html.fromHtml(ctx.card!!.blockchainName)
+            tvBlockchain.text = html
+        } else
+            tvBlockchain.text = ctx.card!!.blockchainName
 
-            if (engine!!.hasBalanceInfo()) {
-                btnExtract.isEnabled = true
-                btnExtract.backgroundTintList = activeColor
-            } else {
-                btnExtract.isEnabled = false
-                btnExtract.backgroundTintList = inactiveColor
-            }
-
-            ctx.error = null
-            ctx.message = null
-
-        } catch (e: Exception) {
-            e.printStackTrace()
+        if (engine.hasBalanceInfo()) {
+            btnExtract.isEnabled = true
+            btnExtract.backgroundTintList = activeColor
+        } else {
+            btnExtract.isEnabled = false
+            btnExtract.backgroundTintList = inactiveColor
         }
+
+        ctx.error = null
+        ctx.message = null
     }
 
     private fun refresh() {
-        if ((srl == null) || (ctx.card == null)) return;
-        try {
-            // clear all card data and request again
-            srl!!.isRefreshing = true
-            ctx.coinData.clearInfo();
-            ctx.error = null
-            ctx.message = null
-            requestCounter = 0
+        if (ctx.card == null) return
 
-            updateViews()
+        // clear all card data and request again
+        srl?.isRefreshing = true
+        ctx.coinData.clearInfo()
+        ctx.error = null
+        ctx.message = null
+        requestCounter = 0
 
-            requestVerifyAndGetInfo()
+        updateViews()
 
-            // Bitcoin
-            if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet) {
-                ctx.coinData.setIsBalanceEqual(true)
+        requestVerifyAndGetInfo()
 
-                requestElectrum(ElectrumRequest.checkBalance(ctx.card!!.wallet))
-                requestElectrum(ElectrumRequest.listUnspent(ctx.card!!.wallet))
-                requestRateInfo("bitcoin")
-            }
+        // Bitcoin
+        if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet) {
+            ctx.coinData.setIsBalanceEqual(true)
 
-            // BitcoinCash
-            else if (ctx.blockchain == Blockchain.BitcoinCash || ctx.blockchain == Blockchain.BitcoinCashTestNet) {
-                ctx.coinData.setIsBalanceEqual(true)
+            requestElectrum(ElectrumRequest.checkBalance(ctx.card!!.wallet))
+            requestElectrum(ElectrumRequest.listUnspent(ctx.card!!.wallet))
+            requestRateInfo("bitcoin")
+        }
 
-                requestElectrum(ElectrumRequest.checkBalance(ctx.card!!.wallet))
-                requestElectrum(ElectrumRequest.listUnspent(ctx.card!!.wallet))
-                requestRateInfo("bitcoin-cash")
-            }
+        // BitcoinCash
+        else if (ctx.blockchain == Blockchain.BitcoinCash || ctx.blockchain == Blockchain.BitcoinCashTestNet) {
+            ctx.coinData.setIsBalanceEqual(true)
 
-            // Ethereum
-            else if (ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet) {
-                requestInfura(ServerApiInfura.INFURA_ETH_GET_BALANCE, "")
-                requestInfura(ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT, "")
-                requestInfura(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, "")
-                requestRateInfo("ethereum")
-            }
+            requestElectrum(ElectrumRequest.checkBalance(ctx.card!!.wallet))
+            requestElectrum(ElectrumRequest.listUnspent(ctx.card!!.wallet))
+            requestRateInfo("bitcoin-cash")
+        }
 
-            // Token
-            else if (ctx.blockchain == Blockchain.Token) {
-                val engine = CoinEngineFactory.create(ctx)
-                requestInfura(ServerApiInfura.INFURA_ETH_CALL, (engine as TokenEngine).getContractAddress(ctx.card))
-                requestRateInfo("ethereum")
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        // Ethereum
+        else if (ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet) {
+            requestInfura(ServerApiInfura.INFURA_ETH_GET_BALANCE, "")
+            requestInfura(ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT, "")
+            requestInfura(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, "")
+            requestRateInfo("ethereum")
+        }
+
+        // Token
+        else if (ctx.blockchain == Blockchain.Token) {
+            val engine = CoinEngineFactory.create(ctx)
+            requestInfura(ServerApiInfura.INFURA_ETH_CALL, (engine as TokenEngine).getContractAddress(ctx.card))
+            requestRateInfo("ethereum")
         }
     }
 
@@ -861,7 +853,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             serverApiElectrum.electrumRequestData(ctx.card, electrumRequest)
         } else {
             Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            srl!!.isRefreshing = false
+            srl?.isRefreshing = false
         }
     }
 
@@ -871,7 +863,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             serverApiInfura.infura(method, 67, ctx.card!!.wallet, contract, "")
         } else {
             Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            srl!!.isRefreshing = false
+            srl?.isRefreshing = false
         }
     }
 
@@ -882,7 +874,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
         } else {
             Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            srl!!.isRefreshing = false
+            srl?.isRefreshing = false
         }
     }
 
@@ -891,7 +883,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             serverApiCommon.rateInfoData(cryptoId)
         } else {
             Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            srl!!.isRefreshing = false
+            srl?.isRefreshing = false
         }
     }
 
