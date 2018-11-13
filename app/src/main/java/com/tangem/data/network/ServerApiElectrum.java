@@ -107,6 +107,9 @@ public class ServerApiElectrum {
     private List<ElectrumRequest> testSslSocket(TangemCard card, ElectrumRequest electrumRequest) {
         BitcoinNodeSsl bitcoinNodeSsl = BitcoinNodeSsl.values()[new Random().nextInt(BitcoinNodeSsl.values().length)];
 
+        this.host = bitcoinNodeSsl.getHost();
+        this.port = bitcoinNodeSsl.getPort();
+
         SocketFactory sf = SSLSocketFactory.getDefault();
         SSLSocket socket;
 
@@ -114,8 +117,9 @@ public class ServerApiElectrum {
         Collections.addAll(result, electrumRequest);
 
         try {
-//            socket = (SSLSocket) sf.createSocket("gmail.com", 443);
-            socket = (SSLSocket) sf.createSocket("electrum.hsmiths.com", 50002);
+            socket = (SSLSocket) sf.createSocket("gmail.com", 443);
+//            socket = (SSLSocket) sf.createSocket("electrum.hsmiths.com", 50002);
+//            socket = (SSLSocket) sf.createSocket(host, port);
             HostnameVerifier hv = HttpsURLConnection.getDefaultHostnameVerifier();
             SSLSession s = socket.getSession();
 
@@ -123,7 +127,7 @@ public class ServerApiElectrum {
 //                throw new SSLHandshakeException("Expected mail.google.com, found " + s.getPeerPrincipal());
 //            }
 
-
+            Log.i(TAG, host + " " + port);
             try {
                 OutputStream os = socket.getOutputStream();
                 OutputStreamWriter out = new OutputStreamWriter(os, "UTF-8");
