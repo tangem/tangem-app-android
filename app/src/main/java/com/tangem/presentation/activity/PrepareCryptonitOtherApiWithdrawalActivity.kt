@@ -18,10 +18,10 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_cryptonit_other_api_withdrawal.*
 import java.io.IOException
 
-class PrepareCryptonitOtherAPIWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
+class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     companion object {
-        val TAG: String = PrepareCryptonitOtherAPIWithdrawalActivity::class.java.simpleName
+        val TAG: String = PrepareCryptonitOtherApiWithdrawalActivity::class.java.simpleName
 
         private const val REQUEST_CODE_SCAN_QR_KEY = 1
         private const val REQUEST_CODE_SCAN_QR_SECRET = 2
