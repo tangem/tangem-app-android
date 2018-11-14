@@ -49,7 +49,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             requestInfura(ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION, "")
         else if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet)
             requestElectrum(ctx.card!!, ElectrumRequest.broadcast(ctx.card!!.wallet, tx))
-        else if (ctx.blockchain == Blockchain.BitcoinCash || ctx.blockchain == Blockchain.BitcoinCashTestNet)
+        else if (ctx.blockchain == Blockchain.BitcoinCash)
             requestElectrum(ctx.card!!, ElectrumRequest.broadcast(ctx.card!!.wallet, tx))
 
         // request electrum listener
