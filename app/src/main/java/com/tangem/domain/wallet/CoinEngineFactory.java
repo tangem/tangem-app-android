@@ -2,6 +2,8 @@ package com.tangem.domain.wallet;
 
 import android.util.Log;
 
+import com.tangem.domain.wallet.BitcoinCash.BtcCashEngine;
+
 /**
  * Created by Ilia on 15.02.2018.
  */
@@ -13,7 +15,6 @@ public class CoinEngineFactory {
             case BitcoinTestNet:
                 return new BtcEngine();
             case BitcoinCash:
-            case BitcoinCashTestNet:
                 return new BtcCashEngine();
             case Ethereum:
             case EthereumTestNet:
@@ -28,7 +29,7 @@ public class CoinEngineFactory {
     public static CoinEngine create(TangemContext context) {
         CoinEngine result;
         try {
-            if (Blockchain.BitcoinCash == context.getBlockchain() || Blockchain.BitcoinCashTestNet == context.getBlockchain()) {
+            if (Blockchain.BitcoinCash == context.getBlockchain()) {
                 result = new BtcCashEngine(context);
             } else if (Blockchain.Bitcoin == context.getBlockchain() || Blockchain.BitcoinTestNet == context.getBlockchain()) {
                 result = new BtcEngine(context);
