@@ -28,6 +28,7 @@ import com.tangem.data.nfc.VerifyCardTask
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
+import com.tangem.domain.wallet.BitcoinCash.BtcCashEngine
 import com.tangem.presentation.activity.*
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.PINSwapWarningDialog
@@ -811,7 +812,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             requestVerifyAndGetInfo()
 
             // Bitcoin
-            if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet) {
+            if (ctx.blockchain == Blockchain.Bitcoin) {
                 ctx.coinData.setIsBalanceEqual(true)
 
                 requestElectrum(ElectrumRequest.checkBalance(ctx.card!!.wallet))
@@ -820,11 +821,12 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
 
             // BitcoinCash
-            else if (ctx.blockchain == Blockchain.BitcoinCash || ctx.blockchain == Blockchain.BitcoinCashTestNet) {
+            else if (ctx.blockchain == Blockchain.BitcoinCash) {
                 ctx.coinData.setIsBalanceEqual(true)
+                val engine = CoinEngineFactory.create(ctx)
 
-                requestElectrum(ElectrumRequest.checkBalance(ctx.card!!.wallet))
-                requestElectrum(ElectrumRequest.listUnspent(ctx.card!!.wallet))
+                requestElectrum(ElectrumRequest.checkBalance((engine as BtcCashEngine).convertToLegacyAddress(ctx.card!!.wallet)))
+                requestElectrum(ElectrumRequest.listUnspent((engine as BtcCashEngine).convertToLegacyAddress(ctx.card!!.wallet)))
                 requestRateInfo("bitcoin-cash")
             }
 
