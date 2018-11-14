@@ -3,7 +3,9 @@ package com.tangem;
 import android.app.Application;
 import android.support.v7.app.AppCompatDelegate;
 
+import com.tangem.di.DaggerNavigatorComponent;
 import com.tangem.di.DaggerNetworkComponent;
+import com.tangem.di.NavigatorComponent;
 import com.tangem.di.NetworkComponent;
 
 public class App extends Application {
@@ -22,6 +24,11 @@ public class App extends Application {
     }
 
     private static NetworkComponent networkComponent;
+    private static NavigatorComponent navigatorComponent;
+
+    public static NavigatorComponent getNavigatorComponent() {
+        return navigatorComponent;
+    }
 
     @Override
     public void onCreate() {
@@ -30,6 +37,7 @@ public class App extends Application {
         sInstance = this;
 
         networkComponent = DaggerNetworkComponent.create();
+        navigatorComponent = buildNavigatorComponent();
     }
 
     /**
@@ -41,6 +49,11 @@ public class App extends Application {
 
     public static NetworkComponent getNetworkComponent() {
         return networkComponent;
+    }
+
+    protected NavigatorComponent buildNavigatorComponent() {
+        return DaggerNavigatorComponent.builder()
+                .build();
     }
 
 }
