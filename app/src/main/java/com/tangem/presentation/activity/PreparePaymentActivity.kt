@@ -81,7 +81,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             val engine1 = CoinEngineFactory.create(ctx)
 
             val strAmount: String = etAmount.text.toString().replace(",", ".")
-            val amount = engine1.convertToAmount(etAmount.text.toString(), tvCurrency.text.toString())
+            val amount = engine1!!.convertToAmount(etAmount.text.toString(), tvCurrency.text.toString())
 
             try {
                 if (!engine.checkNewTransactionAmount(amount))
