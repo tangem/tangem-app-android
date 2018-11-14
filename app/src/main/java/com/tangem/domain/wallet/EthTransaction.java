@@ -2,7 +2,6 @@ package com.tangem.domain.wallet;
 
 import android.util.Log;
 
-import com.tangem.util.BTCUtils;
 import com.tangem.util.ByteUtil;
 import com.tangem.util.CryptoUtil;
 
