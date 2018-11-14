@@ -14,11 +14,13 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.Toast
 import com.tangem.data.network.ElectrumRequest
-import com.tangem.data.network.ServerApiHelper
-import com.tangem.data.network.ServerApiHelperElectrum
+import com.tangem.data.network.ServerApiCommon
+import com.tangem.data.network.ServerApiElectrum
+import com.tangem.data.network.ServerApiInfura
 import com.tangem.data.network.model.InfuraResponse
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
+import com.tangem.domain.wallet.btc.BtcData
 import com.tangem.util.*
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_confirm_payment.*
@@ -37,8 +39,9 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     private var nfcManager: NfcManager? = null
 
-    private var serverApiHelper: ServerApiHelper = ServerApiHelper()
-    private var serverApiHelperElectrum: ServerApiHelperElectrum = ServerApiHelperElectrum()
+    private var serverApiCommon: ServerApiCommon = ServerApiCommon()
+    private var serverApiInfura: ServerApiInfura = ServerApiInfura()
+    private var serverApiElectrum: ServerApiElectrum = ServerApiElectrum()
 
     private lateinit var ctx: TangemContext
     private lateinit var amount: CoinEngine.Amount
@@ -97,7 +100,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         if (ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token) {
             rgFee.isEnabled = false
 
-            requestInfura(ServerApiHelper.INFURA_ETH_GAS_PRICE)
+            requestInfura(ServerApiInfura.INFURA_ETH_GAS_PRICE)
 
         } else {
             rgFee.isEnabled = true
@@ -228,10 +231,10 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 //        serverApiHelperElectrum.setElectrumRequestData(electrumBodyListener)
 
         // request infura eth gasPrice listener
-        val infuraBodyListener: ServerApiHelper.InfuraBodyListener = object : ServerApiHelper.InfuraBodyListener {
+        val infuraBodyListener: ServerApiInfura.InfuraBodyListener = object : ServerApiInfura.InfuraBodyListener {
             override fun onSuccess(method: String, infuraResponse: InfuraResponse) {
                 when (method) {
-                    ServerApiHelper.INFURA_ETH_GAS_PRICE -> {
+                    ServerApiInfura.INFURA_ETH_GAS_PRICE -> {
                         var gasPrice = infuraResponse.result
                         gasPrice = gasPrice.substring(2)
                         //TODO - remove Gwei
@@ -260,16 +263,16 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
             override fun onFail(method: String, message: String) {
                 when (method) {
-                    ServerApiHelper.INFURA_ETH_GAS_PRICE -> {
+                    ServerApiInfura.INFURA_ETH_GAS_PRICE -> {
                         finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
                     }
                 }
             }
         }
-        serverApiHelper.setInfuraResponse(infuraBodyListener)
+        serverApiInfura.setInfuraResponse(infuraBodyListener)
 
         // request estimate fee listener
-        val estimateFeeListener: ServerApiHelper.EstimateFeeListener = object : ServerApiHelper.EstimateFeeListener {
+        val estimateFeeListener: ServerApiCommon.EstimateFeeListener = object : ServerApiCommon.EstimateFeeListener {
             override fun onSuccess(blockCount: Int, estimateFeeResponse: String?) {
                 var fee: BigDecimal?
                 fee = BigDecimal(estimateFeeResponse) // BTC per 1 kb
@@ -290,17 +293,17 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 fee = fee!!.setScale(8, RoundingMode.DOWN)
 
                 when (blockCount) {
-                    ServerApiHelper.ESTIMATE_FEE_MINIMAL -> {
+                    ServerApiCommon.ESTIMATE_FEE_MINIMAL -> {
                         minFee = CoinEngine.Amount(fee, engine.feeCurrency)
                         if (rgFee.checkedRadioButtonId == R.id.rbMinimalFee) doSetFee(rgFee.checkedRadioButtonId)
                     }
 
-                    ServerApiHelper.ESTIMATE_FEE_NORMAL -> {
+                    ServerApiCommon.ESTIMATE_FEE_NORMAL -> {
                         normalFee = CoinEngine.Amount(fee, engine.feeCurrency)
                         if (rgFee.checkedRadioButtonId == R.id.rbNormalFee) doSetFee(rgFee.checkedRadioButtonId)
                     }
 
-                    ServerApiHelper.ESTIMATE_FEE_PRIORITY -> {
+                    ServerApiCommon.ESTIMATE_FEE_PRIORITY -> {
                         maxFee = CoinEngine.Amount(fee, engine.feeCurrency)
                         if (rgFee.checkedRadioButtonId == R.id.rbMaximumFee) doSetFee(rgFee.checkedRadioButtonId)
                     }
@@ -318,7 +321,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_calculate_fee_wrong_data_received_from_node))
             }
         }
-        serverApiHelper.setEstimateFee(estimateFeeListener)
+        serverApiCommon.setEstimateFee(estimateFeeListener)
     }
 
     public override fun onResume() {
@@ -460,22 +463,22 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
         if (UtilHelper.isOnline(this)) {
-            serverApiHelperElectrum.electrumRequestData(card, electrumRequest)
+            serverApiElectrum.electrumRequestData(card, electrumRequest)
         } else
             finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
     }
 
     private fun requestInfura(method: String) {
         if (UtilHelper.isOnline(this)) {
-            serverApiHelper.infura(method, 67, ctx.card!!.wallet, "", "")
+            serverApiInfura.infura(method, 67, ctx.card!!.wallet, "", "")
         } else
             finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
     }
 
     private fun requestEstimateFee() {
-        serverApiHelper.estimateFee(ServerApiHelper.ESTIMATE_FEE_PRIORITY)
-        serverApiHelper.estimateFee(ServerApiHelper.ESTIMATE_FEE_NORMAL)
-        serverApiHelper.estimateFee(ServerApiHelper.ESTIMATE_FEE_MINIMAL)
+        serverApiCommon.estimateFee(ServerApiCommon.ESTIMATE_FEE_PRIORITY)
+        serverApiCommon.estimateFee(ServerApiCommon.ESTIMATE_FEE_NORMAL)
+        serverApiCommon.estimateFee(ServerApiCommon.ESTIMATE_FEE_MINIMAL)
     }
 
     private fun doSetFee(checkedRadioButtonId: Int) {
