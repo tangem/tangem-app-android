@@ -135,7 +135,7 @@
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.PrepareCryptonitOtherAPIWithdrawalActivity"
+            android:name="com.tangem.presentation.activity.PrepareCryptonitOtherApiWithdrawalActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
