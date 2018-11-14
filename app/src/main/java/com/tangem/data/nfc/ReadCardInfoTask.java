@@ -6,7 +6,7 @@ import android.util.Log;
 
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.NfcManager;
-import com.tangem.domain.wallet.PINStorage;
+import com.tangem.data.db.PINStorage;
 import com.tangem.domain.wallet.TangemCard;
 import com.tangem.util.Util;
 
