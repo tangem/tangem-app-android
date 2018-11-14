@@ -8,14 +8,14 @@ import android.support.v7.app.AppCompatActivity
 import android.view.KeyEvent
 import android.widget.Toast
 import com.tangem.data.network.ElectrumRequest
-import com.tangem.data.network.ServerApiHelper
-import com.tangem.data.network.ServerApiHelperElectrum
+import com.tangem.data.network.ServerApiElectrum
+import com.tangem.data.network.ServerApiInfura
 import com.tangem.data.network.model.InfuraResponse
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
+import com.tangem.domain.wallet.eth.EthData
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
-import org.json.JSONException
 import java.io.IOException
 import java.math.BigInteger
 
@@ -25,8 +25,8 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         const val EXTRA_TX: String = "TX"
     }
 
-    private var serverApiHelper: ServerApiHelper = ServerApiHelper()
-    private var serverApiHelperElectrum: ServerApiHelperElectrum = ServerApiHelperElectrum()
+    private var serverApiInfura: ServerApiInfura = ServerApiInfura()
+    private var serverApiElectrum: ServerApiElectrum = ServerApiElectrum()
 
     private lateinit var ctx: TangemContext
     private var tx: String? = null
@@ -46,14 +46,14 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         val engine = CoinEngineFactory.create(ctx)
 
         if (ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token)
-            requestInfura(ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION, "")
+            requestInfura(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION, "")
         else if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet)
             requestElectrum(ctx.card!!, ElectrumRequest.broadcast(ctx.card!!.wallet, tx))
         else if (ctx.blockchain == Blockchain.BitcoinCash)
             requestElectrum(ctx.card!!, ElectrumRequest.broadcast(ctx.card!!.wallet, tx))
 
         // request electrum listener
-        val electrumBodyListener: ServerApiHelperElectrum.ElectrumRequestDataListener = object : ServerApiHelperElectrum.ElectrumRequestDataListener {
+        val electrumBodyListener: ServerApiElectrum.ElectrumRequestDataListener = object : ServerApiElectrum.ElectrumRequestDataListener {
             override fun onSuccess(electrumRequest: ElectrumRequest?) {
                 if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
                     if (electrumRequest.resultString.isEmpty())
@@ -67,13 +67,13 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 finishWithError(message!!)
             }
         }
-        serverApiHelperElectrum.setElectrumRequestData(electrumBodyListener)
+        serverApiElectrum.setElectrumRequestData(electrumBodyListener)
 
         // request infura listener
-        val infuraBodyListener: ServerApiHelper.InfuraBodyListener = object : ServerApiHelper.InfuraBodyListener {
+        val infuraBodyListener: ServerApiInfura.InfuraBodyListener = object : ServerApiInfura.InfuraBodyListener {
             override fun onSuccess(method: String, infuraResponse: InfuraResponse) {
                 when (method) {
-                    ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION -> {
+                    ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION -> {
                         if (infuraResponse.result.isEmpty())
                             finishWithError("Rejected by node: " + infuraResponse.error)
                         else {
@@ -88,13 +88,13 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
             override fun onFail(method: String, message: String) {
                 when (method) {
-                    ServerApiHelper.INFURA_ETH_SEND_RAW_TRANSACTION -> {
+                    ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION -> {
                         finishWithError(message)
                     }
                 }
             }
         }
-        serverApiHelper.setInfuraResponse(infuraBodyListener)
+        serverApiInfura.setInfuraResponse(infuraBodyListener)
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -132,14 +132,14 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     private fun requestInfura(method: String, contract: String) {
         if (UtilHelper.isOnline(this)) {
-            serverApiHelper.infura(method, 67, ctx.card!!.wallet, contract, tx)
+            serverApiInfura.infura(method, 67, ctx.card!!.wallet, contract, tx)
         } else
             finishWithError(getString(R.string.no_connection))
     }
 
     private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
         if (UtilHelper.isOnline(this)) {
-            serverApiHelperElectrum.electrumRequestData(card, electrumRequest)
+            serverApiElectrum.electrumRequestData(card, electrumRequest)
         } else
             finishWithError(getString(R.string.no_connection))
     }
