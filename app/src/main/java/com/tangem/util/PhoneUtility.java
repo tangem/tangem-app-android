@@ -2,8 +2,6 @@ package com.tangem.util;
 
 import android.os.Build;
 
-import com.tangem.domain.wallet.DeviceName;
-
 /**
  * Created by Ilia on 20.04.2018.
  */
