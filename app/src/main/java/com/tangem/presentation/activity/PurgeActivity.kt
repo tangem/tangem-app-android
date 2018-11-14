@@ -53,23 +53,19 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
 
     public override fun onResume() {
         super.onResume()
-        nfcManager!!.onResume()
+        nfcManager?.onResume()
     }
 
     public override fun onPause() {
-        nfcManager!!.onPause()
-        if (purgeTask != null) {
-            purgeTask!!.cancel(true)
-        }
+        nfcManager?.onPause()
+        purgeTask?.cancel(true)
         super.onPause()
     }
 
     public override fun onStop() {
         // dismiss enable NFC dialog
-        nfcManager!!.onStop()
-        if (purgeTask != null) {
-            purgeTask!!.cancel(true)
-        }
+        nfcManager?.onStop()
+        purgeTask?.cancel(true)
         super.onStop()
     }
 
@@ -88,7 +84,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
                 purgeTask!!.start()
             } else {
                 //               this Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card.getUID() + ")");
-                nfcManager!!.ignoreTag(isoDep.tag)
+                nfcManager?.ignoreTag(isoDep.tag)
             }
 
         } catch (e: Exception) {
@@ -109,9 +105,9 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
     }
 
     override fun onReadStart(cardProtocol: CardProtocol) {
-        progressBar!!.post {
-            progressBar!!.visibility = View.VISIBLE
-            progressBar!!.progress = 5
+        progressBar.post {
+            progressBar.visibility = View.VISIBLE
+            progressBar.progress = 5
         }
     }
 
