@@ -24,7 +24,10 @@ import android.view.animation.Transformation
 import android.widget.RelativeLayout
 import android.widget.Toast
 import com.scottyab.rootbeer.RootBeer
-import com.tangem.data.network.ServerApiHelper
+import com.tangem.data.Logger
+import com.tangem.data.db.PINStorage
+import com.tangem.data.network.ServerApiCommon
+import com.tangem.data.nfc.DeviceNFCAntennaLocation
 import com.tangem.data.nfc.ReadCardInfoTask
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.FW
@@ -150,7 +153,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         fab.setOnClickListener { showMenu(it) }
 
 
-        val apiHelper = ServerApiHelper()
+        val apiHelper = ServerApiCommon()
         apiHelper.setLastVersionListener { response ->
             try {
                 if (response.isNullOrEmpty()) return@setLastVersionListener
