@@ -104,7 +104,7 @@ class PrepareCryptonitOtherAPIWithdrawalActivity : AppCompatActivity(), NfcAdapt
                 Blockchain.Ethereum, Blockchain.EthereumTestNet -> {
                     tvBalance.text = response.eth_available
                 }
-                Blockchain.Bitcoin, Blockchain.BitcoinTestNet, Blockchain.BitcoinCash, Blockchain.BitcoinCashTestNet -> {
+                Blockchain.Bitcoin, Blockchain.BitcoinTestNet, Blockchain.BitcoinCash -> {
                     tvBalance.text = response.btc_available
                 }
                 else -> {
