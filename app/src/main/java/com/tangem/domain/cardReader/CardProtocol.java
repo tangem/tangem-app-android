@@ -9,7 +9,7 @@ import android.util.Log;
 import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.CoinEngineFactory;
 import com.tangem.domain.wallet.Issuer;
-import com.tangem.domain.wallet.LocalStorage;
+import com.tangem.data.db.LocalStorage;
 import com.tangem.domain.wallet.TangemCard;
 import com.tangem.domain.wallet.Manufacturer;
 import com.tangem.domain.wallet.TangemContext;
@@ -587,7 +587,7 @@ public class CardProtocol {
 
             TangemContext ctx = new TangemContext(mCard);
             try {
-                CoinEngine engineCoin = CoinEngineFactory.create(ctx);
+                CoinEngine engineCoin = CoinEngineFactory.INSTANCE.create(ctx);
                 if( engineCoin==null ) throw new Exception("Can't create CoinEngine!");
                 String wallet = engineCoin.calculateAddress(pkUncompressed);
                 mCard.setWallet(wallet);
