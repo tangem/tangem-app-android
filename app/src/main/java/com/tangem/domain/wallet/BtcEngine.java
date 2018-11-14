@@ -175,7 +175,7 @@ public class BtcEngine extends CoinEngine {
     @Override
     public Uri getShareWalletUri() {
         if (ctx.getCard().getDenomination() != null) {
-            return Uri.parse("bitcoin:" + ctx.getCard().getWallet() + "?amount=" + BTCUtils.satoshiToBtc(ctx.getCard().getDenomination()));
+            return Uri.parse("bitcoin:" + ctx.getCard().getWallet() + "?amount=" + convertToAmount(convertToInternalAmount(ctx.getCard().getDenomination())).toValueString(8));
         } else {
             return Uri.parse("bitcoin:" + ctx.getCard().getWallet());
         }
