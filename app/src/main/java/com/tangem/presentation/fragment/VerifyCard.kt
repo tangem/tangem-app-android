@@ -13,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.Toast
+import com.tangem.data.db.PINStorage
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
 import com.tangem.presentation.activity.CreateNewWalletActivity
@@ -285,7 +286,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
             val engine = CoinEngineFactory.create(ctx)
 
-            tvInputs.text = engine.unspentInputsDescription
+            tvInputs.text = engine!!.unspentInputsDescription
 
             ivBlockchain.setImageResource(Blockchain.getLogoImageResource(ctx.card!!.blockchainID, ctx.card!!.tokenSymbol))
 
@@ -467,7 +468,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
     private fun doPurge() {
         requestPIN2Count = 0
         val engine=CoinEngineFactory.create(ctx)
-        if (!engine.hasBalanceInfo()) {
+        if (!engine!!.hasBalanceInfo()) {
             return
         } else if (engine.isBalanceNotZero) {
             Toast.makeText(context, R.string.cannot_erase_wallet_with_non_zero_balance, Toast.LENGTH_LONG).show()
