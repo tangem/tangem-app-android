@@ -5,6 +5,7 @@ import android.util.Log;
 import com.tangem.App;
 import com.tangem.domain.BitcoinNode;
 import com.tangem.domain.BitcoinNodeTestNet;
+import com.tangem.domain.BitcoinCashNode;
 import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.TangemCard;
 
@@ -161,14 +162,17 @@ public class ServerApiHelperElectrum {
     }
 
     private List<ElectrumRequest> doElectrumRequest(TangemCard card, ElectrumRequest electrumRequest) {
-        BitcoinNode bitcoinNode = BitcoinNode.values()[new Random().nextInt(BitcoinNode.values().length)];
 
-        if (card.getBlockchain() == Blockchain.BitcoinTestNet || card.getBlockchain() == Blockchain.BitcoinCashTestNet) {
+        if (card.getBlockchain() == Blockchain.BitcoinTestNet) {
             BitcoinNodeTestNet bitcoinNodeTestNet = BitcoinNodeTestNet.values()[new Random().nextInt(BitcoinNodeTestNet.values().length)];
             this.host = bitcoinNodeTestNet.getHost();
             this.port = bitcoinNodeTestNet.getPort();
-
-        } else {
+        } else if (card.getBlockchain() == Blockchain.BitcoinCash) {
+            BitcoinCashNode bitcoinCashNode = BitcoinCashNode.values()[new Random().nextInt(BitcoinCashNode.values().length)];
+            this.host = bitcoinCashNode.getHost();
+            this.port = bitcoinCashNode.getPort();
+        } else if (card.getBlockchain() == Blockchain.Bitcoin) {
+            BitcoinNode bitcoinNode = BitcoinNode.values()[new Random().nextInt(BitcoinNode.values().length)];
             this.host = bitcoinNode.getHost();
             this.port = bitcoinNode.getPort();
         }
@@ -178,6 +182,7 @@ public class ServerApiHelperElectrum {
 
         try {
             Socket socket = App.getNetworkComponent().getSocket();
+            socket.setSoTimeout(3000);
             socket.connect(new InetSocketAddress(InetAddress.getByName(host), port));
             Log.i(TAG, host + " " + port);
             try {
