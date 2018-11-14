@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.google.common.base.Strings;
+import com.tangem.data.db.PINStorage;
 import com.tangem.domain.cardReader.SettingsMask;
 import com.tangem.util.Util;
 
@@ -250,7 +251,7 @@ public class TangemCard {
         return contractAddress;
     }
 
-    String tokenSymbol = "";
+    public String tokenSymbol = "";
 
     public void setTokenSymbol(String symbol) {
         tokenSymbol = symbol;
@@ -598,7 +599,7 @@ public class TangemCard {
     public void setDenomination(byte[] denomination) {
         this.Denomination = denomination;
         try {
-            CoinEngine engine=CoinEngineFactory.create(getBlockchain());
+            CoinEngine engine= CoinEngineFactory.INSTANCE.create(getBlockchain());
             CoinEngine.InternalAmount internalAmount=engine.convertToInternalAmount(denomination);
             CoinEngine.Amount amount=engine.convertToAmount(internalAmount);
             this.DenominationText = amount.toString();
