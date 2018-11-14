@@ -13,7 +13,7 @@ import com.tangem.domain.wallet.CoinEngineFactory;
 import com.tangem.domain.wallet.TangemContext;
 import com.tangem.presentation.activity.SendTransactionActivity;
 import com.tangem.presentation.activity.SignPaymentActivity;
-import com.tangem.util.BTCUtils;
+import com.tangem.domain.wallet.BTCUtils;
 
 import java.io.IOException;
 
@@ -86,7 +86,7 @@ public class SignPaymentTask extends Thread {
 //                        SignBTC_TX(protocol);
 //                    }
 
-                CoinEngine engine = CoinEngineFactory.create(mCtx);
+                CoinEngine engine = CoinEngineFactory.INSTANCE.create(mCtx);
                 if (engine != null) {
                     if (mCtx.getCard().getPauseBeforePIN2() > 0) {
                         mNotifications.onReadWait(mCtx.getCard().getPauseBeforePIN2());
