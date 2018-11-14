@@ -1,13 +1,14 @@
 package com.tangem.presentation.activity
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import com.tangem.data.network.ServerApiHelperElectrum
+import com.tangem.App
+import com.tangem.di.Navigator
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_logo.*
+import javax.inject.Inject
 
 class LogoActivity : AppCompatActivity() {
 
@@ -18,13 +19,16 @@ class LogoActivity : AppCompatActivity() {
         const val MILLIS_AUTO_HIDE = 1000
     }
 
-    private var serverApiHelperElectrum: ServerApiHelperElectrum = ServerApiHelperElectrum()
-
     private val hideRunnable = Runnable { this.hide() }
+
+    @Inject
+    internal lateinit var navigator: Navigator
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_logo)
+
+        App.getNavigatorComponent().inject(this)
 
         ivLogo.setOnClickListener { hide() }
     }
@@ -43,8 +47,7 @@ class LogoActivity : AppCompatActivity() {
     }
 
     private fun hide() {
-        val intent = Intent(baseContext, MainActivity::class.java)
-        startActivity(intent)
+        navigator.showMain(this)
         finish()
     }
 
