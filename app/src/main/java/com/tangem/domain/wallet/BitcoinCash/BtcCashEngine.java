@@ -1,10 +1,22 @@
-package com.tangem.domain.wallet;
+package com.tangem.domain.wallet.BitcoinCash;
 
 import android.net.Uri;
 import android.text.InputFilter;
 
 import com.tangem.domain.cardReader.CardProtocol;
 import com.tangem.domain.cardReader.TLV;
+import com.tangem.domain.wallet.BalanceValidator;
+import com.tangem.domain.wallet.Base58;
+import com.tangem.domain.wallet.Blockchain;
+import com.tangem.domain.wallet.BtcData;
+import com.tangem.domain.wallet.CoinData;
+import com.tangem.domain.wallet.CoinEngine;
+import com.tangem.domain.wallet.CoinEngineFactory;
+import com.tangem.domain.wallet.PINStorage;
+import com.tangem.domain.wallet.TangemCard;
+import com.tangem.domain.wallet.TangemContext;
+import com.tangem.domain.wallet.Transaction;
+import com.tangem.domain.wallet.UnspentOutputInfo;
 import com.tangem.util.BTCUtils;
 import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
@@ -113,54 +125,58 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public String getFeeCurrency() {
-        return "mBCH";
+        return "BCH";
     }
 
     @Override
     public boolean validateAddress(String address) {
-        if (address == null || address.isEmpty()) {
-            return false;
-        }
+//        if (address == null || address.isEmpty()) {
+//            return false;
+//        }
+//
+//        if (address.length() < 25) {
+//            return false;
+//        }
+//
+//        if (address.length() > 35) {
+//            return false;
+//        }
+//
+//        if (!address.startsWith("1") && !address.startsWith("2") && !address.startsWith("3") && !address.startsWith("n") && !address.startsWith("m")) {
+//            return false;
+//        }
+//
+//        byte[] decAddress = Base58.decodeBase58(address);
+//
+//        if (decAddress == null || decAddress.length == 0) {
+//            return false;
+//        }
+//
+//        byte[] rip = new byte[21];
+//        for (int i = 0; i < 21; ++i) {
+//            rip[i] = decAddress[i];
+//        }
+//
+//        byte[] kcv = CryptoUtil.doubleSha256(rip);
+//
+//        for (int i = 0; i < 4; ++i) {
+//            if (kcv[i] != decAddress[21 + i])
+//                return false;
+//        }
+//
+//        if (ctx.getBlockchain() != Blockchain.BitcoinTestNet && ctx.getBlockchain() != Blockchain.Bitcoin) {
+//            return false;
+//        }
+//
+//        if (ctx.getBlockchain() == Blockchain.BitcoinTestNet && (address.startsWith("1") || address.startsWith("3"))) {
+//            return false;
+//        }
+//
+//        return true;
 
-        if (address.length() < 25) {
-            return false;
-        }
-
-        if (address.length() > 35) {
-            return false;
-        }
-
-        if (!address.startsWith("1") && !address.startsWith("2") && !address.startsWith("3") && !address.startsWith("n") && !address.startsWith("m")) {
-            return false;
-        }
-
-        byte[] decAddress = Base58.decodeBase58(address);
-
-        if (decAddress == null || decAddress.length == 0) {
-            return false;
-        }
-
-        byte[] rip = new byte[21];
-        for (int i = 0; i < 21; ++i) {
-            rip[i] = decAddress[i];
-        }
-
-        byte[] kcv = CryptoUtil.doubleSha256(rip);
-
-        for (int i = 0; i < 4; ++i) {
-            if (kcv[i] != decAddress[21 + i])
-                return false;
-        }
-
-        if (ctx.getBlockchain() != Blockchain.BitcoinCashTestNet && ctx.getBlockchain() != Blockchain.BitcoinCash) {
-            return false;
-        }
-
-        if (ctx.getBlockchain() == Blockchain.BitcoinCashTestNet && (address.startsWith("1") || address.startsWith("3"))) {
-            return false;
-        }
-
-        return true;
+        if(CashAddr.isValidCashAddress(address))
+            return true;
+        return false;
     }
 
     @Override
@@ -175,7 +191,7 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public Uri getShareWalletUri() {
-        return Uri.parse("bitcoincash:" + ctx.getCard().getWallet());
+        return Uri.parse(ctx.getCard().getWallet());
     }
 
     @Override
@@ -315,15 +331,17 @@ public class BtcCashEngine extends CoinEngine {
     @Override
     public String calculateAddress(byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException {
 
-        byte netSelectionByte;
-        switch (ctx.getBlockchain()) {
-            case BitcoinCash:
-                netSelectionByte = (byte) 0x00; //0 - MainNet 0x6f - TestNet
-                break;
-            default:
-                netSelectionByte = (byte) 0x6f; //0 - MainNet 0x6f - TestNet
-                break;
-        }
+        // CashAddr format
+        byte hash1[] = Util.calculateSHA256(pkUncompressed);
+        byte hash2[] = Util.calculateRIPEMD160(hash1);
+        return CashAddr.toCashAddress(BitcoinCashAddressType.P2PKH, hash2);
+
+    }
+
+    public String calculateLegacyAddress(byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException {
+
+        // Legacy format (BTC)
+        byte netSelectionByte = (byte) 0x00;
 
         byte hash1[] = Util.calculateSHA256(pkUncompressed);
         byte hash2[] = Util.calculateRIPEMD160(hash1);
@@ -337,7 +355,32 @@ public class BtcCashEngine extends CoinEngine {
         byte hash4[] = Util.calculateSHA256(hash3);
 
         BB = ByteBuffer.allocate(hash2.length + 5);
-        BB.put(netSelectionByte); //BB.put((byte) 0x6f);
+        BB.put(netSelectionByte);
+        BB.put(hash2);
+        BB.put(hash4[0]);
+        BB.put(hash4[1]);
+        BB.put(hash4[2]);
+        BB.put(hash4[3]);
+
+        return org.bitcoinj.core.Base58.encode(BB.array());
+    }
+
+    public String convertToLegacyAddress(String cashAddr) throws NoSuchProviderException, NoSuchAlgorithmException {
+
+        BitcoinCashAddressDecodedParts bcadp = CashAddr.decodeCashAddress(cashAddr);
+        byte netSelectionByte = (byte) 0x00;
+        byte hash2[] = bcadp.hash;
+
+        ByteBuffer BB = ByteBuffer.allocate(hash2.length + 1);
+
+        BB.put(netSelectionByte);
+        BB.put(hash2);
+
+        byte hash3[] = Util.calculateSHA256(BB.array());
+        byte hash4[] = Util.calculateSHA256(hash3);
+
+        BB = ByteBuffer.allocate(hash2.length + 5);
+        BB.put(netSelectionByte);
         BB.put(hash2);
         BB.put(hash4[0]);
         BB.put(hash4[1]);
@@ -396,16 +439,19 @@ public class BtcCashEngine extends CoinEngine {
 //    }
 
     @Override
-    public byte[] sign(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress, CardProtocol protocol) throws Exception {
+    public byte[] sign(Amount feeValue, Amount amountValue, boolean IncFee, String destAddress, CardProtocol protocol) throws Exception {
 
         checkBlockchainDataExists();
 
-        String myAddress = ctx.getCard().getWallet();
+        CoinEngine engine = CoinEngineFactory.create(ctx);
+
+        String srcLegacyAddress = ((BtcCashEngine)engine).convertToLegacyAddress(ctx.getCard().getWallet());
+        String destLegacyAddress = ((BtcCashEngine)engine).convertToLegacyAddress(destAddress);
         byte[] pbKey = ctx.getCard().getWalletPublicKeyRar(); //ALWAYS USING COMPRESS KEY
 
         // Build script for our address
         List<BtcData.UnspentTransaction> rawTxList = coinData.getUnspentTransactions();
-        byte[] outputScriptWeAreAbleToSpend = Transaction.Script.buildOutput(myAddress).bytes;
+        byte[] outputScriptWeAreAbleToSpend = Transaction.Script.buildOutput(srcLegacyAddress).bytes;
 
         // Collect unspent
         ArrayList<UnspentOutputInfo> unspentOutputs = BTCUtils.getOutputs(rawTxList, outputScriptWeAreAbleToSpend);
@@ -432,7 +478,7 @@ public class BtcCashEngine extends CoinEngine {
         byte[][] dataForSign = new byte[unspentOutputs.size()][];
 
         for (int i = 0; i < unspentOutputs.size(); ++i) {
-            byte[] newTX = BTCUtils.buildTXForSign(myAddress, targetAddress, myAddress, unspentOutputs, i, amount, change);
+            byte[] newTX = BTCUtils.buildTXForSign(srcLegacyAddress, destLegacyAddress, srcLegacyAddress, unspentOutputs, i, amount, change);
 
             byte[] hashData = Util.calculateSHA256(newTX);
             byte[] doubleHashData = Util.calculateSHA256(hashData);
@@ -471,6 +517,6 @@ public class BtcCashEngine extends CoinEngine {
             unspentOutputs.get(i).scriptForBuild = DerEncodingUtil.packSignDerBitcoinCash(r, s, pbKey);
         }
 
-        return BTCUtils.buildTXForSend(targetAddress, myAddress, unspentOutputs, amount, change);
+        return BTCUtils.buildTXForSend(destLegacyAddress, srcLegacyAddress, unspentOutputs, amount, change);
     }
 }
