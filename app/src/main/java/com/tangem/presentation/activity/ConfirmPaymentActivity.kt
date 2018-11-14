@@ -44,13 +44,13 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     private lateinit var amount: CoinEngine.Amount
 
     private var feeRequestSuccess = false
-    private var balanceRequestSuccess = false
+//    private var balanceRequestSuccess = false
     private var minFee: CoinEngine.Amount? = null
     private var maxFee: CoinEngine.Amount? = null
     private var normalFee: CoinEngine.Amount? = null
     private var isIncludeFee: Boolean = true
     private var requestPIN2Count = 0
-    private var nodeCheck = false
+    private var nodeCheck = true
     private var dtVerified: Date? = null
     private var calcSize: Int = 0
 
@@ -92,7 +92,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         btnSend.visibility = View.INVISIBLE
         feeRequestSuccess = false
-        balanceRequestSuccess = false
+//        balanceRequestSuccess = false
 
         if (ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token) {
             rgFee.isEnabled = false
@@ -102,7 +102,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         } else {
             rgFee.isEnabled = true
 
-            requestElectrum(ctx.card, ElectrumRequest.checkBalance(ctx.card!!.wallet))
+//            requestElectrum(ctx.card, ElectrumRequest.checkBalance(ctx.card!!.wallet))
 
             calcSize = 256
             try {
@@ -194,38 +194,38 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
 
         // request electrum listener
-        val electrumBodyListener: ServerApiHelperElectrum.ElectrumRequestDataListener = object : ServerApiHelperElectrum.ElectrumRequestDataListener {
-            override fun onSuccess(electrumRequest: ElectrumRequest?) {
-                if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_GetBalance)) {
-                    try {
-                        if (etFee.text.toString().isEmpty()) etFee.setText(getString(R.string.empty))
-                        val engine = CoinEngineFactory.create(ctx)
-                        val balance = engine.convertToAmount(CoinEngine.InternalAmount(electrumRequest.result.getLong("confirmed") + electrumRequest.result.getLong("unconfirmed"), "Satoshi"))
-                        val amount = CoinEngine.Amount(etAmount.text.toString(), ctx.blockchain.currency)
-                        if (balance < amount) {
-                            etFee.error = getString(R.string.not_enough_funds)
-                        } else {
-                            etFee.error = null
-                            balanceRequestSuccess = true
-                            if (feeRequestSuccess && balanceRequestSuccess) {
-                                btnSend.visibility = View.VISIBLE
-                            }
-                            dtVerified = Date()
-                            nodeCheck = true
-                        }
-                    } catch (e: JSONException) {
-                        e.printStackTrace()
-                        requestElectrum(ctx.card!!, ElectrumRequest.checkBalance(ctx.card!!.wallet))
-                    }
-                }
-            }
-
-            override fun onFail(message: String?) {
-                finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
-            }
-
-        }
-        serverApiHelperElectrum.setElectrumRequestData(electrumBodyListener)
+//        val electrumBodyListener: ServerApiHelperElectrum.ElectrumRequestDataListener = object : ServerApiHelperElectrum.ElectrumRequestDataListener {
+//            override fun onSuccess(electrumRequest: ElectrumRequest?) {
+//                if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_GetBalance)) {
+//                    try {
+//                        if (etFee.text.toString().isEmpty()) etFee.setText(getString(R.string.empty))
+//                        val engine = CoinEngineFactory.create(ctx)
+//                        val balance = engine.convertToAmount(CoinEngine.InternalAmount(electrumRequest.result.getLong("confirmed") + electrumRequest.result.getLong("unconfirmed"), "Satoshi"))
+//                        val amount = CoinEngine.Amount(etAmount.text.toString(), ctx.blockchain.currency)
+//                        if (balance < amount) {
+//                            etFee.error = getString(R.string.not_enough_funds)
+//                        } else {
+//                            etFee.error = null
+//                            balanceRequestSuccess = true
+//                            if (feeRequestSuccess && balanceRequestSuccess) {
+//                                btnSend.visibility = View.VISIBLE
+//                            }
+//                            dtVerified = Date()
+//                            nodeCheck = true
+//                        }
+//                    } catch (e: JSONException) {
+//                        e.printStackTrace()
+////                        requestElectrum(ctx.card!!, ElectrumRequest.checkBalance(ctx.card!!.wallet))
+//                    }
+//                }
+//            }
+//
+//            override fun onFail(message: String?) {
+//                finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
+//            }
+//
+//        }
+//        serverApiHelperElectrum.setElectrumRequestData(electrumBodyListener)
 
         // request infura eth gasPrice listener
         val infuraBodyListener: ServerApiHelper.InfuraBodyListener = object : ServerApiHelper.InfuraBodyListener {
@@ -252,7 +252,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         etFee.error = null
                         btnSend.visibility = View.VISIBLE
                         feeRequestSuccess = true
-                        balanceRequestSuccess = true
+//                        balanceRequestSuccess = true
                         dtVerified = Date()
                     }
                 }
@@ -308,7 +308,8 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
                 etFee.error = null
                 feeRequestSuccess = true
-                if (feeRequestSuccess && balanceRequestSuccess)
+                if (feeRequestSuccess)
+//                if (feeRequestSuccess && balanceRequestSuccess)
                     btnSend.visibility = View.VISIBLE
                 dtVerified = Date()
             }
