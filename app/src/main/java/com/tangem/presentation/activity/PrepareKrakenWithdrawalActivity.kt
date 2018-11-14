@@ -60,7 +60,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
         tvWallet.text = ctx.card!!.wallet
         val engine = CoinEngineFactory.create(ctx)
 
-        tvCurrency.text = engine.balanceCurrency
+        tvCurrency.text = engine!!.balanceCurrency
 
         etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toValueString())
         etAmount.filters=engine.amountInputFilters
