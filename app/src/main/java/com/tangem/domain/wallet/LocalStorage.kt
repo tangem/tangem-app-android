@@ -59,6 +59,10 @@ data class LocalStorage(
             putResourceArtworkToCatalog(R.drawable.card_ru021, false)
             putResourceArtworkToCatalog(R.drawable.card_ru022, false)
             putResourceArtworkToCatalog(R.drawable.card_ru023, true)
+            putResourceArtworkToCatalog(R.drawable.card_ru024, true)
+            putResourceArtworkToCatalog(R.drawable.card_ru028, true)
+            putResourceArtworkToCatalog(R.drawable.card_ru029, true)
+            putResourceArtworkToCatalog(R.drawable.card_ru030, true)
         }
         if (batchesFile.exists()) {
             try {
@@ -70,28 +74,6 @@ data class LocalStorage(
         } else {
             batches = HashMap()
         }
-
-//        if (batches.count() == 0) {
-//            putBatchToCatalog("0004", R.drawable.card_ru006, false)
-//            putBatchToCatalog("0006", R.drawable.card_ru006, false)
-//            putBatchToCatalog("0010", R.drawable.card_ru006, false)
-//
-//            putBatchToCatalog("0005", R.drawable.card_ru007, false)
-//            putBatchToCatalog("0007", R.drawable.card_ru007, false)
-//            putBatchToCatalog("0011", R.drawable.card_ru007, false)
-//
-//            putBatchToCatalog("0012", R.drawable.card_ru011, false)
-//            putBatchToCatalog("0013", R.drawable.card_ru012, false)
-//            putBatchToCatalog("0014", R.drawable.card_ru006, false)
-//            putBatchToCatalog("0015", R.drawable.card_ru020, false)
-//            putBatchToCatalog("0016", R.drawable.card_ru021, false)
-//            putBatchToCatalog("0017", R.drawable.card_ru013, false)
-//            putBatchToCatalog("0019", R.drawable.card_ru016, false)
-//            putBatchToCatalog("001A", R.drawable.card_ru014, false)
-//            putBatchToCatalog("001B", R.drawable.card_ru015, false)
-//            putBatchToCatalog("001C", R.drawable.card_ru023, false)
-//            putBatchToCatalog("001D", R.drawable.card_ru022, true)
-//        }
     }
 
     private fun getArtworkFile(artworkId: String): File {
@@ -236,6 +218,10 @@ data class LocalStorage(
             card.batch == "001B" -> R.drawable.card_ru015
             card.batch == "001C" -> R.drawable.card_ru023
             card.batch == "001D" -> R.drawable.card_ru022
+            card.batch == "001E" -> R.drawable.card_ru024
+            card.batch == "001F" -> R.drawable.card_ru028
+            card.batch == "0018" -> R.drawable.card_ru029
+            card.batch == "0020" -> R.drawable.card_ru030
 
             else -> null
         }

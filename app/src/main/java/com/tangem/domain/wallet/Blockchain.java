@@ -13,8 +13,7 @@ public enum Blockchain {
     Ethereum("ETH", "ETH", 1.0, R.drawable.ic_logo_ethereum, "Ethereum"),
     EthereumTestNet("ETH/test", "ETH", 1.0, R.drawable.ic_logo_ethereum_testnet, "Ethereum Testnet"),
     Token("Token", "ERC20", 1.0, R.drawable.ic_logo_bat_token, "Ethereum"),
-    BitcoinCash("BCH", "BCH", 100000000.0, R.drawable.ic_logo_bitcoin_cash, "Bitcoin Cash"),
-    BitcoinCashTestNet("BCH/test", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin_cash, "Bitcoin Cash Testnet");
+    BitcoinCash("BCH", "BCH", 100000000.0, R.drawable.ic_logo_bitcoin_cash, "Bitcoin Cash");
 
     Blockchain(String ID, String currency, double multiplier, int imageResource, String officialName) {
         mID = ID;
