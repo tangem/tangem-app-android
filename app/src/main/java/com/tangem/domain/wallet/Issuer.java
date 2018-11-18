@@ -59,20 +59,20 @@ public class Issuer {
         return id;
     }
 
-    private static List<Issuer> instances=new ArrayList<>();
+    private static List<Issuer> instances = new ArrayList<>();
 
     public static boolean needInit() {
         return instances.size() == 0;
     }
 
-    public static void Init(Context context) {
+    public static void init(Context context) {
         try {
             Issuer unknown = new Issuer();
             unknown.id = "UNKNOWN";
             unknown.officialName = "UNKNOWN";
 
-            try(InputStream is=context.getAssets().open("issuers.json")) {
-                try ( InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
+            try (InputStream is = context.getAssets().open("issuers.json")) {
+                try (InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
                     Type listType = new TypeToken<List<Issuer>>() {
                     }.getType();
                     instances = new Gson().fromJson(reader, listType);
