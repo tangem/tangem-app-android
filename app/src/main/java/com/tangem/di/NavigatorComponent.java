@@ -1,5 +1,6 @@
 package com.tangem.di;
 
+import com.tangem.presentation.activity.EmptyWalletActivity;
 import com.tangem.presentation.activity.LogoActivity;
 import com.tangem.presentation.activity.MainActivity;
 
@@ -16,5 +17,7 @@ public interface NavigatorComponent {
     void inject(LogoActivity activity);
 
     void inject(MainActivity activity);
+
+    void inject(EmptyWalletActivity activity);
 
 }
