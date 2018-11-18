@@ -1,5 +1,7 @@
 package com.tangem.presentation.activity
 
+import android.content.Context
+import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
@@ -10,7 +12,12 @@ import com.tangem.wallet.R
 class LoadedWalletActivity : AppCompatActivity() {
 
     companion object {
-        const val EXTRA_MODIFICATION = "modification"
+        fun callingIntent(context: Context, lastTag: Tag, cardInfo: Bundle): Intent {
+            val intent = Intent(context, LoadedWalletActivity::class.java)
+            intent.putExtra(MainActivity.EXTRA_LAST_DISCOVERED_TAG, lastTag)
+            intent.putExtras(cardInfo)
+            return intent
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
