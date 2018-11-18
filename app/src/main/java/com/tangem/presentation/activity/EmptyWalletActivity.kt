@@ -1,6 +1,7 @@
 package com.tangem.presentation.activity
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -31,6 +32,8 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         private const val REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY = 2
         private const val REQUEST_CODE_REQUEST_PIN2 = 3
         private const val REQUEST_CODE_VERIFY_CARD = 4
+
+        fun callingIntent(context: Context) = Intent(context, EmptyWalletActivity::class.java)
     }
 
     private var nfcManager: NfcManager? = null
