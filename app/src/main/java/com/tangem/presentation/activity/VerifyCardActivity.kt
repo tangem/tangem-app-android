@@ -1,15 +1,36 @@
 package com.tangem.presentation.activity
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import com.tangem.App
+import com.tangem.di.Navigator
+import com.tangem.domain.wallet.TangemCard
 import com.tangem.presentation.fragment.VerifyCard
 import com.tangem.wallet.R
+import javax.inject.Inject
 
 class VerifyCardActivity : AppCompatActivity() {
+
+    @Inject
+    lateinit var navigator: Navigator
+
+    companion object {
+        fun callingIntent(context: Context, card: TangemCard): Intent {
+            val intent = Intent(context, VerifyCardActivity::class.java)
+            intent.putExtra(TangemCard.EXTRA_UID, card.uid)
+            intent.putExtra(TangemCard.EXTRA_CARD, card.asBundle)
+            return intent
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_verify_card)
+
+        App.getNavigatorComponent().inject(this)
+
         MainActivity.commonInit(applicationContext)
     }
 
