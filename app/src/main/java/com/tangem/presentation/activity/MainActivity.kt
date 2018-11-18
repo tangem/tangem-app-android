@@ -24,11 +24,13 @@ import android.view.animation.Transformation
 import android.widget.RelativeLayout
 import android.widget.Toast
 import com.scottyab.rootbeer.RootBeer
+import com.tangem.App
 import com.tangem.data.Logger
 import com.tangem.data.db.PINStorage
 import com.tangem.data.network.ServerApiCommon
 import com.tangem.data.nfc.DeviceNFCAntennaLocation
 import com.tangem.data.nfc.ReadCardInfoTask
+import com.tangem.di.Navigator
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.FW
 import com.tangem.domain.cardReader.NfcManager
@@ -43,6 +45,7 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
 import java.util.*
+import javax.inject.Inject
 
 class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, PopupMenu.OnMenuItemClickListener {
 
@@ -51,7 +54,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
         private const val REQUEST_CODE_SEND_EMAIL = 3
         private const val REQUEST_CODE_ENTER_PIN_ACTIVITY = 2
-        private const val REQUEST_CODE_SHOW_CARD_ACTIVITY = 1
+        const val REQUEST_CODE_SHOW_CARD_ACTIVITY = 1
         private const val REQUEST_CODE_REQUEST_CAMERA_PERMISSIONS = 3
 
         const val EXTRA_LAST_DISCOVERED_TAG = "extra_last_tag"
@@ -78,6 +81,9 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     private var readCardInfoTask: ReadCardInfoTask? = null
     private var onNfcReaderCallback: NfcAdapter.ReaderCallback? = null
 
+    @Inject
+    internal lateinit var navigator: Navigator
+
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action || NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action)) {
@@ -90,6 +96,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        App.getNavigatorComponent().inject(this)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
@@ -322,24 +330,13 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                     val card = TangemCard(uid)
                     card.loadFromBundle(cardInfo.getBundle("Card"))
 
-                    val intent: Intent
-                    intent = when {
-                        card.status == TangemCard.Status.Empty -> Intent(this, EmptyWalletActivity::class.java)
-                        card.status == TangemCard.Status.Loaded -> Intent(this, LoadedWalletActivity::class.java)
-                        card.status == TangemCard.Status.Purged -> {
-                            Toast.makeText(this, R.string.erased_wallet, Toast.LENGTH_SHORT).show()
-                            return@post
-                        }
-                        card.status == TangemCard.Status.NotPersonalized -> {
-                            Toast.makeText(this, R.string.not_personalized, Toast.LENGTH_SHORT).show()
-                            return@post
-                        }
-                        else -> Intent(this, LoadedWalletActivity::class.java)
+                    when {
+                        card.status == TangemCard.Status.Loaded -> lastTag?.let { navigator.showLoadedWallet(this, it, cardInfo) }
+                        card.status == TangemCard.Status.Empty -> navigator.showEmptyWallet(this)
+                        card.status == TangemCard.Status.Purged -> Toast.makeText(this, R.string.erased_wallet, Toast.LENGTH_SHORT).show()
+                        card.status == TangemCard.Status.NotPersonalized -> Toast.makeText(this, R.string.not_personalized, Toast.LENGTH_SHORT).show()
+                        else -> lastTag?.let { navigator.showLoadedWallet(this, it, cardInfo) }
                     }
-
-                    intent.putExtra(EXTRA_LAST_DISCOVERED_TAG, lastTag)
-                    intent.putExtras(cardInfo)
-                    startActivityForResult(intent, REQUEST_CODE_SHOW_CARD_ACTIVITY)
                 }
 
             } else {
