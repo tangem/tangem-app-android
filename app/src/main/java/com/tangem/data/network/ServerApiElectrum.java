@@ -20,6 +20,7 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.Random;
 import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -61,8 +63,8 @@ public class ServerApiElectrum {
     public void electrumRequestData(TangemCard card, ElectrumRequest electrumRequest) {
         Observable<ElectrumRequest> checkElectrumDataObserver = Observable.just(electrumRequest)
 
-                .doOnNext(electrumRequest1 -> doElectrumRequest(card, electrumRequest))
-//                .doOnNext(electrumRequest1 -> testSslSocket(card, electrumRequest))
+//                .doOnNext(electrumRequest1 -> doElectrumRequest(card, electrumRequest))
+                .doOnNext(electrumRequest1 -> testSslSocket(card, electrumRequest))
 
                 .flatMap(electrumRequest1 -> {
                     if (electrumRequest1.answerData == null) {
@@ -72,10 +74,9 @@ public class ServerApiElectrum {
                         return Observable.just(electrumRequest1);
                 })
 
-                .retryWhen(errors -> errors
-                        .filter(throwable -> throwable instanceof NullPointerException)
-                        .zipWith(Observable.range(1, 4), (n, i) -> i))
-
+//                .retryWhen(errors -> errors
+//                        .filter(throwable -> throwable instanceof NullPointerException)
+//                        .zipWith(Observable.range(1, 4), (n, i) -> i))
 
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
@@ -112,27 +113,26 @@ public class ServerApiElectrum {
         this.port = bitcoinNodeSsl.getPort();
 
         SocketFactory sf = SSLSocketFactory.getDefault();
-        SSLSocket socket;
+        SSLSocket sslSocket;
 
         List<ElectrumRequest> result = new ArrayList<>();
         Collections.addAll(result, electrumRequest);
 
         try {
-            socket = (SSLSocket) sf.createSocket("gmail.com", 443);
-//            socket = (SSLSocket) sf.createSocket("electrum.hsmiths.com", 50002);
-//            socket = (SSLSocket) sf.createSocket(host, port);
-            HostnameVerifier hv = HttpsURLConnection.getDefaultHostnameVerifier();
-            SSLSession s = socket.getSession();
+            sslSocket = (SSLSocket) sf.createSocket(host, port);
 
-//            if (!hv.verify("mail.google.com", s)) {
-//                throw new SSLHandshakeException("Expected mail.google.com, found " + s.getPeerPrincipal());
+            HostnameVerifier hv = HttpsURLConnection.getDefaultHostnameVerifier();
+            SSLSession sslSession = sslSocket.getSession();
+
+//            if (!hv.verify(host, sslSession)) {
+//                throw new SSLHandshakeException("Expected " + host + " , found " + sslSession.getPeerPrincipal());
 //            }
 
             Log.i(TAG, host + " " + port);
             try {
-                OutputStream os = socket.getOutputStream();
+                OutputStream os = sslSocket.getOutputStream();
                 OutputStreamWriter out = new OutputStreamWriter(os, "UTF-8");
-                InputStream is = socket.getInputStream();
+                InputStream is = sslSocket.getInputStream();
                 BufferedReader in = new BufferedReader(new InputStreamReader(is));
                 electrumRequest.setID(1);
 
@@ -140,8 +140,6 @@ public class ServerApiElectrum {
                 out.flush();
 
                 electrumRequest.answerData = in.readLine();
-//                electrumRequest.host = host;
-//                electrumRequest.port = port;
                 if (electrumRequest.answerData != null) {
                     Log.i(TAG, ">> " + electrumRequest.answerData);
                 } else {
@@ -153,20 +151,19 @@ public class ServerApiElectrum {
                 e.printStackTrace();
                 Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " ConnectException " + e.getMessage());
             } finally {
-//                Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " CLOSE");
-                socket.close();
+                Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " CLOSE");
+                sslSocket.close();
             }
 
-            socket.close();
         } catch (IOException e) {
             e.printStackTrace();
+            Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " IOException " + e.getMessage());
         }
 
         return result;
     }
 
     private List<ElectrumRequest> doElectrumRequest(TangemCard card, ElectrumRequest electrumRequest) {
-
         if (card.getBlockchain() == Blockchain.BitcoinTestNet) {
             BitcoinNodeTestNet bitcoinNodeTestNet = BitcoinNodeTestNet.values()[new Random().nextInt(BitcoinNodeTestNet.values().length)];
             this.host = bitcoinNodeTestNet.getHost();
@@ -203,10 +200,10 @@ public class ServerApiElectrum {
                 electrumRequest.host = host;
                 electrumRequest.port = port;
                 if (electrumRequest.answerData != null) {
-//                        Log.i(TAG, ">> " + electrumRequest.answerData);
+                    Log.i(TAG, ">> " + electrumRequest.answerData);
                 } else {
                     electrumRequest.error = "No answer from server";
-//                        Log.i(TAG, ">> <NULL>");
+                    Log.i(TAG, ">> <NULL>");
                 }
 
             } catch (ConnectException e) {
@@ -220,7 +217,7 @@ public class ServerApiElectrum {
         } catch (IOException e) {
             e.printStackTrace();
             electrumRequestDataListener.onFail(e.getMessage());
-            Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " Exception " + e.getMessage());
+            Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " IOException " + e.getMessage());
         }
         return result;
     }
