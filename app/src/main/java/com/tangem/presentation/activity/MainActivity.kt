@@ -63,13 +63,13 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
         fun commonInit(context: Context) {
             if (PINStorage.needInit())
-                PINStorage.Init(context)
+                PINStorage.init(context)
 
             if (Issuer.needInit())
-                Issuer.Init(context)
+                Issuer.init(context)
 
             if (FW.needInit())
-                FW.Init(context)
+                FW.init(context)
         }
     }
 
