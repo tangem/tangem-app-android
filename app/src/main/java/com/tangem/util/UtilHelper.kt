@@ -41,7 +41,7 @@ object UtilHelper {
             val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val netInfo: NetworkInfo?
             netInfo = cm.activeNetworkInfo
-            netInfo != null && netInfo.isConnectedOrConnecting
+            netInfo != null && netInfo.isConnected
         } catch (e: NullPointerException) {
             e.printStackTrace()
             false
