@@ -54,7 +54,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.5'
     implementation 'com.madgag.spongycastle:core:1.56.0.0'
     implementation 'com.madgag.spongycastle:prov:1.56.0.0'
-    implementation 'com.scottyab:rootbeer-lib:0.0.6'
+    implementation 'com.scottyab:rootbeer-lib:0.0.7'
     implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
     implementation 'com.squareup.retrofit2:retrofit:2.4.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:3.10.0'
