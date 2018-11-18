@@ -6,10 +6,16 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import com.tangem.App
+import com.tangem.di.Navigator
 import com.tangem.presentation.fragment.LoadedWallet
 import com.tangem.wallet.R
+import javax.inject.Inject
 
 class LoadedWalletActivity : AppCompatActivity() {
+
+    @Inject
+    lateinit var navigator: Navigator
 
     companion object {
         fun callingIntent(context: Context, lastTag: Tag, cardInfo: Bundle): Intent {
@@ -23,6 +29,8 @@ class LoadedWalletActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_loaded_wallet)
+
+        App.getNavigatorComponent().inject(this)
 
         MainActivity.commonInit(applicationContext)
 
