@@ -21,7 +21,7 @@ public class PINStorage {
     private static String mSavedPIN, mUserPIN, mLastUsedPIN, mEncryptedPIN, mPIN2;
     private static SharedPreferences sharedPreferences = null;
 
-    public static void Init(Context context) {
+    public static void init(Context context) {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         mSavedPIN = sharedPreferences.getString("SavedPIN", null);
         mUserPIN = null;
