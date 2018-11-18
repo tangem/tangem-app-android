@@ -28,6 +28,7 @@ import com.tangem.data.network.ServerApiInfura
 import com.tangem.data.network.model.CardVerifyAndGetInfo
 import com.tangem.data.network.model.InfuraResponse
 import com.tangem.data.nfc.VerifyCardTask
+import com.tangem.di.Navigator
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
@@ -49,12 +50,13 @@ import org.json.JSONException
 import java.io.InputStream
 import java.math.BigInteger
 import java.util.*
+import javax.inject.Inject
 
 class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, SharedPreferences.OnSharedPreferenceChangeListener {
     companion object {
         val TAG: String = LoadedWallet::class.java.simpleName
         private const val REQUEST_CODE_SEND_PAYMENT = 1
-        private const val REQUEST_CODE_VERIFY_CARD = 4
+        const val REQUEST_CODE_VERIFY_CARD = 4
         private const val REQUEST_CODE_PURGE = 2
         private const val REQUEST_CODE_REQUEST_PIN2_FOR_PURGE = 3
         private const val REQUEST_CODE_ENTER_NEW_PIN = 5
@@ -191,13 +193,12 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         btnDetails.setOnClickListener {
             if (cardProtocol != null)
                 openVerifyCard(cardProtocol!!)
+//                (activity as LoadedWalletActivity).navigator.showVerifyCard(activity, ctx.card)
+
             else
                 showSingleToast(R.string.need_attach_card_again)
         }
-        btnScanAgain.setOnClickListener {
-            val intent = Intent(activity, MainActivity::class.java)
-            startActivity(intent)
-        }
+        btnScanAgain.setOnClickListener { (activity as LoadedWalletActivity).navigator.showMain(activity) }
         btnExtract.setOnClickListener {
             val engine = CoinEngineFactory.create(ctx)
             if (UtilHelper.isOnline(activity)) {
@@ -625,9 +626,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
             REQUEST_CODE_SEND_PAYMENT, REQUEST_CODE_RECEIVE_PAYMENT -> {
                 if (resultCode == Activity.RESULT_OK) {
-                    ctx.coinData!!.clearInfo()
-                    srl!!.postDelayed({ this.refresh() }, 5000)
-                    srl!!.isRefreshing = true
+                    ctx.coinData?.clearInfo()
+                    srl?.postDelayed({ this.refresh() }, 5000)
+                    srl?.isRefreshing = true
                     updateViews()
                 }
 
@@ -807,19 +808,19 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         requestVerifyAndGetInfo()
 
-            // Bitcoin
-            if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet) {
-                ctx.coinData.setIsBalanceEqual(true)
+        // Bitcoin
+        if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet) {
+            ctx.coinData.setIsBalanceEqual(true)
 
             requestElectrum(ElectrumRequest.checkBalance(ctx.card!!.wallet))
             requestElectrum(ElectrumRequest.listUnspent(ctx.card!!.wallet))
             requestRateInfo("bitcoin")
         }
 
-            // BitcoinCash
-            else if (ctx.blockchain == Blockchain.BitcoinCash) {
-                ctx.coinData.setIsBalanceEqual(true)
-                val engine = CoinEngineFactory.create(ctx)
+        // BitcoinCash
+        else if (ctx.blockchain == Blockchain.BitcoinCash) {
+            ctx.coinData.setIsBalanceEqual(true)
+            val engine = CoinEngineFactory.create(ctx)
 
             requestElectrum(ElectrumRequest.checkBalance((engine as BtcCashEngine).convertToLegacyAddress(ctx.card!!.wallet)))
             requestElectrum(ElectrumRequest.listUnspent((engine as BtcCashEngine).convertToLegacyAddress(ctx.card!!.wallet)))
@@ -843,11 +844,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     private fun requestElectrum(electrumRequest: ElectrumRequest) {
-        if (UtilHelper.isOnline(activity!!)) {
+        if (UtilHelper.isOnline(activity)) {
             requestCounter++
             serverApiElectrum.electrumRequestData(ctx.card, electrumRequest)
         } else {
-            Toast.makeText(activity!!, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
             srl?.isRefreshing = false
         }
     }
@@ -902,11 +903,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //                Log.v(TAG, "UID: $sUID")
             }
 
-            if (lastReadSuccess) {
+            if (lastReadSuccess)
                 isoDep.timeout = 1000
-            } else {
+            else
                 isoDep.timeout = 65000
-            }
 
             verifyCardTask = VerifyCardTask(activity, ctx.card, nfcManager, isoDep, this)
             verifyCardTask!!.start()
