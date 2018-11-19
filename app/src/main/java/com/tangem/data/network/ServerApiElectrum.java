@@ -112,6 +112,8 @@ public class ServerApiElectrum {
         this.host = bitcoinNodeSsl.getHost();
         this.port = bitcoinNodeSsl.getPort();
 
+//        System.setProperty("javax.net.debug", "ssl,handshake");
+
         SocketFactory sf = SSLSocketFactory.getDefault();
         SSLSocket sslSocket;
 
@@ -124,9 +126,9 @@ public class ServerApiElectrum {
             HostnameVerifier hv = HttpsURLConnection.getDefaultHostnameVerifier();
             SSLSession sslSession = sslSocket.getSession();
 
-//            if (!hv.verify(host, sslSession)) {
-//                throw new SSLHandshakeException("Expected " + host + " , found " + sslSession.getPeerPrincipal());
-//            }
+            if (!hv.verify(host, sslSession)) {
+                throw new SSLHandshakeException("Expected " + host + " , found " + sslSession.getPeerPrincipal());
+            }
 
             Log.i(TAG, host + " " + port);
             try {
