@@ -3,12 +3,11 @@ package com.tangem.data.network;
 import android.util.Log;
 
 import com.tangem.App;
-import com.tangem.domain.wallet.btc.BitcoinNode;
-import com.tangem.domain.wallet.btc.BitcoinNodeSsl;
-import com.tangem.domain.wallet.btc.BitcoinNodeTestNet;
-import com.tangem.domain.wallet.bch.BitcoinCashNode;
 import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.TangemCard;
+import com.tangem.domain.wallet.bch.BitcoinCashNode;
+import com.tangem.domain.wallet.btc.BitcoinNode;
+import com.tangem.domain.wallet.btc.BitcoinNodeTestNet;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -29,12 +28,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLHandshakeException;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
@@ -49,12 +45,12 @@ public class ServerApiElectrum {
     private static String TAG = ServerApiElectrum.class.getSimpleName();
 
     /**
-     * TCP
-     * Used in BTC
+     * TCP, SSL
+     * Used in BTC, BCH
      */
+    private ElectrumRequestDataListener electrumRequestDataListener;
     private String host;
     private int port;
-    private ElectrumRequestDataListener electrumRequestDataListener;
 
     public interface ElectrumRequestDataListener {
         void onSuccess(ElectrumRequest electrumRequest);
@@ -68,8 +64,7 @@ public class ServerApiElectrum {
 
     public void electrumRequestData(TangemCard card, ElectrumRequest electrumRequest) {
         Observable<ElectrumRequest> checkElectrumDataObserver = Observable.just(electrumRequest)
-//                .doOnNext(electrumRequest1 -> doElectrumRequestTcp(card, electrumRequest))
-                .doOnNext(electrumRequest1 -> doElectrumRequestSsl(card, electrumRequest))
+                .doOnNext(electrumRequest1 -> doElectrumRequest(card, electrumRequest))
 
                 .flatMap(electrumRequest1 -> {
                     if (electrumRequest1.answerData == null) {
@@ -111,21 +106,52 @@ public class ServerApiElectrum {
         });
     }
 
-    private List<ElectrumRequest> doElectrumRequestTcp(TangemCard card, ElectrumRequest electrumRequest) {
+    private List<ElectrumRequest> doElectrumRequest(TangemCard card, ElectrumRequest electrumRequest) {
+        String host;
+        int port;
+        String proto;
         if (card.getBlockchain() == Blockchain.BitcoinTestNet) {
             BitcoinNodeTestNet bitcoinNodeTestNet = BitcoinNodeTestNet.values()[new Random().nextInt(BitcoinNodeTestNet.values().length)];
-            this.host = bitcoinNodeTestNet.getHost();
-            this.port = bitcoinNodeTestNet.getPort();
+            host = bitcoinNodeTestNet.getHost();
+            port = bitcoinNodeTestNet.getPort();
+
+            this.host = host;
+            this.port = port;
+
+            return doElectrumRequestTcp(electrumRequest, host, port);
+
         } else if (card.getBlockchain() == Blockchain.BitcoinCash) {
             BitcoinCashNode bitcoinCashNode = BitcoinCashNode.values()[new Random().nextInt(BitcoinCashNode.values().length)];
-            this.host = bitcoinCashNode.getHost();
-            this.port = bitcoinCashNode.getPort();
+            host = bitcoinCashNode.getHost();
+            port = bitcoinCashNode.getPort();
+
+            this.host = host;
+            this.port = port;
+
+            return doElectrumRequestTcp(electrumRequest, host, port);
+
         } else if (card.getBlockchain() == Blockchain.Bitcoin) {
             BitcoinNode bitcoinNode = BitcoinNode.values()[new Random().nextInt(BitcoinNode.values().length)];
-            this.host = bitcoinNode.getHost();
-            this.port = bitcoinNode.getPort();
-        }
+            host = bitcoinNode.getHost();
+            port = bitcoinNode.getPort();
+            proto = bitcoinNode.getProto();
 
+            if (proto.equals("tcp")) {
+                this.host = host;
+                this.port = port;
+
+                return doElectrumRequestTcp(electrumRequest, host, port);
+            } else {
+                this.host = host;
+                this.port = port;
+
+                return doElectrumRequestSsl(electrumRequest, host, port);
+            }
+        }
+        return null;
+    }
+
+    private List<ElectrumRequest> doElectrumRequestTcp(ElectrumRequest electrumRequest, String host, int port) {
         List<ElectrumRequest> result = new ArrayList<>();
         Collections.addAll(result, electrumRequest);
 
@@ -170,15 +196,10 @@ public class ServerApiElectrum {
         return result;
     }
 
-    private List<ElectrumRequest> doElectrumRequestSsl(TangemCard card, ElectrumRequest electrumRequest) {
-        BitcoinNodeSsl bitcoinNodeSsl = BitcoinNodeSsl.values()[new Random().nextInt(BitcoinNodeSsl.values().length)];
-
-        this.host = bitcoinNodeSsl.getHost();
-        this.port = bitcoinNodeSsl.getPort();
-
+    private List<ElectrumRequest> doElectrumRequestSsl(ElectrumRequest electrumRequest, String host, int port) {
         try {
             // create a trust manager that does not validate certificate chains
-            TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+            TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
                 @Override
                 public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
 
@@ -193,8 +214,7 @@ public class ServerApiElectrum {
                 public X509Certificate[] getAcceptedIssuers() {
                     return new X509Certificate[0];
                 }
-
-            } };
+            }};
 
             // install the all-trusting trust manager
             SSLContext sc = SSLContext.getInstance("SSL");
@@ -203,11 +223,7 @@ public class ServerApiElectrum {
             HttpsURLConnection.setDefaultSSLSocketFactory(sf);
 
             // create all-trusting host name verifier
-            HostnameVerifier allHostsValid = new HostnameVerifier() {
-                public boolean verify(String hostname, SSLSession session) {
-                    return true;
-                }
-            };
+            HostnameVerifier allHostsValid = (hostname, session) -> true;
 
             // install the all-trusting host verifier
             HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
@@ -219,7 +235,6 @@ public class ServerApiElectrum {
 
             try {
                 sslSocket = (SSLSocket) sf.createSocket(host, port);
-
                 Log.i(TAG, host + " " + port);
                 try {
                     OutputStream os = sslSocket.getOutputStream();
@@ -259,65 +274,6 @@ public class ServerApiElectrum {
         }
 
         return null;
-    }
-
-    private List<ElectrumRequest> testSslSocket(TangemCard card, ElectrumRequest electrumRequest) {
-        BitcoinNodeSsl bitcoinNodeSsl = BitcoinNodeSsl.values()[new Random().nextInt(BitcoinNodeSsl.values().length)];
-
-        this.host = bitcoinNodeSsl.getHost();
-        this.port = bitcoinNodeSsl.getPort();
-
-//        System.setProperty("javax.net.debug", "ssl,handshake");
-
-        SocketFactory sf = SSLSocketFactory.getDefault();
-        SSLSocket sslSocket;
-
-        List<ElectrumRequest> result = new ArrayList<>();
-        Collections.addAll(result, electrumRequest);
-
-        try {
-            sslSocket = (SSLSocket) sf.createSocket(host, port);
-
-            HostnameVerifier hv = HttpsURLConnection.getDefaultHostnameVerifier();
-            SSLSession sslSession = sslSocket.getSession();
-
-            if (!hv.verify(host, sslSession)) {
-                throw new SSLHandshakeException("Expected " + host + " , found " + sslSession.getPeerPrincipal());
-            }
-
-            Log.i(TAG, host + " " + port);
-            try {
-                OutputStream os = sslSocket.getOutputStream();
-                OutputStreamWriter out = new OutputStreamWriter(os, "UTF-8");
-                InputStream is = sslSocket.getInputStream();
-                BufferedReader in = new BufferedReader(new InputStreamReader(is));
-                electrumRequest.setID(1);
-
-                out.write(electrumRequest.getAsString() + "\n");
-                out.flush();
-
-                electrumRequest.answerData = in.readLine();
-                if (electrumRequest.answerData != null) {
-                    Log.i(TAG, ">> " + electrumRequest.answerData);
-                } else {
-                    electrumRequest.error = "No answer from server";
-                    Log.i(TAG, ">> <NULL>");
-                }
-
-            } catch (ConnectException e) {
-                e.printStackTrace();
-                Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " ConnectException " + e.getMessage());
-            } finally {
-                Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " CLOSE");
-                sslSocket.close();
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " IOException " + e.getMessage());
-        }
-
-        return result;
     }
 
     public String getValidationNodeDescription() {
