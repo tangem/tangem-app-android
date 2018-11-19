@@ -18,19 +18,5 @@ enum class BitcoinNode(val host: String, val port: Int, val proto: String) {
 //	n14("electrum.eff.ro", 50002, "ssl"),
 //	n15("vps.hsmiths.com", 50002, "ssl"),
 
-//	n16("VPS.hsmiths.com", 50002, "ssl"),
-//	n17("agapc7dhcqfjqpjb.onion", 50002, "ssl"),
-//	n18("alviss.coinjoined.com", 50002, "ssl"),
-//	n19("arihancckjge66iv.onion", 50002, "ssl"),
-//	n20("aspinall.io", 50002, "ssl"),
-//	n21("bauerjda5hnedjam.onion", 50002, "ssl"),
-//	n22("bauerjhejlv6di7s.onion", 50002, "ssl"),
-//	n23("bauerjhejlv6di7s.onion", 50002, "ssl"),
-//	n24("btc.asis.io", 50002, "ssl"),
-//	n25("btc.cihar.com", 50002, "ssl"),
-//	n26("btc.ex.laodc.com", 443, "ssl"),
-//	n27("btc.gravitech.net", 50002, "ssl"),
-//	n28("btc.pr0xima.de", 50002, "ssl"),
-//	n29("btc.smsys.me", 995, "ssl"),
 
 }
