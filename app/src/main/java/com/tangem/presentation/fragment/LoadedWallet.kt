@@ -28,15 +28,14 @@ import com.tangem.data.network.ServerApiInfura
 import com.tangem.data.network.model.CardVerifyAndGetInfo
 import com.tangem.data.network.model.InfuraResponse
 import com.tangem.data.nfc.VerifyCardTask
-import com.tangem.di.Navigator
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
+import com.tangem.domain.wallet.bch.BtcCashEngine
 import com.tangem.domain.wallet.btc.BtcData
 import com.tangem.domain.wallet.eth.EthData
 import com.tangem.domain.wallet.token.TokenData
 import com.tangem.domain.wallet.token.TokenEngine
-import com.tangem.domain.wallet.bch.BtcCashEngine
 import com.tangem.presentation.activity.*
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.PINSwapWarningDialog
@@ -50,7 +49,6 @@ import org.json.JSONException
 import java.io.InputStream
 import java.math.BigInteger
 import java.util.*
-import javax.inject.Inject
 
 class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, SharedPreferences.OnSharedPreferenceChangeListener {
     companion object {
@@ -762,19 +760,20 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
 
         val engine = CoinEngineFactory.create(ctx)
-        if (engine!!.hasBalanceInfo() || ctx.card!!.offlineBalance == null) {
-            val html = Html.fromHtml(engine.balanceHTML)
-            tvBalance.text = html
-            // TODO???
-            tvBalanceEquivalent.text = engine.balanceEquivalent
-        } else {
-            // TODO
-            val html = Html.fromHtml(engine.offlineBalanceHTML)
-            tvBalance.text = html
+        when {
+            engine!!.hasBalanceInfo() -> {
+                val html = Html.fromHtml(engine.balanceHTML)
+                tvBalance.text = html
+                tvBalanceEquivalent.text = engine.balanceEquivalent
+            }
+            ctx.card!!.offlineBalance != null -> {
+                val html = Html.fromHtml(engine.offlineBalanceHTML)
+                tvBalance.text = html
+            }
+            else -> tvBalance.text = getString(R.string.no_data_string)
         }
 
         tvWallet.text = ctx.card!!.wallet
-//            tvBlockchain.text = card!!.blockchainName
 
         if (ctx.card!!.tokenSymbol.length > 1) {
             val html = Html.fromHtml(ctx.card!!.blockchainName)
