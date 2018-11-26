@@ -105,9 +105,9 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
     }
 
     override fun onReadStart(cardProtocol: CardProtocol) {
-        progressBar!!.post {
-            progressBar!!.visibility = View.VISIBLE
-            progressBar!!.progress = 5
+        progressBar?.post {
+            progressBar?.visibility = View.VISIBLE
+            progressBar?.progress = 5
         }
     }
 
@@ -149,7 +149,7 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
                 else -> progressBar!!.post {
                     if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported) {
                         if (!NoExtendedLengthSupportDialog.allReadyShowed) {
-                            NoExtendedLengthSupportDialog().show(fragmentManager, NoExtendedLengthSupportDialog.TAG)
+                            NoExtendedLengthSupportDialog().show(supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
                         }
                     } else {
                         Toast.makeText(baseContext, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show()
