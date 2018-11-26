@@ -3,9 +3,9 @@ package com.tangem.presentation.dialog;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
@@ -20,6 +20,8 @@ import java.util.TimerTask;
  * Created by dvol on 06.03.2018.
  */
 public class WaitSecurityDelayDialog extends DialogFragment {
+    private static final String TAG = WaitSecurityDelayDialog.class.getSimpleName();
+
     private ProgressBar progressBar;
     private int msTimeout = 60000, msProgress = 0;
     private Timer timer;
@@ -35,7 +37,7 @@ public class WaitSecurityDelayDialog extends DialogFragment {
 
         LayoutInflater inflater = getActivity().getLayoutInflater();
 
-        // Inflate and set the layout for the dialog
+        // Inflate and set t he layout for the dialog
         // Pass null as the parent view because its going in the dialog layout
         View v = inflater.inflate(R.layout.dialog_wait_pin2, null);
 
@@ -117,7 +119,8 @@ public class WaitSecurityDelayDialog extends DialogFragment {
                     instance = new WaitSecurityDelayDialog();
                     instance.setup(timeout, DelayBeforeShowDialog);
                     instance.setCancelable(false);
-                    instance.show(activity.getFragmentManager(), "WaitSecurityDelayDialog");
+                    if (instance.getFragmentManager() != null)
+                        instance.show(instance.getFragmentManager(), TAG);
                 }
             }, DelayBeforeShowDialog);
         });
@@ -152,11 +155,11 @@ public class WaitSecurityDelayDialog extends DialogFragment {
                     // 1000ms - card delay notification interval
                     instance.setup(msec + 1000, 1000);
                     instance.setCancelable(false);
-                    instance.show(activity.getFragmentManager(), "WaitSecurityDelayDialog");
+                    if (instance.getFragmentManager() != null)
+                        instance.show(instance.getFragmentManager(), TAG);
                 }
-            } else {
+            } else
                 instance.setRemainingTimeout(msec);
-            }
         });
     }
 
