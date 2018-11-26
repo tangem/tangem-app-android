@@ -54,7 +54,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
         super.onCreate(savedInstanceState)
         nfcManager = NfcManager(activity, this)
 
-        ctx = TangemContext.loadFromBundle(activity, activity!!.intent.extras)
+        ctx = TangemContext.loadFromBundle(activity, activity?.intent?.extras)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -73,8 +73,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
         btnOk.setOnClickListener {
             val data = prepareResultIntent()
             data.putExtra("modification", "update")
-            if (activity != null)
-                activity!!.finish()
+            activity?.finish()
         }
     }
 
@@ -142,7 +141,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 else
                     bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_use_default))
                 pinSwapWarningDialog.arguments = bundle
-                pinSwapWarningDialog.show(activity!!.fragmentManager, PINSwapWarningDialog.TAG)
+                pinSwapWarningDialog.show(activity?.supportFragmentManager, PINSwapWarningDialog.TAG)
             }
 
             REQUEST_CODE_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
@@ -279,8 +278,8 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
             tvIssuer.text = ctx.card!!.issuerDescription
             tvCardRegistredDate.text = ctx.card!!.personalizationDateTimeDescription
-                val html = Html.fromHtml(ctx.card!!.blockchainName)
-                tvBlockchain.text = html
+            val html = Html.fromHtml(ctx.card!!.blockchainName)
+            tvBlockchain.text = html
 
             tvValidationNode.text = ctx.coinData!!.validationNodeDescription
 
@@ -467,7 +466,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
     private fun doPurge() {
         requestPIN2Count = 0
-        val engine=CoinEngineFactory.create(ctx)
+        val engine = CoinEngineFactory.create(ctx)
         if (!engine!!.hasBalanceInfo()) {
             return
         } else if (engine.isBalanceNotZero) {
