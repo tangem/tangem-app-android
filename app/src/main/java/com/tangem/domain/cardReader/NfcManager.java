@@ -14,7 +14,7 @@ import android.nfc.tech.IsoDep;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
-import android.util.Log;
+import android.support.v4.app.FragmentActivity;
 
 import com.tangem.presentation.dialog.NfcEnableDialog;
 
@@ -26,36 +26,34 @@ public class NfcManager {
     // reader mode flags: listen for type A (not B), skipping ndef check
     private static final int READER_FLAGS = NfcAdapter.FLAG_READER_NFC_A | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK | NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS;
 
-    private NfcAdapter mNfcAdapter;
+    private NfcAdapter nfcAdapter;
     private NfcEnableDialog mEnableNfcDialog;
-    private Activity mActivity;
+    private FragmentActivity activity;
     private NfcAdapter.ReaderCallback mReaderCallback;
 
     private boolean broadcomWorkaround = false;
     private static final int DELAY_PRESENCE = 1500;
 
 
-    public NfcManager(Activity activity, NfcAdapter.ReaderCallback readerCallback) {
-        mActivity = activity;
+    public NfcManager(FragmentActivity activity, NfcAdapter.ReaderCallback readerCallback) {
+        this.activity = activity;
         mReaderCallback = readerCallback;
-        mNfcAdapter = NfcAdapter.getDefaultAdapter(activity);
+        nfcAdapter = NfcAdapter.getDefaultAdapter(activity);
     }
 
     public void onResume() {
         // register broadcast receiver
         IntentFilter filter = new IntentFilter(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED);
-        mActivity.registerReceiver(mBroadcastReceiver, filter);
+        activity.registerReceiver(mBroadcastReceiver, filter);
 
-        if (mNfcAdapter == null || !mNfcAdapter.isEnabled()) {
+        if (nfcAdapter == null || !nfcAdapter.isEnabled())
             showNFCEnableDialog();
-
-        } else {
+        else
             enableReaderMode();
-        }
     }
 
     public void onPause() {
-        mActivity.unregisterReceiver(mBroadcastReceiver);
+        activity.unregisterReceiver(mBroadcastReceiver);
         disableReaderMode();
     }
 
@@ -67,7 +65,7 @@ public class NfcManager {
 
     public void ignoreTag(Tag tag) throws IOException {
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-//            mNfcAdapter.ignore(tag, 500, null, null);
+//            nfcAdapter.ignore(tag, 500, null, null);
 //        }else{
         IsoDep isoDep = IsoDep.get(tag);
         if (isoDep != null) {
@@ -86,10 +84,10 @@ public class NfcManager {
 //        }
 //        if (errorCount >= 3) {
 //            disableReaderMode();
-//            mNfcAdapter = null;
-////            Toast.makeText(mActivity,"NFC restarted!",Toast.LENGTH_SHORT).show();
-//            mActivity.runOnUiThread(() -> {
-//                mNfcAdapter = NfcAdapter.getDefaultAdapter(mActivity);
+//            nfcAdapter = null;
+////            Toast.makeText(activity,"NFC restarted!",Toast.LENGTH_SHORT).show();
+//            activity.runOnUiThread(() -> {
+//                nfcAdapter = NfcAdapter.getDefaultAdapter(activity);
 //                enableReaderMode();
 //            });
 //        }
@@ -97,7 +95,7 @@ public class NfcManager {
 
     private void showNFCEnableDialog() {
         mEnableNfcDialog = new NfcEnableDialog();
-        mEnableNfcDialog.show(mActivity.getFragmentManager(), NfcEnableDialog.Companion.getTAG());
+        mEnableNfcDialog.show(activity.getSupportFragmentManager(), NfcEnableDialog.Companion.getTAG());
     }
 
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
@@ -110,7 +108,7 @@ public class NfcManager {
             if (action.equals(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED)) {
                 int state = intent.getIntExtra(NfcAdapter.EXTRA_ADAPTER_STATE, NfcAdapter.STATE_ON);
                 if (state == NfcAdapter.STATE_ON || state == NfcAdapter.STATE_TURNING_ON) {
-                    Log.d(TAG, "state: " + state + " , dialog: " + mEnableNfcDialog);
+//                    Log.d(TAG, "state: " + state + " , dialog: " + mEnableNfcDialog);
                     if (mEnableNfcDialog != null) {
                         mEnableNfcDialog.dismiss();
                     }
@@ -136,13 +134,13 @@ public class NfcManager {
              */
             options.putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, DELAY_PRESENCE);
         }
-        mNfcAdapter.enableReaderMode(mActivity, mReaderCallback, READER_FLAGS, options);
+        nfcAdapter.enableReaderMode(activity, mReaderCallback, READER_FLAGS, options);
     }
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     private void disableReaderMode() {
-        if (mNfcAdapter != null) {
-            mNfcAdapter.disableReaderMode(mActivity);
+        if (nfcAdapter != null) {
+            nfcAdapter.disableReaderMode(activity);
         }
     }
 
@@ -151,8 +149,7 @@ public class NfcManager {
             Manifest.permission.NFC
     };
 
-    //Checks if the app has NFC permission
-    //If the app does not has permission then the user will be prompted to grant permissions
+    // checks if the app has NFC permission if the app does not has permission then the user will be prompted to grant permissions
     public static void verifyPermissions(Activity activity) {
         // Check if we have write permission
         int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.NFC);
