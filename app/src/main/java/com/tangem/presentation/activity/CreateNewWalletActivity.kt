@@ -149,7 +149,7 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                     progressBar!!.post {
                         if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported) {
                             if (!NoExtendedLengthSupportDialog.allReadyShowed) {
-                                NoExtendedLengthSupportDialog().show(fragmentManager, NoExtendedLengthSupportDialog.TAG)
+                                NoExtendedLengthSupportDialog().show(supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
                             }
                         } else {
                             Toast.makeText(baseContext, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show()
