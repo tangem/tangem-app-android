@@ -200,7 +200,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                         if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported) {
                             if (!NoExtendedLengthSupportDialog.allReadyShowed) {
                                 NoExtendedLengthSupportDialog.message = getText(R.string.the_nfc_adapter_length_apdu).toString() + "\n" + getText(R.string.the_nfc_adapter_length_apdu_advice).toString()
-                                NoExtendedLengthSupportDialog().show(fragmentManager, NoExtendedLengthSupportDialog.TAG)
+                                NoExtendedLengthSupportDialog().show(supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
                             }
                         } else {
                             Toast.makeText(baseContext, R.string.try_to_scan_again, Toast.LENGTH_LONG).show()
