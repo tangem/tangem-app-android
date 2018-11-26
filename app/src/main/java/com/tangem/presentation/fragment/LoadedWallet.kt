@@ -108,7 +108,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         if (ctx.blockchain == Blockchain.Token)
             tvBalance.setSingleLine(false)
 
-        ivTangemCard.setImageBitmap(localStorage.getCardArtworkBitmap(ctx.card!!))
+        ivTangemCard.setImageBitmap(localStorage.getCardArtworkBitmap(ctx.card))
 
         btnExtract.isEnabled = false
         btnExtract.backgroundTintList = inactiveColor
@@ -117,13 +117,14 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         startVerify(lastTag)
 
-        tvWallet.text = ctx.card!!.wallet
+        tvWallet.text = ctx.card.wallet
+        tvWallet.text = ctx.card.wallet
 
         // set listeners
         srl.setOnRefreshListener { refresh() }
         btnLookup.setOnClickListener {
             val engine = CoinEngineFactory.create(ctx)
-            val browserIntent = Intent(Intent.ACTION_VIEW, engine!!.shareWalletUriExplorer)
+            val browserIntent = Intent(Intent.ACTION_VIEW, engine?.shareWalletUriExplorer)
             startActivity(browserIntent)
         }
         btnCopy.setOnClickListener { doShareWallet(false) }
@@ -737,11 +738,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
 
         if (ctx.message == null || ctx.message.isEmpty()) {
-            tvMessage!!.text = ""
-            tvMessage!!.visibility = View.GONE
+            tvMessage.text = ""
+            tvMessage.visibility = View.GONE
         } else {
-            tvMessage!!.text = ctx.message
-            tvMessage!!.visibility = View.VISIBLE
+            tvMessage.text = ctx.message
+            tvMessage.visibility = View.VISIBLE
         }
 
         if (srl!!.isRefreshing) {
@@ -821,7 +822,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val engine = CoinEngineFactory.create(ctx)
 
             requestElectrum(ElectrumRequest.checkBalance((engine as BtcCashEngine).convertToLegacyAddress(ctx.card!!.wallet)))
-            requestElectrum(ElectrumRequest.listUnspent((engine as BtcCashEngine).convertToLegacyAddress(ctx.card!!.wallet)))
+            requestElectrum(ElectrumRequest.listUnspent(engine.convertToLegacyAddress(ctx.card!!.wallet)))
             requestRateInfo("bitcoin-cash")
         }
 
@@ -892,7 +893,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val isoDep = IsoDep.get(tag) ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag!!.id
             val sUID = Util.byteArrayToHexString(uid)
-            if (ctx.card!!.uid != sUID) {
+            if (ctx.card.uid != sUID) {
 //                Log.d(TAG, "Invalid UID: $sUID")
                 nfcManager!!.ignoreTag(isoDep.tag)
                 return
@@ -906,7 +907,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 isoDep.timeout = 65000
 
             verifyCardTask = VerifyCardTask(activity, ctx.card, nfcManager, isoDep, this)
-            verifyCardTask!!.start()
+            verifyCardTask?.start()
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -955,7 +956,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         startActivityForResult(intent, REQUEST_CODE_SWAP_PIN)
     }
 
-    var showTime: Date = Date()
+    private var showTime: Date = Date()
 
     private fun showSingleToast(text: Int) {
         if (singleToast == null || !singleToast!!.view.isShown || showTime.time + 2000 < Date().time) {
