@@ -41,7 +41,6 @@
     <string name="with_balance">with balance</string>
     <string name="send_to_wallet">Send to wallet</string>
     <string name="amount">Amount</string>
-    <!--<string name="including_fee">(including fee)</string>-->
     <string name="m_btc">BTC</string>
     <string name="scan_again_to_verify_the_card">Scan again to verify the card</string>
     <string name="smart_cash_ag">Smart Cash AG</string>
