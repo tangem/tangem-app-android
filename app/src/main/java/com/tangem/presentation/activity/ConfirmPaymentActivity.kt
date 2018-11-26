@@ -416,11 +416,11 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
 
         // get first unspent
-        val outPut = unspentOutputs[0]
-        val outPutIndex = outPut.outputIndex
+//        val outPut = unspentOutputs[0]
+//        val outPutIndex = outPut.outputIndex
 
         // get prev TX id;
-        val prevTXID = rawTxList[0].txID//"f67b838d6e2c0c587f476f583843e93ff20368eaf96a798bdc25e01f53f8f5d2";
+//        val prevTXID = rawTxList[0].txID//"f67b838d6e2c0c587f476f583843e93ff20368eaf96a798bdc25e01f53f8f5d2";
 
         val fees = FormatUtil.ConvertStringToLong(outFee)
         var amount = FormatUtil.ConvertStringToLong(outAmount)
