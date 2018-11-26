@@ -28,12 +28,12 @@ class Navigator {
         context.startActivityForResult(VerifyCardActivity.callingIntent(context, card), LoadedWallet.REQUEST_CODE_VERIFY_CARD)
     }
 
-    fun showPreparePayment(context: Activity) {
-
-    }
-
-    fun showCreateNewWallet(context: Activity) {
-
-    }
+//    fun showPreparePayment(context: Activity) {
+//
+//    }
+//
+//    fun showCreateNewWallet(context: Activity) {
+//
+//    }
 
 }

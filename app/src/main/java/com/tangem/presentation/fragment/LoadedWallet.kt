@@ -2,7 +2,6 @@ package com.tangem.presentation.fragment
 
 import android.app.Activity
 import android.app.AlertDialog
-import android.app.Fragment
 import android.content.*
 import android.content.Context.CLIPBOARD_SERVICE
 import android.content.pm.PackageManager
@@ -11,6 +10,7 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
+import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.text.Html
 import android.util.Log
@@ -28,15 +28,14 @@ import com.tangem.data.network.ServerApiInfura
 import com.tangem.data.network.model.CardVerifyAndGetInfo
 import com.tangem.data.network.model.InfuraResponse
 import com.tangem.data.nfc.VerifyCardTask
-import com.tangem.di.Navigator
 import com.tangem.domain.cardReader.CardProtocol
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
+import com.tangem.domain.wallet.bch.BtcCashEngine
 import com.tangem.domain.wallet.btc.BtcData
 import com.tangem.domain.wallet.eth.EthData
 import com.tangem.domain.wallet.token.TokenData
 import com.tangem.domain.wallet.token.TokenEngine
-import com.tangem.domain.wallet.bch.BtcCashEngine
 import com.tangem.presentation.activity.*
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.PINSwapWarningDialog
@@ -50,7 +49,6 @@ import org.json.JSONException
 import java.io.InputStream
 import java.math.BigInteger
 import java.util.*
-import javax.inject.Inject
 
 class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, SharedPreferences.OnSharedPreferenceChangeListener {
     companion object {
@@ -93,11 +91,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         super.onCreate(savedInstanceState)
         nfcManager = NfcManager(activity, this)
 
-        ctx = TangemContext.loadFromBundle(activity, activity.intent.extras)
+        ctx = TangemContext.loadFromBundle(activity, activity?.intent?.extras)
 
-        lastTag = activity.intent.getParcelableExtra(MainActivity.EXTRA_LAST_DISCOVERED_TAG)
+        lastTag = activity?.intent?.getParcelableExtra(MainActivity.EXTRA_LAST_DISCOVERED_TAG)
 
-        localStorage = LocalStorage(activity)
+        localStorage = activity?.let { LocalStorage(it) }!!
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -122,7 +120,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         tvWallet.text = ctx.card!!.wallet
 
         // set listeners
-        srl!!.setOnRefreshListener { refresh() }
+        srl.setOnRefreshListener { refresh() }
         btnLookup.setOnClickListener {
             val engine = CoinEngineFactory.create(ctx)
             val browserIntent = Intent(Intent.ACTION_VIEW, engine!!.shareWalletUriExplorer)
@@ -198,10 +196,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             else
                 showSingleToast(R.string.need_attach_card_again)
         }
-        btnScanAgain.setOnClickListener { (activity as LoadedWalletActivity).navigator.showMain(activity) }
+        btnScanAgain.setOnClickListener { (activity as LoadedWalletActivity).navigator.showMain(context as Activity) }
         btnExtract.setOnClickListener {
             val engine = CoinEngineFactory.create(ctx)
-            if (UtilHelper.isOnline(activity)) {
+            if (UtilHelper.isOnline(context as Activity)) {
                 if (!engine!!.isExtractPossible)
                     showSingleToast(ctx.message)
                 else if (ctx.card!!.remainingSignatures == 0)
@@ -503,7 +501,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 // action when erase wallet
                 if (resultCode == Activity.RESULT_OK) {
                     if (activity != null)
-                        activity.finish()
+                        activity?.finish()
                 }
 
             REQUEST_CODE_ENTER_NEW_PIN -> if (resultCode == Activity.RESULT_OK) {
@@ -553,7 +551,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 else
                     bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_use_default))
                 pinSwapWarningDialog.arguments = bundle
-                pinSwapWarningDialog.show(activity.fragmentManager, PINSwapWarningDialog.TAG)
+                pinSwapWarningDialog.show(activity?.supportFragmentManager, PINSwapWarningDialog.TAG)
             }
 
             REQUEST_CODE_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
@@ -564,10 +562,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 } else
                     data.putExtra("modification", "update")
 
-                if (activity != null) {
-                    activity.setResult(Activity.RESULT_OK, data)
-                    activity.finish()
-                }
+                activity?.setResult(Activity.RESULT_OK, data)
+                activity?.finish()
+
             } else {
                 if (data != null && data.extras != null && data.extras!!.containsKey(TangemCard.EXTRA_UID) && data.extras!!.containsKey(TangemCard.EXTRA_CARD)) {
                     val updatedCard = TangemCard(data.getStringExtra(TangemCard.EXTRA_UID))
@@ -600,10 +597,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 } else {
                     data.putExtra("modification", "update")
                 }
-                if (activity != null) {
-                    activity.setResult(Activity.RESULT_OK, data)
-                    activity.finish()
-                }
+
+                activity?.setResult(Activity.RESULT_OK, data)
+                activity?.finish()
+
             } else {
                 if (data != null && data.extras != null && data.extras!!.containsKey(TangemCard.EXTRA_UID) && data.extras!!.containsKey(TangemCard.EXTRA_CARD)) {
                     val updatedCard = TangemCard(data.getStringExtra(TangemCard.EXTRA_UID))
@@ -682,7 +679,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     lastReadSuccess = false
                     if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported)
                         if (!NoExtendedLengthSupportDialog.allReadyShowed)
-                            NoExtendedLengthSupportDialog().show(activity.fragmentManager, NoExtendedLengthSupportDialog.TAG)
+                            NoExtendedLengthSupportDialog().show(activity?.supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
                         else
                             Toast.makeText(activity, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show()
                 }
@@ -756,7 +753,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         } else {
             val validator = BalanceValidator()
             validator.Check(ctx, false)
-            tvBalanceLine1.setTextColor(ContextCompat.getColor(activity, validator.color))
+            context?.let { ContextCompat.getColor(it, validator.color) }?.let { tvBalanceLine1.setTextColor(it) }
             tvBalanceLine1.text = validator.firstLine
             tvBalanceLine2.text = validator.getSecondLine(false)
         }
@@ -765,16 +762,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         if (engine!!.hasBalanceInfo() || ctx.card!!.offlineBalance == null) {
             val html = Html.fromHtml(engine.balanceHTML)
             tvBalance.text = html
-            // TODO???
             tvBalanceEquivalent.text = engine.balanceEquivalent
         } else {
-            // TODO
             val html = Html.fromHtml(engine.offlineBalanceHTML)
             tvBalance.text = html
         }
 
         tvWallet.text = ctx.card!!.wallet
-//            tvBlockchain.text = card!!.blockchainName
 
         if (ctx.card!!.tokenSymbol.length > 1) {
             val html = Html.fromHtml(ctx.card!!.blockchainName)
@@ -844,7 +838,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     private fun requestElectrum(electrumRequest: ElectrumRequest) {
-        if (UtilHelper.isOnline(activity)) {
+        if (UtilHelper.isOnline(context as Activity)) {
             requestCounter++
             serverApiElectrum.electrumRequestData(ctx.card, electrumRequest)
         } else {
@@ -854,7 +848,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     private fun requestInfura(method: String, contract: String) {
-        if (UtilHelper.isOnline(activity)) {
+        if (UtilHelper.isOnline(context as Activity)) {
             requestCounter++
             serverApiInfura.infura(method, 67, ctx.card!!.wallet, contract, "")
         } else {
@@ -864,7 +858,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     private fun requestVerifyAndGetInfo() {
-        if (UtilHelper.isOnline(activity)) {
+        if (UtilHelper.isOnline(context as Activity)) {
             if ((ctx.card!!.isOnlineVerified == null || !ctx.card!!.isOnlineVerified)) {
                 serverApiCommon.cardVerifyAndGetInfo(ctx.card)
             }
@@ -875,7 +869,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     private fun requestRateInfo(cryptoId: String) {
-        if (UtilHelper.isOnline(activity)) {
+        if (UtilHelper.isOnline(context as Activity)) {
             serverApiCommon.rateInfoData(cryptoId)
         } else {
             Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
@@ -891,8 +885,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     private fun startVerify(tag: Tag?) {
         try {
-            val isoDep = IsoDep.get(tag)
-                    ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
+            val isoDep = IsoDep.get(tag) ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag!!.id
             val sUID = Util.byteArrayToHexString(uid)
             if (ctx.card!!.uid != sUID) {
@@ -925,26 +918,26 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             intent.putExtra(Intent.EXTRA_SUBJECT, "Wallet address")
             intent.putExtra(Intent.EXTRA_TEXT, txtShare)
 
-            val packageManager = activity.packageManager
-            val activities = packageManager.queryIntentActivities(intent, PackageManager.MATCH_ALL)
-            val isIntentSafe = activities.size > 0
+            val packageManager = activity?.packageManager
+            val activities = packageManager?.queryIntentActivities(intent, PackageManager.MATCH_ALL)
+            val isIntentSafe = activities?.size!! > 0
 
             if (isIntentSafe) {
                 // create intent to show chooser
                 val chooser = Intent.createChooser(intent, getString(R.string.share_wallet_address_with))
 
                 // verify the intent will resolve to at least one activity
-                if (intent.resolveActivity(activity.packageManager) != null) {
+                if (intent.resolveActivity(activity!!.packageManager) != null) {
                     startActivity(chooser)
                 }
             } else {
-                val clipboard = activity.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                val clipboard = activity?.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
                 clipboard.primaryClip = ClipData.newPlainText(txtShare, txtShare)
                 Toast.makeText(activity, R.string.copied_clipboard, Toast.LENGTH_LONG).show()
             }
         } else {
-            val txtShare = ctx.card!!.wallet
-            val clipboard = activity.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+            val txtShare = ctx.card.wallet
+            val clipboard = activity?.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
             clipboard.primaryClip = ClipData.newPlainText(txtShare, txtShare)
             Toast.makeText(activity, R.string.copied_clipboard, Toast.LENGTH_LONG).show()
         }
@@ -979,4 +972,5 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             showTime = Date()
         }
     }
+
 }
