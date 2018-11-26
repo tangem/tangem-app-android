@@ -759,13 +759,17 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
 
         val engine = CoinEngineFactory.create(ctx)
-        if (engine!!.hasBalanceInfo() || ctx.card!!.offlineBalance == null) {
-            val html = Html.fromHtml(engine.balanceHTML)
-            tvBalance.text = html
-            tvBalanceEquivalent.text = engine.balanceEquivalent
-        } else {
-            val html = Html.fromHtml(engine.offlineBalanceHTML)
-            tvBalance.text = html
+        when {
+            engine!!.hasBalanceInfo() -> {
+                val html = Html.fromHtml(engine.balanceHTML)
+                tvBalance.text = html
+                tvBalanceEquivalent.text = engine.balanceEquivalent
+            }
+            ctx.card!!.offlineBalance != null -> {
+                val html = Html.fromHtml(engine.offlineBalanceHTML)
+                tvBalance.text = html
+            }
+            else -> tvBalance.text = getString(R.string.no_data_string)
         }
 
         tvWallet.text = ctx.card!!.wallet
