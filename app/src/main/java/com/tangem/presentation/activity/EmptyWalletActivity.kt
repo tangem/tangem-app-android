@@ -192,10 +192,10 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                 progressBar!!.post {
                     progressBar!!.progress = 100
                     progressBar!!.progressTintList = ColorStateList.valueOf(Color.GREEN)
-                    val intent = Intent(this@EmptyWalletActivity, VerifyCardActivity::class.java)
-                    intent.putExtra("UID", cardProtocol.card.uid)
-                    intent.putExtra("Card", cardProtocol.card.asBundle)
-                    startActivityForResult(intent, REQUEST_CODE_VERIFY_CARD)
+//                    val intent = Intent(this@EmptyWalletActivity, VerifyCardActivity::class.java)
+//                    intent.putExtra("UID", cardProtocol.card.uid)
+//                    intent.putExtra("Card", cardProtocol.card.asBundle)
+//                    startActivityForResult(intent, REQUEST_CODE_VERIFY_CARD)
                     //addCard(cardProtocol.getCard());
                 }
             } else {
