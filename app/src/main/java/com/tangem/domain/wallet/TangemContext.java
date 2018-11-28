@@ -4,9 +4,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
+import com.tangem.Constant;
+
 
 public class TangemContext {
-    public static final String EXTRA_BLOCKCHAIN_DATA = "BLOCKCHAIN_DATA";
+//    public static final String EXTRA_BLOCKCHAIN_DATA = "BLOCKCHAIN_DATA";
     private Context context;
     private TangemCard card;
     private CoinData coinData;
@@ -87,8 +89,8 @@ public class TangemContext {
         }
 
         if (tangemContext.getBlockchain() != null) {
-            if (bundle.containsKey(EXTRA_BLOCKCHAIN_DATA)) {
-                tangemContext.coinData = CoinData.fromBundle(tangemContext.getBlockchain(), bundle.getBundle(EXTRA_BLOCKCHAIN_DATA));
+            if (bundle.containsKey(Constant.EXTRA_BLOCKCHAIN_DATA)) {
+                tangemContext.coinData = CoinData.fromBundle(tangemContext.getBlockchain(), bundle.getBundle(Constant.EXTRA_BLOCKCHAIN_DATA));
             } else {
                 tangemContext.coinData = CoinEngineFactory.INSTANCE.create(tangemContext).createCoinData();
             }
@@ -107,7 +109,7 @@ public class TangemContext {
         }
 
         if (coinData != null) {
-            intent.putExtra(EXTRA_BLOCKCHAIN_DATA, coinData.asBundle());
+            intent.putExtra(Constant.EXTRA_BLOCKCHAIN_DATA, coinData.asBundle());
         }
 
         intent.putExtra("Error", error);
