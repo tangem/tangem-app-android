@@ -29,6 +29,10 @@ class Navigator {
         context.startActivityForResult(VerifyCardActivity.callingIntent(context, card, coinData, message, error), LoadedWallet.REQUEST_CODE_VERIFY_CARD)
     }
 
+    fun showPinSwap(context: Activity) {
+
+    }
+
 //    fun showPreparePayment(context: Activity) {
 //
 //    }
