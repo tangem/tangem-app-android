@@ -191,8 +191,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
         btnDetails.setOnClickListener {
             if (cardProtocol != null)
-                openVerifyCard(cardProtocol!!)
-//                (activity as LoadedWalletActivity).navigator.showVerifyCard(activity, ctx.card)
+//                openVerifyCard(cardProtocol!!)
+                (activity as LoadedWalletActivity).navigator.showVerifyCard(context as Activity, ctx.card, ctx.coinData, ctx.message, ctx.error)
 
             else
                 showSingleToast(R.string.need_attach_card_again)
@@ -882,11 +882,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
     }
 
-    private fun openVerifyCard(cardProtocol: CardProtocol) {
-        val intent = Intent(activity, VerifyCardActivity::class.java)
-        ctx.saveToIntent(intent)
-        startActivityForResult(intent, REQUEST_CODE_VERIFY_CARD)
-    }
+//    private fun openVerifyCard(cardProtocol: CardProtocol) {
+//        val intent = Intent(activity, VerifyCardActivity::class.java)
+//        ctx.saveToIntent(intent)
+//        startActivityForResult(intent, REQUEST_CODE_VERIFY_CARD)
+//
+//        ctx.coinData
+//    }
 
     private fun startVerify(tag: Tag?) {
         try {
