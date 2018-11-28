@@ -3,6 +3,7 @@ package com.tangem.di
 import android.app.Activity
 import android.nfc.Tag
 import android.os.Bundle
+import com.tangem.domain.wallet.CoinData
 import com.tangem.domain.wallet.TangemCard
 import com.tangem.presentation.activity.EmptyWalletActivity
 import com.tangem.presentation.activity.LoadedWalletActivity
@@ -24,8 +25,8 @@ class Navigator {
         context.startActivity(EmptyWalletActivity.callingIntent(context))
     }
 
-    fun showVerifyCard(context: Activity, card: TangemCard) {
-        context.startActivityForResult(VerifyCardActivity.callingIntent(context, card), LoadedWallet.REQUEST_CODE_VERIFY_CARD)
+    fun showVerifyCard(context: Activity, card: TangemCard, coinData: CoinData, message: String, error: String) {
+        context.startActivityForResult(VerifyCardActivity.callingIntent(context, card, coinData, message, error), LoadedWallet.REQUEST_CODE_VERIFY_CARD)
     }
 
 //    fun showPreparePayment(context: Activity) {
