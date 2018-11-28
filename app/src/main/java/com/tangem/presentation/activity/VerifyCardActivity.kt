@@ -6,7 +6,9 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.di.Navigator
+import com.tangem.domain.wallet.CoinData
 import com.tangem.domain.wallet.TangemCard
+import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.fragment.VerifyCard
 import com.tangem.wallet.R
 import javax.inject.Inject
@@ -17,10 +19,13 @@ class VerifyCardActivity : AppCompatActivity() {
     lateinit var navigator: Navigator
 
     companion object {
-        fun callingIntent(context: Context, card: TangemCard): Intent {
+        fun callingIntent(context: Context, card: TangemCard, coinData: CoinData, message: String, error: String): Intent {
             val intent = Intent(context, VerifyCardActivity::class.java)
             intent.putExtra(TangemCard.EXTRA_UID, card.uid)
             intent.putExtra(TangemCard.EXTRA_CARD, card.asBundle)
+            intent.putExtra(TangemContext.EXTRA_BLOCKCHAIN_DATA, coinData.asBundle())
+            intent.putExtra("Message", message)
+            intent.putExtra("Error", error)
             return intent
         }
     }
