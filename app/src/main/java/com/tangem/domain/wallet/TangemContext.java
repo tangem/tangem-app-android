@@ -6,7 +6,7 @@ import android.os.Bundle;
 
 
 public class TangemContext {
-    private static final String EXTRA_BLOCKCHAIN_DATA = "BLOCKCHAIN_DATA";
+    public static final String EXTRA_BLOCKCHAIN_DATA = "BLOCKCHAIN_DATA";
     private Context context;
     private TangemCard card;
     private CoinData coinData;
