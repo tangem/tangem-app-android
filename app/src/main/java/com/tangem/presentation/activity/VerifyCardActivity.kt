@@ -5,10 +5,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import com.tangem.App
+import com.tangem.Constant
 import com.tangem.di.Navigator
 import com.tangem.domain.wallet.CoinData
 import com.tangem.domain.wallet.TangemCard
-import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.fragment.VerifyCard
 import com.tangem.wallet.R
 import javax.inject.Inject
@@ -23,9 +23,9 @@ class VerifyCardActivity : AppCompatActivity() {
             val intent = Intent(context, VerifyCardActivity::class.java)
             intent.putExtra(TangemCard.EXTRA_UID, card.uid)
             intent.putExtra(TangemCard.EXTRA_CARD, card.asBundle)
-            intent.putExtra(TangemContext.EXTRA_BLOCKCHAIN_DATA, coinData.asBundle())
-            intent.putExtra("Message", message)
-            intent.putExtra("Error", error)
+            intent.putExtra(Constant.EXTRA_BLOCKCHAIN_DATA, coinData.asBundle())
+            intent.putExtra(Constant.MESSAGE, message)
+            intent.putExtra(Constant.ERROR, error)
             return intent
         }
     }
@@ -43,7 +43,7 @@ class VerifyCardActivity : AppCompatActivity() {
         super.onBackPressed()
         val verifyCard = supportFragmentManager.findFragmentById(R.id.verify_card_fragment) as VerifyCard
         val data = verifyCard.prepareResultIntent()
-        data.putExtra("modification", "update")
+        data.putExtra(Constant.EXTRA_MODIFICATION, "update")
         finish()
     }
 
