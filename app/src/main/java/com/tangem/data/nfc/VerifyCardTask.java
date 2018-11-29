@@ -5,7 +5,7 @@ import android.nfc.tech.IsoDep;
 import android.util.Log;
 
 import com.tangem.domain.cardReader.CardProtocol;
-import com.tangem.domain.cardReader.FW;
+import com.tangem.domain.cardReader.Firmwares;
 import com.tangem.domain.cardReader.NfcManager;
 import com.tangem.data.db.PINStorage;
 import com.tangem.domain.wallet.TangemCard;
@@ -73,7 +73,7 @@ public class VerifyCardTask extends Thread {
                         mNotifications.onReadProgress(protocol, 80);
                     }
                     if (isCancelled) return;
-                    FW.VerifyCodeRecord record=FW.selectRandomVerifyCodeBlock(mCard.getFirmwareVersion());
+                    Firmwares.VerifyCodeRecord record=Firmwares.selectRandomVerifyCodeBlock(mCard.getFirmwareVersion());
                     if (isCancelled) return;
                     if( record!=null ) {
                         byte[] returnedDigest = protocol.run_VerifyCode(record.hashAlg, record.blockIndex, record.blockCount, record.challenge);
