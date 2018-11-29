@@ -21,6 +21,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.Security;
 import java.security.Signature;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
@@ -37,6 +38,10 @@ import javax.crypto.spec.SecretKeySpec;
  */
 
 public class CardCrypto {
+    static {
+        Security.insertProviderAt(new org.spongycastle.jce.provider.BouncyCastleProvider(), 1);
+    }
+
     public static PublicKey LoadPublicKey(byte[] publicKeyArray) throws Exception {
         if( publicKeyArray==null ) throw new Exception("Public key not specified!");
         ECNamedCurveParameterSpec spec = ECNamedCurveTable.getParameterSpec("secp256k1");
