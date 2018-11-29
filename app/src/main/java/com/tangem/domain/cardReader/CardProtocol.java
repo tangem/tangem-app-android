@@ -33,7 +33,7 @@ import java.util.Calendar;
 import javax.crypto.KeyAgreement;
 
 /**
- * Main class with Tangem Card Protocol realization
+ * Implementation of the Tangem Card NFC Protocol
  * See "Tangem card and NFC protocol Technical manual" [1]
  *
  * @author dvol
@@ -54,7 +54,7 @@ public class CardProtocol {
         void onReadStart(CardProtocol cardProtocol);
 
         /**
-         * call during reading thread progress - to show progress bar and etc
+         * called during reading thread progress - to show progress bar, etc.
          *
          * @param cardProtocol - instance of protocol class
          * @param progress     - progress in percents
@@ -62,34 +62,34 @@ public class CardProtocol {
         void onReadProgress(CardProtocol cardProtocol, int progress);
 
         /**
-         * call after reading finished
+         * called after the reading is over
          *
          * @param cardProtocol - instance of protocol class
          */
         void onReadFinish(CardProtocol cardProtocol);
 
         /**
-         * call if reading thread was canceled (for example, on activity pause)
+         * called if reading thread was canceled (e.g. due to paused activity)
          */
         void onReadCancel();
 
         /**
-         * call a few times during card security delay with estimated time to delay end (approximately every second)
-         * call after command complete with msec=0
+         * called approx. every second while card security delay is pending
+         * called with msec=0 after the delay is over and command has been executed
          *
-         * @param msec - estimated time before delay finished in ms
+         * @param msec - estimated time in ms before the delay is finished
          */
         void onReadWait(int msec);
 
         /**
-         * call before send command to card
+         * called before sending command to a card
          *
-         * @param timeout - maximum time before answer received or timeout occurred
+         * @param timeout - maximum waiting time before the answer is received or timeout occurs
          */
         void onReadBeforeRequest(int timeout);
 
         /**
-         * call after receive command answer or error/timeout occurred
+         * called when the command answer is received or error/timeout occurred
          */
         void onReadAfterRequest();
     }
@@ -98,7 +98,7 @@ public class CardProtocol {
 
 
     /**
-     * Return object containing data was read from card
+     * Return object containing data received from a card
      *
      * @return TangemCard
      * @see TangemCard
@@ -146,7 +146,7 @@ public class CardProtocol {
     /**
      * Get occurred error
      *
-     * @return Exception that occurred during read the card
+     * @return Exception occurred during reading a card
      */
     public Exception getError() {
         return mError;
@@ -184,7 +184,7 @@ public class CardProtocol {
     }
 
     /**
-     * Base exception class for exceptions on read cards
+     * Base exception class for exceptions on card reading
      */
     public static class TangemException extends Exception {
         public TangemException(String message) {
@@ -193,7 +193,7 @@ public class CardProtocol {
     }
 
     /**
-     * Throws when read card with possible wrong PIN
+     * Thrown on failed attempt of reading with possible wrong PIN
      */
     public static class TangemException_InvalidPIN extends TangemException {
         public TangemException_InvalidPIN(String message) {
@@ -202,7 +202,7 @@ public class CardProtocol {
     }
 
     /**
-     * Throws when card enforce security delay
+     * Thrown when card enforces security delay
      */
     public static class TangemException_NeedPause extends TangemException {
         public TangemException_NeedPause(String message) {
@@ -212,8 +212,8 @@ public class CardProtocol {
 
 
     /**
-     * Throws if APDU commands with extended length not supported by device
-     * This mean that this action can't be executed on this device because it is not possible to transfer all needed bytes to or from cards
+     * Thrown if APDU commands with extended length is not supported by an Android NFC device. This issue can occur on some legacy devices.
+     * This exception means that this particular action can't be executed on this device because it's impossible to transfer all needed data to/from a card.
      */
     public static class TangemException_ExtendedLengthNotSupported extends TangemException {
         public TangemException_ExtendedLengthNotSupported(String message) {
@@ -229,10 +229,10 @@ public class CardProtocol {
 
     /**
      * Return ISO 14443-3 tag UID - unique card identifier
-     * The tag identifier is a low level serial number, used for anti-collision
-     * and identification.
+     * The tag identifier is a low level number used for anti-collision
+     * and identification. It has nothing to do with CID.
      * <p>
-     * Used in protocol encryption
+     * Used internally for protocol encryption
      * <p>
      * Can be used on subsequent reading to first fast check that
      * you read the same card
@@ -255,7 +255,7 @@ public class CardProtocol {
 
     /**
      * protocolKey
-     * a base used to construct the communication encryption key derived from PIN and UID
+     * a base value used to construct the communication encryption key derived from PIN and UID
      * See [1] 4.3, 4.4, 4.5
      * {@see run_OpenSession}
      */
@@ -296,7 +296,7 @@ public class CardProtocol {
      * See [1] 4.1, 4.3, 4.4, 4.5
      *
      * @param encryptionMode - mode of encryption {@link TangemCard.EncryptionMode}
-     * @throws Exception if something was wrong
+     * @throws Exception if something went wrong
      */
     private void run_OpenSession(TangemCard.EncryptionMode encryptionMode) throws Exception {
         sessionKey = null;
@@ -415,14 +415,14 @@ public class CardProtocol {
 
 
     /**
-     * Send the specified command to a card and receive an answer
-     * Previously open a session if need (if encryption is used and no opened session)
+     * Send the specified APDU command to a card and receive an answer
+     * Should have a prior opened encryption session if encryption is used
      * See [1] 4
      *
-     * @param cmdApdu          - command APDU to send
-     * @param breakOnNeedPause - specify what to do when card enforce security delay (break transfer or wait the end of delay )
-     * @return - response APDU
-     * @throws Exception if something was wrong
+     * @param cmdApdu           - APDU command to send
+     * @param breakOnNeedPause  - Specifies what to do when the card requests a security delay (interrupt transfer or wait till the end of the delay )
+     * @return                  - response APDU
+     * @throws Exception        - if something went wrong
      */
     private ResponseApdu SendAndReceive(CommandApdu cmdApdu, boolean breakOnNeedPause) throws Exception {
         if (mCard.encryptionMode != TangemCard.EncryptionMode.None) {
@@ -486,7 +486,7 @@ public class CardProtocol {
     }
 
     /**
-     * Helper for prepare APDU command - init CommandApdu object and put common TLV tags ([CID,] PIN)
+     * Helper for preparing APDU command - init CommandApdu object and add common TLV tags ([CID,] PIN)
      *
      * @param ins - instruction code {@link INS}
      * @return CommandAPDU
@@ -506,7 +506,7 @@ public class CardProtocol {
      * Run READ command and parse answer
      * {@see run_Read(boolean parseResult) }
      *
-     * @throws Exception if something was wrong
+     * @throws Exception if something went wrong
      */
     public void run_Read() throws Exception {
         run_Read(true);
@@ -515,17 +515,16 @@ public class CardProtocol {
     /**
      * Run READ command and parse answer (if specified)
      * <p>
-     * This command returns all data about the card and the wallet, including unique card number (CID) that has to be submitted while calling all other commands. Therefore,
-     * READ_CARD should always be used in the beginning of communication session between host and Tangem card
+     * This command returns all card and wallet data, including unique card number (CID) that has to be submitted when further calling all other commands. Therefore,
+     * READ_CARD should always be used in the beginning of communication session between NFC device and Tangem card
      * <p>
-     * Also if specified parseResult executing GET_ISSUER_DATA or WRITE_ISSUER_DATA depending on data in TangemCard object {@see TangemCard.getNeedWriteIssuerData()}
-     * In order to obtain card’s data, the host application should call READ_CARD command with correct PIN1 value as a parameter. The card will not respond if wrong PIN1
+     * In order to obtain card’s data, the app should call READ_CARD command with correct PIN1 value as a parameter. The card will not respond if wrong PIN1
      * has been submitted
-     * This command need only PIN value while other commands also need CID
+     * This command requires only PIN1 parameter while other commands also need CID
      * See [1] 8, 8.2
      *
-     * @param parseResult - specify parse answer or not
-     * @throws Exception if something was wrong
+     * @param parseResult - parse answer into TangemCard object or not
+     * @throws Exception if something went wrong
      */
     public void run_Read(boolean parseResult) throws Exception {
         CommandApdu rqApdu = StartPrepareCommand(INS.Read);
@@ -535,16 +534,12 @@ public class CardProtocol {
 
         if (rspApdu.isStatus(SW.PROCESS_COMPLETED)) {
 
-
             Log.i(logTag, String.format("OK: [%04X]\n%s", rspApdu.getSW1SW2(), rspApdu.getTLVs().getParsedTLVs("  ")));
-
-
             readResult = rspApdu.getTLVs();
-
             if (parseResult) {
-                // on first success reading parse information was read from card and store in TangemCard
-                // also read or write (if need update) IssuerData
+                // After first successful read, data will be parsed into TangemCard object
                 parseReadResult();
+                //TODO: move issuer data out from here
                 run_ReadWriteIssuerData();
             } else {
                 //TODO: check that card is the same
@@ -562,7 +557,7 @@ public class CardProtocol {
      * Executing GET_ISSUER_DATA or WRITE_ISSUER_DATA depending on state in TangemCard object {@see TangemCard.getNeedWriteIssuerData()}
      * See [1] 8.7
      *
-     * @throws Exception if something was wrong
+     * @throws Exception if something went wrong
      */
     public void run_ReadWriteIssuerData() throws Exception {
         TLVList tlvIssuerData;
@@ -607,7 +602,7 @@ public class CardProtocol {
     }
 
     /**
-     * A TLV list, containing answer to last READ command
+     * A TLV list containing response of the last READ command
      */
     private TLVList readResult = null;
 
@@ -621,26 +616,27 @@ public class CardProtocol {
     }
 
     /**
-     * Extract data from last READ command answer to TangemCard object
+     * Parse response of the last READ command into TangemCard object
      * See [1] 8.2, 5.3, 3.3
      *
-     * @throws TangemException - if something was wrong
+     * @throws TangemException - if something went wrong
      */
     public void parseReadResult() throws TangemException {
-        // next tags always exists in answer - TAG_Status, TAG_CID, TAG_Manufacture_ID, TAG_Health, TAG_Firmware
+        // These tags always present in the parsed response: TAG_Status, TAG_CID, TAG_Manufacture_ID, TAG_Health, TAG_Firmware
         TLV tlvStatus = readResult.getTLV(TLV.Tag.TAG_Status);
         mCard.setStatus(TangemCard.Status.fromCode(Util.byteArrayToInt(tlvStatus.Value)));
         TLV tlvCID = readResult.getTLV(TLV.Tag.TAG_CardID);
         mCard.setCID(tlvCID.Value);
         mCard.setManufacturer(Manufacturer.FindManufacturer(readResult.getTLV(TLV.Tag.TAG_Manufacture_ID).getAsString()), true);
+
+        // Support of legacy Firmware
         if (readResult.getTLV(TLV.Tag.TAG_Firmware) != null) {
-            // on very very old cards Firmware version was stored in cardData and parse later
             mCard.setFirmwareVersion(readResult.getTLV(TLV.Tag.TAG_Firmware).getAsString());
         }
         mCard.setHealth(readResult.getTLV(TLV.Tag.TAG_Health).getAsInt());
 
+        // If the card was previously personalized then parse personalized card data - card public key, blockchain data and other settings
         if (mCard.getStatus() != TangemCard.Status.NotPersonalized) {
-            // if card was personalized parse personalized card data - card public key, blockchain data and other settings
             try {
                 TLV tlvCardPubkicKey = readResult.getTLV(TLV.Tag.TAG_CardPublicKey);
                 if (tlvCardPubkicKey == null)
@@ -673,8 +669,8 @@ public class CardProtocol {
                 cd.set(year, month, day, 0, 0, 0);
                 mCard.setPersonalizationDateTime(cd.getTime());
                 try {
+                    // Support of legacy Firmware
                     if (mCard.getFirmwareVersion() == null) {
-                        // on very very old cards Firmware version was stored in cardData
                         mCard.setFirmwareVersion(tlvCardData.getTLV(TLV.Tag.TAG_Firmware).getAsString());
                     }
                 } catch (Exception e) {
@@ -685,10 +681,10 @@ public class CardProtocol {
 
                 try {
                     if (mCard.getFirmwareVersion().compareTo("1.05") < 0) {
-                        // For card before FW version 1.05 issuer have one keypair, used as both DataKey and TransactionKey, see [1] 3.3.1 and [1] 3.3.2
+                        // In FW ver 1.05, the issuer has one key pair used as both DataKey and TransactionKey, see [1] 3.3.1 and [1] 3.3.2
                         mCard.setIssuer(tlvCardData.getTLV(TLV.Tag.TAG_Issuer_ID).getAsString(), readResult.getTLV(TLV.Tag.TAG_Issuer_Transaction_PublicKey).Value);
                     } else {
-                        // started from FW version 1.05 issuer have two different keypairs - DataKey and TransactionKey, see [1] 3.3.1 and [1] 3.3.2
+                        // In newer FW versions, the issuer has two different key pairs - DataKey and TransactionKey, see [1] 3.3.1 and [1] 3.3.2
                         mCard.setIssuer(tlvCardData.getTLV(TLV.Tag.TAG_Issuer_ID).getAsString(), readResult.getTLV(TLV.Tag.TAG_Issuer_Data_PublicKey).Value);
                     }
                 } catch (Exception e) {
@@ -704,10 +700,10 @@ public class CardProtocol {
                     }
                 }
 
-                // substitutions for card, that was produced with wrong blockchain data (for example token contract was unknown)
-                // this method must be called after set issuer because substitution is verified by issuer data key
+                // Overriding of missing card data, e.g. for cards with unknown ERC20 contract data
+                // This method must be called after the issuer data is defined because newly written data is verified by issuer data key
                 try {
-                    // for known batch hardcoded, for new batches received from tangem server and stored in local storage
+                    // Hardcoded for some known batches, or, for other batches, received from Tangem server and stored in local storage
                     if (mCard.getBatch().equals("0017")) {
                         mCard.setContractAddress("0x9Eef75bA8e81340da9D8d1fd06B2f313DB88839c");
                     } else if (mCard.getBatch().equals("0019")) {
@@ -721,8 +717,6 @@ public class CardProtocol {
                     e.printStackTrace();
                 }
 
-                // this method has reflection TokenSymbol
-                // you mast call setBlockchainIDFromCard after calling setTokensXXX and make substitutions
                 mCard.setBlockchainIDFromCard(tlvCardData.getTLV(TLV.Tag.TAG_Blockchain_ID).getAsString());
 
                 try {
@@ -758,8 +752,8 @@ public class CardProtocol {
         }
 
 
+        // Parse additional parameters for Loaded cards: wallet public key, remaining signatures, etc
         if (mCard.getStatus() == TangemCard.Status.Loaded) {
-            // for card in loaded state parse additional parameters - wallet public key, remaining signatures and etc
 
             TLV tlvPublicKey = readResult.getTLV(TLV.Tag.TAG_Wallet_PublicKey);
 
@@ -797,13 +791,13 @@ public class CardProtocol {
     }
 
     /**
-     * Execute VERIFY_CARD command and verify card signature in answer
+     * VERIFY_CARD command and verify card's signature
      * By using standard challenge-response scheme, the card proves
      * possession of CARD_PRIVATE_KEY that corresponds to CARD_PUBLIC_KEY returned by READ_CARD command
      * See [1] 3.2, 8.9
      *
-     * @return TLVList with answer in case of success
-     * @throws Exception - if something was wrong
+     * @return TLVList with response in case of success
+     * @throws Exception - if something went wrong
      */
     public TLVList run_VerifyCard() throws Exception {
         if (mCard.getCardPublicKey() == null || readResult == null) {
@@ -866,13 +860,13 @@ public class CardProtocol {
     }
 
     /**
-     * Execute CREATE_WALLET command
+     * CREATE_WALLET command
      * This command will create a new wallet on the card having ‘Empty’ state. A key pair WALLET_PUBLIC_KEY / WALLET_PRIVATE_KEY is generated and securely stored in
      * the card.
      * See [1] 3.4, 8.3
      *
      * @param PIN2 - PIN2 code to confirm operation
-     * @throws Exception - if something was wrong
+     * @throws Exception - if something went wrong
      */
     public void run_CreateWallet(String PIN2) throws Exception {
         if (readResult == null) run_Read();
@@ -898,12 +892,12 @@ public class CardProtocol {
     }
 
     /**
-     * Execute CHECK_WALLET command
-     * This command proves that the card possesses WALLET_PRIVATE_KEY corresponding to WALLET_PUBLIC_KEY. Standard challenge/response scheme is used.
+     * CHECK_WALLET command without signature verification
+     * Card will sign a challenge to prove that it possesses WALLET_PRIVATE_KEY corresponding to WALLET_PUBLIC_KEY. Standard challenge/response scheme is used.
      * See [1] 3.4, 8.4
      *
      * @return TLVList from answer in case of success
-     * @throws Exception - if something was wrong
+     * @throws Exception - if something went wrong
      */
     private TLVList run_CheckWallet() throws Exception {
         CommandApdu rqApdu = StartPrepareCommand(INS.CheckWallet);
@@ -926,12 +920,13 @@ public class CardProtocol {
     }
 
     /**
-     * This function proves that the card possesses WALLET_PRIVATE_KEY corresponding to WALLET_PUBLIC_KEY. Standard challenge/response scheme is used.
-     * If no previous read was made firstly run READ command, than CHECK_WALLET command and verify signature in answer
+     * CHECK_WALLET command and verify wallet's signature
+     * Card will sign a challenge to prove that it possesses WALLET_PRIVATE_KEY corresponding to WALLET_PUBLIC_KEY. Standard challenge/response scheme is used.
+     * It will first run READ command if no reads where made before. Then execute CHECK_WALLET command and verify signature in the response.
      * Set WalletPublicKeyValid in {@link TangemCard}
      * See [1] 3.4, 8.4
      *
-     * @throws Exception - if something was wrong
+     * @throws Exception - if something went wrong
      */
     public void run_CheckWalletWithSignatureVerify() throws Exception {
         if (mCard.getCardPublicKey() == null || readResult == null) {
@@ -971,13 +966,13 @@ public class CardProtocol {
     }
 
     /**
-     * Execute PURGE_WALLET command
+     * PURGE_WALLET command
      * See [1] 3.4, 8.11
      * This command deletes all wallet data. If Is_Reusable flag is enabled during personalization, the card changes state to ‘Empty’ and a new wallet can be created by
      * CREATE_WALLET command. If Is_Reusable flag is disabled, the card switches to ‘Purged’ state. ‘Purged’ state is final, it makes the card useless.
      *
      * @param PIN2 - PIN2 code to confirm operation
-     * @throws Exception - if something was wrong
+     * @throws Exception - if something went wrong
      */
     public void run_PurgeWallet(String PIN2) throws Exception {
         CommandApdu rqApdu = StartPrepareCommand(INS.PurgeWallet);
@@ -1017,7 +1012,7 @@ public class CardProtocol {
      * @param newPin           - new value of PIN code
      * @param newPin2          - new value of PIN2 code
      * @param breakOnNeedPause - flag that specify what
-     * @throws Exception - if something was wrong
+     * @throws Exception - if something went wrong
      */
     public void run_SetPIN(String PIN2, String newPin, String newPin2, boolean breakOnNeedPause) throws Exception {
         CommandApdu rqApdu = StartPrepareCommand(INS.SwapPIN);
@@ -1049,18 +1044,15 @@ public class CardProtocol {
     }
 
     /**
-     * Try to define if default PIN2 set on card and set UseDefaultPIN2 flag on {@link TangemCard}
-     * On new card (>1.19 or >1.12 without security delay or >1.12 with smart security delay option) execute SET_PIN command with default PIN,PIN2
-     * and analyze answer
-     * On older cards do nothing
-     * If it's impossible to understand PIN2 is default or not set UseDefaultPIN2=null
-     * This function NEVER enforce security delay
+     * Verify if default PIN2 is set on the card and enable UseDefaultPIN2 flag {@link TangemCard}
+     * Works in firmware 1.12 and later, for older version UseDefaultPIN2 is always null
+     * This function NEVER triggers security delay
      *
-     * @throws Exception - if something was wrong
+     * @throws Exception - if something went wrong
      */
     public void run_CheckPIN2isDefault() throws Exception {
+        // can obtain SetPIN(to default) answer without security delay - try check if PIN2 is default with card request
         if (mCard.isFirmwareNewer("1.19") || (mCard.isFirmwareNewer("1.12") && (mCard.getPauseBeforePIN2() == 0 || mCard.useSmartSecurityDelay()))) {
-            // can obtain SetPIN(to default) answer without security delay - try check if PIN2 is default with card request
             try {
                 run_SetPIN(DefaultPIN2, mPIN, DefaultPIN2, true);
                 mCard.setUseDefaultPIN2(true);
@@ -1075,7 +1067,7 @@ public class CardProtocol {
     }
 
     /**
-     * Execute SIGN command in case of SigningMethod=0,2,4 (see {@link TangemCard.SigningMethod})
+     * SIGN command to sign hashes - SigningMethod=0,2,4 (see {@link TangemCard.SigningMethod})
      * See [1] 8.6
      * @param PIN2                - PIN2 code to confirm operation
      * @param hashes              - array of digests to sign (max 10 digest at a time)
@@ -1083,7 +1075,7 @@ public class CardProtocol {
      * @param issuerData          - new issuerData to write on card (only for SigningMethod=4, null for other)
      * @param issuer              - issuer (need only for SigningMethod=2,4)
      * @return TLVList with card answer contained wallet signatures of digests from hashes array (in case of success)
-     * @throws Exception - if something was wrong
+     * @throws Exception - if something went wrong
      */
     // TODO - change function to run_SignHashes(String PIN2, byte[][] hashes, byte[] issuerData, byte[] issuerTransactionSignature) because normally issuer signature can be obtained only by external server
     public TLVList run_SignHashes(String PIN2, byte[][] hashes, boolean UseIssuerValidation, byte[] issuerData, Issuer issuer) throws Exception {
@@ -1133,12 +1125,12 @@ public class CardProtocol {
     }
 
     /**
-     * Execute SIGN command in case of SigningMethod=1 (see {@link TangemCard.SigningMethod})
+     * SIGN raw tx - SigningMethod=1 (see {@link TangemCard.SigningMethod})
      * See [1] 8.6
      * @param PIN2 - PIN2 code to confirm operation
      * @param bTxOutData - part of raw transaction to sign
      * @return TLVList with card answer contained wallet signatures of bTxOutData(in case of success)
-     * @throws Exception - if something was wrong
+     * @throws Exception - if something went wrong
      */
     // TODO - change function to run_SignRaw(String PIN2, String hashAlgID, byte[] bTxOutData, byte[] issuerData, byte[] issuerTransactionSignature) to support all signing methods
     public TLVList run_SignRaw(String PIN2, byte[] bTxOutData) throws Exception {
@@ -1170,7 +1162,7 @@ public class CardProtocol {
     }
 
     /**
-     * Execute VERIFY_CODE command
+     * VERIFY_CODE command
      * See [1] 8.8
      * This command challenges the card to prove integrity of COS binary code. For this purpose, the host application should have a special ‘hash library’ publicly provided
      * by Tangem. It may contains ~150.000 precalculated hashes of COS binary code segments.
@@ -1182,7 +1174,7 @@ public class CardProtocol {
      * @param codePageCount - Number of 32-byte pages to read: from 1 to 5, take from {@link Firmwares}
      * @param challenge - Additional challenge value from 1 to 10, take from {@link Firmwares}
      * @return digest bytes to compare with one stored in {@link Firmwares}
-     * @throws Exception - if something was wrong
+     * @throws Exception - if something went wrong
      */
     public byte[] run_VerifyCode(String hashAlgID, int codePageAddress, int codePageCount, byte[] challenge) throws Exception {
         if (readResult == null) run_Read();
@@ -1205,7 +1197,7 @@ public class CardProtocol {
     }
 
     /**
-     * Execute VALIDATE_CARD command
+     * VALIDATE_CARD command
      * See [1] 3.2, 8.10
      * This is an optional command that the issuer can support if there is a real risk of mass counterfeiting by making multiple clones of a single card. This can be the case for
      * transferrable Tangem cards that are almost never redeemed by users.
@@ -1217,7 +1209,7 @@ public class CardProtocol {
      * previous value is less than the new one. If the server reveals that submitted Card_Validation_Counter value is less than previous value, then the card having this CID is
      * deemed compromised and should not be accepted by the application.
      * @param PIN2 - PIN2 code to confirm operation
-     * @throws Exception - if something was wrong
+     * @throws Exception - if something went wrong
      */
     private void run_ValidateCard(String PIN2) throws Exception {
         if (readResult == null) run_Read();
@@ -1244,13 +1236,13 @@ public class CardProtocol {
     }
 
     /**
-     * Execute WRITE_ISSUER_DATA command
-     * This command write up to 512-byte Issuer_Data field and its issuer’s signature to card.
+     * WRITE_ISSUER_DATA command
+     * This command re-writes Issuer_Data data block (max 512 bytes) and its issuer’s signature.
      * Issuer_Data is never changed or parsed from within the Tangem COS. The issuer defines purpose of use, format and payload of Issuer_Data.
      * For example, this field may contain information about wallet balance signed by the issuer or additional issuer’s attestation data
      * @param issuerData - new issuerData
      * @param issuerSignature - signature of issuerData with IssuerDataKey
-     * @throws Exception - if something was wrong
+     * @throws Exception - if something went wrong
      */
     private void run_WriteIssuerData(byte[] issuerData, byte[] issuerSignature) throws Exception {
         run_Read();
@@ -1271,13 +1263,11 @@ public class CardProtocol {
     }
 
     /**
-     * Execute GET_ISSUER_DATA command and verify data (verify issuer signature of returned data)
+     * GET_ISSUER_DATA command and verify verify issuer signature of returned data
      * See [1] 3.3, 8.7
-     * This command returns up to 512-byte Issuer_Data field and its issuer’s signature.
-     * Issuer_Data is never changed or parsed from within the Tangem COS. The issuer defines purpose of use, format and payload of Issuer_Data.
-     * For example, this field may contain information about wallet balance signed by the issuer or additional issuer’s attestation data
+     * This command returns Issuer_Data data block and its issuer’s signature.
      * @return TLVList with issuerData (if success read and verify)
-     * @throws Exception - if something was wrong
+     * @throws Exception - if something went wrong
      */
     private TLVList run_GetIssuerData() throws Exception {
         CommandApdu rqApdu = StartPrepareCommand(INS.GetIssuerData);
@@ -1320,10 +1310,10 @@ public class CardProtocol {
     }
 
     /**
-     * Execute series of READ command with increasing encryption level from EncryptionMode.None to EncryptionMode.Strong, see {@link TangemCard.EncryptionMode}
-     * If card need other encryption level it return special status word SW.NEED_ENCRYPTION and series continue;
-     * If card accept the command, then save answer to {@see readResult}, current PIN and encryption mode to {@link TangemCard} and return
-     * @throws Exception - if something was wrong (for example PIN is wrong)
+     * Execute consecutive READ commands with increasing encryption level from EncryptionMode.None to EncryptionMode.Strong, see {@link TangemCard.EncryptionMode}
+     * If card requires stricter encryption level it returns SW.NEED_ENCRYPTION status word
+     * Once READ is successfully executed - save answer to {@see readResult}, save current PIN and encryption mode to {@link TangemCard} and return
+     * @throws Exception - if something went wrong
      */
     public void run_GetSupportedEncryption() throws Exception {
         mCard.encryptionMode = TangemCard.EncryptionMode.None;
