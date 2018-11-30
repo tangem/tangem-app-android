@@ -32,7 +32,7 @@ import com.tangem.data.nfc.DeviceNFCAntennaLocation
 import com.tangem.data.nfc.ReadCardInfoTask
 import com.tangem.di.Navigator
 import com.tangem.domain.cardReader.CardProtocol
-import com.tangem.domain.cardReader.FW
+import com.tangem.domain.cardReader.Firmwares
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
@@ -68,8 +68,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
             if (Issuer.needInit())
                 Issuer.init(context)
 
-            if (FW.needInit())
-                FW.init(context)
+            if (Firmwares.needInit())
+                Firmwares.init(context)
         }
     }
 
