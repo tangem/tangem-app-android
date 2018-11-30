@@ -61,7 +61,7 @@ public class SwapPINTask extends Thread {
                 }
 
 //                    try {
-                protocol.run_SwapPIN(PINStorage.getPIN2(), newPIN, newPIN2, false);
+                protocol.run_SetPIN(PINStorage.getPIN2(), newPIN, newPIN2, false);
                 protocol.setPIN(newPIN);
                 mCard.setPIN(newPIN);
 //                    } finally {
