@@ -1,6 +1,7 @@
 package com.tangem.data.nfc
 
 import android.os.Build
+import com.tangem.tangemcard.nfc.NFCLocation
 
 class DeviceNFCAntennaLocation {
     companion object {
