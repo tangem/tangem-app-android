@@ -20,10 +20,10 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import com.tangem.data.fingerprint.StartFingerprintReaderTask
-import com.tangem.domain.cardReader.NfcManager
+import com.tangem.tangemcard.reader.NfcManager
 import com.tangem.data.fingerprint.FingerprintHelper
-import com.tangem.data.db.PINStorage
-import com.tangem.domain.wallet.TangemCard
+import com.tangem.tangemcard.data.PINStorage
+import com.tangem.tangemcard.data.TangemCard
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_pin_request.*
 import kotlinx.android.synthetic.main.layout_pin_buttons.*
