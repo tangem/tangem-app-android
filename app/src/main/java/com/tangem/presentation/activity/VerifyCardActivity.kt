@@ -34,7 +34,7 @@ class VerifyCardActivity : AppCompatActivity() {
 
         App.getNavigatorComponent().inject(this)
 
-        MainActivity.commonInit(applicationContext)
+//        MainActivity.commonInit(applicationContext)
     }
 
     override fun onBackPressed() {
