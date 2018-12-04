@@ -10,8 +10,8 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import com.tangem.data.network.CryptonitOtherApi
-import com.tangem.domain.cardReader.NfcManager
-import com.tangem.domain.wallet.Blockchain
+import com.tangem.tangemcard.reader.NfcManager
+import com.tangem.tangemcard.data.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.wallet.R

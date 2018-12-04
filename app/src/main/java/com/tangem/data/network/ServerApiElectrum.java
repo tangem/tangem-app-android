@@ -3,8 +3,8 @@ package com.tangem.data.network;
 import android.util.Log;
 
 import com.tangem.App;
-import com.tangem.domain.wallet.Blockchain;
-import com.tangem.domain.wallet.TangemCard;
+import com.tangem.tangemcard.data.Blockchain;
+import com.tangem.tangemcard.data.TangemCard;
 import com.tangem.domain.wallet.bch.BitcoinCashNode;
 import com.tangem.domain.wallet.btc.BitcoinNode;
 import com.tangem.domain.wallet.btc.BitcoinNodeTestNet;
