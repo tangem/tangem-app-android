@@ -4,10 +4,9 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
-import com.tangem.util.Util;
+import com.tangem.tangemcard.util.Util;
 import com.tangem.wallet.R;
 
 import org.spongycastle.util.encoders.Base64;
