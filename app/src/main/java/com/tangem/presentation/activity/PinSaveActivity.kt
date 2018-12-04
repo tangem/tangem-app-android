@@ -6,6 +6,7 @@ import android.annotation.TargetApi
 import android.app.Dialog
 import android.app.KeyguardManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.hardware.fingerprint.FingerprintManager
 import android.os.Build
@@ -19,9 +20,10 @@ import android.text.TextUtils
 import android.view.View
 import android.widget.Button
 import android.widget.Toast
+import com.tangem.Constant
+import com.tangem.data.db.PINStorage
 import com.tangem.data.fingerprint.ConfirmWithFingerprintTask
 import com.tangem.data.fingerprint.FingerprintHelper
-import com.tangem.data.db.PINStorage
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_pin_save.*
 import kotlinx.android.synthetic.main.layout_pin_buttons.*
@@ -37,6 +39,16 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 
 class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelperListener {
+
+    companion object {
+        val TAG: String = PinSaveActivity::class.java.simpleName
+
+        fun callingIntent(context: Context, hasPin2: Boolean): Intent {
+            val intent = Intent(context, PinSaveActivity::class.java)
+            intent.putExtra(Constant.EXTRA_PIN2, hasPin2)
+            return intent
+        }
+    }
 
     private var confirmWithFingerprintTask: ConfirmWithFingerprintTask? = null
     private var keyStore: KeyStore? = null
@@ -58,7 +70,7 @@ class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
 
 //        MainActivity.commonInit(applicationContext)
 
-        usePIN2 = intent.getBooleanExtra("PIN2", false)
+        usePIN2 = intent.getBooleanExtra(Constant.EXTRA_PIN2, false)
 
         if (usePIN2)
             tvPinPrompt.text = getString(R.string.enter_pin2_and_use_fingerprint_to_save_it)
