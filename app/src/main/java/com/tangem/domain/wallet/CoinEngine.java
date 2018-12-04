@@ -3,7 +3,7 @@ package com.tangem.domain.wallet;
 import android.net.Uri;
 import android.text.InputFilter;
 
-import com.tangem.domain.cardReader.CardProtocol;
+import com.tangem.tangemcard.reader.CardProtocol;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
