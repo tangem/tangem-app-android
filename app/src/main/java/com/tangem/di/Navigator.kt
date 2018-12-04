@@ -42,12 +42,16 @@ class Navigator {
         context.startActivityForResult(PinSwapActivity.callingIntent(context, newPIN, newPIN2), Constant.REQUEST_CODE_SWAP_PIN)
     }
 
-//    fun showPreparePayment(context: Activity) {
-//
-//    }
-//
-//    fun showCreateNewWallet(context: Activity) {
-//
-//    }
+    fun showPurge(context: Activity) {
+
+    }
+
+    fun showPreparePayment(context: Activity) {
+
+    }
+
+    fun showCreateNewWallet(context: Activity) {
+
+    }
 
 }
