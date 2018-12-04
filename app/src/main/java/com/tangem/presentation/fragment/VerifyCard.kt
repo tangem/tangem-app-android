@@ -13,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.Toast
+import com.tangem.Constant
 import com.tangem.data.db.PINStorage
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
@@ -72,7 +73,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
         fabMenu.setOnClickListener { showMenu(fabMenu) }
         btnOk.setOnClickListener {
             val data = prepareResultIntent()
-            data.putExtra("modification", "update")
+            data.putExtra(Constant.EXTRA_MODIFICATION, "update")
             activity?.finish()
         }
     }
