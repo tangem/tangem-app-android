@@ -39,7 +39,7 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_cryptonit_withdrawal)
 
-        MainActivity.commonInit(applicationContext)
+//        MainActivity.commonInit(applicationContext)
 
         nfcManager = NfcManager(this, this)
 
