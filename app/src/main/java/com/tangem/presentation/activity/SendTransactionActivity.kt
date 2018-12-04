@@ -11,9 +11,11 @@ import com.tangem.data.network.ElectrumRequest
 import com.tangem.data.network.ServerApiElectrum
 import com.tangem.data.network.ServerApiInfura
 import com.tangem.data.network.model.InfuraResponse
-import com.tangem.domain.cardReader.NfcManager
+import com.tangem.tangemcard.reader.NfcManager
 import com.tangem.domain.wallet.*
 import com.tangem.domain.wallet.eth.EthData
+import com.tangem.tangemcard.data.Blockchain
+import com.tangem.tangemcard.data.TangemCard
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import java.io.IOException
