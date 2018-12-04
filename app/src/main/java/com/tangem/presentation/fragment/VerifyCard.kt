@@ -17,10 +17,7 @@ import com.tangem.Constant
 import com.tangem.data.db.PINStorage
 import com.tangem.domain.cardReader.NfcManager
 import com.tangem.domain.wallet.*
-import com.tangem.presentation.activity.CreateNewWalletActivity
-import com.tangem.presentation.activity.PurgeActivity
-import com.tangem.presentation.activity.PinRequestActivity
-import com.tangem.presentation.activity.PinSwapActivity
+import com.tangem.presentation.activity.*
 import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
@@ -135,7 +132,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 if (newPIN2 == "") newPIN2 = PINStorage.getPIN2()
 
                 val pinSwapWarningDialog = PINSwapWarningDialog()
-                pinSwapWarningDialog.setOnRefreshPage { startSwapPINActivity() }
+                pinSwapWarningDialog.setOnRefreshPage { (activity as VerifyCardActivity).navigator.showPinSwap(context as Activity, newPIN, newPIN2) }
                 val bundle = Bundle()
                 if (!PINStorage.isDefaultPIN(newPIN) || !PINStorage.isDefaultPIN2(newPIN2))
                     bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_forget))
@@ -481,13 +478,13 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
         startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2_FOR_PURGE)
     }
 
-    private fun startSwapPINActivity() {
-        val intent = Intent(context, PinSwapActivity::class.java)
-        ctx.saveToIntent(intent)
-        intent.putExtra("newPIN", newPIN)
-        intent.putExtra("newPIN2", newPIN2)
-        startActivityForResult(intent, REQUEST_CODE_SWAP_PIN)
-    }
+//    private fun startSwapPINActivity() {
+//        val intent = Intent(context, PinSwapActivity::class.java)
+//        ctx.saveToIntent(intent)
+//        intent.putExtra("newPIN", newPIN)
+//        intent.putExtra("newPIN2", newPIN2)
+//        startActivityForResult(intent, REQUEST_CODE_SWAP_PIN)
+//    }
 
     fun prepareResultIntent(): Intent {
         val data = Intent()
