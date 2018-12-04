@@ -27,5 +27,10 @@ object Constant {
     const val REQUEST_CODE_REQUEST_CAMERA_PERMISSIONS = 3
 
     const val EXTRA_LAST_DISCOVERED_TAG = "extra_last_tag"
+    const val EXTRA_PIN2 = "PIN2"
+
+    // LogoActivity
+    const val EXTRA_AUTO_HIDE = "extra_auto_hide"
+    const val MILLIS_AUTO_HIDE = 1000
 
 }
