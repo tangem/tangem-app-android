@@ -11,21 +11,14 @@ import com.tangem.domain.wallet.btc.BitcoinOutputStream;
 import com.tangem.domain.wallet.btc.BtcData;
 import com.tangem.util.CryptoUtil;
 import com.tangem.util.FormatUtil;
-import com.tangem.util.Util;
+import com.tangem.tangemcard.util.Util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.Stack;
 
 @SuppressWarnings({"WeakerAccess", "TryWithIdenticalCatches", "unused"})
 public final class BTCUtils {
