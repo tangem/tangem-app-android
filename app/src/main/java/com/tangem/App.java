@@ -3,10 +3,13 @@ package com.tangem;
 import android.app.Application;
 import android.support.v7.app.AppCompatDelegate;
 
+import com.tangem.data.db.PINStorage;
 import com.tangem.di.DaggerNavigatorComponent;
 import com.tangem.di.DaggerNetworkComponent;
 import com.tangem.di.NavigatorComponent;
 import com.tangem.di.NetworkComponent;
+import com.tangem.domain.cardReader.Firmwares;
+import com.tangem.domain.wallet.Issuer;
 
 public class App extends Application {
 
@@ -38,6 +41,16 @@ public class App extends Application {
 
         networkComponent = DaggerNetworkComponent.create();
         navigatorComponent = buildNavigatorComponent();
+
+        // common init
+        if (PINStorage.needInit())
+            PINStorage.init(getApplicationContext());
+
+        if (Issuer.needInit())
+            Issuer.init(getApplicationContext());
+
+        if (Firmwares.needInit())
+            Firmwares.init(getApplicationContext());
     }
 
     /**
