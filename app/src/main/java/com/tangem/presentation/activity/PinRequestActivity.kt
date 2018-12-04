@@ -53,7 +53,7 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pin_request)
 
-        MainActivity.commonInit(applicationContext)
+//        MainActivity.commonInit(applicationContext)
 
         nfcManager = NfcManager(this, this)
 
