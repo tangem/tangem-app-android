@@ -56,7 +56,7 @@ class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pin_save)
 
-        MainActivity.commonInit(applicationContext)
+//        MainActivity.commonInit(applicationContext)
 
         usePIN2 = intent.getBooleanExtra("PIN2", false)
 
