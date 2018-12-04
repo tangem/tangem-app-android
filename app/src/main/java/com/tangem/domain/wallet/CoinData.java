@@ -3,13 +3,31 @@ package com.tangem.domain.wallet;
 import android.os.Bundle;
 import android.util.Log;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
+import com.tangem.tangemcard.data.Blockchain;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class CoinData {
 
     public CoinData() {
+    }
+
+    private String wallet;
+
+    public void setWallet(String wallet) {
+        this.wallet = wallet;
+    }
+
+    public String getWallet() {
+        return wallet;
+    }
+
+    public String getShortWalletString() {
+        if (wallet.length() < 22) {
+            return wallet;
+        } else {
+            return wallet.substring(0, 10) + "......" + wallet.substring(wallet.length() - 10, wallet.length());
+        }
     }
 
     public boolean isBalanceReceived() {
@@ -23,6 +41,8 @@ public abstract class CoinData {
     }
 
     public void loadFromBundle(Bundle B) {
+        wallet = B.getString("Wallet");
+
         if (B.containsKey("balanceReceived")) setBalanceReceived(B.getBoolean("balanceReceived"));
 
         validationNodeDescription = B.getString("validationNodeDescription");
@@ -40,6 +60,8 @@ public abstract class CoinData {
 
     public void saveToBundle(Bundle B) {
         try {
+            B.putString("Wallet", wallet);
+
             if (balanceEqual != null) B.putBoolean("isBalanceEqual", balanceEqual);
 
             if (failedBalanceRequestCounter != null)
