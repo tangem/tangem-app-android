@@ -33,4 +33,11 @@ object Constant {
     const val EXTRA_AUTO_HIDE = "extra_auto_hide"
     const val MILLIS_AUTO_HIDE = 1000
 
+    // PinRequestActivity
+    const val EXTRA_MODE = "mode"
+
+    // PinSwapActivity
+    const val EXTRA_NEW_PIN = "newPIN"
+    const val EXTRA_NEW_PIN_2 = "newPIN2"
+
 }
