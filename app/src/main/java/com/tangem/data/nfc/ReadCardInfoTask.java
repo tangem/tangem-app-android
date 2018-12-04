@@ -27,8 +27,8 @@ public class ReadCardInfoTask extends Thread {
     private static String lastRead_UID;
 
     public static void resetLastReadInfo() {
-        lastRead_UID="";
-        lastRead_Encryption=null;
+        lastRead_UID = "";
+        lastRead_Encryption = null;
         lastRead_UnsuccessfullPINs.clear();
     }
 
