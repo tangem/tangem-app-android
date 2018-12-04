@@ -7,6 +7,7 @@ import android.nfc.Tag
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import com.tangem.App
+import com.tangem.Constant
 import com.tangem.di.Navigator
 import com.tangem.presentation.fragment.LoadedWallet
 import com.tangem.wallet.R
@@ -20,7 +21,7 @@ class LoadedWalletActivity : AppCompatActivity() {
     companion object {
         fun callingIntent(context: Context, lastTag: Tag, cardInfo: Bundle): Intent {
             val intent = Intent(context, LoadedWalletActivity::class.java)
-            intent.putExtra(MainActivity.EXTRA_LAST_DISCOVERED_TAG, lastTag)
+            intent.putExtra(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
             intent.putExtras(cardInfo)
             return intent
         }
