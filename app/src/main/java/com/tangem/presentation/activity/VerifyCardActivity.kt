@@ -8,7 +8,7 @@ import com.tangem.App
 import com.tangem.Constant
 import com.tangem.di.Navigator
 import com.tangem.domain.wallet.CoinData
-import com.tangem.domain.wallet.TangemCard
+import com.tangem.tangemcard.data.TangemCard
 import com.tangem.presentation.fragment.VerifyCard
 import com.tangem.wallet.R
 import javax.inject.Inject
