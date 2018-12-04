@@ -38,7 +38,7 @@ class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapt
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_cryptonit_other_api_withdrawal)
 
-        MainActivity.commonInit(applicationContext)
+//        MainActivity.commonInit(applicationContext)
 
         nfcManager = NfcManager(this, this)
 
@@ -57,7 +57,7 @@ class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapt
         tvCurrency.text = engine!!.balanceCurrency
 
         etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toValueString())
-        etAmount.filters=engine.amountInputFilters
+        etAmount.filters = engine.amountInputFilters
 
         // set listeners
         btnLoad.setOnClickListener {
@@ -66,7 +66,7 @@ class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapt
                 val strAmount: String = etAmount.text.toString().replace(",", ".")
 //                if (!engine.checkAmount(card, strAmount))
 //                    etAmount.error = getString(R.string.unknown_amount_format)
-                var dblAmount: Double = strAmount.toDouble()
+                val dblAmount: Double = strAmount.toDouble()
 
                 rlProgressBar.visibility = View.VISIBLE
                 tvProgressDescription.text = getString(R.string.cryptonit_request_withdrawal)
@@ -177,8 +177,8 @@ class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapt
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if( resultCode == Activity.RESULT_OK && data != null && data.extras!!.containsKey("QRCode") ) {
-            when(requestCode) {
+        if (resultCode == Activity.RESULT_OK && data != null && data.extras!!.containsKey("QRCode")) {
+            when (requestCode) {
                 REQUEST_CODE_SCAN_QR_KEY -> {
                     cryptonit!!.key = data.getStringExtra("QRCode")
                     tvKey!!.text = cryptonit!!.key
