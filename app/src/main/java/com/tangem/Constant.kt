@@ -9,7 +9,7 @@ object Constant {
 
     const val EXTRA_MODIFICATION = "modification"
 
-    // LoadedWallet
+    // LoadedWallet, VerifyCard
     const val REQUEST_CODE_SEND_PAYMENT = 1
     const val REQUEST_CODE_PURGE = 2
     const val REQUEST_CODE_REQUEST_PIN2_FOR_PURGE = 3
