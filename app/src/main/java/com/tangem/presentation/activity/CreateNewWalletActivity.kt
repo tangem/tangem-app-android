@@ -12,14 +12,13 @@ import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
-import com.tangem.data.nfc.CreateNewWalletTask
-import com.tangem.domain.cardReader.CardProtocol
-import com.tangem.domain.cardReader.NfcManager
-import com.tangem.domain.wallet.TangemCard
+import com.tangem.tangemcard.tasks.CreateNewWalletTask
+import com.tangem.tangemcard.reader.CardProtocol
+import com.tangem.tangemcard.reader.NfcManager
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
-import com.tangem.util.Util
+import com.tangem.tangemcard.util.Util
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_create_new_wallet.*
 
