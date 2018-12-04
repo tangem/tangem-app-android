@@ -183,9 +183,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
         btnDetails.setOnClickListener {
             if (cardProtocol != null)
-//                openVerifyCard(cardProtocol!!)
                 (activity as LoadedWalletActivity).navigator.showVerifyCard(context as Activity, ctx.card, ctx.coinData)
-
             else
                 showSingleToast(R.string.need_attach_card_again)
         }
@@ -537,7 +535,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     newPIN2 = PINStorage.getPIN2()
 
                 val pinSwapWarningDialog = PINSwapWarningDialog()
-                pinSwapWarningDialog.setOnRefreshPage { startSwapPINActivity() }
+                pinSwapWarningDialog.setOnRefreshPage { (activity as LoadedWalletActivity).navigator.showPinSwap(context as Activity, newPIN, newPIN2) }
                 val bundle = Bundle()
                 if (!PINStorage.isDefaultPIN(newPIN) || !PINStorage.isDefaultPIN2(newPIN2))
                     bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_forget))
@@ -874,17 +872,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
     }
 
-//    private fun openVerifyCard(cardProtocol: CardProtocol) {
-//        val intent = Intent(activity, VerifyCardActivity::class.java)
-//        ctx.saveToIntent(intent)
-//        startActivityForResult(intent, REQUEST_CODE_VERIFY_CARD)
-//
-//        ctx.coinData
-//    }
-
     private fun startVerify(tag: Tag?) {
         try {
-            val isoDep = IsoDep.get(tag) ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
+            val isoDep = IsoDep.get(tag)
+                    ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag!!.id
             val sUID = Util.byteArrayToHexString(uid)
             if (ctx.card.uid != sUID) {
@@ -940,14 +931,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             clipboard.primaryClip = ClipData.newPlainText(txtShare, txtShare)
             Toast.makeText(activity, R.string.copied_clipboard, Toast.LENGTH_LONG).show()
         }
-    }
-
-    private fun startSwapPINActivity() {
-        val intent = Intent(activity, PinSwapActivity::class.java)
-        ctx.saveToIntent(intent)
-        intent.putExtra("newPIN", newPIN)
-        intent.putExtra("newPIN2", newPIN2)
-        startActivityForResult(intent, Constant.REQUEST_CODE_SWAP_PIN)
     }
 
     private var showTime: Date = Date()
