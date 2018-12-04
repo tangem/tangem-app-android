@@ -1,9 +1,12 @@
 package com.tangem.presentation.activity
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import com.tangem.App
+import com.tangem.Constant
 import com.tangem.di.Navigator
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
@@ -15,8 +18,11 @@ class LogoActivity : AppCompatActivity() {
     companion object {
         val TAG: String = LogoActivity::class.java.simpleName
 
-        const val EXTRA_AUTO_HIDE = "extra_auto_hide"
-        const val MILLIS_AUTO_HIDE = 1000
+        fun callingIntent(context: Context, autoHide: Boolean): Intent {
+            val intent = Intent(context, LogoActivity::class.java)
+            intent.putExtra(Constant.EXTRA_AUTO_HIDE, autoHide)
+            return intent
+        }
     }
 
     private val hideRunnable = Runnable { this.hide() }
@@ -42,8 +48,8 @@ class LogoActivity : AppCompatActivity() {
         else
             tvAppVersion.text = "BETA v." + BuildConfig.VERSION_NAME
 
-        if (intent.getBooleanExtra(EXTRA_AUTO_HIDE, true))
-            ivLogo.postDelayed(hideRunnable, MILLIS_AUTO_HIDE.toLong())
+        if (intent.getBooleanExtra(Constant.EXTRA_AUTO_HIDE, true))
+            ivLogo.postDelayed(hideRunnable, Constant.MILLIS_AUTO_HIDE.toLong())
     }
 
     private fun hide() {
