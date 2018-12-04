@@ -7,7 +7,6 @@ import com.tangem.Constant
 import com.tangem.domain.wallet.CoinData
 import com.tangem.domain.wallet.TangemCard
 import com.tangem.presentation.activity.*
-import com.tangem.presentation.fragment.LoadedWallet
 
 class Navigator {
 
@@ -23,6 +22,10 @@ class Navigator {
         context.startActivity(PinSaveActivity.callingIntent(context, hasPin2))
     }
 
+    fun showPinRequest(context: Activity, mode: String) {
+        context.startActivityForResult(PinRequestActivity.callingIntent(context, mode), Constant.REQUEST_CODE_ENTER_PIN_ACTIVITY)
+    }
+
     fun showLoadedWallet(context: Activity, lastTag: Tag, cardInfo: Bundle) {
         context.startActivityForResult(LoadedWalletActivity.callingIntent(context, lastTag, cardInfo), Constant.REQUEST_CODE_SHOW_CARD_ACTIVITY)
     }
@@ -35,8 +38,8 @@ class Navigator {
         context.startActivityForResult(VerifyCardActivity.callingIntent(context, card, coinData), Constant.REQUEST_CODE_VERIFY_CARD)
     }
 
-    fun showPinSwap(context: Activity) {
-
+    fun showPinSwap(context: Activity, newPIN: String, newPIN2: String) {
+        context.startActivityForResult(PinSwapActivity.callingIntent(context, newPIN, newPIN2), Constant.REQUEST_CODE_SWAP_PIN)
     }
 
 //    fun showPreparePayment(context: Activity) {
