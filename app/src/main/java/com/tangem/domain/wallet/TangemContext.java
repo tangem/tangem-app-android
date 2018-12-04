@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import com.tangem.Constant;
+import com.tangem.tangemcard.data.Blockchain;
+import com.tangem.tangemcard.data.TangemCard;
 
 
 public class TangemContext {
@@ -121,4 +123,17 @@ public class TangemContext {
         if (context != null) return getContext().getResources().getString(stringId);
         return "context.resources.string[" + stringId + "]";
     }
+
+    public void setDenomination(byte[] denomination) {
+        try {
+            CoinEngine engine= CoinEngineFactory.INSTANCE.create(getBlockchain());
+            CoinEngine.InternalAmount internalAmount=engine.convertToInternalAmount(denomination);
+            CoinEngine.Amount amount=engine.convertToAmount(internalAmount);
+            card.setDenomination(denomination,amount.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+            card.setDenomination(denomination,"N/A");
+        }
+    }
+
 }

@@ -7,8 +7,8 @@ import android.util.Log;
 import com.tangem.App;
 import com.tangem.data.network.model.CardVerifyAndGetInfo;
 import com.tangem.data.network.model.RateInfoResponse;
-import com.tangem.domain.wallet.TangemCard;
-import com.tangem.util.Util;
+import com.tangem.tangemcard.data.TangemCard;
+import com.tangem.tangemcard.util.Util;
 
 import java.io.InputStream;
 import java.util.ArrayList;
