@@ -19,13 +19,11 @@ class VerifyCardActivity : AppCompatActivity() {
     lateinit var navigator: Navigator
 
     companion object {
-        fun callingIntent(context: Context, card: TangemCard, coinData: CoinData, message: String, error: String): Intent {
+        fun callingIntent(context: Context, card: TangemCard, coinData: CoinData): Intent {
             val intent = Intent(context, VerifyCardActivity::class.java)
             intent.putExtra(TangemCard.EXTRA_UID, card.uid)
             intent.putExtra(TangemCard.EXTRA_CARD, card.asBundle)
             intent.putExtra(Constant.EXTRA_BLOCKCHAIN_DATA, coinData.asBundle())
-            intent.putExtra(Constant.MESSAGE, message)
-            intent.putExtra(Constant.ERROR, error)
             return intent
         }
     }
