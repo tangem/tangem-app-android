@@ -4,7 +4,7 @@ import android.app.Activity
 import android.nfc.Tag
 import android.os.Bundle
 import com.tangem.domain.wallet.CoinData
-import com.tangem.domain.wallet.TangemCard
+import com.tangem.tangemcard.data.TangemCard
 import com.tangem.presentation.activity.EmptyWalletActivity
 import com.tangem.presentation.activity.LoadedWalletActivity
 import com.tangem.presentation.activity.MainActivity
