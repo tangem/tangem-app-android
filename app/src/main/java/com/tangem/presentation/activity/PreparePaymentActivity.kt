@@ -12,8 +12,8 @@ import android.text.Html
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import com.tangem.domain.cardReader.NfcManager
-import com.tangem.domain.wallet.Blockchain
+import com.tangem.tangemcard.reader.NfcManager
+import com.tangem.tangemcard.data.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.wallet.R
