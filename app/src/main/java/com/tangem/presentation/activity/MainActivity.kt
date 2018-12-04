@@ -55,16 +55,16 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
         fun callingIntent(context: Context) = Intent(context, MainActivity::class.java)
 
-        fun commonInit(context: Context) {
-            if (PINStorage.needInit())
-                PINStorage.init(context)
-
-            if (Issuer.needInit())
-                Issuer.init(context)
-
-            if (Firmwares.needInit())
-                Firmwares.init(context)
-        }
+//        fun commonInit(context: Context) {
+//            if (PINStorage.needInit())
+//                PINStorage.init(context)
+//
+//            if (Issuer.needInit())
+//                Issuer.init(context)
+//
+//            if (Firmwares.needInit())
+//                Firmwares.init(context)
+//        }
     }
 
     private var nfcManager: NfcManager? = null
@@ -101,7 +101,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_NOSENSOR
 
-        commonInit(applicationContext)
+//        commonInit(applicationContext)
 
         setNfcAdapterReaderCallback(this)
 
