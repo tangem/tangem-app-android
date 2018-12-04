@@ -27,15 +27,13 @@ import com.scottyab.rootbeer.RootBeer
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Logger
-import com.tangem.data.db.PINStorage
 import com.tangem.data.network.ServerApiCommon
 import com.tangem.data.nfc.DeviceNFCAntennaLocation
 import com.tangem.data.nfc.ReadCardInfoTask
 import com.tangem.di.Navigator
 import com.tangem.domain.cardReader.CardProtocol
-import com.tangem.domain.cardReader.Firmwares
 import com.tangem.domain.cardReader.NfcManager
-import com.tangem.domain.wallet.*
+import com.tangem.domain.wallet.TangemCard
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.RootFoundDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
@@ -339,7 +337,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                     unsuccessReadCount++
 
                     if (cardProtocol.error is CardProtocol.TangemException_InvalidPIN)
-                        doEnterPIN()
+                        navigator.showPinRequest(this, PinRequestActivity.Mode.RequestPIN.toString())
                     else {
                         if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported)
                             if (!NoExtendedLengthSupportDialog.allReadyShowed)
@@ -423,12 +421,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
         popup.setOnMenuItemClickListener(this)
         popup.show()
-    }
-
-    private fun doEnterPIN() {
-        val intent = Intent(this, PinRequestActivity::class.java)
-        intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN.toString())
-        startActivityForResult(intent, Constant.REQUEST_CODE_ENTER_PIN_ACTIVITY)
     }
 
 }
