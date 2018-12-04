@@ -73,12 +73,12 @@ public class VerifyCardTask extends Thread {
                         mNotifications.onReadProgress(protocol, 80);
                     }
                     if (isCancelled) return;
-                    Firmwares.VerifyCodeRecord record=Firmwares.selectRandomVerifyCodeBlock(mCard.getFirmwareVersion());
+                    Firmwares.VerifyCodeRecord record = Firmwares.selectRandomVerifyCodeBlock(mCard.getFirmwareVersion());
                     if (isCancelled) return;
-                    if( record!=null ) {
+                    if (record != null) {
                         byte[] returnedDigest = protocol.run_VerifyCode(record.hashAlg, record.blockIndex, record.blockCount, record.challenge);
                         mCard.setCodeConfirmed(Arrays.equals(returnedDigest, record.digest));
-                    }else{
+                    } else {
                         mCard.setCodeConfirmed(null);
                     }
                     mNotifications.onReadProgress(protocol, 90);
