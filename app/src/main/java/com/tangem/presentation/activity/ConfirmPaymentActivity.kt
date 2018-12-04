@@ -18,13 +18,15 @@ import com.tangem.data.network.ServerApiCommon
 import com.tangem.data.network.ServerApiElectrum
 import com.tangem.data.network.ServerApiInfura
 import com.tangem.data.network.model.InfuraResponse
-import com.tangem.domain.cardReader.NfcManager
+import com.tangem.tangemcard.reader.NfcManager
 import com.tangem.domain.wallet.*
 import com.tangem.domain.wallet.btc.BtcData
+import com.tangem.tangemcard.data.Blockchain
+import com.tangem.tangemcard.data.TangemCard
+import com.tangem.tangemcard.util.Util
 import com.tangem.util.*
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_confirm_payment.*
-import org.json.JSONException
 import java.io.IOException
 import java.math.BigDecimal
 import java.math.BigInteger
