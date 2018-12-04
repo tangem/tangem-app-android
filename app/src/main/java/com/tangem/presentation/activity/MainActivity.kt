@@ -210,7 +210,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
-
         when (id) {
             R.id.sendLogs -> {
                 var f: File? = null
@@ -231,17 +230,17 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                 return true
             }
             R.id.managePIN -> {
-                showSavePinActivity()
+                navigator.showPinSave(this, false)
                 return true
             }
 
             R.id.managePIN2 -> {
-                showSavePin2Activity()
+                navigator.showPinSave(this, true)
                 return true
             }
 
             R.id.about -> {
-                showLogoActivity()
+                navigator.showLogo(this, false)
                 return true
             }
         }
@@ -391,13 +390,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         onNfcReaderCallback = callback
     }
 
-    private fun showLogoActivity() {
-        val intent = Intent(baseContext, LogoActivity::class.java)
-        intent.putExtra(LogoActivity.TAG, true)
-        intent.putExtra(LogoActivity.EXTRA_AUTO_HIDE, false)
-        startActivity(intent)
-    }
-
     private fun animate() {
         val lp = llHand.layoutParams as RelativeLayout.LayoutParams
         val lp2 = llNfc.layoutParams as RelativeLayout.LayoutParams
@@ -416,18 +408,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         a.duration = 2000
         a.interpolator = DecelerateInterpolator()
         llHand.startAnimation(a)
-    }
-
-    private fun showSavePinActivity() {
-        val intent = Intent(baseContext, PinSaveActivity::class.java)
-        intent.putExtra("PIN2", false)
-        startActivity(intent)
-    }
-
-    private fun showSavePin2Activity() {
-        val intent = Intent(baseContext, PinSaveActivity::class.java)
-        intent.putExtra("PIN2", true)
-        startActivity(intent)
     }
 
     private fun showMenu(v: View) {
