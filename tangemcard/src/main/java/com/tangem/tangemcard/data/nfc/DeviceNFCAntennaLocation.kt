@@ -1,4 +1,4 @@
-package com.tangem.tangemcard.data
+package com.tangem.tangemcard.data.nfc
 
 import android.os.Build
 
