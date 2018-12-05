@@ -3,7 +3,7 @@ package com.tangem.domain.wallet.bch;
 import android.net.Uri;
 import android.text.InputFilter;
 
-import com.tangem.tangemcard.data.PINStorage;
+import com.tangem.tangemcard.data.local.PINStorage;
 import com.tangem.tangemcard.reader.CardProtocol;
 import com.tangem.tangemcard.reader.TLV;
 import com.tangem.domain.wallet.BalanceValidator;
@@ -181,12 +181,12 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public Uri getShareWalletUriExplorer() {
-        return Uri.parse((ctx.getBlockchain() == Blockchain.BitcoinCash ? "https://bitcoincash.blockexplorer.com/address/" : "https://testnet.blockexplorer.com/address/") + ctx.getCard().getWallet());
+        return Uri.parse((ctx.getBlockchain() == Blockchain.BitcoinCash ? "https://bitcoincash.blockexplorer.com/address/" : "https://testnet.blockexplorer.com/address/") + ctx.getCoinData().getWallet());
     }
 
     @Override
     public Uri getShareWalletUri() {
-        return Uri.parse(ctx.getCard().getWallet());
+        return Uri.parse(ctx.getCoinData().getWallet());
     }
 
     @Override
@@ -440,7 +440,7 @@ public class BtcCashEngine extends CoinEngine {
 
         CoinEngine engine = CoinEngineFactory.INSTANCE.create(ctx);
 
-        String srcLegacyAddress = ((BtcCashEngine)engine).convertToLegacyAddress(ctx.getCard().getWallet());
+        String srcLegacyAddress = ((BtcCashEngine)engine).convertToLegacyAddress(ctx.getCoinData().getWallet());
         String destLegacyAddress = ((BtcCashEngine)engine).convertToLegacyAddress(destAddress);
         byte[] pbKey = ctx.getCard().getWalletPublicKeyRar(); //ALWAYS USING COMPRESS KEY
 
@@ -498,9 +498,11 @@ public class BtcCashEngine extends CoinEngine {
                     throw new Exception("Hashes length must be identical!");
                 bs.write(dataForSign[i]);
             }
-            signFromCard = protocol.run_SignRaw(PINStorage.getPIN2(), bs.toByteArray()).getTLV(TLV.Tag.TAG_Signature).Value;
+            signFromCard = protocol.run_SignRaw(PINStorage.getPIN2(), "sha-256x2", bs.toByteArray(), null, null, null).getTLV(TLV.Tag.TAG_Signature).Value;
         } else {
-            signFromCard = protocol.run_SignHashes(PINStorage.getPIN2(), dataForSign, ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer, null, ctx.getCard().getIssuer()).getTLV(TLV.Tag.TAG_Signature).Value;
+            //ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer
+            //ctx.getCard().getIssuer()
+            signFromCard = protocol.run_SignHashes(PINStorage.getPIN2(), dataForSign, null, null, null).getTLV(TLV.Tag.TAG_Signature).Value;
             // TODO slice signFromCard to hashes.length parts
         }
 
