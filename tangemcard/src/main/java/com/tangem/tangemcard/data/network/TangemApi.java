@@ -1,6 +1,6 @@
-package com.tangem.data.network;
+package com.tangem.tangemcard.data.network;
 
-import com.tangem.data.network.model.CardVerifyAndGetInfo;
+import com.tangem.tangemcard.data.network.model.CardVerifyAndGetInfo;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
