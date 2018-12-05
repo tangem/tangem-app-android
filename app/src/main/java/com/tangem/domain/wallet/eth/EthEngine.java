@@ -4,7 +4,7 @@ import android.net.Uri;
 import android.text.InputFilter;
 import android.util.Log;
 
-import com.tangem.tangemcard.data.PINStorage;
+import com.tangem.tangemcard.data.local.PINStorage;
 import com.tangem.tangemcard.reader.CardProtocol;
 import com.tangem.tangemcard.reader.TLV;
 import com.tangem.domain.wallet.BalanceValidator;
@@ -227,18 +227,18 @@ public class EthEngine extends CoinEngine {
     @Override
     public Uri getShareWalletUri() {
         if (ctx.getCard().getDenomination() != null) {
-            return Uri.parse("ethereum:" + ctx.getCard().getWallet());// + "?value=" + mCard.getDenomination() +"e18");
+            return Uri.parse("ethereum:" + ctx.getCoinData().getWallet());// + "?value=" + mCard.getDenomination() +"e18");
         } else {
-            return Uri.parse("ethereum:" + ctx.getCard().getWallet());
+            return Uri.parse("ethereum:" + ctx.getCoinData().getWallet());
         }
     }
 
     @Override
     public Uri getShareWalletUriExplorer() {
         if (ctx.getCard().getBlockchain() == Blockchain.EthereumTestNet)
-            return Uri.parse("https://rinkeby.etherscan.io/address/" + ctx.getCard().getWallet());
+            return Uri.parse("https://rinkeby.etherscan.io/address/" + ctx.getCoinData().getWallet());
         else
-            return Uri.parse("https://etherscan.io/address/" + ctx.getCard().getWallet());
+            return Uri.parse("https://etherscan.io/address/" + ctx.getCoinData().getWallet());
     }
 
     @Override
@@ -383,7 +383,7 @@ public class EthEngine extends CoinEngine {
 
         BigInteger nonceValue = coinData.getConfirmedTXCount();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
-        boolean flag = (ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer);
+//        boolean flag = (ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer);
         Issuer issuer = ctx.getCard().getIssuer();
 
         BigInteger weiFee=convertToInternalAmount(feeValue).toBigIntegerExact();
@@ -412,7 +412,7 @@ public class EthEngine extends CoinEngine {
 
         byte[] signFromCard = null;
         try {
-            signFromCard = protocol.run_SignHashes(PINStorage.getPIN2(), hashesForSign, flag, null, issuer).getTLV(TLV.Tag.TAG_Signature).Value;
+            signFromCard = protocol.run_SignHashes(PINStorage.getPIN2(), hashesForSign, null, null, null).getTLV(TLV.Tag.TAG_Signature).Value;
             // TODO slice signFromCard to hashes.length parts
         } catch (Exception ex) {
             Log.e("ETH", ex.getMessage());
