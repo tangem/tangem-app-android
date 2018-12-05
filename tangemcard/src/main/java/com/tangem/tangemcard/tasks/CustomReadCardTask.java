@@ -5,9 +5,9 @@ import android.nfc.tech.IsoDep;
 import android.util.Log;
 
 import com.tangem.tangemcard.data.Issuer;
-import com.tangem.tangemcard.data.LocalStorage;
+import com.tangem.tangemcard.data.local.LocalStorage;
 import com.tangem.tangemcard.data.Manufacturer;
-import com.tangem.tangemcard.data.PINStorage;
+import com.tangem.tangemcard.data.local.PINStorage;
 import com.tangem.tangemcard.data.TangemCard;
 import com.tangem.tangemcard.reader.CardProtocol;
 import com.tangem.tangemcard.reader.NfcManager;
@@ -21,6 +21,7 @@ import org.spongycastle.jce.spec.ECNamedCurveParameterSpec;
 import org.spongycastle.math.ec.ECPoint;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 
 /**
@@ -112,6 +113,7 @@ public class CustomReadCardTask extends Thread {
      * @throws CardProtocol.TangemException - if something went wrong
      */
     public void parseReadResult() throws CardProtocol.TangemException {
+        if( mCard==null ) mCard=protocol.getCard();
         // These tags always present in the parsed response: TAG_Status, TAG_CID, TAG_Manufacture_ID, TAG_Health, TAG_Firmware
         TLV tlvStatus = protocol.getReadResult().getTLV(TLV.Tag.TAG_Status);
         mCard.setStatus(TangemCard.Status.fromCode(Util.byteArrayToInt(tlvStatus.Value)));
@@ -256,19 +258,6 @@ public class CustomReadCardTask extends Thread {
             mCard.setWalletPublicKey(pkUncompressed);
             mCard.setWalletPublicKeyRar(pkCompresses);
 
-            // TODO - store in mCard only public key, not wallet address, move wallet address to coinData
-//            TangemContext ctx = new TangemContext(mCard);
-//            try {
-//                CoinEngine engineCoin = CoinEngineFactory.INSTANCE.create(ctx);
-//                if (engineCoin == null) throw new Exception("Can't create CoinEngine!");
-//                String wallet = engineCoin.calculateAddress(pkUncompressed);
-//                mCard.setWallet(wallet);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                throw new TangemException("Can't define wallet address");
-//            }
-            //mCard.setWallet(Blockchain.calculateWalletAddress(mCard, pkUncompressed));
-
             mCard.setRemainingSignatures(protocol.getReadResult().getTagAsInt(TLV.Tag.TAG_RemainingSignatures));
 
             if (protocol.getReadResult() != null && protocol.getReadResult().getTLV(TLV.Tag.TAG_SignedHashes) != null) {
@@ -348,7 +337,7 @@ public class CustomReadCardTask extends Thread {
                     if (protocol.getCard().encryptionMode != TangemCard.EncryptionMode.None) {
                         protocol.CreateProtocolKey();
                     }
-                    protocol.run_Read1();
+                    protocol.run_Read();
                     // After first successful read, data will be parsed into TangemCard object
                     parseReadResult();
 
@@ -375,9 +364,9 @@ public class CustomReadCardTask extends Thread {
     public void run_SecondTimeRead() throws Exception {
         String PIN = mCard.getPIN();
         protocol.setPIN(PIN);
-        protocol.run_Read1();
+        protocol.run_Read();
         PINStorage.setLastUsedPIN(PIN);
-        if (!mCard.getCID().equals(protocol.getReadResult().getTLV(TLV.Tag.TAG_CardID))) {
+        if (!Arrays.equals(mCard.getCID(),protocol.getReadResult().getTLV(TLV.Tag.TAG_CardID).Value)) {
             throw new CardProtocol.TangemException("Card must be the same. Reading attempt on different card!");
         }
     }
