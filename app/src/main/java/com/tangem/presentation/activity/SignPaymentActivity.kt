@@ -13,13 +13,15 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
-import com.tangem.tangemcard.tasks.SignPaymentTask
+import com.tangem.data.nfc.SignPaymentTask
 import com.tangem.tangemcard.reader.CardProtocol
 import com.tangem.tangemcard.reader.NfcManager
 import com.tangem.domain.wallet.CoinEngine
+import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.tangemcard.tasks.SignTask
 import com.tangem.tangemcard.util.Util
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_sign_payment.*
@@ -42,10 +44,11 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
     private var nfcManager: NfcManager? = null
     private lateinit var ctx: TangemContext
 
-    private var signPaymentTask: SignPaymentTask? = null
+//    private var signPaymentTask: SignPaymentTask? = null
+    private var signPaymentTask: SignTask? = null
 
-    private var amount: CoinEngine.Amount? = null
-    private var fee: CoinEngine.Amount? = null
+    private lateinit var amount: CoinEngine.Amount
+    private lateinit var fee: CoinEngine.Amount
     private var isIncludeFee = true
     private var outAddressStr: String? = null
     private var lastReadSuccess = true
@@ -130,7 +133,16 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                 } else {
                     isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 65000
                 }
-                signPaymentTask = SignPaymentTask(this, ctx, nfcManager, isoDep, this, amount, fee, isIncludeFee, outAddressStr)
+//                signPaymentTask = SignPaymentTask(this, ctx, nfcManager, isoDep, this, amount, fee, isIncludeFee, outAddressStr)
+
+                val coinEngine= CoinEngineFactory.create(ctx) ?: throw CardProtocol.TangemException("Can't create CoinEngine!")
+                val paymentToSign = coinEngine.constructPayment(amount, fee, isIncludeFee, outAddressStr)
+
+//                object: SignTask.PaymentToSign {
+//                    override fun call(context: String?) { println("Call: $context") }
+//                    override fun run(context: String?) { println("Run: $context")  }
+//                }
+                signPaymentTask = SignTask(this, ctx.card, nfcManager, isoDep, this, paymentToSign)
                 signPaymentTask!!.start()
             } else {
 //                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card!!.uid + ")")
