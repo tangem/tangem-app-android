@@ -13,7 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.Toast
-import com.tangem.tangemcard.data.PINStorage
+import com.tangem.tangemcard.data.local.PINStorage
 import com.tangem.tangemcard.reader.NfcManager
 import com.tangem.domain.wallet.*
 import com.tangem.presentation.activity.CreateNewWalletActivity
@@ -387,7 +387,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 imgDeveloperVersion.visibility = View.INVISIBLE
 
             if (ctx.card!!.status == TangemCard.Status.Loaded) {
-                tvWallet.text = ctx.card!!.shortWalletString
+                tvWallet.text = ctx.coinData!!.shortWalletString
                 if (ctx.card!!.isWalletPublicKeyValid) {
                     tvWalletIdentity.setText(R.string.possession_proved)
                     tvWalletIdentity.setTextColor(ContextCompat.getColor(context!!, R.color.confirmed))
