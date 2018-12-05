@@ -50,9 +50,9 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         if (ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token)
             requestInfura(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION, "")
         else if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet)
-            requestElectrum(ctx.card!!, ElectrumRequest.broadcast(ctx.card!!.wallet, tx))
+            requestElectrum(ctx.card!!, ElectrumRequest.broadcast(ctx.coinData!!.wallet, tx))
         else if (ctx.blockchain == Blockchain.BitcoinCash)
-            requestElectrum(ctx.card!!, ElectrumRequest.broadcast(ctx.card!!.wallet, tx))
+            requestElectrum(ctx.card!!, ElectrumRequest.broadcast(ctx.coinData!!.wallet, tx))
 
         // request electrum listener
         val electrumBodyListener: ServerApiElectrum.ElectrumRequestDataListener = object : ServerApiElectrum.ElectrumRequestDataListener {
@@ -134,7 +134,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     private fun requestInfura(method: String, contract: String) {
         if (UtilHelper.isOnline(this)) {
-            serverApiInfura.infura(method, 67, ctx.card!!.wallet, contract, tx)
+            serverApiInfura.infura(method, 67, ctx.coinData!!.wallet, contract, tx)
         } else
             finishWithError(getString(R.string.no_connection))
     }
