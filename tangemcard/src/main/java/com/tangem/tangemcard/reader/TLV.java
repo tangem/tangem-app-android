@@ -1,6 +1,6 @@
 package com.tangem.tangemcard.reader;
 
-import com.tangem.util.Util;
+import com.tangem.tangemcard.util.Util;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
