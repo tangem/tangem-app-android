@@ -6,17 +6,14 @@ import android.nfc.TagLostException;
 import android.nfc.tech.IsoDep;
 import android.util.Log;
 
-import com.tangem.tangemcard.data.Issuer;
 import com.tangem.tangemcard.data.TangemCard;
-import com.tangem.tangemcard.data.Firmwares;
-import com.tangem.tangemcard.data.LocalStorage;
+import com.tangem.tangemcard.data.local.Firmwares;
 import com.tangem.tangemcard.data.Manufacturer;
 import com.tangem.tangemcard.util.Util;
 
 import org.spongycastle.jce.ECNamedCurveTable;
 import org.spongycastle.jce.interfaces.ECPublicKey;
 import org.spongycastle.jce.spec.ECNamedCurveParameterSpec;
-import org.spongycastle.math.ec.ECPoint;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,8 +23,6 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.ECGenParameterSpec;
-import java.util.Calendar;
-import java.util.TreeMap;
 
 import javax.crypto.KeyAgreement;
 
@@ -499,7 +494,7 @@ public class CardProtocol {
 //     * @throws Exception if something went wrong
 //     */
 //    public void run_Read() throws Exception {
-//        run_Read1(true);
+//        run_Read(true);
 //    }
 
     /**
@@ -515,7 +510,7 @@ public class CardProtocol {
      *
      * @throws Exception if something went wrong
      */
-    public void run_Read1() throws Exception {
+    public void run_Read() throws Exception {
         CommandApdu rqApdu = StartPrepareCommand(INS.Read);
         Log.i(logTag, String.format("[%s]\n%s", rqApdu.getCommandName(), rqApdu.getTLVs().getParsedTLVs("  ")));
 
@@ -811,37 +806,44 @@ public class CardProtocol {
      * See [1] 8.6
      * @param PIN2                - PIN2 code to confirm operation
      * @param hashes              - array of digests to sign (max 10 digest at a time)
-     * @param UseIssuerValidation - if card need issuer validation before sign (true for SigningMethod=2,4)
+     * @param issuerTransactionSignature - signature of hashes, if card need issuer validation before sign (for SigningMethod=2)
      * @param issuerData          - new issuerData to write on card (only for SigningMethod=4, null for other)
-     * @param issuer              - issuer (need only for SigningMethod=2,4)
+     * @param issuerDataSignature - signature of issuerData, if issuerData specified(for SigningMethod=4)
      * @return TLVList with card answer contained wallet signatures of digests from hashes array (in case of success)
      * @throws Exception - if something went wrong
      */
-    // TODO - change function to run_SignHashes(String PIN2, byte[][] hashes, byte[] issuerData, byte[] issuerTransactionSignature) because normally issuer signature can be obtained only by external server
-    public TLVList run_SignHashes(String PIN2, byte[][] hashes, boolean UseIssuerValidation, byte[] issuerData, Issuer issuer) throws Exception {
+    public TLVList run_SignHashes(String PIN2, byte[][] hashes, byte[] issuerTransactionSignature, byte[] issuerData, byte[] issuerDataSignature) throws Exception {
+        if ( mCard.getSigningMethod()!=TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer && mCard.getSigningMethod()!=TangemCard.SigningMethod.Sign_Hash ){
+            throw new TangemException("Card don't support signing hashes!");
+        }
+
         ByteArrayOutputStream bs = new ByteArrayOutputStream();
-        if (hashes.length > 10) throw new Exception("To much hashes in one transaction!");
+        if (hashes.length > 10) throw new TangemException("To much hashes in one transaction!");
         for (int i = 0; i < hashes.length; i++) {
             if (i != 0 && hashes[0].length != hashes[i].length)
-                throw new Exception("Hashes length must be identical!");
+                throw new TangemException("Hashes length must be identical!");
             bs.write(hashes[i]);
         }
         CommandApdu rqApdu = StartPrepareCommand(INS.Sign);
         rqApdu.addTLV(TLV.Tag.TAG_PIN2, Util.calculateSHA256(PIN2));
         rqApdu.addTLV_U8(TLV.Tag.TAG_TrOut_HashSize, hashes[0].length);
         rqApdu.addTLV(TLV.Tag.TAG_TrOut_Hash, bs.toByteArray());
-        if (UseIssuerValidation) {
-            byte[] issuerSignature = CardCrypto.Signature(issuer.getPrivateTransactionKey(), bs.toByteArray());
-            rqApdu.addTLV(TLV.Tag.TAG_Issuer_Transaction_Signature, issuerSignature);
-        }
         if (issuerData != null) {
-            if (issuer == null || issuer == Issuer.Unknown())
-                throw new Exception("Need known Issuer to write issuer Data");
-            rqApdu.addTLV(TLV.Tag.TAG_Issuer_Data, issuerData);
-            byte[] issuerSignature = CardCrypto.Signature(issuer.getPrivateTransactionKey(), issuerData);
-            rqApdu.addTLV(TLV.Tag.TAG_Issuer_Data_Signature, issuerSignature);
-        }
+            if ( mCard.getSigningMethod()!=TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer_And_WriteIssuerData )
+                throw new TangemException("Card don't support simultaneous sign with write issuer data!");
 
+            if (issuerDataSignature == null )
+                throw new TangemException("Card require issuer validation before write issuer data");
+            bs.write(issuerData);
+            rqApdu.addTLV(TLV.Tag.TAG_Issuer_Data, issuerData);
+            rqApdu.addTLV(TLV.Tag.TAG_Issuer_Data_Signature, issuerDataSignature);
+        }
+        if (issuerTransactionSignature!=null) {
+            //byte[] issuerSignature = CardCrypto.Signature(issuer.getPrivateTransactionKey(), bs.toByteArray());
+            rqApdu.addTLV(TLV.Tag.TAG_Issuer_Transaction_Signature, issuerTransactionSignature);
+        }else if ( mCard.getSigningMethod()==TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer ){
+            throw new TangemException("Card require issuer validation before sign the transaction!");
+        }
 
         Log.i(logTag, String.format("[%s]\n%s", rqApdu.getCommandName(), rqApdu.getTLVs().getParsedTLVs("  ")));
 
@@ -868,18 +870,41 @@ public class CardProtocol {
      * SIGN raw tx - SigningMethod=1 (see {@link TangemCard.SigningMethod})
      * See [1] 8.6
      * @param PIN2 - PIN2 code to confirm operation
+     * @param hashAlgID - name of hash alg, used for signature
      * @param bTxOutData - part of raw transaction to sign
+     * @param issuerTransactionSignature - signature of hashes, if card need issuer validation before sign (for SigningMethod=2)
+     * @param issuerData          - new issuerData to write on card (only for SigningMethod=4, null for other)
+     * @param issuerDataSignature - signature of issuerData, if issuerData specified(for SigningMethod=4)
      * @return TLVList with card answer contained wallet signatures of bTxOutData(in case of success)
      * @throws Exception - if something went wrong
      */
-    // TODO - change function to run_SignRaw(String PIN2, String hashAlgID, byte[] bTxOutData, byte[] issuerData, byte[] issuerTransactionSignature) to support all signing methods
-    public TLVList run_SignRaw(String PIN2, byte[] bTxOutData) throws Exception {
+    public TLVList run_SignRaw(String PIN2, String hashAlgID, byte[] bTxOutData, byte[] issuerTransactionSignature, byte[] issuerData, byte[] issuerDataSignature) throws Exception {
 
         CommandApdu rqApdu = StartPrepareCommand(INS.Sign);
         rqApdu.addTLV(TLV.Tag.TAG_PIN2, Util.calculateSHA256(PIN2));
         rqApdu.addTLV(TLV.Tag.TAG_TrOut_Raw, bTxOutData);
-        rqApdu.addTLV(TLV.Tag.TAG_HashAlgID, "sha-256x2".getBytes("US-ASCII"));
+        rqApdu.addTLV(TLV.Tag.TAG_HashAlgID, hashAlgID.getBytes("US-ASCII"));
         Log.i(logTag, String.format("[%s]\n%s", rqApdu.getCommandName(), rqApdu.getTLVs().getParsedTLVs("  ")));
+
+        ByteArrayOutputStream bs = new ByteArrayOutputStream();
+        if (bTxOutData.length > 1024) throw new TangemException("Raw transaction size is to big!");
+        bs.write(bTxOutData);
+
+        if (issuerData != null) {
+            if ( mCard.getSigningMethod()!=TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer_And_WriteIssuerData )
+                throw new TangemException("Card don't support simultaneous sign with write issuer data!");
+
+            if (issuerDataSignature == null )
+                throw new TangemException("Card require issuer validation before write issuer data");
+            bs.write(issuerData);
+            rqApdu.addTLV(TLV.Tag.TAG_Issuer_Data, issuerData);
+            rqApdu.addTLV(TLV.Tag.TAG_Issuer_Data_Signature, issuerDataSignature);
+        }
+        if (issuerTransactionSignature!=null) {
+            rqApdu.addTLV(TLV.Tag.TAG_Issuer_Transaction_Signature, issuerTransactionSignature);
+        }else if ( mCard.getSigningMethod()==TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer ){
+            throw new TangemException("Card require issuer validation before sign the transaction!");
+        }
 
         ResponseApdu rspApdu = SendAndReceive(rqApdu, false);
 
