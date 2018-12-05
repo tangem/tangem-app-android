@@ -33,7 +33,11 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         private const val REQUEST_CODE_REQUEST_PIN2 = 3
         private const val REQUEST_CODE_VERIFY_CARD = 4
 
-        fun callingIntent(context: Context) = Intent(context, EmptyWalletActivity::class.java)
+        fun callingIntent(context: Context, ctx: TangemContext) : Intent {
+            val intent=Intent(context, EmptyWalletActivity::class.java)
+            ctx.saveToIntent(intent)
+            return intent
+        }
     }
 
     private var nfcManager: NfcManager? = null

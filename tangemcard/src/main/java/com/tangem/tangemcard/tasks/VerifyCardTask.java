@@ -5,9 +5,8 @@ import android.nfc.tech.IsoDep;
 import android.util.Log;
 
 import com.tangem.tangemcard.reader.CardProtocol;
-import com.tangem.tangemcard.data.Firmwares;
+import com.tangem.tangemcard.data.local.Firmwares;
 import com.tangem.tangemcard.reader.NfcManager;
-import com.tangem.tangemcard.data.PINStorage;
 import com.tangem.tangemcard.data.TangemCard;
 
 import java.util.Arrays;
