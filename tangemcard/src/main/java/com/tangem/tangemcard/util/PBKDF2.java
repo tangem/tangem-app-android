@@ -1,5 +1,5 @@
 
-package com.tangem.tangemcard.reader;
+package com.tangem.tangemcard.util;
 
 import org.spongycastle.crypto.CipherParameters;
 import org.spongycastle.crypto.digests.SHA256Digest;
