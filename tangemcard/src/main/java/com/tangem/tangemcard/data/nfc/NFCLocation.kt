@@ -1,4 +1,4 @@
-package com.tangem.tangemcard.data
+package com.tangem.tangemcard.data.nfc
 
 enum class NFCLocation(val codename: String, val fullName: String, val orientation: Int, val x: Int, val y: Int, val z: Int) {
     model1("sailfish", "Google Pixel", 0, 65, 25, 0),
