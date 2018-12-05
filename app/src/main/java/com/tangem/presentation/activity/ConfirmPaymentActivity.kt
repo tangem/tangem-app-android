@@ -400,7 +400,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 // [REDACTED_TODO_COMMENT]
     @Throws(Exception::class)
     internal fun buildSize(outputAddress: String, outFee: String, outAmount: String): Int {
-        val myAddress = ctx.card!!.wallet
+        val myAddress = ctx.coinData!!.wallet
         val pbKey = ctx.card!!.walletPublicKey
         val pbComprKey = ctx.card!!.walletPublicKeyRar
 
@@ -471,7 +471,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     private fun requestInfura(method: String) {
         if (UtilHelper.isOnline(this)) {
-            serverApiInfura.infura(method, 67, ctx.card!!.wallet, "", "")
+            serverApiInfura.infura(method, 67, ctx.coinData!!.wallet, "", "")
         } else
             finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
     }

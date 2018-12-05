@@ -26,13 +26,15 @@ import android.widget.Toast
 import com.scottyab.rootbeer.RootBeer
 import com.tangem.App
 import com.tangem.data.Logger
-import com.tangem.tangemcard.data.PINStorage
+import com.tangem.tangemcard.data.local.PINStorage
 import com.tangem.data.network.ServerApiCommon
-import com.tangem.tangemcard.data.DeviceNFCAntennaLocation
+import com.tangem.tangemcard.data.nfc.DeviceNFCAntennaLocation
 import com.tangem.tangemcard.tasks.ReadCardInfoTask
 import com.tangem.di.Navigator
+import com.tangem.domain.wallet.CoinEngineFactory
+import com.tangem.domain.wallet.TangemContext
 import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.data.Firmwares
+import com.tangem.tangemcard.data.local.Firmwares
 import com.tangem.tangemcard.reader.NfcManager
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.RootFoundDialog
@@ -309,7 +311,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     }
 
     override fun onReadProgress(protocol: CardProtocol, progress: Int) {
-
     }
 
     override fun onReadFinish(cardProtocol: CardProtocol?) {
@@ -319,7 +320,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                 nfcManager!!.notifyReadResult(true)
                 rlProgressBar.post {
                     rlProgressBar.visibility = View.GONE
-// [REDACTED_TODO_COMMENT]
+
+//                    // TODO - ??? remove save and load???
                     val cardInfo = Bundle()
                     cardInfo.putString("UID", cardProtocol.card.uid)
                     val bCard = Bundle()
@@ -330,12 +332,19 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                     val card = TangemCard(uid)
                     card.loadFromBundle(cardInfo.getBundle("Card"))
 
+                    val ctx = TangemContext(card)
                     when {
-                        card.status == TangemCard.Status.Loaded -> lastTag?.let { navigator.showLoadedWallet(this, it, cardInfo) }
-                        card.status == TangemCard.Status.Empty -> navigator.showEmptyWallet(this)
+                        card.status == TangemCard.Status.Loaded -> lastTag?.let {
+                            val engineCoin = CoinEngineFactory.create(ctx) ?: throw CardProtocol.TangemException("Can't create CoinEngine!")
+                            engineCoin.defineWallet()
+                            //mCard.setWallet(Blockchain.calculateWalletAddress(mCard, pkUncompressed));
+
+                            navigator.showLoadedWallet(this, it, ctx)
+                        }
+                        card.status == TangemCard.Status.Empty -> navigator.showEmptyWallet(this, ctx)
                         card.status == TangemCard.Status.Purged -> Toast.makeText(this, R.string.erased_wallet, Toast.LENGTH_SHORT).show()
                         card.status == TangemCard.Status.NotPersonalized -> Toast.makeText(this, R.string.not_personalized, Toast.LENGTH_SHORT).show()
-                        else -> lastTag?.let { navigator.showLoadedWallet(this, it, cardInfo) }
+                        else -> lastTag?.let { navigator.showLoadedWallet(this, it, ctx) }
                     }
                 }
 

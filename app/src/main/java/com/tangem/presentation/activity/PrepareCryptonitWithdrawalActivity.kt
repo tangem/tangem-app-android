@@ -52,7 +52,7 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         etFee.setText(cryptonit!!.fee)
 
         tvCardID.text = ctx.card!!.cidDescription
-        tvWallet.text = ctx.card!!.wallet
+        tvWallet.text = ctx.coinData!!.wallet
         val engine = CoinEngineFactory.create(ctx)
 
         tvCurrency.text = engine!!.balanceCurrency
@@ -100,7 +100,7 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
                 rlProgressBar.visibility = View.VISIBLE
                 tvProgressDescription.text = getString(R.string.cryptonit_request_withdrawal)
 
-                cryptonit!!.requestWithdrawCoins(ctx.blockchain.currency, dblAmount, ctx.card!!.wallet)
+                cryptonit!!.requestWithdrawCoins(ctx.blockchain.currency, dblAmount, ctx.coinData!!.wallet)
             } catch (e: Exception) {
                 etAmount.error = getString(R.string.unknown_amount_format)
             }
