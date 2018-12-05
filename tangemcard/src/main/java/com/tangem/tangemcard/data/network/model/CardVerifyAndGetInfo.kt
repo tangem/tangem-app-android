@@ -1,4 +1,4 @@
-package com.tangem.data.network.model
+package com.tangem.tangemcard.data.network.model
 
 import java.text.SimpleDateFormat
 import java.util.*
