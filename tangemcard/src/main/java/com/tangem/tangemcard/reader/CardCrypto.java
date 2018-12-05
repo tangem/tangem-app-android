@@ -2,6 +2,7 @@ package com.tangem.tangemcard.reader;
 
 import android.util.Log;
 
+import com.tangem.tangemcard.util.PBKDF2;
 import com.tangem.tangemcard.util.Util;
 
 import org.spongycastle.asn1.ASN1EncodableVector;
