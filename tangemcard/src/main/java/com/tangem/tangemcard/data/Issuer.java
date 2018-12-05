@@ -5,7 +5,7 @@ import android.content.Context;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.tangem.tangemcard.reader.CardCrypto;
-import com.tangem.util.Util;
+import com.tangem.tangemcard.util.Util;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
