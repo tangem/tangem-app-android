@@ -104,7 +104,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 etWallet.error = null
             }
 
-            if (etWallet.text.toString() == ctx.card!!.wallet) {
+            if (etWallet.text.toString() == ctx.coinData!!.wallet) {
                 etWallet.error = getString(R.string.destination_wallet_address_equal_source_address)
                 return@setOnClickListener
             }
