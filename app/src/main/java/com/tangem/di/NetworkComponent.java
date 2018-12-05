@@ -20,9 +20,6 @@ public interface NetworkComponent {
     @Named(Server.ApiEstimatefee.URL_ESTIMATEFEE)
     Retrofit getRetrofitEstimatefee();
 
-    @Named(Server.ApiTangem.URL_TANGEM)
-    Retrofit getRetrofitTangem();
-
     @Named(Server.ApiCoinmarket.URL_COINMARKET)
     Retrofit getRetrofitCoinmarketcap();
 
