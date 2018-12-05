@@ -1,23 +1,23 @@
-package com.tangem.tangemcard.tasks;
+package com.tangem.data.nfc;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.nfc.tech.IsoDep;
 import android.util.Log;
 
-import com.tangem.tangemcard.reader.CardProtocol;
-import com.tangem.tangemcard.reader.NfcManager;
-import com.tangem.tangemcard.data.Blockchain;
+import com.tangem.domain.wallet.BTCUtils;
 import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.CoinEngineFactory;
 import com.tangem.domain.wallet.TangemContext;
 import com.tangem.presentation.activity.SendTransactionActivity;
 import com.tangem.presentation.activity.SignPaymentActivity;
-import com.tangem.domain.wallet.BTCUtils;
+import com.tangem.tangemcard.reader.CardProtocol;
+import com.tangem.tangemcard.reader.NfcManager;
+import com.tangem.tangemcard.data.Blockchain;
 
 import java.io.IOException;
 
-public class SignPaymentTask extends Thread {
+public class SignPaymentTask extends Thread{
     public static final String TAG = SignPaymentTask.class.getSimpleName();
 
     private CoinEngine.Amount txAmount;
@@ -72,7 +72,7 @@ public class SignPaymentTask extends Thread {
                 Log.i(TAG, "[-- Start sign payment --]");
 
                 if (isCancelled) return;
-                protocol.run_Read(false);
+                protocol.run_Read();
                 protocol.run_VerifyCard();
 
                 Log.i(TAG, "Manufacturer: " + protocol.getCard().getManufacturer().getOfficialName());

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.nfc.Tag
 import android.os.Bundle
 import com.tangem.domain.wallet.CoinData
+import com.tangem.domain.wallet.TangemContext
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.presentation.activity.EmptyWalletActivity
 import com.tangem.presentation.activity.LoadedWalletActivity
@@ -17,16 +18,16 @@ class Navigator {
         context.startActivity(MainActivity.callingIntent(context))
     }
 
-    fun showLoadedWallet(context: Activity, lastTag: Tag, cardInfo: Bundle) {
-        context.startActivityForResult(LoadedWalletActivity.callingIntent(context, lastTag, cardInfo), MainActivity.REQUEST_CODE_SHOW_CARD_ACTIVITY)
+    fun showLoadedWallet(context: Activity, lastTag: Tag, ctx: TangemContext) {
+        context.startActivityForResult(LoadedWalletActivity.callingIntent(context, lastTag, ctx), MainActivity.REQUEST_CODE_SHOW_CARD_ACTIVITY)
     }
 
-    fun showEmptyWallet(context: Activity) {
-        context.startActivity(EmptyWalletActivity.callingIntent(context))
+    fun showEmptyWallet(context: Activity, ctx: TangemContext) {
+        context.startActivity(EmptyWalletActivity.callingIntent(context ,ctx))
     }
 
-    fun showVerifyCard(context: Activity, card: TangemCard, coinData: CoinData, message: String, error: String) {
-        context.startActivityForResult(VerifyCardActivity.callingIntent(context, card, coinData, message, error), LoadedWallet.REQUEST_CODE_VERIFY_CARD)
+    fun showVerifyCard(context: Activity, ctx: TangemContext) {
+        context.startActivityForResult(VerifyCardActivity.callingIntent(context, ctx), LoadedWallet.REQUEST_CODE_VERIFY_CARD)
     }
 
     fun showPinSwap(context: Activity) {
