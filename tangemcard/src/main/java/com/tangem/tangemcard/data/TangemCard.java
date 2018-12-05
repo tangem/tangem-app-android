@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.google.common.base.Strings;
+import com.tangem.tangemcard.data.local.PINStorage;
 import com.tangem.tangemcard.reader.SettingsMask;
 import com.tangem.tangemcard.util.Util;
 
@@ -463,7 +464,9 @@ public class TangemCard {
         Sign_Hash(0, "sign hash"),
         Sign_Raw(1, "sign raw tx"),
         Sign_Hash_Validated_By_Issuer(2, "sign hash validated by issuer"),
-        Sign_Raw_Validated_By_Issuer(3, "sign raw tx validated by issuer");
+        Sign_Raw_Validated_By_Issuer(3, "sign raw tx validated by issuer"),
+        Sign_Hash_Validated_By_Issuer_And_WriteIssuerData(4, "sign hash validated by issuer and write issuer data"),
+        Sign_Raw_Validated_By_Issuer_And_WriteIssuerData(5, "sign raw tx validated by issuer and write issuer data");
 
         int ID;
         String mDescription;
