@@ -4,6 +4,9 @@ import android.net.Uri;
 import android.text.InputFilter;
 
 import com.tangem.tangemcard.reader.CardProtocol;
+import com.tangem.tangemcard.tasks.SignTask;
+
+import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -19,6 +22,7 @@ import java.util.Locale;
  */
 
 public abstract class CoinEngine {
+
 
     public static class InternalAmount extends BigDecimal {
         private String currency;
@@ -231,4 +235,21 @@ public abstract class CoinEngine {
 
     public abstract String getUnspentInputsDescription();
 
+    public void defineWallet() throws CardProtocol.TangemException {
+        try {
+            String wallet = calculateAddress(ctx.getCard().getWalletPublicKey());
+            ctx.getCoinData().setWallet(wallet);
+        }
+        catch (Exception e)
+        {
+            ctx.getCoinData().setWallet("ERROR");
+            throw new CardProtocol.TangemException("Can't define wallet address");
+        }
+
+    }
+
+    public SignTask.PaymentToSign constructPayment(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress)
+    {
+        return null;
+    }
 }
