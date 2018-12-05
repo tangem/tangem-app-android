@@ -5,7 +5,7 @@ import android.nfc.tech.IsoDep;
 
 import com.tangem.tangemcard.reader.CardProtocol;
 import com.tangem.tangemcard.reader.NfcManager;
-import com.tangem.tangemcard.data.PINStorage;
+import com.tangem.tangemcard.data.local.PINStorage;
 import com.tangem.tangemcard.data.TangemCard;
 
 public class PurgeTask extends CustomReadCardTask {
@@ -22,7 +22,7 @@ public class PurgeTask extends CustomReadCardTask {
         }
         protocol.run_PurgeWallet(PINStorage.getPIN2());
         mNotifications.onReadProgress(protocol, 50);
-        protocol.run_Read1();
+        protocol.run_Read();
         mNotifications.onReadProgress(protocol, 100);
 
     }

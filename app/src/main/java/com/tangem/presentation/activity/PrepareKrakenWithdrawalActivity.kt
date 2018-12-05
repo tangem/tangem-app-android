@@ -57,7 +57,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
         tvSecret.text = kraken!!.secretDescription
 
         tvCardID.text = ctx.card!!.cidDescription
-        tvWallet.text = ctx.card!!.wallet
+        tvWallet.text = ctx.coinData!!.wallet
         val engine = CoinEngineFactory.create(ctx)
 
         tvCurrency.text = engine!!.balanceCurrency
@@ -85,7 +85,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
                 rlProgressBar.visibility = View.VISIBLE
                 tvProgressDescription.text = getString(R.string.kraken_request_withdrawal)
 
-                kraken!!.requestWithdrawInfo(ctx.blockchain.currency, dblAmount.toString(), ctx.card!!.wallet)
+                kraken!!.requestWithdrawInfo(ctx.blockchain.currency, dblAmount.toString(), ctx.coinData!!.wallet)
             } catch (e: Exception) {
                 etAmount.error = getString(R.string.unknown_amount_format)
             }
@@ -184,7 +184,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
                         tvProgressDescription.text = getString(R.string.kraken_request_withdrawal)
 
                         //Toast.makeText(this, String.format("Withdraw %s!",dblAmount.toString()), Toast.LENGTH_LONG).show()
-                        kraken!!.requestWithdraw(ctx.blockchain.currency, dblAmount.toString(), ctx.card!!.wallet)
+                        kraken!!.requestWithdraw(ctx.blockchain.currency, dblAmount.toString(), ctx.coinData!!.wallet)
                     } catch (e: Exception) {
                         etAmount.error = getString(R.string.unknown_amount_format)
                     }
