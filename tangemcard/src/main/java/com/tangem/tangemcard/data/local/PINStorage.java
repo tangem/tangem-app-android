@@ -1,4 +1,4 @@
-package com.tangem.tangemcard.data;
+package com.tangem.tangemcard.data.local;
 
 import android.content.Context;
 import android.content.SharedPreferences;
