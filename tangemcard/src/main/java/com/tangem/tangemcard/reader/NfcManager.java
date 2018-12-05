@@ -16,7 +16,7 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 
-import com.tangem.presentation.dialog.NfcEnableDialog;
+import com.tangem.tangemcard.presentation.dialog.NfcEnableDialog;
 
 import java.io.IOException;
 
