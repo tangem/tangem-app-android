@@ -185,7 +185,7 @@ public abstract class CoinEngine {
 
     public abstract boolean isBalanceNotZero();
 
-    public abstract byte[] sign(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress, CardProtocol protocol) throws Exception;
+//    public abstract byte[] sign(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress, CardProtocol protocol) throws Exception;
 
     // TODO - change isExtractPossible to isExtractPossible and if not - return string message
     public abstract boolean isExtractPossible();
@@ -248,8 +248,22 @@ public abstract class CoinEngine {
 
     }
 
-    public SignTask.PaymentToSign constructPayment(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress)
+    public abstract SignTask.PaymentToSign constructPayment(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception;
+
+    public interface OnNeedSendPayment
     {
-        return null;
+        void onPaymentPrepared(byte[] txForSend);
+    }
+    private OnNeedSendPayment onNeedSendPayment;
+
+    public void setOnNeedSendPayment(OnNeedSendPayment onNeedSendPayment) {
+        this.onNeedSendPayment = onNeedSendPayment;
+    }
+
+    protected void notifyOnNeedSendPayment(byte[] txForSend) throws Exception {
+        if(onNeedSendPayment==null)
+            throw new Exception("Payment signed but no callback defined to send!");
+        onNeedSendPayment.onPaymentPrepared(txForSend);
+
     }
 }
