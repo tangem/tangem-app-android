@@ -16,6 +16,7 @@ import com.tangem.domain.wallet.TangemContext;
 import com.tangem.domain.wallet.Transaction;
 import com.tangem.domain.wallet.UnspentOutputInfo;
 import com.tangem.domain.wallet.BTCUtils;
+import com.tangem.tangemcard.tasks.SignTask;
 import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.util.DerEncodingUtil;
@@ -404,8 +405,8 @@ public class BtcEngine extends CoinEngine {
     }
 
     @Override
-    public byte[] sign(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress, CardProtocol protocol) throws Exception {
-
+    public SignTask.PaymentToSign constructPayment(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
+        final ArrayList<UnspentOutputInfo> unspentOutputs;
         checkBlockchainDataExists();
 
         String myAddress = ctx.getCoinData().getWallet();
@@ -416,13 +417,12 @@ public class BtcEngine extends CoinEngine {
         byte[] outputScriptWeAreAbleToSpend = Transaction.Script.buildOutput(myAddress).bytes;
 
         // Collect unspent
-        ArrayList<UnspentOutputInfo> unspentOutputs = BTCUtils.getOutputs(rawTxList, outputScriptWeAreAbleToSpend);
+        unspentOutputs = BTCUtils.getOutputs(rawTxList, outputScriptWeAreAbleToSpend);
 
         long fullAmount = 0;
         for (int i = 0; i < unspentOutputs.size(); ++i) {
             fullAmount += unspentOutputs.get(i).value;
         }
-
 
         long fees = convertToInternalAmount(feeValue).longValueExact();
         long amount = convertToInternalAmount(amountValue).longValueExact();
@@ -433,53 +433,155 @@ public class BtcEngine extends CoinEngine {
             change = change - fees;
         }
 
+        final long amountFinal=amount;
+        final long changeFinal=change;
+
         if (amount + fees > fullAmount) {
             throw new CardProtocol.TangemException_WrongAmount(String.format("Balance (%d) < change (%d) + amount (%d)", fullAmount, change, amount));
         }
 
-        byte[][] dataForSign = new byte[unspentOutputs.size()][];
+        byte[][] txForSign = new byte[unspentOutputs.size()][];
+        byte[][] bodyDoubleHash = new byte[unspentOutputs.size()][];
+        byte[][] bodyHash= new byte[unspentOutputs.size()][];
 
         for (int i = 0; i < unspentOutputs.size(); ++i) {
-            byte[] newTX = BTCUtils.buildTXForSign(myAddress, targetAddress, myAddress, unspentOutputs, i, amount, change);
+            txForSign[i] = BTCUtils.buildTXForSign(myAddress, targetAddress, myAddress, unspentOutputs, i, amount, change);
+            bodyHash[i] = Util.calculateSHA256(txForSign[i]);
+            bodyDoubleHash [i] = Util.calculateSHA256(bodyHash[i]);
+        }
 
-            byte[] hashData = Util.calculateSHA256(newTX);
-            byte[] doubleHashData = Util.calculateSHA256(hashData);
+        return new SignTask.PaymentToSign() {
 
-            unspentOutputs.get(i).bodyDoubleHash = doubleHashData;
-            unspentOutputs.get(i).bodyHash = hashData;
-
-            if (ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Raw || ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Raw_Validated_By_Issuer) {
-                dataForSign[i] = newTX;
-            } else {
-                dataForSign[i] = doubleHashData;
+            @Override
+            public boolean isSigningMethodSupported(TangemCard.SigningMethod signingMethod) {
+                return signingMethod==TangemCard.SigningMethod.Sign_Hash || signingMethod==TangemCard.SigningMethod.Sign_Raw;
             }
-        }
 
-        byte[] signFromCard;
-        if (ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Raw || ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Raw_Validated_By_Issuer) {
-            ByteArrayOutputStream bs = new ByteArrayOutputStream();
-            if (dataForSign.length > 10) throw new Exception("To much hashes in one transaction!");
-            for (int i = 0; i < dataForSign.length; i++) {
-                if (i != 0 && dataForSign[0].length != dataForSign[i].length)
-                    throw new Exception("Hashes length must be identical!");
-                bs.write(dataForSign[i]);
+            @Override
+            public byte[][] getHashesToSign() throws Exception {
+                byte[][] dataForSign=new byte[unspentOutputs.size()][];
+                if (txForSign.length > 10) throw new Exception("To much hashes in one transaction!");
+                for (int i = 0; i < unspentOutputs.size(); ++i) {
+                    dataForSign[i] = bodyDoubleHash[i];
+                }
+                return dataForSign;
             }
-            signFromCard = protocol.run_SignRaw(PINStorage.getPIN2(), "sha-256x2",bs.toByteArray(),null,null,null).getTLV(TLV.Tag.TAG_Signature).Value;
-        } else {
-            //ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer, null, ctx.getCard().getIssuer()
-            signFromCard = protocol.run_SignHashes(PINStorage.getPIN2(), dataForSign, null, null, null).getTLV(TLV.Tag.TAG_Signature).Value;
-            // TODO slice signFromCard to hashes.length parts
-        }
 
-        for (int i = 0; i < unspentOutputs.size(); ++i) {
-            BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, i * 64, 32 + i * 64));
-            BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, 32 + i * 64, 64 + i * 64));
-            s = CryptoUtil.toCanonicalised(s);
+            @Override
+            public byte[] getRawDataToSign() throws Exception {
+                ByteArrayOutputStream bs = new ByteArrayOutputStream();
+                for (int i = 0; i < txForSign.length; i++) {
+                    if (i != 0 && txForSign[0].length != txForSign[i].length)
+                        throw new Exception("Hashes length must be identical!");
+                    bs.write(txForSign[i]);
+                }
 
-            unspentOutputs.get(i).scriptForBuild = DerEncodingUtil.packSignDer(r, s, pbKey);
-        }
+                return bs.toByteArray();
+            }
 
-        return BTCUtils.buildTXForSend(targetAddress, myAddress, unspentOutputs, amount, change);
+            @Override
+            public String getHashAlgToSign() {
+                return "sha-256x2";
+            }
+
+            @Override
+            public byte[] getIssuerTransactionSignature(byte[] dataToSignByIssuer) throws Exception {
+                throw new Exception("Issuer validation not supported!");
+            }
+
+            @Override
+            public void onSignCompleted(byte[] signature) throws Exception {
+                for (int i = 0; i < unspentOutputs.size(); ++i) {
+                    BigInteger r = new BigInteger(1, Arrays.copyOfRange(signature, i * 64, 32 + i * 64));
+                    BigInteger s = new BigInteger(1, Arrays.copyOfRange(signature, 32 + i * 64, 64 + i * 64));
+                    s = CryptoUtil.toCanonicalised(s);
+
+                    unspentOutputs.get(i).scriptForBuild = DerEncodingUtil.packSignDer(r, s, pbKey);
+                }
+
+                byte[] txForSend=BTCUtils.buildTXForSend(targetAddress, myAddress, unspentOutputs, amountFinal, changeFinal);
+                notifyOnNeedSendPayment(txForSend);
+            }
+        };
     }
+
+//    @Override
+//    public byte[] sign(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress, CardProtocol protocol) throws Exception {
+//
+//        checkBlockchainDataExists();
+//
+//        String myAddress = ctx.getCoinData().getWallet();
+//        byte[] pbKey = ctx.getCard().getWalletPublicKey();
+//
+//        // Build script for our address
+//        List<BtcData.UnspentTransaction> rawTxList = coinData.getUnspentTransactions();
+//        byte[] outputScriptWeAreAbleToSpend = Transaction.Script.buildOutput(myAddress).bytes;
+//
+//        // Collect unspent
+//        ArrayList<UnspentOutputInfo> unspentOutputs = BTCUtils.getOutputs(rawTxList, outputScriptWeAreAbleToSpend);
+//
+//        long fullAmount = 0;
+//        for (int i = 0; i < unspentOutputs.size(); ++i) {
+//            fullAmount += unspentOutputs.get(i).value;
+//        }
+//
+//
+//        long fees = convertToInternalAmount(feeValue).longValueExact();
+//        long amount = convertToInternalAmount(amountValue).longValueExact();
+//        long change = fullAmount - amount;
+//        if (IncFee) {
+//            amount = amount - fees;
+//        } else {
+//            change = change - fees;
+//        }
+//
+//        if (amount + fees > fullAmount) {
+//            throw new CardProtocol.TangemException_WrongAmount(String.format("Balance (%d) < change (%d) + amount (%d)", fullAmount, change, amount));
+//        }
+//
+//        byte[][] dataForSign = new byte[unspentOutputs.size()][];
+//
+//        for (int i = 0; i < unspentOutputs.size(); ++i) {
+//            byte[] newTX = BTCUtils.buildTXForSign(myAddress, targetAddress, myAddress, unspentOutputs, i, amount, change);
+//
+//            byte[] hashData = Util.calculateSHA256(newTX);
+//            byte[] doubleHashData = Util.calculateSHA256(hashData);
+//
+//            unspentOutputs.get(i).bodyDoubleHash = doubleHashData;
+//            unspentOutputs.get(i).bodyHash = hashData;
+//
+//            if (ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Raw || ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Raw_Validated_By_Issuer) {
+//                dataForSign[i] = newTX;
+//            } else {
+//                dataForSign[i] = doubleHashData;
+//            }
+//        }
+//
+//        byte[] signFromCard;
+//        if (ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Raw || ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Raw_Validated_By_Issuer) {
+//            ByteArrayOutputStream bs = new ByteArrayOutputStream();
+//            if (dataForSign.length > 10) throw new Exception("To much hashes in one transaction!");
+//            for (int i = 0; i < dataForSign.length; i++) {
+//                if (i != 0 && dataForSign[0].length != dataForSign[i].length)
+//                    throw new Exception("Hashes length must be identical!");
+//                bs.write(dataForSign[i]);
+//            }
+//            signFromCard = protocol.run_SignRaw(PINStorage.getPIN2(), "sha-256x2",bs.toByteArray(),null,null,null).getTLV(TLV.Tag.TAG_Signature).Value;
+//        } else {
+//            //ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer, null, ctx.getCard().getIssuer()
+//            signFromCard = protocol.run_SignHashes(PINStorage.getPIN2(), dataForSign, null, null, null).getTLV(TLV.Tag.TAG_Signature).Value;
+//            // TODO slice signFromCard to hashes.length parts
+//        }
+//
+//        for (int i = 0; i < unspentOutputs.size(); ++i) {
+//            BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, i * 64, 32 + i * 64));
+//            BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, 32 + i * 64, 64 + i * 64));
+//            s = CryptoUtil.toCanonicalised(s);
+//
+//            unspentOutputs.get(i).scriptForBuild = DerEncodingUtil.packSignDer(r, s, pbKey);
+//        }
+//
+//        return BTCUtils.buildTXForSend(targetAddress, myAddress, unspentOutputs, amount, change);
+//    }
 
 }
