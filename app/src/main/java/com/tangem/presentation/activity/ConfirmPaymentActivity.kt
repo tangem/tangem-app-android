@@ -109,13 +109,6 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
 //            requestElectrum(ctx.card, ElectrumRequest.checkBalance(ctx.card!!.wallet))
 
-            calcSize = 256
-            try {
-                calcSize = buildSize(etWallet!!.text.toString(), "0.00", etAmount.text.toString())
-            } catch (ex: Exception) {
-                Log.e("Build Fee error", ex.message)
-            }
-
             ctx.coinData!!.resetFailedBalanceRequestCounter()
 
             progressBar.visibility = View.VISIBLE
@@ -443,8 +436,8 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 //            Log.e("TX_HASH_1", BTCUtils.toHex(hashData))
 //            Log.e("TX_HASH_2", BTCUtils.toHex(doubleHashData))
 
-            unspentOutputs[i].bodyDoubleHash = doubleHashData
-            unspentOutputs[i].bodyHash = hashData
+//            unspentOutputs[i].bodyDoubleHash = doubleHashData
+//            unspentOutputs[i].bodyHash = hashData
             hashesForSign[i] = doubleHashData
         }
 
@@ -477,6 +470,16 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     }
 
     private fun requestEstimateFee() {
+        if( calcSize==0 )
+        {
+            calcSize = 256
+            try {
+
+                calcSize =  buildSize(etWallet!!.text.toString(), "0.00", etAmount.text.toString())
+            } catch (ex: Exception) {
+                Log.e("Build Fee error", ex.message)
+            }
+        }
         serverApiCommon.estimateFee(ServerApiCommon.ESTIMATE_FEE_PRIORITY)
         serverApiCommon.estimateFee(ServerApiCommon.ESTIMATE_FEE_NORMAL)
         serverApiCommon.estimateFee(ServerApiCommon.ESTIMATE_FEE_MINIMAL)
