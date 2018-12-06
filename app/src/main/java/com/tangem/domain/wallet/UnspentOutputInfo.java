@@ -13,8 +13,6 @@ public class  UnspentOutputInfo {
     public final long confirmations;
     public String txHashForBuild;
     public byte[] scriptForBuild;
-    public byte[] bodyDoubleHash;
-    public byte[] bodyHash;
 
     public UnspentOutputInfo(byte[] txHash, Transaction.Script script, long value, int outputIndex, long confirmations, String hashForBuild, byte[] sign) {
         this.txHash = txHash;
