@@ -22,15 +22,15 @@ public class SignTask extends CustomReadCardTask {
     public interface PaymentToSign {
         boolean isSigningMethodSupported(TangemCard.SigningMethod signingMethod);
 
-        byte[][] getHashesToSign();
+        byte[][] getHashesToSign() throws Exception;
 
-        byte[] getRawDataToSign();
+        byte[] getRawDataToSign() throws Exception;
 
-        String getHashAlgToSign();
+        String getHashAlgToSign() throws Exception;
 
-        byte[] getIssuerTransactionSignature(byte[] dataToSignByIssuer);
+        byte[] getIssuerTransactionSignature(byte[] dataToSignByIssuer) throws Exception;
 
-        void OnSignCompleted(byte[] signature);
+        void onSignCompleted(byte[] signature) throws Exception;
     }
 
     private PaymentToSign paymentToSign;
@@ -86,7 +86,7 @@ public class SignTask extends CustomReadCardTask {
                 throw new CardProtocol.TangemException("Signing method isn't supported!");
         }
 
-        paymentToSign.OnSignCompleted(signResult.getTLV(TLV.Tag.TAG_Signature).Value);
+        paymentToSign.onSignCompleted(signResult.getTLV(TLV.Tag.TAG_Signature).Value);
         mNotifications.onReadProgress(protocol, 100);
 
     }
