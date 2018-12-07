@@ -156,11 +156,20 @@ public class ElectrumRequest {
     }
 
     public JSONObject getError() throws JSONException {
-        return getAnswer().getJSONObject("error");
+        JSONObject answer = getAnswer();
+        if (answer.has("error")) {
+            return getAnswer().getJSONObject("error");
+        } else {
+            return null;
+        }
     }
 
     public String getResultString() throws JSONException {
-        return getAnswer().getString("result");
+        if (getAnswer().has("result")) {
+            return getAnswer().getString("result");
+        } else {
+            return null;
+        }
     }
 
     public JSONArray getResultArray() throws JSONException {
