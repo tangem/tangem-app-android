@@ -45,7 +45,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_kraken_withdrawal)
 
-        MainActivity.commonInit(applicationContext)
+//        MainActivity.commonInit(applicationContext)
 
         nfcManager = NfcManager(this, this)
 
