@@ -440,14 +440,14 @@ public class BtcEngine extends CoinEngine {
             throw new CardProtocol.TangemException_WrongAmount(String.format("Balance (%d) < change (%d) + amount (%d)", fullAmount, change, amount));
         }
 
-        byte[][] txForSign = new byte[unspentOutputs.size()][];
-        byte[][] bodyDoubleHash = new byte[unspentOutputs.size()][];
-        byte[][] bodyHash= new byte[unspentOutputs.size()][];
+        final byte[][] txForSign = new byte[unspentOutputs.size()][];
+        final byte[][] bodyDoubleHash = new byte[unspentOutputs.size()][];
+        final byte[][] bodyHash= new byte[unspentOutputs.size()][];
 
         for (int i = 0; i < unspentOutputs.size(); ++i) {
             txForSign[i] = BTCUtils.buildTXForSign(myAddress, targetAddress, myAddress, unspentOutputs, i, amount, change);
             bodyHash[i] = Util.calculateSHA256(txForSign[i]);
-            bodyDoubleHash [i] = Util.calculateSHA256(bodyHash[i]);
+            bodyDoubleHash[i] = Util.calculateSHA256(bodyHash[i]);
         }
 
         return new SignTask.PaymentToSign() {
@@ -490,10 +490,10 @@ public class BtcEngine extends CoinEngine {
             }
 
             @Override
-            public void onSignCompleted(byte[] signature) throws Exception {
+            public void onSignCompleted(byte[] signFromCard) throws Exception {
                 for (int i = 0; i < unspentOutputs.size(); ++i) {
-                    BigInteger r = new BigInteger(1, Arrays.copyOfRange(signature, i * 64, 32 + i * 64));
-                    BigInteger s = new BigInteger(1, Arrays.copyOfRange(signature, 32 + i * 64, 64 + i * 64));
+                    BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, i * 64, 32 + i * 64));
+                    BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, 32 + i * 64, 64 + i * 64));
                     s = CryptoUtil.toCanonicalised(s);
 
                     unspentOutputs.get(i).scriptForBuild = DerEncodingUtil.packSignDer(r, s, pbKey);
