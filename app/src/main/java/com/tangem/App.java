@@ -3,13 +3,13 @@ package com.tangem;
 import android.app.Application;
 import android.support.v7.app.AppCompatDelegate;
 
-import com.tangem.data.db.PINStorage;
 import com.tangem.di.DaggerNavigatorComponent;
 import com.tangem.di.DaggerNetworkComponent;
 import com.tangem.di.NavigatorComponent;
 import com.tangem.di.NetworkComponent;
-import com.tangem.domain.cardReader.Firmwares;
-import com.tangem.domain.wallet.Issuer;
+import com.tangem.tangemcard.data.Issuer;
+import com.tangem.tangemcard.data.local.Firmwares;
+import com.tangem.tangemcard.data.local.PINStorage;
 
 public class App extends Application {
 
