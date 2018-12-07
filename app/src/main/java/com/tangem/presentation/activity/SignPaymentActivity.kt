@@ -27,6 +27,7 @@ import com.tangem.tangemcard.util.Util
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_sign_payment.*
 
+
 class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
 
     companion object {
@@ -136,7 +137,8 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                 }
 //                signPaymentTask = SignPaymentTask(this, ctx, nfcManager, isoDep, this, amount, fee, isIncludeFee, outAddressStr)
 
-                val coinEngine= CoinEngineFactory.create(ctx) ?: throw CardProtocol.TangemException("Can't create CoinEngine!")
-                coinEngine.setOnNeedSendPayment { tx->
+                val coinEngine = CoinEngineFactory.create(ctx)
+                        ?: throw CardProtocol.TangemException("Can't create CoinEngine!")
+                coinEngine.setOnNeedSendPayment { tx ->
                     if (tx != null) {
                         // [REDACTED_TODO_COMMENT]

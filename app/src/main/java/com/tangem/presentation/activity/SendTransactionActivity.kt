@@ -19,6 +19,7 @@ import com.tangem.tangemcard.data.TangemCard
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import java.io.IOException
+import java.lang.Exception
 import java.math.BigInteger
 
 class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
@@ -58,10 +59,21 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         val electrumBodyListener: ServerApiElectrum.ElectrumRequestDataListener = object : ServerApiElectrum.ElectrumRequestDataListener {
             override fun onSuccess(electrumRequest: ElectrumRequest?) {
                 if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
-                    if (electrumRequest.resultString.isEmpty())
-                        finishWithError("Rejected by node: " + electrumRequest.getError())
-                    else
-                        finishWithSuccess()
+                    try {
+                        if (electrumRequest.resultString.isNullOrEmpty())
+                            finishWithError("Rejected by node: " + electrumRequest.getError())
+                        else
+                            finishWithSuccess()
+                    }
+                    catch (e: Exception)
+                    {
+                        if( e.message!=null )
+                        {
+                            finishWithError(e.message!!)
+                        }else{
+                            finishWithError(e.javaClass.name)
+                        }
+                    }
                 }
             }
 
