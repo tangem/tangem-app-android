@@ -3,7 +3,6 @@ package com.tangem.tangemcard.data.network;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.tangem.tangemcard.App;
 import com.tangem.tangemcard.data.TangemCard;
 import com.tangem.tangemcard.data.network.model.CardVerifyAndGetInfo;
 import com.tangem.tangemcard.util.Util;
@@ -17,6 +16,8 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ServerApiTangem {
     private static String TAG = ServerApiTangem.class.getSimpleName();
@@ -37,7 +38,12 @@ public class ServerApiTangem {
     }
 
     public void cardVerifyAndGetInfo(TangemCard card) {
-        TangemApi tangemApi = App.getNetworkComponent().getRetrofitTangem().create(TangemApi.class);
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://estimatefee.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        TangemApi tangemApi = retrofit.create(TangemApi.class);
 
         List<CardVerifyAndGetInfo.Request.Item> requests = new ArrayList<>();
         requests.add(new CardVerifyAndGetInfo.Request.Item(Util.bytesToHex(card.getCID()), Util.bytesToHex(card.getCardPublicKey())));
@@ -82,7 +88,12 @@ public class ServerApiTangem {
     }
 
     public void requestArtwork(final String artworkId, final Date updateDate, TangemCard card) {
-        TangemApi tangemApi = App.getNetworkComponent().getRetrofitTangem().create(TangemApi.class);
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://verify.tangem.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        TangemApi tangemApi = retrofit.create(TangemApi.class);
 
         Call<ResponseBody> call = tangemApi.getArtwork(artworkId, Util.bytesToHex(card.getCID()), Util.bytesToHex(card.getCardPublicKey()));
         call.enqueue(new Callback<ResponseBody>() {
