@@ -7,6 +7,7 @@ import android.nfc.Tag
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import com.tangem.App
+import com.tangem.Constant
 import com.tangem.di.Navigator
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.fragment.LoadedWallet
@@ -21,7 +22,7 @@ class LoadedWalletActivity : AppCompatActivity() {
     companion object {
         fun callingIntent(context: Context, lastTag: Tag, ctx: TangemContext): Intent {
             val intent = Intent(context, LoadedWalletActivity::class.java)
-            intent.putExtra(MainActivity.EXTRA_LAST_DISCOVERED_TAG, lastTag)
+            intent.putExtra(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
             ctx.saveToIntent(intent)
             return intent
         }
@@ -33,7 +34,7 @@ class LoadedWalletActivity : AppCompatActivity() {
 
         App.getNavigatorComponent().inject(this)
 
-        MainActivity.commonInit(applicationContext)
+//        MainActivity.commonInit(applicationContext)
 
         if (intent.extras!!.containsKey(NfcAdapter.EXTRA_TAG)) {
             val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
