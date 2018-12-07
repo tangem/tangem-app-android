@@ -37,7 +37,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_payment)
 
-        MainActivity.commonInit(applicationContext)
+//        MainActivity.commonInit(applicationContext)
 
         nfcManager = NfcManager(this, this)
 
