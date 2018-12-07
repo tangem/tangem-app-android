@@ -47,8 +47,7 @@ class Navigator {
 
     fun showPinSwap(context: Activity, newPIN: String, newPIN2: String) {
         context.startActivityForResult(PinSwapActivity.callingIntent(context, newPIN, newPIN2), Constant.REQUEST_CODE_SWAP_PIN)
-    fun showVerifyCard(context: Activity, ctx: TangemContext) {
-        context.startActivityForResult(VerifyCardActivity.callingIntent(context, ctx), Constant.REQUEST_CODE_VERIFY_CARD)
+
     }
 
     fun showPurge(context: Activity) {
