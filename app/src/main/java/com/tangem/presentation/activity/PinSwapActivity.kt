@@ -1,6 +1,7 @@
 package com.tangem.presentation.activity
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -12,6 +13,7 @@ import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
+import com.tangem.Constant
 import com.tangem.tangemcard.tasks.SwapPINTask
 import com.tangem.tangemcard.reader.CardProtocol
 import com.tangem.tangemcard.reader.NfcManager
@@ -26,6 +28,13 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
 
     companion object {
         val TAG: String = PinSwapActivity::class.java.simpleName
+
+        fun callingIntent(context: Context, newPIN: String, newPIN2: String): Intent {
+            val intent = Intent(context, PinSwapActivity::class.java)
+            intent.putExtra(Constant.EXTRA_NEW_PIN, newPIN)
+            intent.putExtra(Constant.EXTRA_NEW_PIN_2, newPIN2)
+            return intent
+        }
 
         const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
     }
@@ -44,15 +53,15 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pin_swap)
 
-        MainActivity.commonInit(applicationContext)
+//        MainActivity.commonInit(applicationContext)
 
         nfcManager = NfcManager(this, this)
 
         card = TangemCard(intent.getStringExtra(TangemCard.EXTRA_UID))
         card!!.loadFromBundle(intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
 
-        newPIN = intent.getStringExtra("newPIN")
-        newPIN2 = intent.getStringExtra("newPIN2")
+        newPIN = intent.getStringExtra(Constant.EXTRA_NEW_PIN)
+        newPIN2 = intent.getStringExtra(Constant.EXTRA_NEW_PIN_2)
 
         tvCardID.text = card!!.cidDescription
 

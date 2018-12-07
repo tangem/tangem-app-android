@@ -143,6 +143,7 @@ public class WaitSecurityDelayDialog extends DialogFragment {
 
             if (msec == 0) {
                 if (instance != null) {
+                    // TODO java.lang.NullPointerException: Attempt to invoke virtual method 'android.support.v4.app.FragmentTransaction android.support.v4.app.FragmentManager.beginTransaction()' on a null object reference
                     instance.dismiss();
                     instance = null;
                 }

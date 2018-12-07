@@ -19,6 +19,7 @@ import android.text.TextUtils
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import com.tangem.Constant
 import com.tangem.data.fingerprint.StartFingerprintReaderTask
 import com.tangem.tangemcard.reader.NfcManager
 import com.tangem.data.fingerprint.FingerprintHelper
@@ -34,6 +35,12 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
     companion object {
         const val KEY_ALIAS = "pinKey"
         const val KEYSTORE = "AndroidKeyStore"
+
+        fun callingIntent(context: Activity, mode: String): Intent {
+            val intent = Intent(context, PinRequestActivity::class.java)
+            intent.putExtra(Constant.EXTRA_MODE, mode)
+            return intent
+        }
     }
 
     lateinit var mode: Mode
@@ -53,7 +60,7 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pin_request)
 
-        MainActivity.commonInit(applicationContext)
+//        MainActivity.commonInit(applicationContext)
 
         nfcManager = NfcManager(this, this)
 
