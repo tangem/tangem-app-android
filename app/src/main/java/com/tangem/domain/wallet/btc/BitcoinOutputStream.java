@@ -4,6 +4,8 @@ package com.tangem.domain.wallet.btc;
  * Created by Ilia on 29.09.2017.
  */
 
+import com.tangem.domain.wallet.Transaction;
+
 import java.io.ByteArrayOutputStream;
 
 @SuppressWarnings("WeakerAccess")
@@ -39,5 +41,8 @@ public final class BitcoinOutputStream extends ByteArrayOutputStream {
             write(0xff);
             writeInt64(value);
         }
+    }
+
+    public void write(Transaction.Script script) {
     }
 }
