@@ -3,6 +3,7 @@ package com.tangem.domain.wallet;
 import android.net.Uri;
 import android.text.InputFilter;
 
+import com.tangem.tangemcard.data.Blockchain;
 import com.tangem.tangemcard.reader.CardProtocol;
 import com.tangem.tangemcard.tasks.SignTask;
 
@@ -237,7 +238,12 @@ public abstract class CoinEngine {
 
     public void defineWallet() throws CardProtocol.TangemException {
         try {
-            String wallet = calculateAddress(ctx.getCard().getWalletPublicKey());
+            String wallet;
+            if (ctx.getBlockchain() == Blockchain.BitcoinCash) {
+                wallet = calculateAddress(ctx.getCard().getWalletPublicKeyRar());
+            } else {
+                wallet = calculateAddress(ctx.getCard().getWalletPublicKey());
+            }    
             ctx.getCoinData().setWallet(wallet);
         }
         catch (Exception e)
