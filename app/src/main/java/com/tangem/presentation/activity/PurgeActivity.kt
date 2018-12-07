@@ -41,7 +41,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
 
         nfcManager = NfcManager(this, this)
 
-        MainActivity.commonInit(applicationContext)
+//        MainActivity.commonInit(applicationContext)
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
