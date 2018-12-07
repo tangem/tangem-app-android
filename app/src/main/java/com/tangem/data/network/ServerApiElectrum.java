@@ -124,11 +124,16 @@ public class ServerApiElectrum {
             BitcoinCashNode bitcoinCashNode = BitcoinCashNode.values()[new Random().nextInt(BitcoinCashNode.values().length)];
             host = bitcoinCashNode.getHost();
             port = bitcoinCashNode.getPort();
+            proto = bitcoinCashNode.getProto();
 
             this.host = host;
             this.port = port;
 
-            return doElectrumRequestTcp(electrumRequest, host, port);
+            if (proto.equals("tcp")) {
+                return doElectrumRequestTcp(electrumRequest, host, port);
+            } else {
+                return doElectrumRequestSsl(electrumRequest, host, port);
+            }
 
         } else if (card.getBlockchain() == Blockchain.Bitcoin) {
             BitcoinNode bitcoinNode = BitcoinNode.values()[new Random().nextInt(BitcoinNode.values().length)];
@@ -136,15 +141,12 @@ public class ServerApiElectrum {
             port = bitcoinNode.getPort();
             proto = bitcoinNode.getProto();
 
-            if (proto.equals("tcp")) {
-                this.host = host;
-                this.port = port;
+            this.host = host;
+            this.port = port;
 
+            if (proto.equals("tcp")) {
                 return doElectrumRequestTcp(electrumRequest, host, port);
             } else {
-                this.host = host;
-                this.port = port;
-
                 return doElectrumRequestSsl(electrumRequest, host, port);
             }
         }
