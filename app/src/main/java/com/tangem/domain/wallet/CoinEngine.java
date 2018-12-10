@@ -3,11 +3,9 @@ package com.tangem.domain.wallet;
 import android.net.Uri;
 import android.text.InputFilter;
 
-import com.tangem.tangemcard.data.Blockchain;
+import com.tangem.data.Blockchain;
 import com.tangem.tangemcard.reader.CardProtocol;
 import com.tangem.tangemcard.tasks.SignTask;
-
-import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
