@@ -13,15 +13,18 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
+import com.tangem.App
 import com.tangem.domain.wallet.BTCUtils
 import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
-import com.tangem.tangemcard.data.Blockchain
+import com.tangem.data.Blockchain
 import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.reader.NfcManager
+import com.tangem.tangemcard.android.reader.NfcManager
+import com.tangem.tangemcard.android.reader.NfcReader
+import com.tangem.tangemcard.data.asBundle
 import com.tangem.tangemcard.tasks.SignTask
 import com.tangem.tangemcard.util.Util
 import com.tangem.wallet.R
@@ -43,7 +46,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
     }
 
-    private var nfcManager: NfcManager? = null
+    private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
 
 //    private var signPaymentTask: SignPaymentTask? = null
