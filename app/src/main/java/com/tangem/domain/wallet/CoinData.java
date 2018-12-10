@@ -3,7 +3,7 @@ package com.tangem.domain.wallet;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.tangem.tangemcard.data.Blockchain;
+import com.tangem.data.Blockchain;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
