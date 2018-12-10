@@ -13,13 +13,18 @@ import android.support.v7.app.AppCompatActivity
 import android.text.Html
 import android.view.View
 import android.widget.Toast
+import com.tangem.App
+import com.tangem.di.Navigator
 import com.tangem.tangemcard.tasks.VerifyCardTask
 import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.reader.NfcManager
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.tangemcard.android.reader.NfcReader
+import com.tangem.tangemcard.data.asBundle
+import com.tangem.tangemcard.data.loadFromBundle
 import com.tangem.tangemcard.util.Util
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_empty_wallet.*
@@ -40,7 +45,7 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         }
     }
 
-    private var nfcManager: NfcManager? = null
+    private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
     private var lastReadSuccess = true
     private var verifyCardTask: VerifyCardTask? = null
@@ -59,15 +64,15 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         tvIssuer.text = ctx.card!!.issuerDescription
         //tvBlockchain.text = ctx.card!!.blockchainName
         if (ctx.card!!.tokenSymbol.length > 1) {
-            val html = Html.fromHtml(ctx.card!!.blockchainName)
+            val html = Html.fromHtml(ctx.blockchainName)
             tvBlockchain.text = html
         } else
-            tvBlockchain.text = ctx.card!!.blockchainName
+            tvBlockchain.text = ctx.blockchainName
 
         tvCardID.text = ctx.card!!.cidDescription
-        imgBlockchain.setImageResource(ctx.card!!.blockchain.getImageResource(this, ctx.card!!.tokenSymbol))
+        imgBlockchain.setImageResource(ctx.blockchain.getImageResource(this, ctx.card!!.tokenSymbol))
 
-        if (ctx.card!!.useDefaultPIN1()!!) {
+        if (ctx.card!!.useDefaultPIN1()) {
             imgPIN.setImageResource(R.drawable.unlock_pin1)
             imgPIN.setOnClickListener { Toast.makeText(this@EmptyWalletActivity, R.string.this_banknote_protected_default_PIN1_code, Toast.LENGTH_LONG).show() }
         } else {
@@ -175,7 +180,7 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                 isoDep.timeout = 65000
             }
             //lastTag = tag;
-            verifyCardTask = VerifyCardTask(this, ctx.card, nfcManager, isoDep, this)
+            verifyCardTask = VerifyCardTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, App.firmwaresStorage, this)
             verifyCardTask!!.start()
         } catch (e: Exception) {
             e.printStackTrace()
