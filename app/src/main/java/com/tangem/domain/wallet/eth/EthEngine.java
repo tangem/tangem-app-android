@@ -4,16 +4,12 @@ import android.net.Uri;
 import android.text.InputFilter;
 import android.util.Log;
 
-import com.tangem.tangemcard.data.local.PINStorage;
-import com.tangem.tangemcard.reader.CardProtocol;
-import com.tangem.tangemcard.reader.TLV;
 import com.tangem.domain.wallet.BalanceValidator;
-import com.tangem.tangemcard.data.Blockchain;
+import com.tangem.data.Blockchain;
 import com.tangem.domain.wallet.CoinData;
 import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.ECDSASignatureETH;
 import com.tangem.domain.wallet.EthTransaction;
-import com.tangem.tangemcard.data.Issuer;
 import com.tangem.domain.wallet.Keccak256;
 import com.tangem.tangemcard.data.TangemCard;
 import com.tangem.domain.wallet.TangemContext;
@@ -236,7 +232,7 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public Uri getShareWalletUriExplorer() {
-        if (ctx.getCard().getBlockchain() == Blockchain.EthereumTestNet)
+        if (ctx.getBlockchain() == Blockchain.EthereumTestNet)
             return Uri.parse("https://rinkeby.etherscan.io/address/" + ctx.getCoinData().getWallet());
         else
             return Uri.parse("https://etherscan.io/address/" + ctx.getCoinData().getWallet());
