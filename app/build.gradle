@@ -44,7 +44,9 @@ android {
 }
 
 dependencies {
-    implementation project(':tangemcard')
+    implementation project(':tangemcard-common')
+    implementation project(':tangemcard-android')
+    implementation project(':tangemserver-android')
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.android.support:design:28.0.0'
     implementation 'com.android.support:support-compat:28.0.0'
