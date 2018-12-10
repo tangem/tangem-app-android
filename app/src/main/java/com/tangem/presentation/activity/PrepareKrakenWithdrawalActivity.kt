@@ -16,8 +16,8 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import com.tangem.data.network.Kraken
-import com.tangem.tangemcard.reader.NfcManager
-import com.tangem.tangemcard.data.Blockchain
+import com.tangem.tangemcard.android.reader.NfcManager
+import com.tangem.data.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.wallet.R
