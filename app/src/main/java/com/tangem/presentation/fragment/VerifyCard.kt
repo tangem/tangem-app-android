@@ -8,19 +8,23 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.text.Html
+import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.Toast
-import com.tangem.tangemcard.data.local.PINStorage
-import com.tangem.tangemcard.reader.NfcManager
+import com.tangem.App
+import com.tangem.tangemcard.android.data.PINStorage
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.Constant
 import com.tangem.domain.wallet.*
 import com.tangem.presentation.activity.*
 import com.tangem.presentation.dialog.PINSwapWarningDialog
-import com.tangem.tangemcard.data.Blockchain
+import com.tangem.data.Blockchain
 import com.tangem.tangemcard.data.TangemCard
+import com.tangem.tangemcard.data.loadFromBundle
+import com.tangem.tangemcard.reader.CardProtocol
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_verify_card.*
@@ -123,12 +127,12 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
             Constant.REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (newPIN == "") newPIN = ctx.card!!.pin
 
-                if (newPIN2 == "") newPIN2 = PINStorage.getPIN2()
+                if (newPIN2 == "") newPIN2 = App.pinStorage.getPIN2()
 
                 val pinSwapWarningDialog = PINSwapWarningDialog()
                 pinSwapWarningDialog.setOnRefreshPage { (activity as VerifyCardActivity).navigator.showPinSwap(context as Activity, newPIN, newPIN2) }
                 val bundle = Bundle()
-                if (!PINStorage.isDefaultPIN(newPIN) || !PINStorage.isDefaultPIN2(newPIN2))
+                if (!CardProtocol.isDefaultPIN(newPIN) || !CardProtocol.isDefaultPIN2(newPIN2))
                     bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_forget))
                 else
                     bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_use_default))
@@ -203,7 +207,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 if (resultCode == Activity.RESULT_OK) {
                     srlVerifyCard.isRefreshing = true
                     ctx.coinData!!.clearInfo()
-                    ctx.card!!.switchToInitialBlockchain()
+                    //ctx.card!!.switchToInitialBlockchain()
                     updateViews()
                 }
 
@@ -269,8 +273,9 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
             }
 
             tvIssuer.text = ctx.card!!.issuerDescription
-            tvCardRegistredDate.text = ctx.card!!.personalizationDateTimeDescription
-            val html = Html.fromHtml(ctx.card!!.blockchainName)
+
+            tvCardRegistredDate.text = DateUtils.formatDateTime(null, ctx.card!!.personalizationDateTime.time, DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_NUMERIC_DATE or DateUtils.FORMAT_SHOW_YEAR)
+            val html = Html.fromHtml(ctx.blockchainName)
             tvBlockchain.text = html
 
             tvValidationNode.text = ctx.coinData!!.validationNodeDescription
@@ -350,7 +355,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
             tvFeatures.text = features
 
-            if (ctx.card!!.useDefaultPIN1()!!) {
+            if (ctx.card!!.useDefaultPIN1()) {
                 imgPIN.setImageResource(R.drawable.unlock_pin1)
                 imgPIN.setOnClickListener { Toast.makeText(context, R.string.this_banknote_protected_default_PIN1_code, Toast.LENGTH_LONG).show() }
             } else {

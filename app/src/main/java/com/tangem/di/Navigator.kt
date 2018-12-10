@@ -2,16 +2,12 @@ package com.tangem.di
 
 import android.app.Activity
 import android.nfc.Tag
-import android.os.Bundle
 import com.tangem.Constant
-import com.tangem.domain.wallet.CoinData
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.activity.EmptyWalletActivity
 import com.tangem.presentation.activity.LoadedWalletActivity
 import com.tangem.presentation.activity.MainActivity
 import com.tangem.presentation.activity.VerifyCardActivity
-import com.tangem.presentation.fragment.LoadedWallet
-import com.tangem.tangemcard.data.TangemCard
 import com.tangem.presentation.activity.*
 
 class Navigator {
