@@ -12,13 +12,16 @@ import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
+import com.tangem.App
 import com.tangem.tangemcard.tasks.CreateNewWalletTask
 import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.reader.NfcManager
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.util.Util
+import com.tangem.tangemcard.data.asBundle
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_create_new_wallet.*
 
@@ -31,7 +34,7 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
     }
 
     private lateinit var ctx: TangemContext
-    private var nfcManager: NfcManager? = null
+    private lateinit var nfcManager: NfcManager
 
     private var createNewWalletTask: CreateNewWalletTask? = null
     private var lastReadSuccess = true
@@ -70,7 +73,7 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                 } else {
                     isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 65000
                 }
-                createNewWalletTask = CreateNewWalletTask(this, ctx.card, nfcManager, isoDep, this)
+                createNewWalletTask = CreateNewWalletTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage,this)
                 createNewWalletTask!!.start()
             } else {
 //                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + mCard.getUID() + ")");
@@ -137,7 +140,7 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                             val intent = Intent()
                             intent.putExtra("message", "Cannot create wallet. Make sure you enter correct PIN2!")
                             intent.putExtra("UID", cardProtocol.card.uid)
-                            intent.putExtra("Card", cardProtocol.card.asBundle)
+                            intent.putExtra("Card", cardProtocol.card!!.asBundle)
                             setResult(RESULT_INVALID_PIN, intent)
                             finish()
                         } catch (e: Exception) {
