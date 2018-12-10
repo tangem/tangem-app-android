@@ -21,10 +21,13 @@ import android.view.View
 import android.widget.Button
 import com.tangem.Constant
 import com.tangem.data.fingerprint.StartFingerprintReaderTask
-import com.tangem.tangemcard.reader.NfcManager
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.data.fingerprint.FingerprintHelper
-import com.tangem.tangemcard.data.local.PINStorage
+import com.tangem.tangemcard.android.data.PINStorage
 import com.tangem.tangemcard.data.TangemCard
+import com.tangem.tangemcard.data.loadFromBundle
+import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD
+import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD_UID
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_pin_request.*
 import kotlinx.android.synthetic.main.layout_pin_buttons.*
@@ -89,9 +92,9 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         else if (mode == Mode.ConfirmNewPIN2)
             tvPinPrompt.setText(R.string.confirm_new_pin_2)
         else if (mode == Mode.RequestPIN2) {
-            val uid = intent.getStringExtra(TangemCard.EXTRA_UID)
+            val uid = intent.getStringExtra(EXTRA_TANGEM_CARD_UID)
             val card = TangemCard(uid)
-            card.loadFromBundle(intent.getBundleExtra(TangemCard.EXTRA_CARD))
+            card.loadFromBundle(intent.getBundleExtra(EXTRA_TANGEM_CARD))
 
             if (card.PIN2 == TangemCard.PIN2_Mode.DefaultPIN2 || card.PIN2 == TangemCard.PIN2_Mode.Unchecked) {
                 // if we know PIN2 or not try default previously - use it
