@@ -3,8 +3,8 @@ package com.tangem.data.network;
 import android.util.Log;
 
 import com.tangem.App;
-import com.tangem.tangemcard.data.Blockchain;
-import com.tangem.tangemcard.data.TangemCard;
+import com.tangem.domain.wallet.TangemContext;
+import com.tangem.data.Blockchain;
 import com.tangem.domain.wallet.bch.BitcoinCashNode;
 import com.tangem.domain.wallet.btc.BitcoinNode;
 import com.tangem.domain.wallet.btc.BitcoinNodeTestNet;
@@ -62,9 +62,9 @@ public class ServerApiElectrum {
         electrumRequestDataListener = listener;
     }
 
-    public void electrumRequestData(TangemCard card, ElectrumRequest electrumRequest) {
+    public void electrumRequestData(TangemContext ctx, ElectrumRequest electrumRequest) {
         Observable<ElectrumRequest> checkElectrumDataObserver = Observable.just(electrumRequest)
-                .doOnNext(electrumRequest1 -> doElectrumRequest(card, electrumRequest))
+                .doOnNext(electrumRequest1 -> doElectrumRequest(ctx, electrumRequest))
 
                 .flatMap(electrumRequest1 -> {
                     if (electrumRequest1.answerData == null) {
@@ -106,11 +106,11 @@ public class ServerApiElectrum {
         });
     }
 
-    private List<ElectrumRequest> doElectrumRequest(TangemCard card, ElectrumRequest electrumRequest) {
+    private List<ElectrumRequest> doElectrumRequest(TangemContext ctx, ElectrumRequest electrumRequest) {
         String host;
         int port;
         String proto;
-        if (card.getBlockchain() == Blockchain.BitcoinTestNet) {
+        if (ctx.getBlockchain() == Blockchain.BitcoinTestNet) {
             BitcoinNodeTestNet bitcoinNodeTestNet = BitcoinNodeTestNet.values()[new Random().nextInt(BitcoinNodeTestNet.values().length)];
             host = bitcoinNodeTestNet.getHost();
             port = bitcoinNodeTestNet.getPort();
@@ -120,7 +120,7 @@ public class ServerApiElectrum {
 
             return doElectrumRequestTcp(electrumRequest, host, port);
 
-        } else if (card.getBlockchain() == Blockchain.BitcoinCash) {
+        } else if (ctx.getBlockchain() == Blockchain.BitcoinCash) {
             BitcoinCashNode bitcoinCashNode = BitcoinCashNode.values()[new Random().nextInt(BitcoinCashNode.values().length)];
             host = bitcoinCashNode.getHost();
             port = bitcoinCashNode.getPort();
@@ -135,7 +135,7 @@ public class ServerApiElectrum {
                 return doElectrumRequestSsl(electrumRequest, host, port);
             }
 
-        } else if (card.getBlockchain() == Blockchain.Bitcoin) {
+        } else if (ctx.getBlockchain() == Blockchain.Bitcoin) {
             BitcoinNode bitcoinNode = BitcoinNode.values()[new Random().nextInt(BitcoinNode.values().length)];
             host = bitcoinNode.getHost();
             port = bitcoinNode.getPort();
