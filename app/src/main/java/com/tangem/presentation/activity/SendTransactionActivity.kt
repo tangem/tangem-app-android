@@ -11,11 +11,10 @@ import com.tangem.data.network.ElectrumRequest
 import com.tangem.data.network.ServerApiElectrum
 import com.tangem.data.network.ServerApiInfura
 import com.tangem.data.network.model.InfuraResponse
-import com.tangem.tangemcard.reader.NfcManager
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.domain.wallet.*
 import com.tangem.domain.wallet.eth.EthData
-import com.tangem.tangemcard.data.Blockchain
-import com.tangem.tangemcard.data.TangemCard
+import com.tangem.data.Blockchain
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import java.io.IOException
@@ -51,9 +50,9 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         if (ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token)
             requestInfura(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION, "")
         else if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet)
-            requestElectrum(ctx.card!!, ElectrumRequest.broadcast(ctx.coinData!!.wallet, tx))
+            requestElectrum(ctx, ElectrumRequest.broadcast(ctx.coinData!!.wallet, tx))
         else if (ctx.blockchain == Blockchain.BitcoinCash)
-            requestElectrum(ctx.card!!, ElectrumRequest.broadcast(ctx.coinData!!.wallet, tx))
+            requestElectrum(ctx, ElectrumRequest.broadcast(ctx.coinData!!.wallet, tx))
 
         // request electrum listener
         val electrumBodyListener: ServerApiElectrum.ElectrumRequestDataListener = object : ServerApiElectrum.ElectrumRequestDataListener {
@@ -151,9 +150,9 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             finishWithError(getString(R.string.no_connection))
     }
 
-    private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
+    private fun requestElectrum(ctx: TangemContext, electrumRequest: ElectrumRequest) {
         if (UtilHelper.isOnline(this)) {
-            serverApiElectrum.electrumRequestData(card, electrumRequest)
+            serverApiElectrum.electrumRequestData(ctx, electrumRequest)
         } else
             finishWithError(getString(R.string.no_connection))
     }
