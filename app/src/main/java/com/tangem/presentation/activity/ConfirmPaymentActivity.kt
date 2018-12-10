@@ -18,11 +18,12 @@ import com.tangem.data.network.ServerApiCommon
 import com.tangem.data.network.ServerApiElectrum
 import com.tangem.data.network.ServerApiInfura
 import com.tangem.data.network.model.InfuraResponse
-import com.tangem.tangemcard.reader.NfcManager
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.domain.wallet.*
 import com.tangem.domain.wallet.btc.BtcData
-import com.tangem.tangemcard.data.Blockchain
+import com.tangem.data.Blockchain
 import com.tangem.tangemcard.data.TangemCard
+import com.tangem.tangemcard.data.loadFromBundle
 import com.tangem.tangemcard.util.Util
 import com.tangem.util.*
 import com.tangem.wallet.R
@@ -456,9 +457,9 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         return realTX.size
     }
 
-    private fun requestElectrum(card: TangemCard, electrumRequest: ElectrumRequest) {
+    private fun requestElectrum(ctx: TangemContext, electrumRequest: ElectrumRequest) {
         if (UtilHelper.isOnline(this)) {
-            serverApiElectrum.electrumRequestData(card, electrumRequest)
+            serverApiElectrum.electrumRequestData(ctx, electrumRequest)
         } else
             finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
     }

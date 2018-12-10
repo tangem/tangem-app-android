@@ -13,13 +13,15 @@ import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
+import com.tangem.App
 import com.tangem.Constant
 import com.tangem.tangemcard.tasks.SwapPINTask
 import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.reader.NfcManager
-import com.tangem.tangemcard.data.TangemCard
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.tangemcard.android.reader.NfcReader
+import com.tangem.tangemcard.data.*
 import com.tangem.tangemcard.util.Util
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_pin_swap.*
@@ -39,7 +41,7 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
         const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
     }
 
-    private var nfcManager: NfcManager? = null
+    private lateinit var nfcManager: NfcManager
     private var card: TangemCard? = null
 
     private var newPIN: String? = null
@@ -57,8 +59,8 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
 
         nfcManager = NfcManager(this, this)
 
-        card = TangemCard(intent.getStringExtra(TangemCard.EXTRA_UID))
-        card!!.loadFromBundle(intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
+        card = TangemCard(intent.getStringExtra(EXTRA_TANGEM_CARD_UID))
+        card!!.loadFromBundle(intent.extras!!.getBundle(EXTRA_TANGEM_CARD))
 
         newPIN = intent.getStringExtra(Constant.EXTRA_NEW_PIN)
         newPIN2 = intent.getStringExtra(Constant.EXTRA_NEW_PIN_2)
@@ -81,7 +83,7 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
 
             if (sUID == card!!.uid) {
                 isoDep.timeout = card!!.pauseBeforePIN2 + 65000
-                swapPinTask = SwapPINTask(this, card, nfcManager, newPIN, newPIN2, isoDep, this)
+                swapPinTask = SwapPINTask(card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, newPIN, newPIN2)
                 swapPinTask!!.start()
             } else {
 //                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + mCard!!.uid + ")")

@@ -27,21 +27,21 @@ import com.scottyab.rootbeer.RootBeer
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Logger
-import com.tangem.tangemcard.data.local.PINStorage
 import com.tangem.data.network.ServerApiCommon
-import com.tangem.tangemcard.data.nfc.DeviceNFCAntennaLocation
+import com.tangem.tangemcard.android.nfc.DeviceNFCAntennaLocation
 import com.tangem.tangemcard.tasks.ReadCardInfoTask
 import com.tangem.di.Navigator
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.data.local.Firmwares
-import com.tangem.tangemcard.reader.NfcManager
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.RootFoundDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
-import com.tangem.tangemcard.data.Issuer
+import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.TangemCard
+import com.tangem.tangemcard.data.loadFromBundle
+import com.tangem.tangemcard.data.saveToBundle
 import com.tangem.util.CommonUtil
 import com.tangem.util.PhoneUtility
 import com.tangem.wallet.BuildConfig
@@ -70,7 +70,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 //        }
     }
 
-    private var nfcManager: NfcManager? = null
+    private lateinit var nfcManager: NfcManager
     private var zipFile: File? = null
     private var antenna: DeviceNFCAntennaLocation? = null
     private var unsuccessReadCount = 0
@@ -264,7 +264,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
             }
             lastTag = tag
 
-            readCardInfoTask = ReadCardInfoTask(this, nfcManager, isoDep, this)
+            readCardInfoTask = ReadCardInfoTask(NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
             readCardInfoTask!!.start()
 
 //            Log.i(TAG, "onTagDiscovered " + Arrays.toString(tag.getId()));
