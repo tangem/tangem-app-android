@@ -5,16 +5,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.tangem.App;
-import com.tangem.tangemcard.data.network.TangemApi;
-import com.tangem.tangemcard.data.network.model.CardVerifyAndGetInfo;
 import com.tangem.data.network.model.RateInfoResponse;
-import com.tangem.tangemcard.data.TangemCard;
-import com.tangem.tangemcard.util.Util;
-
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;

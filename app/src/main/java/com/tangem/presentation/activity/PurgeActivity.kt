@@ -12,12 +12,15 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.Toast
+import com.tangem.App
 import com.tangem.tangemcard.tasks.PurgeTask
 import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.reader.NfcManager
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.tangemcard.android.reader.NfcReader
+import com.tangem.tangemcard.data.asBundle
 import com.tangem.tangemcard.util.Util
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_purge.*
@@ -30,7 +33,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
     }
 
     private lateinit var ctx: TangemContext
-    private var nfcManager: NfcManager? = null
+    private lateinit var nfcManager: NfcManager
     private var purgeTask: PurgeTask? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,7 +82,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
 
             if (sUID == ctx.card!!.uid) {
                 isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 65000
-                purgeTask = PurgeTask(this, ctx.card, nfcManager, isoDep, this)
+                purgeTask = PurgeTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
                 purgeTask!!.start()
             } else {
                 //               this Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card.getUID() + ")");
