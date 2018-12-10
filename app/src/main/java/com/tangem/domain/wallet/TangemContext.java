@@ -5,8 +5,9 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import com.tangem.Constant;
-import com.tangem.tangemcard.data.Blockchain;
+import com.tangem.data.Blockchain;
 import com.tangem.tangemcard.data.TangemCard;
+import com.tangem.tangemcard.data.TangemCardExtensionsKt;
 
 
 public class TangemContext {
@@ -16,7 +17,6 @@ public class TangemContext {
     private CoinData coinData;
     private String error;
     private String message;
-
 
     public TangemContext() {
 
@@ -28,12 +28,29 @@ public class TangemContext {
 
     public Blockchain getBlockchain() {
         if (card == null) return Blockchain.Unknown;
-        return card.getBlockchain();
+        Blockchain blockchain=Blockchain.fromId(card.getBlockchainID());
+        if( (blockchain==Blockchain.Ethereum || blockchain==Blockchain.EthereumTestNet)&& card.isToken() )
+        {
+            return Blockchain.Token;
+        }
+        return blockchain;
     }
 
-    public void setBlockchain(Blockchain blockchain) {
-        if (card == null) return;
-        card.setBlockchain(blockchain);
+//    public void setBlockchain(Blockchain blockchain) {
+//        if (card == null) return;
+//        card.setBlockchainID(blockchain.getID());
+//    }
+
+//    private String blockchainName = "";
+
+    public String getBlockchainName() {
+        Blockchain blockchain=getBlockchain();
+        if( (blockchain==Blockchain.Ethereum || blockchain==Blockchain.EthereumTestNet)&& card.isToken() ) {
+            String token = card.getTokenSymbol();
+            return token + " <br><small><small> " + getBlockchain().getOfficialName() + " ERC20 token</small></small>";
+        }else {
+            return blockchain.getOfficialName();
+        }
     }
 
     public Context getContext() {
@@ -85,9 +102,9 @@ public class TangemContext {
         TangemContext tangemContext = new TangemContext();
         tangemContext.setContext(context);
 
-        if (bundle.containsKey(TangemCard.EXTRA_UID)) {
-            tangemContext.card = new TangemCard(bundle.getString(TangemCard.EXTRA_UID));
-            tangemContext.card.loadFromBundle(bundle.getBundle(TangemCard.EXTRA_CARD));
+        if (bundle.containsKey(TangemCardExtensionsKt.EXTRA_TANGEM_CARD_UID)) {
+            tangemContext.card = new TangemCard(bundle.getString(TangemCardExtensionsKt.EXTRA_TANGEM_CARD_UID));
+            TangemCardExtensionsKt.loadFromBundle(tangemContext.card, bundle.getBundle(TangemCardExtensionsKt.EXTRA_TANGEM_CARD));
         }
 
         if (tangemContext.getBlockchain() != null) {
@@ -106,8 +123,8 @@ public class TangemContext {
     public void saveToIntent(Intent intent) {
 
         if (card != null) {
-            intent.putExtra(TangemCard.EXTRA_UID, card.getUID());
-            intent.putExtra(TangemCard.EXTRA_CARD, card.getAsBundle());
+            intent.putExtra(TangemCardExtensionsKt.EXTRA_TANGEM_CARD_UID, card.getUID());
+            intent.putExtra(TangemCardExtensionsKt.EXTRA_TANGEM_CARD, TangemCardExtensionsKt.getAsBundle(card));
         }
 
         if (coinData != null) {
