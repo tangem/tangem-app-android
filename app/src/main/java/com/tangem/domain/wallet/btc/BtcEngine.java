@@ -3,12 +3,10 @@ package com.tangem.domain.wallet.btc;
 import android.net.Uri;
 import android.text.InputFilter;
 
-import com.tangem.tangemcard.data.local.PINStorage;
 import com.tangem.tangemcard.reader.CardProtocol;
-import com.tangem.tangemcard.reader.TLV;
 import com.tangem.domain.wallet.BalanceValidator;
 import com.tangem.domain.wallet.Base58;
-import com.tangem.tangemcard.data.Blockchain;
+import com.tangem.data.Blockchain;
 import com.tangem.domain.wallet.CoinData;
 import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.tangemcard.data.TangemCard;
