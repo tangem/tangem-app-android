@@ -13,8 +13,8 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import com.tangem.data.network.Cryptonit
-import com.tangem.tangemcard.reader.NfcManager
-import com.tangem.tangemcard.data.Blockchain
+import com.tangem.tangemcard.android.reader.NfcManager
+import com.tangem.data.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.util.DecimalDigitsInputFilter
@@ -145,7 +145,7 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
             rlProgressBar.visibility = View.VISIBLE
             tvProgressDescription.text = getString(R.string.cryptonit_request_balance)
             tvError.visibility = View.INVISIBLE
-            cryptonit!!.requestBalance(ctx.card!!.blockchain.currency)
+            cryptonit!!.requestBalance(ctx.blockchain.currency)
         } else {
             tvError.visibility = View.VISIBLE
             tvError.text = getString(R.string.cryptonit_not_enough_account_data)
