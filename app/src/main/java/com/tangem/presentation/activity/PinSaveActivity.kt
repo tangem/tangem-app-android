@@ -23,7 +23,7 @@ import android.widget.Toast
 import com.tangem.Constant
 import com.tangem.data.fingerprint.ConfirmWithFingerprintTask
 import com.tangem.data.fingerprint.FingerprintHelper
-import com.tangem.tangemcard.data.local.PINStorage
+import com.tangem.tangemcard.android.data.PINStorage
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_pin_save.*
 import kotlinx.android.synthetic.main.layout_pin_buttons.*
