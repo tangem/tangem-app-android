@@ -12,8 +12,8 @@ import android.text.Html
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import com.tangem.tangemcard.reader.NfcManager
-import com.tangem.tangemcard.data.Blockchain
+import com.tangem.tangemcard.android.reader.NfcManager
+import com.tangem.data.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.wallet.R
@@ -50,7 +50,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         tvBalance.text = html
 
         //TODO - to engine
-        if (ctx.card!!.blockchain == Blockchain.Token && engine.balance.currency!="ETH") {
+        if (ctx.blockchain == Blockchain.Token && engine.balance.currency!="ETH") {
             rgIncFee!!.visibility = View.INVISIBLE
         } else {
             rgIncFee!!.visibility = View.VISIBLE
@@ -152,7 +152,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE_SCAN_QR && resultCode == Activity.RESULT_OK && data != null && data.extras!!.containsKey("QRCode")) {
             var code = data.getStringExtra("QRCode")
-            when (ctx.card!!.blockchain) {
+            when (ctx.blockchain) {
                 Blockchain.Bitcoin -> {
                     if (code.contains("bitcoin:")) {
                         val tmp = code.split("bitcoin:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
