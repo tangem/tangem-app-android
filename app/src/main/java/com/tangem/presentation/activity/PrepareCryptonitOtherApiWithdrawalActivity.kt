@@ -10,10 +10,10 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import com.tangem.data.network.CryptonitOtherApi
-import com.tangem.tangemcard.reader.NfcManager
-import com.tangem.tangemcard.data.Blockchain
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
+import com.tangem.data.Blockchain
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_cryptonit_other_api_withdrawal.*
 import java.io.IOException
