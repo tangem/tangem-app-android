@@ -167,9 +167,7 @@ public class BtcCashEngine extends CoinEngine {
 //
 //        return true;
 
-        if(CashAddr.isValidCashAddress(address))
-            return true;
-        return false;
+        return CashAddr.isValidCashAddress(address);
     }
 
     @Override
@@ -179,7 +177,7 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public Uri getShareWalletUriExplorer() {
-        return Uri.parse((ctx.getBlockchain() == Blockchain.BitcoinCash ? "https://bitcoincash.blockexplorer.com/address/" : "https://testnet.blockexplorer.com/address/") + ctx.getCoinData().getWallet());
+        return Uri.parse("https://bch.btc.com/" + ctx.getCoinData().getWallet());
     }
 
     @Override
