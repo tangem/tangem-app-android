@@ -56,9 +56,11 @@ public class CashAddr {
         String[] addressParts = bitcoinCashAddress.split(SEPARATOR);
         if (addressParts.length == 2) {
             decoded.setPrefix(addressParts[0]);
+        } else {
+            decoded.setPrefix(MAIN_NET_PREFIX);
         }
 
-        byte[] addressData = BitcoinCashBase32.decode(addressParts[1]);
+        byte[] addressData = BitcoinCashBase32.decode(addressParts[addressParts.length - 1]);
         addressData = Arrays.copyOfRange(addressData, 0, addressData.length - 8);
         addressData = BitcoinCashBitArrayConverter.convertBits(addressData, 5, 8, true);
         byte versionByte = addressData[0];
