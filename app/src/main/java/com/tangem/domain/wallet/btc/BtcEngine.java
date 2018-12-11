@@ -403,7 +403,7 @@ public class BtcEngine extends CoinEngine {
     }
 
     @Override
-    public SignTask.PaymentToSign constructPayment(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
+    public SignTask.PaymentToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         final ArrayList<UnspentOutputInfo> unspentOutputs;
         checkBlockchainDataExists();
 
