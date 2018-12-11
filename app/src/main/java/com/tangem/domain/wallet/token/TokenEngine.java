@@ -422,7 +422,7 @@ public class TokenEngine extends CoinEngine {
     }
 
     @Override
-    public SignTask.PaymentToSign constructPayment(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
+    public SignTask.PaymentToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         if (amountValue.getCurrency().equals("ETH")) {
             return constructPaymentETH(feeValue, amountValue, IncFee, targetAddress);
         } else {
