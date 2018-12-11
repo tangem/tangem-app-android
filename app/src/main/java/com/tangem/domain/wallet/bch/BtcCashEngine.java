@@ -433,7 +433,7 @@ public class BtcCashEngine extends CoinEngine {
 
 
     @Override
-    public SignTask.PaymentToSign constructPayment(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
+    public SignTask.PaymentToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         checkBlockchainDataExists();
 
         String srcLegacyAddress = convertToLegacyAddress(ctx.getCoinData().getWallet());
