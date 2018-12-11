@@ -252,7 +252,7 @@ public abstract class CoinEngine {
 
     }
 
-    public abstract SignTask.PaymentToSign constructPayment(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception;
+    public abstract SignTask.PaymentToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception;
 
     public interface OnNeedSendPayment
     {
