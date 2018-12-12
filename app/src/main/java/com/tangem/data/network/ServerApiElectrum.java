@@ -52,6 +52,21 @@ public class ServerApiElectrum {
     private String host;
     private int port;
 
+    private int requestsCount=0;
+
+    public boolean hasRequests() {
+        return requestsCount>0;
+    }
+
+    private String error=null;
+    public boolean isErrorOccured() {
+        return error!=null;
+    }
+
+    public void setErrorOccured(String error) {
+        this.error=error;
+    }
+
     public interface ElectrumRequestDataListener {
         void onSuccess(ElectrumRequest electrumRequest);
 
@@ -63,6 +78,7 @@ public class ServerApiElectrum {
     }
 
     public void electrumRequestData(TangemContext ctx, ElectrumRequest electrumRequest) {
+        requestsCount++;
         Observable<ElectrumRequest> checkElectrumDataObserver = Observable.just(electrumRequest)
                 .doOnNext(electrumRequest1 -> doElectrumRequest(ctx, electrumRequest))
 
@@ -84,6 +100,7 @@ public class ServerApiElectrum {
             @Override
             public void onNext(ElectrumRequest v) {
                 if (electrumRequest.answerData != null) {
+                    requestsCount--;
                     electrumRequestDataListener.onSuccess(electrumRequest);
 //                    Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onNext != null");
                 } else {
@@ -281,5 +298,6 @@ public class ServerApiElectrum {
     public String getValidationNodeDescription() {
         return "Electrum, " + host + ":" + String.valueOf(port);
     }
+
 
 }
