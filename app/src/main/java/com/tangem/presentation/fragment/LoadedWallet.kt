@@ -21,9 +21,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import com.tangem.App
 import com.tangem.Constant
-import com.tangem.data.network.ElectrumRequest
 import com.tangem.data.network.ServerApiCommon
-import com.tangem.data.network.ServerApiElectrum
 import com.tangem.data.network.ServerApiInfura
 import com.tangem.tangemserver.android.model.CardVerifyAndGetInfo
 import com.tangem.data.network.model.InfuraResponse
@@ -32,7 +30,6 @@ import com.tangem.tangemcard.reader.CardProtocol
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.domain.wallet.*
 import com.tangem.domain.wallet.bch.BtcCashEngine
-import com.tangem.domain.wallet.btc.BtcData
 import com.tangem.domain.wallet.eth.EthData
 import com.tangem.domain.wallet.token.TokenData
 import com.tangem.domain.wallet.token.TokenEngine
@@ -42,6 +39,7 @@ import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.presentation.dialog.ShowQRCodeDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.data.Blockchain
+import com.tangem.data.network.ElectrumRequest
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD_UID
@@ -66,7 +64,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     private var serverApiCommon: ServerApiCommon = ServerApiCommon()
     private var serverApiInfura: ServerApiInfura = ServerApiInfura()
-    private var serverApiElectrum: ServerApiElectrum = ServerApiElectrum()
     private var serverApiTangem: ServerApiTangem = ServerApiTangem()
 
     private var singleToast: Toast? = null
@@ -190,7 +187,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             if (cardProtocol != null)
 //                openVerifyCard(cardProtocol!!)
                 (activity as LoadedWalletActivity).navigator.showVerifyCard(context as Activity, ctx)
-
             else
                 showSingleToast(R.string.need_attach_card_again)
         }
@@ -212,81 +208,81 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
 
         // request electrum listener
-        val electrumBodyListener: ServerApiElectrum.ElectrumRequestDataListener = object : ServerApiElectrum.ElectrumRequestDataListener {
-            override fun onSuccess(electrumRequest: ElectrumRequest?) {
-                if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_GetBalance)) {
-                    try {
-                        val walletAddress = electrumRequest.params.getString(0)
-                        val confBalance = electrumRequest.result.getLong("confirmed")
-                        val unconfirmedBalance = electrumRequest.result.getLong("unconfirmed")
-                        ctx.coinData!!.isBalanceReceived = true
-                        (ctx.coinData!! as BtcData).setBalanceConfirmed(confBalance)
-                        (ctx.coinData!! as BtcData).balanceUnconfirmed = unconfirmedBalance
-                        (ctx.coinData!! as BtcData).validationNodeDescription = serverApiElectrum.validationNodeDescription
-                    } catch (e: JSONException) {
-                        e.printStackTrace()
-                        Log.e(TAG, "FAIL METHOD_GetBalance JSONException")
-                    }
-                }
-
-                if (electrumRequest.isMethod(ElectrumRequest.METHOD_ListUnspent)) {
-                    try {
-                        val walletAddress = electrumRequest.params.getString(0)
-                        val jsUnspentArray = electrumRequest.resultArray
-                        try {
-                            (ctx.coinData!! as BtcData).unspentTransactions.clear()
-                            for (i in 0 until jsUnspentArray.length()) {
-                                val jsUnspent = jsUnspentArray.getJSONObject(i)
-                                val trUnspent = BtcData.UnspentTransaction()
-                                trUnspent.txID = jsUnspent.getString("tx_hash")
-                                trUnspent.Amount = jsUnspent.getInt("value")
-                                trUnspent.Height = jsUnspent.getInt("height")
-                                (ctx.coinData!! as BtcData).unspentTransactions.add(trUnspent)
-                            }
-                        } catch (e: JSONException) {
-                            e.printStackTrace()
-                            Log.e(TAG, "FAIL METHOD_ListUnspent JSONException")
-                        }
-
-                        for (i in 0 until jsUnspentArray.length()) {
-                            val jsUnspent = jsUnspentArray.getJSONObject(i)
-                            val height = jsUnspent.getInt("height")
-                            val hash = jsUnspent.getString("tx_hash")
-                            if (height != -1) {
-                                requestElectrum(ElectrumRequest.getTransaction(walletAddress, hash))
-                            }
-                        }
-                    } catch (e: JSONException) {
-                        e.printStackTrace()
-                    }
-                }
-
-                if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetTransaction)) {
-                    try {
-                        val txHash = electrumRequest.txHash
-                        val raw = electrumRequest.resultString
-                        val listTx = (ctx.coinData!! as BtcData).unspentTransactions
-                        for (tx in listTx) {
-                            if (tx.txID == txHash)
-                                tx.Raw = raw
-                        }
-                    } catch (e: JSONException) {
-                        e.printStackTrace()
-                    }
-                }
-
-                if (electrumRequest.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
-
-                }
-
-                counterMinus()
-            }
-
-            override fun onFail(method: String?) {
-
-            }
-        }
-        serverApiElectrum.setElectrumRequestData(electrumBodyListener)
+//        val electrumBodyListener: ServerApiElectrum.ElectrumRequestDataListener = object : ServerApiElectrum.ElectrumRequestDataListener {
+//            override fun onSuccess(electrumRequest: ElectrumRequest?) {
+//                if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_GetBalance)) {
+//                    try {
+//                        val walletAddress = electrumRequest.params.getString(0)
+//                        val confBalance = electrumRequest.result.getLong("confirmed")
+//                        val unconfirmedBalance = electrumRequest.result.getLong("unconfirmed")
+//                        ctx.coinData!!.isBalanceReceived = true
+//                        (ctx.coinData!! as BtcData).setBalanceConfirmed(confBalance)
+//                        (ctx.coinData!! as BtcData).balanceUnconfirmed = unconfirmedBalance
+//                        (ctx.coinData!! as BtcData).validationNodeDescription = serverApiElectrum.validationNodeDescription
+//                    } catch (e: JSONException) {
+//                        e.printStackTrace()
+//                        Log.e(TAG, "FAIL METHOD_GetBalance JSONException")
+//                    }
+//                }
+//
+//                if (electrumRequest.isMethod(ElectrumRequest.METHOD_ListUnspent)) {
+//                    try {
+//                        val walletAddress = electrumRequest.params.getString(0)
+//                        val jsUnspentArray = electrumRequest.resultArray
+//                        try {
+//                            (ctx.coinData!! as BtcData).unspentTransactions.clear()
+//                            for (i in 0 until jsUnspentArray.length()) {
+//                                val jsUnspent = jsUnspentArray.getJSONObject(i)
+//                                val trUnspent = BtcData.UnspentTransaction()
+//                                trUnspent.txID = jsUnspent.getString("tx_hash")
+//                                trUnspent.Amount = jsUnspent.getInt("value")
+//                                trUnspent.Height = jsUnspent.getInt("height")
+//                                (ctx.coinData!! as BtcData).unspentTransactions.add(trUnspent)
+//                            }
+//                        } catch (e: JSONException) {
+//                            e.printStackTrace()
+//                            Log.e(TAG, "FAIL METHOD_ListUnspent JSONException")
+//                        }
+//
+//                        for (i in 0 until jsUnspentArray.length()) {
+//                            val jsUnspent = jsUnspentArray.getJSONObject(i)
+//                            val height = jsUnspent.getInt("height")
+//                            val hash = jsUnspent.getString("tx_hash")
+//                            if (height != -1) {
+//                                requestElectrum(ElectrumRequest.getTransaction(walletAddress, hash))
+//                            }
+//                        }
+//                    } catch (e: JSONException) {
+//                        e.printStackTrace()
+//                    }
+//                }
+//
+//                if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetTransaction)) {
+//                    try {
+//                        val txHash = electrumRequest.txHash
+//                        val raw = electrumRequest.resultString
+//                        val listTx = (ctx.coinData!! as BtcData).unspentTransactions
+//                        for (tx in listTx) {
+//                            if (tx.txID == txHash)
+//                                tx.Raw = raw
+//                        }
+//                    } catch (e: JSONException) {
+//                        e.printStackTrace()
+//                    }
+//                }
+//
+//                if (electrumRequest.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
+//
+//                }
+//
+//                counterMinus()
+//            }
+//
+//            override fun onFail(method: String?) {
+//
+//            }
+//        }
+//        serverApiElectrum.setElectrumRequestData(electrumBodyListener)
 
         // request infura listener
         val infuraBodyListener: ServerApiInfura.InfuraBodyListener = object : ServerApiInfura.InfuraBodyListener {
@@ -428,8 +424,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //                    if (ctx.blockchain == Blockchain.Token || ctx.blockchain == Blockchain.Ethereum) {
 //                        ctx.card!!.setBlockchainIDFromCard(Blockchain.Ethereum.id)
 
-                        //ctx.blockchain=Blockchain.Ethereum
-                        //engine=engine!!.swithToOtherEngine(Blockchain.Ethereum)
+                    //ctx.blockchain=Blockchain.Ethereum
+                    //engine=engine!!.swithToOtherEngine(Blockchain.Ethereum)
 //                    }
                     refresh()
                 }
@@ -807,12 +803,28 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         requestVerifyAndGetInfo()
 
+        val coinEngine = CoinEngineFactory.create(ctx)
+        requestCounter++
+        coinEngine!!.requestBalanceAndUnspentTransactions (
+            object : CoinEngine.BlockchainRequestsNotifications {
+                override fun onComplete(success: Boolean?) {
+                    counterMinus()
+                    updateViews()
+                }
+
+                override fun needTerminate(): Boolean {
+                    return !UtilHelper.isOnline(context as Activity)
+                }
+            }
+        )
+
+
         // Bitcoin
         if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet) {
             ctx.coinData.setIsBalanceEqual(true)
 
-            requestElectrum(ElectrumRequest.checkBalance(ctx.coinData!!.wallet))
-            requestElectrum(ElectrumRequest.listUnspent(ctx.coinData!!.wallet))
+//            requestElectrum(ElectrumRequest.checkBalance(ctx.coinData!!.wallet))
+//            requestElectrum(ElectrumRequest.listUnspent(ctx.coinData!!.wallet))
             requestRateInfo("bitcoin")
         }
 
@@ -842,15 +854,15 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
     }
 
-    private fun requestElectrum(electrumRequest: ElectrumRequest) {
-        if (UtilHelper.isOnline(context as Activity)) {
-            requestCounter++
-            serverApiElectrum.electrumRequestData(ctx, electrumRequest)
-        } else {
-            Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            srl?.isRefreshing = false
-        }
-    }
+//    private fun requestElectrum(electrumRequest: ElectrumRequest) {
+//        if (UtilHelper.isOnline(context as Activity)) {
+//            requestCounter++
+//            serverApiElectrum.electrumRequestData(ctx, electrumRequest)
+//        } else {
+//            Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+//            srl?.isRefreshing = false
+//        }
+//    }
 
     private fun requestInfura(method: String, contract: String) {
         if (UtilHelper.isOnline(context as Activity)) {
