@@ -431,6 +431,19 @@ public class BtcCashEngine extends CoinEngine {
 //        return mCard.getAmountDescription(Double.parseDouble(amount));
 //    }
 
+    @Override
+    public void defineWallet() throws CardProtocol.TangemException {
+        try {
+            String wallet = calculateAddress(ctx.getCard().getWalletPublicKeyRar());
+            ctx.getCoinData().setWallet(wallet);
+        }
+        catch (Exception e)
+        {
+            ctx.getCoinData().setWallet("ERROR");
+            throw new CardProtocol.TangemException("Can't define wallet address");
+        }
+    }
+
 
     @Override
     public SignTask.PaymentToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
