@@ -143,8 +143,8 @@ public class ElectrumRequest {
         return "";
     }
 
-    public boolean isMethod(String methodName) throws JSONException {
-        return jsRequestData.getString("method").equals(methodName);
+    public boolean isMethod(String methodName) {
+        return getMethod().equals(methodName);
     }
 
     public JSONArray getParams() throws JSONException {
