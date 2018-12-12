@@ -2,6 +2,7 @@ package com.tangem.domain.wallet.btc;
 
 import android.net.Uri;
 import android.text.InputFilter;
+import android.util.Log;
 
 import com.tangem.tangemcard.reader.CardProtocol;
 import com.tangem.domain.wallet.BalanceValidator;
@@ -20,6 +21,13 @@ import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.util.DerEncodingUtil;
 import com.tangem.tangemcard.util.Util;
 import com.tangem.wallet.R;
+import com.tangem.data.network.ElectrumRequest;
+import com.tangem.data.network.ServerApiElectrum;
+
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
@@ -32,6 +40,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BtcEngine extends CoinEngine {
+
+    private static final String TAG = BtcEngine.class.getSimpleName();
 
     public BtcData coinData = null;
 
@@ -431,8 +441,8 @@ public class BtcEngine extends CoinEngine {
             change = change - fees;
         }
 
-        final long amountFinal=amount;
-        final long changeFinal=change;
+        final long amountFinal = amount;
+        final long changeFinal = change;
 
         if (amount + fees > fullAmount) {
             throw new CardProtocol.TangemException_WrongAmount(String.format("Balance (%d) < change (%d) + amount (%d)", fullAmount, change, amount));
@@ -440,7 +450,7 @@ public class BtcEngine extends CoinEngine {
 
         final byte[][] txForSign = new byte[unspentOutputs.size()][];
         final byte[][] bodyDoubleHash = new byte[unspentOutputs.size()][];
-        final byte[][] bodyHash= new byte[unspentOutputs.size()][];
+        final byte[][] bodyHash = new byte[unspentOutputs.size()][];
 
         for (int i = 0; i < unspentOutputs.size(); ++i) {
             txForSign[i] = BTCUtils.buildTXForSign(myAddress, targetAddress, myAddress, unspentOutputs, i, amount, change);
@@ -452,12 +462,12 @@ public class BtcEngine extends CoinEngine {
 
             @Override
             public boolean isSigningMethodSupported(TangemCard.SigningMethod signingMethod) {
-                return signingMethod==TangemCard.SigningMethod.Sign_Hash || signingMethod==TangemCard.SigningMethod.Sign_Raw;
+                return signingMethod == TangemCard.SigningMethod.Sign_Hash || signingMethod == TangemCard.SigningMethod.Sign_Raw;
             }
 
             @Override
             public byte[][] getHashesToSign() throws Exception {
-                byte[][] dataForSign=new byte[unspentOutputs.size()][];
+                byte[][] dataForSign = new byte[unspentOutputs.size()][];
                 if (txForSign.length > 10) throw new Exception("To much hashes in one transaction!");
                 for (int i = 0; i < unspentOutputs.size(); ++i) {
                     dataForSign[i] = bodyDoubleHash[i];
@@ -497,10 +507,185 @@ public class BtcEngine extends CoinEngine {
                     unspentOutputs.get(i).scriptForBuild = DerEncodingUtil.packSignDer(r, s, pbKey);
                 }
 
-                byte[] txForSend=BTCUtils.buildTXForSend(targetAddress, myAddress, unspentOutputs, amountFinal, changeFinal);
+                byte[] txForSend = BTCUtils.buildTXForSend(targetAddress, myAddress, unspentOutputs, amountFinal, changeFinal);
                 notifyOnNeedSendPayment(txForSend);
             }
         };
+    }
+
+    @Override
+    public void requestBalanceAndUnspentTransactions(BlockchainRequestsNotifications blockchainRequestsNotifications) {
+        final ServerApiElectrum serverApiElectrum = new ServerApiElectrum();
+
+        ServerApiElectrum.ElectrumRequestDataListener electrumBodyListener = new ServerApiElectrum.ElectrumRequestDataListener() {
+            @Override
+            public void onSuccess(ElectrumRequest electrumRequest) {
+                if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetBalance)) {
+                    try {
+                        String walletAddress = electrumRequest.getParams().getString(0);
+                        if( !walletAddress.equals(coinData.getWallet()))
+                        {
+                            // todo - check
+                            throw new Exception("Invalid wallet address in answer!");
+                        }
+                        Long confBalance = electrumRequest.getResult().getLong("confirmed");
+                        Long unconfirmedBalance = electrumRequest.getResult().getLong("unconfirmed");
+                        coinData.setBalanceReceived(true);
+                        coinData.setBalanceConfirmed(confBalance);
+                        coinData.setBalanceUnconfirmed(unconfirmedBalance);
+                        coinData.setValidationNodeDescription(serverApiElectrum.getValidationNodeDescription());
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        Log.e(TAG, "FAIL METHOD_GetBalance JSONException");
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                        Log.e(TAG, "FAIL METHOD_GetBalance Exception");
+                    }
+                }
+
+                if (electrumRequest.isMethod(ElectrumRequest.METHOD_ListUnspent)) {
+                    try {
+                        String walletAddress = electrumRequest.getParams().getString(0);
+                        JSONArray jsUnspentArray = electrumRequest.getResultArray();
+                        try {
+                            coinData.getUnspentTransactions().clear();
+                            for (int i = 0; i < jsUnspentArray.length(); i++) {
+                                JSONObject jsUnspent = jsUnspentArray.getJSONObject(i);
+                                BtcData.UnspentTransaction trUnspent = new BtcData.UnspentTransaction();
+                                trUnspent.txID = jsUnspent.getString("tx_hash");
+                                trUnspent.Amount = jsUnspent.getInt("value");
+                                trUnspent.Height = jsUnspent.getInt("height");
+                                coinData.getUnspentTransactions().add(trUnspent);
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            Log.e(TAG, "FAIL METHOD_ListUnspent JSONException");
+                        }
+
+                        for (int i = 0; i < jsUnspentArray.length(); i++) {
+                            JSONObject jsUnspent = jsUnspentArray.getJSONObject(i);
+                            Integer height = jsUnspent.getInt("height");
+                            String hash = jsUnspent.getString("tx_hash");
+                            if (height != -1) {
+                                if( !blockchainRequestsNotifications.needTerminate() ) {
+                                    serverApiElectrum.electrumRequestData(ctx, ElectrumRequest.getTransaction(walletAddress, hash));
+                                }else{
+                                    serverApiElectrum.setErrorOccured("Terminated by user");
+                                }
+                            }
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetTransaction)) {
+                    try {
+                        String txHash = electrumRequest.txHash;
+                        String raw = electrumRequest.getResultString();
+                        for (BtcData.UnspentTransaction tx : coinData.getUnspentTransactions()) {
+                            if (tx.txID.equals(txHash))
+                                tx.Raw = raw;
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                if( !serverApiElectrum.hasRequests() )
+                {
+                    blockchainRequestsNotifications.onComplete(serverApiElectrum.isErrorOccured());
+                }
+            }
+
+            @Override
+            public void onFail(String method) {
+                if( !serverApiElectrum.hasRequests() )
+                {
+                    blockchainRequestsNotifications.onComplete(serverApiElectrum.isErrorOccured());
+                }
+            }
+        };
+
+//        override fun onSuccess(electrumRequest: ElectrumRequest?) {
+//            if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_GetBalance)) {
+//                try {
+//                    val walletAddress = electrumRequest.params.getString(0)
+//                    val confBalance = electrumRequest.result.getLong("confirmed")
+//                    val unconfirmedBalance = electrumRequest.result.getLong("unconfirmed")
+//                    ctx.coinData!!.isBalanceReceived = true
+//                    (ctx.coinData!! as BtcData).setBalanceConfirmed(confBalance)
+//                    (ctx.coinData!! as BtcData).balanceUnconfirmed = unconfirmedBalance
+//                            (ctx.coinData!! as BtcData).validationNodeDescription = serverApiElectrum.validationNodeDescription
+//                } catch (e: JSONException) {
+//                    e.printStackTrace()
+//                    Log.e(TAG, "FAIL METHOD_GetBalance JSONException")
+//                }
+//            }
+//
+//            if (electrumRequest.isMethod(ElectrumRequest.METHOD_ListUnspent)) {
+//                try {
+//                    val walletAddress = electrumRequest.params.getString(0)
+//                    val jsUnspentArray = electrumRequest.resultArray
+//                    try {
+//                        (ctx.coinData!! as BtcData).unspentTransactions.clear()
+//                        for (i in 0 until jsUnspentArray.length()) {
+//                            val jsUnspent = jsUnspentArray.getJSONObject(i)
+//                            val trUnspent = BtcData.UnspentTransaction()
+//                            trUnspent.txID = jsUnspent.getString("tx_hash")
+//                            trUnspent.Amount = jsUnspent.getInt("value")
+//                            trUnspent.Height = jsUnspent.getInt("height")
+//                            (ctx.coinData!! as BtcData).unspentTransactions.add(trUnspent)
+//                        }
+//                    } catch (e: JSONException) {
+//                        e.printStackTrace()
+//                        Log.e(TAG, "FAIL METHOD_ListUnspent JSONException")
+//                    }
+//
+//                    for (i in 0 until jsUnspentArray.length()) {
+//                        val jsUnspent = jsUnspentArray.getJSONObject(i)
+//                        val height = jsUnspent.getInt("height")
+//                        val hash = jsUnspent.getString("tx_hash")
+//                        if (height != -1) {
+//                            requestElectrum(ElectrumRequest.getTransaction(walletAddress, hash))
+//                        }
+//                    }
+//                } catch (e: JSONException) {
+//                    e.printStackTrace()
+//                }
+//            }
+//
+//            if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetTransaction)) {
+//                try {
+//                    val txHash = electrumRequest.txHash
+//                    val raw = electrumRequest.resultString
+//                    val listTx = (ctx.coinData!! as BtcData).unspentTransactions
+//                    for (tx in listTx) {
+//                        if (tx.txID == txHash)
+//                            tx.Raw = raw
+//                    }
+//                } catch (e: JSONException) {
+//                    e.printStackTrace()
+//                }
+//            }
+//
+//            if (electrumRequest.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
+//
+//            }
+//
+//            counterMinus()
+//        }
+//
+//        override fun onFail(method: String?) {
+//
+//        }
+
+
+        serverApiElectrum.setElectrumRequestData(electrumBodyListener);
+
+        serverApiElectrum.electrumRequestData(ctx, ElectrumRequest.checkBalance(coinData.getWallet()));
+        serverApiElectrum.electrumRequestData(ctx, ElectrumRequest.listUnspent(coinData.getWallet()));
     }
 
 //    @Override
