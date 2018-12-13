@@ -63,7 +63,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private lateinit var nfcManager: NfcManager
 
     private var serverApiCommon: ServerApiCommon = ServerApiCommon()
-    private var serverApiInfura: ServerApiInfura = ServerApiInfura()
     private var serverApiTangem: ServerApiTangem = ServerApiTangem()
 
     private var singleToast: Toast? = null
@@ -284,123 +283,123 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //        }
 //        serverApiElectrum.setElectrumRequestData(electrumBodyListener)
 
-        // request infura listener
-        val infuraBodyListener: ServerApiInfura.InfuraBodyListener = object : ServerApiInfura.InfuraBodyListener {
-            override fun onSuccess(method: String, infuraResponse: InfuraResponse) {
-                when (method) {
-                    ServerApiInfura.INFURA_ETH_GET_BALANCE -> {
-                        var balanceCap = infuraResponse.result
-                        balanceCap = balanceCap.substring(2)
-                        val l = BigInteger(balanceCap, 16)
-//                        val d = l.divide(BigInteger("1000000000000000000", 10))
-//                        val balance = d.toLong()
-
-//                        (ctx.coinData!! as EthData).setBalanceConfirmed(balance)
-//                        (ctx.coinData!! as EthData).balanceUnconfirmed = 0L
-                        if (ctx.blockchain != Blockchain.Token) {
-                            (ctx.coinData!! as EthData).isBalanceReceived = true
-                            (ctx.coinData!! as EthData).balanceInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(), "wei")
-                        } else {
-                            (ctx.coinData!! as TokenData).isBalanceReceived = true
-                            //(ctx.coinData!! as TokenData).balanceInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(),ctx.card.tokenSymbol)
-                            (ctx.coinData!! as TokenData).balanceAlterInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(), "wei")
-                        }
-
-//                        Log.i("$TAG eth_get_balance", balanceCap)
-                    }
-
-                    ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT -> {
-                        var nonce = infuraResponse.result
-                        nonce = nonce.substring(2)
-                        val count = BigInteger(nonce, 16)
-                        (ctx.coinData!! as EthData).confirmedTXCount = count
-
-
-//                        Log.i("$TAG eth_getTransCount", nonce)
-                    }
-
-                    ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT -> {
-                        var pending = infuraResponse.result
-                        pending = pending.substring(2)
-                        val count = BigInteger(pending, 16)
-                        (ctx.coinData!! as EthData).unconfirmedTXCount = count
-
-//                        Log.i("$TAG eth_getPendingTxCount", pending)
-                    }
-
-                    ServerApiInfura.INFURA_ETH_CALL -> {
-                        try {
-                            var balanceCap = infuraResponse.result
-                            balanceCap = balanceCap.substring(2)
-                            val l = BigInteger(balanceCap, 16)
-                            val balance = l.toLong()
-//                            if (l.compareTo(BigInteger.ZERO) == 0) {
-//                                //ctx.card!!.blockchainID = Blockchain.Ethereum.id
-//                                ctx.card!!.addTokenToBlockchainName()
+//        // request infura listener
+//        val infuraBodyListener: ServerApiInfura.InfuraBodyListener = object : ServerApiInfura.InfuraBodyListener {
+//            override fun onSuccess(method: String, infuraResponse: InfuraResponse) {
+//                when (method) {
+//                    ServerApiInfura.INFURA_ETH_GET_BALANCE -> {
+//                        var balanceCap = infuraResponse.result
+//                        balanceCap = balanceCap.substring(2)
+//                        val l = BigInteger(balanceCap, 16)
+////                        val d = l.divide(BigInteger("1000000000000000000", 10))
+////                        val balance = d.toLong()
 //
-//                                //TODO check
-//                                //ctx.blockchain=lBlockchain.Ethereum
+////                        (ctx.coinData!! as EthData).setBalanceConfirmed(balance)
+////                        (ctx.coinData!! as EthData).balanceUnconfirmed = 0L
+//                        if (ctx.blockchain != Blockchain.Token) {
+//                            (ctx.coinData!! as EthData).isBalanceReceived = true
+//                            (ctx.coinData!! as EthData).balanceInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(), "wei")
+//                        } else {
+//                            (ctx.coinData!! as TokenData).isBalanceReceived = true
+//                            //(ctx.coinData!! as TokenData).balanceInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(),ctx.card.tokenSymbol)
+//                            (ctx.coinData!! as TokenData).balanceAlterInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(), "wei")
+//                        }
 //
-//                                requestCounter--
-//                                if (requestCounter == 0) srl!!.isRefreshing = false
+////                        Log.i("$TAG eth_get_balance", balanceCap)
+//                    }
 //
-//                                requestInfura(ServerApiCommon.INFURA_ETH_GET_BALANCE, "")
-//                                requestInfura(ServerApiCommon.INFURA_ETH_GET_TRANSACTION_COUNT, "")
-//                                requestInfura(ServerApiCommon.INFURA_ETH_GET_PENDING_COUNT, "")
+//                    ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT -> {
+//                        var nonce = infuraResponse.result
+//                        nonce = nonce.substring(2)
+//                        val count = BigInteger(nonce, 16)
+//                        (ctx.coinData!! as EthData).confirmedTXCount = count
+//
+//
+////                        Log.i("$TAG eth_getTransCount", nonce)
+//                    }
+//
+//                    ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT -> {
+//                        var pending = infuraResponse.result
+//                        pending = pending.substring(2)
+//                        val count = BigInteger(pending, 16)
+//                        (ctx.coinData!! as EthData).unconfirmedTXCount = count
+//
+////                        Log.i("$TAG eth_getPendingTxCount", pending)
+//                    }
+//
+//                    ServerApiInfura.INFURA_ETH_CALL -> {
+//                        try {
+//                            var balanceCap = infuraResponse.result
+//                            balanceCap = balanceCap.substring(2)
+//                            val l = BigInteger(balanceCap, 16)
+//                            val balance = l.toLong()
+////                            if (l.compareTo(BigInteger.ZERO) == 0) {
+////                                //ctx.card!!.blockchainID = Blockchain.Ethereum.id
+////                                ctx.card!!.addTokenToBlockchainName()
+////
+////                                //TODO check
+////                                //ctx.blockchain=lBlockchain.Ethereum
+////
+////                                requestCounter--
+////                                if (requestCounter == 0) srl!!.isRefreshing = false
+////
+////                                requestInfura(ServerApiCommon.INFURA_ETH_GET_BALANCE, "")
+////                                requestInfura(ServerApiCommon.INFURA_ETH_GET_TRANSACTION_COUNT, "")
+////                                requestInfura(ServerApiCommon.INFURA_ETH_GET_PENDING_COUNT, "")
+////                                return
+////                            }
+//                            (ctx.coinData!! as EthData).balanceInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(), ctx.card.tokenSymbol)
+//
+////                            Log.i("$TAG eth_call", balanceCap)
+//
+//                            requestInfura(ServerApiInfura.INFURA_ETH_GET_BALANCE, "")
+//                            requestInfura(ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT, "")
+//                            requestInfura(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, "")
+//                        } catch (e: JSONException) {
+//                            e.printStackTrace()
+//                        } catch (e: NumberFormatException) {
+//                            e.printStackTrace()
+//                        } catch (e: Exception) {
+//                            e.printStackTrace()
+//                        }
+//                    }
+//
+//                    ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION -> {
+//                        try {
+//                            var hashTX: String
+//                            try {
+//                                val tmp = infuraResponse.result
+//                                hashTX = tmp
+//                            } catch (e: JSONException) {
 //                                return
 //                            }
-                            (ctx.coinData!! as EthData).balanceInInternalUnits = CoinEngine.InternalAmount(l.toBigDecimal(), ctx.card.tokenSymbol)
-
-//                            Log.i("$TAG eth_call", balanceCap)
-
-                            requestInfura(ServerApiInfura.INFURA_ETH_GET_BALANCE, "")
-                            requestInfura(ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT, "")
-                            requestInfura(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, "")
-                        } catch (e: JSONException) {
-                            e.printStackTrace()
-                        } catch (e: NumberFormatException) {
-                            e.printStackTrace()
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-
-                    ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION -> {
-                        try {
-                            var hashTX: String
-                            try {
-                                val tmp = infuraResponse.result
-                                hashTX = tmp
-                            } catch (e: JSONException) {
-                                return
-                            }
-
-                            if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
-                                hashTX = hashTX.substring(2)
-                            }
-
-                            Log.e("$TAG TX_RESULT", hashTX)
-
-                            val nonce = (ctx.coinData!! as EthData).confirmedTXCount
-                            nonce.add(BigInteger.valueOf(1))
-                            (ctx.coinData!! as EthData).confirmedTXCount = nonce
-
-                            Log.e("$TAG TX_RESULT", hashTX)
-
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-                }
-
-                counterMinus()
-            }
-
-            override fun onFail(method: String, message: String) {
-
-            }
-        }
-        serverApiInfura.setInfuraResponse(infuraBodyListener)
+//
+//                            if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
+//                                hashTX = hashTX.substring(2)
+//                            }
+//
+//                            Log.e("$TAG TX_RESULT", hashTX)
+//
+//                            val nonce = (ctx.coinData!! as EthData).confirmedTXCount
+//                            nonce.add(BigInteger.valueOf(1))
+//                            (ctx.coinData!! as EthData).confirmedTXCount = nonce
+//
+//                            Log.e("$TAG TX_RESULT", hashTX)
+//
+//                        } catch (e: Exception) {
+//                            e.printStackTrace()
+//                        }
+//                    }
+//                }
+//
+//                counterMinus()
+//            }
+//
+//            override fun onFail(method: String, message: String) {
+//
+//            }
+//        }
+//        serverApiInfura.setInfuraResponse(infuraBodyListener)
 
         // request card verify and get info listener
         val cardVerifyAndGetInfoListener: ServerApiTangem.CardVerifyAndGetInfoListener = object : ServerApiTangem.CardVerifyAndGetInfoListener {
@@ -803,21 +802,23 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         requestVerifyAndGetInfo()
 
-        val coinEngine = CoinEngineFactory.create(ctx)
-        requestCounter++
-        coinEngine!!.requestBalanceAndUnspentTransactions (
-            object : CoinEngine.BlockchainRequestsNotifications {
-                override fun onComplete(success: Boolean?) {
-                    counterMinus()
-                    updateViews()
-                }
+        if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet || ctx.blockchain == Blockchain.BitcoinCash) {
+            val coinEngine = CoinEngineFactory.create(ctx)
+            requestCounter++
+            coinEngine!!.requestBalanceAndUnspentTransactions(
+                    object : CoinEngine.BlockchainRequestsNotifications {
+                        override fun onComplete(success: Boolean?) {
+                            counterMinus()
+                            updateViews()
+                        }
 
-                override fun needTerminate(): Boolean {
-                    return !UtilHelper.isOnline(context as Activity)
-                }
-            }
-        )
+                        override fun needTerminate(): Boolean {
+                            return !UtilHelper.isOnline(context as Activity)
+                        }
+                    }
+            )
 
+        }
 
         // Bitcoin
         if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet) {
@@ -831,25 +832,25 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         // BitcoinCash
         else if (ctx.blockchain == Blockchain.BitcoinCash) {
             ctx.coinData.setIsBalanceEqual(true)
-            val engine = CoinEngineFactory.create(ctx)
-
-            requestElectrum(ElectrumRequest.checkBalance((engine as BtcCashEngine).convertToLegacyAddress(ctx.coinData!!.wallet)))
-            requestElectrum(ElectrumRequest.listUnspent(engine.convertToLegacyAddress(ctx.coinData!!.wallet)))
+//            val engine = CoinEngineFactory.create(ctx)
+//
+//            requestElectrum(ElectrumRequest.checkBalance((engine as BtcCashEngine).convertToLegacyAddress(ctx.coinData!!.wallet)))
+//            requestElectrum(ElectrumRequest.listUnspent(engine.convertToLegacyAddress(ctx.coinData!!.wallet)))
             requestRateInfo("bitcoin-cash")
         }
 
         // Ethereum
         else if (ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet) {
-            requestInfura(ServerApiInfura.INFURA_ETH_GET_BALANCE, "")
-            requestInfura(ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT, "")
-            requestInfura(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, "")
+//            requestInfura(ServerApiInfura.INFURA_ETH_GET_BALANCE, "")
+//            requestInfura(ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT, "")
+//            requestInfura(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, "")
             requestRateInfo("ethereum")
         }
 
         // Token
         else if (ctx.blockchain == Blockchain.Token) {
             val engine = CoinEngineFactory.create(ctx)
-            requestInfura(ServerApiInfura.INFURA_ETH_CALL, (engine as TokenEngine).getContractAddress(ctx.card))
+//            requestInfura(ServerApiInfura.INFURA_ETH_CALL, (engine as TokenEngine).getContractAddress(ctx.card))
             requestRateInfo("ethereum")
         }
     }
