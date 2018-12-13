@@ -13,6 +13,7 @@ import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.widget.Toast
+import org.json.JSONException
 import com.tangem.data.network.ElectrumRequest
 import com.tangem.data.network.ServerApiCommon
 import com.tangem.data.network.ServerApiElectrum
@@ -27,6 +28,7 @@ import com.tangem.tangemcard.data.loadFromBundle
 import com.tangem.tangemcard.util.Util
 import com.tangem.util.*
 import com.tangem.wallet.R
+import com.tangem.wallet.R.string.fee
 import kotlinx.android.synthetic.main.activity_confirm_payment.*
 import java.io.IOException
 import java.math.BigDecimal
@@ -104,6 +106,13 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             rgFee.isEnabled = false
 
             requestInfura(ServerApiInfura.INFURA_ETH_GAS_PRICE)
+
+        } else if (ctx.blockchain == Blockchain.BitcoinCash) {
+            rgFee.isEnabled = false
+
+            progressBar.visibility = View.VISIBLE
+
+            requestElectrum(ctx, ElectrumRequest.getFee())
 
         } else {
             rgFee.isEnabled = true
@@ -193,38 +202,48 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
 
         // request electrum listener
-//        val electrumBodyListener: ServerApiHelperElectrum.ElectrumRequestDataListener = object : ServerApiHelperElectrum.ElectrumRequestDataListener {
-//            override fun onSuccess(electrumRequest: ElectrumRequest?) {
-//                if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_GetBalance)) {
-//                    try {
-//                        if (etFee.text.toString().isEmpty()) etFee.setText(getString(R.string.empty))
-//                        val engine = CoinEngineFactory.create(ctx)
-//                        val balance = engine.convertToAmount(CoinEngine.InternalAmount(electrumRequest.result.getLong("confirmed") + electrumRequest.result.getLong("unconfirmed"), "Satoshi"))
-//                        val amount = CoinEngine.Amount(etAmount.text.toString(), ctx.blockchain.currency)
-//                        if (balance < amount) {
-//                            etFee.error = getString(R.string.not_enough_funds)
-//                        } else {
-//                            etFee.error = null
-//                            balanceRequestSuccess = true
-//                            if (feeRequestSuccess && balanceRequestSuccess) {
-//                                btnSend.visibility = View.VISIBLE
-//                            }
-//                            dtVerified = Date()
-//                            nodeCheck = true
-//                        }
-//                    } catch (e: JSONException) {
-//                        e.printStackTrace()
-////                        requestElectrum(ctx.card!!, ElectrumRequest.checkBalance(ctx.card!!.wallet))
-//                    }
-//                }
-//            }
-//
-//            override fun onFail(message: String?) {
-//                finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
-//            }
-//
-//        }
-//        serverApiHelperElectrum.setElectrumRequestData(electrumBodyListener)
+        val electrumBodyListener: ServerApiElectrum.ElectrumRequestDataListener = object : ServerApiElectrum.ElectrumRequestDataListener {
+            override fun onSuccess(electrumRequest: ElectrumRequest?) {
+                var fee: BigDecimal
+                if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_GetFee)) {
+                    try {
+                        //if (etFee.text.toString().isEmpty()) etFee.setText(getString(R.string.empty))
+                        fee = BigDecimal(electrumRequest.resultString) //fee per KB
+
+                        if (fee == BigDecimal.ZERO) {
+                            requestElectrum(ctx, ElectrumRequest.getFee())
+                        }
+
+                        if (calcSize.toLong() != 0L) {
+                            fee = fee.multiply(BigDecimal(calcSize.toLong())).divide(BigDecimal(1024)) // (per KB -> per byte)*size
+                        } else {
+                            requestElectrum(ctx, ElectrumRequest.getFee())
+                        }
+                        progressBar.visibility = View.INVISIBLE
+
+                        fee = fee.setScale(8, RoundingMode.DOWN)
+                        var feeAmount: CoinEngine.Amount = CoinEngine.Amount(fee, "BCH")
+                        minFee = feeAmount
+                        normalFee = feeAmount
+                        maxFee = feeAmount
+                        doSetFee(rgFee.checkedRadioButtonId)
+                        etFee.error = null
+                        btnSend.visibility = View.VISIBLE
+                        feeRequestSuccess = true
+                        dtVerified = Date()
+
+                    } catch (e: JSONException) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+
+            override fun onFail(message: String?) {
+                finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
+            }
+
+        }
+        serverApiElectrum.setElectrumRequestData(electrumBodyListener)
 
         // request infura eth gasPrice listener
         val infuraBodyListener: ServerApiInfura.InfuraBodyListener = object : ServerApiInfura.InfuraBodyListener {
@@ -251,7 +270,6 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         etFee.error = null
                         btnSend.visibility = View.VISIBLE
                         feeRequestSuccess = true
-//                        balanceRequestSuccess = true
                         dtVerified = Date()
                     }
                 }
@@ -270,7 +288,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         // request estimate fee listener
         val estimateFeeListener: ServerApiCommon.EstimateFeeListener = object : ServerApiCommon.EstimateFeeListener {
             override fun onSuccess(blockCount: Int, estimateFeeResponse: String?) {
-                var fee: BigDecimal?
+                var fee: BigDecimal
                 fee = BigDecimal(estimateFeeResponse) // BTC per 1 kb
 
                 if (fee == BigDecimal.ZERO) {
@@ -286,7 +304,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
                 progressBar.visibility = View.INVISIBLE
 
-                fee = fee!!.setScale(8, RoundingMode.DOWN)
+                fee = fee.setScale(8, RoundingMode.DOWN)
 
                 when (blockCount) {
                     ServerApiCommon.ESTIMATE_FEE_MINIMAL -> {
@@ -307,9 +325,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
                 etFee.error = null
                 feeRequestSuccess = true
-                if (feeRequestSuccess)
-//                if (feeRequestSuccess && balanceRequestSuccess)
-                    btnSend.visibility = View.VISIBLE
+                btnSend.visibility = View.VISIBLE
                 dtVerified = Date()
             }
 
@@ -457,6 +473,16 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     }
 
     private fun requestElectrum(ctx: TangemContext, electrumRequest: ElectrumRequest) {
+        if( calcSize==0 )
+        {
+            calcSize = 256
+            try {
+
+                calcSize =  buildSize(etWallet!!.text.toString(), "0.00", etAmount.text.toString())
+            } catch (ex: Exception) {
+                Log.e("Build Fee error", ex.message)
+            }
+        }
         if (UtilHelper.isOnline(this)) {
             serverApiElectrum.electrumRequestData(ctx, electrumRequest)
         } else
@@ -486,7 +512,10 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         serverApiCommon.estimateFee(ServerApiCommon.ESTIMATE_FEE_MINIMAL)
     }
 
-    private fun doSetFee(checkedRadioButtonId: Int) {
+    private fun
+
+
+            doSetFee(checkedRadioButtonId: Int) {
         var txtFee = ""
         when (checkedRadioButtonId) {
             R.id.rbMinimalFee ->
