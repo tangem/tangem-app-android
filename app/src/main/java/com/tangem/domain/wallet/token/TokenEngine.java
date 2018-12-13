@@ -430,6 +430,11 @@ public class TokenEngine extends CoinEngine {
         }
     }
 
+    @Override
+    public void requestBalanceAndUnspentTransactions(BlockchainRequestsNotifications blockchainRequestsNotifications) throws Exception {
+        //TODO("NOT IMPLEMENTED")
+    }
+
 //    @Override
 //    public byte[] sign(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress, CardProtocol protocol) throws Exception {
 //        if (amountValue.getCurrency().equals("ETH")) {
