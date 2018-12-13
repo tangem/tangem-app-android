@@ -236,12 +236,7 @@ public abstract class CoinEngine {
 
     public void defineWallet() throws CardProtocol.TangemException {
         try {
-            String wallet;
-            if (ctx.getBlockchain() == Blockchain.BitcoinCash) {
-                wallet = calculateAddress(ctx.getCard().getWalletPublicKeyRar());
-            } else {
-                wallet = calculateAddress(ctx.getCard().getWalletPublicKey());
-            }    
+            String wallet = calculateAddress(ctx.getCard().getWalletPublicKey());
             ctx.getCoinData().setWallet(wallet);
         }
         catch (Exception e)
