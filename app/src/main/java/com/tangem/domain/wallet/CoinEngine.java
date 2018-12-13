@@ -271,5 +271,5 @@ public abstract class CoinEngine {
         void onComplete(Boolean success);
         boolean needTerminate();
     }
-    public abstract void requestBalanceAndUnspentTransactions(BlockchainRequestsNotifications blockchainRequestsNotifications);
+    public abstract void requestBalanceAndUnspentTransactions(BlockchainRequestsNotifications blockchainRequestsNotifications) throws Exception;
 }
