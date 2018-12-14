@@ -555,7 +555,7 @@ public class BtcCashEngine extends CoinEngine {
     }
 
     @Override
-    public void requestBalanceAndUnspentTransactions(BlockchainRequestsNotifications blockchainRequestsNotifications) throws Exception {
+    public void requestBalanceAndUnspentTransactions(BalanceAndUnspentTransactionsNotifications balanceAndUnspentTransactionsNotifications) throws Exception {
         final ServerApiElectrum serverApiElectrum = new ServerApiElectrum();
 
         ServerApiElectrum.ElectrumRequestDataListener electrumBodyListener = new ServerApiElectrum.ElectrumRequestDataListener() {
@@ -607,7 +607,7 @@ public class BtcCashEngine extends CoinEngine {
                             Integer height = jsUnspent.getInt("height");
                             String hash = jsUnspent.getString("tx_hash");
                             if (height != -1) {
-                                if (!blockchainRequestsNotifications.needTerminate()) {
+                                if (!balanceAndUnspentTransactionsNotifications.needTerminate()) {
                                     serverApiElectrum.electrumRequestData(ctx, ElectrumRequest.getTransaction(walletAddress, hash));
                                 } else {
                                     serverApiElectrum.setErrorOccured("Terminated by user");
@@ -633,14 +633,14 @@ public class BtcCashEngine extends CoinEngine {
                 }
 
                 if (!serverApiElectrum.hasRequests()) {
-                    blockchainRequestsNotifications.onComplete(serverApiElectrum.isErrorOccured());
+                    balanceAndUnspentTransactionsNotifications.onComplete(serverApiElectrum.isErrorOccured());
                 }
             }
 
             @Override
             public void onFail(String method) {
                 if (!serverApiElectrum.hasRequests()) {
-                    blockchainRequestsNotifications.onComplete(serverApiElectrum.isErrorOccured());
+                    balanceAndUnspentTransactionsNotifications.onComplete(serverApiElectrum.isErrorOccured());
                 }
             }
         };
