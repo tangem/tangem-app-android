@@ -1,10 +1,8 @@
 package com.tangem.domain.wallet.eth;
 
-import android.app.Activity;
 import android.net.Uri;
 import android.text.InputFilter;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.tangem.data.network.ServerApiInfura;
 import com.tangem.data.network.model.InfuraResponse;
@@ -12,19 +10,16 @@ import com.tangem.domain.wallet.BalanceValidator;
 import com.tangem.data.Blockchain;
 import com.tangem.domain.wallet.CoinData;
 import com.tangem.domain.wallet.CoinEngine;
-import com.tangem.domain.wallet.CoinEngineFactory;
 import com.tangem.domain.wallet.ECDSASignatureETH;
 import com.tangem.domain.wallet.EthTransaction;
 import com.tangem.domain.wallet.Keccak256;
 import com.tangem.domain.wallet.token.TokenData;
-import com.tangem.domain.wallet.token.TokenEngine;
 import com.tangem.tangemcard.data.TangemCard;
 import com.tangem.domain.wallet.TangemContext;
 import com.tangem.domain.wallet.BTCUtils;
 import com.tangem.tangemcard.tasks.SignTask;
 import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
-import com.tangem.util.UtilHelper;
 import com.tangem.wallet.R;
 
 import org.bitcoinj.core.ECKey;
@@ -462,7 +457,7 @@ public class EthEngine extends CoinEngine {
     }
 
     @Override
-    public void requestBalanceAndUnspentTransactions(BlockchainRequestsNotifications blockchainRequestsNotifications) throws Exception {
+    public void requestBalanceAndUnspentTransactions(BalanceAndUnspentTransactionsNotifications balanceAndUnspentTransactionsNotifications) {
         final ServerApiInfura serverApiInfura = new ServerApiInfura();
         // request infura listener
         ServerApiInfura.InfuraBodyListener infuraBodyListener = new ServerApiInfura.InfuraBodyListener() {
@@ -473,8 +468,8 @@ public class EthEngine extends CoinEngine {
                         String balanceCap = infuraResponse.getResult();
                         balanceCap = balanceCap.substring(2);
                         BigInteger l = new BigInteger(balanceCap, 16);
-                        BigInteger d = l.divide(new BigInteger("1000000000000000000", 10));
-                        Long balance = d.longValue();
+//                        BigInteger d = l.divide(new BigInteger("1000000000000000000", 10));
+//                        Long balance = d.longValue();
 
 //                        (ctx.coinData!! as EthData).setBalanceConfirmed(balance)
 //                        (ctx.coinData!! as EthData).balanceUnconfirmed = 0L
@@ -510,102 +505,71 @@ public class EthEngine extends CoinEngine {
 
 //                        Log.i("$TAG eth_getPendingTxCount", pending)
                     }
-//
-                    case ServerApiInfura.INFURA_ETH_CALL: {
-                        try {
-                            String balanceCap = infuraResponse.getResult();
-                            balanceCap = balanceCap.substring(2);
-                            BigInteger l = new BigInteger(balanceCap, 16);
-                            Long balance = l.longValue();
-//                            if (l.compareTo(BigInteger.ZERO) == 0) {
-//                                //ctx.card!!.blockchainID = Blockchain.Ethereum.id
-//                                ctx.card!!.addTokenToBlockchainName()
-//
-//                                //TODO check
-//                                //ctx.blockchain=lBlockchain.Ethereum
-//
-//                                requestCounter--
-//                                if (requestCounter == 0) srl!!.isRefreshing = false
-//
-//                                requestInfura(ServerApiCommon.INFURA_ETH_GET_BALANCE, "")
-//                                requestInfura(ServerApiCommon.INFURA_ETH_GET_TRANSACTION_COUNT, "")
-//                                requestInfura(ServerApiCommon.INFURA_ETH_GET_PENDING_COUNT, "")
-//                                return
-//                            }
-                            coinData.setBalanceInInternalUnits(new CoinEngine.InternalAmount(l, ctx.getCard().tokenSymbol));
-
-//                            Log.i("$TAG eth_call", balanceCap)
-
-                            if (!blockchainRequestsNotifications.needTerminate()) {
-                                serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
-                                serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT, 67, coinData.getWallet(), "", "");
-                                serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, 67, coinData.getWallet(), "", "");
-                            } else {
-                                serverApiInfura.setErrorOccured("Terminated by user");
-                            }
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-//                    ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION -> {
-//                        try {
-//                            var hashTX: String
-//                            try {
-//                                val tmp = infuraResponse.result
-//                                hashTX = tmp
-//                            } catch (e: JSONException) {
-//                                return
-//                            }
-//
-//                            if (hashTX.startsWith("0x") || hashTX.startsWith("0X")) {
-//                                hashTX = hashTX.substring(2)
-//                            }
-//
-//                            Log.e("$TAG TX_RESULT", hashTX)
-//
-//                            val nonce = (ctx.coinData!! as EthData).confirmedTXCount
-//                            nonce.add(BigInteger.valueOf(1))
-//                            (ctx.coinData!! as EthData).confirmedTXCount = nonce
-//
-//                            Log.e("$TAG TX_RESULT", hashTX)
-//
-//                        } catch (e: Exception) {
-//                            e.printStackTrace()
-//                        }
-//                    }
                 }
-//
-//                counterMinus()
+
                 if (!serverApiInfura.hasRequests()) {
-                    blockchainRequestsNotifications.onComplete(serverApiInfura.isErrorOccured());
+                    balanceAndUnspentTransactionsNotifications.onComplete(serverApiInfura.isErrorOccured());
                 }
             }
 
             @Override
             public void onFail(String method, String message) {
                 if (!serverApiInfura.hasRequests()) {
-                    blockchainRequestsNotifications.onComplete(serverApiInfura.isErrorOccured());
+                    balanceAndUnspentTransactionsNotifications.onComplete(serverApiInfura.isErrorOccured());
                 }
             }
         };
         serverApiInfura.setInfuraResponse(infuraBodyListener);
 
-        if (ctx.getBlockchain() == Blockchain.Ethereum || ctx.getBlockchain() == Blockchain.EthereumTestNet) {
             serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
             serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT, 67, coinData.getWallet(), "", "");
             serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, 67, coinData.getWallet(), "", "");
-        }
+    }
 
-        // Token
-        else if (ctx.getBlockchain() == Blockchain.Token) {
-            final CoinEngine engine = CoinEngineFactory.INSTANCE.create(ctx);
-            serverApiInfura.infura(ServerApiInfura.INFURA_ETH_CALL, 67, coinData.getWallet(), ((TokenEngine) engine).getContractAddress(ctx.getCard()), "");
-        }
+    @Override
+    public void requestFee(FeeRequestsNotifications feeRequestsNotifications, CoinEngine.Amount amount) throws Exception {
+        ServerApiInfura serverApiInfura = new ServerApiInfura();
+        // request infura eth gasPrice listener
+        ServerApiInfura.InfuraBodyListener infuraBodyListener  = new ServerApiInfura.InfuraBodyListener() {
+            @Override
+            public void onSuccess(String method, InfuraResponse infuraResponse) {
+                if(method== ServerApiInfura.INFURA_ETH_GAS_PRICE)
+                        {
+                        String gasPrice = infuraResponse.getResult();
+                        gasPrice = gasPrice.substring(2);
+                        // rounding gas price to integer gwei
+                            BigInteger l = new BigInteger(gasPrice, 16).divide(BigInteger.valueOf(1000000000L)).multiply(BigInteger.valueOf(1000000000L));
 
+                        //val m = if (ctx.blockchain==Blockchain.Token) BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
+                            BigInteger m;
+                            if (amount.getCurrency().equals("ETH")) m = BigInteger.valueOf(60000);
+                            else m = BigInteger.valueOf(21000);
 
-//    @Override
+                            CoinEngine.InternalAmount weiMinFee = new CoinEngine.InternalAmount(l.multiply(m), "wei");
+                            CoinEngine.InternalAmount weiNormalFee = new CoinEngine.InternalAmount(weiMinFee.multiply(BigDecimal.valueOf(12)).divide(BigDecimal.valueOf(10)), "wei");
+                            CoinEngine.InternalAmount weiMaxFee = new CoinEngine.InternalAmount(weiMinFee.multiply(BigDecimal.valueOf(15)).divide(BigDecimal.valueOf(10)), "wei");
+
+                            CoinEngine.Amount minFee = convertToAmount(weiMinFee);
+                            CoinEngine.Amount normalFee = convertToAmount(weiNormalFee);
+                            CoinEngine.Amount maxFee = convertToAmount(weiMaxFee);
+                            feeRequestsNotifications.onComplete(true, minFee, normalFee, maxFee);
+                    }
+
+            }
+
+            @Override
+            public void onFail(String method, String message) {
+                if( method==ServerApiInfura.INFURA_ETH_GAS_PRICE ){
+                    feeRequestsNotifications.onComplete(false, null, null, null);
+                }
+            }
+        };
+        serverApiInfura.setInfuraResponse(infuraBodyListener);
+
+        serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GAS_PRICE, 67, coinData.getWallet(), "", "");
+    }
+
+    //    @Override
 //    public byte[] sign(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress, CardProtocol protocol) throws Exception {
 //
 //        BigInteger nonceValue = coinData.getConfirmedTXCount();
@@ -668,4 +632,4 @@ public class EthEngine extends CoinEngine {
 //        byte[] realTX = tx.getEncoded();
 //        return realTX;
 //    }
-    }
+}
