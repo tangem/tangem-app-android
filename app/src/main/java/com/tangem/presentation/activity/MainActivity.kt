@@ -271,7 +271,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
         } catch (e: Exception) {
             e.printStackTrace()
-            nfcManager!!.notifyReadResult(false)
+            nfcManager.notifyReadResult(false)
         }
     }
 
@@ -279,11 +279,11 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         super.onResume()
         animate()
         ReadCardInfoTask.resetLastReadInfo()
-        nfcManager!!.onResume()
+        nfcManager.onResume()
     }
 
     public override fun onPause() {
-        nfcManager!!.onPause()
+        nfcManager.onPause()
         if (readCardInfoTask != null) {
             readCardInfoTask!!.cancel(true)
         }
@@ -292,7 +292,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
     public override fun onStop() {
         // dismiss enable NFC dialog
-        nfcManager!!.onStop()
+        nfcManager.onStop()
         if (readCardInfoTask != null) {
             readCardInfoTask!!.cancel(true)
         }
