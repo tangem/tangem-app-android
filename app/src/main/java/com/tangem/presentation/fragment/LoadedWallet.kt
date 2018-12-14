@@ -22,24 +22,17 @@ import android.widget.Toast
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.network.ServerApiCommon
-import com.tangem.data.network.ServerApiInfura
 import com.tangem.tangemserver.android.model.CardVerifyAndGetInfo
-import com.tangem.data.network.model.InfuraResponse
 import com.tangem.tangemcard.tasks.VerifyCardTask
 import com.tangem.tangemcard.reader.CardProtocol
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.domain.wallet.*
-import com.tangem.domain.wallet.bch.BtcCashEngine
-import com.tangem.domain.wallet.eth.EthData
-import com.tangem.domain.wallet.token.TokenData
-import com.tangem.domain.wallet.token.TokenEngine
 import com.tangem.presentation.activity.*
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.presentation.dialog.ShowQRCodeDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.data.Blockchain
-import com.tangem.data.network.ElectrumRequest
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD_UID
@@ -50,9 +43,7 @@ import com.tangem.tangemserver.android.ServerApiTangem
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
-import org.json.JSONException
 import java.io.InputStream
-import java.math.BigInteger
 import java.util.*
 
 class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, SharedPreferences.OnSharedPreferenceChangeListener {
@@ -802,23 +793,21 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         requestVerifyAndGetInfo()
 
-        if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet || ctx.blockchain == Blockchain.BitcoinCash) {
-            val coinEngine = CoinEngineFactory.create(ctx)
-            requestCounter++
-            coinEngine!!.requestBalanceAndUnspentTransactions(
-                    object : CoinEngine.BlockchainRequestsNotifications {
-                        override fun onComplete(success: Boolean?) {
-                            counterMinus()
-                            updateViews()
-                        }
-
-                        override fun needTerminate(): Boolean {
-                            return !UtilHelper.isOnline(context as Activity)
-                        }
+        val coinEngine = CoinEngineFactory.create(ctx)
+        requestCounter++
+        coinEngine!!.requestBalanceAndUnspentTransactions(
+                object : CoinEngine.BalanceAndUnspentTransactionsNotifications {
+                    override fun onComplete(success: Boolean?) {
+                        counterMinus()
+                        updateViews()
                     }
-            )
 
-        }
+                    override fun needTerminate(): Boolean {
+                        return !UtilHelper.isOnline(context as Activity)
+                    }
+                }
+        )
+
 
         // Bitcoin
         if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet) {
@@ -865,15 +854,15 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //        }
 //    }
 
-    private fun requestInfura(method: String, contract: String) {
-        if (UtilHelper.isOnline(context as Activity)) {
-            requestCounter++
-            serverApiInfura.infura(method, 67, ctx.coinData!!.wallet, contract, "")
-        } else {
-            Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            srl?.isRefreshing = false
-        }
-    }
+//    private fun requestInfura(method: String, contract: String) {
+//        if (UtilHelper.isOnline(context as Activity)) {
+//            requestCounter++
+//            serverApiInfura.infura(method, 67, ctx.coinData!!.wallet, contract, "")
+//        } else {
+//            Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+//            srl?.isRefreshing = false
+//        }
+//    }
 
     private fun requestVerifyAndGetInfo() {
         if (UtilHelper.isOnline(context as Activity)) {
