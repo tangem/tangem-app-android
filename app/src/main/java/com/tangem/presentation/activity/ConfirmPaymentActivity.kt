@@ -219,9 +219,16 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         } else {
                             requestElectrum(ctx, ElectrumRequest.getFee())
                         }
-                        progressBar.visibility = View.INVISIBLE
 
+                        progressBar.visibility = View.INVISIBLE
+                        val relayFee : BigDecimal = BigDecimal(0.00001)
+
+                        //compare fee to usual relay fee
+                        if (fee.compareTo(relayFee) == -1) {
+                            fee = relayFee
+                        }
                         fee = fee.setScale(8, RoundingMode.DOWN)
+
                         var feeAmount: CoinEngine.Amount = CoinEngine.Amount(fee, "BCH")
                         minFee = feeAmount
                         normalFee = feeAmount
