@@ -265,11 +265,19 @@ public abstract class CoinEngine {
 
     }
 
-
-    public interface BlockchainRequestsNotifications
+    public interface BalanceAndUnspentTransactionsNotifications
     {
         void onComplete(Boolean success);
         boolean needTerminate();
     }
-    public abstract void requestBalanceAndUnspentTransactions(BlockchainRequestsNotifications blockchainRequestsNotifications) throws Exception;
+    public abstract void requestBalanceAndUnspentTransactions(BalanceAndUnspentTransactionsNotifications balanceAndUnspentTransactionsNotifications) throws Exception;
+
+
+    public interface FeeRequestsNotifications
+    {
+        void onComplete(boolean success, Amount minFee, Amount normalFee, Amount maxFee);
+        boolean needTerminate();
+    }
+    public abstract void requestFee(FeeRequestsNotifications feeRequestsNotifications, CoinEngine.Amount amount) throws Exception;
+
 }
