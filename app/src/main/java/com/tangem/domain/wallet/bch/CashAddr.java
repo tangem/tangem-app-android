@@ -51,6 +51,7 @@ public class CashAddr {
         if (!isValidCashAddress(bitcoinCashAddress)) {
             throw new RuntimeException("Address wasn't valid: " + bitcoinCashAddress);
         }
+        bitcoinCashAddress = bitcoinCashAddress.toLowerCase();
 
         BitcoinCashAddressDecodedParts decoded = new BitcoinCashAddressDecodedParts();
         String[] addressParts = bitcoinCashAddress.split(SEPARATOR);
