@@ -4,6 +4,7 @@ import android.net.Uri;
 import android.text.InputFilter;
 import android.util.Log;
 
+import com.tangem.data.network.ServerApiCommon;
 import com.tangem.tangemcard.reader.CardProtocol;
 import com.tangem.domain.wallet.BalanceValidator;
 import com.tangem.domain.wallet.Base58;
@@ -20,6 +21,7 @@ import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.util.DerEncodingUtil;
 import com.tangem.tangemcard.util.Util;
+import com.tangem.util.FormatUtil;
 import com.tangem.wallet.R;
 import com.tangem.data.network.ElectrumRequest;
 import com.tangem.data.network.ServerApiElectrum;
@@ -32,6 +34,7 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -514,7 +517,7 @@ public class BtcEngine extends CoinEngine {
     }
 
     @Override
-    public void requestBalanceAndUnspentTransactions(BlockchainRequestsNotifications blockchainRequestsNotifications) {
+    public void requestBalanceAndUnspentTransactions(BalanceAndUnspentTransactionsNotifications balanceAndUnspentTransactionsNotifications) {
         final ServerApiElectrum serverApiElectrum = new ServerApiElectrum();
 
         ServerApiElectrum.ElectrumRequestDataListener electrumBodyListener = new ServerApiElectrum.ElectrumRequestDataListener() {
@@ -523,8 +526,7 @@ public class BtcEngine extends CoinEngine {
                 if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetBalance)) {
                     try {
                         String walletAddress = electrumRequest.getParams().getString(0);
-                        if( !walletAddress.equals(coinData.getWallet()))
-                        {
+                        if (!walletAddress.equals(coinData.getWallet())) {
                             // todo - check
                             throw new Exception("Invalid wallet address in answer!");
                         }
@@ -537,8 +539,7 @@ public class BtcEngine extends CoinEngine {
                     } catch (JSONException e) {
                         e.printStackTrace();
                         Log.e(TAG, "FAIL METHOD_GetBalance JSONException");
-                    }
-                    catch (Exception e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                         Log.e(TAG, "FAIL METHOD_GetBalance Exception");
                     }
@@ -568,9 +569,9 @@ public class BtcEngine extends CoinEngine {
                             Integer height = jsUnspent.getInt("height");
                             String hash = jsUnspent.getString("tx_hash");
                             if (height != -1) {
-                                if( !blockchainRequestsNotifications.needTerminate() ) {
+                                if (!balanceAndUnspentTransactionsNotifications.needTerminate()) {
                                     serverApiElectrum.electrumRequestData(ctx, ElectrumRequest.getTransaction(walletAddress, hash));
-                                }else{
+                                } else {
                                     serverApiElectrum.setErrorOccured("Terminated by user");
                                 }
                             }
@@ -593,17 +594,15 @@ public class BtcEngine extends CoinEngine {
                     }
                 }
 
-                if( !serverApiElectrum.hasRequests() )
-                {
-                    blockchainRequestsNotifications.onComplete(serverApiElectrum.isErrorOccured());
+                if (!serverApiElectrum.hasRequests()) {
+                    balanceAndUnspentTransactionsNotifications.onComplete(serverApiElectrum.isErrorOccured());
                 }
             }
 
             @Override
             public void onFail(String method) {
-                if( !serverApiElectrum.hasRequests() )
-                {
-                    blockchainRequestsNotifications.onComplete(serverApiElectrum.isErrorOccured());
+                if (!serverApiElectrum.hasRequests()) {
+                    balanceAndUnspentTransactionsNotifications.onComplete(serverApiElectrum.isErrorOccured());
                 }
             }
         };
@@ -614,7 +613,154 @@ public class BtcEngine extends CoinEngine {
         serverApiElectrum.electrumRequestData(ctx, ElectrumRequest.listUnspent(coinData.getWallet()));
     }
 
-//    @Override
+    Integer buildSize(String outputAddress, String outFee, String outAmount) throws Exception {
+        String myAddress = coinData.getWallet();
+        byte[] pbKey = ctx.getCard().getWalletPublicKey();
+        byte[] pbComprKey = ctx.getCard().getWalletPublicKeyRar();
+
+        // build script for our address
+        List<BtcData.UnspentTransaction> rawTxList = coinData.getUnspentTransactions();
+        byte[] outputScriptWeAreAbleToSpend = Transaction.Script.buildOutput(myAddress).bytes;
+
+        // collect unspent
+        ArrayList<UnspentOutputInfo> unspentOutputs = BTCUtils.getOutputs(rawTxList, outputScriptWeAreAbleToSpend);
+
+        Long fullAmount = 0L;
+        for (int i = 0; i < unspentOutputs.size(); i++) {
+            fullAmount += unspentOutputs.get(i).value;
+        }
+
+        // get first unspent
+//        val outPut = unspentOutputs[0]
+//        val outPutIndex = outPut.outputIndex
+
+        // get prev TX id;
+//        val prevTXID = rawTxList[0].txID//"f67b838d6e2c0c587f476f583843e93ff20368eaf96a798bdc25e01f53f8f5d2";
+
+        Long fees = FormatUtil.ConvertStringToLong(outFee);
+        Long amount = FormatUtil.ConvertStringToLong(outAmount);
+        amount -= fees;
+
+        Long change = fullAmount - fees - amount;
+
+        if (amount + fees > fullAmount) {
+            throw new Exception(String.format("Balance (%d) < amount (%d) + (%d)", fullAmount, change, amount));
+        }
+
+        byte[][] hashesForSign = new byte[unspentOutputs.size()][];
+
+        for (int i = 0; i < unspentOutputs.size(); i++) {
+            byte[] newTX = BTCUtils.buildTXForSign(myAddress, outputAddress, myAddress, unspentOutputs, i, amount, change);
+            byte[] hashData = Util.calculateSHA256(newTX);
+            byte[] doubleHashData = Util.calculateSHA256(hashData);
+//            Log.e("TX_BODY_1", BTCUtils.toHex(newTX))
+//            Log.e("TX_HASH_1", BTCUtils.toHex(hashData))
+//            Log.e("TX_HASH_2", BTCUtils.toHex(doubleHashData))
+
+//            unspentOutputs[i].bodyDoubleHash = doubleHashData
+//            unspentOutputs[i].bodyHash = hashData
+            hashesForSign[i] = doubleHashData;
+        }
+
+        byte[] signFromCard = new byte[64 * unspentOutputs.size()];
+
+        for (int i = 0; i < unspentOutputs.size(); i++) {
+            BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, 0 + i * 64, 32 + i * 64));
+            BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, 32 + i * 64, 64 + i * 64));
+            byte[] encodingSign = DerEncodingUtil.packSignDer(r, s, pbKey);
+            unspentOutputs.get(i).scriptForBuild = encodingSign;
+        }
+
+        byte[] realTX = BTCUtils.buildTXForSend(outputAddress, myAddress, unspentOutputs, amount, change);
+
+        return realTX.length;
+    }
+
+    @Override
+    public void requestFee(FeeRequestsNotifications feeRequestsNotifications, CoinEngine.Amount amount) throws Exception {
+// request estimate fee listener
+//        int calcSize = 256;
+//        try {
+
+        final int calcSize = buildSize(coinData.getWallet(), "0.00", amount.toValueString());
+//        } catch (Exception ex) {
+//            Log.e(TAG,"Build Fee error: "+ ex.getMessage());
+//        }
+
+        final ServerApiCommon serverApiCommon = new ServerApiCommon();
+
+        final ServerApiCommon.EstimateFeeListener estimateFeeListener = new ServerApiCommon.EstimateFeeListener() {
+            @Override
+            public void onSuccess(int blockCount, String estimateFeeResponse) {
+                BigDecimal fee = new BigDecimal(estimateFeeResponse); // BTC per 1 kb
+
+                if (fee.equals(BigDecimal.ZERO)) {
+//                     progressBar.visibility = View.INVISIBLE
+                    if( !feeRequestsNotifications.needTerminate()) {
+                        serverApiCommon.estimateFee(blockCount);
+                    }
+                    return;
+                }
+
+                if (calcSize != 0) {
+                    fee = fee.multiply(new BigDecimal(calcSize)).divide(new BigDecimal(1024)); // per Kb -> per byte
+                } else {
+                    if( !feeRequestsNotifications.needTerminate()) {
+                        serverApiCommon.estimateFee(blockCount);
+                    }
+                    return;
+                }
+
+//                 progressBar.visibility = View.INVISIBLE
+
+                fee = fee.setScale(8, RoundingMode.DOWN);
+
+                switch (blockCount) {
+                    case ServerApiCommon.ESTIMATE_FEE_MINIMAL: {
+                        CoinEngine.Amount minFee = new CoinEngine.Amount(fee, getFeeCurrency());
+                        feeRequestsNotifications.onComplete(true, minFee, null, null);
+//                         if (rgFee.checkedRadioButtonId == R.id.rbMinimalFee) doSetFee(rgFee.checkedRadioButtonId)
+                    }
+                    break;
+
+                    case ServerApiCommon.ESTIMATE_FEE_NORMAL: {
+                        CoinEngine.Amount normalFee = new CoinEngine.Amount(fee, getFeeCurrency());
+                        feeRequestsNotifications.onComplete(true, null, normalFee, null);
+//                         if (rgFee.checkedRadioButtonId == R.id.rbNormalFee) doSetFee(rgFee.checkedRadioButtonId)
+                    }
+                    break;
+
+                    case ServerApiCommon.ESTIMATE_FEE_PRIORITY: {
+                        CoinEngine.Amount maxFee = new CoinEngine.Amount(fee, getFeeCurrency());
+                        feeRequestsNotifications.onComplete(true, null, null, maxFee);
+//                         if (rgFee.checkedRadioButtonId == R.id.rbMaximumFee) doSetFee(rgFee.checkedRadioButtonId)
+                    }
+                }
+
+//                 etFee.error = null
+//                 feeRequestSuccess = true
+//                 if (feeRequestSuccess)
+//                if (feeRequestSuccess && balanceRequestSuccess)
+//                     btnSend.visibility = View.VISIBLE
+//                 dtVerified = Date()
+            }
+
+            @Override
+            public void onFail(String message) {
+                feeRequestsNotifications.onComplete(false, null, null, null);
+
+            }
+        };
+        serverApiCommon.setEstimateFee(estimateFeeListener);
+
+        serverApiCommon.estimateFee(ServerApiCommon.ESTIMATE_FEE_PRIORITY);
+        serverApiCommon.estimateFee(ServerApiCommon.ESTIMATE_FEE_NORMAL);
+        serverApiCommon.estimateFee(ServerApiCommon.ESTIMATE_FEE_MINIMAL);
+
+    }
+
+
+    //    @Override
 //    public byte[] sign(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress, CardProtocol protocol) throws Exception {
 //
 //        checkBlockchainDataExists();
