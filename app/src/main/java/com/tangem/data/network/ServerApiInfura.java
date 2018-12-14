@@ -31,6 +31,21 @@ public class ServerApiInfura {
     public static final String INFURA_ETH_SEND_RAW_TRANSACTION = "eth_sendRawTransaction";
     public static final String INFURA_ETH_GAS_PRICE = "eth_gasPrice";
 
+    private int requestsCount=0;
+
+    public boolean hasRequests() {
+        return requestsCount>0;
+    }
+
+    private String error=null;
+    public boolean isErrorOccured() {
+        return error!=null;
+    }
+
+    public void setErrorOccured(String error) {
+        this.error=error;
+    }
+
     private InfuraBodyListener infuraBodyListener;
 
     public interface InfuraBodyListener {
@@ -44,6 +59,7 @@ public class ServerApiInfura {
     }
 
     public void infura(String method, int id, String wallet, String contract, String tx) {
+        requestsCount++;
         InfuraApi infuraApi = App.getNetworkComponent().getRetrofitInfura().create(InfuraApi.class);
 
         InfuraBody infuraBody;
@@ -77,6 +93,7 @@ public class ServerApiInfura {
             @Override
             public void onResponse(@NonNull Call<InfuraResponse> call, @NonNull Response<InfuraResponse> response) {
                 if (response.code() == 200) {
+                    requestsCount--;
                     infuraBodyListener.onSuccess(method, response.body());
                     Log.i(TAG, "infura " + method + " onResponse " + response.code());
                 } else {
