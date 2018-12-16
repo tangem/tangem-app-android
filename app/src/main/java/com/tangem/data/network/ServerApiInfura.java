@@ -33,17 +33,9 @@ public class ServerApiInfura {
 
     private int requestsCount=0;
 
-    public boolean hasRequests() {
-        return requestsCount>0;
-    }
-
-    private String error=null;
-    public boolean isErrorOccured() {
-        return error!=null;
-    }
-
-    public void setErrorOccured(String error) {
-        this.error=error;
+    public boolean isRequestsSequenceCompleted() {
+        Log.i(TAG, String.format("isRequestsSequenceCompleted: %s (%d requests left)", String.valueOf(requestsCount <= 0), requestsCount));
+        return requestsCount <= 0;
     }
 
     private InfuraBodyListener infuraBodyListener;
