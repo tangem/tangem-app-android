@@ -9,29 +9,20 @@ import android.support.v7.app.AppCompatActivity
 import android.text.Editable
 import android.text.Html
 import android.text.TextWatcher
-import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.widget.Toast
-import com.tangem.data.network.ElectrumRequest
-import com.tangem.data.network.ServerApiCommon
-import com.tangem.data.network.ServerApiElectrum
-import com.tangem.data.network.ServerApiInfura
-import com.tangem.data.network.model.InfuraResponse
-import com.tangem.tangemcard.android.reader.NfcManager
-import com.tangem.domain.wallet.*
-import com.tangem.domain.wallet.btc.BtcData
 import com.tangem.data.Blockchain
+import com.tangem.domain.wallet.CoinEngine
+import com.tangem.domain.wallet.CoinEngineFactory
+import com.tangem.domain.wallet.TangemContext
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
-import com.tangem.tangemcard.util.Util
-import com.tangem.util.*
+import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_confirm_payment.*
 import java.io.IOException
-import java.math.BigDecimal
-import java.math.BigInteger
-import java.math.RoundingMode
 import java.util.*
 
 class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
@@ -49,11 +40,8 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     private lateinit var ctx: TangemContext
     private lateinit var amount: CoinEngine.Amount
 
-    private var feeRequestSuccess = false
+    //    private var feeRequestSuccess = false
     //    private var balanceRequestSuccess = false
-    private var minFee: CoinEngine.Amount? = null
-    private var maxFee: CoinEngine.Amount? = null
-    private var normalFee: CoinEngine.Amount? = null
     private var isIncludeFee: Boolean = true
     private var requestPIN2Count = 0
     private var nodeCheck = true
@@ -97,7 +85,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         etFee.setText("")
 
         btnSend.visibility = View.INVISIBLE
-        feeRequestSuccess = false
+//        feeRequestSuccess = false
 //        balanceRequestSuccess = false
 
         if (ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token) {
@@ -110,9 +98,9 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
 //            requestElectrum(ctx.card, ElectrumRequest.checkBalance(ctx.card!!.wallet))
 
-            ctx.coinData!!.resetFailedBalanceRequestCounter()
+//            ctx.coinData!!.resetFailedBalanceRequestCounter()
 
-            progressBar.visibility = View.VISIBLE
+//            progressBar.visibility = View.VISIBLE
 
 //            requestEstimateFee()
         }
@@ -193,30 +181,37 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
 
         val coinEngine = CoinEngineFactory.create(ctx)
+
+        progressBar.visibility = View.VISIBLE
+
         coinEngine!!.requestFee(
-                object : CoinEngine.FeeRequestsNotifications {
-                    override fun onComplete(success: Boolean, minFee: CoinEngine.Amount?, normalFee: CoinEngine.Amount?, maxFee: CoinEngine.Amount?) {
+                object : CoinEngine.BlockchainRequestsCallbacks {
+                    override fun onComplete(success: Boolean) {
                         if (success) {
-                            this@ConfirmPaymentActivity.minFee = minFee
-                            this@ConfirmPaymentActivity.normalFee = normalFee
-                            this@ConfirmPaymentActivity.maxFee = maxFee
-                            doSetFee(rgFee.checkedRadioButtonId)
-                            etFee.error = null
-                            btnSend.visibility = View.VISIBLE
-                            feeRequestSuccess = true
-//                        balanceRequestSuccess = true
+
+                            onProgress()
+
+//                            etFee.error = null
+
+//                            feeRequestSuccess = true
+                            //                        balanceRequestSuccess = true
+                            progressBar.visibility = View.INVISIBLE
                             dtVerified = Date()
                         } else {
-                            finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+                            finishWithError(Activity.RESULT_CANCELED, ctx.error)
                         }
                     }
 
-                    override fun needTerminate(): Boolean {
-                        return !UtilHelper.isOnline(this@ConfirmPaymentActivity)
+                    override fun onProgress() {
+                        doSetFee(rgFee.checkedRadioButtonId)
+                    }
+
+                    override fun allowAdvance(): Boolean {
+                        return UtilHelper.isOnline(this@ConfirmPaymentActivity)
                     }
                 },
-                amount
-        )
+                etWallet.text.toString(),
+                amount)
 
 
         // request electrum listener
@@ -420,7 +415,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     }
 
     // TODO - move to BtcEngine
-    @Throws(Exception::class)
+//    @Throws(Exception::class)
 
 //    private fun requestElectrum(ctx: TangemContext, electrumRequest: ElectrumRequest) {
 //        if (UtilHelper.isOnline(this)) {
@@ -455,20 +450,29 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         var txtFee = ""
         when (checkedRadioButtonId) {
             R.id.rbMinimalFee ->
-                if (minFee != null)
-                    txtFee = minFee!!.toValueString()
-                else
-                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+                if (ctx.coinData.minFee != null) {
+                    txtFee = ctx.coinData.minFee!!.toValueString()
+                    btnSend.visibility = View.VISIBLE
+                }else {
+                    btnSend.visibility = View.INVISIBLE
+//                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+                }
             R.id.rbNormalFee ->
-                if (normalFee != null)
-                    txtFee = normalFee!!.toValueString()
-                else
-                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+                if (ctx.coinData.normalFee != null) {
+                    txtFee = ctx.coinData.normalFee!!.toValueString()
+                    btnSend.visibility = View.VISIBLE
+                }else {
+                    btnSend.visibility = View.INVISIBLE
+//                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+                }
             R.id.rbMaximumFee ->
-                if (maxFee != null)
-                    txtFee = maxFee!!.toValueString()
-                else
-                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+                if (ctx.coinData.maxFee != null) {
+                    txtFee = ctx.coinData.maxFee!!.toValueString()
+                    btnSend.visibility = View.VISIBLE
+                }else {
+//                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+                    btnSend.visibility = View.INVISIBLE
+                }
         }
         etFee.setText(txtFee.replace(',', '.'))
     }
