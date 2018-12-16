@@ -252,7 +252,7 @@ public abstract class CoinEngine {
     {
         void onPaymentPrepared(byte[] txForSend);
     }
-    private OnNeedSendPayment onNeedSendPayment;
+    protected OnNeedSendPayment onNeedSendPayment;
 
     public void setOnNeedSendPayment(OnNeedSendPayment onNeedSendPayment) {
         this.onNeedSendPayment = onNeedSendPayment;
@@ -262,22 +262,34 @@ public abstract class CoinEngine {
         if(onNeedSendPayment==null)
             throw new Exception("Payment signed but no callback defined to send!");
         onNeedSendPayment.onPaymentPrepared(txForSend);
-
     }
 
-    public interface BalanceAndUnspentTransactionsNotifications
+    public interface BlockchainRequestsCallbacks
     {
+        /**
+         * Notification that the all requests in sequence completed
+         * Call after a last request completed
+         * If occurred error return in ctx.error
+         * @param success -*
+         */
         void onComplete(Boolean success);
-        boolean needTerminate();
+
+        /**
+         * Notification that a new part of data received and it's possible to update view
+         * May call when some request in the sequence completed but there are still a few requests left
+         */
+        void onProgress();
+
+        /**
+         * Return flag that allow to add new or re-requests in the sequence
+         * Call between requests or when request fail and before re-request
+         * @return true if not need terminate (e.g. activity is online)
+         */
+        boolean allowAdvance();
     }
-    public abstract void requestBalanceAndUnspentTransactions(BalanceAndUnspentTransactionsNotifications balanceAndUnspentTransactionsNotifications) throws Exception;
+    public abstract void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) throws Exception;
 
+    public abstract void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) throws Exception;
 
-    public interface FeeRequestsNotifications
-    {
-        void onComplete(boolean success, Amount minFee, Amount normalFee, Amount maxFee);
-        boolean needTerminate();
-    }
-    public abstract void requestFee(FeeRequestsNotifications feeRequestsNotifications, CoinEngine.Amount amount) throws Exception;
-
+    public abstract void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) throws Exception;
 }
