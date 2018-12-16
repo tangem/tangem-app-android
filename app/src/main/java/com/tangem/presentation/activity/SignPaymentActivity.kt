@@ -144,4 +144,143 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                         ?: throw CardProtocol.TangemException("Can't create CoinEngine!")
                 coinEngine.setOnNeedSendPayment { tx ->
                     if (tx != null) {
-                        // [REDACTED_TODO_COMMENT]
+                        val intent = Intent(this, SendTransactionActivity::class.java)
+                        ctx.saveToIntent(intent)
+                        intent.putExtra(SendTransactionActivity.EXTRA_TX, tx)
+                        startActivityForResult(intent, SignPaymentActivity.REQUEST_CODE_SEND_PAYMENT)
+                    }
+                }
+                val paymentToSign = coinEngine.constructPayment(amount, fee, isIncludeFee, outAddressStr)
+
+                signPaymentTask = SignTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, paymentToSign)
+                signPaymentTask!!.start()
+            } else {
+//                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card!!.uid + ")")
+                nfcManager!!.ignoreTag(isoDep.tag)
+            }
+
+        }catch (e: CardProtocol.TangemException_WrongAmount)
+        {
+            try {
+                val intent = Intent()
+                intent.putExtra("message", getString(R.string.cannot_sign_transaction_wrong_amount))
+                intent.putExtra("UID", ctx.card.uid)
+                intent.putExtra("Card", ctx.card.asBundle)
+                setResult(Activity.RESULT_CANCELED, intent)
+                finish()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    override fun onReadStart(cardProtocol: CardProtocol) {
+        progressBar!!.post {
+            progressBar!!.visibility = View.VISIBLE
+            progressBar!!.progress = 5
+        }
+    }
+
+    override fun onReadProgress(protocol: CardProtocol, progress: Int) {
+        progressBar!!.post { progressBar!!.progress = progress }
+    }
+
+    override fun onReadFinish(cardProtocol: CardProtocol?) {
+        signPaymentTask = null
+        if (cardProtocol != null) {
+            if (cardProtocol.error == null) {
+                progressBar!!.post {
+                    progressBar!!.progress = 100
+                    progressBar!!.progressTintList = ColorStateList.valueOf(Color.GREEN)
+                }
+            } else {
+                lastReadSuccess = false
+                if (cardProtocol.error.javaClass == CardProtocol.TangemException_InvalidPIN::class.java) {
+                    progressBar!!.post {
+                        progressBar!!.progress = 100
+                        progressBar!!.progressTintList = ColorStateList.valueOf(Color.RED)
+                    }
+                    progressBar!!.postDelayed({
+                        try {
+                            progressBar!!.progress = 0
+                            progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+                            progressBar!!.visibility = View.INVISIBLE
+                            val intent = Intent()
+                            intent.putExtra("message", getString(R.string.cannot_sign_transaction__make_sure_you_enter_correct_pin_2))
+                            intent.putExtra("UID", cardProtocol.card.uid)
+                            intent.putExtra("Card", cardProtocol.card.asBundle)
+                            setResult(RESULT_INVALID_PIN, intent)
+                            finish()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }, 500)
+                } else {
+                    if (cardProtocol.error is CardProtocol.TangemException_WrongAmount) {
+                        try {
+                            val intent = Intent()
+                            intent.putExtra("message", getString(R.string.cannot_sign_transaction_wrong_amount))
+                            intent.putExtra("UID", cardProtocol.card.uid)
+                            intent.putExtra("Card", cardProtocol.card.asBundle)
+                            setResult(Activity.RESULT_CANCELED, intent)
+                            finish()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                    progressBar!!.post {
+                        if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported) {
+                            if (!NoExtendedLengthSupportDialog.allReadyShowed) {
+                                NoExtendedLengthSupportDialog.message = getText(R.string.the_nfc_adapter_length_apdu).toString() + "\n" + getText(R.string.the_nfc_adapter_length_apdu_advice).toString()
+                                NoExtendedLengthSupportDialog().show(supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
+                            }
+                        } else {
+                            Toast.makeText(baseContext, R.string.try_to_scan_again, Toast.LENGTH_LONG).show()
+                        }
+                        progressBar!!.progress = 100
+                        progressBar!!.progressTintList = ColorStateList.valueOf(Color.RED)
+                    }
+                }
+            }
+        }
+
+        progressBar!!.postDelayed({
+            try {
+                progressBar!!.progress = 0
+                progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+                progressBar!!.visibility = View.INVISIBLE
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }, 500)
+    }
+
+    override fun onReadCancel() {
+        signPaymentTask = null
+
+        progressBar!!.postDelayed({
+            try {
+                progressBar!!.progress = 0
+                progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+                progressBar!!.visibility = View.INVISIBLE
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }, 500)
+    }
+
+    override fun onReadWait(msec: Int) {
+        WaitSecurityDelayDialog.OnReadWait(this, msec)
+    }
+
+    override fun onReadBeforeRequest(timeout: Int) {
+        WaitSecurityDelayDialog.onReadBeforeRequest(this, timeout)
+    }
+
+    override fun onReadAfterRequest() {
+        WaitSecurityDelayDialog.onReadAfterRequest(this)
+    }
+
+}
