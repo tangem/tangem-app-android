@@ -8,6 +8,7 @@ import com.tangem.data.Blockchain;
 import com.tangem.domain.wallet.bch.BitcoinCashNode;
 import com.tangem.domain.wallet.btc.BitcoinNode;
 import com.tangem.domain.wallet.btc.BitcoinNodeTestNet;
+import com.tangem.wallet.R;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -54,23 +55,15 @@ public class ServerApiElectrum {
 
     private int requestsCount=0;
 
-    public boolean hasRequests() {
-        return requestsCount>0;
-    }
-
-    private String error=null;
-    public boolean isErrorOccured() {
-        return error!=null;
-    }
-
-    public void setErrorOccured(String error) {
-        this.error=error;
+    public boolean isRequestsSequenceCompleted() {
+        Log.i(TAG, String.format("isRequestsSequenceCompleted: %s (%d requests left)", String.valueOf(requestsCount <= 0), requestsCount));
+        return requestsCount <= 0;
     }
 
     public interface ElectrumRequestDataListener {
         void onSuccess(ElectrumRequest electrumRequest);
 
-        void onFail(String method);
+        void onFail(ElectrumRequest electrumRequest);
     }
 
     public void setElectrumRequestData(ElectrumRequestDataListener listener) {
@@ -79,6 +72,7 @@ public class ServerApiElectrum {
 
     public void electrumRequestData(TangemContext ctx, ElectrumRequest electrumRequest) {
         requestsCount++;
+        Log.i(TAG, String.format("New request[%d]: %s", requestsCount,electrumRequest.getMethod()));
         Observable<ElectrumRequest> checkElectrumDataObserver = Observable.just(electrumRequest)
                 .doOnNext(electrumRequest1 -> doElectrumRequest(ctx, electrumRequest))
 
@@ -97,33 +91,47 @@ public class ServerApiElectrum {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
         checkElectrumDataObserver.subscribe(new DefaultObserver<ElectrumRequest>() {
+            //TODO remove onNext
             @Override
             public void onNext(ElectrumRequest v) {
                 if (electrumRequest.answerData != null) {
-                    requestsCount--;
-                    electrumRequestDataListener.onSuccess(electrumRequest);
-//                    Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onNext != null");
+                    Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onNext != null");
                 } else {
-                    electrumRequestDataListener.onFail(electrumRequest.getMethod());
                     Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onNext == null");
                 }
             }
 
             @Override
             public void onError(Throwable e) {
-                electrumRequestDataListener.onFail(electrumRequest.getMethod());
+                requestsCount--;
                 Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onError " + e.getMessage());
+                Log.e(TAG, String.format("%d requests left in processing",requestsCount));
+                electrumRequest.setError(ctx.getString(R.string.cannot_obtain_data_from_blockchain));
+                //setErrorOccurred(e.getMessage());//;
+                electrumRequestDataListener.onFail(electrumRequest);
             }
 
             @Override
             public void onComplete() {
-//                Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onComplete");
+                requestsCount--;
+                if (electrumRequest.answerData != null) {
+                    Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onComplete, answerData!=null");
+                } else {
+                    Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onComplete, answerData==null");
+                }
+                Log.e(TAG, String.format("%d requests left in processing",requestsCount));
+                if (electrumRequest.answerData != null) {
+                    electrumRequestDataListener.onSuccess(electrumRequest);
+                } else {
+//                    if( error==null || error.isEmpty() ) setErrorOccurred(ctx.getString(R.string.cannot_obtain_data_from_blockchain));
+                    electrumRequestDataListener.onFail(electrumRequest);
+                }
             }
 
         });
     }
 
-    private List<ElectrumRequest> doElectrumRequest(TangemContext ctx, ElectrumRequest electrumRequest) {
+    private void doElectrumRequest(TangemContext ctx, ElectrumRequest electrumRequest) {
         String host;
         int port;
         String proto;
@@ -135,8 +143,7 @@ public class ServerApiElectrum {
             this.host = host;
             this.port = port;
 
-            return doElectrumRequestTcp(electrumRequest, host, port);
-
+            doElectrumRequestTcp(electrumRequest, host, port);
         } else if (ctx.getBlockchain() == Blockchain.BitcoinCash) {
             BitcoinCashNode bitcoinCashNode = BitcoinCashNode.values()[new Random().nextInt(BitcoinCashNode.values().length)];
             host = bitcoinCashNode.getHost();
@@ -147,9 +154,9 @@ public class ServerApiElectrum {
             this.port = port;
 
             if (proto.equals("tcp")) {
-                return doElectrumRequestTcp(electrumRequest, host, port);
+                doElectrumRequestTcp(electrumRequest, host, port);
             } else {
-                return doElectrumRequestSsl(electrumRequest, host, port);
+                doElectrumRequestSsl(electrumRequest, host, port);
             }
 
         } else if (ctx.getBlockchain() == Blockchain.Bitcoin) {
@@ -162,23 +169,19 @@ public class ServerApiElectrum {
             this.port = port;
 
             if (proto.equals("tcp")) {
-                return doElectrumRequestTcp(electrumRequest, host, port);
+                doElectrumRequestTcp(electrumRequest, host, port);
             } else {
-                return doElectrumRequestSsl(electrumRequest, host, port);
+                doElectrumRequestSsl(electrumRequest, host, port);
             }
         }
-        return null;
     }
 
-    private List<ElectrumRequest> doElectrumRequestTcp(ElectrumRequest electrumRequest, String host, int port) {
-        List<ElectrumRequest> result = new ArrayList<>();
-        Collections.addAll(result, electrumRequest);
-
+    private void doElectrumRequestTcp(ElectrumRequest electrumRequest, String host, int port) {
         try {
             Socket socket = App.getNetworkComponent().getSocket();
             socket.setSoTimeout(3000);
+            Log.i(TAG, "Start process "+electrumRequest.getMethod()+" @ "+host + ":" + port);
             socket.connect(new InetSocketAddress(InetAddress.getByName(host), port));
-            Log.i(TAG, host + " " + port);
             try {
                 OutputStream os = socket.getOutputStream();
                 OutputStreamWriter out = new OutputStreamWriter(os, "UTF-8");
@@ -195,37 +198,38 @@ public class ServerApiElectrum {
                 if (electrumRequest.answerData != null) {
                     Log.i(TAG, ">> " + electrumRequest.answerData);
                 } else {
-                    electrumRequest.error = "No answer from server";
+                    electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_no_answer));
                     Log.i(TAG, ">> <NULL>");
                 }
 
             } catch (ConnectException e) {
-                e.printStackTrace();
-                electrumRequestDataListener.onFail(e.getMessage());
-                Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " ConnectException " + e.getMessage());
+                //e.printStackTrace();
+                //electrumRequestDataListener.onFail(e.getMessage());
+                electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_no_connection));
+                Log.e(TAG, "doElectrumRequestTcp " + electrumRequest.getMethod() + " ConnectException " + e.getMessage());
             } finally {
-                Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " CLOSE");
+                Log.i(TAG, "doElectrumRequestTcp " + electrumRequest.getMethod() + " socket.close");
                 socket.close();
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            electrumRequestDataListener.onFail(e.getMessage());
-            Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " IOException " + e.getMessage());
+            //e.printStackTrace();
+            //electrumRequestDataListener.onFail(e.getMessage());
+            electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_communication_error));
+            Log.e(TAG, "doElectrumRequestTcp " + electrumRequest.getMethod() + " IOException " + e.getMessage());
         }
-        return result;
     }
 
-    private List<ElectrumRequest> doElectrumRequestSsl(ElectrumRequest electrumRequest, String host, int port) {
+    private void doElectrumRequestSsl(ElectrumRequest electrumRequest, String host, int port) {
         try {
             // create a trust manager that does not validate certificate chains
             TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
                 @Override
-                public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                public void checkClientTrusted(X509Certificate[] chain, String authType) {
 
                 }
 
                 @Override
-                public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                public void checkServerTrusted(X509Certificate[] chain, String authType) {
 
                 }
 
@@ -253,8 +257,8 @@ public class ServerApiElectrum {
             Collections.addAll(result, electrumRequest);
 
             try {
-                sslSocket = (SSLSocket) sf.createSocket(host, port);
                 Log.i(TAG, host + " " + port);
+                sslSocket = (SSLSocket) sf.createSocket(host, port);
                 try {
                     OutputStream os = sslSocket.getOutputStream();
                     OutputStreamWriter out = new OutputStreamWriter(os, "UTF-8");
@@ -269,30 +273,28 @@ public class ServerApiElectrum {
                     if (electrumRequest.answerData != null) {
                         Log.i(TAG, ">> " + electrumRequest.answerData);
                     } else {
-                        electrumRequest.error = "No answer from server";
+                        electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_no_answer));
                         Log.i(TAG, ">> <NULL>");
                     }
 
                 } catch (ConnectException e) {
                     e.printStackTrace();
-                    Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " ConnectException " + e.getMessage());
+                    electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_no_connection));
+                    Log.e(TAG, "doElectrumRequestTcp " + electrumRequest.getMethod() + " ConnectException " + e.getMessage());
                 } finally {
-                    Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " CLOSE");
+                    Log.i(TAG, "doElectrumRequestTcp " + electrumRequest.getMethod() + " socket.close");
                     sslSocket.close();
                 }
 
             } catch (IOException e) {
                 e.printStackTrace();
-                Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " IOException " + e.getMessage());
+                electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_communication_error));
+                Log.e(TAG, "doElectrumRequestTcp " + electrumRequest.getMethod() + " IOException " + e.getMessage());
             }
-
-            return result;
-
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain));
             Log.e(TAG, e.getMessage());
         }
-
-        return null;
     }
 
     public String getValidationNodeDescription() {

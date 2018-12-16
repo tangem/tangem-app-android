@@ -28,7 +28,11 @@ public class TokenData extends EthData {
     public void loadFromBundle(Bundle B) {
         super.loadFromBundle(B);
 
-        balanceAlter = new CoinEngine.InternalAmount(B.getString("BalanceDecimalAlter"),"wei");
+        if( B.containsKey("BalanceDecimalAlter" )) {
+            balanceAlter = new CoinEngine.InternalAmount(B.getString("BalanceDecimalAlter"), "wei");
+        }else{
+            balanceAlter=null;
+        }
     }
 
     @Override
