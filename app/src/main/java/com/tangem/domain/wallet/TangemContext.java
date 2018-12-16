@@ -85,6 +85,10 @@ public class TangemContext {
         return error;
     }
 
+    public boolean hasError() {
+        return error!=null && !error.isEmpty();
+    }
+
     public void setMessage(String value) {
         this.message = value;
     }
