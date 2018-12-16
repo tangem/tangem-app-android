@@ -69,7 +69,17 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private var cardProtocol: CardProtocol? = null
     private val inactiveColor: ColorStateList by lazy { resources.getColorStateList(R.color.btn_dark) }
     private val activeColor: ColorStateList by lazy { resources.getColorStateList(R.color.colorAccent) }
-    private var requestCounter = 0
+    private var requestCounter: Int = 0
+        set(value)
+        {
+            field=value
+            Log.i(TAG, "requestCounter, set $field")
+            if (field <= 0 && srl!=null && srl.isRefreshing ) {
+                Log.e(TAG, "+++++++++++ FINISH REFRESH")
+                if (srl != null) srl!!.isRefreshing = false
+                //updateViews()
+            }
+        }
     private var timerRepeatRefresh: Timer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -395,6 +405,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         // request card verify and get info listener
         val cardVerifyAndGetInfoListener: ServerApiTangem.CardVerifyAndGetInfoListener = object : ServerApiTangem.CardVerifyAndGetInfoListener {
             override fun onSuccess(cardVerifyAndGetArtworkResponse: CardVerifyAndGetInfo.Response?) {
+                Log.i(TAG,"cardVerifyAndGetInfoListener onSuccess")
                 val result = cardVerifyAndGetArtworkResponse?.results!![0]
                 if (result.error != null) {
                     ctx.card!!.isOnlineVerified = false
@@ -402,7 +413,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 }
                 ctx.card!!.isOnlineVerified = result.passed
 
-                if (requestCounter == 0) updateViews()
+//                if (requestCounter == 0)
+                requestCounter--
+                updateViews()
 
                 if (!result.passed) return
 
@@ -421,6 +434,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 }
                 if (result.artwork != null && App.localStorage.checkNeedUpdateArtwork(result.artwork)) {
                     Log.w(TAG, "Artwork '${result.artwork!!.id}' updated, need download")
+                    requestCounter++
                     serverApiTangem.requestArtwork(result.artwork!!.id, result.artwork!!.getUpdateDate(), ctx.card!!)
                     updateViews()
                 }
@@ -428,7 +442,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
 
             override fun onFail(message: String?) {
-
+                Log.i(TAG,"cardVerifyAndGetInfoListener onFail")
+                requestCounter--
+                updateViews()
             }
         }
         serverApiTangem.setCardVerifyAndGetInfoListener(cardVerifyAndGetInfoListener)
@@ -436,12 +452,17 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         // request artwork listener
         val artworkListener: ServerApiTangem.ArtworkListener = object : ServerApiTangem.ArtworkListener {
             override fun onSuccess(artworkId: String?, inputStream: InputStream?, updateDate: Date?) {
+                Log.i(TAG,"artworkListener onSuccess")
                 App.localStorage.updateArtwork(artworkId!!, inputStream!!, updateDate!!)
+                requestCounter--
                 ivTangemCard.setImageBitmap(App.localStorage.getCardArtworkBitmap(ctx.card!!))
+                updateViews()
             }
 
             override fun onFail(message: String?) {
-
+                Log.i(TAG,"artworkListener onFail")
+                requestCounter--
+                updateViews()
             }
         }
         serverApiTangem.setArtworkListener(artworkListener)
@@ -451,14 +472,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val rate = it.priceUsd.toFloat()
             ctx.coinData!!.rate = rate
             ctx.coinData!!.rateAlter = rate
-        }
-    }
-
-    private fun counterMinus() {
-        requestCounter--
-        if (requestCounter == 0) {
-            if (srl != null) srl!!.isRefreshing = false
-            updateViews()
         }
     }
 
@@ -714,12 +727,12 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             timerHideErrorAndMessage = null
         }
 
-        if (ctx.error == null || ctx.error.isEmpty()) {
-            tvError.visibility = View.GONE
-            tvError.text = ""
-        } else {
+        if (ctx.hasError()) {
             tvError.visibility = View.VISIBLE
             tvError.text = ctx.error
+        } else {
+            tvError.visibility = View.GONE
+            tvError.text = ""
         }
 
         if (ctx.message == null || ctx.message.isEmpty()) {
@@ -775,19 +788,22 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             btnExtract.backgroundTintList = inactiveColor
         }
 
-        ctx.error = null
-        ctx.message = null
+        //TODO why ???
+//        ctx.error = null
+//        ctx.message = null
     }
 
     private fun refresh() {
         if (ctx.card == null) return
 
         // clear all card data and request again
-        srl?.isRefreshing = true
         ctx.coinData.clearInfo()
         ctx.error = null
         ctx.message = null
+
+        Log.e(TAG, "============= START REFRESH")
         requestCounter = 0
+        srl?.isRefreshing = true
 
         updateViews()
 
@@ -796,14 +812,24 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         val coinEngine = CoinEngineFactory.create(ctx)
         requestCounter++
         coinEngine!!.requestBalanceAndUnspentTransactions(
-                object : CoinEngine.BalanceAndUnspentTransactionsNotifications {
-                    override fun onComplete(success: Boolean?) {
-                        counterMinus()
+                object : CoinEngine.BlockchainRequestsCallbacks {
+                    override fun onComplete(success: Boolean) {
+                        Log.i(TAG, "requestBalanceAndUnspentTransactions onComplete: "+success.toString()+", request counter "+requestCounter.toString())
+                        requestCounter--
+                        if(! success)
+                        {
+                            Log.e(TAG, "ctx.error: "+ctx.error)
+                        }
                         updateViews()
                     }
 
-                    override fun needTerminate(): Boolean {
-                        return !UtilHelper.isOnline(context as Activity)
+                    override fun onProgress() {
+                        Log.i(TAG, "requestBalanceAndUnspentTransactions onProgress")
+                        updateViews()
+                    }
+
+                    override fun allowAdvance(): Boolean {
+                        return UtilHelper.isOnline(context as Activity)
                     }
                 }
         )
@@ -867,19 +893,24 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private fun requestVerifyAndGetInfo() {
         if (UtilHelper.isOnline(context as Activity)) {
             if ((ctx.card!!.isOnlineVerified == null || !ctx.card!!.isOnlineVerified)) {
+                Log.i(TAG, "requestVerifyAndGetInfo")
+                requestCounter++
                 serverApiTangem.cardVerifyAndGetInfo(ctx.card)
             }
         } else {
             Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+            Log.e(TAG, "+++++++++++ Hide refresh 1")
             srl?.isRefreshing = false
         }
     }
 
     private fun requestRateInfo(cryptoId: String) {
         if (UtilHelper.isOnline(context as Activity)) {
+            Log.i(TAG, "requestRateInfo")
             serverApiCommon.rateInfoData(cryptoId)
         } else {
             Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+            Log.e(TAG, "+++++++++++ Hide refresh 2")
             srl?.isRefreshing = false
         }
     }
