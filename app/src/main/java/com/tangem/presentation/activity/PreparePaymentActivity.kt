@@ -12,10 +12,10 @@ import android.text.Html
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.data.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_payment.*
 import java.io.IOException
@@ -24,6 +24,12 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     companion object {
         val TAG: String = PreparePaymentActivity::class.java.simpleName
+
+        fun callingIntent(context: Context, ctx: TangemContext): Intent {
+            val intent = Intent(context, PreparePaymentActivity::class.java)
+            ctx.saveToIntent(intent)
+            return intent
+        }
 
         private const val REQUEST_CODE_SCAN_QR = 1
         private const val REQUEST_CODE_SEND_PAYMENT = 2
