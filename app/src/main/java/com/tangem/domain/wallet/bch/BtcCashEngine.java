@@ -320,10 +320,10 @@ public class BtcCashEngine extends CoinEngine {
     }
 
     @Override
-    public String calculateAddress(byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException {
+    public String calculateAddress(byte[] pubKey) throws NoSuchProviderException, NoSuchAlgorithmException {
 
         // CashAddr format
-        byte hash1[] = Util.calculateSHA256(pkUncompressed);
+        byte hash1[] = Util.calculateSHA256(pubKey);
         byte hash2[] = Util.calculateRIPEMD160(hash1);
         return CashAddr.toCashAddress(BitcoinCashAddressType.P2PKH, hash2);
 
