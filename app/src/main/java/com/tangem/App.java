@@ -64,11 +64,11 @@ public class App extends Application {
 
         initIssuers();
 
-        firmwaresStorage=new Firmwares(getApplicationContext());
+        firmwaresStorage = new Firmwares(getApplicationContext());
 
-        localStorage=new LocalStorage(getApplicationContext());
+        localStorage = new LocalStorage(getApplicationContext());
 
-        pinStorage=new PINStorage();
+        pinStorage = new PINStorage();
     }
 
     /**
