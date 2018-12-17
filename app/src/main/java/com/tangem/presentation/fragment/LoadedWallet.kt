@@ -21,16 +21,16 @@ import android.view.ViewGroup
 import android.widget.Toast
 import com.tangem.App
 import com.tangem.Constant
+import com.tangem.data.Blockchain
 import com.tangem.data.network.ElectrumRequest
 import com.tangem.data.network.ServerApiCommon
 import com.tangem.data.network.ServerApiElectrum
 import com.tangem.data.network.ServerApiInfura
-import com.tangem.tangemserver.android.model.CardVerifyAndGetInfo
 import com.tangem.data.network.model.InfuraResponse
-import com.tangem.tangemcard.tasks.VerifyCardTask
-import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.android.reader.NfcManager
-import com.tangem.domain.wallet.*
+import com.tangem.domain.wallet.BalanceValidator
+import com.tangem.domain.wallet.CoinEngine
+import com.tangem.domain.wallet.CoinEngineFactory
+import com.tangem.domain.wallet.TangemContext
 import com.tangem.domain.wallet.bch.BtcCashEngine
 import com.tangem.domain.wallet.btc.BtcData
 import com.tangem.domain.wallet.eth.EthData
@@ -41,14 +41,17 @@ import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.presentation.dialog.ShowQRCodeDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
-import com.tangem.data.Blockchain
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD_UID
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
+import com.tangem.tangemcard.reader.CardProtocol
+import com.tangem.tangemcard.tasks.VerifyCardTask
 import com.tangem.tangemcard.util.Util
 import com.tangem.tangemserver.android.ServerApiTangem
+import com.tangem.tangemserver.android.model.CardVerifyAndGetInfo
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
@@ -203,9 +206,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 else if (ctx.card!!.remainingSignatures == 0)
                     showSingleToast(R.string.card_has_no_remaining_signature)
                 else {
-                    val intent = Intent(activity, PreparePaymentActivity::class.java)
-                    ctx.saveToIntent(intent)
-                    startActivityForResult(intent, Constant.REQUEST_CODE_SEND_PAYMENT)
+                    (activity as LoadedWalletActivity).navigator.showPreparePayment(context as Activity, ctx)
+//                    val intent = Intent(activity, PreparePaymentActivity::class.java)
+//                    ctx.saveToIntent(intent)
+//                    startActivityForResult(intent, Constant.REQUEST_CODE_SEND_PAYMENT)
                 }
             } else
                 Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
