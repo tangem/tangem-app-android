@@ -15,13 +15,17 @@ import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.Toast
 import com.tangem.App
+import com.tangem.Constant
+import com.tangem.data.Blockchain
+import com.tangem.domain.wallet.CoinEngineFactory
+import com.tangem.domain.wallet.TangemContext
+import com.tangem.presentation.activity.CreateNewWalletActivity
+import com.tangem.presentation.activity.PinRequestActivity
+import com.tangem.presentation.activity.PurgeActivity
+import com.tangem.presentation.activity.VerifyCardActivity
+import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.tangemcard.android.data.PINStorage
 import com.tangem.tangemcard.android.reader.NfcManager
-import com.tangem.Constant
-import com.tangem.domain.wallet.*
-import com.tangem.presentation.activity.*
-import com.tangem.presentation.dialog.PINSwapWarningDialog
-import com.tangem.data.Blockchain
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
 import com.tangem.tangemcard.reader.CardProtocol
@@ -203,29 +207,31 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 }
                 updateViews()
             }
-            Constant.REQUEST_CODE_SEND_PAYMENT -> {
-                if (resultCode == Activity.RESULT_OK) {
-                    srlVerifyCard.isRefreshing = true
-                    ctx.coinData!!.clearInfo()
-                    //ctx.card!!.switchToInitialBlockchain()
-                    updateViews()
-                }
 
-                if (data != null) {
-                    if (data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
-                        val updatedCard = TangemCard(data.getStringExtra("UID"))
-                        updatedCard.loadFromBundle(data.getBundleExtra("Card"))
-                        ctx.card = updatedCard
-                    }
-                    if (data.extras!!.containsKey("message")) {
-                        if (resultCode == Activity.RESULT_OK)
-                            ctx.message = data.getStringExtra("message")
-                        else
-                            ctx.error = data.getStringExtra("message")
-                    }
-                    updateViews()
-                }
-            }
+            // TODO unused block
+//            Constant.REQUEST_CODE_SEND_PAYMENT -> {
+//                if (resultCode == Activity.RESULT_OK) {
+//                    srlVerifyCard.isRefreshing = true
+//                    ctx.coinData!!.clearInfo()
+//                    //ctx.card!!.switchToInitialBlockchain()
+//                    updateViews()
+//                }
+//
+//                if (data != null) {
+//                    if (data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
+//                        val updatedCard = TangemCard(data.getStringExtra("UID"))
+//                        updatedCard.loadFromBundle(data.getBundleExtra("Card"))
+//                        ctx.card = updatedCard
+//                    }
+//                    if (data.extras!!.containsKey("message")) {
+//                        if (resultCode == Activity.RESULT_OK)
+//                            ctx.message = data.getStringExtra("message")
+//                        else
+//                            ctx.error = data.getStringExtra("message")
+//                    }
+//                    updateViews()
+//                }
+//            }
         }
     }
 
