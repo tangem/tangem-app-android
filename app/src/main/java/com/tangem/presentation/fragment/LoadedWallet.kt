@@ -808,7 +808,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         requestVerifyAndGetInfo()
 
         // Bitcoin
-        if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet) {
+        if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet || ctx.blockchain == Blockchain.Litecoin) {
             ctx.coinData.setIsBalanceEqual(true)
 
             requestElectrum(ElectrumRequest.checkBalance(ctx.coinData!!.wallet))
