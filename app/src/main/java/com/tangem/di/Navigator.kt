@@ -4,10 +4,6 @@ import android.app.Activity
 import android.nfc.Tag
 import com.tangem.Constant
 import com.tangem.domain.wallet.TangemContext
-import com.tangem.presentation.activity.EmptyWalletActivity
-import com.tangem.presentation.activity.LoadedWalletActivity
-import com.tangem.presentation.activity.MainActivity
-import com.tangem.presentation.activity.VerifyCardActivity
 import com.tangem.presentation.activity.*
 
 class Navigator {
@@ -27,7 +23,6 @@ class Navigator {
     fun showPinRequest(context: Activity, mode: String) {
         context.startActivityForResult(PinRequestActivity.callingIntent(context, mode), Constant.REQUEST_CODE_ENTER_PIN_ACTIVITY)
     }
-
 
     fun showLoadedWallet(context: Activity, lastTag: Tag, ctx: TangemContext) {
         context.startActivityForResult(LoadedWalletActivity.callingIntent(context, lastTag, ctx), Constant.REQUEST_CODE_SHOW_CARD_ACTIVITY)
@@ -50,8 +45,8 @@ class Navigator {
 
     }
 
-    fun showPreparePayment(context: Activity) {
-
+    fun showPreparePayment(context: Activity, ctx: TangemContext) {
+        context.startActivityForResult(PreparePaymentActivity.callingIntent(context, ctx), Constant.REQUEST_CODE_SEND_PAYMENT)
     }
 
     fun showCreateNewWallet(context: Activity) {
