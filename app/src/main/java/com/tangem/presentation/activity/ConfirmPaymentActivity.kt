@@ -107,7 +107,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
             requestInfura(ServerApiInfura.INFURA_ETH_GAS_PRICE)
 
-        } else if (ctx.blockchain == Blockchain.BitcoinCash) {
+        } else if (ctx.blockchain == Blockchain.BitcoinCash || ctx.blockchain == Blockchain.Litecoin) {
             rgFee.isEnabled = false
 
             progressBar.visibility = View.VISIBLE
@@ -229,7 +229,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         }
                         fee = fee.setScale(8, RoundingMode.DOWN)
 
-                        var feeAmount: CoinEngine.Amount = CoinEngine.Amount(fee, "BCH")
+                        var feeAmount: CoinEngine.Amount = CoinEngine.Amount(fee, ctx.blockchain.currency)
                         minFee = feeAmount
                         normalFee = feeAmount
                         maxFee = feeAmount
