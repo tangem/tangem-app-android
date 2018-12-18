@@ -9,31 +9,20 @@ import android.support.v7.app.AppCompatActivity
 import android.text.Editable
 import android.text.Html
 import android.text.TextWatcher
-import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.widget.Toast
-import org.json.JSONException
-import com.tangem.data.network.ElectrumRequest
-import com.tangem.data.network.ServerApiCommon
-import com.tangem.data.network.ServerApiElectrum
-import com.tangem.data.network.ServerApiInfura
-import com.tangem.data.network.model.InfuraResponse
-import com.tangem.tangemcard.android.reader.NfcManager
-import com.tangem.domain.wallet.*
-import com.tangem.domain.wallet.btc.BtcData
 import com.tangem.data.Blockchain
+import com.tangem.domain.wallet.CoinEngine
+import com.tangem.domain.wallet.CoinEngineFactory
+import com.tangem.domain.wallet.TangemContext
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
-import com.tangem.tangemcard.util.Util
-import com.tangem.util.*
+import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
-import com.tangem.wallet.R.string.fee
 import kotlinx.android.synthetic.main.activity_confirm_payment.*
 import java.io.IOException
-import java.math.BigDecimal
-import java.math.BigInteger
-import java.math.RoundingMode
 import java.util.*
 
 class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
@@ -44,23 +33,20 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     private var nfcManager: NfcManager? = null
 
-    private var serverApiCommon: ServerApiCommon = ServerApiCommon()
-    private var serverApiInfura: ServerApiInfura = ServerApiInfura()
-    private var serverApiElectrum: ServerApiElectrum = ServerApiElectrum()
+//    private var serverApiCommon: ServerApiCommon = ServerApiCommon()
+//    private var serverApiInfura: ServerApiInfura = ServerApiInfura()
+//    private var serverApiElectrum: ServerApiElectrum = ServerApiElectrum()
 
     private lateinit var ctx: TangemContext
     private lateinit var amount: CoinEngine.Amount
 
-    private var feeRequestSuccess = false
-//    private var balanceRequestSuccess = false
-    private var minFee: CoinEngine.Amount? = null
-    private var maxFee: CoinEngine.Amount? = null
-    private var normalFee: CoinEngine.Amount? = null
+    //    private var feeRequestSuccess = false
+    //    private var balanceRequestSuccess = false
     private var isIncludeFee: Boolean = true
     private var requestPIN2Count = 0
     private var nodeCheck = true
     private var dtVerified: Date? = null
-    private var calcSize: Int = 0
+//    private var calcSize: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,7 +72,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         amount = CoinEngine.Amount(intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT), intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT_CURRENCY))
 
-        if (ctx.blockchain == Blockchain.Token && amount.currency!="ETH")
+        if (ctx.blockchain == Blockchain.Token && amount.currency != "ETH")
             tvIncFee.visibility = View.INVISIBLE
         else
             tvIncFee.visibility = View.VISIBLE
@@ -99,31 +85,24 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         etFee.setText("")
 
         btnSend.visibility = View.INVISIBLE
-        feeRequestSuccess = false
+//        feeRequestSuccess = false
 //        balanceRequestSuccess = false
 
         if (ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token) {
             rgFee.isEnabled = false
 
-            requestInfura(ServerApiInfura.INFURA_ETH_GAS_PRICE)
-
-        } else if (ctx.blockchain == Blockchain.BitcoinCash) {
-            rgFee.isEnabled = false
-
-            progressBar.visibility = View.VISIBLE
-
-            requestElectrum(ctx, ElectrumRequest.getFee())
+//            requestInfura(ServerApiInfura.INFURA_ETH_GAS_PRICE)
 
         } else {
             rgFee.isEnabled = true
 
 //            requestElectrum(ctx.card, ElectrumRequest.checkBalance(ctx.card!!.wallet))
 
-            ctx.coinData!!.resetFailedBalanceRequestCounter()
+//            ctx.coinData!!.resetFailedBalanceRequestCounter()
 
-            progressBar.visibility = View.VISIBLE
+//            progressBar.visibility = View.VISIBLE
 
-            requestEstimateFee()
+//            requestEstimateFee()
         }
 
         // set listeners
@@ -201,146 +180,166 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
         }
 
-        // request electrum listener
-        val electrumBodyListener: ServerApiElectrum.ElectrumRequestDataListener = object : ServerApiElectrum.ElectrumRequestDataListener {
-            override fun onSuccess(electrumRequest: ElectrumRequest?) {
-                var fee: BigDecimal
-                if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_GetFee)) {
-                    try {
-                        //if (etFee.text.toString().isEmpty()) etFee.setText(getString(R.string.empty))
-                        fee = BigDecimal(electrumRequest.resultString) //fee per KB
+        val coinEngine = CoinEngineFactory.create(ctx)
 
-                        if (fee == BigDecimal.ZERO) {
-                            requestElectrum(ctx, ElectrumRequest.getFee())
-                        }
+        progressBar.visibility = View.VISIBLE
 
-                        if (calcSize.toLong() != 0L) {
-                            fee = fee.multiply(BigDecimal(calcSize.toLong())).divide(BigDecimal(1024)) // (per KB -> per byte)*size
+        coinEngine!!.requestFee(
+                object : CoinEngine.BlockchainRequestsCallbacks {
+                    override fun onComplete(success: Boolean) {
+                        if (success) {
+
+                            onProgress()
+
+//                            etFee.error = null
+
+//                            feeRequestSuccess = true
+                            //                        balanceRequestSuccess = true
+                            progressBar.visibility = View.INVISIBLE
+                            dtVerified = Date()
                         } else {
-                            requestElectrum(ctx, ElectrumRequest.getFee())
+                            finishWithError(Activity.RESULT_CANCELED, ctx.error)
                         }
-
-                        progressBar.visibility = View.INVISIBLE
-                        val relayFee : BigDecimal = BigDecimal(0.00001)
-
-                        //compare fee to usual relay fee
-                        if (fee.compareTo(relayFee) == -1) {
-                            fee = relayFee
-                        }
-                        fee = fee.setScale(8, RoundingMode.DOWN)
-
-                        var feeAmount: CoinEngine.Amount = CoinEngine.Amount(fee, "BCH")
-                        minFee = feeAmount
-                        normalFee = feeAmount
-                        maxFee = feeAmount
-                        doSetFee(rgFee.checkedRadioButtonId)
-                        etFee.error = null
-                        btnSend.visibility = View.VISIBLE
-                        feeRequestSuccess = true
-                        dtVerified = Date()
-
-                    } catch (e: JSONException) {
-                        e.printStackTrace()
                     }
-                }
-            }
 
-            override fun onFail(message: String?) {
-                finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
-            }
+                    override fun onProgress() {
+                        doSetFee(rgFee.checkedRadioButtonId)
+                    }
 
-        }
-        serverApiElectrum.setElectrumRequestData(electrumBodyListener)
+                    override fun allowAdvance(): Boolean {
+                        return UtilHelper.isOnline(this@ConfirmPaymentActivity)
+                    }
+                },
+                etWallet.text.toString(),
+                amount)
+
+
+        // request electrum listener
+//        val electrumBodyListener: ServerApiHelperElectrum.ElectrumRequestDataListener = object : ServerApiHelperElectrum.ElectrumRequestDataListener {
+//            override fun onSuccess(electrumRequest: ElectrumRequest?) {
+//                if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_GetBalance)) {
+//                    try {
+//                        if (etFee.text.toString().isEmpty()) etFee.setText(getString(R.string.empty))
+//                        val engine = CoinEngineFactory.create(ctx)
+//                        val balance = engine.convertToAmount(CoinEngine.InternalAmount(electrumRequest.result.getLong("confirmed") + electrumRequest.result.getLong("unconfirmed"), "Satoshi"))
+//                        val amount = CoinEngine.Amount(etAmount.text.toString(), ctx.blockchain.currency)
+//                        if (balance < amount) {
+//                            etFee.error = getString(R.string.not_enough_funds)
+//                        } else {
+//                            etFee.error = null
+//                            balanceRequestSuccess = true
+//                            if (feeRequestSuccess && balanceRequestSuccess) {
+//                                btnSend.visibility = View.VISIBLE
+//                            }
+//                            dtVerified = Date()
+//                            nodeCheck = true
+//                        }
+//                    } catch (e: JSONException) {
+//                        e.printStackTrace()
+////                        requestElectrum(ctx.card!!, ElectrumRequest.checkBalance(ctx.card!!.wallet))
+//                    }
+//                }
+//            }
+//
+//            override fun onFail(message: String?) {
+//                finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
+//            }
+//
+//        }
+//        serverApiHelperElectrum.setElectrumRequestData(electrumBodyListener)
 
         // request infura eth gasPrice listener
-        val infuraBodyListener: ServerApiInfura.InfuraBodyListener = object : ServerApiInfura.InfuraBodyListener {
-            override fun onSuccess(method: String, infuraResponse: InfuraResponse) {
-                when (method) {
-                    ServerApiInfura.INFURA_ETH_GAS_PRICE -> {
-                        var gasPrice = infuraResponse.result
-                        gasPrice = gasPrice.substring(2)
-                        //TODO - remove Gwei
-                        // rounding gas price to integer gwei
-                        val l = BigInteger(gasPrice, 16).divide(BigInteger.valueOf(1000000000L)).multiply(BigInteger.valueOf(1000000000L))
+//        val infuraBodyListener: ServerApiInfura.InfuraBodyListener = object : ServerApiInfura.InfuraBodyListener {
+//            override fun onSuccess(method: String, infuraResponse: InfuraResponse) {
+//                when (method) {
+//                    ServerApiInfura.INFURA_ETH_GAS_PRICE -> {
+//                        var gasPrice = infuraResponse.result
+//                        gasPrice = gasPrice.substring(2)
+//                        //TODO - remove Gwei
+//                        // rounding gas price to integer gwei
+//                        val l = BigInteger(gasPrice, 16).divide(BigInteger.valueOf(1000000000L)).multiply(BigInteger.valueOf(1000000000L))
+//
+//                        //val m = if (ctx.blockchain==Blockchain.Token) BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
+//                        val m = if (amount.currency != "ETH") BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
+//                        val weiMinFee = CoinEngine.InternalAmount(l.multiply(m), "wei")
+//                        val weiNormalFee = CoinEngine.InternalAmount(weiMinFee.multiply(BigDecimal.valueOf(12)).divide(BigDecimal.valueOf(10)), "wei")
+//                        val weiMaxFee = CoinEngine.InternalAmount(weiMinFee.multiply(BigDecimal.valueOf(15)).divide(BigDecimal.valueOf(10)), "wei")
+//
+//                        minFee = engine.convertToAmount(weiMinFee)
+//                        normalFee = engine.convertToAmount(weiNormalFee)
+//                        maxFee = engine.convertToAmount(weiMaxFee)
+//                        doSetFee(rgFee.checkedRadioButtonId)
+//                        //etFee.setText(weiNormalFee.toValueString())
+//                        etFee.error = null
+//                        btnSend.visibility = View.VISIBLE
+//                        feeRequestSuccess = true
+////                        balanceRequestSuccess = true
+//                        dtVerified = Date()
+//                    }
+//                }
+//            }
+//
+//            override fun onFail(method: String, message: String) {
+//                when (method) {
+//                    ServerApiInfura.INFURA_ETH_GAS_PRICE -> {
+//                        finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+//                    }
+//                }
+//            }
+//        }
+//        serverApiInfura.setInfuraResponse(infuraBodyListener)
 
-                        //val m = if (ctx.blockchain==Blockchain.Token) BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
-                        val m = if (amount.currency != "ETH") BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
-                        val weiMinFee = CoinEngine.InternalAmount(l.multiply(m), "wei")
-                        val weiNormalFee = CoinEngine.InternalAmount(weiMinFee.multiply(BigDecimal.valueOf(12)).divide(BigDecimal.valueOf(10)), "wei")
-                        val weiMaxFee = CoinEngine.InternalAmount(weiMinFee.multiply(BigDecimal.valueOf(15)).divide(BigDecimal.valueOf(10)), "wei")
-
-                        minFee = engine.convertToAmount(weiMinFee)
-                        normalFee = engine.convertToAmount(weiNormalFee)
-                        maxFee = engine.convertToAmount(weiMaxFee)
-                        doSetFee(rgFee.checkedRadioButtonId)
-                        //etFee.setText(weiNormalFee.toValueString())
-                        etFee.error = null
-                        btnSend.visibility = View.VISIBLE
-                        feeRequestSuccess = true
-                        dtVerified = Date()
-                    }
-                }
-            }
-
-            override fun onFail(method: String, message: String) {
-                when (method) {
-                    ServerApiInfura.INFURA_ETH_GAS_PRICE -> {
-                        finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
-                    }
-                }
-            }
-        }
-        serverApiInfura.setInfuraResponse(infuraBodyListener)
-
-        // request estimate fee listener
-        val estimateFeeListener: ServerApiCommon.EstimateFeeListener = object : ServerApiCommon.EstimateFeeListener {
-            override fun onSuccess(blockCount: Int, estimateFeeResponse: String?) {
-                var fee: BigDecimal
-                fee = BigDecimal(estimateFeeResponse) // BTC per 1 kb
-
-                if (fee == BigDecimal.ZERO) {
-                    progressBar.visibility = View.INVISIBLE
-                    requestEstimateFee()
-                }
-
-                if (calcSize.toLong() != 0L) {
-                    fee = fee.multiply(BigDecimal(calcSize.toLong())).divide(BigDecimal(1024)) // per Kb -> per byte
-                } else {
-                    requestEstimateFee()
-                }
-
-                progressBar.visibility = View.INVISIBLE
-
-                fee = fee.setScale(8, RoundingMode.DOWN)
-
-                when (blockCount) {
-                    ServerApiCommon.ESTIMATE_FEE_MINIMAL -> {
-                        minFee = CoinEngine.Amount(fee, engine.feeCurrency)
-                        if (rgFee.checkedRadioButtonId == R.id.rbMinimalFee) doSetFee(rgFee.checkedRadioButtonId)
-                    }
-
-                    ServerApiCommon.ESTIMATE_FEE_NORMAL -> {
-                        normalFee = CoinEngine.Amount(fee, engine.feeCurrency)
-                        if (rgFee.checkedRadioButtonId == R.id.rbNormalFee) doSetFee(rgFee.checkedRadioButtonId)
-                    }
-
-                    ServerApiCommon.ESTIMATE_FEE_PRIORITY -> {
-                        maxFee = CoinEngine.Amount(fee, engine.feeCurrency)
-                        if (rgFee.checkedRadioButtonId == R.id.rbMaximumFee) doSetFee(rgFee.checkedRadioButtonId)
-                    }
-                }
-
-                etFee.error = null
-                feeRequestSuccess = true
-                btnSend.visibility = View.VISIBLE
-                dtVerified = Date()
-            }
-
-            override fun onFail(message: String?) {
-                finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_calculate_fee_wrong_data_received_from_node))
-            }
-        }
-        serverApiCommon.setEstimateFee(estimateFeeListener)
+//        // request estimate fee listener
+//        val estimateFeeListener: ServerApiCommon.EstimateFeeListener = object : ServerApiCommon.EstimateFeeListener {
+//            override fun onSuccess(blockCount: Int, estimateFeeResponse: String?) {
+//                var fee: BigDecimal?
+//                fee = BigDecimal(estimateFeeResponse) // BTC per 1 kb
+//
+//                if (fee == BigDecimal.ZERO) {
+//                    progressBar.visibility = View.INVISIBLE
+//                    requestEstimateFee()
+//                }
+//
+//                if (calcSize.toLong() != 0L) {
+//                    fee = fee.multiply(BigDecimal(calcSize.toLong())).divide(BigDecimal(1024)) // per Kb -> per byte
+//                } else {
+//                    requestEstimateFee()
+//                }
+//
+//                progressBar.visibility = View.INVISIBLE
+//
+//                fee = fee!!.setScale(8, RoundingMode.DOWN)
+//
+//                when (blockCount) {
+//                    ServerApiCommon.ESTIMATE_FEE_MINIMAL -> {
+//                        minFee = CoinEngine.Amount(fee, engine.feeCurrency)
+//                        if (rgFee.checkedRadioButtonId == R.id.rbMinimalFee) doSetFee(rgFee.checkedRadioButtonId)
+//                    }
+//
+//                    ServerApiCommon.ESTIMATE_FEE_NORMAL -> {
+//                        normalFee = CoinEngine.Amount(fee, engine.feeCurrency)
+//                        if (rgFee.checkedRadioButtonId == R.id.rbNormalFee) doSetFee(rgFee.checkedRadioButtonId)
+//                    }
+//
+//                    ServerApiCommon.ESTIMATE_FEE_PRIORITY -> {
+//                        maxFee = CoinEngine.Amount(fee, engine.feeCurrency)
+//                        if (rgFee.checkedRadioButtonId == R.id.rbMaximumFee) doSetFee(rgFee.checkedRadioButtonId)
+//                    }
+//                }
+//
+//                etFee.error = null
+//                feeRequestSuccess = true
+//                if (feeRequestSuccess)
+////                if (feeRequestSuccess && balanceRequestSuccess)
+//                    btnSend.visibility = View.VISIBLE
+//                dtVerified = Date()
+//            }
+//
+//            override fun onFail(message: String?) {
+//                finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_calculate_fee_wrong_data_received_from_node))
+//            }
+//        }
+//        serverApiCommon.setEstimateFee(estimateFeeListener)
     }
 
     public override fun onResume() {
@@ -416,131 +415,64 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     }
 
     // TODO - move to BtcEngine
-    @Throws(Exception::class)
-    internal fun buildSize(outputAddress: String, outFee: String, outAmount: String): Int {
-        val myAddress = ctx.coinData!!.wallet
-        val pbKey = ctx.card!!.walletPublicKey
-        val pbComprKey = ctx.card!!.walletPublicKeyRar
+//    @Throws(Exception::class)
 
-        // build script for our address
-        val rawTxList = (ctx.coinData!! as BtcData).unspentTransactions
-        val outputScriptWeAreAbleToSpend = Transaction.Script.buildOutput(myAddress).bytes
+//    private fun requestElectrum(ctx: TangemContext, electrumRequest: ElectrumRequest) {
+//        if (UtilHelper.isOnline(this)) {
+//            serverApiElectrum.electrumRequestData(ctx, electrumRequest)
+//        } else
+//            finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+//    }
 
-        // collect unspent
-        val unspentOutputs = BTCUtils.getOutputs(rawTxList, outputScriptWeAreAbleToSpend)
+//    private fun requestInfura(method: String) {
+//        if (UtilHelper.isOnline(this)) {
+//            serverApiInfura.infura(method, 67, ctx.coinData!!.wallet, "", "")
+//        } else
+//            finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+//    }
 
-        var fullAmount: Long = 0
-        for (i in unspentOutputs.indices) {
-            fullAmount += unspentOutputs[i].value
-        }
+//    private fun requestEstimateFee() {
+//        if (calcSize == 0) {
+//            calcSize = 256
+//            try {
+//
+//                calcSize = buildSize(etWallet!!.text.toString(), "0.00", etAmount.text.toString())
+//            } catch (ex: Exception) {
+//                Log.e("Build Fee error", ex.message)
+//            }
+//        }
+//        serverApiCommon.estimateFee(ServerApiCommon.ESTIMATE_FEE_PRIORITY)
+//        serverApiCommon.estimateFee(ServerApiCommon.ESTIMATE_FEE_NORMAL)
+//        serverApiCommon.estimateFee(ServerApiCommon.ESTIMATE_FEE_MINIMAL)
+//    }
 
-        // get first unspent
-//        val outPut = unspentOutputs[0]
-//        val outPutIndex = outPut.outputIndex
-
-        // get prev TX id;
-//        val prevTXID = rawTxList[0].txID//"f67b838d6e2c0c587f476f583843e93ff20368eaf96a798bdc25e01f53f8f5d2";
-
-        val fees = FormatUtil.ConvertStringToLong(outFee)
-        var amount = FormatUtil.ConvertStringToLong(outAmount)
-        amount -= fees
-
-        val change = fullAmount - fees - amount
-
-        if (amount + fees > fullAmount) {
-            throw Exception(String.format("Balance (%d) < amount (%d) + (%d)", fullAmount, change, amount))
-        }
-
-        val hashesForSign = arrayOfNulls<ByteArray>(unspentOutputs.size)
-
-        for (i in unspentOutputs.indices) {
-            val newTX = BTCUtils.buildTXForSign(myAddress, outputAddress, myAddress, unspentOutputs, i, amount, change)
-            val hashData = Util.calculateSHA256(newTX)
-            val doubleHashData = Util.calculateSHA256(hashData)
-//            Log.e("TX_BODY_1", BTCUtils.toHex(newTX))
-//            Log.e("TX_HASH_1", BTCUtils.toHex(hashData))
-//            Log.e("TX_HASH_2", BTCUtils.toHex(doubleHashData))
-
-//            unspentOutputs[i].bodyDoubleHash = doubleHashData
-//            unspentOutputs[i].bodyHash = hashData
-            hashesForSign[i] = doubleHashData
-        }
-
-        val signFromCard = ByteArray(64 * unspentOutputs.size)
-
-        for (i in unspentOutputs.indices) {
-            val r = BigInteger(1, Arrays.copyOfRange(signFromCard, 0 + i * 64, 32 + i * 64))
-            val s = BigInteger(1, Arrays.copyOfRange(signFromCard, 32 + i * 64, 64 + i * 64))
-            val encodingSign = DerEncodingUtil.packSignDer(r, s, pbKey)
-            unspentOutputs[i].scriptForBuild = encodingSign
-        }
-
-        val realTX = BTCUtils.buildTXForSend(outputAddress, myAddress, unspentOutputs, amount, change)
-
-        return realTX.size
-    }
-
-    private fun requestElectrum(ctx: TangemContext, electrumRequest: ElectrumRequest) {
-        if( calcSize==0 )
-        {
-            calcSize = 256
-            try {
-
-                calcSize =  buildSize(etWallet!!.text.toString(), "0.00", etAmount.text.toString())
-            } catch (ex: Exception) {
-                Log.e("Build Fee error", ex.message)
-            }
-        }
-        if (UtilHelper.isOnline(this)) {
-            serverApiElectrum.electrumRequestData(ctx, electrumRequest)
-        } else
-            finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
-    }
-
-    private fun requestInfura(method: String) {
-        if (UtilHelper.isOnline(this)) {
-            serverApiInfura.infura(method, 67, ctx.coinData!!.wallet, "", "")
-        } else
-            finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
-    }
-
-    private fun requestEstimateFee() {
-        if( calcSize==0 )
-        {
-            calcSize = 256
-            try {
-
-                calcSize =  buildSize(etWallet!!.text.toString(), "0.00", etAmount.text.toString())
-            } catch (ex: Exception) {
-                Log.e("Build Fee error", ex.message)
-            }
-        }
-        serverApiCommon.estimateFee(ServerApiCommon.ESTIMATE_FEE_PRIORITY)
-        serverApiCommon.estimateFee(ServerApiCommon.ESTIMATE_FEE_NORMAL)
-        serverApiCommon.estimateFee(ServerApiCommon.ESTIMATE_FEE_MINIMAL)
-    }
-
-    private fun
-
-
-            doSetFee(checkedRadioButtonId: Int) {
+    private fun doSetFee(checkedRadioButtonId: Int) {
         var txtFee = ""
         when (checkedRadioButtonId) {
             R.id.rbMinimalFee ->
-                if (minFee != null)
-                    txtFee = minFee!!.toValueString()
-                else
-                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+                if (ctx.coinData.minFee != null) {
+                    txtFee = ctx.coinData.minFee!!.toValueString()
+                    btnSend.visibility = View.VISIBLE
+                }else {
+                    btnSend.visibility = View.INVISIBLE
+//                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+                }
             R.id.rbNormalFee ->
-                if (normalFee != null)
-                    txtFee = normalFee!!.toValueString()
-                else
-                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+                if (ctx.coinData.normalFee != null) {
+                    txtFee = ctx.coinData.normalFee!!.toValueString()
+                    btnSend.visibility = View.VISIBLE
+                }else {
+                    btnSend.visibility = View.INVISIBLE
+//                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+                }
             R.id.rbMaximumFee ->
-                if (maxFee != null)
-                    txtFee = maxFee!!.toValueString()
-                else
-                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+                if (ctx.coinData.maxFee != null) {
+                    txtFee = ctx.coinData.maxFee!!.toValueString()
+                    btnSend.visibility = View.VISIBLE
+                }else {
+//                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+                    btnSend.visibility = View.INVISIBLE
+                }
         }
         etFee.setText(txtFee.replace(',', '.'))
     }
