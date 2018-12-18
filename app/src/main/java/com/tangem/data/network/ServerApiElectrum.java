@@ -42,6 +42,17 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DefaultObserver;
 import io.reactivex.schedulers.Schedulers;
 
+/**
+ * Request processor for Electrum Api
+ * Every request live cycle:
+ * 1. In application create request and call {@link ServerApiElectrum}.electrumRequestData(..)
+ * 2. Try send every request for max 4 times,
+ * 3. If all 4 times fail call DefaultObserver<ElectrumRequest>.onError (defined in .electrumRequestData(..)) and than
+ *    {@link ElectrumRequestDataListener}.onFail(...) callback
+ *    Error can be acquired with {@link ElectrumRequest}.getError() method
+ * 4. If request network communication finished successfully then call DefaultObserver<ElectrumRequest>.onComplete (defined in .electrumRequestData) and than
+ *    {@link ElectrumRequestDataListener}.onSuccess(...) callback
+ */
 public class ServerApiElectrum {
     private static String TAG = ServerApiElectrum.class.getSimpleName();
 
@@ -60,16 +71,37 @@ public class ServerApiElectrum {
         return requestsCount <= 0;
     }
 
+    /**
+     * Interface for notification every request result
+     */
     public interface ElectrumRequestDataListener {
-        void onSuccess(ElectrumRequest electrumRequest);
 
+        /**
+         * Notify that request processing was successful
+         * @param electrumRequest - processed request containing received answer {@see electrumRequest.getAnswer() method}
+         */
+        void onSuccess(ElectrumRequest electrumRequest);
+        /**
+         * Notify that request processing was successful
+         * @param electrumRequest - processed request containing occurred error {@see electrumRequest.getError() method}
+         */
         void onFail(ElectrumRequest electrumRequest);
     }
 
+    /**
+     * Set notificaion listener
+     * @param listener
+     */
     public void setElectrumRequestData(ElectrumRequestDataListener listener) {
         electrumRequestDataListener = listener;
     }
 
+
+    /**
+     * Start process request
+     * @param ctx
+     * @param electrumRequest
+     */
     public void electrumRequestData(TangemContext ctx, ElectrumRequest electrumRequest) {
         requestsCount++;
         Log.i(TAG, String.format("New request[%d]: %s", requestsCount,electrumRequest.getMethod()));
@@ -111,6 +143,9 @@ public class ServerApiElectrum {
                 electrumRequestDataListener.onFail(electrumRequest);
             }
 
+            /**
+             * Called after completion request processing
+             */
             @Override
             public void onComplete() {
                 requestsCount--;
