@@ -35,7 +35,6 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
     companion object {
         val TAG: String = VerifyCard::class.java.simpleName
-
     }
 
     private var nfcManager: NfcManager? = null
