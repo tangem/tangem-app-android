@@ -47,8 +47,8 @@ public abstract class CoinData {
 
         validationNodeDescription = B.getString("validationNodeDescription");
 
-        if (B.containsKey("FailedBalance"))
-            failedBalanceRequestCounter = new AtomicInteger(B.getInt("FailedBalance"));
+//        if (B.containsKey("FailedBalance"))
+//            failedBalanceRequestCounter = new AtomicInteger(B.getInt("FailedBalance"));
 
         if (B.containsKey("isBalanceEqual")) setIsBalanceEqual(B.getBoolean("isBalanceEqual"));
 
@@ -64,8 +64,8 @@ public abstract class CoinData {
 
             if (balanceEqual != null) B.putBoolean("isBalanceEqual", balanceEqual);
 
-            if (failedBalanceRequestCounter != null)
-                B.putInt("FailedBalance", failedBalanceRequestCounter.get());
+//            if (failedBalanceRequestCounter != null)
+//                B.putInt("FailedBalance", failedBalanceRequestCounter.get());
 
             B.putFloat("rate", rate);
             B.putFloat("rateAlter", rateAlter);
@@ -143,25 +143,32 @@ public abstract class CoinData {
 
     public void clearInfo() {
         setIsBalanceEqual(false);
+        setBalanceReceived(false); // TODO check
+        setValidationNodeDescription("");
+        minFee=null;
+        maxFee=null;
+        normalFee=null;
+        rate=0f;
+        rateAlter=0f;
     }
 
-    private AtomicInteger failedBalanceRequestCounter;
-
-    public int incFailedBalanceRequestCounter() {
-        if (failedBalanceRequestCounter == null)
-            failedBalanceRequestCounter = new AtomicInteger(0);
-        return failedBalanceRequestCounter.incrementAndGet();
-    }
-
-    public void resetFailedBalanceRequestCounter() {
-        failedBalanceRequestCounter = new AtomicInteger(0);
-    }
-
-    public int getFailedBalanceRequestCounter() {
-        if (failedBalanceRequestCounter == null)
-            return 0;
-        return failedBalanceRequestCounter.get();
-    }
+//    private AtomicInteger failedBalanceRequestCounter;
+//
+//    public int incFailedBalanceRequestCounter() {
+//        if (failedBalanceRequestCounter == null)
+//            failedBalanceRequestCounter = new AtomicInteger(0);
+//        return failedBalanceRequestCounter.incrementAndGet();
+//    }
+//
+//    public void resetFailedBalanceRequestCounter() {
+//        failedBalanceRequestCounter = new AtomicInteger(0);
+//    }
+//
+//    public int getFailedBalanceRequestCounter() {
+//        if (failedBalanceRequestCounter == null)
+//            return 0;
+//        return failedBalanceRequestCounter.get();
+//    }
 
     private Boolean balanceEqual;
 
@@ -183,7 +190,7 @@ public abstract class CoinData {
         this.validationNodeDescription = validationNodeDescription;
     }
 
-
-
-
+    public CoinEngine.Amount minFee = null;
+    public CoinEngine.Amount normalFee = null;
+    public CoinEngine.Amount maxFee = null;
 }
