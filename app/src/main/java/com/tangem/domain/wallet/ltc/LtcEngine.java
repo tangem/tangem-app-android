@@ -3,15 +3,14 @@ package com.tangem.domain.wallet.ltc;
 import android.net.Uri;
 import android.text.InputFilter;
 
-import com.tangem.data.Blockchain;
 import com.tangem.domain.wallet.BTCUtils;
 import com.tangem.domain.wallet.BalanceValidator;
 import com.tangem.domain.wallet.Base58;
 import com.tangem.domain.wallet.CoinData;
-import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.TangemContext;
 import com.tangem.domain.wallet.Transaction;
 import com.tangem.domain.wallet.UnspentOutputInfo;
+import com.tangem.domain.wallet.bch.BtcCashEngine;
 import com.tangem.domain.wallet.btc.BtcData;
 import com.tangem.tangemcard.data.TangemCard;
 import com.tangem.tangemcard.reader.CardProtocol;
@@ -32,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class LtcEngine extends CoinEngine {
+public class LtcEngine extends BtcCashEngine {
 
     public BtcData coinData = null;
 
@@ -356,7 +355,7 @@ public class LtcEngine extends CoinEngine {
     }
 
     @Override
-    public InternalAmount convertToInternalAmount(Amount amount) throws Exception {
+    public InternalAmount convertToInternalAmount(Amount amount) {
         BigDecimal d = amount.multiply(new BigDecimal("100000000"));
         return new InternalAmount(d, "Satoshi");
     }
@@ -370,7 +369,7 @@ public class LtcEngine extends CoinEngine {
     }
 
     @Override
-    public byte[] convertToByteArray(InternalAmount internalAmount) throws Exception {
+    public byte[] convertToByteArray(InternalAmount internalAmount) {
         byte[] bytes = Util.longToByteArray(internalAmount.longValueExact());
         byte[] reversed = new byte[bytes.length];
         for (int i = 0; i < bytes.length; i++) reversed[i] = bytes[bytes.length - i - 1];
@@ -473,7 +472,7 @@ public class LtcEngine extends CoinEngine {
             }
 
             @Override
-            public void onSignCompleted(byte[] signFromCard) throws Exception {
+            public byte[] onSignCompleted(byte[] signFromCard) throws Exception {
                 for (int i = 0; i < unspentOutputs.size(); ++i) {
                     BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, i * 64, 32 + i * 64));
                     BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, 32 + i * 64, 64 + i * 64));
@@ -484,87 +483,8 @@ public class LtcEngine extends CoinEngine {
 
                 byte[] txForSend=BTCUtils.buildTXForSend(targetAddress, myAddress, unspentOutputs, amountFinal, changeFinal);
                 notifyOnNeedSendPayment(txForSend);
+                return txForSend;
             }
         };
     }
-
-//    @Override
-//    public byte[] sign(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress, CardProtocol protocol) throws Exception {
-//
-//        checkBlockchainDataExists();
-//
-//        String myAddress = ctx.getCoinData().getWallet();
-//        byte[] pbKey = ctx.getCard().getWalletPublicKey();
-//
-//        // Build script for our address
-//        List<BtcData.UnspentTransaction> rawTxList = coinData.getUnspentTransactions();
-//        byte[] outputScriptWeAreAbleToSpend = Transaction.Script.buildOutput(myAddress).bytes;
-//
-//        // Collect unspent
-//        ArrayList<UnspentOutputInfo> unspentOutputs = BTCUtils.getOutputs(rawTxList, outputScriptWeAreAbleToSpend);
-//
-//        long fullAmount = 0;
-//        for (int i = 0; i < unspentOutputs.size(); ++i) {
-//            fullAmount += unspentOutputs.get(i).value;
-//        }
-//
-//
-//        long fees = convertToInternalAmount(feeValue).longValueExact();
-//        long amount = convertToInternalAmount(amountValue).longValueExact();
-//        long change = fullAmount - amount;
-//        if (IncFee) {
-//            amount = amount - fees;
-//        } else {
-//            change = change - fees;
-//        }
-//
-//        if (amount + fees > fullAmount) {
-//            throw new CardProtocol.TangemException_WrongAmount(String.format("Balance (%d) < change (%d) + amount (%d)", fullAmount, change, amount));
-//        }
-//
-//        byte[][] dataForSign = new byte[unspentOutputs.size()][];
-//
-//        for (int i = 0; i < unspentOutputs.size(); ++i) {
-//            byte[] newTX = BTCUtils.buildTXForSign(myAddress, targetAddress, myAddress, unspentOutputs, i, amount, change);
-//
-//            byte[] hashData = Util.calculateSHA256(newTX);
-//            byte[] doubleHashData = Util.calculateSHA256(hashData);
-//
-//            unspentOutputs.get(i).bodyDoubleHash = doubleHashData;
-//            unspentOutputs.get(i).bodyHash = hashData;
-//
-//            if (ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Raw || ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Raw_Validated_By_Issuer) {
-//                dataForSign[i] = newTX;
-//            } else {
-//                dataForSign[i] = doubleHashData;
-//            }
-//        }
-//
-//        byte[] signFromCard;
-//        if (ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Raw || ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Raw_Validated_By_Issuer) {
-//            ByteArrayOutputStream bs = new ByteArrayOutputStream();
-//            if (dataForSign.length > 10) throw new Exception("To much hashes in one transaction!");
-//            for (int i = 0; i < dataForSign.length; i++) {
-//                if (i != 0 && dataForSign[0].length != dataForSign[i].length)
-//                    throw new Exception("Hashes length must be identical!");
-//                bs.write(dataForSign[i]);
-//            }
-//            signFromCard = protocol.run_SignRaw(PINStorage.getPIN2(), "sha-256x2",bs.toByteArray(),null,null,null).getTLV(TLV.Tag.TAG_Signature).Value;
-//        } else {
-//            //ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer, null, ctx.getCard().getIssuer()
-//            signFromCard = protocol.run_SignHashes(PINStorage.getPIN2(), dataForSign, null, null, null).getTLV(TLV.Tag.TAG_Signature).Value;
-//            // TODO slice signFromCard to hashes.length parts
-//        }
-//
-//        for (int i = 0; i < unspentOutputs.size(); ++i) {
-//            BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, i * 64, 32 + i * 64));
-//            BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, 32 + i * 64, 64 + i * 64));
-//            s = CryptoUtil.toCanonicalised(s);
-//
-//            unspentOutputs.get(i).scriptForBuild = DerEncodingUtil.packSignDer(r, s, pbKey);
-//        }
-//
-//        return BTCUtils.buildTXForSend(targetAddress, myAddress, unspentOutputs, amount, change);
-//    }
-
 }
