@@ -35,8 +35,12 @@ object Constant {
 
     // PinRequestActivity
     const val EXTRA_MODE = "mode"
+    const val KEY_ALIAS = "pinKey"
+    const val KEYSTORE = "AndroidKeyStore"
 
     // PinSwapActivity
+    const val EXTRA_CONFIRM_PIN = "confirmPIN"
+    const val EXTRA_CONFIRM_PIN_2 = "confirmPIN2"
     const val EXTRA_NEW_PIN = "newPIN"
     const val EXTRA_NEW_PIN_2 = "newPIN2"
 
