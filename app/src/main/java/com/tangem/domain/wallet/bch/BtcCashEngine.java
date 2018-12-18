@@ -179,9 +179,7 @@ public class BtcCashEngine extends CoinEngine {
 //
 //        return true;
 
-        if (CashAddr.isValidCashAddress(address))
-            return true;
-        return false;
+        return CashAddr.isValidCashAddress(address);
     }
 
     @Override
@@ -191,7 +189,7 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public Uri getShareWalletUriExplorer() {
-        return Uri.parse((ctx.getBlockchain() == Blockchain.BitcoinCash ? "https://bitcoincash.blockexplorer.com/address/" : "https://testnet.blockexplorer.com/address/") + ctx.getCoinData().getWallet());
+        return Uri.parse("https://bch.btc.com/" + ctx.getCoinData().getWallet());
     }
 
     @Override
@@ -334,10 +332,10 @@ public class BtcCashEngine extends CoinEngine {
     }
 
     @Override
-    public String calculateAddress(byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException {
+    public String calculateAddress(byte[] pubKey) throws NoSuchProviderException, NoSuchAlgorithmException {
 
         // CashAddr format
-        byte hash1[] = Util.calculateSHA256(pkUncompressed);
+        byte hash1[] = Util.calculateSHA256(pubKey);
         byte hash2[] = Util.calculateRIPEMD160(hash1);
         return CashAddr.toCashAddress(BitcoinCashAddressType.P2PKH, hash2);
 
@@ -438,21 +436,24 @@ public class BtcCashEngine extends CoinEngine {
         return coinData.getUnspentInputsDescription();
     }
 
-//    @Override
-//    public String getAmountDescription(TangemCard mCard, String amount) throws Exception {
-//        return mCard.getAmountDescription(Double.parseDouble(amount));
-//    }
-
     @Override
     public void defineWallet() throws CardProtocol.TangemException {
         try {
             String wallet = calculateAddress(ctx.getCard().getWalletPublicKeyRar());
             ctx.getCoinData().setWallet(wallet);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             ctx.getCoinData().setWallet("ERROR");
             throw new CardProtocol.TangemException("Can't define wallet address");
         }
+
     }
+
+//    @Override
+//    public String getAmountDescription(TangemCard mCard, String amount) throws Exception {
+//        return mCard.getAmountDescription(Double.parseDouble(amount));
+//    }
 
 
     @Override
