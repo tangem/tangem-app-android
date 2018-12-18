@@ -28,7 +28,7 @@ public class SignTask extends CustomReadCardTask {
 
         byte[] getIssuerTransactionSignature(byte[] dataToSignByIssuer) throws Exception;
 
-        void onSignCompleted(byte[] signature) throws Exception;
+        byte[] onSignCompleted(byte[] signature) throws Exception;
     }
 
     private PaymentToSign paymentToSign;
