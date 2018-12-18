@@ -14,7 +14,6 @@ import android.text.Html
 import android.view.View
 import android.widget.Toast
 import com.tangem.App
-import com.tangem.di.Navigator
 import com.tangem.tangemcard.tasks.VerifyCardTask
 import com.tangem.tangemcard.reader.CardProtocol
 import com.tangem.tangemcard.android.reader.NfcManager
@@ -253,7 +252,7 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
     }
 
     override fun onReadWait(msec: Int) {
-        WaitSecurityDelayDialog.OnReadWait(this, msec)
+        WaitSecurityDelayDialog.onReadWait(this, msec)
     }
 
     override fun onReadBeforeRequest(timeout: Int) {
