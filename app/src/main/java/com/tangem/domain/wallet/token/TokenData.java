@@ -20,7 +20,6 @@ public class TokenData extends EthData {
         return balanceAlter;
 
     }
-
     public void setBalanceAlterInInternalUnits(CoinEngine.InternalAmount value) {
         balanceAlter = value;
     }
@@ -29,10 +28,10 @@ public class TokenData extends EthData {
     public void loadFromBundle(Bundle B) {
         super.loadFromBundle(B);
 
-        if (B.containsKey("BalanceDecimalAlter")) {
+        if( B.containsKey("BalanceDecimalAlter" )) {
             balanceAlter = new CoinEngine.InternalAmount(B.getString("BalanceDecimalAlter"), "wei");
-        } else {
-            balanceAlter = null;
+        }else{
+            balanceAlter=null;
         }
     }
 
@@ -41,9 +40,7 @@ public class TokenData extends EthData {
         super.saveToBundle(B);
 
         try {
-            if (balanceAlter != null) {
-                B.putString("BalanceDecimalAlter", balanceAlter.toString());
-            }
+            B.putString("BalanceDecimalAlter", balanceAlter.toString());
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());
         }
