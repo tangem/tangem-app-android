@@ -23,6 +23,7 @@ import com.tangem.Constant
 import com.tangem.data.fingerprint.StartFingerprintReaderTask
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.data.fingerprint.FingerprintHelper
+import com.tangem.domain.wallet.TangemContext
 import com.tangem.tangemcard.android.data.PINStorage
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
@@ -36,11 +37,36 @@ import java.io.IOException
 class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, FingerprintHelper.FingerprintHelperListener {
 
     companion object {
-        const val KEY_ALIAS = "pinKey"
-        const val KEYSTORE = "AndroidKeyStore"
-
         fun callingIntent(context: Activity, mode: String): Intent {
             val intent = Intent(context, PinRequestActivity::class.java)
+            intent.putExtra(Constant.EXTRA_MODE, mode)
+            return intent
+        }
+
+        fun callingIntentRequestPin(context: Activity, mode: String, ctx: TangemContext, newPIN: String): Intent {
+            val intent = Intent(context, PinRequestActivity::class.java)
+            intent.putExtra(Constant.EXTRA_MODE, mode)
+            ctx.saveToIntent(intent)
+            return intent
+        }
+
+        fun callingIntentRequestPin2(context: Activity, mode: String, ctx: TangemContext, newPIN2: String): Intent {
+            val intent = Intent(context, PinRequestActivity::class.java)
+            intent.putExtra(Constant.EXTRA_MODE, mode)
+            ctx.saveToIntent(intent)
+            return intent
+        }
+
+        fun callingIntentConfirmPin(context: Activity, mode: String, newPIN: String): Intent {
+            val intent = Intent(context, PinRequestActivity::class.java)
+            intent.putExtra(Constant.EXTRA_NEW_PIN, newPIN)
+            intent.putExtra(Constant.EXTRA_MODE, mode)
+            return intent
+        }
+
+        fun callingIntentConfirmPin2(context: Activity, mode: String, newPin2: String): Intent {
+            val intent = Intent(context, PinRequestActivity::class.java)
+            intent.putExtra(Constant.EXTRA_NEW_PIN_2, newPin2)
             intent.putExtra(Constant.EXTRA_MODE, mode)
             return intent
         }
@@ -62,8 +88,6 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pin_request)
-
-//        MainActivity.commonInit(applicationContext)
 
         nfcManager = NfcManager(this, this)
 
