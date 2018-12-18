@@ -107,6 +107,9 @@
     <string name="if_you_forget">If you forget your new PIN you will lose your money forever!</string>
     <string name="if_you_use_default">If you use default PIN someone can steal your money!</string>
     <string name="cannot_obtain_data_from_blockchain">Cannot obtain data from blockchain</string>
+    <string name="cannot_obtain_data_from_blockchain_no_connection">Cannot obtain data from blockchain (connection refused)</string>
+    <string name="cannot_obtain_data_from_blockchain_no_answer">Cannot obtain data from blockchain (empty answer received)</string>
+    <string name="cannot_obtain_data_from_blockchain_communication_error">Cannot obtain data from blockchain (communication error)</string>
     <string name="sending_cached_transaction">Sending cached transaction…</string>
     <string name="not_implemented">NOT IMPLEMENTED</string>
     <string name="this_banknote_protected_default_PIN1_code">This banknote is protected by default PIN1 code</string>
