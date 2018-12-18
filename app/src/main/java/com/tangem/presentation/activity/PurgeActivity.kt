@@ -44,8 +44,6 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
 
         nfcManager = NfcManager(this, this)
 
-//        MainActivity.commonInit(applicationContext)
-
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
         tvCardID.text = ctx.card!!.cidDescription
