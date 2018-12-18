@@ -295,7 +295,7 @@ public abstract class CoinEngine {
         /**
          * Notification that the all requests in sequence completed
          * Call after a last request completed
-         * If occurred error return in ctx.error
+         * If occurred error return in {@link TangemContext} {@see TangemContext.getError()}
          *
          * @param success -*
          */
@@ -319,12 +319,26 @@ public abstract class CoinEngine {
     /**
      * Start sequence of request to blockchain nodes needed to get balance and other information (for example unspent transaction) needed to
      * show current state of wallet and prepare new withdrawal transaction
+     * Save result in {@link CoinData}
+     * If occurred error can be get at onComplete callback in {@link TangemContext}.getError()
      * @param blockchainRequestsCallbacks - notifications
-     * @throws Exception
+     * @throws Exception if something goes wrong
      */
     public abstract void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) throws Exception;
 
+    /**
+     * Start sequence of request to blockchain nodes needed to get fee amount for a new transaction
+     * Save result in {@link CoinData} minFee, maxFee, normalFee
+     * @param blockchainRequestsCallbacks - notifications
+     * @throws Exception if something goes wrong
+     */
     public abstract void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) throws Exception;
 
+    /**
+     * Start sequence of request to blockchain nodes needed to send new transaction
+     * If occurred error can be get at onComplete callback in {@link TangemContext}.getError()
+     * @param blockchainRequestsCallbacks - notifications
+     * @throws Exception if something goes wrong
+     */
     public abstract void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) throws Exception;
 }
