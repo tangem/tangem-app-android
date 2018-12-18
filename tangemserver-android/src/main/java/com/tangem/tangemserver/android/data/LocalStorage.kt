@@ -112,7 +112,7 @@ class LocalStorage
         var sData: String? = result.substitution?.data
         var sSignature: String? = result.substitution?.signature
         if (card.batch != result.batch) {
-            Log.e("CardDataSubstitutionProvider", "Invalid batch received!")
+            Log.e("CardDataSubstitution", "Invalid batch received!")
             return false
         }
         if (!BatchInfo.CardDataSubstitution.verifySignature(card, sData, sSignature)) {
