@@ -171,6 +171,7 @@ public class ServerApiElectrum {
         String host;
         int port;
         String proto;
+        // todo - get available URL list from coinEngine, remove if( ctx.getBlockchain()==...)
         if (ctx.getBlockchain() == Blockchain.BitcoinTestNet) {
             BitcoinNodeTestNet bitcoinNodeTestNet = BitcoinNodeTestNet.values()[new Random().nextInt(BitcoinNodeTestNet.values().length)];
             host = bitcoinNodeTestNet.getHost();
@@ -205,9 +206,9 @@ public class ServerApiElectrum {
             this.port = port;
 
             if (proto.equals("tcp")) {
-                return doElectrumRequestTcp(electrumRequest, host, port);
+                doElectrumRequestTcp(electrumRequest, host, port);
             } else {
-                return doElectrumRequestSsl(electrumRequest, host, port);
+                doElectrumRequestSsl(electrumRequest, host, port);
             }
         } else if (ctx.getBlockchain() == Blockchain.Litecoin) {
             LitecoinNode litecoinNode = LitecoinNode.values()[new Random().nextInt(LitecoinNode.values().length)];
