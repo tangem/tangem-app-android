@@ -40,7 +40,9 @@ public class TokenData extends EthData {
         super.saveToBundle(B);
 
         try {
-            B.putString("BalanceDecimalAlter", balanceAlter.toString());
+            if (balanceAlter != null) {
+                B.putString("BalanceDecimalAlter", balanceAlter.toString());
+            }
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());
         }
