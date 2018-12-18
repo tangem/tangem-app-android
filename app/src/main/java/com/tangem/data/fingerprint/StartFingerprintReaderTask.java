@@ -8,6 +8,7 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 
+import com.tangem.Constant;
 import com.tangem.tangemcard.android.data.PINStorage;
 import com.tangem.presentation.activity.PinRequestActivity;
 
@@ -88,7 +89,7 @@ public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
 
         pinRequestActivity.doLog("Getting keystore...");
         try {
-            keyStore = KeyStore.getInstance(PinRequestActivity.KEYSTORE);
+            keyStore = KeyStore.getInstance(Constant.KEYSTORE);
             keyStore.load(null); // Create empty keystore
             return true;
         } catch (KeyStoreException | CertificateException | NoSuchAlgorithmException | IOException e) {
@@ -105,12 +106,12 @@ public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
         pinRequestActivity.doLog("Creating new key...");
         try {
             if (forceCreate)
-                keyStore.deleteEntry(PinRequestActivity.KEY_ALIAS);
+                keyStore.deleteEntry(Constant.KEY_ALIAS);
 
-            if (!keyStore.containsAlias(PinRequestActivity.KEY_ALIAS)) {
-                KeyGenerator generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, PinRequestActivity.KEYSTORE);
+            if (!keyStore.containsAlias(Constant.KEY_ALIAS)) {
+                KeyGenerator generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, Constant.KEYSTORE);
 
-                generator.init(new KeyGenParameterSpec.Builder(PinRequestActivity.KEY_ALIAS,
+                generator.init(new KeyGenParameterSpec.Builder(Constant.KEY_ALIAS,
                         KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
                         .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
                         .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
@@ -152,7 +153,7 @@ public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
         pinRequestActivity.doLog("Initializing cipher...");
         try {
             keyStore.load(null);
-            SecretKey keyspec = (SecretKey) keyStore.getKey(PinRequestActivity.KEY_ALIAS, null);
+            SecretKey keyspec = (SecretKey) keyStore.getKey(Constant.KEY_ALIAS, null);
 
             if (mode == Cipher.ENCRYPT_MODE) {
                 cipher.init(mode, keyspec);
