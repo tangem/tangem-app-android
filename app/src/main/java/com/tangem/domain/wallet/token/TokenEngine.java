@@ -1,6 +1,7 @@
 package com.tangem.domain.wallet.token;
 
 import android.net.Uri;
+import android.os.Bundle;
 import android.text.InputFilter;
 import android.util.Log;
 
@@ -13,6 +14,7 @@ import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.ECDSASignatureETH;
 import com.tangem.domain.wallet.EthTransaction;
 import com.tangem.domain.wallet.Keccak256;
+import com.tangem.domain.wallet.eth.EthData;
 import com.tangem.tangemcard.data.TangemCard;
 import com.tangem.domain.wallet.TangemContext;
 import com.tangem.domain.wallet.BTCUtils;
@@ -45,6 +47,13 @@ public class TokenEngine extends CoinEngine {
             ctx.setCoinData(coinData);
         } else if (ctx.getCoinData() instanceof TokenData) {
             coinData = (TokenData) ctx.getCoinData();
+        } else if (ctx.getCoinData() instanceof EthData) {
+            // special case with receive card data substitution from server at the moment
+            Bundle B=new Bundle();
+            ctx.getCoinData().saveToBundle(B);
+            coinData = new TokenData();
+            coinData.loadFromBundle(B);
+            ctx.setCoinData(coinData);
         } else {
             throw new Exception("Invalid type of Blockchain data for TokenEngine");
         }
