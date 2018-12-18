@@ -116,8 +116,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         srl.setOnRefreshListener { refresh() }
         btnLookup.setOnClickListener {
             val engine = CoinEngineFactory.create(ctx)
-            val browserIntent = Intent(Intent.ACTION_VIEW, engine?.shareWalletUriExplorer)
-            startActivity(browserIntent)
+            startActivity(Intent(Intent.ACTION_VIEW, engine?.shareWalletUriExplorer))
         }
         btnCopy.setOnClickListener { doShareWallet(false) }
         tvWallet.setOnClickListener { doShareWallet(false) }
@@ -183,7 +182,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
         btnDetails.setOnClickListener {
             if (cardProtocol != null)
-//                openVerifyCard(cardProtocol!!)
                 (activity as LoadedWalletActivity).navigator.showVerifyCard(context as Activity, ctx)
             else
                 showSingleToast(R.string.need_attach_card_again)
@@ -191,18 +189,14 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         btnScanAgain.setOnClickListener { (activity as LoadedWalletActivity).navigator.showMain(context as Activity) }
         btnExtract.setOnClickListener {
             val engine = CoinEngineFactory.create(ctx)
-            if (UtilHelper.isOnline(context as Activity)) {
+            if (UtilHelper.isOnline(context as Activity))
                 if (!engine!!.isExtractPossible)
                     showSingleToast(ctx.message)
                 else if (ctx.card!!.remainingSignatures == 0)
                     showSingleToast(R.string.card_has_no_remaining_signature)
-                else {
+                else
                     (activity as LoadedWalletActivity).navigator.showPreparePayment(context as Activity, ctx)
-//                    val intent = Intent(activity, PreparePaymentActivity::class.java)
-//                    ctx.saveToIntent(intent)
-//                    startActivityForResult(intent, Constant.REQUEST_CODE_SEND_PAYMENT)
-                }
-            } else
+            else
                 Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
         }
 
@@ -496,48 +490,29 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        var data = data
+//        var data = data
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
             Constant.REQUEST_CODE_VERIFY_CARD ->
-                // action when erase wallet
-                if (resultCode == Activity.RESULT_OK) {
-                    if (activity != null)
-                        activity?.finish()
-                }
+                // action after erase wallet
+                if (resultCode == Activity.RESULT_OK)
+                    activity?.finish()
 
-            Constant.REQUEST_CODE_ENTER_NEW_PIN -> if (resultCode == Activity.RESULT_OK) {
-                if (data != null) {
-                    if (data.extras != null && data.extras!!.containsKey("confirmPIN")) {
-                        val intent = Intent(activity, PinRequestActivity::class.java)
-                        intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                        ctx.saveToIntent(intent)
-                        newPIN = data.getStringExtra("newPIN")
-                        startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
-                    } else {
-                        val intent = Intent(activity, PinRequestActivity::class.java)
-                        intent.putExtra("newPIN", data.getStringExtra("newPIN"))
-                        intent.putExtra("mode", PinRequestActivity.Mode.ConfirmNewPIN.toString())
-                        startActivityForResult(intent, Constant.REQUEST_CODE_ENTER_NEW_PIN)
-                    }
-                }
-            }
-            Constant.REQUEST_CODE_ENTER_NEW_PIN2 -> if (resultCode == Activity.RESULT_OK) {
-                if (data != null) {
-                    if (data.extras != null && data.extras!!.containsKey("confirmPIN2")) {
-                        val intent = Intent(activity, PinRequestActivity::class.java)
-                        intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                        ctx.saveToIntent(intent)
-                        newPIN2 = data.getStringExtra("newPIN2")
-                        startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
-                    } else {
-                        val intent = Intent(activity, PinRequestActivity::class.java)
-                        intent.putExtra("newPIN2", data.getStringExtra("newPIN2"))
-                        intent.putExtra("mode", PinRequestActivity.Mode.ConfirmNewPIN2.toString())
-                        startActivityForResult(intent, Constant.REQUEST_CODE_ENTER_NEW_PIN2)
-                    }
-                }
-            }
+            Constant.REQUEST_CODE_ENTER_NEW_PIN -> if (resultCode == Activity.RESULT_OK)
+                if (data != null)
+                    if (data.extras != null && data.extras!!.containsKey(Constant.EXTRA_CONFIRM_PIN))
+                        (activity as LoadedWalletActivity).navigator.showPinRequestRequestPin(context as Activity, PinRequestActivity.Mode.RequestPIN.toString(), ctx, data.getStringExtra(Constant.EXTRA_NEW_PIN))
+                    else
+                        (activity as LoadedWalletActivity).navigator.showPinRequestConfirmNewPin(context as Activity, PinRequestActivity.Mode.ConfirmNewPIN.toString(), data.getStringExtra(Constant.EXTRA_NEW_PIN))
+
+
+            Constant.REQUEST_CODE_ENTER_NEW_PIN2 -> if (resultCode == Activity.RESULT_OK)
+                if (data != null)
+                    if (data.extras != null && data.extras!!.containsKey(Constant.EXTRA_CONFIRM_PIN_2))
+                        (activity as LoadedWalletActivity).navigator.showPinRequestRequestPin2(context as Activity, PinRequestActivity.Mode.RequestPIN2.toString(), ctx, data.getStringExtra(Constant.EXTRA_NEW_PIN_2))
+                    else
+                        (activity as LoadedWalletActivity).navigator.showPinRequestConfirmNewPin2(context as Activity, PinRequestActivity.Mode.ConfirmNewPIN2.toString(), data.getStringExtra(Constant.EXTRA_NEW_PIN_2))
+
             Constant.REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (newPIN == "")
                     newPIN = ctx.card!!.pin
@@ -558,9 +533,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             Constant.REQUEST_CODE_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
-                    data = Intent()
                     ctx.saveToIntent(data)
-                    data.putExtra(Constant.EXTRA_MODIFICATION, "delete")
+                    data?.putExtra(Constant.EXTRA_MODIFICATION, "delete")
                 } else
                     data.putExtra(Constant.EXTRA_MODIFICATION, "update")
 
@@ -586,16 +560,17 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     }
                 }
             }
+
             Constant.REQUEST_CODE_REQUEST_PIN2_FOR_PURGE -> if (resultCode == Activity.RESULT_OK) {
                 val intent = Intent(activity, PurgeActivity::class.java)
                 ctx.saveToIntent(intent)
                 startActivityForResult(intent, Constant.REQUEST_CODE_PURGE)
             }
+
             Constant.REQUEST_CODE_PURGE -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
-                    data = Intent()
                     ctx.saveToIntent(data)
-                    data.putExtra(Constant.EXTRA_MODIFICATION, "delete")
+                    data?.putExtra(Constant.EXTRA_MODIFICATION, "delete")
                 } else {
                     data.putExtra(Constant.EXTRA_MODIFICATION, "update")
                 }
@@ -623,6 +598,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 }
                 updateViews()
             }
+
             Constant.REQUEST_CODE_SEND_PAYMENT, Constant.REQUEST_CODE_RECEIVE_PAYMENT -> {
                 if (resultCode == Activity.RESULT_OK) {
                     ctx.coinData?.clearInfo()
@@ -733,11 +709,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         }
 
         if (ctx.hasError()) {
-            tvError.visibility = View.VISIBLE
-            tvError.text = ctx.error
+            tvError?.visibility = View.VISIBLE
+            tvError?.text = ctx.error
         } else {
-            tvError.visibility = View.GONE
-            tvError.text = ""
+            tvError?.visibility = View.GONE
+            tvError?.text = ""
         }
 
         if (ctx.message == null || ctx.message.isEmpty()) {
