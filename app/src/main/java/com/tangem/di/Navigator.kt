@@ -38,7 +38,6 @@ class Navigator {
 
     fun showPinSwap(context: Activity, newPIN: String, newPIN2: String) {
         context.startActivityForResult(PinSwapActivity.callingIntent(context, newPIN, newPIN2), Constant.REQUEST_CODE_SWAP_PIN)
-
     }
 
     fun showPurge(context: Activity) {

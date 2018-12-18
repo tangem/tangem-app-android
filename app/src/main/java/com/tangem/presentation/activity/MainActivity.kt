@@ -385,7 +385,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     }
 
     override fun onReadWait(msec: Int) {
-        WaitSecurityDelayDialog.OnReadWait(Objects.requireNonNull(this), msec)
+        WaitSecurityDelayDialog.onReadWait(Objects.requireNonNull(this), msec)
     }
 
     override fun onReadBeforeRequest(timeout: Int) {
