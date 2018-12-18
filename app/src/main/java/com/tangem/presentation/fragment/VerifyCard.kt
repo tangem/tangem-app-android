@@ -207,7 +207,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 updateViews()
             }
 
-            // TODO unused block
+            // TODO unused block, need check and remove it
 //            Constant.REQUEST_CODE_SEND_PAYMENT -> {
 //                if (resultCode == Activity.RESULT_OK) {
 //                    srlVerifyCard.isRefreshing = true
