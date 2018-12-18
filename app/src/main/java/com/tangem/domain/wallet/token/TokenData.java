@@ -20,6 +20,7 @@ public class TokenData extends EthData {
         return balanceAlter;
 
     }
+
     public void setBalanceAlterInInternalUnits(CoinEngine.InternalAmount value) {
         balanceAlter = value;
     }
