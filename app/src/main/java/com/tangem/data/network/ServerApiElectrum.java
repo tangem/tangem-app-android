@@ -8,6 +8,7 @@ import com.tangem.data.Blockchain;
 import com.tangem.domain.wallet.bch.BitcoinCashNode;
 import com.tangem.domain.wallet.btc.BitcoinNode;
 import com.tangem.domain.wallet.btc.BitcoinNodeTestNet;
+import com.tangem.domain.wallet.ltc.LitecoinNode;
 import com.tangem.wallet.R;
 
 import java.io.BufferedReader;
@@ -199,6 +200,20 @@ public class ServerApiElectrum {
             host = bitcoinNode.getHost();
             port = bitcoinNode.getPort();
             proto = bitcoinNode.getProto();
+
+            this.host = host;
+            this.port = port;
+
+            if (proto.equals("tcp")) {
+                return doElectrumRequestTcp(electrumRequest, host, port);
+            } else {
+                return doElectrumRequestSsl(electrumRequest, host, port);
+            }
+        } else if (ctx.getBlockchain() == Blockchain.Litecoin) {
+            LitecoinNode litecoinNode = LitecoinNode.values()[new Random().nextInt(LitecoinNode.values().length)];
+            host = litecoinNode.getHost();
+            port = litecoinNode.getPort();
+            proto = litecoinNode.getProto();
 
             this.host = host;
             this.port = port;
