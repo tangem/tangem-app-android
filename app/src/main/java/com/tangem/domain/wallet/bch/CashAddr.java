@@ -56,9 +56,11 @@ public class CashAddr {
         String[] addressParts = bitcoinCashAddress.split(SEPARATOR);
         if (addressParts.length == 2) {
             decoded.setPrefix(addressParts[0]);
+        } else {
+            decoded.setPrefix(MAIN_NET_PREFIX);
         }
 
-        byte[] addressData = BitcoinCashBase32.decode(addressParts[1]);
+        byte[] addressData = BitcoinCashBase32.decode(addressParts[addressParts.length - 1]);
         addressData = Arrays.copyOfRange(addressData, 0, addressData.length - 8);
         addressData = BitcoinCashBitArrayConverter.convertBits(addressData, 5, 8, true);
         byte versionByte = addressData[0];
@@ -84,19 +86,21 @@ public class CashAddr {
 
     public static boolean isValidCashAddress(String bitcoinCashAddress ) {
         try {
-            String prefix;
-            if (bitcoinCashAddress.contains(SEPARATOR)) {
-                String[] split = bitcoinCashAddress.split(SEPARATOR);
-                prefix = split[0];
-                bitcoinCashAddress = split[1];
-            } else {
-                prefix =MAIN_NET_PREFIX;
-            }
-
             if (!isSingleCase(bitcoinCashAddress))
                 return false;
 
             bitcoinCashAddress = bitcoinCashAddress.toLowerCase();
+            String prefix;
+
+            if (bitcoinCashAddress.contains(SEPARATOR)) {
+                String[] split = bitcoinCashAddress.split(SEPARATOR);
+                prefix = split[0];
+                if (!prefix.equals(MAIN_NET_PREFIX)) {return false;} //for now we use main net only
+                bitcoinCashAddress = split[1];
+            } else {
+                prefix = MAIN_NET_PREFIX;
+            }
+            if (!bitcoinCashAddress.startsWith("q")) {return false;} //for now we use P2PKH addresses only
 
             byte[] checksumData =  concatenateByteArrays(
                     concatenateByteArrays(getPrefixBytes(prefix ), new byte[] { 0x00 }),
