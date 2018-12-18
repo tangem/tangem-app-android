@@ -135,7 +135,7 @@ public class WaitSecurityDelayDialog extends DialogFragment {
         });
     }
 
-    public static void OnReadWait(final Activity activity, final int msec) {
+    public static void onReadWait(final Activity activity, final int msec) {
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {

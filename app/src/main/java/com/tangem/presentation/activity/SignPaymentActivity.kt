@@ -14,13 +14,11 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
 import com.tangem.App
-import com.tangem.domain.wallet.BTCUtils
 import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
-import com.tangem.data.Blockchain
 import com.tangem.tangemcard.reader.CardProtocol
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
@@ -272,7 +270,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
     }
 
     override fun onReadWait(msec: Int) {
-        WaitSecurityDelayDialog.OnReadWait(this, msec)
+        WaitSecurityDelayDialog.onReadWait(this, msec)
     }
 
     override fun onReadBeforeRequest(timeout: Int) {
