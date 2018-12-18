@@ -167,7 +167,7 @@ class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
 
     fun getKeyStore(): Boolean {
         try {
-            keyStore = KeyStore.getInstance(PinRequestActivity.KEYSTORE)
+            keyStore = KeyStore.getInstance(Constant.KEYSTORE)
             // create empty keystore
             keyStore!!.load(null)
             return true
@@ -188,12 +188,12 @@ class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
     fun createNewKey(forceCreate: Boolean): Boolean {
         try {
             if (forceCreate)
-                keyStore!!.deleteEntry(PinRequestActivity.KEY_ALIAS)
+                keyStore!!.deleteEntry(Constant.KEY_ALIAS)
 
-            if (!keyStore!!.containsAlias(PinRequestActivity.KEY_ALIAS)) {
-                val generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, PinRequestActivity.KEYSTORE)
+            if (!keyStore!!.containsAlias(Constant.KEY_ALIAS)) {
+                val generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, Constant.KEYSTORE)
 
-                generator.init(KeyGenParameterSpec.Builder(PinRequestActivity.KEY_ALIAS,
+                generator.init(KeyGenParameterSpec.Builder(Constant.KEY_ALIAS,
                         KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
                         .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
                         .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
@@ -229,7 +229,7 @@ class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
     fun initCipher(mode: Int): Boolean {
         try {
             keyStore!!.load(null)
-            val keyspec = keyStore!!.getKey(PinRequestActivity.KEY_ALIAS, null) as SecretKey
+            val keyspec = keyStore!!.getKey(Constant.KEY_ALIAS, null) as SecretKey
 
             if (mode == Cipher.ENCRYPT_MODE) {
                 cipher!!.init(mode, keyspec)
