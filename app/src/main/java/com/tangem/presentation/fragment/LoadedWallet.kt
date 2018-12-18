@@ -21,25 +21,28 @@ import android.view.ViewGroup
 import android.widget.Toast
 import com.tangem.App
 import com.tangem.Constant
+import com.tangem.data.Blockchain
 import com.tangem.data.network.ServerApiCommon
-import com.tangem.tangemserver.android.model.CardVerifyAndGetInfo
-import com.tangem.tangemcard.tasks.VerifyCardTask
-import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.android.reader.NfcManager
-import com.tangem.domain.wallet.*
+import com.tangem.domain.wallet.BalanceValidator
+import com.tangem.domain.wallet.CoinEngine
+import com.tangem.domain.wallet.CoinEngineFactory
+import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.activity.*
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.presentation.dialog.ShowQRCodeDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
-import com.tangem.data.Blockchain
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD_UID
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
+import com.tangem.tangemcard.reader.CardProtocol
+import com.tangem.tangemcard.tasks.VerifyCardTask
 import com.tangem.tangemcard.util.Util
 import com.tangem.tangemserver.android.ServerApiTangem
+import com.tangem.tangemserver.android.model.CardVerifyAndGetInfo
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
@@ -107,10 +110,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         btnExtract.isEnabled = false
         btnExtract.backgroundTintList = inactiveColor
-
-        refresh()
-
-        startVerify(lastTag)
 
         tvWallet.text = ctx.coinData.wallet
 
@@ -406,6 +405,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         val cardVerifyAndGetInfoListener: ServerApiTangem.CardVerifyAndGetInfoListener = object : ServerApiTangem.CardVerifyAndGetInfoListener {
             override fun onSuccess(cardVerifyAndGetArtworkResponse: CardVerifyAndGetInfo.Response?) {
                 Log.i(TAG,"cardVerifyAndGetInfoListener onSuccess")
+                if( activity==null || !UtilHelper.isOnline(activity!!)) return
+
                 val result = cardVerifyAndGetArtworkResponse?.results!![0]
                 if (result.error != null) {
                     ctx.card!!.isOnlineVerified = false
@@ -413,8 +414,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 }
                 ctx.card!!.isOnlineVerified = result.passed
 
-//                if (requestCounter == 0)
+
                 requestCounter--
+//                if (requestCounter == 0)
                 updateViews()
 
                 if (!result.passed) return
@@ -423,13 +425,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     Log.w(TAG, "Batch ${result.batch} info  changed to '$result'")
                     ivTangemCard.setImageBitmap(App.localStorage.getCardArtworkBitmap(ctx.card!!))
                     App.localStorage.applySubstitution(ctx.card!!)
-                    //todo - check this is not need after refactoring
-//                    if (ctx.blockchain == Blockchain.Token || ctx.blockchain == Blockchain.Ethereum) {
-//                        ctx.card!!.setBlockchainIDFromCard(Blockchain.Ethereum.id)
-
-                    //ctx.blockchain=Blockchain.Ethereum
-                    //engine=engine!!.swithToOtherEngine(Blockchain.Ethereum)
-//                    }
                     refresh()
                 }
                 if (result.artwork != null && App.localStorage.checkNeedUpdateArtwork(result.artwork)) {
@@ -443,6 +438,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             override fun onFail(message: String?) {
                 Log.i(TAG,"cardVerifyAndGetInfoListener onFail")
+                if( activity==null || !UtilHelper.isOnline(activity!!)) return
                 requestCounter--
                 updateViews()
             }
@@ -453,6 +449,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         val artworkListener: ServerApiTangem.ArtworkListener = object : ServerApiTangem.ArtworkListener {
             override fun onSuccess(artworkId: String?, inputStream: InputStream?, updateDate: Date?) {
                 Log.i(TAG,"artworkListener onSuccess")
+                if( activity==null || !UtilHelper.isOnline(activity!!)) return
                 App.localStorage.updateArtwork(artworkId!!, inputStream!!, updateDate!!)
                 requestCounter--
                 ivTangemCard.setImageBitmap(App.localStorage.getCardArtworkBitmap(ctx.card!!))
@@ -461,6 +458,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             override fun onFail(message: String?) {
                 Log.i(TAG,"artworkListener onFail")
+                if( activity==null || !UtilHelper.isOnline(activity!!)) return
                 requestCounter--
                 updateViews()
             }
@@ -469,27 +467,32 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         // request rate info listener
         serverApiCommon.setRateInfoData {
+            if( activity==null || !UtilHelper.isOnline(activity!!)) return@setRateInfoData
             val rate = it.priceUsd.toFloat()
             ctx.coinData!!.rate = rate
             ctx.coinData!!.rateAlter = rate
         }
+
+        refresh()
+
+        startVerify(lastTag)
     }
 
     override fun onResume() {
         super.onResume()
-        nfcManager!!.onResume()
+        nfcManager.onResume()
     }
 
     override fun onPause() {
         super.onPause()
-        nfcManager!!.onPause()
+        nfcManager.onPause()
         if (timerRepeatRefresh != null)
             timerRepeatRefresh!!.cancel()
     }
 
     override fun onStop() {
         super.onStop()
-        nfcManager!!.onStop()
+        nfcManager.onStop()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -722,6 +725,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     fun updateViews() {
+        if( activity==null || !UtilHelper.isOnline(activity!!)) return
+
         if (timerHideErrorAndMessage != null) {
             timerHideErrorAndMessage!!.cancel()
             timerHideErrorAndMessage = null
@@ -780,7 +785,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         } else
             tvBlockchain.text = ctx.blockchainName
 
-        if (engine.hasBalanceInfo()) {
+        if (requestCounter==0 && engine.hasBalanceInfo()) {
             btnExtract.isEnabled = true
             btnExtract.backgroundTintList = activeColor
         } else {
@@ -815,6 +820,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 object : CoinEngine.BlockchainRequestsCallbacks {
                     override fun onComplete(success: Boolean) {
                         Log.i(TAG, "requestBalanceAndUnspentTransactions onComplete: "+success.toString()+", request counter "+requestCounter.toString())
+                        if( activity==null || !UtilHelper.isOnline(activity!!)) return
                         requestCounter--
                         if(! success)
                         {
@@ -824,6 +830,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     }
 
                     override fun onProgress() {
+                        if( activity==null || !UtilHelper.isOnline(activity!!)) return
                         Log.i(TAG, "requestBalanceAndUnspentTransactions onProgress")
                         updateViews()
                     }
@@ -864,7 +871,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         // Token
         else if (ctx.blockchain == Blockchain.Token) {
-            val engine = CoinEngineFactory.create(ctx)
+//            val engine = CoinEngineFactory.create(ctx)
 //            requestInfura(ServerApiInfura.INFURA_ETH_CALL, (engine as TokenEngine).getContractAddress(ctx.card))
             requestRateInfo("ethereum")
         }
@@ -923,7 +930,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val sUID = Util.byteArrayToHexString(uid)
             if (ctx.card.uid != sUID) {
 //                Log.d(TAG, "Invalid UID: $sUID")
-                nfcManager!!.ignoreTag(isoDep.tag)
+                nfcManager.ignoreTag(isoDep.tag)
                 return
             } else {
 //                Log.v(TAG, "UID: $sUID")
