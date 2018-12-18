@@ -28,7 +28,7 @@ public class ServerApiCommon {
 
     public interface EstimateFeeListener {
         void onSuccess(int blockCount, String estimateFeeResponse);
-        void onFail(String message);
+        void onFail(int blockCount, String message);
     }
 
     public void setEstimateFee(EstimateFeeListener listener) {
@@ -63,13 +63,13 @@ public class ServerApiCommon {
                     estimateFeeListener.onSuccess(blockCount, response.body());
                     Log.i(TAG, "estimateFee         onResponse " + response.code() + "  " + response.body());
                 } else
-                    estimateFeeListener.onFail(response.body());
+                    estimateFeeListener.onFail(blockCount, response.body());
                 Log.e(TAG, "estimateFee         onResponse " + response.code());
             }
 
             @Override
             public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
-                estimateFeeListener.onFail(t.getMessage());
+                estimateFeeListener.onFail(blockCount, t.getMessage());
                 Log.e(TAG, "estimateFee onFailure " + t.getMessage());
             }
         });
