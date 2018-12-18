@@ -808,12 +808,21 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         requestVerifyAndGetInfo()
 
         // Bitcoin
-        if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet || ctx.blockchain == Blockchain.Litecoin) {
+        if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet) {
             ctx.coinData.setIsBalanceEqual(true)
 
             requestElectrum(ElectrumRequest.checkBalance(ctx.coinData!!.wallet))
             requestElectrum(ElectrumRequest.listUnspent(ctx.coinData!!.wallet))
             requestRateInfo("bitcoin")
+        }
+
+        // Litecoin
+        if (ctx.blockchain == Blockchain.Litecoin) {
+            ctx.coinData.setIsBalanceEqual(true)
+
+            requestElectrum(ElectrumRequest.checkBalance(ctx.coinData!!.wallet))
+            requestElectrum(ElectrumRequest.listUnspent(ctx.coinData!!.wallet))
+            requestRateInfo("litecoin")
         }
 
         // BitcoinCash
