@@ -84,10 +84,9 @@ public class ElectrumRequest {
     }
 
 
-    public static ElectrumRequest getFee(String wallet) {
+    public static ElectrumRequest getFee() {
         ElectrumRequest request = new ElectrumRequest();
         try {
-            request.walletAddress = wallet; //METHOD_GetFee
             request.jsRequestData = new JSONObject("{ \"method\":\"" + METHOD_GetFee + "\", \"params\":[\"" + 6 + "\"] }");
         } catch (JSONException e) {
             e.printStackTrace();
