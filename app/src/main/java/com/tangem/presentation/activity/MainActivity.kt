@@ -284,18 +284,14 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
     public override fun onPause() {
         nfcManager.onPause()
-        if (readCardInfoTask != null) {
-            readCardInfoTask!!.cancel(true)
-        }
+        readCardInfoTask?.cancel(true)
         super.onPause()
     }
 
     public override fun onStop() {
         // dismiss enable NFC dialog
         nfcManager.onStop()
-        if (readCardInfoTask != null) {
-            readCardInfoTask!!.cancel(true)
-        }
+        readCardInfoTask?.cancel(true)
         super.onStop()
     }
 
@@ -329,7 +325,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                     val ctx = TangemContext(card)
                     when {
                         card.status == TangemCard.Status.Loaded -> lastTag?.let {
-                            val engineCoin = CoinEngineFactory.create(ctx) ?: throw CardProtocol.TangemException("Can't create CoinEngine!")
+                            val engineCoin = CoinEngineFactory.create(ctx)
+                                    ?: throw CardProtocol.TangemException("Can't create CoinEngine!")
                             engineCoin.defineWallet()
                             //mCard.setWallet(Blockchain.calculateWalletAddress(mCard, pkUncompressed));
 
