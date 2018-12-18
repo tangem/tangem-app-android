@@ -17,14 +17,14 @@ public class ElectrumRequest {
     public static final String METHOD_SendTransaction = "blockchain.transaction.broadcast";
     public static final String METHOD_GetFee = "blockchain.estimatefee";
 
-    public JSONObject jsRequestData;
-    public String answerData;
-    public String error;
-    public String walletAddress;
+    private JSONObject jsRequestData;
+    String answerData;
+    private String error = null;
+    private String walletAddress;
     public String txHash;
-    public String TX;
-    public String host;
-    public int port;
+    private String TX;
+    String host;
+    int port;
 
     private ElectrumRequest() {
     }
@@ -142,8 +142,8 @@ public class ElectrumRequest {
         return "";
     }
 
-    public boolean isMethod(String methodName) throws JSONException {
-        return jsRequestData.getString("method").equals(methodName);
+    public boolean isMethod(String methodName) {
+        return getMethod().equals(methodName);
     }
 
     public JSONArray getParams() throws JSONException {
@@ -154,13 +154,28 @@ public class ElectrumRequest {
         return getAnswer().getJSONObject("result");
     }
 
-    public JSONObject getError() throws JSONException {
-        JSONObject answer = getAnswer();
-        if (answer.has("error")) {
-            return getAnswer().getJSONObject("error");
-        } else {
-            return null;
+    public String getError() {
+        if( answerData!=null ) {
+            // answer received - return error from it
+            JSONObject answer = getAnswer();
+            if (answer.has("error")) {
+                try {
+                    return getAnswer().getJSONObject("error").toString();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        }else{
+            // no answer received - return saved error reason
+            return error;
         }
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 
     public String getResultString() throws JSONException {
