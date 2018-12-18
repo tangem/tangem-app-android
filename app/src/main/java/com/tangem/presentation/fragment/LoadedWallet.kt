@@ -73,11 +73,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private val inactiveColor: ColorStateList by lazy { resources.getColorStateList(R.color.btn_dark) }
     private val activeColor: ColorStateList by lazy { resources.getColorStateList(R.color.colorAccent) }
     private var requestCounter: Int = 0
-        set(value)
-        {
-            field=value
+        set(value) {
+            field = value
             Log.i(TAG, "requestCounter, set $field")
-            if (field <= 0 && srl!=null && srl.isRefreshing ) {
+            if (field <= 0 && srl != null && srl.isRefreshing) {
                 Log.e(TAG, "+++++++++++ FINISH REFRESH")
                 if (srl != null) srl!!.isRefreshing = false
                 //updateViews()
@@ -198,9 +197,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 else if (ctx.card!!.remainingSignatures == 0)
                     showSingleToast(R.string.card_has_no_remaining_signature)
                 else {
-                    val intent = Intent(activity, PreparePaymentActivity::class.java)
-                    ctx.saveToIntent(intent)
-                    startActivityForResult(intent, Constant.REQUEST_CODE_SEND_PAYMENT)
+                    (activity as LoadedWalletActivity).navigator.showPreparePayment(context as Activity, ctx)
+//                    val intent = Intent(activity, PreparePaymentActivity::class.java)
+//                    ctx.saveToIntent(intent)
+//                    startActivityForResult(intent, Constant.REQUEST_CODE_SEND_PAYMENT)
                 }
             } else
                 Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
@@ -404,8 +404,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         // request card verify and get info listener
         val cardVerifyAndGetInfoListener: ServerApiTangem.CardVerifyAndGetInfoListener = object : ServerApiTangem.CardVerifyAndGetInfoListener {
             override fun onSuccess(cardVerifyAndGetArtworkResponse: CardVerifyAndGetInfo.Response?) {
-                Log.i(TAG,"cardVerifyAndGetInfoListener onSuccess")
-                if( activity==null || !UtilHelper.isOnline(activity!!)) return
+                Log.i(TAG, "cardVerifyAndGetInfoListener onSuccess")
+                if (activity == null || !UtilHelper.isOnline(activity!!)) return
 
                 val result = cardVerifyAndGetArtworkResponse?.results!![0]
                 if (result.error != null) {
@@ -437,8 +437,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
 
             override fun onFail(message: String?) {
-                Log.i(TAG,"cardVerifyAndGetInfoListener onFail")
-                if( activity==null || !UtilHelper.isOnline(activity!!)) return
+                Log.i(TAG, "cardVerifyAndGetInfoListener onFail")
+                if (activity == null || !UtilHelper.isOnline(activity!!)) return
                 requestCounter--
                 updateViews()
             }
@@ -448,8 +448,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         // request artwork listener
         val artworkListener: ServerApiTangem.ArtworkListener = object : ServerApiTangem.ArtworkListener {
             override fun onSuccess(artworkId: String?, inputStream: InputStream?, updateDate: Date?) {
-                Log.i(TAG,"artworkListener onSuccess")
-                if( activity==null || !UtilHelper.isOnline(activity!!)) return
+                Log.i(TAG, "artworkListener onSuccess")
+                if (activity == null || !UtilHelper.isOnline(activity!!)) return
                 App.localStorage.updateArtwork(artworkId!!, inputStream!!, updateDate!!)
                 requestCounter--
                 ivTangemCard.setImageBitmap(App.localStorage.getCardArtworkBitmap(ctx.card!!))
@@ -457,8 +457,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
 
             override fun onFail(message: String?) {
-                Log.i(TAG,"artworkListener onFail")
-                if( activity==null || !UtilHelper.isOnline(activity!!)) return
+                Log.i(TAG, "artworkListener onFail")
+                if (activity == null || !UtilHelper.isOnline(activity!!)) return
                 requestCounter--
                 updateViews()
             }
@@ -467,7 +467,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         // request rate info listener
         serverApiCommon.setRateInfoData {
-            if( activity==null || !UtilHelper.isOnline(activity!!)) return@setRateInfoData
+            if (activity == null || !UtilHelper.isOnline(activity!!)) return@setRateInfoData
             val rate = it.priceUsd.toFloat()
             ctx.coinData!!.rate = rate
             ctx.coinData!!.rateAlter = rate
@@ -709,7 +709,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     override fun onReadWait(msec: Int) {
-        WaitSecurityDelayDialog.OnReadWait(activity, msec)
+        WaitSecurityDelayDialog.onReadWait(activity, msec)
     }
 
     override fun onReadBeforeRequest(timeout: Int) {
@@ -725,7 +725,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     fun updateViews() {
-        if( activity==null || !UtilHelper.isOnline(activity!!)) return
+        if (activity == null || !UtilHelper.isOnline(activity!!)) return
 
         if (timerHideErrorAndMessage != null) {
             timerHideErrorAndMessage!!.cancel()
@@ -785,7 +785,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         } else
             tvBlockchain.text = ctx.blockchainName
 
-        if (requestCounter==0 && engine.hasBalanceInfo()) {
+        if (requestCounter == 0 && engine.hasBalanceInfo()) {
             btnExtract.isEnabled = true
             btnExtract.backgroundTintList = activeColor
         } else {
@@ -819,18 +819,17 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         coinEngine!!.requestBalanceAndUnspentTransactions(
                 object : CoinEngine.BlockchainRequestsCallbacks {
                     override fun onComplete(success: Boolean) {
-                        Log.i(TAG, "requestBalanceAndUnspentTransactions onComplete: "+success.toString()+", request counter "+requestCounter.toString())
-                        if( activity==null || !UtilHelper.isOnline(activity!!)) return
+                        Log.i(TAG, "requestBalanceAndUnspentTransactions onComplete: " + success.toString() + ", request counter " + requestCounter.toString())
+                        if (activity == null || !UtilHelper.isOnline(activity!!)) return
                         requestCounter--
-                        if(! success)
-                        {
-                            Log.e(TAG, "ctx.error: "+ctx.error)
+                        if (!success) {
+                            Log.e(TAG, "ctx.error: " + ctx.error)
                         }
                         updateViews()
                     }
 
                     override fun onProgress() {
-                        if( activity==null || !UtilHelper.isOnline(activity!!)) return
+                        if (activity == null || !UtilHelper.isOnline(activity!!)) return
                         Log.i(TAG, "requestBalanceAndUnspentTransactions onProgress")
                         updateViews()
                     }
