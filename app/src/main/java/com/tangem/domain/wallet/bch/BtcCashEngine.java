@@ -569,11 +569,6 @@ public class BtcCashEngine extends CoinEngine {
             public void onSuccess(ElectrumRequest electrumRequest) {
                 if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetBalance)) {
                     try {
-                        String walletAddress = electrumRequest.getParams().getString(0);
-                        if (!walletAddress.equals(coinData.getWallet())) {
-                            // todo - check
-                            throw new Exception("Invalid wallet address in answer!");
-                        }
                         Long confBalance = electrumRequest.getResult().getLong("confirmed");
                         Long unconfirmedBalance = electrumRequest.getResult().getLong("unconfirmed");
                         coinData.setBalanceReceived(true);
