@@ -19,10 +19,7 @@ import com.tangem.Constant
 import com.tangem.data.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
-import com.tangem.presentation.activity.CreateNewWalletActivity
-import com.tangem.presentation.activity.PinRequestActivity
-import com.tangem.presentation.activity.PurgeActivity
-import com.tangem.presentation.activity.VerifyCardActivity
+import com.tangem.presentation.activity.*
 import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.tangemcard.android.data.PINStorage
 import com.tangem.tangemcard.android.reader.NfcManager
@@ -158,7 +155,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                     updatedCard.loadFromBundle(data.getBundleExtra("Card"))
                     ctx.card = updatedCard
                 }
-                if (resultCode == CreateNewWalletActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
+                if (resultCode == Constant.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
                     val intent = Intent(context, PinRequestActivity::class.java)
                     intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
@@ -171,11 +168,10 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                     }
                 }
             }
-            Constant.REQUEST_CODE_REQUEST_PIN2_FOR_PURGE -> if (resultCode == Activity.RESULT_OK) {
-                val intent = Intent(context, PurgeActivity::class.java)
-                ctx.saveToIntent(intent)
-                startActivityForResult(intent, Constant.REQUEST_CODE_PURGE)
-            }
+
+            Constant.REQUEST_CODE_REQUEST_PIN2_FOR_PURGE -> if (resultCode == Activity.RESULT_OK)
+                (activity as VerifyCardActivity).navigator.showPurge(context as Activity, ctx)
+
             Constant.REQUEST_CODE_PURGE -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
                     data = Intent()
@@ -192,7 +188,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                     updatedCard.loadFromBundle(data.getBundleExtra("Card"))
                     ctx.card = updatedCard
                 }
-                if (resultCode == CreateNewWalletActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
+                if (resultCode == Constant.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
                     val intent = Intent(context, PinRequestActivity::class.java)
                     intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
