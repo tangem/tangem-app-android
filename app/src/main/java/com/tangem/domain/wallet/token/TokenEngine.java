@@ -725,7 +725,7 @@ public class TokenEngine extends CoinEngine {
                 String gasPrice = infuraResponse.getResult();
                 gasPrice = gasPrice.substring(2);
                 // rounding gas price to integer gwei
-                BigInteger l = new BigInteger(gasPrice, 16).divide(BigInteger.valueOf(1000000000L)).multiply(BigInteger.valueOf(1000000000L));
+                BigInteger l = new BigInteger(gasPrice, 16);//.divide(BigInteger.valueOf(1000000000L)).multiply(BigInteger.valueOf(1000000000L));
 
                 //val m = if (ctx.blockchain==Blockchain.Token) BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
                 BigInteger m;
