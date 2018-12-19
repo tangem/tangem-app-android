@@ -14,6 +14,8 @@ import android.text.Html
 import android.view.View
 import android.widget.Toast
 import com.tangem.App
+import com.tangem.Constant
+import com.tangem.di.Navigator
 import com.tangem.tangemcard.tasks.VerifyCardTask
 import com.tangem.tangemcard.reader.CardProtocol
 import com.tangem.tangemcard.android.reader.NfcManager
@@ -27,18 +29,13 @@ import com.tangem.tangemcard.data.loadFromBundle
 import com.tangem.tangemcard.util.Util
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_empty_wallet.*
+import javax.inject.Inject
 
 class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
 
     companion object {
-        val TAG: String = EmptyWalletActivity::class.java.simpleName
-
-        private const val REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY = 2
-        private const val REQUEST_CODE_REQUEST_PIN2 = 3
-        private const val REQUEST_CODE_VERIFY_CARD = 4
-
-        fun callingIntent(context: Context, ctx: TangemContext) : Intent {
-            val intent=Intent(context, EmptyWalletActivity::class.java)
+        fun callingIntent(context: Context, ctx: TangemContext): Intent {
+            val intent = Intent(context, EmptyWalletActivity::class.java)
             ctx.saveToIntent(intent)
             return intent
         }
@@ -50,11 +47,14 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
     private var verifyCardTask: VerifyCardTask? = null
     private var requestPIN2Count = 0
 
+    @Inject
+    internal lateinit var navigator: Navigator
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_empty_wallet)
 
-//        MainActivity.commonInit(applicationContext)
+        App.getNavigatorComponent().inject(this)
 
         nfcManager = NfcManager(this, this)
 
@@ -105,27 +105,27 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
             intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
             intent.putExtra("UID", ctx.card!!.uid)
             intent.putExtra("Card", ctx.card!!.asBundle)
-            startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
+            startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2)
         }
     }
 
     public override fun onResume() {
         super.onResume()
-        nfcManager!!.onResume()
+        nfcManager.onResume()
     }
 
     public override fun onPause() {
         super.onPause()
-        nfcManager!!.onPause()
+        nfcManager.onPause()
     }
 
     public override fun onStop() {
         super.onStop()
-        nfcManager!!.onStop()
+        nfcManager.onStop()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY) {
+        if (requestCode == Constant.REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY) {
             if (resultCode == Activity.RESULT_OK) {
 
                 if (data != null) {
@@ -140,21 +140,22 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                     updatedCard.loadFromBundle(data.getBundleExtra("Card"))
                     ctx.card = updatedCard
                 }
-                if (resultCode == CreateNewWalletActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
+                if (resultCode == Constant.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
                     val intent = Intent(baseContext, PinRequestActivity::class.java)
                     intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
                     intent.putExtra("UID", ctx.card!!.uid)
                     intent.putExtra("Card", ctx.card!!.asBundle)
-                    startActivityForResult(intent, REQUEST_CODE_REQUEST_PIN2)
+                    startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2)
                     return
                 }
             }
             setResult(resultCode, data)
             finish()
-        } else if (requestCode == REQUEST_CODE_REQUEST_PIN2) {
+        } else if (requestCode == Constant.REQUEST_CODE_REQUEST_PIN2) {
             if (resultCode == Activity.RESULT_OK) {
-                doCreateNewWallet()
+//                doCreateNewWallet()
+                navigator.showCreateNewWallet(this, ctx)
             }
         }
     }
@@ -167,7 +168,7 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
             val sUID = Util.byteArrayToHexString(uid)
             if (ctx.card!!.uid != sUID) {
 //                Log.d(TAG, "Invalid UID: " + sUID);
-                nfcManager!!.ignoreTag(isoDep.tag)
+                nfcManager.ignoreTag(isoDep.tag)
                 return
             } else {
 //                Log.v(TAG, "UID: " + sUID);
@@ -262,13 +263,6 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
     override fun onReadAfterRequest() {
         WaitSecurityDelayDialog.onReadAfterRequest(this)
-    }
-
-    private fun doCreateNewWallet() {
-        val intent = Intent(this, CreateNewWalletActivity::class.java)
-        intent.putExtra("UID", ctx.card!!.uid)
-        intent.putExtra("Card", ctx.card!!.asBundle)
-        startActivityForResult(intent, REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY)
     }
 
 }

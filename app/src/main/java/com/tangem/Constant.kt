@@ -1,5 +1,7 @@
 package com.tangem
 
+import android.app.Activity
+
 object Constant {
 
     const val EXTRA_BLOCKCHAIN_DATA = "BLOCKCHAIN_DATA"
@@ -43,5 +45,13 @@ object Constant {
     const val EXTRA_CONFIRM_PIN_2 = "confirmPIN2"
     const val EXTRA_NEW_PIN = "newPIN"
     const val EXTRA_NEW_PIN_2 = "newPIN2"
+
+
+    // CreateNewWalletActivity
+    const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
+
+    // EmptyWalletActivity
+    const val REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY = 2
+    const val REQUEST_CODE_REQUEST_PIN2 = 3
 
 }
