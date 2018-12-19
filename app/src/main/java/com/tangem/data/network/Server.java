@@ -28,7 +28,7 @@ public class Server {
         public static final String URL_INFURA = ServerURL.API_INFURA;
 
         public static class Method {
-            static final String MAIN = URL_INFURA + "AfWg0tmYEX5Kukn2UkKV";
+            static final String MAIN = URL_INFURA + "613a0b14833145968b1f656240c7d245";
         }
     }
 
