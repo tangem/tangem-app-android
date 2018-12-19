@@ -1,6 +1,7 @@
 package com.tangem.presentation.activity
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.ColorStateList
@@ -30,6 +31,12 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
     companion object {
         val TAG: String = PurgeActivity::class.java.simpleName
         const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
+
+        fun callingIntent(context: Context, ctx: TangemContext): Intent {
+            val intent = Intent(context, PurgeActivity::class.java)
+            ctx.saveToIntent(intent)
+            return intent
+        }
     }
 
     private lateinit var ctx: TangemContext
@@ -53,18 +60,18 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
 
     public override fun onResume() {
         super.onResume()
-        nfcManager?.onResume()
+        nfcManager.onResume()
     }
 
     public override fun onPause() {
-        nfcManager?.onPause()
+        nfcManager.onPause()
         purgeTask?.cancel(true)
         super.onPause()
     }
 
     public override fun onStop() {
         // dismiss enable NFC dialog
-        nfcManager?.onStop()
+        nfcManager.onStop()
         purgeTask?.cancel(true)
         super.onStop()
     }
@@ -72,8 +79,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
     override fun onTagDiscovered(tag: Tag) {
         try {
             // get IsoDep handle and run cardReader thread
-            val isoDep = IsoDep.get(tag)
-                    ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
+            val isoDep = IsoDep.get(tag) ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag.id
             val sUID = Util.byteArrayToHexString(uid)
 //            Log.v(TAG, "UID: $sUID")
@@ -84,7 +90,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
                 purgeTask!!.start()
             } else {
                 //               this Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card.getUID() + ")");
-                nfcManager?.ignoreTag(isoDep.tag)
+                nfcManager.ignoreTag(isoDep.tag)
             }
 
         } catch (e: Exception) {
