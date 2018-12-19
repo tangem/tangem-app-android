@@ -30,8 +30,6 @@ class VerifyCardActivity : AppCompatActivity() {
         setContentView(R.layout.activity_verify_card)
 
         App.getNavigatorComponent().inject(this)
-
-//        MainActivity.commonInit(applicationContext)
     }
 
     override fun onBackPressed() {
