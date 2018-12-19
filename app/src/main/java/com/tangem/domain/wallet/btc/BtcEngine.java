@@ -623,7 +623,7 @@ public class BtcEngine extends CoinEngine {
         serverApiElectrum.electrumRequestData(ctx, ElectrumRequest.listUnspent(coinData.getWallet()));
     }
 
-    private Integer calculateEstimatedTransactionSize(String outputAddress, String outAmount) {
+    protected Integer calculateEstimatedTransactionSize(String outputAddress, String outAmount) {
         //todo - правильней было бы использовать constructPayment
         try {
 //            String myAddress = coinData.getWallet();
@@ -708,7 +708,7 @@ public class BtcEngine extends CoinEngine {
     }
 
     @Override
-    public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
+    public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) throws Exception {
         final int calcSize = calculateEstimatedTransactionSize(targetAddress, amount.toValueString());
         Log.e(TAG, String.format("Estimated tx size %d", calcSize));
         coinData.minFee = null;
