@@ -57,17 +57,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         val TAG: String = MainActivity::class.java.simpleName
 
         fun callingIntent(context: Context) = Intent(context, MainActivity::class.java)
-
-//        fun commonInit(context: Context) {
-//            if (PINStorage.needInit())
-//                PINStorage.init(context)
-//
-//            if (Issuer.needInit())
-//                Issuer.init(context)
-//
-//            if (Firmwares.needInit())
-//                Firmwares.init(context)
-//        }
     }
 
     private lateinit var nfcManager: NfcManager
@@ -103,8 +92,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         verifyPermissions()
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_NOSENSOR
-
-//        commonInit(applicationContext)
 
         setNfcAdapterReaderCallback(this)
 
@@ -307,7 +294,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         readCardInfoTask = null
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
-                nfcManager!!.notifyReadResult(true)
+                nfcManager.notifyReadResult(true)
                 rlProgressBar.post {
                     rlProgressBar.visibility = View.GONE
 
@@ -354,7 +341,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
                         lastTag = null
                         ReadCardInfoTask.resetLastReadInfo()
-                        nfcManager!!.notifyReadResult(false)
+                        nfcManager.notifyReadResult(false)
                     }
                 }
             }
