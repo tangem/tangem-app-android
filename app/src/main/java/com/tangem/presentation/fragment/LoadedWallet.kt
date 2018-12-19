@@ -350,7 +350,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     updatedCard.loadFromBundle(data.getBundleExtra(EXTRA_TANGEM_CARD))
                     ctx.card = updatedCard
                 }
-                if (resultCode == CreateNewWalletActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
+                if (resultCode == Constant.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
                     val intent = Intent(activity, PinRequestActivity::class.java)
                     intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
@@ -363,12 +363,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     }
                 }
             }
-
-            Constant.REQUEST_CODE_REQUEST_PIN2_FOR_PURGE -> if (resultCode == Activity.RESULT_OK) {
-                val intent = Intent(activity, PurgeActivity::class.java)
-                ctx.saveToIntent(intent)
-                startActivityForResult(intent, Constant.REQUEST_CODE_PURGE)
-            }
+// [REDACTED_TODO_COMMENT]
+//            Constant.REQUEST_CODE_REQUEST_PIN2_FOR_PURGE -> if (resultCode == Activity.RESULT_OK)
+//                (activity as LoadedWalletActivity).navigator.showPurge(context as Activity, ctx)
 
             Constant.REQUEST_CODE_PURGE -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
@@ -387,7 +384,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     updatedCard.loadFromBundle(data.getBundleExtra(EXTRA_TANGEM_CARD))
                     ctx.card = updatedCard
                 }
-                if (resultCode == CreateNewWalletActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
+                if (resultCode == Constant.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
                     val intent = Intent(activity, PinRequestActivity::class.java)
                     intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
