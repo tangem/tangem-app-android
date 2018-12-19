@@ -88,7 +88,8 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 //        feeRequestSuccess = false
 //        balanceRequestSuccess = false
 
-        if (ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token) {
+        if (ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token ||
+                ctx.blockchain == Blockchain.BitcoinCash || ctx.blockchain == Blockchain.Litecoin) {
             rgFee.isEnabled = false
 
 //            requestInfura(ServerApiInfura.INFURA_ETH_GAS_PRICE)
