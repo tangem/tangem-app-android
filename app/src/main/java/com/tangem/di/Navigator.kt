@@ -56,16 +56,16 @@ class Navigator {
         context.startActivityForResult(PinSwapActivity.callingIntent(context, newPIN, newPIN2), Constant.REQUEST_CODE_SWAP_PIN)
     }
 
-    fun showPurge(context: Activity) {
-
+    fun showPurge(context: Activity, ctx: TangemContext) {
+        context.startActivityForResult(PurgeActivity.callingIntent(context, ctx), Constant.REQUEST_CODE_PURGE)
     }
 
     fun showPreparePayment(context: Activity, ctx: TangemContext) {
         context.startActivityForResult(PreparePaymentActivity.callingIntent(context, ctx), Constant.REQUEST_CODE_SEND_PAYMENT)
     }
 
-    fun showCreateNewWallet(context: Activity) {
-
+    fun showCreateNewWallet(context: Activity, ctx: TangemContext) {
+        context.startActivityForResult(CreateNewWalletActivity.callingIntent(context, ctx), Constant.REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY)
     }
 
 }
