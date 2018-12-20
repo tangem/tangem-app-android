@@ -13,7 +13,7 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.text.Html
-import android.util.Log
+//import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -43,6 +43,7 @@ import com.tangem.tangemcard.tasks.VerifyCardTask
 import com.tangem.tangemcard.util.Util
 import com.tangem.tangemserver.android.ServerApiTangem
 import com.tangem.tangemserver.android.model.CardVerifyAndGetInfo
+import com.tangem.util.LOG
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
@@ -59,7 +60,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private var serverApiCommon: ServerApiCommon = ServerApiCommon()
     private var serverApiTangem: ServerApiTangem = ServerApiTangem()
 
-    private var singleToast: Toast? = null
+
     private lateinit var ctx: TangemContext
 
     private var lastTag: Tag? = null
@@ -75,9 +76,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private var requestCounter: Int = 0
         set(value) {
             field = value
-            Log.i(TAG, "requestCounter, set $field")
+            LOG.i(TAG, "requestCounter, set $field")
             if (field <= 0 && srl != null && srl.isRefreshing) {
-                Log.e(TAG, "+++++++++++ FINISH REFRESH")
+                LOG.e(TAG, "+++++++++++ FINISH REFRESH")
                 if (srl != null) srl!!.isRefreshing = false
                 //updateViews()
             }
@@ -120,78 +121,85 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         tvWallet.setOnClickListener { doShareWallet(false) }
         btnLoad.setOnClickListener {
             //if (BuildConfig.DEBUG) {
-            if (true) {
-                val items = arrayOf<CharSequence>(getString(R.string.in_app), getString(R.string.load_via_share_address), getString(R.string.load_via_qr))//, getString(R.string.via_cryptonit), getString(R.string.via_kraken))
-                val cw = android.view.ContextThemeWrapper(activity, R.style.AlertDialogTheme)
-                val dialog = AlertDialog.Builder(cw).setItems(items
-                ) { _, which ->
-                    when (items[which]) {
-                        getString(R.string.in_app) -> {
-                            try {
-                                val engine = CoinEngineFactory.create(ctx)
-                                val intent = Intent(Intent.ACTION_VIEW, engine!!.shareWalletUri)
-                                intent.addCategory(Intent.CATEGORY_DEFAULT)
-                                startActivity(intent)
-                            } catch (e: ActivityNotFoundException) {
-                                showSingleToast(R.string.no_compatible_wallet)
-                            }
-                        }
-                        getString(R.string.load_via_share_address) -> {
-                            doShareWallet(true)
-                        }
-                        getString(R.string.load_via_qr) -> {
+//            if (true) {
+            val items = arrayOf<CharSequence>(getString(R.string.in_app), getString(R.string.load_via_share_address), getString(R.string.load_via_qr))//, getString(R.string.via_cryptonit), getString(R.string.via_kraken))
+            val cw = android.view.ContextThemeWrapper(activity, R.style.AlertDialogTheme)
+            val dialog = AlertDialog.Builder(cw).setItems(items
+            ) { _, which ->
+                when (items[which]) {
+                    getString(R.string.in_app) -> {
+                        try {
                             val engine = CoinEngineFactory.create(ctx)
-                            ShowQRCodeDialog.show(activity, engine!!.shareWalletUri.toString())
+                            val intent = Intent(Intent.ACTION_VIEW, engine!!.shareWalletUri)
+                            intent.addCategory(Intent.CATEGORY_DEFAULT)
+                            startActivity(intent)
+                        } catch (e: ActivityNotFoundException) {
+                            UtilHelper.showSingleToast(context, getString(R.string.no_compatible_wallet))
                         }
+                    }
+
+                    getString(R.string.load_via_share_address) -> {
+                        doShareWallet(true)
+                    }
+
+                    getString(R.string.load_via_qr) -> {
+                        val engine = CoinEngineFactory.create(ctx)
+                        ShowQRCodeDialog.show(activity, engine!!.shareWalletUri.toString())
+                    }
 //                        getString(R.string.via_cryptonit2) -> {
 //                            val intent = Intent(ctx, PrepareCryptonitOtherApiWithdrawalActivity::class.java)
 //                            intent.putExtra("UID", card!!.uid)
 //                            intent.putExtra("Card", card!!.asBundle)
 //                            startActivityForResult(intent, REQUEST_CODE_RECEIVE_PAYMENT)
 //                        }
-                        getString(R.string.via_cryptonit) -> {
-                            val intent = Intent(activity, PrepareCryptonitWithdrawalActivity::class.java)
-                            ctx.saveToIntent(intent)
-                            startActivityForResult(intent, Constant.REQUEST_CODE_RECEIVE_PAYMENT)
-                        }
-                        getString(R.string.via_kraken) -> {
-                            val intent = Intent(activity, PrepareKrakenWithdrawalActivity::class.java)
-                            ctx.saveToIntent(intent)
-                            startActivityForResult(intent, Constant.REQUEST_CODE_RECEIVE_PAYMENT)
-                        }
-                        else -> {
-                        }
+
+                    getString(R.string.via_cryptonit) -> {
+                        val intent = Intent(activity, PrepareCryptonitWithdrawalActivity::class.java)
+                        ctx.saveToIntent(intent)
+                        startActivityForResult(intent, Constant.REQUEST_CODE_RECEIVE_PAYMENT)
+                    }
+
+                    getString(R.string.via_kraken) -> {
+                        val intent = Intent(activity, PrepareKrakenWithdrawalActivity::class.java)
+                        ctx.saveToIntent(intent)
+                        startActivityForResult(intent, Constant.REQUEST_CODE_RECEIVE_PAYMENT)
+                    }
+                    else -> {
                     }
                 }
-                val dlg = dialog.show()
-                val wlp = dlg.window.attributes
-                wlp.gravity = Gravity.BOTTOM
-                dlg.window.attributes = wlp
-            } else {
-                try {
-                    val engine = CoinEngineFactory.create(ctx)
-                    val intent = Intent(Intent.ACTION_VIEW, engine!!.shareWalletUri)
-                    intent.addCategory(Intent.CATEGORY_DEFAULT)
-                    startActivity(intent)
-                } catch (e: ActivityNotFoundException) {
-                    showSingleToast(R.string.no_compatible_wallet)
-                }
             }
+            val dlg = dialog.show()
+            val wlp = dlg.window.attributes
+            wlp.gravity = Gravity.BOTTOM
+            dlg.window.attributes = wlp
+
+//            }
+// [REDACTED_TODO_COMMENT]
+//        else {
+//                try {
+//                    val engine = CoinEngineFactory.create(ctx)
+//                    val intent = Intent(Intent.ACTION_VIEW, engine!!.shareWalletUri)
+//                    intent.addCategory(Intent.CATEGORY_DEFAULT)
+//                    startActivity(intent)
+//                } catch (e: ActivityNotFoundException) {
+//                    UtilHelper.showSingleToast(context, getString(R.string.no_compatible_wallet))
+//                }
+//            }
         }
         btnDetails.setOnClickListener {
             if (cardProtocol != null)
                 (activity as LoadedWalletActivity).navigator.showVerifyCard(context as Activity, ctx)
             else
-                showSingleToast(R.string.need_attach_card_again)
+                UtilHelper.showSingleToast(context, getString(R.string.need_attach_card_again))
         }
         btnScanAgain.setOnClickListener { (activity as LoadedWalletActivity).navigator.showMain(context as Activity) }
         btnExtract.setOnClickListener {
             val engine = CoinEngineFactory.create(ctx)
             if (UtilHelper.isOnline(context as Activity))
                 if (!engine!!.isExtractPossible)
-                    showSingleToast(ctx.message)
+                    UtilHelper.showSingleToast(context, ctx.message)
                 else if (ctx.card!!.remainingSignatures == 0)
-                    showSingleToast(R.string.card_has_no_remaining_signature)
+                    UtilHelper.showSingleToast(context, getString(R.string.card_has_no_remaining_signature))
                 else
                     (activity as LoadedWalletActivity).navigator.showPreparePayment(context as Activity, ctx)
             else
@@ -201,7 +209,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         // request card verify and get info listener
         val cardVerifyAndGetInfoListener: ServerApiTangem.CardVerifyAndGetInfoListener = object : ServerApiTangem.CardVerifyAndGetInfoListener {
             override fun onSuccess(cardVerifyAndGetArtworkResponse: CardVerifyAndGetInfo.Response?) {
-                Log.i(TAG, "cardVerifyAndGetInfoListener onSuccess")
+                LOG.i(TAG, "cardVerifyAndGetInfoListener onSuccess")
                 if (activity == null || !UtilHelper.isOnline(activity!!)) return
 
                 val result = cardVerifyAndGetArtworkResponse?.results!![0]
@@ -211,7 +219,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 }
                 ctx.card!!.isOnlineVerified = result.passed
 
-
                 requestCounter--
 //                if (requestCounter == 0)
                 updateViews()
@@ -219,13 +226,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 if (!result.passed) return
 
                 if (App.localStorage.checkBatchInfoChanged(ctx.card!!, result)) {
-                    Log.w(TAG, "Batch ${result.batch} info  changed to '$result'")
+                    LOG.w(TAG, "Batch ${result.batch} info  changed to '$result'")
                     ivTangemCard.setImageBitmap(App.localStorage.getCardArtworkBitmap(ctx.card!!))
                     App.localStorage.applySubstitution(ctx.card!!)
                     refresh()
                 }
                 if (result.artwork != null && App.localStorage.checkNeedUpdateArtwork(result.artwork)) {
-                    Log.w(TAG, "Artwork '${result.artwork!!.id}' updated, need download")
+                    LOG.w(TAG, "Artwork '${result.artwork!!.id}' updated, need download")
                     requestCounter++
                     serverApiTangem.requestArtwork(result.artwork!!.id, result.artwork!!.getUpdateDate(), ctx.card!!)
                     updateViews()
@@ -234,7 +241,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
 
             override fun onFail(message: String?) {
-                Log.i(TAG, "cardVerifyAndGetInfoListener onFail")
+                LOG.i(TAG, "cardVerifyAndGetInfoListener onFail")
                 if (activity == null || !UtilHelper.isOnline(activity!!)) return
                 requestCounter--
                 updateViews()
@@ -245,7 +252,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         // request artwork listener
         val artworkListener: ServerApiTangem.ArtworkListener = object : ServerApiTangem.ArtworkListener {
             override fun onSuccess(artworkId: String?, inputStream: InputStream?, updateDate: Date?) {
-                Log.i(TAG, "artworkListener onSuccess")
+                LOG.i(TAG, "artworkListener onSuccess")
                 if (activity == null || !UtilHelper.isOnline(activity!!)) return
                 App.localStorage.updateArtwork(artworkId!!, inputStream!!, updateDate!!)
                 requestCounter--
@@ -254,7 +261,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
 
             override fun onFail(message: String?) {
-                Log.i(TAG, "artworkListener onFail")
+                LOG.i(TAG, "artworkListener onFail")
                 if (activity == null || !UtilHelper.isOnline(activity!!)) return
                 requestCounter--
                 updateViews()
@@ -581,7 +588,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         ctx.error = null
         ctx.message = null
 
-        Log.e(TAG, "============= START REFRESH")
+        LOG.w(TAG, "============= START REFRESH")
         requestCounter = 0
         srl?.isRefreshing = true
 
@@ -594,18 +601,18 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         coinEngine!!.requestBalanceAndUnspentTransactions(
                 object : CoinEngine.BlockchainRequestsCallbacks {
                     override fun onComplete(success: Boolean) {
-                        Log.i(TAG, "requestBalanceAndUnspentTransactions onComplete: " + success.toString() + ", request counter " + requestCounter.toString())
+                        LOG.i(TAG, "requestBalanceAndUnspentTransactions onComplete: " + success.toString() + ", request counter " + requestCounter.toString())
                         if (activity == null || !UtilHelper.isOnline(activity!!)) return
                         requestCounter--
                         if (!success) {
-                            Log.e(TAG, "ctx.error: " + ctx.error)
+                            LOG.e(TAG, "ctx.error: " + ctx.error)
                         }
                         updateViews()
                     }
 
                     override fun onProgress() {
                         if (activity == null || !UtilHelper.isOnline(activity!!)) return
-                        Log.i(TAG, "requestBalanceAndUnspentTransactions onProgress")
+                        LOG.i(TAG, "requestBalanceAndUnspentTransactions onProgress")
                         updateViews()
                     }
 
@@ -615,7 +622,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 }
         )
 // [REDACTED_TODO_COMMENT]
-
         // Bitcoin
         if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet) {
             ctx.coinData.setIsBalanceEqual(true)
@@ -650,24 +656,24 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private fun requestVerifyAndGetInfo() {
         if (UtilHelper.isOnline(context as Activity)) {
             if ((ctx.card!!.isOnlineVerified == null || !ctx.card!!.isOnlineVerified)) {
-                Log.i(TAG, "requestVerifyAndGetInfo")
+                LOG.i(TAG, "requestVerifyAndGetInfo")
                 requestCounter++
                 serverApiTangem.cardVerifyAndGetInfo(ctx.card)
             }
         } else {
             Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            Log.e(TAG, "+++++++++++ Hide refresh 1")
+            LOG.e(TAG, "+++++++++++ Hide refresh 1")
             srl?.isRefreshing = false
         }
     }
 
     private fun requestRateInfo(cryptoId: String) {
         if (UtilHelper.isOnline(context as Activity)) {
-            Log.i(TAG, "requestRateInfo")
+            LOG.i(TAG, "requestRateInfo")
             serverApiCommon.rateInfoData(cryptoId)
         } else {
             Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            Log.e(TAG, "+++++++++++ Hide refresh 2")
+            LOG.e(TAG, "+++++++++++ Hide refresh 2")
             srl?.isRefreshing = false
         }
     }
@@ -679,11 +685,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             val uid = tag!!.id
             val sUID = Util.byteArrayToHexString(uid)
             if (ctx.card.uid != sUID) {
-//                Log.d(TAG, "Invalid UID: $sUID")
                 nfcManager.ignoreTag(isoDep.tag)
                 return
-            } else {
-//                Log.v(TAG, "UID: $sUID")
             }
 
             if (lastReadSuccess)
@@ -693,7 +696,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             verifyCardTask = VerifyCardTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, App.firmwaresStorage, this)
             verifyCardTask?.start()
-
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -732,27 +734,28 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             Toast.makeText(activity, R.string.copied_clipboard, Toast.LENGTH_LONG).show()
         }
     }
-
-    private var showTime: Date = Date()
-
-    private fun showSingleToast(text: Int) {
-        if (singleToast == null || !singleToast!!.view.isShown || showTime.time + 2000 < Date().time) {
-            if (singleToast != null)
-                singleToast!!.cancel()
-            singleToast = Toast.makeText(activity, text, Toast.LENGTH_LONG)
-            singleToast!!.show()
-            showTime = Date()
-        }
-    }
-
-    private fun showSingleToast(text: String) {
-        if (singleToast == null || !singleToast!!.view.isShown || showTime.time + 2000 < Date().time) {
-            if (singleToast != null)
-                singleToast!!.cancel()
-            singleToast = Toast.makeText(activity, text, Toast.LENGTH_LONG)
-            singleToast!!.show()
-            showTime = Date()
-        }
-    }
+// [REDACTED_TODO_COMMENT]
+//    private var singleToast: Toast? = null
+//    private var showTime: Date = Date()
+//
+//    private fun showSingleToast(text: Int) {
+//        if (singleToast == null || !singleToast!!.view.isShown || showTime.time + 2000 < Date().time) {
+//            if (singleToast != null)
+//                singleToast!!.cancel()
+//            singleToast = Toast.makeText(activity, text, Toast.LENGTH_LONG)
+//            singleToast!!.show()
+//            showTime = Date()
+//        }
+//    }
+//
+//    private fun showSingleToast(text: String) {
+//        if (singleToast == null || !singleToast!!.view.isShown || showTime.time + 2000 < Date().time) {
+//            if (singleToast != null)
+//                singleToast!!.cancel()
+//            singleToast = Toast.makeText(activity, text, Toast.LENGTH_LONG)
+//            singleToast!!.show()
+//            showTime = Date()
+//        }
+//    }
 
 }
