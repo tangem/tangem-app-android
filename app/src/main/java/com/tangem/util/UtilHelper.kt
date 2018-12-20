@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
+import android.widget.Toast
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.WriterException
@@ -45,6 +46,21 @@ object UtilHelper {
         } catch (e: NullPointerException) {
             e.printStackTrace()
             false
+        }
+    }
+
+    private var singleToast: Toast? = null
+    private var showTime: Date = Date()
+
+    fun showSingleToast(context: Context?, text: String) {
+        if (singleToast == null || !singleToast!!.view.isShown || showTime.time + 2000 < Date().time) {
+            if (singleToast != null)
+                singleToast!!.cancel()
+            if (context != null) {
+                singleToast = Toast.makeText(context, text, Toast.LENGTH_LONG)
+                singleToast!!.show()
+                showTime = Date()
+            }
         }
     }
 
