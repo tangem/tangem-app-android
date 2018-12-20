@@ -9,6 +9,7 @@ import com.tangem.domain.wallet.bch.BitcoinCashNode;
 import com.tangem.domain.wallet.btc.BitcoinNode;
 import com.tangem.domain.wallet.btc.BitcoinNodeTestNet;
 import com.tangem.domain.wallet.ltc.LitecoinNode;
+import com.tangem.tangemcard.reader.CardProtocol;
 import com.tangem.wallet.R;
 
 import java.io.BufferedReader;
@@ -260,7 +261,15 @@ public class ServerApiElectrum {
                 Log.e(TAG, "doElectrumRequestTcp " + electrumRequest.getMethod() + " ConnectException " + e.getMessage());
             } finally {
                 Log.i(TAG, "doElectrumRequestTcp " + electrumRequest.getMethod() + " socket.close");
-                socket.close();
+                try {
+                    if( socket.isConnected() ) socket.close();
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                    Log.e(TAG,"Can't close socket");
+                    electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_communication_error));
+                }
             }
         } catch (IOException e) {
             //e.printStackTrace();
@@ -331,16 +340,24 @@ public class ServerApiElectrum {
                 } catch (ConnectException e) {
                     e.printStackTrace();
                     electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_no_connection));
-                    Log.e(TAG, "doElectrumRequestTcp " + electrumRequest.getMethod() + " ConnectException " + e.getMessage());
+                    Log.e(TAG, "doElectrumRequestSsl " + electrumRequest.getMethod() + " ConnectException " + e.getMessage());
                 } finally {
-                    Log.i(TAG, "doElectrumRequestTcp " + electrumRequest.getMethod() + " socket.close");
-                    sslSocket.close();
+                    Log.i(TAG, "doElectrumRequestSsl " + electrumRequest.getMethod() + " socket.close");
+                    try {
+                        if( sslSocket.isConnected() ) sslSocket.close();
+                    }
+                    catch (Exception e)
+                    {
+                        electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_communication_error));
+                        e.printStackTrace();
+                        Log.e(TAG, "Can't close ssl socket");
+                    }
                 }
 
             } catch (IOException e) {
                 e.printStackTrace();
                 electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_communication_error));
-                Log.e(TAG, "doElectrumRequestTcp " + electrumRequest.getMethod() + " IOException " + e.getMessage());
+                Log.e(TAG, "doElectrumRequestSsl " + electrumRequest.getMethod() + " IOException " + e.getMessage());
             }
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
             electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain));
