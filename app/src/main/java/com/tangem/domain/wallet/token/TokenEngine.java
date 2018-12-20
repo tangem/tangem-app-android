@@ -6,6 +6,7 @@ import android.text.InputFilter;
 import android.util.Log;
 
 import com.google.common.base.Strings;
+import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiInfura;
 import com.tangem.data.network.model.InfuraResponse;
 import com.tangem.domain.wallet.BalanceValidator;
@@ -38,6 +39,7 @@ import java.util.Arrays;
 
 public class TokenEngine extends CoinEngine {
 
+    private static final String TAG = TokenEngine.class.getSimpleName();
     public TokenData coinData = null;
 
     public TokenEngine(TangemContext ctx) throws Exception {
@@ -442,6 +444,8 @@ public class TokenEngine extends CoinEngine {
     }
 
     private SignTask.PaymentToSign constructPaymentETH(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
+        Log.e(TAG, "Construct ETH payment "+amountValue.toString()+" with fee "+feeValue.toString()+(IncFee?" including":" excluding"));
+
         BigInteger nonceValue = coinData.getConfirmedTXCount();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
 
@@ -523,6 +527,8 @@ public class TokenEngine extends CoinEngine {
     }
 
     private SignTask.PaymentToSign constructPaymentToken(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
+        Log.e(TAG, "Construct TOKEN payment "+amountValue.toString()+" with fee "+feeValue.toString()+(IncFee?" including":" excluding"));
+
         BigInteger nonceValue = coinData.getConfirmedTXCount();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
 //        boolean flag = (ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer);
@@ -724,22 +730,32 @@ public class TokenEngine extends CoinEngine {
             public void onSuccess(String method, InfuraResponse infuraResponse) {
                 String gasPrice = infuraResponse.getResult();
                 gasPrice = gasPrice.substring(2);
-                // rounding gas price to integer gwei
-                BigInteger l = new BigInteger(gasPrice, 16);//.divide(BigInteger.valueOf(1000000000L)).multiply(BigInteger.valueOf(1000000000L));
 
-                //val m = if (ctx.blockchain==Blockchain.Token) BigInteger.valueOf(60000) else BigInteger.valueOf(21000)
+                // rounding gas price to integer gwei
+                BigInteger l = new BigInteger(gasPrice, 16);
+
+                Log.i(TAG, "Infura gas price: "+gasPrice+" ("+l.toString()+")");
                 BigInteger m;
-                if (amount.getCurrency().equals("ETH")) m = BigInteger.valueOf(60000);
+                if (!amount.getCurrency().equals(Blockchain.Ethereum.getCurrency())) m = BigInteger.valueOf(60000);
                 else m = BigInteger.valueOf(21000);
+
+                Log.i(TAG, "fee multiplier: "+m.toString());
+
 
                 CoinEngine.InternalAmount weiMinFee = new CoinEngine.InternalAmount(l.multiply(m), "wei");
                 CoinEngine.InternalAmount weiNormalFee = new CoinEngine.InternalAmount(weiMinFee.multiply(BigDecimal.valueOf(12)).divide(BigDecimal.valueOf(10)), "wei");
                 CoinEngine.InternalAmount weiMaxFee = new CoinEngine.InternalAmount(weiMinFee.multiply(BigDecimal.valueOf(15)).divide(BigDecimal.valueOf(10)), "wei");
+                Log.i(TAG, "min fee   : "+weiMinFee.toValueString()+" wei");
+                Log.i(TAG, "normal fee: "+weiNormalFee.toValueString()+" wei");
+                Log.i(TAG, "max fee   : "+weiMaxFee.toValueString()+" wei");
 
                 try {
                     coinData.minFee = convertToAmount(weiMinFee);
                     coinData.normalFee = convertToAmount(weiNormalFee);
                     coinData.maxFee = convertToAmount(weiMaxFee);
+                    Log.i(TAG, "min fee   : "+coinData.minFee.toString());
+                    Log.i(TAG, "normal fee: "+coinData.normalFee.toString());
+                    Log.i(TAG, "max fee   : "+coinData.maxFee.toString());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
