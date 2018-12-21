@@ -366,9 +366,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             Constant.REQUEST_CODE_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
                     ctx.saveToIntent(data)
-                    data?.putExtra(Constant.EXTRA_MODIFICATION, "delete")
+                    data?.putExtra(Constant.EXTRA_MODIFICATION, Constant.EXTRA_MODIFICATION_DELETE)
                 } else
-                    data.putExtra(Constant.EXTRA_MODIFICATION, "update")
+                    data.putExtra(Constant.EXTRA_MODIFICATION, Constant.EXTRA_MODIFICATION_UPDATE)
 
                 activity?.setResult(Activity.RESULT_OK, data)
                 activity?.finish()
@@ -400,10 +400,9 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             Constant.REQUEST_CODE_PURGE -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
                     ctx.saveToIntent(data)
-                    data?.putExtra(Constant.EXTRA_MODIFICATION, "delete")
-                } else {
-                    data.putExtra(Constant.EXTRA_MODIFICATION, "update")
-                }
+                    data?.putExtra(Constant.EXTRA_MODIFICATION, Constant.EXTRA_MODIFICATION_DELETE)
+                } else
+                    data.putExtra(Constant.EXTRA_MODIFICATION, Constant.EXTRA_MODIFICATION_UPDATE)
 
                 activity?.setResult(Activity.RESULT_OK, data)
                 activity?.finish()
@@ -430,7 +429,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
 
             Constant.REQUEST_CODE_SEND_PAYMENT, Constant.REQUEST_CODE_RECEIVE_PAYMENT -> {
-                LOG.i("finishWithError", "REQUEST_CODE_SEND_PAYMENT")
                 if (resultCode == Activity.RESULT_OK) {
                     ctx.coinData?.clearInfo()
                     srl?.postDelayed({ this.refresh() }, 5000)
@@ -472,10 +470,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     override fun onReadFinish(cardProtocol: CardProtocol?) {
         verifyCardTask = null
-
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
-
                 rlProgressBar?.post {
                     rlProgressBar?.visibility = View.GONE
                     this.cardProtocol = cardProtocol
