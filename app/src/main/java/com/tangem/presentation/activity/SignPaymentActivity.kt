@@ -14,6 +14,7 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
 import com.tangem.App
+import com.tangem.Constant
 import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
@@ -32,15 +33,6 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
     companion object {
         val TAG: String = SignPaymentActivity::class.java.simpleName
-
-        const val EXTRA_AMOUNT = "Amount"
-        const val EXTRA_AMOUNT_CURRENCY = "AmountCurrency"
-        const val EXTRA_FEE = "Fee"
-        const val EXTRA_FEE_CURRENCY = "FeeCurrency"
-        const val EXTRA_FEE_INCLUDED = "FeeIncluded"
-        const val EXTRA_TARGET_ADDRESS = "TargetAddress"
-        const val REQUEST_CODE_SEND_PAYMENT = 1
-        const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
     }
 
     private lateinit var nfcManager: NfcManager
@@ -64,10 +56,10 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
-        amount = CoinEngine.Amount(intent.getStringExtra(EXTRA_AMOUNT), intent.getStringExtra(EXTRA_AMOUNT_CURRENCY))
-        fee = CoinEngine.Amount(intent.getStringExtra(EXTRA_FEE), intent.getStringExtra(EXTRA_FEE_CURRENCY))
-        isIncludeFee = intent.getBooleanExtra(EXTRA_FEE_INCLUDED, true)
-        outAddressStr = intent.getStringExtra(EXTRA_TARGET_ADDRESS)
+        amount = CoinEngine.Amount(intent.getStringExtra(Constant.EXTRA_AMOUNT), intent.getStringExtra(Constant.EXTRA_AMOUNT_CURRENCY))
+        fee = CoinEngine.Amount(intent.getStringExtra(Constant.EXTRA_FEE), intent.getStringExtra(Constant.EXTRA_FEE_CURRENCY))
+        isIncludeFee = intent.getBooleanExtra(Constant.EXTRA_FEE_INCLUDED, true)
+        outAddressStr = intent.getStringExtra(Constant.EXTRA_TARGET_ADDRESS)
 
         tvCardID.text = ctx.card!!.cidDescription
 
@@ -97,7 +89,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == REQUEST_CODE_SEND_PAYMENT) {
+        if (requestCode == Constant.REQUEST_CODE_SEND_PAYMENT_) {
             setResult(resultCode, data)
             finish()
             return
@@ -139,7 +131,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                         val intent = Intent(this, SendTransactionActivity::class.java)
                         ctx.saveToIntent(intent)
                         intent.putExtra(SendTransactionActivity.EXTRA_TX, tx)
-                        startActivityForResult(intent, SignPaymentActivity.REQUEST_CODE_SEND_PAYMENT)
+                        startActivityForResult(intent, Constant.REQUEST_CODE_SEND_PAYMENT_)
                     }
                 }
                 val paymentToSign = coinEngine.constructPayment(amount, fee, isIncludeFee, outAddressStr)
@@ -200,7 +192,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                             intent.putExtra("message", getString(R.string.cannot_sign_transaction__make_sure_you_enter_correct_pin_2))
                             intent.putExtra("UID", cardProtocol.card.uid)
                             intent.putExtra("Card", cardProtocol.card.asBundle)
-                            setResult(RESULT_INVALID_PIN, intent)
+                            setResult(Constant.RESULT_INVALID_PIN_, intent)
                             finish()
                         } catch (e: Exception) {
                             e.printStackTrace()
