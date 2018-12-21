@@ -144,7 +144,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         // set listeners
         fab.setOnClickListener { showMenu(it) }
 
-
         val apiHelper = ServerApiCommon()
         apiHelper.setLastVersionListener { response ->
             try {
