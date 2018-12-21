@@ -94,12 +94,12 @@ public class WaitSecurityDelayDialog extends DialogFragment {
     static Timer timerToShowDelayDialog = null;
     static WaitSecurityDelayDialog instance = null;
 
-    public static WaitSecurityDelayDialog getInstance() {
-        if (instance == null) {
-            instance = new WaitSecurityDelayDialog();
-        }
-        return instance;
-    }
+//    public static WaitSecurityDelayDialog getInstance() {
+//        if (instance == null) {
+//            instance = new WaitSecurityDelayDialog();
+//        }
+//        return instance;
+//    }
 
     private final static int MinRemainingDelayToShowDialog=1000;
     private final static int DelayBeforeShowDialog=5000;
