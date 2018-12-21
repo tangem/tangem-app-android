@@ -12,6 +12,7 @@ import android.text.Html
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import com.tangem.Constant
 import com.tangem.data.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
@@ -126,10 +127,10 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
             val intent = Intent(baseContext, ConfirmPaymentActivity::class.java)
             ctx.saveToIntent(intent)
-            intent.putExtra(SignPaymentActivity.EXTRA_TARGET_ADDRESS, etWallet!!.text.toString())
-            intent.putExtra(SignPaymentActivity.EXTRA_FEE_INCLUDED, (rgIncFee!!.checkedRadioButtonId == R.id.rbFeeIn))
-            intent.putExtra(SignPaymentActivity.EXTRA_AMOUNT, strAmount)
-            intent.putExtra(SignPaymentActivity.EXTRA_AMOUNT_CURRENCY, tvCurrency.text.toString())
+            intent.putExtra(Constant.EXTRA_TARGET_ADDRESS, etWallet!!.text.toString())
+            intent.putExtra(Constant.EXTRA_FEE_INCLUDED, (rgIncFee!!.checkedRadioButtonId == R.id.rbFeeIn))
+            intent.putExtra(Constant.EXTRA_AMOUNT, strAmount)
+            intent.putExtra(Constant.EXTRA_AMOUNT_CURRENCY, tvCurrency.text.toString())
             startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT)
         }
         ivCamera.setOnClickListener {
