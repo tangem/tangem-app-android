@@ -28,7 +28,6 @@ import com.tangem.tangemcard.util.Util
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_sign_payment.*
 
-
 class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
 
     companion object {
@@ -47,7 +46,6 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
     private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
 
-//    private var signPaymentTask: SignPaymentTask? = null
     private var signPaymentTask: SignTask? = null
 
     private lateinit var amount: CoinEngine.Amount
@@ -62,13 +60,11 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_payment)
 
-//        MainActivity.commonInit(applicationContext)
-
         nfcManager = NfcManager(this, this)
 
-        ctx=TangemContext.loadFromBundle(this, intent.extras)
+        ctx = TangemContext.loadFromBundle(this, intent.extras)
 
-        amount =  CoinEngine.Amount(intent.getStringExtra(EXTRA_AMOUNT), intent.getStringExtra(EXTRA_AMOUNT_CURRENCY))
+        amount = CoinEngine.Amount(intent.getStringExtra(EXTRA_AMOUNT), intent.getStringExtra(EXTRA_AMOUNT_CURRENCY))
         fee = CoinEngine.Amount(intent.getStringExtra(EXTRA_FEE), intent.getStringExtra(EXTRA_FEE_CURRENCY))
         isIncludeFee = intent.getBooleanExtra(EXTRA_FEE_INCLUDED, true)
         outAddressStr = intent.getStringExtra(EXTRA_TARGET_ADDRESS)
@@ -82,11 +78,11 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
     public override fun onResume() {
         super.onResume()
-        nfcManager!!.onResume()
+        nfcManager.onResume()
     }
 
     public override fun onPause() {
-        nfcManager!!.onPause()
+        nfcManager.onPause()
         if (signPaymentTask != null)
             signPaymentTask!!.cancel(true)
         super.onPause()
@@ -94,7 +90,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
     public override fun onStop() {
         // dismiss enable NFC dialog
-        nfcManager!!.onStop()
+        nfcManager.onStop()
         if (signPaymentTask != null)
             signPaymentTask!!.cancel(true)
         super.onStop()
@@ -128,7 +124,6 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                     ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag.id
             val sUID = Util.byteArrayToHexString(uid)
-//            Log.v(TAG, "UID: $sUID")
 
             if (sUID == ctx.card!!.uid) {
                 if (lastReadSuccess) {
@@ -136,7 +131,6 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                 } else {
                     isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 65000
                 }
-//                signPaymentTask = SignPaymentTask(this, ctx, nfcManager, isoDep, this, amount, fee, isIncludeFee, outAddressStr)
 
                 val coinEngine = CoinEngineFactory.create(ctx)
                         ?: throw CardProtocol.TangemException("Can't create CoinEngine!")
@@ -152,13 +146,10 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
                 signPaymentTask = SignTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, paymentToSign)
                 signPaymentTask!!.start()
-            } else {
-//                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card!!.uid + ")")
-                nfcManager!!.ignoreTag(isoDep.tag)
-            }
+            } else
+                nfcManager.ignoreTag(isoDep.tag)
 
-        }catch (e: CardProtocol.TangemException_WrongAmount)
-        {
+        } catch (e: CardProtocol.TangemException_WrongAmount) {
             try {
                 val intent = Intent()
                 intent.putExtra("message", getString(R.string.cannot_sign_transaction_wrong_amount))
