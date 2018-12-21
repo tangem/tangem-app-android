@@ -53,14 +53,14 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         val html = Html.fromHtml(engine!!.balanceHTML)
         tvBalance.text = html
 
-        isIncludeFee = intent.getBooleanExtra(SignPaymentActivity.EXTRA_FEE_INCLUDED, true)
+        isIncludeFee = intent.getBooleanExtra(Constant.EXTRA_FEE_INCLUDED, true)
 
         if (isIncludeFee)
             tvIncFee.setText(R.string.including_fee)
         else
             tvIncFee.setText(R.string.not_including_fee)
 
-        amount = CoinEngine.Amount(intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT), intent.getStringExtra(SignPaymentActivity.EXTRA_AMOUNT_CURRENCY))
+        amount = CoinEngine.Amount(intent.getStringExtra(Constant.EXTRA_AMOUNT), intent.getStringExtra(Constant.EXTRA_AMOUNT_CURRENCY))
 
         if (ctx.blockchain == Blockchain.Token && amount.currency != "ETH")
             tvIncFee.visibility = View.INVISIBLE
@@ -71,28 +71,12 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         tvCurrency.text = engine.balanceCurrency
         tvCurrency2.text = engine.feeCurrency
         tvCardID.text = ctx.card!!.cidDescription
-        etWallet.setText(intent.getStringExtra(SignPaymentActivity.EXTRA_TARGET_ADDRESS))
+        etWallet.setText(intent.getStringExtra(Constant.EXTRA_TARGET_ADDRESS))
         etFee.setText("")
 
         btnSend.visibility = View.INVISIBLE
 
-        if (ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token ||
-                ctx.blockchain == Blockchain.BitcoinCash || ctx.blockchain == Blockchain.Litecoin) {
-            rgFee.isEnabled = false
-
-//            requestInfura(ServerApiInfura.INFURA_ETH_GAS_PRICE)
-
-        } else {
-            rgFee.isEnabled = true
-
-//            requestElectrum(ctx.card, ElectrumRequest.checkBalance(ctx.card!!.wallet))
-
-//            ctx.coinData!!.resetFailedBalanceRequestCounter()
-
-//            progressBar.visibility = View.VISIBLE
-
-//            requestEstimateFee()
-        }
+        rgFee.isEnabled = !(ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token || ctx.blockchain == Blockchain.BitcoinCash || ctx.blockchain == Blockchain.Litecoin)
 
         // set listeners
         rgFee.setOnCheckedChangeListener { _, checkedId -> doSetFee(checkedId) }
@@ -165,7 +149,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             val intent = Intent(baseContext, PinRequestActivity::class.java)
             intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
             ctx.saveToIntent(intent)
-            intent.putExtra(SignPaymentActivity.EXTRA_FEE_INCLUDED, isIncludeFee)
+            intent.putExtra(Constant.EXTRA_FEE_INCLUDED, isIncludeFee)
             startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_)
         }
 
@@ -222,12 +206,12 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                     ctx.card = updatedCard
                 }
             }
-            if (resultCode == SignPaymentActivity.RESULT_INVALID_PIN && requestPIN2Count < 2) {
+            if (resultCode == Constant.RESULT_INVALID_PIN_ && requestPIN2Count < 2) {
                 requestPIN2Count++
                 val intent = Intent(baseContext, PinRequestActivity::class.java)
                 intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
                 ctx.saveToIntent(intent)
-                intent.putExtra(SignPaymentActivity.EXTRA_FEE_INCLUDED, isIncludeFee)
+                intent.putExtra(Constant.EXTRA_FEE_INCLUDED, isIncludeFee)
                 startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_)
                 return
             }
@@ -237,12 +221,12 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             if (resultCode == Activity.RESULT_OK) {
                 val intent = Intent(baseContext, SignPaymentActivity::class.java)
                 ctx.saveToIntent(intent)
-                intent.putExtra(SignPaymentActivity.EXTRA_TARGET_ADDRESS, etWallet!!.text.toString())
-                intent.putExtra(SignPaymentActivity.EXTRA_AMOUNT, etAmount.text.toString())
-                intent.putExtra(SignPaymentActivity.EXTRA_AMOUNT_CURRENCY, tvCurrency.text.toString())
-                intent.putExtra(SignPaymentActivity.EXTRA_FEE, etFee.text.toString())
-                intent.putExtra(SignPaymentActivity.EXTRA_FEE_CURRENCY, tvCurrency2.text.toString())
-                intent.putExtra(SignPaymentActivity.EXTRA_FEE_INCLUDED, isIncludeFee)
+                intent.putExtra(Constant.EXTRA_TARGET_ADDRESS, etWallet!!.text.toString())
+                intent.putExtra(Constant.EXTRA_AMOUNT, etAmount.text.toString())
+                intent.putExtra(Constant.EXTRA_AMOUNT_CURRENCY, tvCurrency.text.toString())
+                intent.putExtra(Constant.EXTRA_FEE, etFee.text.toString())
+                intent.putExtra(Constant.EXTRA_FEE_CURRENCY, tvCurrency2.text.toString())
+                intent.putExtra(Constant.EXTRA_FEE_INCLUDED, isIncludeFee)
                 startActivityForResult(intent, Constant.REQUEST_CODE_SIGN_PAYMENT)
             } else
                 Toast.makeText(baseContext, R.string.pin_2_is_required_to_sign_the_payment, Toast.LENGTH_LONG).show()
@@ -276,26 +260,22 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 if (ctx.coinData.minFee != null) {
                     txtFee = ctx.coinData.minFee!!.toValueString()
                     btnSend.visibility = View.VISIBLE
-                } else {
+                } else
                     btnSend.visibility = View.INVISIBLE
-//                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
-                }
+
             R.id.rbNormalFee ->
                 if (ctx.coinData.normalFee != null) {
                     txtFee = ctx.coinData.normalFee!!.toValueString()
                     btnSend.visibility = View.VISIBLE
-                } else {
+                } else
                     btnSend.visibility = View.INVISIBLE
-//                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
-                }
+
             R.id.rbMaximumFee ->
                 if (ctx.coinData.maxFee != null) {
                     txtFee = ctx.coinData.maxFee!!.toValueString()
                     btnSend.visibility = View.VISIBLE
-                } else {
-//                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_obtain_data_from_blockchain))
+                } else
                     btnSend.visibility = View.INVISIBLE
-                }
         }
         etFee.setText(txtFee.replace(',', '.'))
     }
