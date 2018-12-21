@@ -16,6 +16,7 @@ import com.tangem.data.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.tangemcard.android.reader.NfcManager
+import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_payment.*
 import java.io.IOException
@@ -177,7 +178,6 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             }
             etWallet!!.setText(code)
         } else if (requestCode == REQUEST_CODE_SEND_PAYMENT) {
-
             setResult(resultCode, data)
             finish()
         }
