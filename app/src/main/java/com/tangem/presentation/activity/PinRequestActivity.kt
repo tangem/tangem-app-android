@@ -91,7 +91,7 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
 
         nfcManager = NfcManager(this, this)
 
-        mode = Mode.valueOf(intent.getStringExtra("mode"))
+        mode = Mode.valueOf(intent.getStringExtra(Constant.EXTRA_MODE))
 
         if (mode == Mode.RequestNewPIN)
             if (PINStorage.haveEncryptedPIN()) {
@@ -200,7 +200,6 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         } catch (e: IOException) {
             e.printStackTrace()
         }
-
     }
 
     override fun authenticationFailed(error: String) {
