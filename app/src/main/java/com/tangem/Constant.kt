@@ -46,12 +46,15 @@ object Constant {
     const val EXTRA_NEW_PIN = "newPIN"
     const val EXTRA_NEW_PIN_2 = "newPIN2"
 
-
     // CreateNewWalletActivity
     const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
 
     // EmptyWalletActivity
     const val REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY = 2
     const val REQUEST_CODE_REQUEST_PIN2 = 3
+
+    // ConfirmPaymentActivity
+    const val REQUEST_CODE_SIGN_PAYMENT = 1
+    const val REQUEST_CODE_REQUEST_PIN2_ = 2
 
 }
