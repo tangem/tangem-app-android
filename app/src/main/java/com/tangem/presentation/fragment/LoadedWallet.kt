@@ -13,7 +13,6 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.text.Html
-//import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -32,6 +31,7 @@ import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.presentation.dialog.ShowQRCodeDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.presentation.event.ConfirmPaymentFinishWithError
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD
@@ -47,6 +47,11 @@ import com.tangem.util.LOG
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
+
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+
+import org.greenrobot.eventbus.ThreadMode
 import java.io.InputStream
 import java.util.*
 
@@ -295,13 +300,29 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             timerRepeatRefresh!!.cancel()
     }
 
+    override fun onStart() {
+        super.onStart()
+        if (!EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().register(this)
+    }
+
     override fun onStop() {
         super.onStop()
         nfcManager.onStop()
     }
 
+    override fun onDestroy() {
+        EventBus.getDefault().unregister(this)
+        super.onDestroy()
+    }
+
+    @Subscribe
+    fun onConfirmPaymentFinishWithError(confirmPaymentFinishWithError: ConfirmPaymentFinishWithError) {
+        ctx.error = confirmPaymentFinishWithError.message
+        updateViews()
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-//        var data = data
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
             Constant.REQUEST_CODE_VERIFY_CARD ->
@@ -361,7 +382,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 if (resultCode == Constant.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
                     val intent = Intent(activity, PinRequestActivity::class.java)
-                    intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
+                    intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
                     ctx.saveToIntent(intent)
                     startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
                     return
@@ -396,7 +417,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 if (resultCode == Constant.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
                     val intent = Intent(activity, PinRequestActivity::class.java)
-                    intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
+                    intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
                     ctx.saveToIntent(intent)
                     startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_FOR_PURGE)
                     return
@@ -409,6 +430,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             }
 
             Constant.REQUEST_CODE_SEND_PAYMENT, Constant.REQUEST_CODE_RECEIVE_PAYMENT -> {
+                LOG.i("finishWithError", "REQUEST_CODE_SEND_PAYMENT")
                 if (resultCode == Activity.RESULT_OK) {
                     ctx.coinData?.clearInfo()
                     srl?.postDelayed({ this.refresh() }, 5000)
