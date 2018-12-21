@@ -10,6 +10,8 @@ object Constant {
     const val ERROR = "Error"
 
     const val EXTRA_MODIFICATION = "modification"
+    const val EXTRA_MODIFICATION_DELETE = "delete"
+    const val EXTRA_MODIFICATION_UPDATE = "update"
 
     // LoadedWallet, VerifyCard
     const val REQUEST_CODE_SEND_PAYMENT = 1
@@ -56,5 +58,15 @@ object Constant {
     // ConfirmPaymentActivity
     const val REQUEST_CODE_SIGN_PAYMENT = 1
     const val REQUEST_CODE_REQUEST_PIN2_ = 2
+
+    // SignPaymentActivity
+    const val EXTRA_AMOUNT = "Amount"
+    const val EXTRA_AMOUNT_CURRENCY = "AmountCurrency"
+    const val EXTRA_FEE = "Fee"
+    const val EXTRA_FEE_CURRENCY = "FeeCurrency"
+    const val EXTRA_FEE_INCLUDED = "FeeIncluded"
+    const val EXTRA_TARGET_ADDRESS = "TargetAddress"
+    const val REQUEST_CODE_SEND_PAYMENT_ = 1
+    const val RESULT_INVALID_PIN_ = Activity.RESULT_FIRST_USER
 
 }
