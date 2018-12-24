@@ -24,6 +24,10 @@ class Navigator {
         context.startActivityForResult(PinRequestActivity.callingIntent(context, mode), Constant.REQUEST_CODE_ENTER_PIN_ACTIVITY)
     }
 
+    fun showQrScanActivity(context: Activity, requestCode: Int) {
+        context.startActivityForResult(QrScanActivity.callingIntent(context), requestCode)
+    }
+
     fun showPinRequestRequestPin(context: Activity, mode: String, ctx: TangemContext, newPin: String) {
         context.startActivityForResult(PinRequestActivity.callingIntentRequestPin(context, mode, ctx, newPin), Constant.REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
     }
