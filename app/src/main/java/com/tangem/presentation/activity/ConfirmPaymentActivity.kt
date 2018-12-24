@@ -209,18 +209,19 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             }
             if (resultCode == Constant.RESULT_INVALID_PIN_ && requestPIN2Count < 2) {
                 requestPIN2Count++
+
                 val intent = Intent(baseContext, PinRequestActivity::class.java)
                 intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
                 ctx.saveToIntent(intent)
                 intent.putExtra(Constant.EXTRA_FEE_INCLUDED, isIncludeFee)
                 startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_)
+
                 return
             }
             setResult(resultCode, data)
             finish()
         } else if (requestCode == Constant.REQUEST_CODE_REQUEST_PIN2_) {
             if (resultCode == Activity.RESULT_OK) {
-                LOG.i("SDSDW", "sdwwd")
                 val intent = Intent(baseContext, SignPaymentActivity::class.java)
                 ctx.saveToIntent(intent)
                 intent.putExtra(Constant.EXTRA_TARGET_ADDRESS, etWallet!!.text.toString())
