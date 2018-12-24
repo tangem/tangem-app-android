@@ -31,7 +31,8 @@ import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.presentation.dialog.ShowQRCodeDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
-import com.tangem.presentation.event.ConfirmPaymentFinishWithError
+import com.tangem.presentation.event.TransactionFinishWithError
+import com.tangem.presentation.event.TransactionFinishWithSuccess
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD
@@ -298,8 +299,14 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     @Subscribe
-    fun onConfirmPaymentFinishWithError(confirmPaymentFinishWithError: ConfirmPaymentFinishWithError) {
-        ctx.error = confirmPaymentFinishWithError.message
+    fun onTransactionFinishWithSuccess(transactionFinishWithSuccess: TransactionFinishWithSuccess) {
+        ctx.message = transactionFinishWithSuccess.message
+        updateViews()
+    }
+
+    @Subscribe
+    fun onTransactionFinishWithError(transactionFinishWithError: TransactionFinishWithError) {
+        ctx.error = transactionFinishWithError.message
         updateViews()
     }
 
@@ -423,14 +430,14 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         updatedCard.loadFromBundle(data.getBundleExtra(EXTRA_TANGEM_CARD))
                         ctx.card = updatedCard
                     }
-                    if (data.extras!!.containsKey("message")) {
-                        if (resultCode == Activity.RESULT_OK) {
-                            ctx.message = data.getStringExtra("message")
-                        } else {
-                            ctx.error = data.getStringExtra("message")
-                        }
-                    }
-                    updateViews()
+//                    if (data.extras!!.containsKey("message")) {
+//                        if (resultCode == Activity.RESULT_OK) {
+//                            ctx.message = data.getStringExtra("message")
+//                        } else {
+//                            ctx.error = data.getStringExtra("message")
+//                        }
+//                    }
+//                    updateViews()
                 }
             }
         }
