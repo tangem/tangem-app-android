@@ -46,11 +46,20 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         fun callingIntentRequestPin(context: Activity, mode: String, ctx: TangemContext, newPIN: String): Intent {
             val intent = Intent(context, PinRequestActivity::class.java)
             intent.putExtra(Constant.EXTRA_MODE, mode)
+            intent.putExtra(Constant.EXTRA_NEW_PIN, newPIN)
             ctx.saveToIntent(intent)
             return intent
         }
 
         fun callingIntentRequestPin2(context: Activity, mode: String, ctx: TangemContext, newPIN2: String): Intent {
+            val intent = Intent(context, PinRequestActivity::class.java)
+            intent.putExtra(Constant.EXTRA_MODE, mode)
+            intent.putExtra(Constant.EXTRA_NEW_PIN_2, newPIN2)
+            ctx.saveToIntent(intent)
+            return intent
+        }
+
+        fun callingIntentRequestPin2(context: Activity, mode: String, ctx: TangemContext): Intent {
             val intent = Intent(context, PinRequestActivity::class.java)
             intent.putExtra(Constant.EXTRA_MODE, mode)
             ctx.saveToIntent(intent)
@@ -59,15 +68,15 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
 
         fun callingIntentConfirmPin(context: Activity, mode: String, newPIN: String): Intent {
             val intent = Intent(context, PinRequestActivity::class.java)
-            intent.putExtra(Constant.EXTRA_NEW_PIN, newPIN)
             intent.putExtra(Constant.EXTRA_MODE, mode)
+            intent.putExtra(Constant.EXTRA_NEW_PIN, newPIN)
             return intent
         }
 
-        fun callingIntentConfirmPin2(context: Activity, mode: String, newPin2: String): Intent {
+        fun callingIntentConfirmPin2(context: Activity, mode: String, newPIN2: String): Intent {
             val intent = Intent(context, PinRequestActivity::class.java)
-            intent.putExtra(Constant.EXTRA_NEW_PIN_2, newPin2)
             intent.putExtra(Constant.EXTRA_MODE, mode)
+            intent.putExtra(Constant.EXTRA_NEW_PIN_2, newPIN2)
             return intent
         }
     }
