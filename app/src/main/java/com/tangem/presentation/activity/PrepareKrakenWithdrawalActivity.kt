@@ -15,9 +15,12 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import com.tangem.App
+import com.tangem.Constant
 import com.tangem.data.network.Kraken
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.data.Blockchain
+import com.tangem.di.Navigator
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.wallet.R
@@ -26,13 +29,12 @@ import java.io.IOException
 import java.math.BigDecimal
 import java.net.URI
 import java.util.*
+import javax.inject.Inject
 
 class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     companion object {
         val TAG: String = PrepareKrakenWithdrawalActivity::class.java.simpleName
-
-        private const val REQUEST_CODE_SCAN_QR = 1
     }
 
     private lateinit var ctx: TangemContext
@@ -40,12 +42,15 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
     private var kraken: Kraken? = null
     private var fee: BigDecimal? = null
 
+    @Inject
+    internal lateinit var navigator: Navigator
+
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_kraken_withdrawal)
 
-//        MainActivity.commonInit(applicationContext)
+        App.getNavigatorComponent().inject(this)
 
         nfcManager = NfcManager(this, this)
 
@@ -91,10 +96,8 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
             }
 
         }
-        ivCamera.setOnClickListener {
-            val intent = Intent(baseContext, QrScanActivity::class.java)
-            startActivityForResult(intent, REQUEST_CODE_SCAN_QR)
-        }
+
+        ivCamera.setOnClickListener { navigator.showQrScanActivity(this, Constant.REQUEST_CODE_SCAN_QR) }
 
         ivRefreshBalance.setOnClickListener { doRequestBalance() }
 
@@ -240,7 +243,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK && data != null && data.extras!!.containsKey("QRCode")) {
             when (requestCode) {
-                REQUEST_CODE_SCAN_QR -> {
+                Constant.REQUEST_CODE_SCAN_QR -> {
                     val uri = URI(data.getStringExtra("QRCode"))
                     val query = uri.query
                     val params = query.split("&")
