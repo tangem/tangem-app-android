@@ -1,5 +1,5 @@
 package com.tangem.presentation.event
 
-class ConfirmPaymentFinishWithError {
+class TransactionFinishWithSuccess {
     var message: String? = null
 }
