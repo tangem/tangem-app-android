@@ -369,10 +369,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 }
                 if (resultCode == Constant.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
-                    val intent = Intent(activity, PinRequestActivity::class.java)
-                    intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
-                    ctx.saveToIntent(intent)
-                    startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
+                    (activity as LoadedWalletActivity).navigator.showPinRequestRequestPin2(context as Activity, PinRequestActivity.Mode.RequestPIN2.toString(), ctx)
                     return
                 } else {
                     if (data != null && data.extras!!.containsKey("message")) {
@@ -380,10 +377,6 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     }
                 }
             }
-
-            // TODO unused block, need check and remove it
-//            Constant.REQUEST_CODE_REQUEST_PIN2_FOR_PURGE -> if (resultCode == Activity.RESULT_OK)
-//                (activity as LoadedWalletActivity).navigator.showPurge(context as Activity, ctx)
 
             Constant.REQUEST_CODE_PURGE -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
@@ -403,10 +396,12 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 }
                 if (resultCode == Constant.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
+
                     val intent = Intent(activity, PinRequestActivity::class.java)
                     intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
                     ctx.saveToIntent(intent)
                     startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_FOR_PURGE)
+
                     return
                 } else {
                     if (data != null && data.extras!!.containsKey("message")) {
