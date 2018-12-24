@@ -69,4 +69,13 @@ object Constant {
     const val REQUEST_CODE_SEND_PAYMENT_ = 1
     const val RESULT_INVALID_PIN_ = Activity.RESULT_FIRST_USER
 
+    // PreparePaymentActivity
+    const val REQUEST_CODE_SCAN_QR = 1
+    const val REQUEST_CODE_SEND_PAYMENT__ = 2
+
+    // PrepareCryptonitOtherApiWithdrawalActivity
+    const val REQUEST_CODE_SCAN_QR_KEY = 1
+    const val REQUEST_CODE_SCAN_QR_SECRET = 2
+    const val REQUEST_CODE_SCAN_QR_USER_ID = 3
+
 }
