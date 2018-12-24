@@ -9,13 +9,12 @@ import android.view.KeyEvent
 import android.widget.Toast
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.domain.wallet.*
-import com.tangem.domain.wallet.eth.EthData
-import com.tangem.data.Blockchain
+import com.tangem.presentation.event.TransactionFinishWithError
+import com.tangem.presentation.event.TransactionFinishWithSuccess
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
+import org.greenrobot.eventbus.EventBus
 import java.io.IOException
-import java.lang.Exception
-import java.math.BigInteger
 
 class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
@@ -23,18 +22,13 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         const val EXTRA_TX: String = "TX"
     }
 
-//    private var serverApiInfura: ServerApiInfura = ServerApiInfura()
-//    private var serverApiElectrum: ServerApiElectrum = ServerApiElectrum()
-
     private lateinit var ctx: TangemContext
     private var tx: ByteArray? = null
-    private var nfcManager: NfcManager? = null
+    private lateinit var nfcManager: NfcManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_send_transaction)
-
-//        MainActivity.commonInit(applicationContext)
 
         nfcManager = NfcManager(this, this)
 
@@ -46,11 +40,10 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         engine!!.requestSendTransaction(
                 object : CoinEngine.BlockchainRequestsCallbacks {
                     override fun onComplete(success: Boolean) {
-                        if (success) {
+                        if (success)
                             finishWithSuccess()
-                        } else {
+                        else
                             finishWithError(this@SendTransactionActivity.getString(R.string.try_again_failed_to_send_transaction))
-                        }
                     }
 
                     override fun onProgress() {
@@ -63,65 +56,6 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 tx
         )
 
-
-//        if (ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token)
-//            requestInfura(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION, "")
-//        else if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet)
-//            requestElectrum(ctx, ElectrumRequest.broadcast(ctx.coinData!!.wallet, tx))
-//        else if (ctx.blockchain == Blockchain.BitcoinCash)
-//            requestElectrum(ctx, ElectrumRequest.broadcast(ctx.coinData!!.wallet, tx))
-
-        // request electrum listener
-//        val electrumBodyListener: ServerApiElectrum.ElectrumRequestDataListener = object : ServerApiElectrum.ElectrumRequestDataListener {
-//            override fun onSuccess(electrumRequest: ElectrumRequest?) {
-//                if (electrumRequest!!.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
-//                    try {
-//                        if (electrumRequest.resultString.isNullOrEmpty())
-//                            finishWithError("Rejected by node: " + electrumRequest.getError())
-//                        else
-//                            finishWithSuccess()
-//                    } catch (e: Exception) {
-//                        if (e.message != null) {
-//                            finishWithError(e.message!!)
-//                        } else {
-//                            finishWithError(e.javaClass.name)
-//                        }
-//                    }
-//                }
-//            }
-//
-//            override fun onFail(message: String?) {
-//                finishWithError(message!!)
-//            }
-//        }
-//        serverApiElectrum.setElectrumRequestData(electrumBodyListener)
-
-        // request infura listener
-//        val infuraBodyListener: ServerApiInfura.InfuraBodyListener = object : ServerApiInfura.InfuraBodyListener {
-//            override fun onSuccess(method: String, infuraResponse: InfuraResponse) {
-//                when (method) {
-//                    ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION -> {
-//                        if (infuraResponse.result.isEmpty())
-//                            finishWithError("Rejected by node: " + infuraResponse.error)
-//                        else {
-//                            val nonce = (ctx.coinData!! as EthData).confirmedTXCount
-//                            nonce.add(BigInteger.valueOf(1))
-//                            (ctx.coinData!! as EthData).confirmedTXCount = nonce
-//                            finishWithSuccess()
-//                        }
-//                    }
-//                }
-//            }
-//
-//            override fun onFail(method: String, message: String) {
-//                when (method) {
-//                    ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION -> {
-//                        finishWithError(message)
-//                    }
-//                }
-//            }
-//        }
-//        serverApiInfura.setInfuraResponse(infuraBodyListener)
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -136,42 +70,32 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     public override fun onResume() {
         super.onResume()
-        nfcManager!!.onResume()
+        nfcManager.onResume()
     }
 
     public override fun onPause() {
         super.onPause()
-        nfcManager!!.onPause()
+        nfcManager.onPause()
     }
 
     public override fun onStop() {
         super.onStop()
-        nfcManager!!.onStop()
+        nfcManager.onStop()
     }
 
     override fun onTagDiscovered(tag: Tag) {
         try {
-            nfcManager!!.ignoreTag(tag)
+            nfcManager.ignoreTag(tag)
         } catch (e: IOException) {
             e.printStackTrace()
         }
     }
 
-//    private fun requestInfura(method: String, contract: String) {
-//        if (UtilHelper.isOnline(this)) {
-//            serverApiInfura.infura(method, 67, ctx.coinData!!.wallet, contract, tx)
-//        } else
-//            finishWithError(getString(R.string.no_connection))
-//    }
-
-//    private fun requestElectrum(ctx: TangemContext, electrumRequest: ElectrumRequest) {
-//        if (UtilHelper.isOnline(this)) {
-//            serverApiElectrum.electrumRequestData(ctx, electrumRequest)
-//        } else
-//            finishWithError(getString(R.string.no_connection))
-//    }
-//
     private fun finishWithSuccess() {
+        val transactionFinishWithSuccess = TransactionFinishWithSuccess()
+        transactionFinishWithSuccess.message = getString(R.string.transaction_has_been_successfully_signed)
+        EventBus.getDefault().post(transactionFinishWithSuccess)
+
         val intent = Intent()
         intent.putExtra("message", getString(R.string.transaction_has_been_successfully_signed))
         setResult(RESULT_OK, intent)
@@ -179,6 +103,10 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     }
 
     private fun finishWithError(message: String) {
+        val transactionFinishWithError = TransactionFinishWithError()
+        transactionFinishWithError.message = String.format(getString(R.string.try_again_failed_to_send_transaction), message)
+        EventBus.getDefault().post(transactionFinishWithError)
+
         val intent = Intent()
         intent.putExtra("message", String.format(getString(R.string.try_again_failed_to_send_transaction), message))
         setResult(RESULT_CANCELED, intent)
