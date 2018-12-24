@@ -66,6 +66,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
         // set listeners
         fabMenu.setOnClickListener { showMenu(fabMenu) }
+
         btnOk.setOnClickListener {
             val data = prepareResultIntent()
             data.putExtra(Constant.EXTRA_MODIFICATION, "update")
@@ -89,7 +90,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        var data = data
+//        var data = data
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
             Constant.REQUEST_CODE_ENTER_NEW_PIN -> if (resultCode == Activity.RESULT_OK) {
@@ -142,9 +143,9 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
             Constant.REQUEST_CODE_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
-                    data = Intent()
+//                    data = Intent()
                     ctx.saveToIntent(data)
-                    data.putExtra("modification", "delete")
+                    data?.putExtra("modification", "delete")
                 } else
                     data.putExtra("modification", "update")
                 activity!!.setResult(Activity.RESULT_OK, data)
@@ -174,9 +175,9 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
             Constant.REQUEST_CODE_PURGE -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
-                    data = Intent()
+//                    data = Intent()
                     ctx.saveToIntent(data)
-                    data.putExtra(Constant.EXTRA_MODIFICATION, "delete")
+                    data?.putExtra(Constant.EXTRA_MODIFICATION, "delete")
                 } else {
                     data.putExtra(Constant.EXTRA_MODIFICATION, "update")
                 }
