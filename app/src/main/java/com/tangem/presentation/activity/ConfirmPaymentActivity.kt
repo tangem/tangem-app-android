@@ -17,10 +17,11 @@ import com.tangem.data.Blockchain
 import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
-import com.tangem.presentation.event.ConfirmPaymentFinishWithError
+import com.tangem.presentation.event.TransactionFinishWithError
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
+import com.tangem.util.LOG
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_confirm_payment.*
@@ -219,6 +220,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             finish()
         } else if (requestCode == Constant.REQUEST_CODE_REQUEST_PIN2_) {
             if (resultCode == Activity.RESULT_OK) {
+                LOG.i("SDSDW", "sdwwd")
                 val intent = Intent(baseContext, SignPaymentActivity::class.java)
                 ctx.saveToIntent(intent)
                 intent.putExtra(Constant.EXTRA_TARGET_ADDRESS, etWallet!!.text.toString())
@@ -281,9 +283,9 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     }
 
     private fun finishWithError(errorCode: Int, message: String) {
-        val confirmPaymentFinishWithError = ConfirmPaymentFinishWithError()
-        confirmPaymentFinishWithError.message = message
-        EventBus.getDefault().post(confirmPaymentFinishWithError)
+        val transactionFinishWithError = TransactionFinishWithError()
+        transactionFinishWithError.message = message
+        EventBus.getDefault().post(transactionFinishWithError)
 
         val intent = Intent()
         intent.putExtra("message", message)
