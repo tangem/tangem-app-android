@@ -32,6 +32,10 @@ class Navigator {
         context.startActivityForResult(PinRequestActivity.callingIntentRequestPin2(context, mode, ctx, newPin2), Constant.REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
     }
 
+    fun showPinRequestRequestPin2(context: Activity, mode: String, ctx: TangemContext) {
+        context.startActivityForResult(PinRequestActivity.callingIntentRequestPin2(context, mode, ctx), Constant.REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
+    }
+
     fun showPinRequestConfirmNewPin(context: Activity, mode: String, newPin: String) {
         context.startActivityForResult(PinRequestActivity.callingIntentConfirmPin(context, mode, newPin), Constant.REQUEST_CODE_ENTER_NEW_PIN)
     }
