@@ -12,8 +12,10 @@ import android.text.Html
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Blockchain
+import com.tangem.di.Navigator
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.tangemcard.android.reader.NfcManager
@@ -21,6 +23,7 @@ import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_payment.*
 import java.io.IOException
+import javax.inject.Inject
 
 class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
@@ -32,18 +35,20 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             ctx.saveToIntent(intent)
             return intent
         }
-
-        private const val REQUEST_CODE_SCAN_QR = 1
-        private const val REQUEST_CODE_SEND_PAYMENT = 2
     }
 
     private lateinit var ctx: TangemContext
     private var nfcManager: NfcManager? = null
 
+    @Inject
+    internal lateinit var navigator: Navigator
+
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_payment)
+
+        App.getNavigatorComponent().inject(this)
 
         nfcManager = NfcManager(this, this)
 
@@ -98,7 +103,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             }
 
             var checkAddress = false
-            if (engine1 != null)
+//            if (engine1 != null)
                 checkAddress = engine1.validateAddress(etWallet.text.toString())
 
             // check wallet address
@@ -130,12 +135,10 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             intent.putExtra(Constant.EXTRA_FEE_INCLUDED, (rgIncFee!!.checkedRadioButtonId == R.id.rbFeeIn))
             intent.putExtra(Constant.EXTRA_AMOUNT, strAmount)
             intent.putExtra(Constant.EXTRA_AMOUNT_CURRENCY, tvCurrency.text.toString())
-            startActivityForResult(intent, REQUEST_CODE_SEND_PAYMENT)
+            startActivityForResult(intent, Constant.REQUEST_CODE_SEND_PAYMENT__)
         }
-        ivCamera.setOnClickListener {
-            val intent = Intent(baseContext, QrScanActivity::class.java)
-            startActivityForResult(intent, REQUEST_CODE_SCAN_QR)
-        }
+
+        ivCamera.setOnClickListener { navigator.showQrScanActivity(this, Constant.REQUEST_CODE_SCAN_QR) }
     }
 
     public override fun onResume() {
@@ -155,7 +158,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_SCAN_QR && resultCode == Activity.RESULT_OK && data != null && data.extras!!.containsKey("QRCode")) {
+        if (requestCode == Constant.REQUEST_CODE_SCAN_QR && resultCode == Activity.RESULT_OK && data != null && data.extras!!.containsKey("QRCode")) {
             var code = data.getStringExtra("QRCode")
             when (ctx.blockchain) {
                 Blockchain.Bitcoin -> {
@@ -177,7 +180,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 }
             }
             etWallet!!.setText(code)
-        } else if (requestCode == REQUEST_CODE_SEND_PAYMENT) {
+        } else if (requestCode == Constant.REQUEST_CODE_SEND_PAYMENT__) {
             setResult(resultCode, data)
             finish()
         }
