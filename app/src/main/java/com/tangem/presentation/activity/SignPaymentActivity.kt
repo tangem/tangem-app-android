@@ -130,7 +130,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                     if (tx != null) {
                         val intent = Intent(this, SendTransactionActivity::class.java)
                         ctx.saveToIntent(intent)
-                        intent.putExtra(SendTransactionActivity.EXTRA_TX, tx)
+                        intent.putExtra(Constant.EXTRA_TX, tx)
                         startActivityForResult(intent, Constant.REQUEST_CODE_SEND_PAYMENT_)
                     }
                 }
