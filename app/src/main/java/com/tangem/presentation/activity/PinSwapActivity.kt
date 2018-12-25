@@ -15,14 +15,15 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import com.tangem.App
 import com.tangem.Constant
-import com.tangem.tangemcard.tasks.SwapPINTask
-import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.*
+import com.tangem.tangemcard.reader.CardProtocol
+import com.tangem.tangemcard.tasks.SwapPINTask
 import com.tangem.tangemcard.util.Util
+import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_pin_swap.*
 
@@ -55,8 +56,6 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pin_swap)
 
-//        MainActivity.commonInit(applicationContext)
-
         nfcManager = NfcManager(this, this)
 
         card = TangemCard(intent.getStringExtra(EXTRA_TANGEM_CARD_UID))
@@ -79,17 +78,16 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
                     ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag.id
             val sUID = Util.byteArrayToHexString(uid)
-//            Log.v(TAG, "UID: $sUID")
+            LOG.d(TAG, "UID: $sUID")
 
             if (sUID == card!!.uid) {
                 isoDep.timeout = card!!.pauseBeforePIN2 + 65000
                 swapPinTask = SwapPINTask(card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, newPIN, newPIN2)
                 swapPinTask!!.start()
             } else {
-//                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + mCard!!.uid + ")")
-                nfcManager!!.ignoreTag(isoDep.tag)
+                LOG.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card!!.uid + ")")
+                nfcManager.ignoreTag(isoDep.tag)
             }
-
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -97,11 +95,11 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
 
     public override fun onResume() {
         super.onResume()
-        nfcManager!!.onResume()
+        nfcManager.onResume()
     }
 
     public override fun onPause() {
-        nfcManager!!.onPause()
+        nfcManager.onPause()
         if (swapPinTask != null)
             swapPinTask!!.cancel(true)
         super.onPause()
@@ -109,7 +107,7 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
 
     public override fun onStop() {
         // dismiss enable NFC dialog
-        nfcManager!!.onStop()
+        nfcManager.onStop()
         if (swapPinTask != null)
             swapPinTask!!.cancel(true)
         super.onStop()

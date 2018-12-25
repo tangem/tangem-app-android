@@ -26,7 +26,10 @@ import com.tangem.domain.wallet.BalanceValidator
 import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
-import com.tangem.presentation.activity.*
+import com.tangem.presentation.activity.LoadedWalletActivity
+import com.tangem.presentation.activity.PinRequestActivity
+import com.tangem.presentation.activity.PrepareCryptonitWithdrawalActivity
+import com.tangem.presentation.activity.PrepareKrakenWithdrawalActivity
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.presentation.dialog.ShowQRCodeDialog
@@ -48,10 +51,8 @@ import com.tangem.util.LOG
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
-
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
-
 import java.io.InputStream
 import java.util.*
 
