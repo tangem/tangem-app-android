@@ -6,8 +6,7 @@ object Constant {
 
     const val EXTRA_BLOCKCHAIN_DATA = "BLOCKCHAIN_DATA"
 
-    const val MESSAGE = "Message"
-    const val ERROR = "Error"
+    const val EXTRA_MESSAGE = "message"
 
     const val EXTRA_MODIFICATION = "modification"
     const val EXTRA_MODIFICATION_DELETE = "delete"
@@ -42,6 +41,9 @@ object Constant {
     const val KEY_ALIAS = "pinKey"
     const val KEYSTORE = "AndroidKeyStore"
 
+    // QrScanActivity
+    const val EXTRA_QR_CODE = "QRCode"
+
     // PinSwapActivity
     const val EXTRA_CONFIRM_PIN = "confirmPIN"
     const val EXTRA_CONFIRM_PIN_2 = "confirmPIN2"
@@ -58,6 +60,9 @@ object Constant {
     // ConfirmPaymentActivity
     const val REQUEST_CODE_SIGN_PAYMENT = 1
     const val REQUEST_CODE_REQUEST_PIN2_ = 2
+
+    // SendTransactionActivity
+    const val EXTRA_TX: String = "TX"
 
     // SignPaymentActivity
     const val EXTRA_AMOUNT = "Amount"
