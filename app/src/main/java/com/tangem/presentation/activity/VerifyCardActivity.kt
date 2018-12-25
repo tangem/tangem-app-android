@@ -36,7 +36,7 @@ class VerifyCardActivity : AppCompatActivity() {
         super.onBackPressed()
         val verifyCard = supportFragmentManager.findFragmentById(R.id.verify_card_fragment) as VerifyCard
         val data = verifyCard.prepareResultIntent()
-        data.putExtra(Constant.EXTRA_MODIFICATION, "update")
+        data.putExtra(Constant.EXTRA_MODIFICATION, Constant.EXTRA_MODIFICATION_UPDATE)
         finish()
     }
 
