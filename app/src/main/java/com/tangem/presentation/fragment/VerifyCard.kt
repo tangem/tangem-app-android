@@ -175,7 +175,6 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
             Constant.REQUEST_CODE_PURGE -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
-//                    data = Intent()
                     ctx.saveToIntent(data)
                     data?.putExtra(Constant.EXTRA_MODIFICATION, "delete")
                 } else {
@@ -203,37 +202,11 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 }
                 updateViews()
             }
-
-            // TODO unused block, need check and remove it
-//            Constant.REQUEST_CODE_SEND_PAYMENT -> {
-//                if (resultCode == Activity.RESULT_OK) {
-//                    srlVerifyCard.isRefreshing = true
-//                    ctx.coinData!!.clearInfo()
-//                    //ctx.card!!.switchToInitialBlockchain()
-//                    updateViews()
-//                }
-//
-//                if (data != null) {
-//                    if (data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
-//                        val updatedCard = TangemCard(data.getStringExtra("UID"))
-//                        updatedCard.loadFromBundle(data.getBundleExtra("Card"))
-//                        ctx.card = updatedCard
-//                    }
-//                    if (data.extras!!.containsKey("message")) {
-//                        if (resultCode == Activity.RESULT_OK)
-//                            ctx.message = data.getStringExtra("message")
-//                        else
-//                            ctx.error = data.getStringExtra("message")
-//                    }
-//                    updateViews()
-//                }
-//            }
         }
     }
 
     override fun onTagDiscovered(tag: Tag) {
         try {
-//            Log.w(getClass().getName(), "Ignore discovered tag!");
             nfcManager!!.ignoreTag(tag)
         } catch (e: IOException) {
             e.printStackTrace()
