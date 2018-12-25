@@ -21,7 +21,6 @@ import com.tangem.presentation.event.TransactionFinishWithError
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
-import com.tangem.util.LOG
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_confirm_payment.*
