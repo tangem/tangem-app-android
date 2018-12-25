@@ -16,7 +16,6 @@ import javax.inject.Inject
 class LogoActivity : AppCompatActivity() {
 
     companion object {
-        val TAG: String = LogoActivity::class.java.simpleName
 
         fun callingIntent(context: Context, autoHide: Boolean): Intent {
             val intent = Intent(context, LogoActivity::class.java)
