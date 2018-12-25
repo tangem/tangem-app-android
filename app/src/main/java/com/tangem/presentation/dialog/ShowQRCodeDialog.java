@@ -11,14 +11,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.tangem.util.UtilHelper;
 import com.tangem.wallet.R;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * Created by dvol on 06.03.2018.

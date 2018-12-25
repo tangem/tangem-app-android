@@ -23,6 +23,7 @@ import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.asBundle
 import com.tangem.tangemcard.util.Util
+import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_purge.*
 
@@ -82,14 +83,14 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
             val isoDep = IsoDep.get(tag) ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag.id
             val sUID = Util.byteArrayToHexString(uid)
-//            Log.v(TAG, "UID: $sUID")
+            LOG.d(TAG, "UID: $sUID")
 
             if (sUID == ctx.card!!.uid) {
                 isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 65000
                 purgeTask = PurgeTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
                 purgeTask!!.start()
             } else {
-                //               this Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card.getUID() + ")");
+                LOG.d(TAG, "Mismatch card UID (" + sUID + " instead of " + ctx.card.uid + ")")
                 nfcManager.ignoreTag(isoDep.tag)
             }
 
