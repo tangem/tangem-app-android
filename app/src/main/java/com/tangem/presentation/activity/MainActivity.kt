@@ -43,6 +43,7 @@ import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
 import com.tangem.tangemcard.data.saveToBundle
 import com.tangem.util.CommonUtil
+import com.tangem.util.LOG
 import com.tangem.util.PhoneUtility
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
@@ -205,10 +206,10 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                 try {
                     f = Logger.collectLogs(this)
                     if (f != null) {
-//                        Log.e(TAG, String.format("Collect %d log bytes", f.length()));
+                        LOG.e(TAG, String.format("Collect %d log bytes", f.length()))
                         CommonUtil.sendEmail(this, zipFile, TAG, "Logs", PhoneUtility.getDeviceInfo(), arrayOf(f))
                     } else {
-//                        Log.e(TAG, "Can't create temporaly log file");
+                        LOG.e(TAG, "Can't create temporarily log file")
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -242,7 +243,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
             val isoDep = IsoDep.get(tag)
                     ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
 
-//            Log.e(TAG, "setTimeout(" + String.valueOf(1000 + 3000 * unsuccessReadCount) + ")");
+            LOG.e(TAG, "setTimeout(" + (1000 + 3000 * unsuccessReadCount) + ")")
             if (unsuccessReadCount < 2) {
                 isoDep.timeout = 2000 + 5000 * unsuccessReadCount
             } else {
@@ -253,7 +254,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
             readCardInfoTask = ReadCardInfoTask(NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
             readCardInfoTask!!.start()
 
-//            Log.i(TAG, "onTagDiscovered " + Arrays.toString(tag.getId()));
+            LOG.i(TAG, "onTagDiscovered " + Arrays.toString(tag.id))
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -297,7 +298,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                 rlProgressBar.post {
                     rlProgressBar.visibility = View.GONE
 
-//                    // TODO - ??? remove save and load???
+                    // TODO - ??? remove save and load???
                     val cardInfo = Bundle()
                     cardInfo.putString("UID", cardProtocol.card.uid)
                     val bCard = Bundle()

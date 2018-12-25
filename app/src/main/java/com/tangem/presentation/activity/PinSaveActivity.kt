@@ -68,8 +68,6 @@ class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pin_save)
 
-//        MainActivity.commonInit(applicationContext)
-
         usePIN2 = intent.getBooleanExtra(Constant.EXTRA_PIN2, false)
 
         if (usePIN2)
@@ -229,14 +227,14 @@ class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
     fun initCipher(mode: Int): Boolean {
         try {
             keyStore!!.load(null)
-            val keyspec = keyStore!!.getKey(Constant.KEY_ALIAS, null) as SecretKey
+            val keySpec = keyStore!!.getKey(Constant.KEY_ALIAS, null) as SecretKey
 
             if (mode == Cipher.ENCRYPT_MODE) {
-                cipher!!.init(mode, keyspec)
+                cipher!!.init(mode, keySpec)
             } else {
                 val iv = PINStorage.loadEncryptedIV()
-                val ivspec = IvParameterSpec(iv)
-                cipher!!.init(mode, keyspec, ivspec)
+                val ivSpec = IvParameterSpec(iv)
+                cipher!!.init(mode, keySpec, ivSpec)
             }
 
             return true
@@ -314,7 +312,6 @@ class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
                     }
 
                     // show a progress spinner, and kick off a background task to perform the user login attempt
-                    //showProgress(true);
                     confirmWithFingerprintTask = ConfirmWithFingerprintTask(this@PinSaveActivity)
                     confirmWithFingerprintTask!!.execute(null as Void?)
                 } else {
