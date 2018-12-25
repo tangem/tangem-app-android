@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AppCompatActivity
 import com.google.zxing.Result
+import com.tangem.Constant
 import me.dm7.barcodescanner.zxing.ZXingScannerView
 
 class QrScanActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
@@ -54,7 +55,7 @@ class QrScanActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
 
     override fun handleResult(result: Result) {
         val data = Intent()
-        data.putExtra("QRCode", result.text)
+        data.putExtra(Constant.EXTRA_QR_CODE, result.text)
         setResult(Activity.RESULT_OK, data)
         finish()
     }

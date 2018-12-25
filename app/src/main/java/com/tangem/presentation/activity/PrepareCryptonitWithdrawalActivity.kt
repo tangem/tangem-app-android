@@ -22,7 +22,6 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_cryptonit_withdrawal.*
 import java.io.IOException
 
-
 class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     companion object {
@@ -38,8 +37,6 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_cryptonit_withdrawal)
-
-//        MainActivity.commonInit(applicationContext)
 
         nfcManager = NfcManager(this, this)
 
@@ -89,11 +86,10 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
 
         // set listeners
         btnLoad.setOnClickListener {
-
             try {
                 val strAmount: String = etAmount.text.toString().replace(",", ".")
                 val strFee: String = etFee.text.toString().replace(",", ".")
-                var dblAmount: Double = strAmount.toDouble()
+                val dblAmount: Double = strAmount.toDouble()
                 var dblFee: Double = strFee.toDouble()
                 cryptonit!!.fee = strFee
 
