@@ -16,17 +16,18 @@ import android.widget.Toast
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.di.Navigator
-import com.tangem.tangemcard.tasks.VerifyCardTask
-import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.android.reader.NfcManager
-import com.tangem.tangemcard.data.TangemCard
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
+import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.asBundle
 import com.tangem.tangemcard.data.loadFromBundle
+import com.tangem.tangemcard.reader.CardProtocol
+import com.tangem.tangemcard.tasks.VerifyCardTask
 import com.tangem.tangemcard.util.Util
+import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_empty_wallet.*
 import javax.inject.Inject
@@ -34,6 +35,8 @@ import javax.inject.Inject
 class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
 
     companion object {
+        val TAG: String = EmptyWalletActivity::class.java.simpleName
+
         fun callingIntent(context: Context, ctx: TangemContext): Intent {
             val intent = Intent(context, EmptyWalletActivity::class.java)
             ctx.saveToIntent(intent)
@@ -61,7 +64,7 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
         tvIssuer.text = ctx.card!!.issuerDescription
-        //tvBlockchain.text = ctx.card!!.blockchainName
+
         if (ctx.card!!.tokenSymbol.length > 1) {
             val html = Html.fromHtml(ctx.blockchainName)
             tvBlockchain.text = html
@@ -154,7 +157,6 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
             finish()
         } else if (requestCode == Constant.REQUEST_CODE_REQUEST_PIN2) {
             if (resultCode == Activity.RESULT_OK) {
-//                doCreateNewWallet()
                 navigator.showCreateNewWallet(this, ctx)
             }
         }
@@ -167,11 +169,11 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
             val uid = tag.id
             val sUID = Util.byteArrayToHexString(uid)
             if (ctx.card!!.uid != sUID) {
-//                Log.d(TAG, "Invalid UID: " + sUID);
+                LOG.d(TAG, "Invalid UID: $sUID")
                 nfcManager.ignoreTag(isoDep.tag)
                 return
             } else {
-//                Log.v(TAG, "UID: " + sUID);
+                LOG.d(TAG, "UID: $sUID")
             }
 
             if (lastReadSuccess) {
