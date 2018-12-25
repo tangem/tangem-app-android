@@ -11,12 +11,12 @@ import android.support.v7.app.AppCompatActivity
 import android.view.View
 import com.tangem.App
 import com.tangem.Constant
+import com.tangem.data.Blockchain
 import com.tangem.data.network.CryptonitOtherApi
-import com.tangem.tangemcard.android.reader.NfcManager
+import com.tangem.di.Navigator
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
-import com.tangem.data.Blockchain
-import com.tangem.di.Navigator
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_cryptonit_other_api_withdrawal.*
 import java.io.IOException
@@ -26,10 +26,6 @@ class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapt
 
     companion object {
         val TAG: String = PrepareCryptonitOtherApiWithdrawalActivity::class.java.simpleName
-
-
-
-
     }
 
     private lateinit var ctx: TangemContext
@@ -67,7 +63,6 @@ class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapt
 
         // set listeners
         btnLoad.setOnClickListener {
-
             try {
                 val strAmount: String = etAmount.text.toString().replace(",", ".")
 //                if (!engine.checkAmount(card, strAmount))
