@@ -7,20 +7,19 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.KeyEvent
 import android.widget.Toast
-import com.tangem.tangemcard.android.reader.NfcManager
-import com.tangem.domain.wallet.*
+import com.tangem.Constant
+import com.tangem.domain.wallet.CoinEngine
+import com.tangem.domain.wallet.CoinEngineFactory
+import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.event.TransactionFinishWithError
 import com.tangem.presentation.event.TransactionFinishWithSuccess
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import org.greenrobot.eventbus.EventBus
 import java.io.IOException
 
 class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
-
-    companion object {
-        const val EXTRA_TX: String = "TX"
-    }
 
     private lateinit var ctx: TangemContext
     private var tx: ByteArray? = null
@@ -33,7 +32,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         nfcManager = NfcManager(this, this)
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
-        tx = intent.getByteArrayExtra(EXTRA_TX)
+        tx = intent.getByteArrayExtra(Constant.EXTRA_TX)
 
         val engine = CoinEngineFactory.create(ctx)
 
@@ -55,7 +54,6 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 },
                 tx
         )
-
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -97,7 +95,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         EventBus.getDefault().post(transactionFinishWithSuccess)
 
         val intent = Intent()
-        intent.putExtra("message", getString(R.string.transaction_has_been_successfully_signed))
+        intent.putExtra(Constant.EXTRA_MESSAGE, getString(R.string.transaction_has_been_successfully_signed))
         setResult(RESULT_OK, intent)
         finish()
     }
@@ -108,7 +106,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         EventBus.getDefault().post(transactionFinishWithError)
 
         val intent = Intent()
-        intent.putExtra("message", String.format(getString(R.string.try_again_failed_to_send_transaction), message))
+        intent.putExtra(Constant.EXTRA_MESSAGE, String.format(getString(R.string.try_again_failed_to_send_transaction), message))
         setResult(RESULT_CANCELED, intent)
         finish()
     }
