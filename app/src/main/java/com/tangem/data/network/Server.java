@@ -44,5 +44,4 @@ public class Server {
             static final String N_6 = URL_ESTIMATEFEE + "n/6";
         }
     }
-
 }
