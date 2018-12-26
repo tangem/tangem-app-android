@@ -38,6 +38,7 @@ import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.RootFoundDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.presentation.dialog.WaitSecurityDelayDialogNew
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
@@ -83,6 +84,9 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+//        val waitSecurityDelayDialogNew = WaitSecurityDelayDialogNew()
+//        waitSecurityDelayDialogNew.show(supportFragmentManager, WaitSecurityDelayDialogNew.TAG)
 
         App.getNavigatorComponent().inject(this)
 
