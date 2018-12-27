@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatDialogFragment
 import android.widget.ProgressBar
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.dialog_wait_pin2.*
 import java.util.*
 
 class WaitSecurityDelayDialogNew : AppCompatDialogFragment() {
@@ -31,10 +30,7 @@ class WaitSecurityDelayDialogNew : AppCompatDialogFragment() {
         val inflater = activity!!.layoutInflater
         val v = inflater.inflate(R.layout.dialog_wait_pin2, null)
 
-        isCancelable = false
-
         pb = v.findViewById(R.id.progressBar)
-
 
         pb.max = msTimeout
         pb.progress = msProgress
@@ -67,7 +63,8 @@ class WaitSecurityDelayDialogNew : AppCompatDialogFragment() {
             override fun run() {
                 setup(timeout, DELAY_BEFORE_SHOW_DIALOG)
                 isCancelable = false
-                show(activity?.supportFragmentManager, TAG)
+//                if (!isVisible)
+                    show(activity?.supportFragmentManager, TAG)
             }
         }, DELAY_BEFORE_SHOW_DIALOG.toLong())
 
@@ -96,7 +93,8 @@ class WaitSecurityDelayDialogNew : AppCompatDialogFragment() {
             // 1000ms - card delay notification interval
             setup(msec + 1000, 1000)
             isCancelable = false
-            show(activity?.supportFragmentManager, TAG)
+//            if (!isVisible)
+                show(activity?.supportFragmentManager, TAG)
 
         } else
             setRemainingTimeout(msec)
@@ -119,7 +117,7 @@ class WaitSecurityDelayDialogNew : AppCompatDialogFragment() {
             } else {
                 val newProgress = pb.max - msec
                 if (pb.max > progress)
-                    progressBar.progress = newProgress
+                    pb.progress = newProgress
                 else
                     pb.max = progress + msec
             }
