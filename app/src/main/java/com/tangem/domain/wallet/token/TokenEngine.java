@@ -109,7 +109,7 @@ public class TokenEngine extends CoinEngine {
             if (coinData.getBalanceInInternalUnits().notZero()) {
                 return currency;
             } else {
-                return "ETH";
+                return Blockchain.Ethereum.getCurrency();
             }
         } else {
             return currency;
@@ -128,7 +128,7 @@ public class TokenEngine extends CoinEngine {
 
     @Override
     public String getFeeCurrency() {
-        return "ETH";
+        return Blockchain.Ethereum.getCurrency();
     }
 
     @Override
@@ -227,7 +227,7 @@ public class TokenEngine extends CoinEngine {
     public Amount convertToAmount(InternalAmount internalAmount) throws Exception {
         if (internalAmount.getCurrency().equals("wei")) {
             BigDecimal d = internalAmount.divide(new BigDecimal("1000000000000000000"), getEthDecimals(), RoundingMode.DOWN);
-            return new Amount(d, "ETH");
+            return new Amount(d, Blockchain.Ethereum.getCurrency());
         } else if (internalAmount.getCurrency().equals(ctx.getCard().getTokenSymbol())) {
             BigDecimal p = new BigDecimal(10);
             p = p.pow(getTokenDecimals());
@@ -244,7 +244,7 @@ public class TokenEngine extends CoinEngine {
 
     @Override
     public InternalAmount convertToInternalAmount(Amount amount) throws Exception {
-        if (amount.getCurrency().equals("ETH")) {
+        if (amount.getCurrency().equals(Blockchain.Ethereum.getCurrency())) {
             BigDecimal d = amount.multiply(new BigDecimal("1000000000000000000"));
             return new InternalAmount(d, "wei");
         } else if (amount.getCurrency().equals(ctx.getCard().getTokenSymbol())) {
@@ -325,7 +325,7 @@ public class TokenEngine extends CoinEngine {
         try {
             if (amount.getCurrency().equals(ctx.getCard().tokenSymbol)) {
                 balance = convertToAmount(coinData.getBalanceInInternalUnits());
-            } else if (amount.getCurrency().equals("ETH") && coinData.getBalanceInInternalUnits().isZero()) {
+            } else if (amount.getCurrency().equals(Blockchain.Ethereum.getCurrency()) && coinData.getBalanceInInternalUnits().isZero()) {
                 balance = convertToAmount(coinData.getBalanceAlterInInternalUnits());
             } else {
                 return false;
@@ -342,7 +342,7 @@ public class TokenEngine extends CoinEngine {
         if (!hasBalanceInfo()) return false;
 
         try {
-            Amount balance = convertToAmount(coinData.getBalanceAlterInInternalUnits());
+            Amount balanceETH = convertToAmount(coinData.getBalanceAlterInInternalUnits());
 
             if (fee == null || amount == null || fee.isZero() || amount.isZero())
                 return false;
@@ -350,22 +350,20 @@ public class TokenEngine extends CoinEngine {
 
             if (amount.getCurrency().equals(ctx.getCard().tokenSymbol)) {
                 // token transaction
-                if (fee.compareTo(balance) > 0)
+                if (fee.compareTo(balanceETH) > 0)
                     return false;
-            } else if (amount.getCurrency().equals("ETH") && coinData.getBalanceInInternalUnits().isZero()) {
+            } else if (amount.getCurrency().equals(Blockchain.Ethereum.getCurrency()) && coinData.getBalanceInInternalUnits().isZero()) {
                 // standard ETH transaction
-                try {
-                    BigDecimal cardBalance = getBalance();
-
-                    if (isFeeIncluded && amount.compareTo(cardBalance) > 0)
+//                try {
+                    if (isFeeIncluded && (amount.compareTo(balanceETH) > 0 || fee.compareTo(balanceETH) > 0))
                         return false;
 
-                    if (!isFeeIncluded && amount.add(fee).compareTo(cardBalance) > 0)
+                    if (!isFeeIncluded && amount.add(fee).compareTo(balanceETH) > 0)
                         return false;
 
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
-                }
+//                } catch (NumberFormatException e) {
+//                    e.printStackTrace();
+//                }
             } else
 
             {
@@ -434,7 +432,7 @@ public class TokenEngine extends CoinEngine {
 
     @Override
     public SignTask.PaymentToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
-        if (amountValue.getCurrency().equals("ETH")) {
+        if (amountValue.getCurrency().equals(Blockchain.Ethereum.getCurrency())) {
             return constructPaymentETH(feeValue, amountValue, IncFee, targetAddress);
         } else {
             return constructPaymentToken(feeValue, amountValue, IncFee, targetAddress);
@@ -511,11 +509,11 @@ public class TokenEngine extends CoinEngine {
                 tx.signature = new ECDSASignatureETH(r, s);
                 int v = tx.BruteRecoveryID2(tx.signature, for_hash, pbKey);
                 if (v != 27 && v != 28) {
-                    Log.e("ETH", "invalid v");
+                    Log.e(TAG, "invalid v");
                     throw new Exception("Error in EthEngine - invalid v");
                 }
                 tx.signature.v = (byte) v;
-                Log.e("ETH_v", String.valueOf(v));
+                Log.e(TAG,"ETH_v "+ String.valueOf(v));
 
                 byte[] txForSend = tx.getEncoded();
                 notifyOnNeedSendPayment(txForSend);
@@ -619,11 +617,11 @@ public class TokenEngine extends CoinEngine {
                 tx.signature = new ECDSASignatureETH(r, s);
                 int v = tx.BruteRecoveryID2(tx.signature, for_hash, pbKey);
                 if (v != 27 && v != 28) {
-                    Log.e("ETH", "invalid v");
+                    Log.e(TAG, "invalid v");
                     throw new Exception("Error in EthEngine - invalid v");
                 }
                 tx.signature.v = (byte) v;
-                Log.e("ETH_v", String.valueOf(v));
+                Log.e(TAG,"ETH_v: "+ String.valueOf(v));
 
                 byte[] txForSend = tx.getEncoded();
                 notifyOnNeedSendPayment(txForSend);
