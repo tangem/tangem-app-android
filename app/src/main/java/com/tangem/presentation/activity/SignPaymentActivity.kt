@@ -20,12 +20,14 @@ import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.presentation.dialog.WaitSecurityDelayDialogNew
 import com.tangem.tangemcard.reader.CardProtocol
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.asBundle
 import com.tangem.tangemcard.tasks.SignTask
 import com.tangem.tangemcard.util.Util
+import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_sign_payment.*
 
@@ -252,16 +254,29 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         }, 500)
     }
 
-    override fun onReadWait(msec: Int) {
-        WaitSecurityDelayDialog.onReadWait(this, msec)
-    }
+    private val waitSecurityDelayDialogNew = WaitSecurityDelayDialogNew()
 
     override fun onReadBeforeRequest(timeout: Int) {
+        LOG.i(TAG, "onReadBeforeRequest timeout $timeout")
         WaitSecurityDelayDialog.onReadBeforeRequest(this, timeout)
+
     }
 
     override fun onReadAfterRequest() {
+        LOG.i(TAG, "onReadAfterRequest")
         WaitSecurityDelayDialog.onReadAfterRequest(this)
+
     }
+
+    override fun onReadWait(msec: Int) {
+        LOG.i(TAG, "onReadWait msec $msec")
+        WaitSecurityDelayDialog.onReadWait(this, msec)
+
+
+    }
+
+
+
+
 
 }
