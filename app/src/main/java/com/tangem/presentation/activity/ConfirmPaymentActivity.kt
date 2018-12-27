@@ -62,7 +62,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         amount = CoinEngine.Amount(intent.getStringExtra(Constant.EXTRA_AMOUNT), intent.getStringExtra(Constant.EXTRA_AMOUNT_CURRENCY))
 
-        if (ctx.blockchain == Blockchain.Token && amount.currency != "ETH")
+        if (ctx.blockchain == Blockchain.Token && amount.currency != Blockchain.Ethereum.currency)
             tvIncFee.visibility = View.INVISIBLE
         else
             tvIncFee.visibility = View.VISIBLE
