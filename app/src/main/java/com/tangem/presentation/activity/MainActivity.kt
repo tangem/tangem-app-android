@@ -85,9 +85,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//        val waitSecurityDelayDialogNew = WaitSecurityDelayDialogNew()
-//        waitSecurityDelayDialogNew.show(supportFragmentManager, WaitSecurityDelayDialogNew.TAG)
-
         App.getNavigatorComponent().inject(this)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
