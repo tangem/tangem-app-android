@@ -21,6 +21,10 @@ import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialogNew
+import com.tangem.presentation.event.ReadAfterRequest
+import com.tangem.presentation.event.ReadBeforeRequest
+import com.tangem.presentation.event.ReadWait
+import com.tangem.presentation.event.TransactionFinishWithError
 import com.tangem.tangemcard.reader.CardProtocol
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
@@ -30,6 +34,7 @@ import com.tangem.tangemcard.util.Util
 import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_sign_payment.*
+import org.greenrobot.eventbus.EventBus
 
 class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
 
@@ -257,26 +262,38 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
     private val waitSecurityDelayDialogNew = WaitSecurityDelayDialogNew()
 
     override fun onReadBeforeRequest(timeout: Int) {
-        LOG.i(TAG, "onReadBeforeRequest timeout $timeout")
-        WaitSecurityDelayDialog.onReadBeforeRequest(this, timeout)
+//        LOG.i(TAG, "onReadBeforeRequest timeout $timeout")
+//        WaitSecurityDelayDialog.onReadBeforeRequest(this, timeout)
+
+        if (!waitSecurityDelayDialogNew.isAdded)
+            waitSecurityDelayDialogNew.show(supportFragmentManager, WaitSecurityDelayDialogNew.TAG)
+
+
+        val readBeforeRequest = ReadBeforeRequest()
+        readBeforeRequest.timeout = timeout
+        EventBus.getDefault().post(readBeforeRequest)
 
     }
 
     override fun onReadAfterRequest() {
-        LOG.i(TAG, "onReadAfterRequest")
-        WaitSecurityDelayDialog.onReadAfterRequest(this)
+//        LOG.i(TAG, "onReadAfterRequest")
+//        WaitSecurityDelayDialog.onReadAfterRequest(this)
+
+        val readAfterRequest = ReadAfterRequest()
+        EventBus.getDefault().post(readAfterRequest)
 
     }
 
     override fun onReadWait(msec: Int) {
-        LOG.i(TAG, "onReadWait msec $msec")
-        WaitSecurityDelayDialog.onReadWait(this, msec)
+//        LOG.i(TAG, "onReadWait msec $msec")
+//        WaitSecurityDelayDialog.onReadWait(this, msec)
+
+        val readWait = ReadWait()
+        readWait.msec = msec
+        EventBus.getDefault().post(readWait)
 
 
     }
-
-
-
 
 
 }
