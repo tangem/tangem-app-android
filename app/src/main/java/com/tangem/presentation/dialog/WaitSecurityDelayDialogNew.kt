@@ -6,7 +6,15 @@ import android.app.Dialog
 import android.os.Bundle
 import android.support.v7.app.AppCompatDialogFragment
 import android.widget.ProgressBar
+import com.tangem.presentation.activity.SignPaymentActivity
+import com.tangem.presentation.event.ReadAfterRequest
+import com.tangem.presentation.event.ReadBeforeRequest
+import com.tangem.presentation.event.ReadWait
+import com.tangem.presentation.event.TransactionFinishWithSuccess
+import com.tangem.util.LOG
 import com.tangem.wallet.R
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
 import java.util.*
 
 class WaitSecurityDelayDialogNew : AppCompatDialogFragment() {
@@ -54,23 +62,38 @@ class WaitSecurityDelayDialogNew : AppCompatDialogFragment() {
                 .create()
     }
 
-    fun onReadBeforeRequest(timeout: Int) {
-        if (timerToShowDelayDialog != null || timeout < DELAY_BEFORE_SHOW_DIALOG + MIN_REMAINING_DELAY_TO_SHOW_DIALOG)
+    override fun onStart() {
+        super.onStart()
+        EventBus.getDefault().register(this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        EventBus.getDefault().unregister(this)
+    }
+
+    @Subscribe
+    fun readBeforeRequest(readBeforeRequest: ReadBeforeRequest) {
+        LOG.i(TAG, "readBeforeRequest 111")
+
+        if (timerToShowDelayDialog != null || readBeforeRequest.timeout!! < DELAY_BEFORE_SHOW_DIALOG + MIN_REMAINING_DELAY_TO_SHOW_DIALOG)
             return
 
         timerToShowDelayDialog = Timer()
         timerToShowDelayDialog!!.schedule(object : TimerTask() {
             override fun run() {
-                setup(timeout, DELAY_BEFORE_SHOW_DIALOG)
+                setup(readBeforeRequest.timeout!!, DELAY_BEFORE_SHOW_DIALOG)
                 isCancelable = false
-//                if (!isVisible)
+                if (!isAdded)
                     show(activity?.supportFragmentManager, TAG)
             }
         }, DELAY_BEFORE_SHOW_DIALOG.toLong())
-
     }
 
-    fun onReadAfterRequest() {
+    @Subscribe
+    fun readAfterRequest(readAfterRequest: ReadAfterRequest) {
+        LOG.i(TAG, "readAfterRequest 222")
+
         if (timerToShowDelayDialog == null)
             return
 
@@ -78,26 +101,74 @@ class WaitSecurityDelayDialogNew : AppCompatDialogFragment() {
         timerToShowDelayDialog = null
     }
 
-    fun onReadWait(msec: Int) {
+    @Subscribe
+    fun readWait(readWait: ReadWait) {
+        LOG.i(TAG, "readWait 333")
+
         if (timerToShowDelayDialog != null) {
             timerToShowDelayDialog!!.cancel()
             timerToShowDelayDialog = null
         }
 
-        if (msec == 0) {
+        if (readWait.msec == 0) {
             dismiss()
             return
         }
 
-        if (msec > MIN_REMAINING_DELAY_TO_SHOW_DIALOG) {
+        if (readWait.msec!! > MIN_REMAINING_DELAY_TO_SHOW_DIALOG) {
             // 1000ms - card delay notification interval
-            setup(msec + 1000, 1000)
+            setup(readWait.msec!! + 1000, 1000)
             isCancelable = false
-//            if (!isVisible)
-                show(activity?.supportFragmentManager, TAG)
+//            if (!isAdded)
+//                show(activity?.supportFragmentManager, TAG)
 
         } else
-            setRemainingTimeout(msec)
+            setRemainingTimeout(readWait.msec!!)
+    }
+
+    fun onReadBeforeRequest(timeout: Int) {
+//        if (timerToShowDelayDialog != null || timeout < DELAY_BEFORE_SHOW_DIALOG + MIN_REMAINING_DELAY_TO_SHOW_DIALOG)
+//            return
+//
+//        timerToShowDelayDialog = Timer()
+//        timerToShowDelayDialog!!.schedule(object : TimerTask() {
+//            override fun run() {
+//                setup(timeout, DELAY_BEFORE_SHOW_DIALOG)
+//                isCancelable = false
+//                if (!isVisible)
+//                    show(activity?.supportFragmentManager, TAG)
+//            }
+//        }, DELAY_BEFORE_SHOW_DIALOG.toLong())
+    }
+
+    fun onReadAfterRequest() {
+//        if (timerToShowDelayDialog == null)
+//            return
+//
+//        timerToShowDelayDialog!!.cancel()
+//        timerToShowDelayDialog = null
+    }
+
+    fun onReadWait(msec: Int) {
+//        if (timerToShowDelayDialog != null) {
+//            timerToShowDelayDialog!!.cancel()
+//            timerToShowDelayDialog = null
+//        }
+//
+//        if (msec == 0) {
+//            dismiss()
+//            return
+//        }
+//
+//        if (msec > MIN_REMAINING_DELAY_TO_SHOW_DIALOG) {
+//            // 1000ms - card delay notification interval
+//            setup(msec + 1000, 1000)
+//            isCancelable = false
+////            if (!isVisible)
+//            show(activity?.supportFragmentManager, TAG)
+//
+//        } else
+//            setRemainingTimeout(msec)
     }
 
     private fun setup(msTimeout: Int, msProgress: Int) {
