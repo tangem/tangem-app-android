@@ -18,11 +18,19 @@ public class BtcData extends CoinData {
     private Long balanceConfirmed, balanceUnconfirmed;
 
     public String getUnspentInputsDescription() {
-        int gatheredUnspents = 0;
-        for (int i=0; i<unspentTransactions.size(); i++) {
-            if (unspentTransactions.get(i).Raw.length() > 1)  gatheredUnspents++;
+        try {
+            int gatheredUnspents = 0;
+            if( unspentTransactions==null ) return "";
+            for (int i = 0; i < unspentTransactions.size(); i++) {
+                if (unspentTransactions.get(i).Raw != null && unspentTransactions.get(i).Raw.length() > 1) gatheredUnspents++;
+            }
+            return String.valueOf(unspentTransactions.size()) + " unspents (" + String.valueOf(gatheredUnspents) + " received)";
         }
-        return String.valueOf(unspentTransactions.size()) + " unspents (" + String.valueOf(gatheredUnspents) + " received)";
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return "";
+        }
     }
 
     public static class UnspentTransaction {
