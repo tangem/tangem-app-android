@@ -82,7 +82,7 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public String getBalanceCurrency() {
-        return "ETH";
+        return Blockchain.Ethereum.getCurrency();
     }
 
     @Override
@@ -101,7 +101,7 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public String getFeeCurrency() {
-        return "ETH";
+        return Blockchain.Ethereum.getCurrency();
     }
 
     public boolean isNeedCheckNode() {
@@ -445,11 +445,11 @@ public class EthEngine extends CoinEngine {
                 tx.signature = new ECDSASignatureETH(r, s);
                 int v = tx.BruteRecoveryID2(tx.signature, for_hash, pbKey);
                 if (v != 27 && v != 28) {
-                    Log.e("ETH", "invalid v");
+                    Log.e(TAG, "invalid v");
                     throw new Exception("Error in EthEngine - invalid v");
                 }
                 tx.signature.v = (byte) v;
-                Log.e("ETH_v", String.valueOf(v));
+                Log.e(TAG, "ETH_v: " +String.valueOf(v));
 
                 byte[] txForSend = tx.getEncoded();
                 notifyOnNeedSendPayment(txForSend);
