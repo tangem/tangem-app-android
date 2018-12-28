@@ -55,6 +55,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import java.io.InputStream
 import java.util.*
+import kotlin.concurrent.timerTask
 
 class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, SharedPreferences.OnSharedPreferenceChangeListener {
     companion object {
@@ -83,14 +84,12 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         set(value) {
             field = value
             LOG.i(TAG, "requestCounter, set $field")
-            if (field <= 0 && srl != null && srl.isRefreshing) {
+            if (field <= 0) {
                 LOG.e(TAG, "+++++++++++ FINISH REFRESH")
-                if (srl != null) srl!!.isRefreshing = false
+                if (srl != null && srl.isRefreshing) srl.isRefreshing = false
                 //updateViews()
-            }
+            } else if (srl != null && !srl.isRefreshing) srl.isRefreshing = true
         }
-    private var timerRepeatRefresh: Timer? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         nfcManager = NfcManager(activity, this)
@@ -279,8 +278,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     override fun onPause() {
         super.onPause()
         nfcManager.onPause()
-        if (timerRepeatRefresh != null)
-            timerRepeatRefresh!!.cancel()
+        if (timerHideErrorAndMessage != null) {
+            timerHideErrorAndMessage!!.cancel()
+            timerHideErrorAndMessage = null
+        }
     }
 
     override fun onStart() {
@@ -302,7 +303,10 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     @Subscribe
     fun onTransactionFinishWithSuccess(transactionFinishWithSuccess: TransactionFinishWithSuccess) {
         ctx.message = transactionFinishWithSuccess.message
+        ctx.coinData.clearInfo()
         updateViews()
+        srl?.isRefreshing=true
+        srl?.postDelayed({ refresh() }, 5000)
     }
 
     @Subscribe
@@ -512,7 +516,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     fun updateViews() {
-        if (activity == null || !UtilHelper.isOnline(activity!!)) return
+        if (activity == null) return
 
         if (timerHideErrorAndMessage != null) {
             timerHideErrorAndMessage!!.cancel()
@@ -533,6 +537,21 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         } else {
             tvMessage.text = ctx.message
             tvMessage.visibility = View.VISIBLE
+        }
+
+        if (tvError.visibility == View.VISIBLE || tvMessage.visibility == View.VISIBLE) {
+            timerHideErrorAndMessage = Timer()
+            timerHideErrorAndMessage!!.schedule(
+                    timerTask {
+                        activity?.runOnUiThread {
+                            tvMessage?.visibility = View.GONE
+                            tvError?.visibility = View.GONE
+                            // clear only already viewed messages
+                            if (tvMessage.text == ctx.message) ctx.message = null
+                            if (tvError.text == ctx.error) ctx.error = null
+                        }
+                    },
+                    5000)
         }
 
         if (srl!!.isRefreshing) {
@@ -599,63 +618,61 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         updateViews()
 
+        // Bitcoin
+        // Litecoin
+        // BitcoinCash
+        if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet ||
+                ctx.blockchain == Blockchain.Litecoin || ctx.blockchain == Blockchain.BitcoinCash) {
+            ctx.coinData.setIsBalanceEqual(true)
+        }
+
         requestVerifyAndGetInfo()
 
-        val coinEngine = CoinEngineFactory.create(ctx)
-        requestCounter++
-        coinEngine!!.requestBalanceAndUnspentTransactions(
-                object : CoinEngine.BlockchainRequestsCallbacks {
-                    override fun onComplete(success: Boolean) {
-                        LOG.i(TAG, "requestBalanceAndUnspentTransactions onComplete: " + success.toString() + ", request counter " + requestCounter.toString())
-                        if (activity == null || !UtilHelper.isOnline(activity!!)) return
-                        requestCounter--
-                        if (!success) {
-                            LOG.e(TAG, "ctx.error: " + ctx.error)
+        requestBalanceAndUnspentTransactions()
+
+        requestRateInfo()
+
+        if( requestCounter==0 )
+        {
+            // if no connection and no requests posted
+            srl?.isRefreshing = false
+            updateViews()
+        }
+    }
+
+    private fun requestBalanceAndUnspentTransactions() {
+        if (UtilHelper.isOnline(context as Activity)) {
+            val coinEngine = CoinEngineFactory.create(ctx)
+            requestCounter++
+            coinEngine!!.requestBalanceAndUnspentTransactions(
+                    object : CoinEngine.BlockchainRequestsCallbacks {
+                        override fun onComplete(success: Boolean) {
+                            LOG.i(TAG, "requestBalanceAndUnspentTransactions onComplete: " + success.toString() + ", request counter " + requestCounter.toString())
+                            if (activity == null) return
+                            requestCounter--
+                            if (!success) {
+                                LOG.e(TAG, "requestBalanceAndUnspentTransactions ctx.error: " + ctx.error)
+                            }
+//                            if (!UtilHelper.isOnline(activity!!)) {
+//                                ctx.error = getString(R.string.no_connection)
+//                            }
+                            updateViews()
                         }
-                        updateViews()
+
+                        override fun onProgress() {
+                            if (activity == null) return
+                            LOG.i(TAG, "requestBalanceAndUnspentTransactions onProgress")
+                            updateViews()
+                        }
+
+                        override fun allowAdvance(): Boolean {
+                            return UtilHelper.isOnline(context as Activity)
+                        }
                     }
-
-                    override fun onProgress() {
-                        if (activity == null || !UtilHelper.isOnline(activity!!)) return
-                        LOG.i(TAG, "requestBalanceAndUnspentTransactions onProgress")
-                        updateViews()
-                    }
-
-                    override fun allowAdvance(): Boolean {
-                        return UtilHelper.isOnline(context as Activity)
-                    }
-                }
-        )
-
-        // TODO - move requestRateInfo to CoinEngine
-        // Bitcoin
-        if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet) {
-            ctx.coinData.setIsBalanceEqual(true)
-
-            requestRateInfo("bitcoin")
-        }
-
-        // Litecoin
-        if (ctx.blockchain == Blockchain.Litecoin) {
-            ctx.coinData.setIsBalanceEqual(true)
-
-            requestRateInfo("litecoin")
-        }
-
-        // BitcoinCash
-        else if (ctx.blockchain == Blockchain.BitcoinCash) {
-            ctx.coinData.setIsBalanceEqual(true)
-            requestRateInfo("bitcoin-cash")
-        }
-
-        // Ethereum
-        else if (ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet) {
-            requestRateInfo("ethereum")
-        }
-
-        // Token
-        else if (ctx.blockchain == Blockchain.Token) {
-            requestRateInfo("ethereum")
+            )
+        } else {
+            ctx.error = getString(R.string.no_connection)
+            updateViews()
         }
     }
 
@@ -667,20 +684,38 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 serverApiTangem.cardVerifyAndGetInfo(ctx.card)
             }
         } else {
-            Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            LOG.e(TAG, "+++++++++++ Hide refresh 1")
-            srl?.isRefreshing = false
+            ctx.error = getString(R.string.no_connection)
+            updateViews()
+            //Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+            //LOG.e(TAG, "+++++++++++ Hide refresh 1")
+            //srl?.isRefreshing = false
         }
     }
 
-    private fun requestRateInfo(cryptoId: String) {
+    private fun requestRateInfo() {
         if (UtilHelper.isOnline(context as Activity)) {
             LOG.i(TAG, "requestRateInfo")
+
+            // TODO - move requestRateInfo to CoinEngine
+            val cryptoId: String = when (ctx.blockchain) {
+                Blockchain.Bitcoin -> "bitcoin"
+                Blockchain.BitcoinTestNet -> "bitcoin"
+                Blockchain.Ethereum -> "ethereum"
+                Blockchain.EthereumTestNet -> "ethereum"
+                Blockchain.Token -> "ethereum"
+                Blockchain.BitcoinCash -> "bitcoin-cash"
+                Blockchain.Litecoin -> "litecoin"
+                else -> {
+                    throw Exception("Can''t get rate for blockchain " + ctx.blockchainName)
+                }
+            }
             serverApiCommon.rateInfoData(cryptoId)
         } else {
-            Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            LOG.e(TAG, "+++++++++++ Hide refresh 2")
-            srl?.isRefreshing = false
+            ctx.error = getString(R.string.no_connection)
+            updateViews()
+//            Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+//            LOG.e(TAG, "+++++++++++ Hide refresh 2")
+//            srl?.isRefreshing = false
         }
     }
 
