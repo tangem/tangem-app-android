@@ -157,7 +157,7 @@ public class ServerApiElectrum {
                     Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onComplete, answerData==null");
                 }
                 Log.e(TAG, String.format("%d requests left in processing",requestsCount));
-                if (electrumRequest.answerData != null) {
+                if (electrumRequest.answerData != null && electrumRequest.getError()==null) {
                     electrumRequestDataListener.onSuccess(electrumRequest);
                 } else {
 //                    if( error==null || error.isEmpty() ) setErrorOccurred(ctx.getString(R.string.cannot_obtain_data_from_blockchain));
@@ -172,6 +172,7 @@ public class ServerApiElectrum {
         String host;
         int port;
         String proto;
+        electrumRequest.setError(null);
         // todo - get available URL list from coinEngine, remove if( ctx.getBlockchain()==...)
         if (ctx.getBlockchain() == Blockchain.BitcoinTestNet) {
             BitcoinNodeTestNet bitcoinNodeTestNet = BitcoinNodeTestNet.values()[new Random().nextInt(BitcoinNodeTestNet.values().length)];
