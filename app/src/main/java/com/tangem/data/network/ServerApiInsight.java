@@ -3,7 +3,6 @@ package com.tangem.data.network;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.tangem.App;
 import com.tangem.data.network.model.InsightBody;
 import com.tangem.data.network.model.InsightResponse;
 
@@ -23,6 +22,8 @@ public class ServerApiInsight {
     public static final String INSIGHT_SEND = "/tx/send";
 
     private int requestsCount=0;
+
+    public String lastNode;
 
     public boolean isRequestsSequenceCompleted() {
         Log.i(TAG, String.format("isRequestsSequenceCompleted: %s (%d requests left)", String.valueOf(requestsCount <= 0), requestsCount));
@@ -44,8 +45,9 @@ public class ServerApiInsight {
     public void insight(String method, String wallet, String tx, int nbBlocks) {
         requestsCount++;
         String insightURL = "http://130.185.109.17:3001/insight-api"; //TODO: make random selection
+        this.lastNode = insightURL; //TODO: show node instead of URL
 
-        Retrofit retrofitInsight = new Retrofit.Builder() //TODO: check
+        Retrofit retrofitInsight = new Retrofit.Builder() //TODO: move to NetworkModule+NetworkComponent if possible
                 .baseUrl(insightURL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
