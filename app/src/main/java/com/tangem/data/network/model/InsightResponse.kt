@@ -9,8 +9,14 @@ data class InsightResponse(
         @SerializedName("id")
         var id: Int? = null,
 
-        @SerializedName("result")
-        var result: String = "",
+        @SerializedName("balanceSat")
+        var balanceSat: Long = null,
+
+        @SerializedName("unconfirmedBalanceSat")
+        var unconfirmedBalanceSat: Long = null,
+
+        @SerializedName("addrStr")
+        var addrStr: String = "",
 
         @SerializedName("error")
         var error: String = ""
