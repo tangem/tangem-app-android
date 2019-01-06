@@ -5,6 +5,7 @@ import android.text.InputFilter;
 import android.util.Log;
 
 import com.tangem.data.network.ElectrumRequest;
+import com.tangem.data.network.InsightApi;
 import com.tangem.data.network.ServerApiInsight;
 import com.tangem.data.network.model.InsightResponse;
 import com.tangem.domain.wallet.BTCUtils;
@@ -501,7 +502,8 @@ public class DucatusEngine extends BtcEngine {
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
         final ServerApiInsight serverApiInsight = new ServerApiInsight();
 
-        ServerApiInsight.InsightBodyListener insightBodyListenerListener = new ServerApiInsight.InsightBodyListener() {
+        ServerApiInsight.InsightBodyListener insightBodyListener = new ServerApiInsight.InsightBodyListener() {
+            @Override
             public void onSuccess(String method, InsightResponse insightResponse) {
                 switch (method) {
                     case ServerApiInsight.INSIGHT_ADDRESS: {
@@ -514,7 +516,7 @@ public class DucatusEngine extends BtcEngine {
                             coinData.setBalanceReceived(true);
                             coinData.setBalanceConfirmed(insightResponse.getBalanceSat());
                             coinData.setBalanceUnconfirmed(insightResponse.getUnconfirmedBalanceSat());
-                            //                        Log.i("$TAG eth_get_balance", balanceCap)
+                            coinData.setValidationNodeDescription(ServerApiInsight.lastNode);
                         }
                         catch (Exception e) {
                             e.printStackTrace();
@@ -523,132 +525,70 @@ public class DucatusEngine extends BtcEngine {
                     }
                     break;
 
-                    case ServerApiInsight.INFURA_ETH_GET_TRANSACTION_COUNT: {
-                        String nonce = insightResponse.getResult();
-                        nonce = nonce.substring(2);
-                        BigInteger count = new BigInteger(nonce, 16);
-                        coinData.setConfirmedTXCount(count);
-
-
-//                        Log.i("$TAG eth_getTransCount", nonce)
-                    }
-                    break;
-
-                    case ServerApiInsight.INFURA_ETH_GET_PENDING_COUNT: {
-                        String pending = insightResponse.getResult();
-                        pending = pending.substring(2);
-                        BigInteger count = new BigInteger(pending, 16);
-                        coinData.setUnconfirmedTXCount(count);
-
-//                        Log.i("$TAG eth_getPendingTxCount", pending)
+                    case ServerApiInsight.INSIGHT_TRANSACTION: {
+                        try {
+                            String raw = insightResponse.getRawtx();
+                            String txHash =  new String(BTCUtils.reverse(CryptoUtil.doubleSha256(BTCUtils.fromHex(raw)))); //TODO: check
+                            for (BtcData.UnspentTransaction tx : coinData.getUnspentTransactions()) {
+                                if (tx.txID.equals(txHash))
+                                    tx.Raw = raw;
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                     break;
                 }
 
-                if (serverApiInfura.isRequestsSequenceCompleted()) {
+                if (serverApiInsight.isRequestsSequenceCompleted()) {
                     blockchainRequestsCallbacks.onComplete(!ctx.hasError());
                 } else {
                     blockchainRequestsCallbacks.onProgress();
                 }
             }
 
-            @Override
-            public void onSuccess(ElectrumRequest electrumRequest) {
-                Log.i(TAG, "onSuccess: "+electrumRequest.getMethod());
-                if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetBalance)) {
+            public void onSuccess(String method, List<InsightResponse> utxoList) {
+               // case ServerApiInsight.INSIGHT_UNSPENT_OUTPUTS: TODO: check method
                     try {
-                        String walletAddress = electrumRequest.getParams().getString(0);
-                        if (!walletAddress.equals(coinData.getWallet())) {
-                            // todo - check
-                            throw new Exception("Invalid wallet address in answer!");
+                        coinData.getUnspentTransactions().clear();
+                        for (InsightResponse utxo : utxoList) {
+                            BtcData.UnspentTransaction trUnspent = new BtcData.UnspentTransaction();
+                            trUnspent.txID = utxo.getTxid();
+                            trUnspent.Amount = utxo.getSatoshis();
+                            trUnspent.Height = utxo.getHeight();
+                            coinData.getUnspentTransactions().add(trUnspent);
                         }
-                        Long confBalance = electrumRequest.getResult().getLong("confirmed");
-                        Long unconfirmedBalance = electrumRequest.getResult().getLong("unconfirmed");
-                        coinData.setBalanceReceived(true);
-                        coinData.setBalanceConfirmed(confBalance);
-                        coinData.setBalanceUnconfirmed(unconfirmedBalance);
-                        coinData.setValidationNodeDescription(serverApiInsight.lastNode);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                        Log.e(TAG, "FAIL METHOD_GetBalance JSONException");
+
+                        for (InsightResponse utxo : utxoList) {
+                            //if (height != -1) { TODO: check
+                            if (blockchainRequestsCallbacks.allowAdvance()) {
+                                serverApiInsight.insight(ServerApiInsight.INSIGHT_TRANSACTION, "", utxo.getTxid());
+                            } else {
+                                ctx.setError("Terminated by user");
+                            }
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
-                        Log.e(TAG, "FAIL METHOD_GetBalance Exception");
                     }
-                } else if (electrumRequest.isMethod(ElectrumRequest.METHOD_ListUnspent)) {
-                    try {
-                        String walletAddress = electrumRequest.getParams().getString(0);
-                        JSONArray jsUnspentArray = electrumRequest.getResultArray();
-                        try {
-                            coinData.getUnspentTransactions().clear();
-                            for (int i = 0; i < jsUnspentArray.length(); i++) {
-                                JSONObject jsUnspent = jsUnspentArray.getJSONObject(i);
-                                BtcData.UnspentTransaction trUnspent = new BtcData.UnspentTransaction();
-                                trUnspent.txID = jsUnspent.getString("tx_hash");
-                                trUnspent.Amount = jsUnspent.getInt("value");
-                                trUnspent.Height = jsUnspent.getInt("height");
-                                coinData.getUnspentTransactions().add(trUnspent);
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            Log.e(TAG, "FAIL METHOD_ListUnspent JSONException");
-                        }
 
-                        for (int i = 0; i < jsUnspentArray.length(); i++) {
-                            JSONObject jsUnspent = jsUnspentArray.getJSONObject(i);
-                            Integer height = jsUnspent.getInt("height");
-                            String hash = jsUnspent.getString("tx_hash");
-                            if (height != -1) {
-                                if (blockchainRequestsCallbacks.allowAdvance()) {
-                                    serverApiInsight.electrumRequestData(ctx, ElectrumRequest.getTransaction(walletAddress, hash));
-                                } else {
-                                    ctx.setError("Terminated by user");
-                                }
-                            }
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                } else if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetTransaction)) {
-                    try {
-                        String txHash = electrumRequest.txHash;
-                        String raw = electrumRequest.getResultString();
-                        for (BtcData.UnspentTransaction tx : coinData.getUnspentTransactions()) {
-                            if (tx.txID.equals(txHash))
-                                tx.Raw = raw;
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                if (serverApiInsight.isRequestsSequenceCompleted()) {
-                    blockchainRequestsCallbacks.onComplete(!ctx.hasError());
-                }else{
-                    blockchainRequestsCallbacks.onProgress();
-                }
             }
 
             @Override
             public void onFail(String method, String message) {
-                Log.i(TAG, "onFail: "+electrumRequest.getMethod()+" "+electrumRequest.getError());
-                ctx.setError(electrumRequest.getError());
-                if (serverApiInsight.isRequestsSequenceCompleted()) {
-                    blockchainRequestsCallbacks.onComplete(false);//serverApiInsight// .isErrorOccurred(), serverApiInsight
-                    //.getError());
-                }else{
-                    blockchainRequestsCallbacks.onProgress();
+                if (!serverApiInsight.isRequestsSequenceCompleted()) {
+                    ctx.setError(message);
+                    blockchainRequestsCallbacks.onComplete(false);
                 }
             }
         };
 
-        serverApiInsight.setElectrumRequestData(electrumListener);
+        serverApiInsight.setInsightResponse(insightBodyListener);
 
-        serverApiInsight.electrumRequestData(ctx, ElectrumRequest.checkBalance(coinData.getWallet()));
-        serverApiInsight.electrumRequestData(ctx, ElectrumRequest.listUnspent(coinData.getWallet()));
+        serverApiInsight.insight(ServerApiInsight.INSIGHT_ADDRESS, coinData.getWallet(), "");
+        serverApiInsight.insight(ServerApiInsight.INSIGHT_UNSPENT_OUTPUTS, coinData.getWallet(), "");
     }
 
-    private final static BigDecimal relayFee = new BigDecimal(0.00001);
+//    private final static BigDecimal relayFee = new BigDecimal(0.00001);
 
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) throws Exception {
@@ -660,55 +600,108 @@ public class DucatusEngine extends BtcEngine {
 
         final ServerApiInsight serverApiInsight = new ServerApiInsight();
 
-        final ServerApiInsight.InsightBodyListener electrumListener  = new ServerApiInsight.InsightBodyListener () {
+        final ServerApiInsight.InsightBodyListener insightBodyListener  = new ServerApiInsight.InsightBodyListener () {
             @Override
-            public void onSuccess(ElectrumRequest electrumRequest) {
-                BigDecimal fee;
-                if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetFee)) {
+            public void onSuccess(String method, InsightResponse insightResponse) {
+                if ( method.equals(ServerApiInsight.INSIGHT_FEE)) {
                     try {
-                        fee = new BigDecimal(electrumRequest.getResultString()); //fee per KB
+                        BigDecimal minFee = new BigDecimal(insightResponse.getFee2()); //fee per KB
+                        BigDecimal normalFee = new BigDecimal(insightResponse.getFee3());
+                        BigDecimal maxFee = new BigDecimal(insightResponse.getFee6());
 
-                        if (fee.equals(BigDecimal.ZERO)) {
-                            serverApiInsight.electrumRequestData(ctx, ElectrumRequest.getFee());
+                        if (minFee.equals(BigDecimal.ZERO) || normalFee.equals(BigDecimal.ZERO) || maxFee.equals(BigDecimal.ZERO)) {
+                            serverApiInsight.insight(ServerApiInsight.INSIGHT_FEE, "","");
                         }
 
-//                        if (calcSize != 0) {
-                        fee = fee.multiply(new BigDecimal(calcSize)).divide(new BigDecimal(1024)); // (per KB -> per byte)*size
-//                        } else {
-//                            serverApiInsight
-//.electrumRequestData(ctx, ElectrumRequest.getFee());
+                        minFee = minFee.multiply(new BigDecimal(calcSize)).divide(new BigDecimal(1024)); // (per KB -> per byte)*size
+                        normalFee = normalFee.multiply(new BigDecimal(calcSize)).divide(new BigDecimal(1024));
+                        maxFee = maxFee.multiply(new BigDecimal(calcSize)).divide(new BigDecimal(1024));
+
+//                        //compare fee to usual relay fee TODO: check if needed after we get access to Ducatus network
+//                        if (fee.compareTo(relayFee) < 0) {
+//                            fee = relayFee;
 //                        }
+                        minFee = minFee.setScale(8, RoundingMode.DOWN);
+                        normalFee = normalFee.setScale(8, RoundingMode.DOWN);
+                        maxFee = maxFee.setScale(8, RoundingMode.DOWN);
 
-                        //compare fee to usual relay fee
-                        if (fee.compareTo(relayFee) < 0) {
-                            fee = relayFee;
-                        }
-                        fee = fee.setScale(8, RoundingMode.DOWN);
+                        coinData.minFee = new Amount(minFee,  ctx.getBlockchain().getCurrency());
+                        coinData.normalFee = new Amount(normalFee,  ctx.getBlockchain().getCurrency());
+                        coinData.maxFee = new Amount(maxFee,  ctx.getBlockchain().getCurrency());
 
-                        Amount feeAmount = new Amount(fee,  ctx.getBlockchain().getCurrency());
-                        coinData.minFee = feeAmount;
-                        coinData.normalFee = feeAmount;
-                        coinData.maxFee = feeAmount;
-//                        if (coinData.minFee != null && coinData.normalFee != null && coinData.maxFee != null) {
                         blockchainRequestsCallbacks.onComplete(true);
-//                        } else {
-//                            blockchainRequestsCallbacks.onProgress();
-//                        }
 
-                    } catch (JSONException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             }
 
             @Override
-            public void onFail(ElectrumRequest electrumRequest) {
-                ctx.setError(electrumRequest.getError());
-                blockchainRequestsCallbacks.onComplete(false);
+            public void onSuccess (String method, List<InsightResponse> utxoList) {
+                Log.e(TAG, "Wrong response body, InsightResponse expected");
+            }
+
+            @Override
+            public void onFail(String method, String message) {
+                if (!serverApiInsight.isRequestsSequenceCompleted()) {
+                    ctx.setError(message);
+                    blockchainRequestsCallbacks.onComplete(false);
+                }
             }
         };
-        serverApiInsight.setElectrumRequestData(electrumListener);
+        serverApiInsight.setInsightResponse(insightBodyListener);
 
-        serverApiInsight.electrumRequestData(ctx, ElectrumRequest.getFee());
+        serverApiInsight.insight(ServerApiInsight.INSIGHT_FEE, "", "");
+    }
+
+    @Override
+    public void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) {
+        final ServerApiInsight serverApiInsight = new ServerApiInsight();
+        final String txStr = BTCUtils.toHex(txForSend);
+
+        final ServerApiInsight.InsightBodyListener insightBodyListener  = new ServerApiInsight.InsightBodyListener () {
+            @Override
+            public void onSuccess(String method, InsightResponse insightResponse) {
+                if (method.equals(ServerApiInsight.INSIGHT_SEND)) {
+                    String resultString = insightResponse.toString();
+                    try {
+                        if (resultString.isEmpty()) {
+                            ctx.setError("No response from node");
+                            blockchainRequestsCallbacks.onComplete(false);
+                        }else { // TODO: Make check for a valid send response
+                            ctx.setError(null);
+                            blockchainRequestsCallbacks.onComplete(true);
+                        }
+                    } catch (Exception e) {
+                        if (e.getMessage() != null) {
+                            ctx.setError(e.getMessage());
+                            blockchainRequestsCallbacks.onComplete(false);
+                        } else {
+                            ctx.setError(e.getClass().getName());
+                            blockchainRequestsCallbacks.onComplete(false);
+
+                            Log.e(TAG, resultString);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onSuccess (String method, List<InsightResponse> utxoList) {
+                Log.e(TAG, "Wrong response body, InsightResponse expected");
+            }
+
+            @Override
+            public void onFail(String method, String message) {
+                if (!serverApiInsight.isRequestsSequenceCompleted()) {
+                    ctx.setError(message);
+                    blockchainRequestsCallbacks.onComplete(false);
+                }
+            }
+        };
+        serverApiInsight.setInsightResponse(insightBodyListener);
+
+        serverApiInsight.insight(ServerApiInsight.INSIGHT_SEND, "", txStr);
     }
 }
