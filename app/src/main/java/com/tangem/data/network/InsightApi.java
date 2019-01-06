@@ -3,6 +3,8 @@ package com.tangem.data.network;
 import com.tangem.data.network.model.InsightBody;
 import com.tangem.data.network.model.InsightResponse;
 
+import java.util.List;
+
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -16,13 +18,13 @@ public interface InsightApi {
     Call<InsightResponse> insightAddress(@Path("address") String address);
 
     @GET(ServerApiInsight.INSIGHT_UNSPENT_OUTPUTS)
-    Call<InsightResponse> insightUnspent(@Path("address") String address);
+    Call<List<InsightResponse>> insightUnspent(@Path("address") String address);
 
     @GET(ServerApiInsight.INSIGHT_TRANSACTION)
     Call<InsightResponse> insightTransaction(@Path("transaction") String transaction);
 
     @GET(ServerApiInsight.INSIGHT_FEE)
-    Call<InsightResponse> insightFee(@Query("nbBlocks") int nbBlocks);
+    Call<InsightResponse> insightFee();
 
     @Headers("Content-Type: application/json")
     @POST(ServerApiInsight.INSIGHT_SEND)
