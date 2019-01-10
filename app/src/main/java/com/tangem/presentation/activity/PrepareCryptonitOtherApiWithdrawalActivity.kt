@@ -9,36 +9,39 @@ import android.nfc.Tag
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
+import com.tangem.App
+import com.tangem.Constant
+import com.tangem.data.Blockchain
 import com.tangem.data.network.CryptonitOtherApi
-import com.tangem.domain.cardReader.NfcManager
-import com.tangem.domain.wallet.Blockchain
+import com.tangem.di.Navigator
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_cryptonit_other_api_withdrawal.*
 import java.io.IOException
+import javax.inject.Inject
 
 class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     companion object {
         val TAG: String = PrepareCryptonitOtherApiWithdrawalActivity::class.java.simpleName
-
-        private const val REQUEST_CODE_SCAN_QR_KEY = 1
-        private const val REQUEST_CODE_SCAN_QR_SECRET = 2
-        private const val REQUEST_CODE_SCAN_QR_USER_ID = 3
     }
 
+    private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
-    private var nfcManager: NfcManager? = null
+
     private var cryptonit: CryptonitOtherApi? = null
 
+    @Inject
+    internal lateinit var navigator: Navigator
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_cryptonit_other_api_withdrawal)
 
-        MainActivity.commonInit(applicationContext)
+        App.getNavigatorComponent().inject(this)
 
         nfcManager = NfcManager(this, this)
 
@@ -51,27 +54,26 @@ class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapt
         tvSecret.text = cryptonit!!.secretDescription
 
         tvCardID.text = ctx.card!!.cidDescription
-        tvWallet.text = ctx.card!!.wallet
+        tvWallet.text = ctx.coinData!!.wallet
         val engine = CoinEngineFactory.create(ctx)
 
         tvCurrency.text = engine!!.balanceCurrency
 
         etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toValueString())
-        etAmount.filters=engine.amountInputFilters
+        etAmount.filters = engine.amountInputFilters
 
         // set listeners
         btnLoad.setOnClickListener {
-
             try {
                 val strAmount: String = etAmount.text.toString().replace(",", ".")
 //                if (!engine.checkAmount(card, strAmount))
 //                    etAmount.error = getString(R.string.unknown_amount_format)
-                var dblAmount: Double = strAmount.toDouble()
+                val dblAmount: Double = strAmount.toDouble()
 
                 rlProgressBar.visibility = View.VISIBLE
                 tvProgressDescription.text = getString(R.string.cryptonit_request_withdrawal)
 
-                cryptonit!!.requestCryptoWithdrawal(ctx.blockchain.currency, dblAmount.toString(), ctx.card!!.wallet)
+                cryptonit!!.requestCryptoWithdrawal(ctx.blockchain.currency, dblAmount.toString(), ctx.coinData!!.wallet)
             } catch (e: Exception) {
                 etAmount.error = getString(R.string.unknown_amount_format)
             }
@@ -84,18 +86,11 @@ class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapt
 //            }
 
         }
-        ivCameraKey.setOnClickListener {
-            val intent = Intent(baseContext, QrScanActivity::class.java)
-            startActivityForResult(intent, REQUEST_CODE_SCAN_QR_KEY)
-        }
-        ivCameraSecret.setOnClickListener {
-            val intent = Intent(baseContext, QrScanActivity::class.java)
-            startActivityForResult(intent, REQUEST_CODE_SCAN_QR_SECRET)
-        }
-        ivCameraUserId.setOnClickListener {
-            val intent = Intent(baseContext, QrScanActivity::class.java)
-            startActivityForResult(intent, REQUEST_CODE_SCAN_QR_USER_ID)
-        }
+        ivCameraKey.setOnClickListener { navigator.showQrScanActivity(this, Constant.REQUEST_CODE_SCAN_QR_KEY) }
+
+        ivCameraSecret.setOnClickListener { navigator.showQrScanActivity(this, Constant.REQUEST_CODE_SCAN_QR_SECRET) }
+
+        ivCameraUserId.setOnClickListener { navigator.showQrScanActivity(this, Constant.REQUEST_CODE_SCAN_QR_USER_ID) }
 
         ivRefreshBalance.setOnClickListener { doRequestBalance() }
 
@@ -162,32 +157,32 @@ class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapt
 
     public override fun onResume() {
         super.onResume()
-        nfcManager!!.onResume()
+        nfcManager.onResume()
     }
 
     public override fun onPause() {
         super.onPause()
-        nfcManager!!.onPause()
+        nfcManager.onPause()
     }
 
     public override fun onStop() {
         super.onStop()
-        nfcManager!!.onStop()
+        nfcManager.onStop()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if( resultCode == Activity.RESULT_OK && data != null && data.extras!!.containsKey("QRCode") ) {
-            when(requestCode) {
-                REQUEST_CODE_SCAN_QR_KEY -> {
+        if (resultCode == Activity.RESULT_OK && data != null && data.extras!!.containsKey("QRCode")) {
+            when (requestCode) {
+                Constant.REQUEST_CODE_SCAN_QR_KEY -> {
                     cryptonit!!.key = data.getStringExtra("QRCode")
                     tvKey!!.text = cryptonit!!.key
                 }
-                REQUEST_CODE_SCAN_QR_SECRET -> {
+                Constant.REQUEST_CODE_SCAN_QR_SECRET -> {
                     cryptonit!!.secret = data.getStringExtra("QRCode")
                     tvSecret!!.text = cryptonit!!.secretDescription
                 }
-                REQUEST_CODE_SCAN_QR_USER_ID -> {
+                Constant.REQUEST_CODE_SCAN_QR_USER_ID -> {
                     cryptonit!!.userId = data.getStringExtra("QRCode")
                     tvUserID!!.text = cryptonit!!.userId
                 }
@@ -199,8 +194,7 @@ class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapt
 
     override fun onTagDiscovered(tag: Tag) {
         try {
-//            Log.w(javaClass.name, "Ignore discovered tag!")
-            nfcManager!!.ignoreTag(tag)
+            nfcManager.ignoreTag(tag)
         } catch (e: IOException) {
             e.printStackTrace()
         }
