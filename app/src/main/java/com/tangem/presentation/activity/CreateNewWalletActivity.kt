@@ -28,7 +28,6 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_create_new_wallet.*
 
 class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
-
     companion object {
         fun callingIntent(context: Context, ctx: TangemContext): Intent {
             val intent = Intent(context, CreateNewWalletActivity::class.java)
@@ -38,8 +37,8 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         }
     }
 
-    private lateinit var ctx: TangemContext
     private lateinit var nfcManager: NfcManager
+    private lateinit var ctx: TangemContext
 
     private var createNewWalletTask: CreateNewWalletTask? = null
     private var lastReadSuccess = true
