@@ -15,9 +15,12 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import com.tangem.App
+import com.tangem.Constant
 import com.tangem.data.network.Kraken
-import com.tangem.domain.cardReader.NfcManager
-import com.tangem.domain.wallet.Blockchain
+import com.tangem.tangemcard.android.reader.NfcManager
+import com.tangem.data.Blockchain
+import com.tangem.di.Navigator
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.wallet.R
@@ -26,13 +29,12 @@ import java.io.IOException
 import java.math.BigDecimal
 import java.net.URI
 import java.util.*
+import javax.inject.Inject
 
 class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     companion object {
         val TAG: String = PrepareKrakenWithdrawalActivity::class.java.simpleName
-
-        private const val REQUEST_CODE_SCAN_QR = 1
     }
 
     private lateinit var ctx: TangemContext
@@ -40,12 +42,15 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
     private var kraken: Kraken? = null
     private var fee: BigDecimal? = null
 
+    @Inject
+    internal lateinit var navigator: Navigator
+
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_kraken_withdrawal)
 
-        MainActivity.commonInit(applicationContext)
+        App.getNavigatorComponent().inject(this)
 
         nfcManager = NfcManager(this, this)
 
@@ -57,7 +62,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
         tvSecret.text = kraken!!.secretDescription
 
         tvCardID.text = ctx.card!!.cidDescription
-        tvWallet.text = ctx.card!!.wallet
+        tvWallet.text = ctx.coinData!!.wallet
         val engine = CoinEngineFactory.create(ctx)
 
         tvCurrency.text = engine!!.balanceCurrency
@@ -85,16 +90,14 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
                 rlProgressBar.visibility = View.VISIBLE
                 tvProgressDescription.text = getString(R.string.kraken_request_withdrawal)
 
-                kraken!!.requestWithdrawInfo(ctx.blockchain.currency, dblAmount.toString(), ctx.card!!.wallet)
+                kraken!!.requestWithdrawInfo(ctx.blockchain.currency, dblAmount.toString(), ctx.coinData!!.wallet)
             } catch (e: Exception) {
                 etAmount.error = getString(R.string.unknown_amount_format)
             }
 
         }
-        ivCamera.setOnClickListener {
-            val intent = Intent(baseContext, QrScanActivity::class.java)
-            startActivityForResult(intent, REQUEST_CODE_SCAN_QR)
-        }
+
+        ivCamera.setOnClickListener { navigator.showQrScanActivity(this, Constant.REQUEST_CODE_SCAN_QR) }
 
         ivRefreshBalance.setOnClickListener { doRequestBalance() }
 
@@ -184,7 +187,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
                         tvProgressDescription.text = getString(R.string.kraken_request_withdrawal)
 
                         //Toast.makeText(this, String.format("Withdraw %s!",dblAmount.toString()), Toast.LENGTH_LONG).show()
-                        kraken!!.requestWithdraw(ctx.blockchain.currency, dblAmount.toString(), ctx.card!!.wallet)
+                        kraken!!.requestWithdraw(ctx.blockchain.currency, dblAmount.toString(), ctx.coinData!!.wallet)
                     } catch (e: Exception) {
                         etAmount.error = getString(R.string.unknown_amount_format)
                     }
@@ -240,7 +243,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK && data != null && data.extras!!.containsKey("QRCode")) {
             when (requestCode) {
-                REQUEST_CODE_SCAN_QR -> {
+                Constant.REQUEST_CODE_SCAN_QR -> {
                     val uri = URI(data.getStringExtra("QRCode"))
                     val query = uri.query
                     val params = query.split("&")
