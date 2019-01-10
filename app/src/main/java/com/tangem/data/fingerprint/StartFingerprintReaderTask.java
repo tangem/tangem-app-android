@@ -8,8 +8,10 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 
-import com.tangem.data.db.PINStorage;
+import com.tangem.Constant;
+import com.tangem.tangemcard.android.data.PINStorage;
 import com.tangem.presentation.activity.PinRequestActivity;
+import com.tangem.util.LOG;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -25,6 +27,8 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 
 public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
+    public static final String TAG = StartFingerprintReaderTask.class.getSimpleName();
+
     private WeakReference<PinRequestActivity> reference;
 
     private KeyStore keyStore;
@@ -63,16 +67,14 @@ public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
 
     @Override
     protected void onPostExecute(final Boolean success) {
-        PinRequestActivity pinRequestActivity = reference.get();
 
         onCancelled();
 
         if (!success) {
-            pinRequestActivity.doLog("Authentication failed!");
+            LOG.i(TAG, "Authentication failed!");
         } else {
             fingerprintHelper.startAuth(fingerprintManager, cryptoObject);
-            pinRequestActivity.doLog("Authenticate using fingerprint!");
-
+            LOG.i(TAG, "Authenticate using fingerprint!");
         }
     }
 
@@ -84,11 +86,9 @@ public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
     }
 
     private boolean getKeyStore() {
-        PinRequestActivity pinRequestActivity = reference.get();
-
-        pinRequestActivity.doLog("Getting keystore...");
+        LOG.i(TAG, "Getting keystore...");
         try {
-            keyStore = KeyStore.getInstance(PinRequestActivity.KEYSTORE);
+            keyStore = KeyStore.getInstance(Constant.KEYSTORE);
             keyStore.load(null); // Create empty keystore
             return true;
         } catch (KeyStoreException | CertificateException | NoSuchAlgorithmException | IOException e) {
@@ -100,17 +100,15 @@ public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
 
     @TargetApi(Build.VERSION_CODES.M)
     public boolean createNewKey(boolean forceCreate) {
-        PinRequestActivity pinRequestActivity = reference.get();
-
-        pinRequestActivity.doLog("Creating new key...");
+        LOG.i(TAG, "Creating new key...");
         try {
             if (forceCreate)
-                keyStore.deleteEntry(PinRequestActivity.KEY_ALIAS);
+                keyStore.deleteEntry(Constant.KEY_ALIAS);
 
-            if (!keyStore.containsAlias(PinRequestActivity.KEY_ALIAS)) {
-                KeyGenerator generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, PinRequestActivity.KEYSTORE);
+            if (!keyStore.containsAlias(Constant.KEY_ALIAS)) {
+                KeyGenerator generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, Constant.KEYSTORE);
 
-                generator.init(new KeyGenParameterSpec.Builder(PinRequestActivity.KEY_ALIAS,
+                generator.init(new KeyGenParameterSpec.Builder(Constant.KEY_ALIAS,
                         KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
                         .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
                         .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
@@ -119,9 +117,9 @@ public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
                 );
 
                 generator.generateKey();
-                pinRequestActivity.doLog("Key created.");
+                LOG.i(TAG, "Key created.");
             } else
-                pinRequestActivity.doLog("Key exists.");
+                LOG.i(TAG, "Key exists.");
 
             return true;
         } catch (Exception e) {
@@ -132,9 +130,7 @@ public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
     }
 
     private boolean getCipher() {
-        PinRequestActivity pinRequestActivity = reference.get();
-
-        pinRequestActivity.doLog("Getting cipher...");
+        LOG.i(TAG, "Getting cipher...");
         try {
             cipher = Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/" + KeyProperties.BLOCK_MODE_CBC + "/" + KeyProperties.ENCRYPTION_PADDING_PKCS7);
             return true;
@@ -149,10 +145,10 @@ public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
     private boolean initCipher(int mode) {
         PinRequestActivity pinRequestActivity = reference.get();
 
-        pinRequestActivity.doLog("Initializing cipher...");
+        LOG.i(TAG, "Initializing cipher...");
         try {
             keyStore.load(null);
-            SecretKey keyspec = (SecretKey) keyStore.getKey(PinRequestActivity.KEY_ALIAS, null);
+            SecretKey keyspec = (SecretKey) keyStore.getKey(Constant.KEY_ALIAS, null);
 
             if (mode == Cipher.ENCRYPT_MODE) {
                 cipher.init(mode, keyspec);
@@ -180,9 +176,7 @@ public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
 
     @TargetApi(Build.VERSION_CODES.M)
     private boolean initCryptObject() {
-        PinRequestActivity pinRequestActivity = reference.get();
-
-        pinRequestActivity.doLog("Initializing crypt object...");
+        LOG.i(TAG, "Initializing crypt object...");
         try {
             cryptoObject = new FingerprintManager.CryptoObject(cipher);
             return true;
@@ -191,6 +185,5 @@ public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
         }
         return false;
     }
-
 
 }
