@@ -2,14 +2,9 @@ package com.tangem.di
 
 import android.app.Activity
 import android.nfc.Tag
-import android.os.Bundle
-import com.tangem.domain.wallet.CoinData
-import com.tangem.domain.wallet.TangemCard
-import com.tangem.presentation.activity.EmptyWalletActivity
-import com.tangem.presentation.activity.LoadedWalletActivity
-import com.tangem.presentation.activity.MainActivity
-import com.tangem.presentation.activity.VerifyCardActivity
-import com.tangem.presentation.fragment.LoadedWallet
+import com.tangem.Constant
+import com.tangem.domain.wallet.TangemContext
+import com.tangem.presentation.activity.*
 
 class Navigator {
 
@@ -17,28 +12,68 @@ class Navigator {
         context.startActivity(MainActivity.callingIntent(context))
     }
 
-    fun showLoadedWallet(context: Activity, lastTag: Tag, cardInfo: Bundle) {
-        context.startActivityForResult(LoadedWalletActivity.callingIntent(context, lastTag, cardInfo), MainActivity.REQUEST_CODE_SHOW_CARD_ACTIVITY)
+    fun showLogo(context: Activity, autoHide: Boolean) {
+        context.startActivity(LogoActivity.callingIntent(context, autoHide))
     }
 
-    fun showEmptyWallet(context: Activity) {
-        context.startActivity(EmptyWalletActivity.callingIntent(context))
+    fun showPinSave(context: Activity, hasPin2: Boolean) {
+        context.startActivity(PinSaveActivity.callingIntent(context, hasPin2))
     }
 
-    fun showVerifyCard(context: Activity, card: TangemCard, coinData: CoinData, message: String, error: String) {
-        context.startActivityForResult(VerifyCardActivity.callingIntent(context, card, coinData, message, error), LoadedWallet.REQUEST_CODE_VERIFY_CARD)
+    fun showPinRequest(context: Activity, mode: String) {
+        context.startActivityForResult(PinRequestActivity.callingIntent(context, mode), Constant.REQUEST_CODE_ENTER_PIN_ACTIVITY)
     }
 
-    fun showPinSwap(context: Activity) {
-
+    fun showQrScanActivity(context: Activity, requestCode: Int) {
+        context.startActivityForResult(QrScanActivity.callingIntent(context), requestCode)
     }
 
-//    fun showPreparePayment(context: Activity) {
-//
-//    }
-//
-//    fun showCreateNewWallet(context: Activity) {
-//
-//    }
+    fun showPinRequestRequestPin(context: Activity, mode: String, ctx: TangemContext, newPin: String) {
+        context.startActivityForResult(PinRequestActivity.callingIntentRequestPin(context, mode, ctx, newPin), Constant.REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
+    }
+
+    fun showPinRequestRequestPin2(context: Activity, mode: String, ctx: TangemContext, newPin2: String) {
+        context.startActivityForResult(PinRequestActivity.callingIntentRequestPin2(context, mode, ctx, newPin2), Constant.REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
+    }
+
+    fun showPinRequestRequestPin2(context: Activity, mode: String, ctx: TangemContext) {
+        context.startActivityForResult(PinRequestActivity.callingIntentRequestPin2(context, mode, ctx), Constant.REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
+    }
+
+    fun showPinRequestConfirmNewPin(context: Activity, mode: String, newPin: String) {
+        context.startActivityForResult(PinRequestActivity.callingIntentConfirmPin(context, mode, newPin), Constant.REQUEST_CODE_ENTER_NEW_PIN)
+    }
+
+    fun showPinRequestConfirmNewPin2(context: Activity, mode: String, newPin2: String) {
+        context.startActivityForResult(PinRequestActivity.callingIntentConfirmPin2(context, mode, newPin2), Constant.REQUEST_CODE_ENTER_NEW_PIN2)
+    }
+
+    fun showLoadedWallet(context: Activity, lastTag: Tag, ctx: TangemContext) {
+        context.startActivityForResult(LoadedWalletActivity.callingIntent(context, lastTag, ctx), Constant.REQUEST_CODE_SHOW_CARD_ACTIVITY)
+    }
+
+    fun showEmptyWallet(context: Activity, ctx: TangemContext) {
+        context.startActivity(EmptyWalletActivity.callingIntent(context, ctx))
+    }
+
+    fun showVerifyCard(context: Activity, ctx: TangemContext) {
+        context.startActivityForResult(VerifyCardActivity.callingIntent(context, ctx), Constant.REQUEST_CODE_VERIFY_CARD)
+    }
+
+    fun showPinSwap(context: Activity, newPIN: String, newPIN2: String) {
+        context.startActivityForResult(PinSwapActivity.callingIntent(context, newPIN, newPIN2), Constant.REQUEST_CODE_SWAP_PIN)
+    }
+
+    fun showPurge(context: Activity, ctx: TangemContext) {
+        context.startActivityForResult(PurgeActivity.callingIntent(context, ctx), Constant.REQUEST_CODE_PURGE)
+    }
+
+    fun showPreparePayment(context: Activity, ctx: TangemContext) {
+        context.startActivityForResult(PreparePaymentActivity.callingIntent(context, ctx), Constant.REQUEST_CODE_SEND_PAYMENT)
+    }
+
+    fun showCreateNewWallet(context: Activity, ctx: TangemContext) {
+        context.startActivityForResult(CreateNewWalletActivity.callingIntent(context, ctx), Constant.REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY)
+    }
 
 }
