@@ -3,13 +3,31 @@ package com.tangem.domain.wallet;
 import android.os.Bundle;
 import android.util.Log;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
+import com.tangem.data.Blockchain;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class CoinData {
 
     public CoinData() {
+    }
+
+    private String wallet;
+
+    public void setWallet(String wallet) {
+        this.wallet = wallet;
+    }
+
+    public String getWallet() {
+        return wallet;
+    }
+
+    public String getShortWalletString() {
+        if (wallet.length() < 22) {
+            return wallet;
+        } else {
+            return wallet.substring(0, 10) + "......" + wallet.substring(wallet.length() - 10, wallet.length());
+        }
     }
 
     public boolean isBalanceReceived() {
@@ -23,12 +41,14 @@ public abstract class CoinData {
     }
 
     public void loadFromBundle(Bundle B) {
+        wallet = B.getString("Wallet");
+
         if (B.containsKey("balanceReceived")) setBalanceReceived(B.getBoolean("balanceReceived"));
 
         validationNodeDescription = B.getString("validationNodeDescription");
 
-        if (B.containsKey("FailedBalance"))
-            failedBalanceRequestCounter = new AtomicInteger(B.getInt("FailedBalance"));
+//        if (B.containsKey("FailedBalance"))
+//            failedBalanceRequestCounter = new AtomicInteger(B.getInt("FailedBalance"));
 
         if (B.containsKey("isBalanceEqual")) setIsBalanceEqual(B.getBoolean("isBalanceEqual"));
 
@@ -40,10 +60,12 @@ public abstract class CoinData {
 
     public void saveToBundle(Bundle B) {
         try {
+            B.putString("Wallet", wallet);
+
             if (balanceEqual != null) B.putBoolean("isBalanceEqual", balanceEqual);
 
-            if (failedBalanceRequestCounter != null)
-                B.putInt("FailedBalance", failedBalanceRequestCounter.get());
+//            if (failedBalanceRequestCounter != null)
+//                B.putInt("FailedBalance", failedBalanceRequestCounter.get());
 
             B.putFloat("rate", rate);
             B.putFloat("rateAlter", rateAlter);
@@ -121,25 +143,32 @@ public abstract class CoinData {
 
     public void clearInfo() {
         setIsBalanceEqual(false);
+        setBalanceReceived(false); // TODO check
+        setValidationNodeDescription("");
+        minFee=null;
+        maxFee=null;
+        normalFee=null;
+        rate=0f;
+        rateAlter=0f;
     }
 
-    private AtomicInteger failedBalanceRequestCounter;
-
-    public int incFailedBalanceRequestCounter() {
-        if (failedBalanceRequestCounter == null)
-            failedBalanceRequestCounter = new AtomicInteger(0);
-        return failedBalanceRequestCounter.incrementAndGet();
-    }
-
-    public void resetFailedBalanceRequestCounter() {
-        failedBalanceRequestCounter = new AtomicInteger(0);
-    }
-
-    public int getFailedBalanceRequestCounter() {
-        if (failedBalanceRequestCounter == null)
-            return 0;
-        return failedBalanceRequestCounter.get();
-    }
+//    private AtomicInteger failedBalanceRequestCounter;
+//
+//    public int incFailedBalanceRequestCounter() {
+//        if (failedBalanceRequestCounter == null)
+//            failedBalanceRequestCounter = new AtomicInteger(0);
+//        return failedBalanceRequestCounter.incrementAndGet();
+//    }
+//
+//    public void resetFailedBalanceRequestCounter() {
+//        failedBalanceRequestCounter = new AtomicInteger(0);
+//    }
+//
+//    public int getFailedBalanceRequestCounter() {
+//        if (failedBalanceRequestCounter == null)
+//            return 0;
+//        return failedBalanceRequestCounter.get();
+//    }
 
     private Boolean balanceEqual;
 
@@ -161,7 +190,7 @@ public abstract class CoinData {
         this.validationNodeDescription = validationNodeDescription;
     }
 
-
-
-
+    public CoinEngine.Amount minFee = null;
+    public CoinEngine.Amount normalFee = null;
+    public CoinEngine.Amount maxFee = null;
 }
