@@ -561,7 +561,7 @@ public class BtcEngine extends CoinEngine {
                                 JSONObject jsUnspent = jsUnspentArray.getJSONObject(i);
                                 BtcData.UnspentTransaction trUnspent = new BtcData.UnspentTransaction();
                                 trUnspent.txID = jsUnspent.getString("tx_hash");
-                                trUnspent.Amount = jsUnspent.getInt("value");
+                                trUnspent.Amount = jsUnspent.getLong("value");
                                 trUnspent.Height = jsUnspent.getInt("height");
                                 coinData.getUnspentTransactions().add(trUnspent);
                             }
