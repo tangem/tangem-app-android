@@ -4,20 +4,19 @@ import android.net.Uri;
 import android.text.InputFilter;
 import android.util.Log;
 
-import com.tangem.data.db.PINStorage;
-import com.tangem.domain.cardReader.CardProtocol;
-import com.tangem.domain.cardReader.TLV;
+import com.tangem.data.Blockchain;
+import com.tangem.data.network.ServerApiInfura;
+import com.tangem.data.network.model.InfuraResponse;
+import com.tangem.domain.wallet.BTCUtils;
 import com.tangem.domain.wallet.BalanceValidator;
-import com.tangem.domain.wallet.Blockchain;
 import com.tangem.domain.wallet.CoinData;
 import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.ECDSASignatureETH;
 import com.tangem.domain.wallet.EthTransaction;
-import com.tangem.domain.wallet.Issuer;
 import com.tangem.domain.wallet.Keccak256;
-import com.tangem.domain.wallet.TangemCard;
 import com.tangem.domain.wallet.TangemContext;
-import com.tangem.domain.wallet.BTCUtils;
+import com.tangem.tangemcard.data.TangemCard;
+import com.tangem.tangemcard.tasks.SignTask;
 import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.wallet.R;
@@ -27,8 +26,6 @@ import org.bitcoinj.core.ECKey;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.util.Arrays;
 
 /**
@@ -37,6 +34,7 @@ import java.util.Arrays;
 
 public class EthEngine extends CoinEngine {
 
+    private static final String TAG = EthEngine.class.getSimpleName();
     public EthData coinData = null;
 
     public EthEngine(TangemContext ctx) throws Exception {
@@ -60,7 +58,7 @@ public class EthEngine extends CoinEngine {
     }
 
     @Override
-    public boolean awaitingConfirmation(){
+    public boolean awaitingConfirmation() {
         return false;
     }
 
@@ -74,17 +72,17 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public String getBalanceHTML() {
-        Amount balance=getBalance();
-        if( balance!=null ) {
+        Amount balance = getBalance();
+        if (balance != null) {
             return balance.toDescriptionString(getDecimals());
-        }else{
+        } else {
             return "";
         }
     }
 
     @Override
     public String getBalanceCurrency() {
-        return "ETH";
+        return Blockchain.Ethereum.getCurrency();
     }
 
     @Override
@@ -96,14 +94,14 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public boolean isBalanceNotZero() {
-        if( coinData ==null ) return false;
+        if (coinData == null) return false;
         if (coinData.getBalanceInInternalUnits() == null) return false;
         return coinData.getBalanceInInternalUnits().notZero();
     }
 
     @Override
     public String getFeeCurrency() {
-        return "ETH";
+        return Blockchain.Ethereum.getCurrency();
     }
 
     public boolean isNeedCheckNode() {
@@ -186,8 +184,8 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public String getBalanceEquivalent() {
-        Amount balance=getBalance();
-        if( balance==null ) return "";
+        Amount balance = getBalance();
+        if (balance == null) return "";
         return balance.toEquivalentString(coinData.getRate());
     }
 
@@ -203,8 +201,8 @@ public class EthEngine extends CoinEngine {
     }
 
     @Override
-    public InternalAmount convertToInternalAmount(Amount amount){
-        return new InternalAmount(amount.multiply(new BigDecimal("1000000000000000000")),"wei");
+    public InternalAmount convertToInternalAmount(Amount amount) {
+        return new InternalAmount(amount.multiply(new BigDecimal("1000000000000000000")), "wei");
     }
 
     @Override
@@ -221,24 +219,24 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public boolean hasBalanceInfo() {
-        return coinData.getBalanceInInternalUnits()!=null;
+        return coinData.getBalanceInInternalUnits() != null;
     }
 
     @Override
     public Uri getShareWalletUri() {
         if (ctx.getCard().getDenomination() != null) {
-            return Uri.parse("ethereum:" + ctx.getCard().getWallet());// + "?value=" + mCard.getDenomination() +"e18");
+            return Uri.parse("ethereum:" + ctx.getCoinData().getWallet());// + "?value=" + mCard.getDenomination() +"e18");
         } else {
-            return Uri.parse("ethereum:" + ctx.getCard().getWallet());
+            return Uri.parse("ethereum:" + ctx.getCoinData().getWallet());
         }
     }
 
     @Override
     public Uri getShareWalletUriExplorer() {
-        if (ctx.getCard().getBlockchain() == Blockchain.EthereumTestNet)
-            return Uri.parse("https://rinkeby.etherscan.io/address/" + ctx.getCard().getWallet());
+        if (ctx.getBlockchain() == Blockchain.EthereumTestNet)
+            return Uri.parse("https://rinkeby.etherscan.io/address/" + ctx.getCoinData().getWallet());
         else
-            return Uri.parse("https://etherscan.io/address/" + ctx.getCard().getWallet());
+            return Uri.parse("https://etherscan.io/address/" + ctx.getCoinData().getWallet());
     }
 
     @Override
@@ -257,14 +255,14 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public InputFilter[] getAmountInputFilters() {
-        return new InputFilter[] { new DecimalDigitsInputFilter(getDecimals()) };
+        return new InputFilter[]{new DecimalDigitsInputFilter(getDecimals())};
     }
 
     @Override
-    public boolean checkNewTransactionAmount(Amount amount){
-        if( coinData ==null ) return false;
-        Amount balance=getBalance();
-        if (balance==null || amount.compareTo(balance) > 0) {
+    public boolean checkNewTransactionAmount(Amount amount) {
+        if (coinData == null) return false;
+        Amount balance = getBalance();
+        if (balance == null || amount.compareTo(balance) > 0) {
             return false;
         }
         return true;
@@ -295,7 +293,7 @@ public class EthEngine extends CoinEngine {
         try {
             BigDecimal cardBalance = getBalance();
 
-            if (isFeeIncluded && (amount.compareTo(cardBalance) > 0 || amount.compareTo(fee)<0))
+            if (isFeeIncluded && (amount.compareTo(cardBalance) > 0 || amount.compareTo(fee) < 0))
                 return false;
 
             if (!isFeeIncluded && amount.add(fee).compareTo(cardBalance) > 0)
@@ -349,20 +347,18 @@ public class EthEngine extends CoinEngine {
         try {
             Amount feeValue = new Amount(fee, ctx.getBlockchain().getCurrency());
             return feeValue.toEquivalentString(coinData.getRate());
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
             return "";
         }
     }
 
     @Override
-    public String calculateAddress(byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException {
+    public String calculateAddress(byte[] pkUncompressed) {
         Keccak256 kec = new Keccak256();
         int lenPk = pkUncompressed.length;
         if (lenPk < 2) {
-            throw new IllegalArgumentException("Uncompress public key length is invald");
+            throw new IllegalArgumentException("Uncompress public key length is invalid");
         }
         byte[] cleanKey = new byte[lenPk - 1];
         for (int i = 0; i < cleanKey.length; ++i) {
@@ -379,21 +375,20 @@ public class EthEngine extends CoinEngine {
     }
 
     @Override
-    public byte[] sign(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress, CardProtocol protocol) throws Exception {
+    public SignTask.PaymentToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) {
+
+        Log.e(TAG, "Construct payment " + amountValue.toString() + " with fee " + feeValue.toString() + (IncFee ? " including" : " excluding"));
 
         BigInteger nonceValue = coinData.getConfirmedTXCount();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
-        boolean flag = (ctx.getCard().getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer);
-        Issuer issuer = ctx.getCard().getIssuer();
 
-        BigInteger weiFee=convertToInternalAmount(feeValue).toBigIntegerExact();
-        BigInteger weiAmount=convertToInternalAmount(amountValue).toBigIntegerExact();
+        BigInteger weiFee = convertToInternalAmount(feeValue).toBigIntegerExact();
+        BigInteger weiAmount = convertToInternalAmount(amountValue).toBigIntegerExact();
 
         if (IncFee) {
             weiAmount = weiAmount.subtract(weiFee);
         }
 
-        BigInteger nonce = nonceValue;
         BigInteger gasPrice = weiFee.divide(BigInteger.valueOf(21000));
         BigInteger gasLimit = BigInteger.valueOf(21000);
         Integer chainId = ctx.getBlockchain() == Blockchain.Ethereum ? EthTransaction.ChainEnum.Mainnet.getValue() : EthTransaction.ChainEnum.Rinkeby.getValue();
@@ -404,41 +399,211 @@ public class EthEngine extends CoinEngine {
             to = to.substring(2);
         }
 
-        EthTransaction tx = EthTransaction.create(to, weiAmount, nonce, gasPrice, gasLimit, chainId);
+        final EthTransaction tx = EthTransaction.create(to, weiAmount, nonceValue, gasPrice, gasLimit, chainId);
 
-        byte[][] hashesForSign = new byte[1][];
-        byte[] for_hash = tx.getRawHash();
-        hashesForSign[0] = for_hash;
+        return new SignTask.PaymentToSign() {
+            @Override
+            public boolean isSigningMethodSupported(TangemCard.SigningMethod signingMethod) {
+                return signingMethod == TangemCard.SigningMethod.Sign_Hash;
+            }
 
-        byte[] signFromCard = null;
-        try {
-            signFromCard = protocol.run_SignHashes(PINStorage.getPIN2(), hashesForSign, flag, null, issuer).getTLV(TLV.Tag.TAG_Signature).Value;
-            // TODO slice signFromCard to hashes.length parts
-        } catch (Exception ex) {
-            Log.e("ETH", ex.getMessage());
-            return null;
-        }
+            @Override
+            public byte[][] getHashesToSign() {
+                byte[][] hashesForSign = new byte[1][];
+                hashesForSign[0] = tx.getRawHash();
+                return hashesForSign;
+            }
 
-        BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, 0, 32));
-        BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, 32, 64));
-        s = CryptoUtil.toCanonicalised(s);
+            @Override
+            public byte[] getRawDataToSign() throws Exception {
+                throw new Exception("Signing of raw transaction not supported for ETH");
+            }
 
-        boolean f = ECKey.verify(for_hash, new ECKey.ECDSASignature(r, s), pbKey);
+            @Override
+            public String getHashAlgToSign() throws Exception {
+                throw new Exception("Signing of raw transaction not supported for ETH");
+            }
 
-        if (!f) {
-            Log.e("ETH-CHECK", "sign Failed.");
-        }
+            @Override
+            public byte[] getIssuerTransactionSignature(byte[] dataToSignByIssuer) throws Exception {
+                throw new Exception("Transaction validation by issuer not supported in this version");
+            }
 
-        tx.signature = new ECDSASignatureETH(r, s);
-        int v = tx.BruteRecoveryID2(tx.signature, for_hash, pbKey);
-        if (v != 27 && v != 28) {
-            Log.e("ETH", "invalid v");
-            return null;
-        }
-        tx.signature.v = (byte) v;
-        Log.e("ETH_v", String.valueOf(v));
+            @Override
+            public byte[] onSignCompleted(byte[] signFromCard) throws Exception {
+                byte[] for_hash = tx.getRawHash();
+                BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, 0, 32));
+                BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, 32, 64));
+                s = CryptoUtil.toCanonicalised(s);
 
-        byte[] realTX = tx.getEncoded();
-        return realTX;
+                boolean f = ECKey.verify(for_hash, new ECKey.ECDSASignature(r, s), pbKey);
+
+                if (!f) {
+                    Log.e("ETH-CHECK", "sign Failed.");
+                }
+
+                tx.signature = new ECDSASignatureETH(r, s);
+                int v = tx.BruteRecoveryID2(tx.signature, for_hash, pbKey);
+                if (v != 27 && v != 28) {
+                    Log.e(TAG, "invalid v");
+                    throw new Exception("Error in EthEngine - invalid v");
+                }
+                tx.signature.v = (byte) v;
+                Log.e(TAG, "ETH_v: " +String.valueOf(v));
+
+                byte[] txForSend = tx.getEncoded();
+                notifyOnNeedSendPayment(txForSend);
+                return txForSend;
+            }
+        };
+    }
+
+    @Override
+    public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
+        final ServerApiInfura serverApiInfura = new ServerApiInfura();
+        // request infura listener
+        ServerApiInfura.InfuraBodyListener infuraBodyListener = new ServerApiInfura.InfuraBodyListener() {
+            @Override
+            public void onSuccess(String method, InfuraResponse infuraResponse) {
+                switch (method) {
+                    case ServerApiInfura.INFURA_ETH_GET_BALANCE: {
+                        String balanceCap = infuraResponse.getResult();
+                        balanceCap = balanceCap.substring(2);
+                        BigInteger l = new BigInteger(balanceCap, 16);
+                        coinData.setBalanceReceived(true);
+                        coinData.setBalanceInInternalUnits(new CoinEngine.InternalAmount(l, "wei"));
+
+//                        Log.i("$TAG eth_get_balance", balanceCap)
+                    }
+                    break;
+
+                    case ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT: {
+                        String nonce = infuraResponse.getResult();
+                        nonce = nonce.substring(2);
+                        BigInteger count = new BigInteger(nonce, 16);
+                        coinData.setConfirmedTXCount(count);
+
+
+//                        Log.i("$TAG eth_getTransCount", nonce)
+                    }
+                    break;
+
+                    case ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT: {
+                        String pending = infuraResponse.getResult();
+                        pending = pending.substring(2);
+                        BigInteger count = new BigInteger(pending, 16);
+                        coinData.setUnconfirmedTXCount(count);
+
+//                        Log.i("$TAG eth_getPendingTxCount", pending)
+                    }
+                    break;
+                }
+
+                if (serverApiInfura.isRequestsSequenceCompleted()) {
+                    blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                } else {
+                    blockchainRequestsCallbacks.onProgress();
+                }
+            }
+
+            @Override
+            public void onFail(String method, String message) {
+                if (!serverApiInfura.isRequestsSequenceCompleted()) {
+                    ctx.setError(message);
+                    blockchainRequestsCallbacks.onComplete(false);
+                }
+            }
+        };
+        serverApiInfura.setInfuraResponse(infuraBodyListener);
+
+        serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
+        serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT, 67, coinData.getWallet(), "", "");
+        serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, 67, coinData.getWallet(), "", "");
+    }
+
+    @Override
+    public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
+        ServerApiInfura serverApiInfura = new ServerApiInfura();
+        // request infura eth gasPrice listener
+        ServerApiInfura.InfuraBodyListener infuraBodyListener = new ServerApiInfura.InfuraBodyListener() {
+            @Override
+            public void onSuccess(String method, InfuraResponse infuraResponse) {
+                String gasPrice = infuraResponse.getResult();
+                gasPrice = gasPrice.substring(2);
+                // rounding gas price to integer gwei
+                BigInteger l = new BigInteger(gasPrice, 16);//.divide(BigInteger.valueOf(1000000000L)).multiply(BigInteger.valueOf(1000000000L));
+
+                Log.i(TAG, "Infura gas price: " + gasPrice + " (" + l.toString() + ")");
+                BigInteger m = BigInteger.valueOf(21000);
+
+                Log.e(TAG, "fee multiplier: " + m.toString());
+
+                CoinEngine.InternalAmount weiMinFee = new CoinEngine.InternalAmount(l.multiply(m), "wei");
+                CoinEngine.InternalAmount weiNormalFee = new CoinEngine.InternalAmount(l.multiply(BigInteger.valueOf(12)).divide(BigInteger.valueOf(10)).multiply(m), "wei");
+                CoinEngine.InternalAmount weiMaxFee = new CoinEngine.InternalAmount(l.multiply(BigInteger.valueOf(15)).divide(BigInteger.valueOf(10)).multiply(m), "wei");
+
+                Log.i(TAG, "min fee   : " + weiMinFee.toValueString() + " wei");
+                Log.i(TAG, "normal fee: " + weiNormalFee.toValueString() + " wei");
+                Log.i(TAG, "max fee   : " + weiMaxFee.toValueString() + " wei");
+
+                coinData.minFee = convertToAmount(weiMinFee);
+                coinData.normalFee = convertToAmount(weiNormalFee);
+                coinData.maxFee = convertToAmount(weiMaxFee);
+
+                Log.i(TAG, "min fee   : " + coinData.minFee.toString());
+                Log.i(TAG, "normal fee: " + coinData.normalFee.toString());
+                Log.i(TAG, "max fee   : " + coinData.maxFee.toString());
+
+                blockchainRequestsCallbacks.onComplete(true);
+            }
+
+            @Override
+            public void onFail(String method, String message) {
+                ctx.setError(ctx.getContext().getString(R.string.cannot_calculate_fee_wrong_data_received_from_node));
+                blockchainRequestsCallbacks.onComplete(false);
+            }
+        };
+        serverApiInfura.setInfuraResponse(infuraBodyListener);
+
+        serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GAS_PRICE, 67, coinData.getWallet(), "", "");
+    }
+
+    @Override
+    public void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) {
+
+        String txStr = String.format("0x%s", BTCUtils.toHex(txForSend));
+
+        ServerApiInfura serverApiInfura = new ServerApiInfura();
+        // request infura eth gasPrice listener
+        ServerApiInfura.InfuraBodyListener infuraBodyListener = new ServerApiInfura.InfuraBodyListener() {
+            @Override
+            public void onSuccess(String method, InfuraResponse infuraResponse) {
+                if (method.equals(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION)) {
+                    if (infuraResponse.getResult().isEmpty()) {
+                        ctx.setError("Rejected by node: " + infuraResponse.getError());
+                        blockchainRequestsCallbacks.onComplete(false);
+                    } else {
+                        BigInteger nonce = coinData.getConfirmedTXCount();
+                        nonce=nonce.add(BigInteger.valueOf(1));
+                        coinData.setConfirmedTXCount(nonce);
+                        ctx.setError(null);
+                        blockchainRequestsCallbacks.onComplete(true);
+                    }
+                }
+            }
+
+            @Override
+            public void onFail(String method, String message) {
+                if (method.equals(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION)) {
+                    ctx.setError(message);
+                    blockchainRequestsCallbacks.onComplete(false);
+                }
+            }
+        };
+
+        serverApiInfura.setInfuraResponse(infuraBodyListener);
+
+        serverApiInfura.infura(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION, 67, coinData.getWallet(), "", txStr);
+
     }
 }

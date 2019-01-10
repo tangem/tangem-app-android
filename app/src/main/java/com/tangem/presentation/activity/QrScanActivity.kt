@@ -2,17 +2,22 @@ package com.tangem.presentation.activity
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AppCompatActivity
-
 import com.google.zxing.Result
-
+import com.tangem.Constant
 import me.dm7.barcodescanner.zxing.ZXingScannerView
 
 class QrScanActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
+    companion object {
+        fun callingIntent(context: Context): Intent {
+            return Intent(context, QrScanActivity::class.java)
+        }
+    }
 
     private var scannerView: ZXingScannerView? = null
 
@@ -26,14 +31,12 @@ class QrScanActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
 
     override fun onPause() {
         super.onPause()
-        if (scannerView != null)
-            scannerView!!.stopCamera()
+        scannerView?.stopCamera()
     }
 
     override fun onResume() {
         super.onResume()
-        if (scannerView != null)
-            scannerView!!.startCamera()
+        scannerView?.startCamera()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -51,7 +54,7 @@ class QrScanActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
 
     override fun handleResult(result: Result) {
         val data = Intent()
-        data.putExtra("QRCode", result.text)
+        data.putExtra(Constant.EXTRA_QR_CODE, result.text)
         setResult(Activity.RESULT_OK, data)
         finish()
     }
@@ -60,9 +63,10 @@ class QrScanActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
         // programmatically initialize the scanner view
         scannerView = ZXingScannerView(this)
         setContentView(scannerView)
+
         // register ourselves as a handler for scan results.
-        scannerView!!.setResultHandler(this)
-        scannerView!!.startCamera()
+        scannerView?.setResultHandler(this)
+        scannerView?.startCamera()
     }
 
 }
