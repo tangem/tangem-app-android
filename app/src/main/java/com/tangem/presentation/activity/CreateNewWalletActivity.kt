@@ -1,6 +1,7 @@
 package com.tangem.presentation.activity
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -12,27 +13,32 @@ import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
-import com.tangem.data.nfc.CreateNewWalletTask
-import com.tangem.domain.cardReader.CardProtocol
-import com.tangem.domain.cardReader.NfcManager
-import com.tangem.domain.wallet.TangemCard
+import com.tangem.App
+import com.tangem.Constant
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
-import com.tangem.util.Util
+import com.tangem.tangemcard.android.reader.NfcManager
+import com.tangem.tangemcard.android.reader.NfcReader
+import com.tangem.tangemcard.data.asBundle
+import com.tangem.tangemcard.reader.CardProtocol
+import com.tangem.tangemcard.tasks.CreateNewWalletTask
+import com.tangem.tangemcard.util.Util
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_create_new_wallet.*
 
 class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
-
     companion object {
-        val TAG: String = CreateNewWalletActivity::class.java.simpleName
-
-        const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
+        fun callingIntent(context: Context, ctx: TangemContext): Intent {
+            val intent = Intent(context, CreateNewWalletActivity::class.java)
+            intent.putExtra("UID", ctx.card!!.uid)
+            intent.putExtra("Card", ctx.card!!.asBundle)
+            return intent
+        }
     }
 
+    private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
-    private var nfcManager: NfcManager? = null
 
     private var createNewWalletTask: CreateNewWalletTask? = null
     private var lastReadSuccess = true
@@ -42,8 +48,6 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_new_wallet)
-
-        MainActivity.commonInit(applicationContext)
 
         nfcManager = NfcManager(this, this)
 
@@ -71,11 +75,11 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                 } else {
                     isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 65000
                 }
-                createNewWalletTask = CreateNewWalletTask(this, ctx.card, nfcManager, isoDep, this)
+                createNewWalletTask = CreateNewWalletTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
                 createNewWalletTask!!.start()
             } else {
 //                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + mCard.getUID() + ")");
-                nfcManager!!.ignoreTag(isoDep.tag)
+                nfcManager.ignoreTag(isoDep.tag)
             }
 
         } catch (e: Exception) {
@@ -85,11 +89,11 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
 
     public override fun onResume() {
         super.onResume()
-        nfcManager!!.onResume()
+        nfcManager.onResume()
     }
 
     public override fun onPause() {
-        nfcManager!!.onPause()
+        nfcManager.onPause()
         if (createNewWalletTask != null)
             createNewWalletTask!!.cancel(true)
         super.onPause()
@@ -97,7 +101,7 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
 
     public override fun onStop() {
         // dismiss enable NFC dialog
-        nfcManager!!.onStop()
+        nfcManager.onStop()
         if (createNewWalletTask != null)
             createNewWalletTask!!.cancel(true)
         super.onStop()
@@ -138,8 +142,8 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                             val intent = Intent()
                             intent.putExtra("message", "Cannot create wallet. Make sure you enter correct PIN2!")
                             intent.putExtra("UID", cardProtocol.card.uid)
-                            intent.putExtra("Card", cardProtocol.card.asBundle)
-                            setResult(RESULT_INVALID_PIN, intent)
+                            intent.putExtra("Card", cardProtocol.card!!.asBundle)
+                            setResult(Constant.RESULT_INVALID_PIN, intent)
                             finish()
                         } catch (e: Exception) {
                             e.printStackTrace()
@@ -177,7 +181,6 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
     }
 
     override fun onReadCancel() {
-
         createNewWalletTask = null
 
         progressBar!!.postDelayed({
@@ -192,7 +195,7 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
     }
 
     override fun onReadWait(msec: Int) {
-        WaitSecurityDelayDialog.OnReadWait(this, msec)
+        WaitSecurityDelayDialog.onReadWait(this, msec)
     }
 
     override fun onReadBeforeRequest(timeout: Int) {
