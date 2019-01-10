@@ -5,13 +5,11 @@ import android.text.InputFilter;
 import android.util.Log;
 
 import com.tangem.data.network.ElectrumRequest;
-import com.tangem.data.network.ServerApiCommon;
 import com.tangem.data.network.ServerApiElectrum;
 import com.tangem.domain.wallet.BCHUtils;
 import com.tangem.domain.wallet.BTCUtils;
 import com.tangem.tangemcard.reader.CardProtocol;
 import com.tangem.domain.wallet.BalanceValidator;
-import com.tangem.data.Blockchain;
 import com.tangem.domain.wallet.btc.BtcData;
 import com.tangem.domain.wallet.CoinData;
 import com.tangem.domain.wallet.CoinEngine;
@@ -24,7 +22,6 @@ import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.util.DerEncodingUtil;
 import com.tangem.tangemcard.util.Util;
-import com.tangem.util.FormatUtil;
 import com.tangem.wallet.R;
 
 import org.json.JSONArray;
@@ -594,7 +591,7 @@ public class BtcCashEngine extends CoinEngine {
                                 JSONObject jsUnspent = jsUnspentArray.getJSONObject(i);
                                 BtcData.UnspentTransaction trUnspent = new BtcData.UnspentTransaction();
                                 trUnspent.txID = jsUnspent.getString("tx_hash");
-                                trUnspent.Amount = jsUnspent.getInt("value");
+                                trUnspent.Amount = jsUnspent.getLong("value");
                                 trUnspent.Height = jsUnspent.getInt("height");
                                 coinData.getUnspentTransactions().add(trUnspent);
                             }
