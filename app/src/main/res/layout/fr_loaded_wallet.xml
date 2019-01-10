@@ -213,7 +213,7 @@
                             android:orientation="horizontal">
 
                             <android.support.v7.widget.AppCompatButton
-                                android:id="@+id/btnLookup"
+                                android:id="@+id/btnExplore"
                                 style="@style/AppTheme.RoundedCornerMaterialButton"
                                 android:layout_width="0dp"
                                 android:layout_height="34dp"
@@ -363,7 +363,7 @@
             android:textColor="@color/primary_dark" />
 
         <android.support.v7.widget.AppCompatButton
-            android:id="@+id/btnScanAgain"
+            android:id="@+id/btnNewScan"
             style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="0dp"
             android:layout_height="34dp"
