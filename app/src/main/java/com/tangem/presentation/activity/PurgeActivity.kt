@@ -1,6 +1,7 @@
 package com.tangem.presentation.activity
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.ColorStateList
@@ -12,14 +13,17 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.Toast
-import com.tangem.data.nfc.PurgeTask
-import com.tangem.domain.cardReader.CardProtocol
-import com.tangem.domain.cardReader.NfcManager
-import com.tangem.domain.wallet.TangemCard
+import com.tangem.App
+import com.tangem.tangemcard.tasks.PurgeTask
+import com.tangem.tangemcard.reader.CardProtocol
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
-import com.tangem.util.Util
+import com.tangem.tangemcard.android.reader.NfcReader
+import com.tangem.tangemcard.data.asBundle
+import com.tangem.tangemcard.util.Util
+import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_purge.*
 
@@ -27,11 +31,19 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
 
     companion object {
         val TAG: String = PurgeActivity::class.java.simpleName
+
+        fun callingIntent(context: Context, ctx: TangemContext): Intent {
+            val intent = Intent(context, PurgeActivity::class.java)
+            ctx.saveToIntent(intent)
+            return intent
+        }
+
         const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
     }
 
+    private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
-    private var nfcManager: NfcManager? = null
+
     private var purgeTask: PurgeTask? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,8 +54,6 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
 
         nfcManager = NfcManager(this, this)
 
-        MainActivity.commonInit(applicationContext)
-
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
         tvCardID.text = ctx.card!!.cidDescription
@@ -53,18 +63,18 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
 
     public override fun onResume() {
         super.onResume()
-        nfcManager?.onResume()
+        nfcManager.onResume()
     }
 
     public override fun onPause() {
-        nfcManager?.onPause()
+        nfcManager.onPause()
         purgeTask?.cancel(true)
         super.onPause()
     }
 
     public override fun onStop() {
         // dismiss enable NFC dialog
-        nfcManager?.onStop()
+        nfcManager.onStop()
         purgeTask?.cancel(true)
         super.onStop()
     }
@@ -72,19 +82,18 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
     override fun onTagDiscovered(tag: Tag) {
         try {
             // get IsoDep handle and run cardReader thread
-            val isoDep = IsoDep.get(tag)
-                    ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
+            val isoDep = IsoDep.get(tag) ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag.id
             val sUID = Util.byteArrayToHexString(uid)
-//            Log.v(TAG, "UID: $sUID")
+            LOG.d(TAG, "UID: $sUID")
 
             if (sUID == ctx.card!!.uid) {
                 isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 65000
-                purgeTask = PurgeTask(this, ctx.card, nfcManager, isoDep, this)
+                purgeTask = PurgeTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
                 purgeTask!!.start()
             } else {
-                //               this Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card.getUID() + ")");
-                nfcManager?.ignoreTag(isoDep.tag)
+                LOG.d(TAG, "Mismatch card UID (" + sUID + " instead of " + ctx.card.uid + ")")
+                nfcManager.ignoreTag(isoDep.tag)
             }
 
         } catch (e: Exception) {
@@ -93,7 +102,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
     }
 
     override fun onReadWait(msec: Int) {
-        WaitSecurityDelayDialog.OnReadWait(this, msec)
+        WaitSecurityDelayDialog.onReadWait(this, msec)
     }
 
     override fun onReadBeforeRequest(timeout: Int) {
