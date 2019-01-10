@@ -2,20 +2,6 @@ package com.tangem.data.network;
 
 public class Server {
 
-    /**
-     * https://tangem-webapp.appspot.com/
-     * https://tangem-services.appspot.com/
-     */
-    public static class ApiTangem {
-        public static final String URL_TANGEM = ServerURL.API_TANGEM;
-
-        public static class Method {
-            static final String VERIFY = URL_TANGEM + "verify";
-            static final String VERIFY_AND_GET_INFO = URL_TANGEM + "card/verify-and-get-info";
-            static final String ARTWORK = URL_TANGEM + "card/artwork";
-        }
-    }
-
     public static class ApiUpdateVersion {
         public static final String URL_UPDATE_VERSION = ServerURL.API_UPDATE_VERSION;
 
@@ -42,7 +28,7 @@ public class Server {
         public static final String URL_INFURA = ServerURL.API_INFURA;
 
         public static class Method {
-            static final String MAIN = URL_INFURA + "AfWg0tmYEX5Kukn2UkKV";
+            static final String MAIN = URL_INFURA + "613a0b14833145968b1f656240c7d245";
         }
     }
 
