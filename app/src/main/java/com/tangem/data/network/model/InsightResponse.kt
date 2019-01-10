@@ -16,7 +16,7 @@ data class InsightResponse(
         var txid: String = "",
 
         @SerializedName("satoshis")
-        var satoshis: Int? = null,
+        var satoshis: Long? = null,
 
         @SerializedName("height")
         var height: Int? = null,
