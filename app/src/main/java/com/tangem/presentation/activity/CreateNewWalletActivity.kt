@@ -31,7 +31,7 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
 
     companion object {
         fun callingIntent(context: Context, ctx: TangemContext): Intent {
-            val intent = Intent(context, EmptyWalletActivity::class.java)
+            val intent = Intent(context, CreateNewWalletActivity::class.java)
             intent.putExtra("UID", ctx.card!!.uid)
             intent.putExtra("Card", ctx.card!!.asBundle)
             return intent
