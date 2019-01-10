@@ -13,8 +13,8 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import com.tangem.data.network.Cryptonit
-import com.tangem.domain.cardReader.NfcManager
-import com.tangem.domain.wallet.Blockchain
+import com.tangem.tangemcard.android.reader.NfcManager
+import com.tangem.data.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.util.DecimalDigitsInputFilter
@@ -22,24 +22,21 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_cryptonit_withdrawal.*
 import java.io.IOException
 
-
 class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     companion object {
         val TAG: String = PrepareCryptonitWithdrawalActivity::class.java.simpleName
     }
 
+    private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
-    private var nfcManager: NfcManager? = null
-    private var cryptonit: Cryptonit? = null
 
+    private var cryptonit: Cryptonit? = null
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_cryptonit_withdrawal)
-
-        MainActivity.commonInit(applicationContext)
 
         nfcManager = NfcManager(this, this)
 
@@ -52,7 +49,7 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         etFee.setText(cryptonit!!.fee)
 
         tvCardID.text = ctx.card!!.cidDescription
-        tvWallet.text = ctx.card!!.wallet
+        tvWallet.text = ctx.coinData!!.wallet
         val engine = CoinEngineFactory.create(ctx)
 
         tvCurrency.text = engine!!.balanceCurrency
@@ -89,18 +86,17 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
 
         // set listeners
         btnLoad.setOnClickListener {
-
             try {
                 val strAmount: String = etAmount.text.toString().replace(",", ".")
                 val strFee: String = etFee.text.toString().replace(",", ".")
-                var dblAmount: Double = strAmount.toDouble()
+                val dblAmount: Double = strAmount.toDouble()
                 var dblFee: Double = strFee.toDouble()
                 cryptonit!!.fee = strFee
 
                 rlProgressBar.visibility = View.VISIBLE
                 tvProgressDescription.text = getString(R.string.cryptonit_request_withdrawal)
 
-                cryptonit!!.requestWithdrawCoins(ctx.blockchain.currency, dblAmount, ctx.card!!.wallet)
+                cryptonit!!.requestWithdrawCoins(ctx.blockchain.currency, dblAmount, ctx.coinData!!.wallet)
             } catch (e: Exception) {
                 etAmount.error = getString(R.string.unknown_amount_format)
             }
@@ -145,7 +141,7 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
             rlProgressBar.visibility = View.VISIBLE
             tvProgressDescription.text = getString(R.string.cryptonit_request_balance)
             tvError.visibility = View.INVISIBLE
-            cryptonit!!.requestBalance(ctx.card!!.blockchain.currency)
+            cryptonit!!.requestBalance(ctx.blockchain.currency)
         } else {
             tvError.visibility = View.VISIBLE
             tvError.text = getString(R.string.cryptonit_not_enough_account_data)
@@ -154,22 +150,22 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
 
     public override fun onResume() {
         super.onResume()
-        nfcManager!!.onResume()
+        nfcManager.onResume()
     }
 
     public override fun onPause() {
         super.onPause()
-        nfcManager!!.onPause()
+        nfcManager.onPause()
     }
 
     public override fun onStop() {
         super.onStop()
-        nfcManager!!.onStop()
+        nfcManager.onStop()
     }
 
     override fun onTagDiscovered(tag: Tag) {
         try {
-            nfcManager!!.ignoreTag(tag)
+            nfcManager.ignoreTag(tag)
         } catch (e: IOException) {
             e.printStackTrace()
         }

@@ -19,29 +19,75 @@ import android.text.TextUtils
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import com.tangem.Constant
 import com.tangem.data.fingerprint.StartFingerprintReaderTask
-import com.tangem.domain.cardReader.NfcManager
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.data.fingerprint.FingerprintHelper
-import com.tangem.data.db.PINStorage
-import com.tangem.domain.wallet.TangemCard
+import com.tangem.domain.wallet.TangemContext
+import com.tangem.tangemcard.android.data.PINStorage
+import com.tangem.tangemcard.data.TangemCard
+import com.tangem.tangemcard.data.loadFromBundle
+import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD
+import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD_UID
+import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_pin_request.*
 import kotlinx.android.synthetic.main.layout_pin_buttons.*
 import java.io.IOException
 
 class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, FingerprintHelper.FingerprintHelperListener {
-
     companion object {
-        const val KEY_ALIAS = "pinKey"
-        const val KEYSTORE = "AndroidKeyStore"
+        val TAG: String = PinRequestActivity::class.java.simpleName
+
+        fun callingIntent(context: Activity, mode: String): Intent {
+            val intent = Intent(context, PinRequestActivity::class.java)
+            intent.putExtra(Constant.EXTRA_MODE, mode)
+            return intent
+        }
+
+        fun callingIntentRequestPin(context: Activity, mode: String, ctx: TangemContext, newPIN: String): Intent {
+            val intent = Intent(context, PinRequestActivity::class.java)
+            intent.putExtra(Constant.EXTRA_MODE, mode)
+            intent.putExtra(Constant.EXTRA_NEW_PIN, newPIN)
+            ctx.saveToIntent(intent)
+            return intent
+        }
+
+        fun callingIntentRequestPin2(context: Activity, mode: String, ctx: TangemContext, newPIN2: String): Intent {
+            val intent = Intent(context, PinRequestActivity::class.java)
+            intent.putExtra(Constant.EXTRA_MODE, mode)
+            intent.putExtra(Constant.EXTRA_NEW_PIN_2, newPIN2)
+            ctx.saveToIntent(intent)
+            return intent
+        }
+
+        fun callingIntentRequestPin2(context: Activity, mode: String, ctx: TangemContext): Intent {
+            val intent = Intent(context, PinRequestActivity::class.java)
+            intent.putExtra(Constant.EXTRA_MODE, mode)
+            ctx.saveToIntent(intent)
+            return intent
+        }
+
+        fun callingIntentConfirmPin(context: Activity, mode: String, newPIN: String): Intent {
+            val intent = Intent(context, PinRequestActivity::class.java)
+            intent.putExtra(Constant.EXTRA_MODE, mode)
+            intent.putExtra(Constant.EXTRA_NEW_PIN, newPIN)
+            return intent
+        }
+
+        fun callingIntentConfirmPin2(context: Activity, mode: String, newPIN2: String): Intent {
+            val intent = Intent(context, PinRequestActivity::class.java)
+            intent.putExtra(Constant.EXTRA_MODE, mode)
+            intent.putExtra(Constant.EXTRA_NEW_PIN_2, newPIN2)
+            return intent
+        }
     }
+
+    private lateinit var nfcManager: NfcManager
 
     lateinit var mode: Mode
     private var allowFingerprint = false
-    private var nfcManager: NfcManager? = null
-
     var startFingerprintReaderTask: StartFingerprintReaderTask? = null
-
     private var fingerprintManager: FingerprintManager? = null
     private var fingerprintHelper: FingerprintHelper? = null
 
@@ -53,11 +99,9 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pin_request)
 
-        MainActivity.commonInit(applicationContext)
-
         nfcManager = NfcManager(this, this)
 
-        mode = Mode.valueOf(intent.getStringExtra("mode"))
+        mode = Mode.valueOf(intent.getStringExtra(Constant.EXTRA_MODE))
 
         if (mode == Mode.RequestNewPIN)
             if (PINStorage.haveEncryptedPIN()) {
@@ -82,9 +126,9 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         else if (mode == Mode.ConfirmNewPIN2)
             tvPinPrompt.setText(R.string.confirm_new_pin_2)
         else if (mode == Mode.RequestPIN2) {
-            val uid = intent.getStringExtra(TangemCard.EXTRA_UID)
+            val uid = intent.getStringExtra(EXTRA_TANGEM_CARD_UID)
             val card = TangemCard(uid)
-            card.loadFromBundle(intent.getBundleExtra(TangemCard.EXTRA_CARD))
+            card.loadFromBundle(intent.getBundleExtra(EXTRA_TANGEM_CARD))
 
             if (card.PIN2 == TangemCard.PIN2_Mode.DefaultPIN2 || card.PIN2 == TangemCard.PIN2_Mode.Unchecked) {
                 // if we know PIN2 or not try default previously - use it
@@ -136,7 +180,7 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
             startFingerprintReaderTask = null
         }
 
-        nfcManager!!.onPause()
+        nfcManager.onPause()
     }
 
     override fun onStop() {
@@ -149,12 +193,12 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
             startFingerprintReaderTask = null
         }
 
-        nfcManager!!.onStop()
+        nfcManager.onStop()
     }
 
     override fun onResume() {
         super.onResume()
-        nfcManager!!.onResume()
+        nfcManager.onResume()
         if (allowFingerprint)
             startFingerprintReader()
     }
@@ -162,20 +206,19 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
     override fun onTagDiscovered(tag: Tag) {
         try {
             Log.w(javaClass.name, "Ignore discovered tag!")
-            nfcManager!!.ignoreTag(tag)
+            nfcManager.ignoreTag(tag)
         } catch (e: IOException) {
             e.printStackTrace()
         }
-
     }
 
     override fun authenticationFailed(error: String) {
-        doLog(error)
+        LOG.w(TAG, error)
     }
 
     @TargetApi(Build.VERSION_CODES.M)
     override fun authenticationSucceeded(result: FingerprintManager.AuthenticationResult) {
-        doLog("Authentication succeeded!")
+        LOG.i(TAG,"Authentication succeeded!")
         val cipher = result.cryptoObject.cipher
 
         if (mode == Mode.RequestNewPIN || mode == Mode.ConfirmNewPIN) {
@@ -203,10 +246,6 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         finish()
     }
 
-    fun doLog(text: String) {
-        //        Log.e("FP", text);
-    }
-
     @SuppressLint("SetTextI18n")
     private fun buttonClick(button: Button) {
         tvPin!!.text = tvPin!!.text.toString() + button.text as String
@@ -214,27 +253,27 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
 
     @SuppressLint("NewApi")
     private fun testFingerPrintSettings(): Boolean {
-        doLog("Testing Fingerprint Settings")
+        LOG.i(TAG,"Testing Fingerprint Settings")
 
         val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
         fingerprintManager = getSystemService(Context.FINGERPRINT_SERVICE) as FingerprintManager
 
         if (!keyguardManager.isKeyguardSecure) {
-            doLog("User hasn't enabled Lock Screen")
+            LOG.i(TAG,"User hasn't enabled Lock Screen")
             return false
         }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
-            doLog("User hasn't granted permission to use Fingerprint")
+            LOG.i(TAG,"User hasn't granted permission to use Fingerprint")
             return false
         }
 
         if (!fingerprintManager!!.hasEnrolledFingerprints()) {
-            doLog("User hasn't registered any fingerprints")
+            LOG.i(TAG,"User hasn't registered any fingerprints")
             return false
         }
 
-        doLog("Fingerprint authentication is set.\n")
+        LOG.i(TAG,"Fingerprint authentication is set.\n")
 
         return true
     }
