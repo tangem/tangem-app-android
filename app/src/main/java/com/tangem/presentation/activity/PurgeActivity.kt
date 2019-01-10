@@ -31,17 +31,19 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
 
     companion object {
         val TAG: String = PurgeActivity::class.java.simpleName
-        const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
 
         fun callingIntent(context: Context, ctx: TangemContext): Intent {
             val intent = Intent(context, PurgeActivity::class.java)
             ctx.saveToIntent(intent)
             return intent
         }
+
+        const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
     }
 
-    private lateinit var ctx: TangemContext
     private lateinit var nfcManager: NfcManager
+    private lateinit var ctx: TangemContext
+
     private var purgeTask: PurgeTask? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
