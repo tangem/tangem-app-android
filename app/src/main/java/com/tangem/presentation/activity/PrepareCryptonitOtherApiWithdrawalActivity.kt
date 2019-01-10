@@ -28,8 +28,9 @@ class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapt
         val TAG: String = PrepareCryptonitOtherApiWithdrawalActivity::class.java.simpleName
     }
 
+    private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
-    private var nfcManager: NfcManager? = null
+
     private var cryptonit: CryptonitOtherApi? = null
 
     @Inject
@@ -156,17 +157,17 @@ class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapt
 
     public override fun onResume() {
         super.onResume()
-        nfcManager!!.onResume()
+        nfcManager.onResume()
     }
 
     public override fun onPause() {
         super.onPause()
-        nfcManager!!.onPause()
+        nfcManager.onPause()
     }
 
     public override fun onStop() {
         super.onStop()
-        nfcManager!!.onStop()
+        nfcManager.onStop()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -193,8 +194,7 @@ class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapt
 
     override fun onTagDiscovered(tag: Tag) {
         try {
-//            Log.w(javaClass.name, "Ignore discovered tag!")
-            nfcManager!!.ignoreTag(tag)
+            nfcManager.ignoreTag(tag)
         } catch (e: IOException) {
             e.printStackTrace()
         }
