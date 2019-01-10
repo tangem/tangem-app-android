@@ -126,51 +126,6 @@ class WaitSecurityDelayDialogNew : AppCompatDialogFragment() {
             setRemainingTimeout(readWait.msec!!)
     }
 
-    fun onReadBeforeRequest(timeout: Int) {
-//        if (timerToShowDelayDialog != null || timeout < DELAY_BEFORE_SHOW_DIALOG + MIN_REMAINING_DELAY_TO_SHOW_DIALOG)
-//            return
-//
-//        timerToShowDelayDialog = Timer()
-//        timerToShowDelayDialog!!.schedule(object : TimerTask() {
-//            override fun run() {
-//                setup(timeout, DELAY_BEFORE_SHOW_DIALOG)
-//                isCancelable = false
-//                if (!isVisible)
-//                    show(activity?.supportFragmentManager, TAG)
-//            }
-//        }, DELAY_BEFORE_SHOW_DIALOG.toLong())
-    }
-
-    fun onReadAfterRequest() {
-//        if (timerToShowDelayDialog == null)
-//            return
-//
-//        timerToShowDelayDialog!!.cancel()
-//        timerToShowDelayDialog = null
-    }
-
-    fun onReadWait(msec: Int) {
-//        if (timerToShowDelayDialog != null) {
-//            timerToShowDelayDialog!!.cancel()
-//            timerToShowDelayDialog = null
-//        }
-//
-//        if (msec == 0) {
-//            dismiss()
-//            return
-//        }
-//
-//        if (msec > MIN_REMAINING_DELAY_TO_SHOW_DIALOG) {
-//            // 1000ms - card delay notification interval
-//            setup(msec + 1000, 1000)
-//            isCancelable = false
-////            if (!isVisible)
-//            show(activity?.supportFragmentManager, TAG)
-//
-//        } else
-//            setRemainingTimeout(msec)
-    }
-
     private fun setup(msTimeout: Int, msProgress: Int) {
         this.msTimeout = msTimeout
         this.msProgress = msProgress
