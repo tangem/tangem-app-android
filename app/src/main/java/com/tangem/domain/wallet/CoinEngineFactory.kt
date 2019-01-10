@@ -6,6 +6,8 @@ import com.tangem.domain.wallet.btc.BtcEngine
 import com.tangem.domain.wallet.eth.EthEngine
 import com.tangem.domain.wallet.token.TokenEngine
 import com.tangem.domain.wallet.bch.BtcCashEngine
+import com.tangem.data.Blockchain
+import com.tangem.domain.wallet.ltc.LtcEngine
 
 /**
  * Factory for create specific engine
@@ -24,6 +26,7 @@ object CoinEngineFactory {
             Blockchain.BitcoinCash -> BtcCashEngine()
             Blockchain.Ethereum, Blockchain.EthereumTestNet -> EthEngine()
             Blockchain.Token -> TokenEngine()
+            Blockchain.Litecoin -> LtcEngine()
             else -> null
         }
     }
@@ -39,6 +42,8 @@ object CoinEngineFactory {
                 EthEngine(context)
             else if (Blockchain.Token == context.blockchain)
                 TokenEngine(context)
+            else if (Blockchain.Litecoin == context.blockchain)
+                LtcEngine(context)
             else
                 return null
         } catch (e: Exception) {
