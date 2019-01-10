@@ -1,6 +1,7 @@
 package com.tangem.presentation.activity
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -12,27 +13,37 @@ import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
-import com.tangem.data.nfc.SwapPINTask
-import com.tangem.domain.cardReader.CardProtocol
-import com.tangem.domain.cardReader.NfcManager
-import com.tangem.domain.wallet.TangemCard
+import com.tangem.App
+import com.tangem.Constant
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
-import com.tangem.util.Util
+import com.tangem.tangemcard.android.reader.NfcManager
+import com.tangem.tangemcard.android.reader.NfcReader
+import com.tangem.tangemcard.data.*
+import com.tangem.tangemcard.reader.CardProtocol
+import com.tangem.tangemcard.tasks.SwapPINTask
+import com.tangem.tangemcard.util.Util
+import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_pin_swap.*
 
 class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
-
     companion object {
         val TAG: String = PinSwapActivity::class.java.simpleName
+
+        fun callingIntent(context: Context, newPIN: String, newPIN2: String): Intent {
+            val intent = Intent(context, PinSwapActivity::class.java)
+            intent.putExtra(Constant.EXTRA_NEW_PIN, newPIN)
+            intent.putExtra(Constant.EXTRA_NEW_PIN_2, newPIN2)
+            return intent
+        }
 
         const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
     }
 
-    private var nfcManager: NfcManager? = null
-    private var card: TangemCard? = null
+    private lateinit var nfcManager: NfcManager
 
+    private var card: TangemCard? = null
     private var newPIN: String? = null
     private var newPIN2: String? = null
 
@@ -44,15 +55,13 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pin_swap)
 
-        MainActivity.commonInit(applicationContext)
-
         nfcManager = NfcManager(this, this)
 
-        card = TangemCard(intent.getStringExtra(TangemCard.EXTRA_UID))
-        card!!.loadFromBundle(intent.extras!!.getBundle(TangemCard.EXTRA_CARD))
+        card = TangemCard(intent.getStringExtra(EXTRA_TANGEM_CARD_UID))
+        card!!.loadFromBundle(intent.extras!!.getBundle(EXTRA_TANGEM_CARD))
 
-        newPIN = intent.getStringExtra("newPIN")
-        newPIN2 = intent.getStringExtra("newPIN2")
+        newPIN = intent.getStringExtra(Constant.EXTRA_NEW_PIN)
+        newPIN2 = intent.getStringExtra(Constant.EXTRA_NEW_PIN_2)
 
         tvCardID.text = card!!.cidDescription
 
@@ -68,17 +77,16 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
                     ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag.id
             val sUID = Util.byteArrayToHexString(uid)
-//            Log.v(TAG, "UID: $sUID")
+            LOG.d(TAG, "UID: $sUID")
 
             if (sUID == card!!.uid) {
                 isoDep.timeout = card!!.pauseBeforePIN2 + 65000
-                swapPinTask = SwapPINTask(this, card, nfcManager, newPIN, newPIN2, isoDep, this)
+                swapPinTask = SwapPINTask(card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, newPIN, newPIN2)
                 swapPinTask!!.start()
             } else {
-//                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + mCard!!.uid + ")")
-                nfcManager!!.ignoreTag(isoDep.tag)
+                LOG.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card!!.uid + ")")
+                nfcManager.ignoreTag(isoDep.tag)
             }
-
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -86,11 +94,11 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
 
     public override fun onResume() {
         super.onResume()
-        nfcManager!!.onResume()
+        nfcManager.onResume()
     }
 
     public override fun onPause() {
-        nfcManager!!.onPause()
+        nfcManager.onPause()
         if (swapPinTask != null)
             swapPinTask!!.cancel(true)
         super.onPause()
@@ -98,7 +106,7 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
 
     public override fun onStop() {
         // dismiss enable NFC dialog
-        nfcManager!!.onStop()
+        nfcManager.onStop()
         if (swapPinTask != null)
             swapPinTask!!.cancel(true)
         super.onStop()
@@ -190,7 +198,7 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
     }
 
     override fun onReadWait(msec: Int) {
-        WaitSecurityDelayDialog.OnReadWait(this, msec)
+        WaitSecurityDelayDialog.onReadWait(this, msec)
     }
 
     override fun onReadBeforeRequest(timeout: Int) {
