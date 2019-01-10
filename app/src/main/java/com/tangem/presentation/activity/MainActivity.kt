@@ -25,20 +25,25 @@ import android.widget.RelativeLayout
 import android.widget.Toast
 import com.scottyab.rootbeer.RootBeer
 import com.tangem.App
+import com.tangem.Constant
 import com.tangem.data.Logger
-import com.tangem.data.db.PINStorage
 import com.tangem.data.network.ServerApiCommon
-import com.tangem.data.nfc.DeviceNFCAntennaLocation
-import com.tangem.data.nfc.ReadCardInfoTask
 import com.tangem.di.Navigator
-import com.tangem.domain.cardReader.CardProtocol
-import com.tangem.domain.cardReader.Firmwares
-import com.tangem.domain.cardReader.NfcManager
-import com.tangem.domain.wallet.*
+import com.tangem.domain.wallet.CoinEngineFactory
+import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.RootFoundDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.tangemcard.android.nfc.DeviceNFCAntennaLocation
+import com.tangem.tangemcard.android.reader.NfcManager
+import com.tangem.tangemcard.android.reader.NfcReader
+import com.tangem.tangemcard.data.TangemCard
+import com.tangem.tangemcard.data.loadFromBundle
+import com.tangem.tangemcard.data.saveToBundle
+import com.tangem.tangemcard.reader.CardProtocol
+import com.tangem.tangemcard.tasks.ReadCardInfoTask
 import com.tangem.util.CommonUtil
+import com.tangem.util.LOG
 import com.tangem.util.PhoneUtility
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
@@ -51,38 +56,20 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
     companion object {
         val TAG: String = MainActivity::class.java.simpleName
-
-        private const val REQUEST_CODE_SEND_EMAIL = 3
-        private const val REQUEST_CODE_ENTER_PIN_ACTIVITY = 2
-        const val REQUEST_CODE_SHOW_CARD_ACTIVITY = 1
-        private const val REQUEST_CODE_REQUEST_CAMERA_PERMISSIONS = 3
-
-        const val EXTRA_LAST_DISCOVERED_TAG = "extra_last_tag"
-
         fun callingIntent(context: Context) = Intent(context, MainActivity::class.java)
-
-        fun commonInit(context: Context) {
-            if (PINStorage.needInit())
-                PINStorage.init(context)
-
-            if (Issuer.needInit())
-                Issuer.init(context)
-
-            if (Firmwares.needInit())
-                Firmwares.init(context)
-        }
     }
 
-    private var nfcManager: NfcManager? = null
+    @Inject
+    internal lateinit var navigator: Navigator
+
+    private lateinit var nfcManager: NfcManager
+
     private var zipFile: File? = null
     private var antenna: DeviceNFCAntennaLocation? = null
     private var unsuccessReadCount = 0
     private var lastTag: Tag? = null
     private var readCardInfoTask: ReadCardInfoTask? = null
     private var onNfcReaderCallback: NfcAdapter.ReaderCallback? = null
-
-    @Inject
-    internal lateinit var navigator: Navigator
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
@@ -106,8 +93,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         verifyPermissions()
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_NOSENSOR
-
-        commonInit(applicationContext)
 
         setNfcAdapterReaderCallback(this)
 
@@ -155,11 +140,10 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         // check if root device
         val rootBeer = RootBeer(this)
         if (rootBeer.isRootedWithoutBusyBoxCheck && !BuildConfig.DEBUG)
-            RootFoundDialog().show(fragmentManager, RootFoundDialog.TAG)
+            RootFoundDialog().show(supportFragmentManager, RootFoundDialog.TAG)
 
         // set listeners
         fab.setOnClickListener { showMenu(it) }
-
 
         val apiHelper = ServerApiCommon()
         apiHelper.setLastVersionListener { response ->
@@ -180,19 +164,19 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         NfcManager.verifyPermissions(this)
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             Log.e("QRScanActivity", "User hasn't granted permission to use camera")
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), REQUEST_CODE_REQUEST_CAMERA_PERMISSIONS)
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), Constant.REQUEST_CODE_REQUEST_CAMERA_PERMISSIONS)
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when (requestCode) {
-            REQUEST_CODE_SEND_EMAIL -> {
+            Constant.REQUEST_CODE_SEND_EMAIL -> {
                 if (zipFile != null) {
                     zipFile!!.delete()
                     zipFile = null
                 }
             }
-            REQUEST_CODE_ENTER_PIN_ACTIVITY -> {
+            Constant.REQUEST_CODE_ENTER_PIN_ACTIVITY -> {
                 if (resultCode == Activity.RESULT_OK && lastTag != null)
                     onTagDiscovered(lastTag!!)
                 else
@@ -216,17 +200,16 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
-
         when (id) {
             R.id.sendLogs -> {
                 var f: File? = null
                 try {
                     f = Logger.collectLogs(this)
                     if (f != null) {
-//                        Log.e(TAG, String.format("Collect %d log bytes", f.length()));
+                        LOG.e(TAG, String.format("Collect %d log bytes", f.length()))
                         CommonUtil.sendEmail(this, zipFile, TAG, "Logs", PhoneUtility.getDeviceInfo(), arrayOf(f))
                     } else {
-//                        Log.e(TAG, "Can't create temporaly log file");
+                        LOG.e(TAG, "Can't create temporarily log file")
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -237,17 +220,17 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                 return true
             }
             R.id.managePIN -> {
-                showSavePinActivity()
+                navigator.showPinSave(this, false)
                 return true
             }
 
             R.id.managePIN2 -> {
-                showSavePin2Activity()
+                navigator.showPinSave(this, true)
                 return true
             }
 
             R.id.about -> {
-                showLogoActivity()
+                navigator.showLogo(this, false)
                 return true
             }
         }
@@ -260,7 +243,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
             val isoDep = IsoDep.get(tag)
                     ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
 
-//            Log.e(TAG, "setTimeout(" + String.valueOf(1000 + 3000 * unsuccessReadCount) + ")");
+            LOG.e(TAG, "setTimeout(" + (1000 + 3000 * unsuccessReadCount) + ")")
             if (unsuccessReadCount < 2) {
                 isoDep.timeout = 2000 + 5000 * unsuccessReadCount
             } else {
@@ -268,14 +251,14 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
             }
             lastTag = tag
 
-            readCardInfoTask = ReadCardInfoTask(this, nfcManager, isoDep, this)
+            readCardInfoTask = ReadCardInfoTask(NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
             readCardInfoTask!!.start()
 
-//            Log.i(TAG, "onTagDiscovered " + Arrays.toString(tag.getId()));
+            LOG.i(TAG, "onTagDiscovered " + Arrays.toString(tag.id))
 
         } catch (e: Exception) {
             e.printStackTrace()
-            nfcManager!!.notifyReadResult(false)
+            nfcManager.notifyReadResult(false)
         }
     }
 
@@ -283,23 +266,19 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         super.onResume()
         animate()
         ReadCardInfoTask.resetLastReadInfo()
-        nfcManager!!.onResume()
+        nfcManager.onResume()
     }
 
     public override fun onPause() {
-        nfcManager!!.onPause()
-        if (readCardInfoTask != null) {
-            readCardInfoTask!!.cancel(true)
-        }
+        nfcManager.onPause()
+        readCardInfoTask?.cancel(true)
         super.onPause()
     }
 
     public override fun onStop() {
         // dismiss enable NFC dialog
-        nfcManager!!.onStop()
-        if (readCardInfoTask != null) {
-            readCardInfoTask!!.cancel(true)
-        }
+        nfcManager.onStop()
+        readCardInfoTask?.cancel(true)
         super.onStop()
     }
 
@@ -315,7 +294,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         readCardInfoTask = null
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
-                nfcManager!!.notifyReadResult(true)
+                nfcManager.notifyReadResult(true)
                 rlProgressBar.post {
                     rlProgressBar.visibility = View.GONE
 
@@ -330,12 +309,20 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                     val card = TangemCard(uid)
                     card.loadFromBundle(cardInfo.getBundle("Card"))
 
+                    val ctx = TangemContext(card)
                     when {
-                        card.status == TangemCard.Status.Loaded -> lastTag?.let { navigator.showLoadedWallet(this, it, cardInfo) }
-                        card.status == TangemCard.Status.Empty -> navigator.showEmptyWallet(this)
+                        card.status == TangemCard.Status.Loaded -> lastTag?.let {
+                            val engineCoin = CoinEngineFactory.create(ctx)
+                                    ?: throw CardProtocol.TangemException("Can't create CoinEngine!")
+                            engineCoin.defineWallet()
+                            //mCard.setWallet(Blockchain.calculateWalletAddress(mCard, pkUncompressed));
+
+                            navigator.showLoadedWallet(this, it, ctx)
+                        }
+                        card.status == TangemCard.Status.Empty -> navigator.showEmptyWallet(this, ctx)
                         card.status == TangemCard.Status.Purged -> Toast.makeText(this, R.string.erased_wallet, Toast.LENGTH_SHORT).show()
                         card.status == TangemCard.Status.NotPersonalized -> Toast.makeText(this, R.string.not_personalized, Toast.LENGTH_SHORT).show()
-                        else -> lastTag?.let { navigator.showLoadedWallet(this, it, cardInfo) }
+                        else -> lastTag?.let { navigator.showLoadedWallet(this, it, ctx) }
                     }
                 }
 
@@ -346,7 +333,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                     unsuccessReadCount++
 
                     if (cardProtocol.error is CardProtocol.TangemException_InvalidPIN)
-                        doEnterPIN()
+                        navigator.showPinRequest(this, PinRequestActivity.Mode.RequestPIN.toString())
                     else {
                         if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported)
                             if (!NoExtendedLengthSupportDialog.allReadyShowed)
@@ -354,7 +341,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
                         lastTag = null
                         ReadCardInfoTask.resetLastReadInfo()
-                        nfcManager!!.notifyReadResult(false)
+                        nfcManager.notifyReadResult(false)
                     }
                 }
             }
@@ -382,7 +369,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     }
 
     override fun onReadWait(msec: Int) {
-        WaitSecurityDelayDialog.OnReadWait(Objects.requireNonNull(this), msec)
+        WaitSecurityDelayDialog.onReadWait(Objects.requireNonNull(this), msec)
     }
 
     override fun onReadBeforeRequest(timeout: Int) {
@@ -395,13 +382,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
     private fun setNfcAdapterReaderCallback(callback: NfcAdapter.ReaderCallback) {
         onNfcReaderCallback = callback
-    }
-
-    private fun showLogoActivity() {
-        val intent = Intent(baseContext, LogoActivity::class.java)
-        intent.putExtra(LogoActivity.TAG, true)
-        intent.putExtra(LogoActivity.EXTRA_AUTO_HIDE, false)
-        startActivity(intent)
     }
 
     private fun animate() {
@@ -424,18 +404,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         llHand.startAnimation(a)
     }
 
-    private fun showSavePinActivity() {
-        val intent = Intent(baseContext, PinSaveActivity::class.java)
-        intent.putExtra("PIN2", false)
-        startActivity(intent)
-    }
-
-    private fun showSavePin2Activity() {
-        val intent = Intent(baseContext, PinSaveActivity::class.java)
-        intent.putExtra("PIN2", true)
-        startActivity(intent)
-    }
-
     private fun showMenu(v: View) {
         val popup = PopupMenu(this, v)
         val inflater = popup.menuInflater
@@ -449,12 +417,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
         popup.setOnMenuItemClickListener(this)
         popup.show()
-    }
-
-    private fun doEnterPIN() {
-        val intent = Intent(this, PinRequestActivity::class.java)
-        intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN.toString())
-        startActivityForResult(intent, REQUEST_CODE_ENTER_PIN_ACTIVITY)
     }
 
 }
