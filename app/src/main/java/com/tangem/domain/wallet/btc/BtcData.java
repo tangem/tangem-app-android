@@ -35,14 +35,14 @@ public class BtcData extends CoinData {
 
     public static class UnspentTransaction {
         public String txID;
-        public Integer Amount;
+        public Long Amount;
         public Integer Height;
         public String Raw = "";
 
         public Bundle getAsBundle() {
             Bundle B = new Bundle();
             B.putString("txID", txID);
-            B.putInt("Amount", Amount);
+            B.putLong("Amount", Amount);
             B.putInt("Height", Height);
             B.putString("Raw", Raw);
             return B;
@@ -50,7 +50,7 @@ public class BtcData extends CoinData {
 
         public void loadFromBundle(Bundle B) {
             txID = B.getString("txID");
-            Amount = B.getInt("Amount");
+            Amount = B.getLong("Amount");
             Height = B.getInt("Height");
             Raw = B.getString("Raw");
         }
