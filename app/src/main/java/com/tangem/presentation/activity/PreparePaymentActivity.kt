@@ -25,10 +25,8 @@ import java.io.IOException
 import javax.inject.Inject
 
 class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
-
     companion object {
         val TAG: String = PreparePaymentActivity::class.java.simpleName
-
         fun callingIntent(context: Context, ctx: TangemContext): Intent {
             val intent = Intent(context, PreparePaymentActivity::class.java)
             ctx.saveToIntent(intent)
@@ -36,11 +34,11 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
     }
 
-    private lateinit var ctx: TangemContext
-    private var nfcManager: NfcManager? = null
-
     @Inject
     internal lateinit var navigator: Navigator
+
+    private lateinit var ctx: TangemContext
+    private lateinit var nfcManager: NfcManager
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,7 +58,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         tvBalance.text = html
 
         //TODO - to engine
-        if (ctx.blockchain == Blockchain.Token && engine.balance.currency!=Blockchain.Ethereum.currency) {
+        if (ctx.blockchain == Blockchain.Token && engine.balance.currency != Blockchain.Ethereum.currency) {
             rgIncFee!!.visibility = View.INVISIBLE
         } else {
             rgIncFee!!.visibility = View.VISIBLE
@@ -87,7 +85,6 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             }
         }
         btnVerify.setOnClickListener {
-
             val engine1 = CoinEngineFactory.create(ctx)
 
             val strAmount: String = etAmount.text.toString().replace(",", ".")
@@ -102,29 +99,18 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 etAmount.error = getString(R.string.unknown_amount_format)
             }
 
-            var checkAddress = false
-//            if (engine1 != null)
-                checkAddress = engine1.validateAddress(etWallet.text.toString())
-
             // check wallet address
-            if (!checkAddress) {
+            if (!engine1.validateAddress(etWallet.text.toString())) {
                 etWallet.error = getString(R.string.incorrect_destination_wallet_address)
                 return@setOnClickListener
-            } else {
+            } else
                 etWallet.error = null
-            }
 
             if (etWallet.text.toString() == ctx.coinData!!.wallet) {
                 etWallet.error = getString(R.string.destination_wallet_address_equal_source_address)
                 return@setOnClickListener
             }
 
-            // check enough funds
-            // TODO - double with engin.checkAmount
-//            if (etAmount.text.toString().replace(",", ".").toDouble() > engine.getBalanceValue(card).replace(",", ".").toDouble()) {
-//                etAmount.error = getString(R.string.not_enough_funds_on_your_card)
-//                return@setOnClickListener
-//            }
             if (!etAmount.error.isNullOrEmpty() || !etWallet.error.isNullOrEmpty()) {
                 return@setOnClickListener
             }
@@ -143,17 +129,17 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     public override fun onResume() {
         super.onResume()
-        nfcManager!!.onResume()
+        nfcManager.onResume()
     }
 
     public override fun onPause() {
         super.onPause()
-        nfcManager!!.onPause()
+        nfcManager.onPause()
     }
 
     public override fun onStop() {
         super.onStop()
-        nfcManager!!.onStop()
+        nfcManager.onStop()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -188,11 +174,10 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     override fun onTagDiscovered(tag: Tag) {
         try {
-            nfcManager!!.ignoreTag(tag)
+            nfcManager.ignoreTag(tag)
         } catch (e: IOException) {
             e.printStackTrace()
         }
-
     }
 
 }
