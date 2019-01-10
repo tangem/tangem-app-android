@@ -21,9 +21,10 @@ import java.io.IOException
 
 class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
-    private lateinit var ctx: TangemContext
-    private var tx: ByteArray? = null
     private lateinit var nfcManager: NfcManager
+    private lateinit var ctx: TangemContext
+
+    private var tx: ByteArray? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
