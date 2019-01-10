@@ -566,11 +566,11 @@ public final class Transaction {
         public static Script buildOutput(String address) throws BitcoinException {
             //noinspection TryWithIdenticalCatches
                 byte[] addressWithCheckSumAndNetworkCode = Base58.decodeBase58(address);
-                if (addressWithCheckSumAndNetworkCode[0] == 0 || addressWithCheckSumAndNetworkCode[0] == 111) {
+                if (addressWithCheckSumAndNetworkCode[0] == 0 || addressWithCheckSumAndNetworkCode[0] == 111 || addressWithCheckSumAndNetworkCode[0] == 48) { //0 for BTC/BCH 1 address | 48 for LTC L address
                     return buildOutputP2H(address);
                 }
 
-                if(addressWithCheckSumAndNetworkCode[0] == 5 || addressWithCheckSumAndNetworkCode[0] == (byte)0xc4) {
+                if(addressWithCheckSumAndNetworkCode[0] == 5 || addressWithCheckSumAndNetworkCode[0] == (byte)0xc4 || addressWithCheckSumAndNetworkCode[0] == 50) { //5 for BTC/BCH/LTC 3 address | 50 for LTC M address
                     return buildOutputP2SH(address);
                 }
 
@@ -579,7 +579,7 @@ public final class Transaction {
         public static Script buildOutputP2SH(String address) throws BitcoinException {
             try {
                 byte[] addressWithCheckSumAndNetworkCode = Base58.decodeBase58(address);
-                if (addressWithCheckSumAndNetworkCode[0] != 5 && addressWithCheckSumAndNetworkCode[0] != (byte)0xc4) {
+                if (addressWithCheckSumAndNetworkCode[0] != 5 && addressWithCheckSumAndNetworkCode[0] != (byte)0xc4 && addressWithCheckSumAndNetworkCode[0] != 50) {
                     throw new BitcoinException(BitcoinException.ERR_UNSUPPORTED, "Unknown address type", address);
                 }
 
@@ -601,7 +601,7 @@ public final class Transaction {
             //noinspection TryWithIdenticalCatches
             try {
                 byte[] addressWithCheckSumAndNetworkCode = Base58.decodeBase58(address);
-                if (addressWithCheckSumAndNetworkCode[0] != 0 && addressWithCheckSumAndNetworkCode[0] != 111) {
+                if (addressWithCheckSumAndNetworkCode[0] != 0 && addressWithCheckSumAndNetworkCode[0] != 111 && addressWithCheckSumAndNetworkCode[0] != 48) {
                     throw new BitcoinException(BitcoinException.ERR_UNSUPPORTED, "Unknown address type", address);
                 }
 
