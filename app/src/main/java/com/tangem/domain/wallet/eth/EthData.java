@@ -62,8 +62,12 @@ public class EthData extends CoinData {
     public void loadFromBundle(Bundle B) {
         super.loadFromBundle(B);
 
-        String currency = B.getString("BalanceCurrency");
-        balance = new CoinEngine.InternalAmount(B.getString("BalanceDecimal"), currency);
+        if (B.containsKey("BalanceCurrency") && B.containsKey("BalanceDecimal")) {
+            String currency = B.getString("BalanceCurrency");
+            balance = new CoinEngine.InternalAmount(B.getString("BalanceDecimal"), currency);
+        } else {
+            balance = null;
+        }
 
         if (B.containsKey("confirmTx"))
             countConfirmedTX = new BigInteger(B.getString("confirmTx"), 16);
@@ -75,8 +79,10 @@ public class EthData extends CoinData {
     public void saveToBundle(Bundle B) {
         super.saveToBundle(B);
         try {
-            B.putString("BalanceCurrency", balance.getCurrency());
-            B.putString("BalanceDecimal", balance.toString());
+            if (balance != null) {
+                B.putString("BalanceCurrency", balance.getCurrency());
+                B.putString("BalanceDecimal", balance.toString());
+            }
 
             B.putString("confirmTx", getConfirmedTXCount().toString(16));
             B.putString("unconfirmTx", getUnconfirmedTXCount().toString(16));
