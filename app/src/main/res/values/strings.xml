@@ -107,6 +107,9 @@
     <string name="if_you_forget">If you forget your new PIN you will lose your money forever!</string>
     <string name="if_you_use_default">If you use default PIN someone can steal your money!</string>
     <string name="cannot_obtain_data_from_blockchain">Cannot obtain data from blockchain</string>
+    <string name="cannot_obtain_data_from_blockchain_no_connection">Cannot obtain data from blockchain (connection refused)</string>
+    <string name="cannot_obtain_data_from_blockchain_no_answer">Cannot obtain data from blockchain (empty answer received)</string>
+    <string name="cannot_obtain_data_from_blockchain_communication_error">Cannot obtain data from blockchain (communication error)</string>
     <string name="sending_cached_transaction">Sending cached transaction…</string>
     <string name="not_implemented">NOT IMPLEMENTED</string>
     <string name="this_banknote_protected_default_PIN1_code">This banknote is protected by default PIN1 code</string>
@@ -158,7 +161,7 @@
     <string name="please_wait">Please wait while the payment is sent…</string>
     <string name="transaction_has_been_successfully_signed">Transaction has been successfully signed and sent to blockchain node. Wallet balance will be updated in a while</string>
     <string name="try_again_failed_to_send_transaction">Try again. Failed to send transaction (%1$s)</string>
-    <string name="cannot_sign_transaction._make_sure_you_enter_correct_pin_2">Cannot sign transaction. Make sure you enter correct PIN2!</string>
+    <string name="cannot_sign_transaction_make_sure_you_enter_correct_pin_2">Cannot sign transaction. Make sure you enter correct PIN2!</string>
     <string name="cannot_sign_transaction_wrong_amount">Amount and fee exceed total wallet balance!</string>
 
     <!-- PreparePaymentActivity -->

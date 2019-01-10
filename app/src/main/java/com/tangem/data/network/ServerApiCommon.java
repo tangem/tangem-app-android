@@ -5,15 +5,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.tangem.App;
-import com.tangem.data.network.model.CardVerifyAndGetInfo;
 import com.tangem.data.network.model.RateInfoResponse;
-import com.tangem.domain.wallet.TangemCard;
-import com.tangem.util.Util;
-
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
@@ -36,7 +28,7 @@ public class ServerApiCommon {
 
     public interface EstimateFeeListener {
         void onSuccess(int blockCount, String estimateFeeResponse);
-        void onFail(String message);
+        void onFail(int blockCount, String message);
     }
 
     public void setEstimateFee(EstimateFeeListener listener) {
@@ -71,102 +63,14 @@ public class ServerApiCommon {
                     estimateFeeListener.onSuccess(blockCount, response.body());
                     Log.i(TAG, "estimateFee         onResponse " + response.code() + "  " + response.body());
                 } else
-                    estimateFeeListener.onFail(response.body());
+                    estimateFeeListener.onFail(blockCount, response.body());
                 Log.e(TAG, "estimateFee         onResponse " + response.code());
             }
 
             @Override
             public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
-                estimateFeeListener.onFail(t.getMessage());
+                estimateFeeListener.onFail(blockCount, t.getMessage());
                 Log.e(TAG, "estimateFee onFailure " + t.getMessage());
-            }
-        });
-    }
-
-    /**
-     * HTTP
-     * Card verify
-     */
-    private CardVerifyAndGetInfoListener cardVerifyAndGetInfoListener;
-
-    public interface CardVerifyAndGetInfoListener {
-        void onSuccess(CardVerifyAndGetInfo.Response cardVerifyAndGetArtworkResponse);
-        void onFail(String message);
-    }
-
-    public void setCardVerifyAndGetInfoListener(CardVerifyAndGetInfoListener listener) {
-        cardVerifyAndGetInfoListener = listener;
-    }
-
-    public void cardVerifyAndGetInfo(TangemCard card) {
-        TangemApi tangemApi = App.getNetworkComponent().getRetrofitTangem().create(TangemApi.class);
-
-        List<CardVerifyAndGetInfo.Request.Item> requests = new ArrayList<>();
-        requests.add(new CardVerifyAndGetInfo.Request.Item(Util.bytesToHex(card.getCID()), Util.bytesToHex(card.getCardPublicKey())));
-
-        CardVerifyAndGetInfo.Request requestBody = new CardVerifyAndGetInfo.Request(requests);
-
-        Call<CardVerifyAndGetInfo.Response> call = tangemApi.getCardVerifyAndGetInfo(requestBody);
-        call.enqueue(new Callback<CardVerifyAndGetInfo.Response>() {
-            @Override
-            public void onResponse(@NonNull Call<CardVerifyAndGetInfo.Response> call, @NonNull Response<CardVerifyAndGetInfo.Response> response) {
-                if (response.code() == 200) {
-                    CardVerifyAndGetInfo.Response cardVerifyAndGetArtworkResponse = response.body();
-                    cardVerifyAndGetInfoListener.onSuccess(cardVerifyAndGetArtworkResponse);
-                    Log.i(TAG, "cardVerifyAndGeInfo onResponse " + response.code());
-                } else {
-                    cardVerifyAndGetInfoListener.onFail(String.valueOf(response.code()));
-                    Log.e(TAG, "cardVerifyAndGetInfo onResponse " + response.code());
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<CardVerifyAndGetInfo.Response> call, @NonNull Throwable t) {
-                cardVerifyAndGetInfoListener.onFail(t.getMessage());
-                Log.e(TAG, "cardVerifyAndGetInfo onFailure " + t.getMessage());
-            }
-        });
-    }
-
-    /**
-     * HTTP
-     * Last version request from GitHub
-     */
-    private ArtworkListener artworkListener;
-
-    public interface ArtworkListener {
-        void onSuccess(String artworkId, InputStream inputStream, Date updateDate);
-        void onFail(String message);
-    }
-
-    public void setArtworkListener(ArtworkListener listener) {
-        artworkListener = listener;
-    }
-
-    public void requestArtwork(String artworkId, Date updateDate, TangemCard card) {
-        TangemApi tangemApi = App.getNetworkComponent().getRetrofitTangem().create(TangemApi.class);
-
-        Call<ResponseBody> call = tangemApi.getArtwork(artworkId, Util.bytesToHex(card.getCID()), Util.bytesToHex(card.getCardPublicKey()));
-        call.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
-                Log.i(TAG, "getArtwork onResponse " + response.code());
-                if (response.code() == 200) {
-                    try {
-                        ResponseBody body = response.body();
-                        if (body != null) {
-                            artworkListener.onSuccess(artworkId, body.byteStream(), updateDate);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
-                artworkListener.onFail(t.getMessage());
-                Log.e(TAG, "getArtwork onFailure " + t.getMessage());
             }
         });
     }
