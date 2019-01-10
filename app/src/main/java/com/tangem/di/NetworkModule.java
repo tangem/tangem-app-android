@@ -43,17 +43,6 @@ class NetworkModule {
 
     @Singleton
     @Provides
-    @Named(Server.ApiTangem.URL_TANGEM)
-    Retrofit provideRetrofitTangem() {
-        return new Retrofit.Builder()
-                .baseUrl(Server.ApiTangem.URL_TANGEM)
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(createOkHttpClient())
-                .build();
-    }
-
-    @Singleton
-    @Provides
     @Named(Server.ApiUpdateVersion.URL_UPDATE_VERSION)
     Retrofit provideGithubusercontent() {
         return new Retrofit.Builder()
