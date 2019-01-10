@@ -6,6 +6,7 @@ import android.annotation.TargetApi
 import android.app.Dialog
 import android.app.KeyguardManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.hardware.fingerprint.FingerprintManager
 import android.os.Build
@@ -19,9 +20,10 @@ import android.text.TextUtils
 import android.view.View
 import android.widget.Button
 import android.widget.Toast
+import com.tangem.Constant
 import com.tangem.data.fingerprint.ConfirmWithFingerprintTask
 import com.tangem.data.fingerprint.FingerprintHelper
-import com.tangem.data.db.PINStorage
+import com.tangem.tangemcard.android.data.PINStorage
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_pin_save.*
 import kotlinx.android.synthetic.main.layout_pin_buttons.*
@@ -37,6 +39,15 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 
 class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelperListener {
+    companion object {
+        val TAG: String = PinSaveActivity::class.java.simpleName
+
+        fun callingIntent(context: Context, hasPin2: Boolean): Intent {
+            val intent = Intent(context, PinSaveActivity::class.java)
+            intent.putExtra(Constant.EXTRA_PIN2, hasPin2)
+            return intent
+        }
+    }
 
     private var confirmWithFingerprintTask: ConfirmWithFingerprintTask? = null
     private var keyStore: KeyStore? = null
@@ -56,9 +67,7 @@ class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pin_save)
 
-        MainActivity.commonInit(applicationContext)
-
-        usePIN2 = intent.getBooleanExtra("PIN2", false)
+        usePIN2 = intent.getBooleanExtra(Constant.EXTRA_PIN2, false)
 
         if (usePIN2)
             tvPinPrompt.text = getString(R.string.enter_pin2_and_use_fingerprint_to_save_it)
@@ -155,7 +164,7 @@ class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
 
     fun getKeyStore(): Boolean {
         try {
-            keyStore = KeyStore.getInstance(PinRequestActivity.KEYSTORE)
+            keyStore = KeyStore.getInstance(Constant.KEYSTORE)
             // create empty keystore
             keyStore!!.load(null)
             return true
@@ -176,12 +185,12 @@ class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
     fun createNewKey(forceCreate: Boolean): Boolean {
         try {
             if (forceCreate)
-                keyStore!!.deleteEntry(PinRequestActivity.KEY_ALIAS)
+                keyStore!!.deleteEntry(Constant.KEY_ALIAS)
 
-            if (!keyStore!!.containsAlias(PinRequestActivity.KEY_ALIAS)) {
-                val generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, PinRequestActivity.KEYSTORE)
+            if (!keyStore!!.containsAlias(Constant.KEY_ALIAS)) {
+                val generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, Constant.KEYSTORE)
 
-                generator.init(KeyGenParameterSpec.Builder(PinRequestActivity.KEY_ALIAS,
+                generator.init(KeyGenParameterSpec.Builder(Constant.KEY_ALIAS,
                         KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
                         .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
                         .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
@@ -217,14 +226,14 @@ class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
     fun initCipher(mode: Int): Boolean {
         try {
             keyStore!!.load(null)
-            val keyspec = keyStore!!.getKey(PinRequestActivity.KEY_ALIAS, null) as SecretKey
+            val keySpec = keyStore!!.getKey(Constant.KEY_ALIAS, null) as SecretKey
 
             if (mode == Cipher.ENCRYPT_MODE) {
-                cipher!!.init(mode, keyspec)
+                cipher!!.init(mode, keySpec)
             } else {
                 val iv = PINStorage.loadEncryptedIV()
-                val ivspec = IvParameterSpec(iv)
-                cipher!!.init(mode, keyspec, ivspec)
+                val ivSpec = IvParameterSpec(iv)
+                cipher!!.init(mode, keySpec, ivSpec)
             }
 
             return true
@@ -302,7 +311,6 @@ class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
                     }
 
                     // show a progress spinner, and kick off a background task to perform the user login attempt
-                    //showProgress(true);
                     confirmWithFingerprintTask = ConfirmWithFingerprintTask(this@PinSaveActivity)
                     confirmWithFingerprintTask!!.execute(null as Void?)
                 } else {
