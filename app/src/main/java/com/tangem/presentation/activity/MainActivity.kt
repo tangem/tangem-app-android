@@ -56,20 +56,20 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
     companion object {
         val TAG: String = MainActivity::class.java.simpleName
-
         fun callingIntent(context: Context) = Intent(context, MainActivity::class.java)
     }
 
+    @Inject
+    internal lateinit var navigator: Navigator
+
     private lateinit var nfcManager: NfcManager
+
     private var zipFile: File? = null
     private var antenna: DeviceNFCAntennaLocation? = null
     private var unsuccessReadCount = 0
     private var lastTag: Tag? = null
     private var readCardInfoTask: ReadCardInfoTask? = null
     private var onNfcReaderCallback: NfcAdapter.ReaderCallback? = null
-
-    @Inject
-    internal lateinit var navigator: Navigator
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
