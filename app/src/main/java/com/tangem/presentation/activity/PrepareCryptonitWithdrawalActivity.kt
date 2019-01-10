@@ -28,10 +28,10 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         val TAG: String = PrepareCryptonitWithdrawalActivity::class.java.simpleName
     }
 
+    private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
-    private var nfcManager: NfcManager? = null
-    private var cryptonit: Cryptonit? = null
 
+    private var cryptonit: Cryptonit? = null
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -150,22 +150,22 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
 
     public override fun onResume() {
         super.onResume()
-        nfcManager!!.onResume()
+        nfcManager.onResume()
     }
 
     public override fun onPause() {
         super.onPause()
-        nfcManager!!.onPause()
+        nfcManager.onPause()
     }
 
     public override fun onStop() {
         super.onStop()
-        nfcManager!!.onStop()
+        nfcManager.onStop()
     }
 
     override fun onTagDiscovered(tag: Tag) {
         try {
-            nfcManager!!.ignoreTag(tag)
+            nfcManager.ignoreTag(tag)
         } catch (e: IOException) {
             e.printStackTrace()
         }
