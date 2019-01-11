@@ -40,9 +40,15 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    packagingOptions {
+        pickFirst('META-INF/proguard/okhttp3.pro')
+    }
     buildToolsVersion '28.0.3'
 }
 
+repositories {
+    maven { url "https://jitpack.io" }
+}
 dependencies {
     implementation project(':tangemcard-common')
     implementation project(':tangemcard-android')
@@ -72,5 +78,5 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxjava:2.2.0'
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
     implementation 'io.reactivex.rxjava2:rxkotlin:2.3.0'
-
+    implementation 'com.github.stellar:java-stellar-sdk:0.4.1'
 }
