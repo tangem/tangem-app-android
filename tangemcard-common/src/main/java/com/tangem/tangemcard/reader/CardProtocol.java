@@ -707,12 +707,13 @@ public class CardProtocol {
         TLVList checkResult = run_CheckWallet();
         if (checkResult == null) return;
 
+        TLV tlvCurveID = readResult.getTLV(TLV.Tag.TAG_CurveID);
         TLV tlvPublicKey = readResult.getTLV(TLV.Tag.TAG_Wallet_PublicKey);
         TLV tlvChallenge = checkResult.getTLV(TLV.Tag.TAG_Challenge);
         TLV tlvSalt = checkResult.getTLV(TLV.Tag.TAG_Salt);
         TLV tlvSignature = checkResult.getTLV(TLV.Tag.TAG_Signature);
 
-        if (tlvPublicKey == null || tlvChallenge == null || tlvSalt == null || tlvSignature == null) {
+        if (tlvCurveID == null || tlvPublicKey == null || tlvChallenge == null || tlvSalt == null || tlvSignature == null) {
             throw new TangemException("Not all data read, can't check signature!");
         }
 
@@ -721,7 +722,7 @@ public class CardProtocol {
         bs.write(tlvSalt.Value);
         byte[] dataArray = bs.toByteArray();
 
-        if (CardCrypto.VerifySignature(tlvPublicKey.Value, dataArray, tlvSignature.Value)) {
+        if (CardCrypto.VerifySignature(tlvCurveID.getAsString(), tlvPublicKey.Value, dataArray, tlvSignature.Value)) {
             Log.i(logTag, "Signature verification OK");
             mCard.setWalletPublicKeyValid(true);
         } else {
