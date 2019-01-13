@@ -6,15 +6,26 @@ import android.util.Log;
 import com.tangem.domain.wallet.CoinData;
 import com.tangem.domain.wallet.CoinEngine;
 
-import org.stellar.sdk.Account;
+import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.responses.AccountResponse;
-import org.stellar.sdk.responses.GsonSingleton;
 
-import java.math.BigInteger;
+/*
+ * Created by dvol on 7.01.2019.
+ */
 
 public class XlmData extends CoinData {
-    private CoinEngine.InternalAmount balance = null;
-    private AccountResponse accountResponse = null;
+
+
+    public static class AccountResponseEx extends AccountResponse
+    {
+        AccountResponseEx(String accountId, Long sequenceNumber) {
+            super(KeyPair.fromAccountId(accountId), sequenceNumber);
+        }
+    }
+
+    private CoinEngine.Amount balance = null;
+
+    private Long sequenceNumber = 0L;
 
 
     @Override
@@ -23,21 +34,26 @@ public class XlmData extends CoinData {
         balance = null;
     }
 
-    public CoinEngine.InternalAmount getBalanceInInternalUnits() {
+    CoinEngine.Amount getBalanceXLM() {
         return balance;
 
     }
 
-    public void setBalanceInInternalUnits(CoinEngine.InternalAmount value) {
-        balance = value;
+    AccountResponse getAccountResponse() {
+        return new AccountResponseEx(getWallet(), sequenceNumber);
     }
 
-    public AccountResponse getAccountResponse() {
-        return accountResponse;
+    void setAccountResponse(AccountResponse accountResponse) {
+        if( accountResponse.getBalances().length>0 ) {
+            AccountResponse.Balance balanceResponse = accountResponse.getBalances()[0];
+            balance = new CoinEngine.Amount(balanceResponse.getBalance(), "XLM");
+        }
+        sequenceNumber = accountResponse.getSequenceNumber();
+        setBalanceReceived(true);
     }
 
-    public void setAccountResponse(AccountResponse accountResponse) {
-        this.accountResponse = accountResponse;
+    public void incSequenceNumber() {
+        sequenceNumber++;
     }
 
     @Override
@@ -46,17 +62,16 @@ public class XlmData extends CoinData {
 
         if (B.containsKey("BalanceCurrency") && B.containsKey("BalanceDecimal")) {
             String currency = B.getString("BalanceCurrency");
-            balance = new CoinEngine.InternalAmount(B.getString("BalanceDecimal"), currency);
+            balance = new CoinEngine.Amount(B.getString("BalanceDecimal"), currency);
         } else {
             balance = null;
         }
 
-        if (B.containsKey("accountResponse")) {
-            accountResponse = GsonSingleton.getInstance().fromJson(B.getString("accountResponse"), AccountResponse.class);
+        if (B.containsKey("sequenceNumber")) {
+            sequenceNumber = B.getLong("sequenceNumber");
         } else {
-            accountResponse = null;
+            sequenceNumber = 0L;
         }
-
     }
 
     @Override
@@ -65,11 +80,11 @@ public class XlmData extends CoinData {
         try {
             if (balance != null) {
                 B.putString("BalanceCurrency", balance.getCurrency());
-                B.putString("BalanceDecimal", balance.toString());
+                B.putString("BalanceDecimal", balance.toValueString());
             }
 
-            if (accountResponse != null) {
-                B.putString("accountResponse", GsonSingleton.getInstance().toJson(accountResponse));
+            if (sequenceNumber != null) {
+                B.putLong("sequenceNumber", sequenceNumber);
             }
 
         } catch (Exception e) {
@@ -77,5 +92,5 @@ public class XlmData extends CoinData {
         }
 
     }
-
 }
+
