@@ -76,7 +76,9 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         btnSend.visibility = View.INVISIBLE
 
-        rgFee.isEnabled = !(ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token || ctx.blockchain == Blockchain.BitcoinCash || ctx.blockchain == Blockchain.Litecoin)
+        for (lol in rgFee.touchables) {
+            lol.isEnabled = !(ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token || ctx.blockchain == Blockchain.BitcoinCash || ctx.blockchain == Blockchain.Litecoin || ctx.blockchain == Blockchain.Stellar || ctx.blockchain == Blockchain.StellarTestNet)
+        }
 
         // set listeners
         rgFee.setOnCheckedChangeListener { _, checkedId -> doSetFee(checkedId) }
