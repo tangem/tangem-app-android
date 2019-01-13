@@ -28,6 +28,7 @@ object CoinEngineFactory {
             Blockchain.Ethereum, Blockchain.EthereumTestNet -> EthEngine()
             Blockchain.Token -> TokenEngine()
             Blockchain.Litecoin -> LtcEngine()
+            Blockchain.StellarTestNet, Blockchain.Stellar -> XlmEngine()
             else -> null
         }
     }
