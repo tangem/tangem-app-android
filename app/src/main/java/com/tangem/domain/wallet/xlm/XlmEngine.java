@@ -19,16 +19,18 @@ import com.tangem.wallet.R;
 
 import org.stellar.sdk.AssetTypeNative;
 import org.stellar.sdk.KeyPair;
-import org.stellar.sdk.Memo;
 import org.stellar.sdk.PaymentOperation;
 import org.stellar.sdk.Transaction;
-import org.stellar.sdk.responses.AccountResponse;
-import org.stellar.sdk.xdr.TransactionEnvelope;
-import org.stellar.sdk.xdr.XdrDataInputStream;
+import org.stellar.sdk.TransactionEx;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+
+/**
+* Created by dvol on 7.01.2019.
+*
+* PS. To create and fill testnet account just open https://friendbot.stellar.org/?addr=XXX in browser
+**/
 
 public class XlmEngine extends CoinEngine {
 
@@ -53,6 +55,7 @@ public class XlmEngine extends CoinEngine {
     }
 
     private static int getDecimals() {
+        //TODO - Is it's right?
         return 8;
     }
 
@@ -93,14 +96,14 @@ public class XlmEngine extends CoinEngine {
     @Override
     public boolean isBalanceNotZero() {
         if (coinData == null) return false;
-        if (coinData.getBalanceInInternalUnits() == null) return false;
-        return coinData.getBalanceInInternalUnits().notZero();
+        if (coinData.getBalanceXLM() == null) return false;
+        return coinData.getBalanceXLM().notZero();
     }
 
     @Override
     public boolean hasBalanceInfo() {
         if (coinData == null) return false;
-        return coinData.getBalanceInInternalUnits() != null;
+        return coinData.getBalanceXLM() != null;
     }
 
 
@@ -145,17 +148,16 @@ public class XlmEngine extends CoinEngine {
 
     @Override
     public Uri getShareWalletUriExplorer() {
-        //TODO - ?
-        return Uri.parse((ctx.getBlockchain() == Blockchain.Bitcoin ? "https://blockchain.info/address/" : "https://testnet.blockchain.info/address/") + ctx.getCoinData().getWallet());
+        return Uri.parse((ctx.getBlockchain() == Blockchain.Bitcoin ? "http://testnet.stellarchain.io/address/" : "http://testnet.stellarchain.io/address/") + ctx.getCoinData().getWallet());
     }
 
     @Override
     public Uri getShareWalletUri() {
-        //TODO - ?
+        //TODO - how to construct payment query intent for stellar?
         if (ctx.getCard().getDenomination() != null) {
-            return Uri.parse("bitcoin:" + ctx.getCoinData().getWallet() + "?amount=" + convertToAmount(convertToInternalAmount(ctx.getCard().getDenomination())).toValueString(8));
+            return Uri.parse("stellar:" + ctx.getCoinData().getWallet() + "?amount=" + convertToAmount(convertToInternalAmount(ctx.getCard().getDenomination())).toValueString());
         } else {
-            return Uri.parse("bitcoin:" + ctx.getCoinData().getWallet());
+            return Uri.parse("stellar:" + ctx.getCoinData().getWallet());
         }
     }
 
@@ -167,7 +169,7 @@ public class XlmEngine extends CoinEngine {
     @Override
     public boolean checkNewTransactionAmount(Amount amount) {
         if (coinData == null) return false;
-        if (amount.compareTo(convertToAmount(coinData.getBalanceInInternalUnits())) > 0) {
+        if (amount.compareTo(coinData.getBalanceXLM()) > 0) {
             return false;
         }
         return true;
@@ -175,28 +177,23 @@ public class XlmEngine extends CoinEngine {
 
     @Override
     public boolean checkNewTransactionAmountAndFee(Amount amountValue, Amount feeValue, Boolean isIncludeFee) {
-        InternalAmount fee;
-        InternalAmount amount;
-
         try {
             checkBlockchainDataExists();
-            amount = convertToInternalAmount(amountValue);
-            fee = convertToInternalAmount(feeValue);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
 
-        if (fee == null || amount == null)
+        if (feeValue == null || amountValue == null)
             return false;
 
-        if (fee.isZero() || amount.isZero())
+        if (feeValue.isZero() || amountValue.isZero())
             return false;
 
-        if (isIncludeFee && (amount.compareTo(coinData.getBalanceInInternalUnits()) > 0 || amount.compareTo(fee) < 0))
+        if (isIncludeFee && (amountValue.compareTo(coinData.getBalanceXLM()) > 0 || amountValue.compareTo(feeValue) < 0))
             return false;
 
-        if (!isIncludeFee && amount.add(fee).compareTo(coinData.getBalanceInInternalUnits()) > 0)
+        if (!isIncludeFee && amountValue.add(feeValue).compareTo(coinData.getBalanceXLM()) > 0)
             return false;
 
         return true;
@@ -231,7 +228,7 @@ public class XlmEngine extends CoinEngine {
                 balanceValidator.setScore(100);
                 balanceValidator.setFirstLine("Verified balance");
                 balanceValidator.setSecondLine("Balance confirmed in blockchain");
-                if (coinData.getBalanceInInternalUnits().isZero()) {
+                if (coinData.getBalanceXLM().isZero()) {
                     balanceValidator.setFirstLine("Empty wallet");
                     balanceValidator.setSecondLine("");
                 }
@@ -246,7 +243,7 @@ public class XlmEngine extends CoinEngine {
 //            return;
 //        }
 
-            if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && coinData.getBalanceInInternalUnits().notZero()) {
+            if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && coinData.getBalanceXLM().notZero()) {
                 balanceValidator.setScore(80);
                 balanceValidator.setFirstLine("Verified offline balance");
                 balanceValidator.setSecondLine("Can't obtain balance from blockchain. Restore internet connection to be more confident. ");
@@ -277,7 +274,7 @@ public class XlmEngine extends CoinEngine {
     @Override
     public Amount getBalance() {
         if (!hasBalanceInfo()) return null;
-        return convertToAmount(coinData.getBalanceInInternalUnits());
+        return coinData.getBalanceXLM();
     }
 
     @Override
@@ -305,7 +302,7 @@ public class XlmEngine extends CoinEngine {
         return kp.getAccountId();
     }
 
-    private static BigDecimal multiplier = new BigDecimal("1000000");
+    private static BigDecimal multiplier = new BigDecimal("10000000");
 
     @Override
     public Amount convertToAmount(InternalAmount internalAmount) {
@@ -350,16 +347,17 @@ public class XlmEngine extends CoinEngine {
         return "";
     }
 
+
     @Override
     public SignTask.PaymentToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         checkBlockchainDataExists();
 
-        Transaction transaction = new Transaction.Builder(coinData.getAccountResponse())
-                .addOperation(new PaymentOperation.Builder(KeyPair.fromAccountId(targetAddress), new AssetTypeNative(), amountValue.toValueString()).build())
-                // A memo allows you to add your own metadata to a transaction. It's
-                // optional and does not affect how Stellar treats the transaction.
-                .addMemo(Memo.text("TangemCard Transaction"))
-                .build();
+        if( IncFee )
+        {
+            amountValue=new Amount(amountValue.subtract(feeValue), amountValue.getCurrency());
+        }
+
+        TransactionEx transaction = TransactionEx.buildEx(60,  coinData.getAccountResponse(), new PaymentOperation.Builder(KeyPair.fromAccountId(targetAddress), new AssetTypeNative(), amountValue.toValueString()).build());
 
         if( transaction.getFee()!=convertToInternalAmount(feeValue).intValueExact() )
         {
@@ -382,12 +380,12 @@ public class XlmEngine extends CoinEngine {
 
             @Override
             public byte[] getRawDataToSign() throws Exception {
-                throw new Exception("Hashes length must be identical!");
+                return transaction.signatureBase();
             }
 
             @Override
             public String getHashAlgToSign() {
-                return "sha-256x2";
+                return "sha-256";
             }
 
             @Override
@@ -398,7 +396,7 @@ public class XlmEngine extends CoinEngine {
             @Override
             public byte[] onSignCompleted(byte[] signFromCard) throws Exception {
                 // Sign the transaction to prove you are actually the person sending it.
-                transaction.sign(signFromCard);
+                transaction.setSign(signFromCard);
 
                 byte[] txForSend = transaction.toEnvelopeXdrBase64().getBytes();
                 notifyOnNeedSendPayment(txForSend);
@@ -423,8 +421,6 @@ public class XlmEngine extends CoinEngine {
                 StellarRequest.Balance balanceRequest = (StellarRequest.Balance) request;
 
                 coinData.setAccountResponse(balanceRequest.accountResponse);
-                AccountResponse.Balance balance=balanceRequest.accountResponse.getBalances()[0];
-                coinData.setBalanceInInternalUnits(new InternalAmount(balance.getBalance(), "stroops"));
                 if (serverApi.isRequestsSequenceCompleted()) {
                     blockchainRequestsCallbacks.onComplete(!ctx.hasError());
                 } else {
@@ -453,6 +449,7 @@ public class XlmEngine extends CoinEngine {
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) throws Exception {
         final int calcSize = 0;
+        // todo - take BASE_FEE from last leger
         Log.e(TAG, String.format("Estimated tx size %d", calcSize));
         coinData.minFee = null;
         coinData.maxFee = null;
@@ -477,7 +474,15 @@ public class XlmEngine extends CoinEngine {
                         ctx.setError(null);
                         blockchainRequestsCallbacks.onComplete(true);
                     } else {
-                        ctx.setError("Rejected by node");
+                        if( submitTransactionRequest.response.getExtras()!=null && submitTransactionRequest.response.getExtras().getResultCodes()!=null ) {
+                            String trResult = submitTransactionRequest.response.getExtras().getResultCodes().getTransactionResultCode();
+                            if( submitTransactionRequest.response.getExtras().getResultCodes().getOperationsResultCodes()!=null && submitTransactionRequest.response.getExtras().getResultCodes().getOperationsResultCodes().size()>0 ) {
+                                trResult+="/"+submitTransactionRequest.response.getExtras().getResultCodes().getOperationsResultCodes().get(0);
+                            }
+                            ctx.setError(trResult);
+                        }else{
+                            ctx.setError("transaction failed");
+                        }
                         blockchainRequestsCallbacks.onComplete(false);
                     }
                 } catch (Exception e) {
@@ -500,8 +505,8 @@ public class XlmEngine extends CoinEngine {
         };
         serverApi.setListener(listener);
 
-        TransactionEnvelope transactionEnvelope = TransactionEnvelope.decode(new XdrDataInputStream(new ByteArrayInputStream(txForSend)));
-        org.stellar.sdk.Transaction transaction = org.stellar.sdk.Transaction.fromEnvelopeXdr(transactionEnvelope);
+        Transaction transaction = TransactionEx.fromEnvelopeXdr(new String(txForSend));
+        coinData.incSequenceNumber();
         serverApi.requestData(ctx, new StellarRequest.SubmitTransaction(transaction));
 
     }

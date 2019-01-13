@@ -622,7 +622,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         // Litecoin
         // BitcoinCash
         if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet ||
-                ctx.blockchain == Blockchain.Litecoin || ctx.blockchain == Blockchain.BitcoinCash) {
+                ctx.blockchain == Blockchain.Litecoin || ctx.blockchain == Blockchain.BitcoinCash ||
+                ctx.blockchain == Blockchain.Stellar || ctx.blockchain == Blockchain.StellarTestNet ) {
             ctx.coinData.setIsBalanceEqual(true)
         }
 
@@ -705,6 +706,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 Blockchain.Token -> "ethereum"
                 Blockchain.BitcoinCash -> "bitcoin-cash"
                 Blockchain.Litecoin -> "litecoin"
+                Blockchain.Stellar -> "stellar"
+                Blockchain.StellarTestNet -> "stellar"
                 else -> {
                     throw Exception("Can''t get rate for blockchain " + ctx.blockchainName)
                 }
