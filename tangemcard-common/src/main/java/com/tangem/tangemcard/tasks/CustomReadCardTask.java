@@ -4,6 +4,7 @@ import com.tangem.tangemcard.data.external.CardDataSubstitutionProvider;
 import com.tangem.tangemcard.data.Manufacturer;
 import com.tangem.tangemcard.data.external.PINsProvider;
 import com.tangem.tangemcard.data.TangemCard;
+import com.tangem.tangemcard.reader.CardCrypto;
 import com.tangem.tangemcard.reader.CardProtocol;
 import com.tangem.tangemcard.reader.NfcReader;
 import com.tangem.tangemcard.reader.TLV;
@@ -19,6 +20,8 @@ import org.spongycastle.math.ec.ECPoint;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+
+import static com.tangem.tangemcard.reader.CardCrypto.Curve.secp256k1;
 
 /**
  * Base class for card communication task
@@ -245,15 +248,27 @@ public class CustomReadCardTask extends Thread {
         if (mCard.getStatus() == TangemCard.Status.Loaded) {
 
             TLV tlvPublicKey = protocol.getReadResult().getTLV(TLV.Tag.TAG_Wallet_PublicKey);
+            String curveID = protocol.getReadResult().getTLV(TLV.Tag.TAG_CurveID).getAsString();
 
-            ECNamedCurveParameterSpec spec = ECNamedCurveTable.getParameterSpec("secp256k1");
-            ECPoint p1 = spec.getCurve().decodePoint(tlvPublicKey.Value);
+            CardCrypto.Curve curve = CardCrypto.Curve.valueOf(curveID);
+            switch (curve)
+            {
+                case secp256k1:
+                    ECNamedCurveParameterSpec spec = ECNamedCurveTable.getParameterSpec("secp256k1");
+                    ECPoint p1 = spec.getCurve().decodePoint(tlvPublicKey.Value);
 
-            byte pkUncompressed[] = p1.getEncoded(false);
+                    byte pkUncompressed[] = p1.getEncoded(false);
 
-            byte pkCompresses[] = p1.getEncoded(true);
-            mCard.setWalletPublicKey(pkUncompressed);
-            mCard.setWalletPublicKeyRar(pkCompresses);
+                    byte pkCompresses[] = p1.getEncoded(true);
+                    mCard.setWalletPublicKey(pkUncompressed);
+                    mCard.setWalletPublicKeyRar(pkCompresses);
+                    break;
+                case ed25519:
+                    mCard.setWalletPublicKey(tlvPublicKey.Value);
+                    mCard.setWalletPublicKeyRar(tlvPublicKey.Value);
+                    break;
+
+            }
 
             mCard.setRemainingSignatures(protocol.getReadResult().getTagAsInt(TLV.Tag.TAG_RemainingSignatures));
 
