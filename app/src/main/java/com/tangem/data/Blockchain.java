@@ -15,7 +15,7 @@ public enum Blockchain {
     BitcoinCash("BCH", "BCH", R.drawable.ic_logo_bitcoin_cash, "Bitcoin Cash"),
     Litecoin("LTC", "LTC", R.drawable.ic_logo_bitcoin, "Litecoin"),
     Stellar("XLM", "XLM", R.drawable.ic_logo_stellar, "Stellar Lumens"),
-    StellarTestNet("XLM/test", "XLM", R.drawable.ic_logo_bitcoin, "Stellar Lumens");
+    StellarTestNet("XLM/test", "XLM", R.drawable.ic_logo_stellar, "Stellar Lumens");
     Blockchain(String ID, String currency, int imageResource, String officialName) {
         mID = ID;
         mCurrency = currency;
