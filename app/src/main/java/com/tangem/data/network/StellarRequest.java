@@ -3,19 +3,22 @@ package com.tangem.data.network;
 import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.Server;
 import org.stellar.sdk.Transaction;
+import org.stellar.sdk.requests.ErrorResponse;
 import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import java.io.IOException;
 
 /**
- * Created by dvol on 16.07.2017.
+ * Created by dvol on 7.01.2019.
  */
 
 public class StellarRequest {
 
     public static abstract class Base {
+        public ErrorResponse errorResponse;
         private String error = null;
+
         public String getError() {
             return error;
         }
@@ -28,28 +31,25 @@ public class StellarRequest {
     }
 
     public static class Balance extends Base {
-        public KeyPair accountKeyPair;
+        KeyPair accountKeyPair;
         public AccountResponse accountResponse;
 
-        public Balance(String walletAddress)
-        {
-            accountKeyPair=KeyPair.fromAccountId(walletAddress);
+        public Balance(String walletAddress) {
+            accountKeyPair = KeyPair.fromAccountId(walletAddress);
         }
 
         @Override
         public void process(Server server) throws IOException {
-            accountResponse=server.accounts().account(accountKeyPair);
+            accountResponse = server.accounts().account(accountKeyPair);
         }
     }
 
     public static class SubmitTransaction extends Base {
-//        public KeyPair sourceAccount;
-//        public KeyPair targetAccount;
         public Transaction transaction;
         public SubmitTransactionResponse response;
 
         public SubmitTransaction(Transaction transaction) {
-            this.transaction=transaction;
+            this.transaction = transaction;
         }
 
         @Override
