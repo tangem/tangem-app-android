@@ -28,7 +28,15 @@ public class Server {
         public static final String URL_INFURA = ServerURL.API_INFURA;
 
         public static class Method {
-            static final String MAIN = URL_INFURA + "613a0b14833145968b1f656240c7d245";
+            static final String MAIN = URL_INFURA + "v3/613a0b14833145968b1f656240c7d245";
+        }
+    }
+
+    public static class ApiRootstock {
+        public static final String URL_ROOTSTOCK = ServerURL.API_ROOTSTOCK;
+
+        public static class Method {
+            static final String MAIN = URL_ROOTSTOCK;
         }
     }
 
