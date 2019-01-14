@@ -8,6 +8,7 @@ import com.tangem.domain.wallet.token.TokenEngine
 import com.tangem.domain.wallet.bch.BtcCashEngine
 import com.tangem.data.Blockchain
 import com.tangem.domain.wallet.ltc.LtcEngine
+import com.tangem.domain.wallet.rsk.RskEngine
 
 /**
  * Factory for create specific engine
@@ -44,6 +45,8 @@ object CoinEngineFactory {
                 TokenEngine(context)
             else if (Blockchain.Litecoin == context.blockchain)
                 LtcEngine(context)
+            else if (Blockchain.Rootstock == context.blockchain)
+                RskEngine(context)
             else
                 return null
         } catch (e: Exception) {
