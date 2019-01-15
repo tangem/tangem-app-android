@@ -169,7 +169,7 @@ public class TokenEngine extends CoinEngine {
         return true;
     }
 
-    private boolean isBalanceAlterNotZero() {
+    protected boolean isBalanceAlterNotZero() {
         if (coinData == null) return false;
         if (coinData.getBalanceAlterInInternalUnits() == null) return false;
         return coinData.getBalanceAlterInInternalUnits().notZero();
