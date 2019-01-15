@@ -31,6 +31,16 @@ class NetworkModule {
                 .build();
     }
 
+    @Singleton
+    @Provides
+    @Named(Server.ApiRootstock.URL_ROOTSTOCK)
+    Retrofit provideRetrofitRootstock() {
+        return new Retrofit.Builder()
+                .baseUrl(Server.ApiRootstock.URL_ROOTSTOCK)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+    }
+
 //    //@Singleton // TODO:check
 //    @Provides
 //    @Named("Insight")
