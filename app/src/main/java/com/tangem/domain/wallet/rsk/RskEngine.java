@@ -28,7 +28,7 @@ public class RskEngine extends EthEngine {
     private static final String TAG = RskEngine.class.getSimpleName();
 
     public RskEngine(TangemContext ctx) throws Exception {
-        super(ctx);
+        this.ctx = ctx;
         if (ctx.getCoinData() == null) {
             coinData = new EthData();
             ctx.setCoinData(coinData);
@@ -37,6 +37,10 @@ public class RskEngine extends EthEngine {
         } else {
             throw new Exception("Invalid type of Blockchain data for RskEngine");
         }
+    }
+
+    public RskEngine() {
+        super();
     }
 
     private static int getDecimals() {
@@ -146,7 +150,7 @@ public class RskEngine extends EthEngine {
     @Override
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
         final ServerApiRootstock serverApiRootstock = new ServerApiRootstock();
-        // request infura listener
+        // request rootstock listener
         ServerApiRootstock.RootstockBodyListener rootstockBodyListener = new ServerApiRootstock.RootstockBodyListener() {
             @Override
             public void onSuccess(String method, InfuraResponse rootstockResponse) {
@@ -209,7 +213,7 @@ public class RskEngine extends EthEngine {
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
         ServerApiRootstock serverApiRootstock = new ServerApiRootstock();
-        // request infura eth gasPrice listener
+        // request rootstock gasPrice listener
         ServerApiRootstock.RootstockBodyListener rootstockBodyListener = new ServerApiRootstock.RootstockBodyListener() {
             @Override
             public void onSuccess(String method, InfuraResponse rootstockResponse) {
