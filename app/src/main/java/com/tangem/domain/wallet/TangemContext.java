@@ -33,6 +33,10 @@ public class TangemContext {
         {
             return Blockchain.Token;
         }
+        if( (blockchain==Blockchain.Rootstock)&& card.isToken() )
+        {
+            return Blockchain.RootstockToken;
+        }
         return blockchain;
     }
 
@@ -45,9 +49,9 @@ public class TangemContext {
 
     public String getBlockchainName() {
         Blockchain blockchain=getBlockchain();
-        if( (blockchain==Blockchain.Ethereum || blockchain==Blockchain.EthereumTestNet)&& card.isToken() ) {
+        if( blockchain==Blockchain.Token || blockchain==Blockchain.RootstockToken ) {
             String token = card.getTokenSymbol();
-            return token + " <br><small><small> " + getBlockchain().getOfficialName() + " ERC20 token</small></small>";
+            return token + " <br><small><small> " + getBlockchain().getOfficialName() + " smart contract token</small></small>";
         }else {
             return blockchain.getOfficialName();
         }
