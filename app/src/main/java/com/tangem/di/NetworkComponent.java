@@ -26,6 +26,9 @@ public interface NetworkComponent {
     @Named(Server.ApiUpdateVersion.URL_UPDATE_VERSION)
     Retrofit getRetrofitGithubusercontent();
 
+    @Named(Server.ApiRootstock.URL_ROOTSTOCK)
+    Retrofit getRetrofitRootstock();
+
 //    @Named("Insight") //TODO:check
 //    Retrofit getRetrofitInsight(String insightURL);
 
