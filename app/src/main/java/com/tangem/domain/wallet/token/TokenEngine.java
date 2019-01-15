@@ -90,7 +90,7 @@ public class TokenEngine extends CoinEngine {
     public String getBalanceHTML() {
         if (hasBalanceInfo()) {
             try {
-                return " " + convertToAmount(coinData.getBalanceInInternalUnits()).toDescriptionString(getTokenDecimals()) + " <br><small><small>  + " + convertToAmount(coinData.getBalanceAlterInInternalUnits()).toDescriptionString(getEthDecimals()) + " for gas</small></small>";
+                return " " + convertToAmount(coinData.getBalanceInInternalUnits()).toDescriptionString(getTokenDecimals()) + " <br><small><small>  + " + convertToAmount(coinData.getBalanceAlterInInternalUnits()).toDescriptionString(getEthDecimals()) + " for fee</small></small>";
             } catch (Exception e) {
                 e.printStackTrace();
                 return "";
@@ -136,15 +136,15 @@ public class TokenEngine extends CoinEngine {
         return ctx.getString(R.string.not_implemented);
     }
 
-    private static int getEthDecimals() {
+    protected static int getEthDecimals() {
         return 18;
     }
 
-    private int getTokenDecimals() {
+    protected int getTokenDecimals() {
         return ctx.getCard().getTokensDecimal();
     }
 
-    private String getContractAddress(TangemCard card) {
+    protected String getContractAddress(TangemCard card) {
         return card.getContractAddress();
     }
 
@@ -311,7 +311,7 @@ public class TokenEngine extends CoinEngine {
         } else if (awaitingConfirmation()) {
             ctx.setMessage(R.string.please_wait_while_previous);
         } else if (!isBalanceAlterNotZero()) {
-            ctx.setMessage(ctx.getString(R.string.not_enough_eth_for_gas));
+            ctx.setMessage(ctx.getString(R.string.not_enough_eth_for_fee));
         } else {
             return true;
         }
