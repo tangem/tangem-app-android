@@ -19,6 +19,7 @@ import com.tangem.domain.wallet.token.TokenEngine;
 import com.tangem.tangemcard.data.TangemCard;
 import com.tangem.tangemcard.tasks.SignTask;
 import com.tangem.util.CryptoUtil;
+import com.tangem.wallet.R;
 
 import org.bitcoinj.core.ECKey;
 
@@ -108,6 +109,22 @@ public class RskTokenEngine extends TokenEngine {
 
     @Override
     public Uri getShareWalletUri() { return Uri.parse(ctx.getCoinData().getWallet()); }
+
+    @Override
+    public boolean isExtractPossible() {
+        if (!hasBalanceInfo()) {
+            ctx.setMessage(R.string.cannot_obtain_data_from_blockchain);
+        } else if (!isBalanceNotZero()) {
+            ctx.setMessage(R.string.wallet_empty);
+        } else if (awaitingConfirmation()) {
+            ctx.setMessage(R.string.please_wait_while_previous);
+        } else if (!isBalanceAlterNotZero()) {
+            ctx.setMessage(ctx.getString(R.string.not_enough_rbtc_for_fee));
+        } else {
+            return true;
+        }
+        return false;
+    }
 
     @Override
     public boolean checkNewTransactionAmount(Amount amount) {
