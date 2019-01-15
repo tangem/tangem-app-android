@@ -52,7 +52,7 @@ public class ServerApiRootstock {
 
     public void rootstock(String method, int id, String wallet, String contract, String tx) {
         requestsCount++;
-        InfuraApi infuraApi = App.getNetworkComponent().getRetrofitInfura().create(InfuraApi.class);
+        RootstockApi rootstockApi = App.getNetworkComponent().getRetrofitRootstock().create(RootstockApi.class);
 
         InfuraBody infuraBody;
         switch (method) {
@@ -80,7 +80,7 @@ public class ServerApiRootstock {
                 infuraBody = new InfuraBody();
         }
 
-        Call<InfuraResponse> call = infuraApi.infura(infuraBody);
+        Call<InfuraResponse> call = rootstockApi.rootstock(infuraBody);
         call.enqueue(new Callback<InfuraResponse>() {
             @Override
             public void onResponse(@NonNull Call<InfuraResponse> call, @NonNull Response<InfuraResponse> response) {
