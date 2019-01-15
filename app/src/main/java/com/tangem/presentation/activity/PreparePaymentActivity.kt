@@ -60,7 +60,8 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         tvBalance.text = html
 
         //TODO - to engine
-        if (ctx.blockchain == Blockchain.Token && engine.balance.currency!=Blockchain.Ethereum.currency) {
+        if ((ctx.blockchain == Blockchain.Token && engine.balance.currency!=Blockchain.Ethereum.currency) ||
+           ((ctx.blockchain == Blockchain.RootstockToken && engine.balance.currency!=Blockchain.Rootstock.currency))){
             rgIncFee!!.visibility = View.INVISIBLE
         } else {
             rgIncFee!!.visibility = View.VISIBLE
