@@ -59,7 +59,8 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         val html = Html.fromHtml(engine!!.balanceHTML)
         tvBalance.text = html
 // [REDACTED_TODO_COMMENT]
-        if (ctx.blockchain == Blockchain.Token && engine.balance.currency!=Blockchain.Ethereum.currency) {
+        if ((ctx.blockchain == Blockchain.Token && engine.balance.currency!=Blockchain.Ethereum.currency) ||
+           ((ctx.blockchain == Blockchain.RootstockToken && engine.balance.currency!=Blockchain.Rootstock.currency))){
             rgIncFee!!.visibility = View.INVISIBLE
         } else {
             rgIncFee!!.visibility = View.VISIBLE
