@@ -22,6 +22,7 @@ import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Blockchain
 import com.tangem.data.network.ServerApiCommon
+import com.tangem.data.network.model.RateInfoResponse
 import com.tangem.domain.wallet.BalanceValidator
 import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.CoinEngineFactory
@@ -258,12 +259,24 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         serverApiTangem.setArtworkListener(artworkListener)
 
         // request rate info listener
-        serverApiCommon.setRateInfoData {
-            if (activity == null || !UtilHelper.isOnline(activity!!)) return@setRateInfoData
-            val rate = it.priceUsd.toFloat()
-            ctx.coinData!!.rate = rate
-            ctx.coinData!!.rateAlter = rate
+        val rateInfoDataListener: ServerApiCommon.RateInfoDataListener = object : ServerApiCommon.RateInfoDataListener {
+
+            override fun onSuccess(rateInfoResponse: RateInfoResponse?){
+                ctx.coinData!!.rate = rateInfoResponse!!.data!!.quote!!.usd!!.price!!
+            }
+
+            override fun onFail(message: String?){
+                ctx.error = message
+            }
         }
+        serverApiCommon.setRateInfoData(rateInfoDataListener)
+
+//        serverApiCommon.setRateInfoData {
+//            if (activity == null || !UtilHelper.isOnline(activity!!)) return@setRateInfoData
+//            val rate = it.priceUsd.toFloat()
+//            ctx.coinData!!.rate = rate
+//            ctx.coinData!!.rateAlter = rate
+//        }
 
         refresh()
 
@@ -694,22 +707,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private fun requestRateInfo() {
         if (UtilHelper.isOnline(context as Activity)) {
             LOG.i(TAG, "requestRateInfo")
-// [REDACTED_TODO_COMMENT]
-            val cryptoId: String = when (ctx.blockchain) {
-                Blockchain.Bitcoin -> "bitcoin"
-                Blockchain.BitcoinTestNet -> "bitcoin"
-                Blockchain.Ethereum -> "ethereum"
-                Blockchain.EthereumTestNet -> "ethereum"
-                Blockchain.Token -> "ethereum"
-                Blockchain.BitcoinCash -> "bitcoin-cash"
-                Blockchain.Litecoin -> "litecoin"
-                Blockchain.Rootstock -> "bitcoin"
-                Blockchain.RootstockToken ->"bitcoin"
-                else -> {
-                    throw Exception("Can''t get rate for blockchain " + ctx.blockchainName)
-                }
-            }
-            serverApiCommon.rateInfoData(cryptoId)
+            serverApiCommon.rateInfoData(ctx.blockchain.currency)
         } else {
             ctx.error = getString(R.string.no_connection)
             updateViews()
