@@ -10,8 +10,7 @@ enum class LitecoinNode(val host: String, val port: Int, val proto: String) {
 	N_007("electrum-ltc.bysh.me", 50002, "ssl"),
 	N_008("e-3.claudioboxx.com", 50004, "ssl"),
 	N_009("electrum-ltc.wilv.in", 50002, "ssl"),
-	N_010("ltc.rentonisk.com", 50002, "ssl"),
-	N_011("e-1.claudioboxx.com", 50004, "ssl"),
-	N_012("electrum.ltc.xurious.com", 50002, "ssl"),
-	N_013("ltc01.knas.systems", 50004, "ssl"),
+	N_010("e-1.claudioboxx.com", 50004, "ssl"),
+	N_011("electrum.ltc.xurious.com", 50002, "ssl"),
+	N_012("ltc01.knas.systems", 50004, "ssl"),
 }
