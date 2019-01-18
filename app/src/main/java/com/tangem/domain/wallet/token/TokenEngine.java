@@ -55,7 +55,7 @@ public class TokenEngine extends CoinEngine {
             coinData.loadFromBundle(B);
             ctx.setCoinData(coinData);
         } else {
-            throw new Exception("Invalid type of Blockchain data for TokenEngine");
+            throw new Exception("Invalid type of Blockchain data for " + this.getClass().getSimpleName());
         }
     }
 

@@ -34,21 +34,6 @@ public class RskTokenEngine extends TokenEngine {
 
     public RskTokenEngine(TangemContext ctx) throws Exception {
         super(ctx);
-        if (ctx.getCoinData() == null) {
-            coinData = new TokenData();
-            ctx.setCoinData(coinData);
-        } else if (ctx.getCoinData() instanceof TokenData) {
-            coinData = (TokenData) ctx.getCoinData();
-        } else if (ctx.getCoinData() instanceof EthData) {
-            // special case with receive card data substitution from server at the moment
-            Bundle B=new Bundle();
-            ctx.getCoinData().saveToBundle(B);
-            coinData = new TokenData();
-            coinData.loadFromBundle(B);
-            ctx.setCoinData(coinData);
-        } else {
-            throw new Exception("Invalid type of Blockchain data for RskTokenEngine");
-        }
     }
 
     public RskTokenEngine() {
