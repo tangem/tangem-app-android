@@ -262,7 +262,14 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         val rateInfoDataListener: ServerApiCommon.RateInfoDataListener = object : ServerApiCommon.RateInfoDataListener {
 
             override fun onSuccess(rateInfoResponse: RateInfoResponse?){
-                ctx.coinData!!.rate = rateInfoResponse!!.data!!.quote!!.usd!!.price!!
+                try {
+                    ctx.coinData!!.rate = rateInfoResponse!!.data!!.quote!!.usd!!.price!!
+                }
+                catch (e : java.lang.Exception) {
+                    e.printStackTrace()
+                    ctx.error = "Unknown response from CoinMarketCap"
+                }
+
             }
 
             override fun onFail(message: String?){
