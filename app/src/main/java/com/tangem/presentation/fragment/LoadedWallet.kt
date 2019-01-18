@@ -666,6 +666,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         }
 
                         override fun allowAdvance(): Boolean {
+                            // TODO Caused by: kotlin.TypeCastException: null cannot be cast to non-null type android.app.Activity
                             return UtilHelper.isOnline(context as Activity)
                         }
                     }
