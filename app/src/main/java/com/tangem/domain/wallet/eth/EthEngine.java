@@ -45,7 +45,7 @@ public class EthEngine extends CoinEngine {
         } else if (ctx.getCoinData() instanceof EthData) {
             coinData = (EthData) ctx.getCoinData();
         } else {
-            throw new Exception("Invalid type of Blockchain data for EthEngine");
+            throw new Exception("Invalid type of Blockchain data for " + this.getClass().getSimpleName());
         }
     }
 
