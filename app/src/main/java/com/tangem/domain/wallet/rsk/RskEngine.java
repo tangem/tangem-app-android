@@ -28,15 +28,7 @@ public class RskEngine extends EthEngine {
     private static final String TAG = RskEngine.class.getSimpleName();
 
     public RskEngine(TangemContext ctx) throws Exception {
-        this.ctx = ctx;
-        if (ctx.getCoinData() == null) {
-            coinData = new EthData();
-            ctx.setCoinData(coinData);
-        } else if (ctx.getCoinData() instanceof EthData) {
-            coinData = (EthData) ctx.getCoinData();
-        } else {
-            throw new Exception("Invalid type of Blockchain data for RskEngine");
-        }
+        super(ctx);
     }
 
     public RskEngine() {
@@ -58,10 +50,14 @@ public class RskEngine extends EthEngine {
     }
 
     @Override
-    public Uri getShareWalletUri() { return Uri.parse(ctx.getCoinData().getWallet()); }
+    public Uri getShareWalletUri() {
+        return Uri.parse(ctx.getCoinData().getWallet());
+    }
 
     @Override
-    public Uri getShareWalletUriExplorer() { return Uri.parse("https://explorer.rsk.co/address/" + ctx.getCoinData().getWallet()); }
+    public Uri getShareWalletUriExplorer() {
+        return Uri.parse("https://explorer.rsk.co/address/" + ctx.getCoinData().getWallet());
+    }
 
     @Override
     public SignTask.PaymentToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) {
@@ -138,7 +134,7 @@ public class RskEngine extends EthEngine {
                     throw new Exception("Error in RskEngine - invalid v");
                 }
                 tx.signature.v = (byte) v;
-                Log.e(TAG, "RSK_v: " +String.valueOf(v));
+                Log.e(TAG, "RSK_v: " + String.valueOf(v));
 
                 byte[] txForSend = tx.getEncoded();
                 notifyOnNeedSendPayment(txForSend);
@@ -272,7 +268,7 @@ public class RskEngine extends EthEngine {
                         blockchainRequestsCallbacks.onComplete(false);
                     } else {
                         BigInteger nonce = coinData.getConfirmedTXCount();
-                        nonce=nonce.add(BigInteger.valueOf(1));
+                        nonce = nonce.add(BigInteger.valueOf(1));
                         coinData.setConfirmedTXCount(nonce);
                         ctx.setError(null);
                         blockchainRequestsCallbacks.onComplete(true);
