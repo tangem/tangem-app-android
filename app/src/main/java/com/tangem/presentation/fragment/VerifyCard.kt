@@ -26,6 +26,7 @@ import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
 import com.tangem.tangemcard.reader.CardProtocol
+import com.tangem.util.LOG
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_verify_card.*
@@ -72,6 +73,7 @@ class VerifyCard : Fragment() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        LOG.i(TAG, "requestCode $requestCode resultCode $resultCode")
         when (requestCode) {
             Constant.REQUEST_CODE_ENTER_NEW_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (data != null) {
@@ -161,8 +163,8 @@ class VerifyCard : Fragment() {
                 } else
                     data.putExtra(Constant.EXTRA_MODIFICATION, "update")
 
-                activity!!.setResult(Activity.RESULT_OK, data)
-                activity!!.finish()
+                activity?.setResult(Activity.RESULT_OK, data)
+                activity?.finish()
             } else {
                 if (data != null && data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
                     val updatedCard = TangemCard(data.getStringExtra("UID"))
