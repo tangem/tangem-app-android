@@ -71,7 +71,6 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         tvCurrency2.text = engine.feeCurrency
         tvCardID.text = ctx.card!!.cidDescription
         etWallet.setText(intent.getStringExtra(Constant.EXTRA_TARGET_ADDRESS))
-        etFee.setText("")
 
         btnSend.visibility = View.INVISIBLE
 
@@ -91,7 +90,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                     tvFeeEquivalent.text = eqFee
 
                     if (!ctx.coinData!!.amountEquivalentDescriptionAvailable) {
-                        tvFeeEquivalent.error = "Service unavailable"
+                        tvFeeEquivalent.error = getString(R.string.service_unavailable)
                         tvCurrency2.visibility = View.GONE
                         tvFeeEquivalent.visibility = View.GONE
                     } else
@@ -108,48 +107,51 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             }
         })
         btnSend.setOnClickListener {
-            val calendar = Calendar.getInstance()
-            calendar.add(Calendar.MINUTE, -1)
+            if (UtilHelper.isOnline(this)) {
+                val calendar = Calendar.getInstance()
+                calendar.add(Calendar.MINUTE, -1)
 
-            if (dtVerified == null || dtVerified!!.before(calendar.time)) {
-                finishWithError(Activity.RESULT_CANCELED, getString(R.string.the_obtained_data_is_outdated_try_again))
-                return@setOnClickListener
-            }
+                if (dtVerified == null || dtVerified!!.before(calendar.time)) {
+                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.the_obtained_data_is_outdated_try_again))
+                    return@setOnClickListener
+                }
 
-            val engineCoin = CoinEngineFactory.create(ctx)
+                val engineCoin = CoinEngineFactory.create(ctx)
 
-            if (engineCoin!!.isNeedCheckNode && !nodeCheck) {
-                Toast.makeText(baseContext, getString(R.string.cannot_reach_current_active_blockchain_node_try_again), Toast.LENGTH_LONG).show()
-                return@setOnClickListener
-            }
+                if (engineCoin!!.isNeedCheckNode && !nodeCheck) {
+                    Toast.makeText(baseContext, getString(R.string.cannot_reach_current_active_blockchain_node_try_again), Toast.LENGTH_LONG).show()
+                    return@setOnClickListener
+                }
 
-            val txFee = engineCoin.convertToAmount(etFee.text.toString(), tvCurrency2.text.toString())
-            val txAmount = engineCoin.convertToAmount(etAmount.text.toString(), tvCurrency.text.toString())
+                val txFee = engineCoin.convertToAmount(etFee.text.toString(), tvCurrency2.text.toString())
+                val txAmount = engineCoin.convertToAmount(etAmount.text.toString(), tvCurrency.text.toString())
 
-            if (!engineCoin.hasBalanceInfo()) {
-                finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
-                return@setOnClickListener
+                if (!engineCoin.hasBalanceInfo()) {
+                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
+                    return@setOnClickListener
 
-            } else if (!engineCoin.isBalanceNotZero) {
-                finishWithError(Activity.RESULT_CANCELED, getString(R.string.the_wallet_is_empty))
-                return@setOnClickListener
+                } else if (!engineCoin.isBalanceNotZero) {
+                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.the_wallet_is_empty))
+                    return@setOnClickListener
 
-            } else if (!engineCoin.isExtractPossible) {
-                finishWithError(Activity.RESULT_CANCELED, getString(R.string.please_wait_for_confirmation_of_incoming_transaction))
-                return@setOnClickListener
-            }
+                } else if (!engineCoin.isExtractPossible) {
+                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.please_wait_for_confirmation_of_incoming_transaction))
+                    return@setOnClickListener
+                }
 
-            if (!engineCoin.checkNewTransactionAmountAndFee(txAmount, txFee, isIncludeFee)) {
-                finishWithError(Activity.RESULT_CANCELED, getString(R.string.not_enough_funds_on_your_card))
-                return@setOnClickListener
-            }
+                if (!engineCoin.checkNewTransactionAmountAndFee(txAmount, txFee, isIncludeFee)) {
+                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.not_enough_funds_on_your_card))
+                    return@setOnClickListener
+                }
 
-            requestPIN2Count = 0
-            val intent = Intent(baseContext, PinRequestActivity::class.java)
-            intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
-            ctx.saveToIntent(intent)
-            intent.putExtra(Constant.EXTRA_FEE_INCLUDED, isIncludeFee)
-            startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_)
+                requestPIN2Count = 0
+                val intent = Intent(baseContext, PinRequestActivity::class.java)
+                intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
+                ctx.saveToIntent(intent)
+                intent.putExtra(Constant.EXTRA_FEE_INCLUDED, isIncludeFee)
+                startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_)
+            } else
+                Toast.makeText(this, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
         }
 
         val coinEngine = CoinEngineFactory.create(ctx)
