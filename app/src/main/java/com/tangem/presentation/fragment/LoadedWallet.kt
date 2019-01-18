@@ -665,6 +665,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         }
 
                         override fun allowAdvance(): Boolean {
+// [REDACTED_TODO_COMMENT]
                             return UtilHelper.isOnline(context as Activity)
                         }
                     }
