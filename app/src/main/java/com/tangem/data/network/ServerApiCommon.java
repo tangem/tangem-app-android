@@ -103,7 +103,7 @@ public class ServerApiCommon {
                     rateInfoDataListener.onSuccess(response.body());
                     Log.i(TAG, "coinmarketcap onResponse " + response.code());
                 } else {
-                    rateInfoDataListener.onFail(String.valueOf(response.code()));
+                    rateInfoDataListener.onFail("Rate info error:" + String.valueOf(response.code()));
                     Log.e(TAG, "coinmarketcap onResponse " + response.code());
                 }
             }
