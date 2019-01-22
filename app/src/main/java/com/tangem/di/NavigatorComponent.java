@@ -6,7 +6,7 @@ import com.tangem.presentation.activity.LogoActivity;
 import com.tangem.presentation.activity.MainActivity;
 import com.tangem.presentation.activity.PrepareCryptonitOtherApiWithdrawalActivity;
 import com.tangem.presentation.activity.PrepareKrakenWithdrawalActivity;
-import com.tangem.presentation.activity.PreparePaymentActivity;
+import com.tangem.presentation.activity.PrepareTransactionActivity;
 import com.tangem.presentation.activity.VerifyCardActivity;
 
 import javax.inject.Singleton;
@@ -23,7 +23,7 @@ public interface NavigatorComponent {
 
     void inject(MainActivity activity);
 
-    void inject(PreparePaymentActivity activity);
+    void inject(PrepareTransactionActivity activity);
 
     void inject(PrepareCryptonitOtherApiWithdrawalActivity activity);
 
