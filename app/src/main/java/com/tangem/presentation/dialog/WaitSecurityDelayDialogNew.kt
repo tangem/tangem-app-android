@@ -6,11 +6,9 @@ import android.app.Dialog
 import android.os.Bundle
 import android.support.v7.app.AppCompatDialogFragment
 import android.widget.ProgressBar
-import com.tangem.presentation.activity.SignPaymentActivity
 import com.tangem.presentation.event.ReadAfterRequest
 import com.tangem.presentation.event.ReadBeforeRequest
 import com.tangem.presentation.event.ReadWait
-import com.tangem.presentation.event.TransactionFinishWithSuccess
 import com.tangem.util.LOG
 import com.tangem.wallet.R
 import org.greenrobot.eventbus.EventBus
