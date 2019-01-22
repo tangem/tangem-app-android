@@ -28,7 +28,6 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_purge.*
 
 class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
-
     companion object {
         val TAG: String = PurgeActivity::class.java.simpleName
 
@@ -125,9 +124,10 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
 
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
-                progressBar!!.post {
-                    progressBar!!.progress = 100
-                    progressBar!!.progressTintList = ColorStateList.valueOf(Color.GREEN)
+                progressBar?.post {
+                    progressBar?.progress = 100
+                    progressBar?.progressTintList = ColorStateList.valueOf(Color.GREEN)
+
                     val intent = Intent()
                     intent.putExtra("UID", cardProtocol.card.uid)
                     intent.putExtra("Card", cardProtocol.card.asBundle)
@@ -136,15 +136,16 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
                 }
             } else {
                 if (cardProtocol.error is CardProtocol.TangemException_InvalidPIN) {
-                    progressBar!!.post {
-                        progressBar!!.progress = 100
-                        progressBar!!.progressTintList = ColorStateList.valueOf(Color.RED)
+                    progressBar?.post {
+                        progressBar?.progress = 100
+                        progressBar?.progressTintList = ColorStateList.valueOf(Color.RED)
                     }
-                    progressBar!!.postDelayed({
+                    progressBar?.postDelayed({
                         try {
-                            progressBar!!.progress = 0
-                            progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
-                            progressBar!!.visibility = View.INVISIBLE
+                            progressBar?.progress = 0
+                            progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+                            progressBar?.visibility = View.INVISIBLE
+
                             val intent = Intent()
                             intent.putExtra("UID", cardProtocol.card.uid)
                             intent.putExtra("Card", cardProtocol.card.asBundle)
@@ -170,11 +171,11 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
             }
         }
 
-        progressBar!!.postDelayed({
+        progressBar?.postDelayed({
             try {
-                progressBar!!.progress = 0
-                progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
-                progressBar!!.visibility = View.INVISIBLE
+                progressBar?.progress = 0
+                progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+                progressBar?.visibility = View.INVISIBLE
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -182,16 +183,16 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
     }
 
     override fun onReadProgress(protocol: CardProtocol, progress: Int) {
-        progressBar!!.post { progressBar!!.progress = progress }
+        progressBar?.post { progressBar?.progress = progress }
     }
 
     override fun onReadCancel() {
         purgeTask = null
-        progressBar!!.postDelayed({
+        progressBar?.postDelayed({
             try {
-                progressBar!!.progress = 0
-                progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
-                progressBar!!.visibility = View.INVISIBLE
+                progressBar?.progress = 0
+                progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+                progressBar?.visibility = View.INVISIBLE
             } catch (e: Exception) {
                 e.printStackTrace()
             }
