@@ -99,17 +99,17 @@
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.PreparePaymentActivity"
+            android:name="com.tangem.presentation.activity.PrepareTransactionActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.ConfirmPaymentActivity"
+            android:name="com.tangem.presentation.activity.ConfirmTransactionActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.SignPaymentActivity"
+            android:name="com.tangem.presentation.activity.SignTransactionActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
