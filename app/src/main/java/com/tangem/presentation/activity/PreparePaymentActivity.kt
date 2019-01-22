@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.nfc.NfcAdapter
+import android.nfc.NfcManager
 import android.nfc.Tag
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -25,6 +26,7 @@ import java.io.IOException
 import javax.inject.Inject
 
 class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
+
     companion object {
         val TAG: String = PreparePaymentActivity::class.java.simpleName
         fun callingIntent(context: Context, ctx: TangemContext): Intent {
@@ -33,6 +35,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             return intent
         }
     }
+
 
     @Inject
     internal lateinit var navigator: Navigator
@@ -57,7 +60,8 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         val html = Html.fromHtml(engine!!.balanceHTML)
         tvBalance.text = html
 // [REDACTED_TODO_COMMENT]
-        if (ctx.blockchain == Blockchain.Token && engine.balance.currency != Blockchain.Ethereum.currency) {
+        if ((ctx.blockchain == Blockchain.Token && engine.balance.currency!=Blockchain.Ethereum.currency) ||
+           ((ctx.blockchain == Blockchain.RootstockToken && engine.balance.currency!=Blockchain.Rootstock.currency))){
             rgIncFee!!.visibility = View.INVISIBLE
         } else {
             rgIncFee!!.visibility = View.VISIBLE
