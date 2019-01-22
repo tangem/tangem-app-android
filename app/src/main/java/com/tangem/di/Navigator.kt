@@ -68,8 +68,8 @@ class Navigator {
         context.startActivityForResult(PurgeActivity.callingIntent(context, ctx), Constant.REQUEST_CODE_PURGE)
     }
 
-    fun showPreparePayment(context: Activity, ctx: TangemContext) {
-        context.startActivityForResult(PreparePaymentActivity.callingIntent(context, ctx), Constant.REQUEST_CODE_SEND_PAYMENT)
+    fun showPrepareTransaction(context: Activity, ctx: TangemContext) {
+        context.startActivityForResult(PrepareTransactionActivity.callingIntent(context, ctx), Constant.REQUEST_CODE_SEND_TRANSACTION)
     }
 
     fun showCreateNewWallet(context: Activity, ctx: TangemContext) {
