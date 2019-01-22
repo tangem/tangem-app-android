@@ -38,19 +38,19 @@ public class ServerApiInfura {
         return requestsCount <= 0;
     }
 
-    private InfuraBodyListener infuraBodyListener;
+    private ResponseListener responseListener;
 
-    public interface InfuraBodyListener {
+    public interface ResponseListener {
         void onSuccess(String method, InfuraResponse infuraResponse);
 
         void onFail(String method, String message);
     }
 
-    public void setInfuraResponse(InfuraBodyListener listener) {
-        infuraBodyListener = listener;
+    public void setResponseListener(ResponseListener listener) {
+        responseListener = listener;
     }
 
-    public void infura(String method, int id, String wallet, String contract, String tx) {
+    public void requestData(String method, int id, String wallet, String contract, String tx) {
         requestsCount++;
         InfuraApi infuraApi = App.getNetworkComponent().getRetrofitInfura().create(InfuraApi.class);
 
@@ -86,18 +86,18 @@ public class ServerApiInfura {
             public void onResponse(@NonNull Call<InfuraResponse> call, @NonNull Response<InfuraResponse> response) {
                 if (response.code() == 200) {
                     requestsCount--;
-                    infuraBodyListener.onSuccess(method, response.body());
-                    Log.i(TAG, "infura " + method + " onResponse " + response.code());
+                    responseListener.onSuccess(method, response.body());
+                    Log.i(TAG, "requestData " + method + " onResponse " + response.code());
                 } else {
-                    infuraBodyListener.onFail(method, String.valueOf(response.code()));
-                    Log.e(TAG, "infura " + method + " onResponse " + response.code());
+                    responseListener.onFail(method, String.valueOf(response.code()));
+                    Log.e(TAG, "requestData " + method + " onResponse " + response.code());
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<InfuraResponse> call, @NonNull Throwable t) {
-                infuraBodyListener.onFail(method, String.valueOf(t.getMessage()));
-                Log.e(TAG, "infura " + method + " onFailure " + t.getMessage());
+                responseListener.onFail(method, String.valueOf(t.getMessage()));
+                Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
             }
         });
     }
