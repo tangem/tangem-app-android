@@ -26,19 +26,18 @@ import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
 import com.tangem.tangemcard.reader.CardProtocol
+import com.tangem.util.LOG
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_verify_card.*
 import java.io.IOException
 import java.util.*
 
-class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
-
+class VerifyCard : Fragment() {
     companion object {
         val TAG: String = VerifyCard::class.java.simpleName
     }
 
-    private var nfcManager: NfcManager? = null
     private lateinit var ctx: TangemContext
 
     private var requestPIN2Count = 0
@@ -48,8 +47,6 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        nfcManager = NfcManager(activity, this)
-
         ctx = TangemContext.loadFromBundle(activity, activity?.intent?.extras)
     }
 
@@ -74,24 +71,9 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        nfcManager!!.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        nfcManager!!.onPause()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        nfcManager!!.onStop()
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-//        var data = data
         super.onActivityResult(requestCode, resultCode, data)
+        LOG.i(TAG, "requestCode $requestCode resultCode $resultCode")
         when (requestCode) {
             Constant.REQUEST_CODE_ENTER_NEW_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (data != null) {
@@ -109,6 +91,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                     }
                 }
             }
+
             Constant.REQUEST_CODE_ENTER_NEW_PIN2 -> if (resultCode == Activity.RESULT_OK) {
                 if (data != null) {
                     if (data.extras!!.containsKey("confirmPIN2")) {
@@ -125,10 +108,11 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                     }
                 }
             }
+
             Constant.REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (newPIN == "") newPIN = ctx.card!!.pin
 
-                if (newPIN2 == "") newPIN2 = App.pinStorage.getPIN2()
+                if (newPIN2 == "") newPIN2 = App.pinStorage.piN2
 
                 val pinSwapWarningDialog = PINSwapWarningDialog()
                 pinSwapWarningDialog.setOnRefreshPage { (activity as VerifyCardActivity).navigator.showPinSwap(context as Activity, newPIN, newPIN2) }
@@ -143,7 +127,6 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
 
             Constant.REQUEST_CODE_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
-//                    data = Intent()
                     ctx.saveToIntent(data)
                     data?.putExtra("modification", "delete")
                 } else
@@ -177,11 +160,11 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 if (data == null) {
                     ctx.saveToIntent(data)
                     data?.putExtra(Constant.EXTRA_MODIFICATION, "delete")
-                } else {
+                } else
                     data.putExtra(Constant.EXTRA_MODIFICATION, "update")
-                }
-                activity!!.setResult(Activity.RESULT_OK, data)
-                activity!!.finish()
+
+                activity?.setResult(Activity.RESULT_OK, data)
+                activity?.finish()
             } else {
                 if (data != null && data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
                     val updatedCard = TangemCard(data.getStringExtra("UID"))
@@ -202,14 +185,6 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 }
                 updateViews()
             }
-        }
-    }
-
-    override fun onTagDiscovered(tag: Tag) {
-        try {
-            nfcManager!!.ignoreTag(tag)
-        } catch (e: IOException) {
-            e.printStackTrace()
         }
     }
 
@@ -369,20 +344,6 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 tvWallet!!.setText(R.string.not_available)
                 tvWalletIdentity.setText(R.string.no_data_string)
             }
-
-//            timerHideErrorAndMessage = Timer()
-//            timerHideErrorAndMessage!!.schedule(object : TimerTask() {
-//                override fun run() {
-//                    tvError.post {
-//                        tvMessage!!.visibility = View.GONE
-//                        tvError!!.visibility = View.GONE
-//                        mCard!!.error = null
-//                        mCard!!.message = null
-//                    }
-//                }
-//            }, 5000)
-
-
         } catch (e: Exception) {
             e.printStackTrace()
         }
