@@ -28,18 +28,18 @@ import com.tangem.tangemcard.tasks.SignTask
 import com.tangem.tangemcard.util.Util
 import com.tangem.util.LOG
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.activity_sign_payment.*
+import kotlinx.android.synthetic.main.activity_sign_transaction.*
 
-class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
+class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
 
     companion object {
-        val TAG: String = SignPaymentActivity::class.java.simpleName
+        val TAG: String = SignTransactionActivity::class.java.simpleName
     }
 
     private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
 
-    private var signPaymentTask: SignTask? = null
+    private var signTransactionTask: SignTask? = null
 
     private lateinit var amount: CoinEngine.Amount
     private lateinit var fee: CoinEngine.Amount
@@ -51,7 +51,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_sign_payment)
+        setContentView(R.layout.activity_sign_transaction)
 
         nfcManager = NfcManager(this, this)
 
@@ -76,21 +76,21 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
     public override fun onPause() {
         nfcManager.onPause()
-        if (signPaymentTask != null)
-            signPaymentTask!!.cancel(true)
+        if (signTransactionTask != null)
+            signTransactionTask!!.cancel(true)
         super.onPause()
     }
 
     public override fun onStop() {
         // dismiss enable NFC dialog
         nfcManager.onStop()
-        if (signPaymentTask != null)
-            signPaymentTask!!.cancel(true)
+        if (signTransactionTask != null)
+            signTransactionTask!!.cancel(true)
         super.onStop()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == Constant.REQUEST_CODE_SEND_PAYMENT_) {
+        if (requestCode == Constant.REQUEST_CODE_SEND_TRANSACTION_) {
             setResult(resultCode, data)
             finish()
             return
@@ -127,18 +127,18 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
                 val coinEngine = CoinEngineFactory.create(ctx)
                         ?: throw CardProtocol.TangemException("Can't create CoinEngine!")
-                coinEngine.setOnNeedSendPayment { tx ->
+                coinEngine.setOnNeedSendTransaction { tx ->
                     if (tx != null) {
                         val intent = Intent(this, SendTransactionActivity::class.java)
                         ctx.saveToIntent(intent)
                         intent.putExtra(Constant.EXTRA_TX, tx)
-                        startActivityForResult(intent, Constant.REQUEST_CODE_SEND_PAYMENT_)
+                        startActivityForResult(intent, Constant.REQUEST_CODE_SEND_TRANSACTION_)
                     }
                 }
-                val paymentToSign = coinEngine.constructPayment(amount, fee, isIncludeFee, outAddressStr)
+                val transactionToSign = coinEngine.constructTransaction(amount, fee, isIncludeFee, outAddressStr)
 
-                signPaymentTask = SignTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, paymentToSign)
-                signPaymentTask!!.start()
+                signTransactionTask = SignTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, transactionToSign)
+                signTransactionTask!!.start()
             } else
                 nfcManager.ignoreTag(isoDep.tag)
 
@@ -170,7 +170,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
     }
 
     override fun onReadFinish(cardProtocol: CardProtocol?) {
-        signPaymentTask = null
+        signTransactionTask = null
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
                 progressBar!!.post {
@@ -240,7 +240,7 @@ class SignPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
     }
 
     override fun onReadCancel() {
-        signPaymentTask = null
+        signTransactionTask = null
 
         progressBar!!.postDelayed({
             try {
