@@ -4,8 +4,6 @@ import android.net.Uri;
 import android.text.InputFilter;
 import android.util.Log;
 
-import com.tangem.data.network.ElectrumRequest;
-import com.tangem.data.network.InsightApi;
 import com.tangem.data.network.ServerApiInsight;
 import com.tangem.data.network.model.InsightResponse;
 import com.tangem.domain.wallet.BTCUtils;
@@ -25,10 +23,6 @@ import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.util.DerEncodingUtil;
 import com.tangem.wallet.R;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
@@ -179,7 +173,7 @@ public class DucatusEngine extends BtcEngine {
     }
 
     @Override
-    public Uri getShareWalletUriExplorer() {
+    public Uri getWalletExplorerUri() {
         return Uri.parse("https://live.blockcypher.com/ltc/address/" + ctx.getCoinData().getWallet());
     }
 
@@ -397,7 +391,7 @@ public class DucatusEngine extends BtcEngine {
     }
 
     @Override
-    public SignTask.PaymentToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
+    public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         final ArrayList<UnspentOutputInfo> unspentOutputs;
         checkBlockchainDataExists();
 
@@ -442,7 +436,7 @@ public class DucatusEngine extends BtcEngine {
             bodyDoubleHash[i] = Util.calculateSHA256(bodyHash[i]);
         }
 
-        return new SignTask.PaymentToSign() {
+        return new SignTask.TransactionToSign() {
 
             @Override
             public boolean isSigningMethodSupported(TangemCard.SigningMethod signingMethod) {
@@ -492,7 +486,7 @@ public class DucatusEngine extends BtcEngine {
                 }
 
                 byte[] txForSend=BTCUtils.buildTXForSend(targetAddress, myAddress, unspentOutputs, amountFinal, changeFinal);
-                notifyOnNeedSendPayment(txForSend);
+                notifyOnNeedSendTransaction(txForSend);
                 return txForSend;
             }
         };
@@ -502,7 +496,7 @@ public class DucatusEngine extends BtcEngine {
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
         final ServerApiInsight serverApiInsight = new ServerApiInsight();
 
-        ServerApiInsight.InsightBodyListener insightBodyListener = new ServerApiInsight.InsightBodyListener() {
+        ServerApiInsight.ResponseListener responseListener = new ServerApiInsight.ResponseListener() {
             @Override
             public void onSuccess(String method, InsightResponse insightResponse) {
                 switch (method) {
@@ -562,7 +556,7 @@ public class DucatusEngine extends BtcEngine {
                         for (InsightResponse utxo : utxoList) {
                             //if (height != -1) { TODO: check
                             if (blockchainRequestsCallbacks.allowAdvance()) {
-                                serverApiInsight.insight(ServerApiInsight.INSIGHT_TRANSACTION, "", utxo.getTxid());
+                                serverApiInsight.requestData(ServerApiInsight.INSIGHT_TRANSACTION, "", utxo.getTxid());
                             } else {
                                 ctx.setError("Terminated by user");
                             }
@@ -582,10 +576,10 @@ public class DucatusEngine extends BtcEngine {
             }
         };
 
-        serverApiInsight.setInsightResponse(insightBodyListener);
+        serverApiInsight.setResponseListener(responseListener);
 
-        serverApiInsight.insight(ServerApiInsight.INSIGHT_ADDRESS, coinData.getWallet(), "");
-        serverApiInsight.insight(ServerApiInsight.INSIGHT_UNSPENT_OUTPUTS, coinData.getWallet(), "");
+        serverApiInsight.requestData(ServerApiInsight.INSIGHT_ADDRESS, coinData.getWallet(), "");
+        serverApiInsight.requestData(ServerApiInsight.INSIGHT_UNSPENT_OUTPUTS, coinData.getWallet(), "");
     }
 
 //    private final static BigDecimal relayFee = new BigDecimal(0.00001);
@@ -600,7 +594,7 @@ public class DucatusEngine extends BtcEngine {
 
         final ServerApiInsight serverApiInsight = new ServerApiInsight();
 
-        final ServerApiInsight.InsightBodyListener insightBodyListener  = new ServerApiInsight.InsightBodyListener () {
+        final ServerApiInsight.ResponseListener responseListener = new ServerApiInsight.ResponseListener() {
             @Override
             public void onSuccess(String method, InsightResponse insightResponse) {
                 if ( method.equals(ServerApiInsight.INSIGHT_FEE)) {
@@ -610,7 +604,7 @@ public class DucatusEngine extends BtcEngine {
                         BigDecimal maxFee = new BigDecimal(insightResponse.getFee6());
 
                         if (minFee.equals(BigDecimal.ZERO) || normalFee.equals(BigDecimal.ZERO) || maxFee.equals(BigDecimal.ZERO)) {
-                            serverApiInsight.insight(ServerApiInsight.INSIGHT_FEE, "","");
+                            serverApiInsight.requestData(ServerApiInsight.INSIGHT_FEE, "","");
                         }
 
                         minFee = minFee.multiply(new BigDecimal(calcSize)).divide(new BigDecimal(1024)); // (per KB -> per byte)*size
@@ -650,9 +644,9 @@ public class DucatusEngine extends BtcEngine {
                 }
             }
         };
-        serverApiInsight.setInsightResponse(insightBodyListener);
+        serverApiInsight.setResponseListener(responseListener);
 
-        serverApiInsight.insight(ServerApiInsight.INSIGHT_FEE, "", "");
+        serverApiInsight.requestData(ServerApiInsight.INSIGHT_FEE, "", "");
     }
 
     @Override
@@ -660,7 +654,7 @@ public class DucatusEngine extends BtcEngine {
         final ServerApiInsight serverApiInsight = new ServerApiInsight();
         final String txStr = BTCUtils.toHex(txForSend);
 
-        final ServerApiInsight.InsightBodyListener insightBodyListener  = new ServerApiInsight.InsightBodyListener () {
+        final ServerApiInsight.ResponseListener responseListener = new ServerApiInsight.ResponseListener() {
             @Override
             public void onSuccess(String method, InsightResponse insightResponse) {
                 if (method.equals(ServerApiInsight.INSIGHT_SEND)) {
@@ -700,8 +694,8 @@ public class DucatusEngine extends BtcEngine {
                 }
             }
         };
-        serverApiInsight.setInsightResponse(insightBodyListener);
+        serverApiInsight.setResponseListener(responseListener);
 
-        serverApiInsight.insight(ServerApiInsight.INSIGHT_SEND, "", txStr);
+        serverApiInsight.requestData(ServerApiInsight.INSIGHT_SEND, "", txStr);
     }
 }

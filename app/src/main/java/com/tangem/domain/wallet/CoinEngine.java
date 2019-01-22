@@ -181,12 +181,10 @@ public abstract class CoinEngine {
 
     public abstract boolean isBalanceNotZero();
 
-//    public abstract byte[] sign(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress, CardProtocol protocol) throws Exception;
-
-    // TODO - change isExtractPossible to isExtractPossible and if not - return string message
+    // TODO - return string message
     public abstract boolean isExtractPossible();
 
-    public abstract Uri getShareWalletUriExplorer();
+    public abstract Uri getWalletExplorerUri();
 
     public abstract Uri getShareWalletUri();
 
@@ -245,14 +243,14 @@ public abstract class CoinEngine {
     }
 
     /**
-     * Create instance of {@link SignTask.PaymentToSign} used for transaction signing and sending
+     * Create instance of {@link SignTask.TransactionToSign} used for transaction signing and sending
      *
      * Transaction processing sequence:
      * 1. User enter transaction attributes
-     * 2. Application create instance of {@link SignTask.PaymentToSign} by call {@see constructPayment}
-     * 3. Application set notification when transaction were prepared {@see setOnNeedSendPayment} and start {@link SignTask}
+     * 2. Application create instance of {@link SignTask.TransactionToSign} by call {@see constructTransaction}
+     * 3. Application set notification when transaction were prepared {@see setOnNeedSendTransaction} and start {@link SignTask}
      * 4. User tap card and card sign transaction
-     * 5. Application receive {@link CoinEngine.OnNeedSendPayment} notification with prepared raw transaction
+     * 5. Application receive {@link OnNeedSendTransaction} notification with prepared raw transaction
      * 6. Application show user information that transaction ready for sending and start sending procedure by call {@see requestSendTransaction}
      * 7. Application receive notification of sending result through {@link CoinEngine.BlockchainRequestsCallbacks} and show result to user
      *
@@ -260,32 +258,32 @@ public abstract class CoinEngine {
      * @param feeValue      - fee amount of desired transaction
      * @param IncFee        - true if fee amount is included in amountValue (amountValue is total amount of transaction)
      * @param targetAddress - target address of transaction
-     * @return instance of {@link SignTask.PaymentToSign}
+     * @return instance of {@link SignTask.TransactionToSign}
      * @throws Exception if something goes wrong
      */
-    public abstract SignTask.PaymentToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception;
+    public abstract SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception;
 
     /**
      * Interface used to notify main application when new transaction is prepared to send
      */
-    public interface OnNeedSendPayment {
-        void onPaymentPrepared(byte[] txForSend);
+    public interface OnNeedSendTransaction {
+        void onTransactionPrepared(byte[] txForSend);
     }
 
-    protected OnNeedSendPayment onNeedSendPayment;
+    protected OnNeedSendTransaction onNeedSendTransaction;
 
 
     /**
      * Set notification callback when new transaction is prepared to send
      */
-    public void setOnNeedSendPayment(OnNeedSendPayment onNeedSendPayment) {
-        this.onNeedSendPayment = onNeedSendPayment;
+    public void setOnNeedSendTransaction(OnNeedSendTransaction onNeedSendTransaction) {
+        this.onNeedSendTransaction = onNeedSendTransaction;
     }
 
-    protected void notifyOnNeedSendPayment(byte[] txForSend) throws Exception {
-        if (onNeedSendPayment == null)
-            throw new Exception("Payment signed but no callback defined to send!");
-        onNeedSendPayment.onPaymentPrepared(txForSend);
+    protected void notifyOnNeedSendTransaction(byte[] txForSend) throws Exception {
+        if (onNeedSendTransaction == null)
+            throw new Exception("Transaction was signed but no callback defined to send!");
+        onNeedSendTransaction.onTransactionPrepared(txForSend);
     }
 
     /**
