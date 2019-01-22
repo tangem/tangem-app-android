@@ -23,12 +23,12 @@ import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.activity_confirm_payment.*
+import kotlinx.android.synthetic.main.activity_confirm_transaction.*
 import org.greenrobot.eventbus.EventBus
 import java.io.IOException
 import java.util.*
 
-class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
+class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
@@ -41,7 +41,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_confirm_payment)
+        setContentView(R.layout.activity_confirm_transaction)
 
         nfcManager = NfcManager(this, this)
 
@@ -74,7 +74,9 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         btnSend.visibility = View.INVISIBLE
 
-        rgFee.isEnabled = !(ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token || ctx.blockchain == Blockchain.BitcoinCash || ctx.blockchain == Blockchain.Litecoin)
+        for (lol in rgFee.touchables) {
+            lol.isEnabled = !(ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token || ctx.blockchain == Blockchain.BitcoinCash || ctx.blockchain == Blockchain.Litecoin)
+        }
 
         // set listeners
         rgFee.setOnCheckedChangeListener { _, checkedId -> doSetFee(checkedId) }
@@ -175,7 +177,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                     }
 
                     override fun allowAdvance(): Boolean {
-                        return UtilHelper.isOnline(this@ConfirmPaymentActivity)
+                        return UtilHelper.isOnline(this@ConfirmTransactionActivity)
                     }
                 },
                 etWallet.text.toString(),
@@ -199,7 +201,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == Constant.REQUEST_CODE_SIGN_PAYMENT) {
+        if (requestCode == Constant.REQUEST_CODE_SIGN_TRANSACTION) {
             if (data != null && data.extras != null) {
                 if (data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
                     val updatedCard = TangemCard(data.getStringExtra("UID"))
@@ -222,7 +224,7 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             finish()
         } else if (requestCode == Constant.REQUEST_CODE_REQUEST_PIN2_) {
             if (resultCode == Activity.RESULT_OK) {
-                val intent = Intent(baseContext, SignPaymentActivity::class.java)
+                val intent = Intent(baseContext, SignTransactionActivity::class.java)
                 ctx.saveToIntent(intent)
                 intent.putExtra(Constant.EXTRA_TARGET_ADDRESS, etWallet!!.text.toString())
                 intent.putExtra(Constant.EXTRA_AMOUNT, etAmount.text.toString())
@@ -230,9 +232,9 @@ class ConfirmPaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 intent.putExtra(Constant.EXTRA_FEE, etFee.text.toString())
                 intent.putExtra(Constant.EXTRA_FEE_CURRENCY, tvCurrency2.text.toString())
                 intent.putExtra(Constant.EXTRA_FEE_INCLUDED, isIncludeFee)
-                startActivityForResult(intent, Constant.REQUEST_CODE_SIGN_PAYMENT)
+                startActivityForResult(intent, Constant.REQUEST_CODE_SIGN_TRANSACTION)
             } else
-                Toast.makeText(baseContext, R.string.pin_2_is_required_to_sign_the_payment, Toast.LENGTH_LONG).show()
+                Toast.makeText(baseContext, R.string.pin_2_is_required_to_sign_the_transaction, Toast.LENGTH_LONG).show()
         }
     }
 
