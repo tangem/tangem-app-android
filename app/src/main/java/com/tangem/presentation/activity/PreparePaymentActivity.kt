@@ -5,7 +5,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.nfc.NfcAdapter
-import android.nfc.NfcManager
 import android.nfc.Tag
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
