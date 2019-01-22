@@ -161,11 +161,11 @@
                 android:padding="12dp"
                 android:textColor="@color/black"
                 android:textColorLink="@color/colorPrimary"
-                android:textSize="@dimen/text_size_large"
+                android:textSize="@dimen/text_size_1_large"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"/>
 
             <TextView
                 android:id="@+id/tvCurrency"
@@ -177,7 +177,7 @@
                 android:layout_marginBottom="8dp"
                 android:fontFamily="@font/maax"
                 android:text="@string/m_btc"
-                android:textSize="@dimen/text_size_large"
+                android:textSize="@dimen/text_size_1_large"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/etAmount"
