@@ -90,6 +90,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 //updateViews()
             } else if (srl != null && !srl.isRefreshing) srl.isRefreshing = true
         }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         nfcManager = NfcManager(activity, this)
@@ -305,7 +306,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         ctx.message = transactionFinishWithSuccess.message
         ctx.coinData.clearInfo()
         updateViews()
-        srl?.isRefreshing=true
+        srl?.isRefreshing = true
         srl?.postDelayed({ refresh() }, 5000)
     }
 
@@ -631,8 +632,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         requestRateInfo()
 
-        if( requestCounter==0 )
-        {
+        if (requestCounter == 0) {
             // if no connection and no requests posted
             srl?.isRefreshing = false
             updateViews()
@@ -665,6 +665,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         }
 
                         override fun allowAdvance(): Boolean {
+// [REDACTED_TODO_COMMENT]
                             return UtilHelper.isOnline(context as Activity)
                         }
                     }
