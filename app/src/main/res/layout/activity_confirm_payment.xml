@@ -269,7 +269,6 @@
                 android:enabled="false"
                 android:fontFamily="@font/maax"
                 android:inputType="numberDecimal"
-                android:padding="12dp"
                 android:textColor="@color/black"
                 android:textColorLink="@android:color/holo_blue_dark"
                 android:textSize="@dimen/text_size_medium"
@@ -277,7 +276,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintWidth_min="150dp" />
+                app:layout_constraintWidth_min="150dp"/>
 
             <TextView
                 android:id="@+id/tvCurrency2"
