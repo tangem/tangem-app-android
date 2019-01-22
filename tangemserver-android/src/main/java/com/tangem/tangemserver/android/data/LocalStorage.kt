@@ -67,6 +67,8 @@ class LocalStorage
             putResourceArtworkToCatalog(R.drawable.card_ru028, true)
             putResourceArtworkToCatalog(R.drawable.card_ru029, true)
             putResourceArtworkToCatalog(R.drawable.card_ru030, true)
+            putResourceArtworkToCatalog(R.drawable.card_ru031, true)
+            putResourceArtworkToCatalog(R.drawable.card_ru032, true)
         }
         if (batchesFile.exists()) {
             try {
@@ -226,6 +228,8 @@ class LocalStorage
             card.batch == "001F" -> R.drawable.card_ru028
             card.batch == "0018" -> R.drawable.card_ru029
             card.batch == "0020" -> R.drawable.card_ru030
+            card.batch == "0021" -> R.drawable.card_ru031
+            card.batch == "0022" -> R.drawable.card_ru032
 
             else -> null
         }
