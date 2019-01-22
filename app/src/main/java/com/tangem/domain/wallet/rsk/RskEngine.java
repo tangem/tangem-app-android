@@ -48,6 +48,11 @@ public class RskEngine extends EthEngine {
     }
 
     @Override
+    protected int getChainId() {
+        return EthTransaction.ChainEnum.Rootstock_mainnet.getValue();
+    }
+
+    @Override
     public String getBalanceCurrency() {
         return Blockchain.Rootstock.getCurrency();
     }
