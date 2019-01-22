@@ -57,6 +57,10 @@ public class EthEngine extends CoinEngine {
         return 18;
     }
 
+    protected int getChainId() {
+        return ctx.getBlockchain() == Blockchain.Ethereum ? EthTransaction.ChainEnum.Mainnet.getValue() : EthTransaction.ChainEnum.Rinkeby.getValue();
+    }
+
     @Override
     public boolean awaitingConfirmation() {
         return false;
@@ -391,7 +395,6 @@ public class EthEngine extends CoinEngine {
 
         BigInteger gasPrice = weiFee.divide(BigInteger.valueOf(21000));
         BigInteger gasLimit = BigInteger.valueOf(21000);
-        Integer chainId = ctx.getBlockchain() == Blockchain.Ethereum ? EthTransaction.ChainEnum.Mainnet.getValue() : EthTransaction.ChainEnum.Rinkeby.getValue();
 
         String to = targetAddress;
 
@@ -399,7 +402,7 @@ public class EthEngine extends CoinEngine {
             to = to.substring(2);
         }
 
-        final EthTransaction tx = EthTransaction.create(to, weiAmount, nonceValue, gasPrice, gasLimit, chainId);
+        final EthTransaction tx = EthTransaction.create(to, weiAmount, nonceValue, gasPrice, gasLimit, this.getChainId());
 
         return new SignTask.PaymentToSign() {
             @Override
