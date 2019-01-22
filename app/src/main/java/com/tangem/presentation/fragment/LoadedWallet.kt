@@ -124,7 +124,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         btnExplore.setOnClickListener {
             val engine = CoinEngineFactory.create(ctx)
-            startActivity(Intent(Intent.ACTION_VIEW, engine?.shareWalletUriExplorer))
+            startActivity(Intent(Intent.ACTION_VIEW, engine?.walletExplorerUri))
         }
         btnCopy.setOnClickListener { doShareWallet(false) }
 
@@ -157,13 +157,13 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     getString(R.string.via_cryptonit) -> {
                         val intent = Intent(activity, PrepareCryptonitWithdrawalActivity::class.java)
                         ctx.saveToIntent(intent)
-                        startActivityForResult(intent, Constant.REQUEST_CODE_RECEIVE_PAYMENT)
+                        startActivityForResult(intent, Constant.REQUEST_CODE_RECEIVE_TRANSACTION)
                     }
 
                     getString(R.string.via_kraken) -> {
                         val intent = Intent(activity, PrepareKrakenWithdrawalActivity::class.java)
                         ctx.saveToIntent(intent)
-                        startActivityForResult(intent, Constant.REQUEST_CODE_RECEIVE_PAYMENT)
+                        startActivityForResult(intent, Constant.REQUEST_CODE_RECEIVE_TRANSACTION)
                     }
                     else -> {
                     }
@@ -183,7 +183,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 else if (ctx.card!!.remainingSignatures == 0)
                     UtilHelper.showSingleToast(context, getString(R.string.card_has_no_remaining_signature))
                 else
-                    (activity as LoadedWalletActivity).navigator.showPreparePayment(context as Activity, ctx)
+                    (activity as LoadedWalletActivity).navigator.showPrepareTransaction(context as Activity, ctx)
             else
                 Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
         }
@@ -259,8 +259,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         serverApiTangem.setArtworkListener(artworkListener)
 
         // request rate info listener
-        serverApiCommon.setRateInfoData {
-            if (activity == null || !UtilHelper.isOnline(activity!!)) return@setRateInfoData
+        serverApiCommon.setRateInfoListener {
+            if (activity == null || !UtilHelper.isOnline(activity!!)) return@setRateInfoListener
             val rate = it.priceUsd.toFloat()
             ctx.coinData!!.rate = rate
             ctx.coinData!!.rateAlter = rate
@@ -417,7 +417,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 updateViews()
             }
 
-            Constant.REQUEST_CODE_SEND_PAYMENT, Constant.REQUEST_CODE_RECEIVE_PAYMENT -> {
+            Constant.REQUEST_CODE_SEND_TRANSACTION, Constant.REQUEST_CODE_RECEIVE_TRANSACTION -> {
                 if (resultCode == Activity.RESULT_OK) {
                     ctx.coinData?.clearInfo()
                     srl?.postDelayed({ this.refresh() }, 5000)
@@ -712,7 +712,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     throw Exception("Can''t get rate for blockchain " + ctx.blockchainName)
                 }
             }
-            serverApiCommon.rateInfoData(cryptoId)
+            serverApiCommon.requestRateInfo(cryptoId)
         } else {
             ctx.error = getString(R.string.no_connection)
             updateViews()

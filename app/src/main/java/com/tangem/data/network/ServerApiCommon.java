@@ -24,18 +24,18 @@ public class ServerApiCommon {
     public static final int ESTIMATE_FEE_PRIORITY = 2;
     public static final int ESTIMATE_FEE_NORMAL = 3;
     public static final int ESTIMATE_FEE_MINIMAL = 6;
-    private EstimateFeeListener estimateFeeListener;
+    private EstimatedFeeListener estimatedFeeListener;
 
-    public interface EstimateFeeListener {
+    public interface EstimatedFeeListener {
         void onSuccess(int blockCount, String estimateFeeResponse);
         void onFail(int blockCount, String message);
     }
 
-    public void setEstimateFee(EstimateFeeListener listener) {
-        estimateFeeListener = listener;
+    public void setBtcEstimatedFeeListener(EstimatedFeeListener listener) {
+        estimatedFeeListener = listener;
     }
 
-    public void estimateFee(int blockCount) {
+    public void requestBtcEstimatedFee(int blockCount) {
         EstimatefeeApi estimatefeeApi = App.getNetworkComponent().getRetrofitEstimatefee().create(EstimatefeeApi.class);
 
         Call<String> call;
@@ -60,17 +60,17 @@ public class ServerApiCommon {
             @Override
             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
                 if (response.code() == 200) {
-                    estimateFeeListener.onSuccess(blockCount, response.body());
-                    Log.i(TAG, "estimateFee         onResponse " + response.code() + "  " + response.body());
+                    estimatedFeeListener.onSuccess(blockCount, response.body());
+                    Log.i(TAG, "requestBtcEstimatedFee         onResponse " + response.code() + "  " + response.body());
                 } else
-                    estimateFeeListener.onFail(blockCount, response.body());
-                Log.e(TAG, "estimateFee         onResponse " + response.code());
+                    estimatedFeeListener.onFail(blockCount, response.body());
+                Log.e(TAG, "requestBtcEstimatedFee         onResponse " + response.code());
             }
 
             @Override
             public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
-                estimateFeeListener.onFail(blockCount, t.getMessage());
-                Log.e(TAG, "estimateFee onFailure " + t.getMessage());
+                estimatedFeeListener.onFail(blockCount, t.getMessage());
+                Log.e(TAG, "requestBtcEstimatedFee onFailure " + t.getMessage());
             }
         });
     }
@@ -79,18 +79,18 @@ public class ServerApiCommon {
      * HTTP
      * Used in Crypto-currency course
      */
-    private RateInfoDataListener rateInfoDataListener;
+    private RateInfoListener rateInfoListener;
 
-    public interface RateInfoDataListener {
+    public interface RateInfoListener {
         void onSuccess(RateInfoResponse rateInfoResponse);
     }
 
-    public void setRateInfoData(RateInfoDataListener listener) {
-        rateInfoDataListener = listener;
+    public void setRateInfoListener(RateInfoListener listener) {
+        rateInfoListener = listener;
     }
 
     @SuppressLint("CheckResult")
-    public void rateInfoData(String cryptoId) {
+    public void requestRateInfo(String cryptoId) {
         CoinmarketApi coinmarketApi = App.getNetworkComponent().getRetrofitCoinmarketcap().create(CoinmarketApi.class);
 
         coinmarketApi.getRateInfoList()
@@ -100,12 +100,12 @@ public class ServerApiCommon {
                             if (!rateInfoModelList.isEmpty()) {
                                 for (RateInfoResponse rateInfoMode : rateInfoModelList) {
                                     if (rateInfoMode.getId().equals(cryptoId)) {
-                                        rateInfoDataListener.onSuccess(rateInfoMode);
-                                        Log.i(TAG, "rateInfoData        " + cryptoId + " onResponse " + "200");
+                                        rateInfoListener.onSuccess(rateInfoMode);
+                                        Log.i(TAG, "requestRateInfo        " + cryptoId + " onResponse " + "200");
                                     }
                                 }
                             } else
-                                Log.e(TAG, "rateInfoData        " + cryptoId + " onResponse " + "Empty");
+                                Log.e(TAG, "requestRateInfo        " + cryptoId + " onResponse " + "Empty");
                         },
                         // handle error
                         Throwable::printStackTrace);
