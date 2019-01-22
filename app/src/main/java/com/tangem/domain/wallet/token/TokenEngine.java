@@ -289,7 +289,7 @@ public class TokenEngine extends CoinEngine {
 
 
     @Override
-    public Uri getShareWalletUriExplorer() {
+    public Uri getWalletExplorerUri() {
         return Uri.parse("https://etherscan.io/token/" + getContractAddress(ctx.getCard()) + "?a=" + ctx.getCoinData().getWallet());
     }
 
@@ -431,16 +431,16 @@ public class TokenEngine extends CoinEngine {
     }
 
     @Override
-    public SignTask.PaymentToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
+    public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         if (amountValue.getCurrency().equals(Blockchain.Ethereum.getCurrency())) {
-            return constructPaymentETH(feeValue, amountValue, IncFee, targetAddress);
+            return constructTransactionETH(feeValue, amountValue, IncFee, targetAddress);
         } else {
-            return constructPaymentToken(feeValue, amountValue, IncFee, targetAddress);
+            return constructTransactionToken(feeValue, amountValue, IncFee, targetAddress);
         }
     }
 
-    private SignTask.PaymentToSign constructPaymentETH(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
-        Log.e(TAG, "Construct ETH payment "+amountValue.toString()+" with fee "+feeValue.toString()+(IncFee?" including":" excluding"));
+    private SignTask.TransactionToSign constructTransactionETH(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
+        Log.e(TAG, "Construct ETH transaction "+amountValue.toString()+" with fee "+feeValue.toString()+(IncFee?" including":" excluding"));
 
         BigInteger nonceValue = coinData.getConfirmedTXCount();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
@@ -465,7 +465,7 @@ public class TokenEngine extends CoinEngine {
 
         final EthTransaction tx = EthTransaction.create(to, weiAmount, nonceValue, gasPrice, gasLimit, chainId);
 
-        return new SignTask.PaymentToSign() {
+        return new SignTask.TransactionToSign() {
             @Override
             public boolean isSigningMethodSupported(TangemCard.SigningMethod signingMethod) {
                 return signingMethod == TangemCard.SigningMethod.Sign_Hash;
@@ -516,14 +516,14 @@ public class TokenEngine extends CoinEngine {
                 Log.e(TAG,"ETH_v "+ String.valueOf(v));
 
                 byte[] txForSend = tx.getEncoded();
-                notifyOnNeedSendPayment(txForSend);
+                notifyOnNeedSendTransaction(txForSend);
                 return txForSend;
             }
         };
     }
 
-    private SignTask.PaymentToSign constructPaymentToken(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
-        Log.e(TAG, "Construct TOKEN payment "+amountValue.toString()+" with fee "+feeValue.toString()+(IncFee?" including":" excluding"));
+    private SignTask.TransactionToSign constructTransactionToken(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
+        Log.e(TAG, "Construct TOKEN transaction "+amountValue.toString()+" with fee "+feeValue.toString()+(IncFee?" including":" excluding"));
 
         BigInteger nonceValue = coinData.getConfirmedTXCount();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
@@ -573,7 +573,7 @@ public class TokenEngine extends CoinEngine {
         byte[] data = BTCUtils.fromHex(cmd);
         EthTransaction tx = EthTransaction.create(contractAddress, amountZero, nonceValue, gasPrice, gasLimit, chainId, data);
 
-        return new SignTask.PaymentToSign() {
+        return new SignTask.TransactionToSign() {
             @Override
             public boolean isSigningMethodSupported(TangemCard.SigningMethod signingMethod) {
                 return signingMethod == TangemCard.SigningMethod.Sign_Hash;
@@ -624,7 +624,7 @@ public class TokenEngine extends CoinEngine {
                 Log.e(TAG,"ETH_v: "+ String.valueOf(v));
 
                 byte[] txForSend = tx.getEncoded();
-                notifyOnNeedSendPayment(txForSend);
+                notifyOnNeedSendTransaction(txForSend);
                 return txForSend;
 
             }
@@ -635,8 +635,8 @@ public class TokenEngine extends CoinEngine {
     @Override
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
         final ServerApiInfura serverApiInfura = new ServerApiInfura();
-        // request infura listener
-        ServerApiInfura.InfuraBodyListener infuraBodyListener = new ServerApiInfura.InfuraBodyListener() {
+        // request requestData listener
+        ServerApiInfura.ResponseListener responseListener = new ServerApiInfura.ResponseListener() {
             @Override
             public void onSuccess(String method, InfuraResponse infuraResponse) {
                 switch (method) {
@@ -682,9 +682,9 @@ public class TokenEngine extends CoinEngine {
 //                            Log.i("$TAG eth_call", balanceCap)
 
                             if (blockchainRequestsCallbacks.allowAdvance()) {
-                                serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
-                                serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT, 67, coinData.getWallet(), "", "");
-                                serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, 67, coinData.getWallet(), "", "");
+                                serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
+                                serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT, 67, coinData.getWallet(), "", "");
+                                serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, 67, coinData.getWallet(), "", "");
                             } else {
                                 ctx.setError("Terminated by user");
                             }
@@ -711,16 +711,16 @@ public class TokenEngine extends CoinEngine {
                 }
             }
         };
-        serverApiInfura.setInfuraResponse(infuraBodyListener);
+        serverApiInfura.setResponseListener(responseListener);
 
-        serverApiInfura.infura(ServerApiInfura.INFURA_ETH_CALL, 67, coinData.getWallet(), getContractAddress(ctx.getCard()), "");
+        serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_CALL, 67, coinData.getWallet(), getContractAddress(ctx.getCard()), "");
     }
 
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
         ServerApiInfura serverApiInfura = new ServerApiInfura();
-        // request infura eth gasPrice listener
-        ServerApiInfura.InfuraBodyListener infuraBodyListener = new ServerApiInfura.InfuraBodyListener() {
+        // request requestData eth gasPrice listener
+        ServerApiInfura.ResponseListener responseListener = new ServerApiInfura.ResponseListener() {
             @Override
             public void onSuccess(String method, InfuraResponse infuraResponse) {
                 String gasPrice = infuraResponse.getResult();
@@ -762,9 +762,9 @@ public class TokenEngine extends CoinEngine {
                 blockchainRequestsCallbacks.onComplete(false);
             }
         };
-        serverApiInfura.setInfuraResponse(infuraBodyListener);
+        serverApiInfura.setResponseListener(responseListener);
 
-        serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GAS_PRICE, 67, coinData.getWallet(), "", "");
+        serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GAS_PRICE, 67, coinData.getWallet(), "", "");
     }
 
     @Override
@@ -773,8 +773,8 @@ public class TokenEngine extends CoinEngine {
         String txStr = String.format("0x%s", BTCUtils.toHex(txForSend));
 
         ServerApiInfura serverApiInfura = new ServerApiInfura();
-        // request infura eth gasPrice listener
-        ServerApiInfura.InfuraBodyListener infuraBodyListener = new ServerApiInfura.InfuraBodyListener() {
+        // request requestData eth gasPrice listener
+        ServerApiInfura.ResponseListener responseListener = new ServerApiInfura.ResponseListener() {
             @Override
             public void onSuccess(String method, InfuraResponse infuraResponse) {
                 if (method.equals(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION)) {
@@ -800,9 +800,9 @@ public class TokenEngine extends CoinEngine {
             }
         };
 
-        serverApiInfura.setInfuraResponse(infuraBodyListener);
+        serverApiInfura.setResponseListener(responseListener);
 
-        serverApiInfura.infura(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION, 67, coinData.getWallet(), "", txStr);
+        serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION, 67, coinData.getWallet(), "", txStr);
 
     }
 
