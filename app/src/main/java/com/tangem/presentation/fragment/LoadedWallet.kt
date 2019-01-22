@@ -107,7 +107,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (ctx.blockchain == Blockchain.Token)
+        if (ctx.blockchain == Blockchain.Token || ctx.blockchain == Blockchain.RootstockToken)
             tvBalance.setSingleLine(false)
 
         ivTangemCard.setImageBitmap(App.localStorage.getCardArtworkBitmap(ctx.card))
@@ -706,6 +706,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 Blockchain.Token -> "ethereum"
                 Blockchain.BitcoinCash -> "bitcoin-cash"
                 Blockchain.Litecoin -> "litecoin"
+                Blockchain.Rootstock -> "bitcoin"
+                Blockchain.RootstockToken ->"bitcoin"
                 else -> {
                     throw Exception("Can''t get rate for blockchain " + ctx.blockchainName)
                 }
