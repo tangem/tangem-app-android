@@ -20,16 +20,16 @@ import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.activity_prepare_payment.*
+import kotlinx.android.synthetic.main.activity_prepare_transaction.*
 import java.io.IOException
 import javax.inject.Inject
 
-class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
+class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     companion object {
-        val TAG: String = PreparePaymentActivity::class.java.simpleName
+        val TAG: String = PrepareTransactionActivity::class.java.simpleName
         fun callingIntent(context: Context, ctx: TangemContext): Intent {
-            val intent = Intent(context, PreparePaymentActivity::class.java)
+            val intent = Intent(context, PrepareTransactionActivity::class.java)
             ctx.saveToIntent(intent)
             return intent
         }
@@ -45,7 +45,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_prepare_payment)
+        setContentView(R.layout.activity_prepare_transaction)
 
         App.getNavigatorComponent().inject(this)
 
@@ -118,13 +118,13 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 return@setOnClickListener
             }
 
-            val intent = Intent(baseContext, ConfirmPaymentActivity::class.java)
+            val intent = Intent(baseContext, ConfirmTransactionActivity::class.java)
             ctx.saveToIntent(intent)
             intent.putExtra(Constant.EXTRA_TARGET_ADDRESS, etWallet!!.text.toString())
             intent.putExtra(Constant.EXTRA_FEE_INCLUDED, (rgIncFee!!.checkedRadioButtonId == R.id.rbFeeIn))
             intent.putExtra(Constant.EXTRA_AMOUNT, strAmount)
             intent.putExtra(Constant.EXTRA_AMOUNT_CURRENCY, tvCurrency.text.toString())
-            startActivityForResult(intent, Constant.REQUEST_CODE_SEND_PAYMENT__)
+            startActivityForResult(intent, Constant.REQUEST_CODE_SEND_TRANSACTION__)
         }
 
         ivCamera.setOnClickListener { navigator.showQrScanActivity(this, Constant.REQUEST_CODE_SCAN_QR) }
@@ -169,7 +169,7 @@ class PreparePaymentActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 }
             }
             etWallet!!.setText(code)
-        } else if (requestCode == Constant.REQUEST_CODE_SEND_PAYMENT__) {
+        } else if (requestCode == Constant.REQUEST_CODE_SEND_TRANSACTION__) {
             setResult(resultCode, data)
             finish()
         }
