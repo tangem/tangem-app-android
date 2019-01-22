@@ -176,7 +176,7 @@
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginLeft="8dp">
+            android:layout_marginStart="8dp">
 
             <EditText
                 android:id="@+id/etAmount"
@@ -185,16 +185,16 @@
                 android:digits="0123456789.,"
                 android:fontFamily="@font/maax"
                 android:hint="@string/enter_amount"
-                android:inputType="numberDecimal"
                 android:imeOptions="actionDone"
+                android:inputType="numberDecimal"
                 android:padding="12dp"
                 android:textColor="@color/colorPrimaryDark"
-                android:textSize="@dimen/text_size_large"
+                android:textSize="@dimen/text_size_1_large"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintWidth_min="150dp" />
+                app:layout_constraintWidth_min="150dp"/>
 
             <TextView
                 android:id="@+id/tvCurrency"
@@ -205,7 +205,7 @@
                 android:fontFamily="@font/maax"
                 android:text="@string/m_btc"
                 android:textColor="@color/primary"
-                android:textSize="@dimen/text_size_large"
+                android:textSize="@dimen/text_size_1_large"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toRightOf="@+id/etAmount" />
 
