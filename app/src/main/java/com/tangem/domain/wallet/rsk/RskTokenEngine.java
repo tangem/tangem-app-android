@@ -105,7 +105,7 @@ public class RskTokenEngine extends TokenEngine {
     }
 
     @Override
-    public Uri getShareWalletUriExplorer() { return Uri.parse("https://explorer.rsk.co/address/" + ctx.getCoinData().getWallet()); } // Only RSK explorer for now
+    public Uri getWalletExplorerUri() { return Uri.parse("https://explorer.rsk.co/address/" + ctx.getCoinData().getWallet()); } // Only RSK explorer for now
 
     @Override
     public Uri getShareWalletUri() { return Uri.parse(ctx.getCoinData().getWallet()); }
@@ -186,16 +186,16 @@ public class RskTokenEngine extends TokenEngine {
     }
 
     @Override
-    public SignTask.PaymentToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
+    public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         if (amountValue.getCurrency().equals(Blockchain.Rootstock.getCurrency())) {
-            return constructPaymentRBTC(feeValue, amountValue, IncFee, targetAddress);
+            return constructTransactionRBTC(feeValue, amountValue, IncFee, targetAddress);
         } else {
-            return constructPaymentToken(feeValue, amountValue, IncFee, targetAddress);
+            return constructTransactionToken(feeValue, amountValue, IncFee, targetAddress);
         }
     }
 
-    private SignTask.PaymentToSign constructPaymentRBTC(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
-        Log.e(TAG, "Construct RBTC payment "+amountValue.toString()+" with fee "+feeValue.toString()+(IncFee?" including":" excluding"));
+    private SignTask.TransactionToSign constructTransactionRBTC(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
+        Log.e(TAG, "Construct RBTC transaction "+amountValue.toString()+" with fee "+feeValue.toString()+(IncFee?" including":" excluding"));
 
         BigInteger nonceValue = coinData.getConfirmedTXCount();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
@@ -219,7 +219,7 @@ public class RskTokenEngine extends TokenEngine {
 
         final EthTransaction tx = EthTransaction.create(to, weiAmount, nonceValue, gasPrice, gasLimit, chainId);
 
-        return new SignTask.PaymentToSign() {
+        return new SignTask.TransactionToSign() {
             @Override
             public boolean isSigningMethodSupported(TangemCard.SigningMethod signingMethod) {
                 return signingMethod == TangemCard.SigningMethod.Sign_Hash;
@@ -270,14 +270,14 @@ public class RskTokenEngine extends TokenEngine {
                 Log.e(TAG,"RSK_v "+ String.valueOf(v));
 
                 byte[] txForSend = tx.getEncoded();
-                notifyOnNeedSendPayment(txForSend);
+                notifyOnNeedSendTransaction(txForSend);
                 return txForSend;
             }
         };
     }
 
-    private SignTask.PaymentToSign constructPaymentToken(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
-        Log.e(TAG, "Construct TOKEN payment "+amountValue.toString()+" with fee "+feeValue.toString()+(IncFee?" including":" excluding"));
+    private SignTask.TransactionToSign constructTransactionToken(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
+        Log.e(TAG, "Construct TOKEN transaction "+amountValue.toString()+" with fee "+feeValue.toString()+(IncFee?" including":" excluding"));
 
         BigInteger nonceValue = coinData.getConfirmedTXCount();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
@@ -327,7 +327,7 @@ public class RskTokenEngine extends TokenEngine {
         byte[] data = BTCUtils.fromHex(cmd);
         EthTransaction tx = EthTransaction.create(contractAddress, amountZero, nonceValue, gasPrice, gasLimit, chainId, data);
 
-        return new SignTask.PaymentToSign() {
+        return new SignTask.TransactionToSign() {
             @Override
             public boolean isSigningMethodSupported(TangemCard.SigningMethod signingMethod) {
                 return signingMethod == TangemCard.SigningMethod.Sign_Hash;
@@ -378,7 +378,7 @@ public class RskTokenEngine extends TokenEngine {
                 Log.e(TAG,"RSK_v: "+ String.valueOf(v));
 
                 byte[] txForSend = tx.getEncoded();
-                notifyOnNeedSendPayment(txForSend);
+                notifyOnNeedSendTransaction(txForSend);
                 return txForSend;
 
             }
@@ -389,8 +389,8 @@ public class RskTokenEngine extends TokenEngine {
     @Override
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
         final ServerApiRootstock serverApiRootstock = new ServerApiRootstock();
-        // request rootstock listener
-        ServerApiRootstock.RootstockBodyListener rootstockBodyListener = new ServerApiRootstock.RootstockBodyListener() {
+        // request requestData listener
+        ServerApiRootstock.ResponseListener responseListener = new ServerApiRootstock.ResponseListener() {
             @Override
             public void onSuccess(String method, InfuraResponse rootstockResponse) {
                 switch (method) {
@@ -436,9 +436,9 @@ public class RskTokenEngine extends TokenEngine {
 //                            Log.i("$TAG eth_call", balanceCap)
 
                             if (blockchainRequestsCallbacks.allowAdvance()) {
-                                serverApiRootstock.rootstock(ServerApiRootstock.ROOTSTOCK_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
-                                serverApiRootstock.rootstock(ServerApiRootstock.ROOTSTOCK_ETH_GET_TRANSACTION_COUNT, 67, coinData.getWallet(), "", "");
-                                serverApiRootstock.rootstock(ServerApiRootstock.ROOTSTOCK_ETH_GET_PENDING_COUNT, 67, coinData.getWallet(), "", "");
+                                serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
+                                serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_GET_TRANSACTION_COUNT, 67, coinData.getWallet(), "", "");
+                                serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_GET_PENDING_COUNT, 67, coinData.getWallet(), "", "");
                             } else {
                                 ctx.setError("Terminated by user");
                             }
@@ -465,16 +465,16 @@ public class RskTokenEngine extends TokenEngine {
                 }
             }
         };
-        serverApiRootstock.setRootstockResponse(rootstockBodyListener);
+        serverApiRootstock.setResponseListener(responseListener);
 
-        serverApiRootstock.rootstock(ServerApiRootstock.ROOTSTOCK_ETH_CALL, 67, coinData.getWallet(), getContractAddress(ctx.getCard()), "");
+        serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_CALL, 67, coinData.getWallet(), getContractAddress(ctx.getCard()), "");
     }
 
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
         ServerApiRootstock serverApiRootstock = new ServerApiRootstock();
-        // request rootstock gasPrice listener
-        ServerApiRootstock.RootstockBodyListener rootstockBodyListener = new ServerApiRootstock.RootstockBodyListener() {
+        // request requestData gasPrice listener
+        ServerApiRootstock.ResponseListener responseListener = new ServerApiRootstock.ResponseListener() {
             @Override
             public void onSuccess(String method, InfuraResponse rootstockResponse) {
                 String gasPrice = rootstockResponse.getResult();
@@ -516,9 +516,9 @@ public class RskTokenEngine extends TokenEngine {
                 blockchainRequestsCallbacks.onComplete(false);
             }
         };
-        serverApiRootstock.setRootstockResponse(rootstockBodyListener);
+        serverApiRootstock.setResponseListener(responseListener);
 
-        serverApiRootstock.rootstock(ServerApiRootstock.ROOTSTOCK_ETH_GAS_PRICE, 67, coinData.getWallet(), "", "");
+        serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_GAS_PRICE, 67, coinData.getWallet(), "", "");
     }
 
     @Override
@@ -527,8 +527,8 @@ public class RskTokenEngine extends TokenEngine {
         String txStr = String.format("0x%s", BTCUtils.toHex(txForSend));
 
         ServerApiRootstock serverApiRootstock = new ServerApiRootstock();
-        // request rootstock listener
-        ServerApiRootstock.RootstockBodyListener rootstockBodyListener = new ServerApiRootstock.RootstockBodyListener() {
+        // request requestData listener
+        ServerApiRootstock.ResponseListener responseListener = new ServerApiRootstock.ResponseListener() {
             @Override
             public void onSuccess(String method, InfuraResponse infuraResponse) {
                 if (method.equals(ServerApiRootstock.ROOTSTOCK_ETH_SEND_RAW_TRANSACTION)) {
@@ -554,9 +554,9 @@ public class RskTokenEngine extends TokenEngine {
             }
         };
 
-        serverApiRootstock.setRootstockResponse(rootstockBodyListener);
+        serverApiRootstock.setResponseListener(responseListener);
 
-        serverApiRootstock.rootstock(ServerApiRootstock.ROOTSTOCK_ETH_SEND_RAW_TRANSACTION, 67, coinData.getWallet(), "", txStr);
+        serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_SEND_RAW_TRANSACTION, 67, coinData.getWallet(), "", txStr);
 
     }
 
