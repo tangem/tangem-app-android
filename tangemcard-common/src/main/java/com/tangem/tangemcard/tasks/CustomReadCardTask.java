@@ -4,6 +4,7 @@ import com.tangem.tangemcard.data.external.CardDataSubstitutionProvider;
 import com.tangem.tangemcard.data.Manufacturer;
 import com.tangem.tangemcard.data.external.PINsProvider;
 import com.tangem.tangemcard.data.TangemCard;
+import com.tangem.tangemcard.reader.CardCrypto;
 import com.tangem.tangemcard.reader.CardProtocol;
 import com.tangem.tangemcard.reader.NfcReader;
 import com.tangem.tangemcard.reader.TLV;
@@ -20,6 +21,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 
+import static com.tangem.tangemcard.reader.CardCrypto.Curve.secp256k1;
+
 /**
  * Base class for card communication task
  */
@@ -29,7 +32,7 @@ public class CustomReadCardTask extends Thread {
     protected NfcReader mIsoDep;
     protected CardProtocol.Notifications mNotifications;
     protected boolean isCancelled = false;
-    protected TangemCard mCard ;
+    protected TangemCard mCard;
     CardDataSubstitutionProvider localStorage;
     PINsProvider pinsProvider;
     CardProtocol protocol;
@@ -48,9 +51,9 @@ public class CustomReadCardTask extends Thread {
     public CustomReadCardTask(TangemCard card, NfcReader reader, CardDataSubstitutionProvider cardDataSubstitutionProvider, PINsProvider pinsProvider, CardProtocol.Notifications notifications) {
         mIsoDep = reader;
         mNotifications = notifications;
-        localStorage= cardDataSubstitutionProvider;
-        this.pinsProvider=pinsProvider;
-        mCard=card;
+        localStorage = cardDataSubstitutionProvider;
+        this.pinsProvider = pinsProvider;
+        mCard = card;
     }
 
     /**
@@ -109,7 +112,7 @@ public class CustomReadCardTask extends Thread {
      * @throws CardProtocol.TangemException - if something went wrong
      */
     public void parseReadResult() throws CardProtocol.TangemException {
-        if( mCard==null ) mCard=protocol.getCard();
+        if (mCard == null) mCard = protocol.getCard();
         // These tags always present in the parsed response: TAG_Status, TAG_CID, TAG_Manufacture_ID, TAG_Health, TAG_Firmware
         TLV tlvStatus = protocol.getReadResult().getTLV(TLV.Tag.TAG_Status);
         mCard.setStatus(TangemCard.Status.fromCode(Util.byteArrayToInt(tlvStatus.Value)));
@@ -199,7 +202,7 @@ public class CustomReadCardTask extends Thread {
                         mCard.setContractAddress("0x0c056b0cda0763cc14b8b2d6c02465c91e33ec72");
                     } else {
                         //CardDataSubstitutionProvider localStorage = new CardDataSubstitutionProvider(mContext);
-                        if( localStorage!=null ) localStorage.applySubstitution(mCard);
+                        if (localStorage != null) localStorage.applySubstitution(mCard);
                     }
                 } catch (Exception e) {
                     Log.e(TAG, "Can't apply card data substitution");
@@ -245,15 +248,26 @@ public class CustomReadCardTask extends Thread {
         if (mCard.getStatus() == TangemCard.Status.Loaded) {
 
             TLV tlvPublicKey = protocol.getReadResult().getTLV(TLV.Tag.TAG_Wallet_PublicKey);
+            String curveID = protocol.getReadResult().getTLV(TLV.Tag.TAG_CurveID).getAsString();
 
-            ECNamedCurveParameterSpec spec = ECNamedCurveTable.getParameterSpec("secp256k1");
-            ECPoint p1 = spec.getCurve().decodePoint(tlvPublicKey.Value);
+            CardCrypto.Curve curve = CardCrypto.Curve.valueOf(curveID);
+            switch (curve) {
+                case secp256k1:
+                    ECNamedCurveParameterSpec spec = ECNamedCurveTable.getParameterSpec("secp256k1");
+                    ECPoint p1 = spec.getCurve().decodePoint(tlvPublicKey.Value);
 
-            byte pkUncompressed[] = p1.getEncoded(false);
+                    byte pkUncompressed[] = p1.getEncoded(false);
 
-            byte pkCompresses[] = p1.getEncoded(true);
-            mCard.setWalletPublicKey(pkUncompressed);
-            mCard.setWalletPublicKeyRar(pkCompresses);
+                    byte pkCompresses[] = p1.getEncoded(true);
+                    mCard.setWalletPublicKey(pkUncompressed);
+                    mCard.setWalletPublicKeyRar(pkCompresses);
+                    break;
+                case ed25519:
+                    mCard.setWalletPublicKey(tlvPublicKey.Value);
+                    mCard.setWalletPublicKeyRar(tlvPublicKey.Value);
+                    break;
+
+            }
 
             mCard.setRemainingSignatures(protocol.getReadResult().getTagAsInt(TLV.Tag.TAG_RemainingSignatures));
 
@@ -363,7 +377,7 @@ public class CustomReadCardTask extends Thread {
         protocol.setPIN(PIN);
         protocol.run_Read();
         pinsProvider.setLastUsedPIN(PIN);
-        if (!Arrays.equals(mCard.getCID(),protocol.getReadResult().getTLV(TLV.Tag.TAG_CardID).Value)) {
+        if (!Arrays.equals(mCard.getCID(), protocol.getReadResult().getTLV(TLV.Tag.TAG_CardID).Value)) {
             throw new CardProtocol.TangemException("Card must be the same. Reading attempt on different card!");
         }
     }

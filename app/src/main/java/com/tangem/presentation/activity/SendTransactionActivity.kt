@@ -43,7 +43,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         if (success)
                             finishWithSuccess()
                         else
-                            finishWithError(this@SendTransactionActivity.getString(R.string.try_again_failed_to_send_transaction))
+                            finishWithError(ctx.error)
                     }
 
                     override fun onProgress() {
