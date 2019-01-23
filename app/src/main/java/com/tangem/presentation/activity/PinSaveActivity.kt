@@ -39,7 +39,6 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 
 class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelperListener {
-
     companion object {
         val TAG: String = PinSaveActivity::class.java.simpleName
 
