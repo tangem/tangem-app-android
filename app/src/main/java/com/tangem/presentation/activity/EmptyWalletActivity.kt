@@ -33,10 +33,8 @@ import kotlinx.android.synthetic.main.activity_empty_wallet.*
 import javax.inject.Inject
 
 class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
-
     companion object {
         val TAG: String = EmptyWalletActivity::class.java.simpleName
-
         fun callingIntent(context: Context, ctx: TangemContext): Intent {
             val intent = Intent(context, EmptyWalletActivity::class.java)
             ctx.saveToIntent(intent)
@@ -44,14 +42,15 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         }
     }
 
+    @Inject
+    internal lateinit var navigator: Navigator
+
     private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
+
     private var lastReadSuccess = true
     private var verifyCardTask: VerifyCardTask? = null
     private var requestPIN2Count = 0
-
-    @Inject
-    internal lateinit var navigator: Navigator
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
