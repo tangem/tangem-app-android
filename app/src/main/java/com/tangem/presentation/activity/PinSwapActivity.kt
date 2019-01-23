@@ -28,7 +28,6 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_pin_swap.*
 
 class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
-
     companion object {
         val TAG: String = PinSwapActivity::class.java.simpleName
 
@@ -43,8 +42,8 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
     }
 
     private lateinit var nfcManager: NfcManager
-    private var card: TangemCard? = null
 
+    private var card: TangemCard? = null
     private var newPIN: String? = null
     private var newPIN2: String? = null
 
