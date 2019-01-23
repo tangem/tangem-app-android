@@ -14,9 +14,7 @@ import kotlinx.android.synthetic.main.activity_logo.*
 import javax.inject.Inject
 
 class LogoActivity : AppCompatActivity() {
-
     companion object {
-
         fun callingIntent(context: Context, autoHide: Boolean): Intent {
             val intent = Intent(context, LogoActivity::class.java)
             intent.putExtra(Constant.EXTRA_AUTO_HIDE, autoHide)
@@ -24,10 +22,10 @@ class LogoActivity : AppCompatActivity() {
         }
     }
 
-    private val hideRunnable = Runnable { this.hide() }
-
     @Inject
     internal lateinit var navigator: Navigator
+
+    private val hideRunnable = Runnable { this.hide() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

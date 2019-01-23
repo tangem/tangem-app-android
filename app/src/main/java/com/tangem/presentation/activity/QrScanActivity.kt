@@ -13,7 +13,6 @@ import com.tangem.Constant
 import me.dm7.barcodescanner.zxing.ZXingScannerView
 
 class QrScanActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
-
     companion object {
         fun callingIntent(context: Context): Intent {
             return Intent(context, QrScanActivity::class.java)
