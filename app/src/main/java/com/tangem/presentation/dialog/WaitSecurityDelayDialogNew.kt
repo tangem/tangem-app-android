@@ -1,12 +1,20 @@
 package com.tangem.presentation.dialog
 
-import android.app.Activity
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
 import android.support.v7.app.AppCompatDialogFragment
+import android.widget.ProgressBar
+import com.tangem.presentation.activity.SignPaymentActivity
+import com.tangem.presentation.event.ReadAfterRequest
+import com.tangem.presentation.event.ReadBeforeRequest
+import com.tangem.presentation.event.ReadWait
+import com.tangem.presentation.event.TransactionFinishWithSuccess
+import com.tangem.util.LOG
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.dialog_wait_pin2.*
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
 import java.util.*
 
 class WaitSecurityDelayDialogNew : AppCompatDialogFragment() {
@@ -18,27 +26,30 @@ class WaitSecurityDelayDialogNew : AppCompatDialogFragment() {
         private const val DELAY_BEFORE_SHOW_DIALOG = 5000
     }
 
+    private lateinit var pb: ProgressBar
+
     private var msTimeout = 60000
     private var msProgress = 0
     private var timer: Timer? = null
     private var timerToShowDelayDialog: Timer? = null
-    private var instance: WaitSecurityDelayDialogNew? = null
 
+    @SuppressLint("InflateParams")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val inflater = activity!!.layoutInflater
         val v = inflater.inflate(R.layout.dialog_wait_pin2, null)
 
-        progressBar.max = msTimeout
-        progressBar.progress = msProgress
+        pb = v.findViewById(R.id.progressBar)
+
+        pb.max = msTimeout
+        pb.progress = msProgress
 
         timer = Timer()
         timer!!.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
-                progressBar.post {
-                    val progress = this@WaitSecurityDelayDialogNew.progressBar.progress
-                    if (progress < this@WaitSecurityDelayDialogNew.progressBar.max) {
-                        this@WaitSecurityDelayDialogNew.progressBar.progress = progress + 1000
-                    }
+                pb.post {
+                    val progress = pb.progress
+                    if (progress < pb.max)
+                        pb.progress = progress + 1000
                 }
             }
         }, 1000, 1000)
@@ -51,59 +62,68 @@ class WaitSecurityDelayDialogNew : AppCompatDialogFragment() {
                 .create()
     }
 
-    fun onReadBeforeRequest(activity: Activity, timeout: Int) {
-        activity.runOnUiThread(Runnable {
-            if (timerToShowDelayDialog != null || timeout < DELAY_BEFORE_SHOW_DIALOG + MIN_REMAINING_DELAY_TO_SHOW_DIALOG)
-                return@Runnable
-
-            timerToShowDelayDialog = Timer()
-            timerToShowDelayDialog!!.schedule(object : TimerTask() {
-                override fun run() {
-                    if (instance != null) return
-                    instance = WaitSecurityDelayDialogNew()
-                    instance!!.setup(timeout, DELAY_BEFORE_SHOW_DIALOG)
-                    instance!!.isCancelable = false
-//                    instance.show(activity.fragmentManager, TAG)
-                }
-            }, DELAY_BEFORE_SHOW_DIALOG.toLong())
-        })
+    override fun onStart() {
+        super.onStart()
+        EventBus.getDefault().register(this)
     }
 
-    fun onReadAfterRequest(activity: Activity) {
-        activity.runOnUiThread(Runnable {
-            if (timerToShowDelayDialog == null) return@Runnable
+    override fun onStop() {
+        super.onStop()
+        EventBus.getDefault().unregister(this)
+    }
+
+    @Subscribe
+    fun readBeforeRequest(readBeforeRequest: ReadBeforeRequest) {
+        LOG.i(TAG, "readBeforeRequest 111")
+
+        if (timerToShowDelayDialog != null || readBeforeRequest.timeout!! < DELAY_BEFORE_SHOW_DIALOG + MIN_REMAINING_DELAY_TO_SHOW_DIALOG)
+            return
+
+        timerToShowDelayDialog = Timer()
+        timerToShowDelayDialog!!.schedule(object : TimerTask() {
+            override fun run() {
+                setup(readBeforeRequest.timeout!!, DELAY_BEFORE_SHOW_DIALOG)
+                isCancelable = false
+                if (!isAdded)
+                    show(activity?.supportFragmentManager, TAG)
+            }
+        }, DELAY_BEFORE_SHOW_DIALOG.toLong())
+    }
+
+    @Subscribe
+    fun readAfterRequest(readAfterRequest: ReadAfterRequest) {
+        LOG.i(TAG, "readAfterRequest 222")
+
+        if (timerToShowDelayDialog == null)
+            return
+
+        timerToShowDelayDialog!!.cancel()
+        timerToShowDelayDialog = null
+    }
+
+    @Subscribe
+    fun readWait(readWait: ReadWait) {
+        LOG.i(TAG, "readWait 333")
+
+        if (timerToShowDelayDialog != null) {
             timerToShowDelayDialog!!.cancel()
             timerToShowDelayDialog = null
-        })
-    }
+        }
 
-    fun onReadWait(activity: Activity, msec: Int) {
-        activity.runOnUiThread(Runnable {
-            if (timerToShowDelayDialog != null) {
-                timerToShowDelayDialog!!.cancel()
-                timerToShowDelayDialog = null
-            }
+        if (readWait.msec == 0) {
+            dismiss()
+            return
+        }
 
-            if (msec == 0) {
-                if (instance != null) {
-                    instance!!.dismiss()
-                    instance = null
-                }
-                return@Runnable
-            }
+        if (readWait.msec!! > MIN_REMAINING_DELAY_TO_SHOW_DIALOG) {
+            // 1000ms - card delay notification interval
+            setup(readWait.msec!! + 1000, 1000)
+            isCancelable = false
+//            if (!isAdded)
+//                show(activity?.supportFragmentManager, TAG)
 
-            if (instance == null) {
-                if (msec > MIN_REMAINING_DELAY_TO_SHOW_DIALOG) {
-                    instance = WaitSecurityDelayDialogNew()
-                    // 1000ms - card delay notification interval
-                    instance!!.setup(msec + 1000, 1000)
-                    instance!!.isCancelable = false
-//                    instance.show(activity.fragmentManager, TAG)
-                }
-            } else {
-                instance!!.setRemainingTimeout(msec)
-            }
-        })
+        } else
+            setRemainingTimeout(readWait.msec!!)
     }
 
     private fun setup(msTimeout: Int, msProgress: Int) {
@@ -112,19 +132,20 @@ class WaitSecurityDelayDialogNew : AppCompatDialogFragment() {
     }
 
     private fun setRemainingTimeout(msec: Int) {
-        progressBar.post {
-            val progress = this@WaitSecurityDelayDialogNew.progressBar.progress
+        pb.post {
+            val progress = pb.progress
             if (timer != null) {
+
                 // we get delay latency from card for first time - don't change progress by timer, only by card answer
-                progressBar.max = progress + msec
+                pb.max = progress + msec
                 timer!!.cancel()
                 timer = null
             } else {
-                val newProgress = progressBar.max - msec
-                if (newProgress > progress)
-                    progressBar.progress = newProgress
+                val newProgress = pb.max - msec
+                if (pb.max > progress)
+                    pb.progress = newProgress
                 else
-                    progressBar.max = progress + msec
+                    pb.max = progress + msec
             }
         }
     }
