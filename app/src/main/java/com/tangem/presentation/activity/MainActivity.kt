@@ -28,20 +28,20 @@ import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Logger
 import com.tangem.data.network.ServerApiCommon
-import com.tangem.tangemcard.android.nfc.DeviceNFCAntennaLocation
-import com.tangem.tangemcard.tasks.ReadCardInfoTask
 import com.tangem.di.Navigator
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
-import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.RootFoundDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.tangemcard.android.nfc.DeviceNFCAntennaLocation
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
 import com.tangem.tangemcard.data.saveToBundle
+import com.tangem.tangemcard.reader.CardProtocol
+import com.tangem.tangemcard.tasks.ReadCardInfoTask
 import com.tangem.util.CommonUtil
 import com.tangem.util.LOG
 import com.tangem.util.PhoneUtility
@@ -56,20 +56,20 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
     companion object {
         val TAG: String = MainActivity::class.java.simpleName
-
         fun callingIntent(context: Context) = Intent(context, MainActivity::class.java)
     }
 
+    @Inject
+    internal lateinit var navigator: Navigator
+
     private lateinit var nfcManager: NfcManager
+
     private var zipFile: File? = null
     private var antenna: DeviceNFCAntennaLocation? = null
     private var unsuccessReadCount = 0
     private var lastTag: Tag? = null
     private var readCardInfoTask: ReadCardInfoTask? = null
     private var onNfcReaderCallback: NfcAdapter.ReaderCallback? = null
-
-    @Inject
-    internal lateinit var navigator: Navigator
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
