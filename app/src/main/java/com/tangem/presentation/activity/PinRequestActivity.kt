@@ -29,14 +29,16 @@ import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD_UID
+import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_pin_request.*
 import kotlinx.android.synthetic.main.layout_pin_buttons.*
 import java.io.IOException
 
 class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, FingerprintHelper.FingerprintHelperListener {
-
     companion object {
+        val TAG: String = PinRequestActivity::class.java.simpleName
+
         fun callingIntent(context: Activity, mode: String): Intent {
             val intent = Intent(context, PinRequestActivity::class.java)
             intent.putExtra(Constant.EXTRA_MODE, mode)
@@ -81,12 +83,11 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         }
     }
 
+    private lateinit var nfcManager: NfcManager
+
     lateinit var mode: Mode
     private var allowFingerprint = false
-    private var nfcManager: NfcManager? = null
-
     var startFingerprintReaderTask: StartFingerprintReaderTask? = null
-
     private var fingerprintManager: FingerprintManager? = null
     private var fingerprintHelper: FingerprintHelper? = null
 
@@ -179,7 +180,7 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
             startFingerprintReaderTask = null
         }
 
-        nfcManager!!.onPause()
+        nfcManager.onPause()
     }
 
     override fun onStop() {
@@ -192,12 +193,12 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
             startFingerprintReaderTask = null
         }
 
-        nfcManager!!.onStop()
+        nfcManager.onStop()
     }
 
     override fun onResume() {
         super.onResume()
-        nfcManager!!.onResume()
+        nfcManager.onResume()
         if (allowFingerprint)
             startFingerprintReader()
     }
@@ -205,19 +206,19 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
     override fun onTagDiscovered(tag: Tag) {
         try {
             Log.w(javaClass.name, "Ignore discovered tag!")
-            nfcManager!!.ignoreTag(tag)
+            nfcManager.ignoreTag(tag)
         } catch (e: IOException) {
             e.printStackTrace()
         }
     }
 
     override fun authenticationFailed(error: String) {
-        doLog(error)
+        LOG.w(TAG, error)
     }
 
     @TargetApi(Build.VERSION_CODES.M)
     override fun authenticationSucceeded(result: FingerprintManager.AuthenticationResult) {
-        doLog("Authentication succeeded!")
+        LOG.i(TAG,"Authentication succeeded!")
         val cipher = result.cryptoObject.cipher
 
         if (mode == Mode.RequestNewPIN || mode == Mode.ConfirmNewPIN) {
@@ -245,10 +246,6 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         finish()
     }
 
-    fun doLog(text: String) {
-        //        Log.e("FP", text);
-    }
-
     @SuppressLint("SetTextI18n")
     private fun buttonClick(button: Button) {
         tvPin!!.text = tvPin!!.text.toString() + button.text as String
@@ -256,27 +253,27 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
 
     @SuppressLint("NewApi")
     private fun testFingerPrintSettings(): Boolean {
-        doLog("Testing Fingerprint Settings")
+        LOG.i(TAG,"Testing Fingerprint Settings")
 
         val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
         fingerprintManager = getSystemService(Context.FINGERPRINT_SERVICE) as FingerprintManager
 
         if (!keyguardManager.isKeyguardSecure) {
-            doLog("User hasn't enabled Lock Screen")
+            LOG.i(TAG,"User hasn't enabled Lock Screen")
             return false
         }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
-            doLog("User hasn't granted permission to use Fingerprint")
+            LOG.i(TAG,"User hasn't granted permission to use Fingerprint")
             return false
         }
 
         if (!fingerprintManager!!.hasEnrolledFingerprints()) {
-            doLog("User hasn't registered any fingerprints")
+            LOG.i(TAG,"User hasn't registered any fingerprints")
             return false
         }
 
-        doLog("Fingerprint authentication is set.\n")
+        LOG.i(TAG,"Fingerprint authentication is set.\n")
 
         return true
     }
