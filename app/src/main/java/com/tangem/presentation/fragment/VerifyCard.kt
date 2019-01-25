@@ -33,11 +33,12 @@ import kotlinx.android.synthetic.main.fr_verify_card.*
 import java.io.IOException
 import java.util.*
 
-class VerifyCard : Fragment() {
+class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
     companion object {
         val TAG: String = VerifyCard::class.java.simpleName
     }
 
+    private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
 
     private var requestPIN2Count = 0
@@ -47,6 +48,7 @@ class VerifyCard : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        nfcManager = NfcManager(activity, this)
         ctx = TangemContext.loadFromBundle(activity, activity?.intent?.extras)
     }
 
@@ -185,6 +187,29 @@ class VerifyCard : Fragment() {
                 }
                 updateViews()
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        nfcManager.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        nfcManager.onPause()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        nfcManager.onStop()
+    }
+
+    override fun onTagDiscovered(tag: Tag?) {
+        try {
+            nfcManager.ignoreTag(tag)
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
     }
 
