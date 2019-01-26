@@ -11,13 +11,18 @@ import android.nfc.tech.IsoDep
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.view.View
+import android.view.animation.Animation
+import android.view.animation.DecelerateInterpolator
+import android.view.animation.Transformation
 import android.widget.ProgressBar
+import android.widget.RelativeLayout
 import android.widget.Toast
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.tangemcard.android.nfc.DeviceNFCAntennaLocation
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.asBundle
@@ -26,6 +31,7 @@ import com.tangem.tangemcard.tasks.CreateNewWalletTask
 import com.tangem.tangemcard.util.Util
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_create_new_wallet.*
+import kotlinx.android.synthetic.main.layout_touch_card.*
 
 class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
     companion object {
@@ -39,6 +45,8 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
 
     private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
+
+    private lateinit var antenna: DeviceNFCAntennaLocation
 
     private var createNewWalletTask: CreateNewWalletTask? = null
     private var lastReadSuccess = true
@@ -58,6 +66,51 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         progressBar = findViewById(R.id.progressBar)
         progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
         progressBar!!.visibility = View.INVISIBLE
+
+        // get NFC Antenna
+        antenna = DeviceNFCAntennaLocation()
+        antenna.getAntennaLocation()
+
+        // set card orientation
+        when (antenna.orientation) {
+            DeviceNFCAntennaLocation.CARD_ORIENTATION_HORIZONTAL -> {
+                ivHandCardHorizontal.visibility = View.VISIBLE
+                ivHandCardVertical.visibility = View.GONE
+            }
+
+            DeviceNFCAntennaLocation.CARD_ORIENTATION_VERTICAL -> {
+                ivHandCardVertical.visibility = View.VISIBLE
+                ivHandCardHorizontal.visibility = View.GONE
+            }
+        }
+
+        // set card z position
+        when (antenna.z) {
+            DeviceNFCAntennaLocation.CARD_ON_BACK -> llHand.elevation = 0.0f
+            DeviceNFCAntennaLocation.CARD_ON_FRONT -> llHand.elevation = 30.0f
+        }
+
+        animate()
+    }
+
+    private fun animate() {
+        val lp = llHand.layoutParams as RelativeLayout.LayoutParams
+        val lp2 = llNfc.layoutParams as RelativeLayout.LayoutParams
+        val dp = resources.displayMetrics.density
+        val lm = dp * (69 + antenna.x * 75)
+        lp.topMargin = (dp * (-100 + antenna.y * 250)).toInt()
+        lp2.topMargin = (dp * (-125 + antenna.y * 250)).toInt()
+        llNfc.layoutParams = lp2
+
+        val a = object : Animation() {
+            override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
+                lp.leftMargin = (lm * interpolatedTime).toInt()
+                llHand.layoutParams = lp
+            }
+        }
+        a.duration = 2000
+        a.interpolator = DecelerateInterpolator()
+        llHand.startAnimation(a)
     }
 
     override fun onTagDiscovered(tag: Tag) {
@@ -70,11 +123,11 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
 //            Log.v(TAG, "UID: " + sUID);
 
             if (sUID == ctx.card!!.uid) {
-                if (lastReadSuccess) {
+                if (lastReadSuccess)
                     isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 5000
-                } else {
+                else
                     isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 65000
-                }
+
                 createNewWalletTask = CreateNewWalletTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
                 createNewWalletTask!!.start()
             } else {
