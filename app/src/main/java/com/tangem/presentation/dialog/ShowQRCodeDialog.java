@@ -3,7 +3,6 @@ package com.tangem.presentation.dialog;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -15,6 +14,9 @@ import android.widget.TextView;
 
 import com.tangem.util.UtilHelper;
 import com.tangem.wallet.R;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.DialogFragment;
 
 /**
  * Created by dvol on 06.03.2018.
@@ -66,11 +68,11 @@ public class ShowQRCodeDialog extends DialogFragment {
         }
     }
 
-    public static void show(final Activity activity, final String content) {
+    public static void show(final AppCompatActivity activity, final String content) {
         activity.runOnUiThread(() -> {
                     ShowQRCodeDialog instance = new ShowQRCodeDialog();
                     instance.setup(content);
-                    instance.show(activity.getFragmentManager(), "ShowQRCodeDialog");
+                    instance.show(activity.getSupportFragmentManager(), "ShowQRCodeDialog");
                 });
     }
 
