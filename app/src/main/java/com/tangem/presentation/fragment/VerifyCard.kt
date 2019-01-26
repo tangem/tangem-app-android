@@ -5,7 +5,6 @@ import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import androidx.core.content.ContextCompat
 import android.text.Html
 import android.text.format.DateUtils
@@ -21,6 +20,7 @@ import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.activity.*
 import com.tangem.presentation.dialog.PINSwapWarningDialog
+import com.tangem.presentation.event.DeletingWalletFinish
 import com.tangem.tangemcard.android.data.PINStorage
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.data.TangemCard
@@ -30,6 +30,8 @@ import com.tangem.util.LOG
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_verify_card.*
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
 import java.io.IOException
 import java.util.*
 
@@ -71,6 +73,22 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
             data.putExtra(Constant.EXTRA_MODIFICATION, "update")
             activity?.finish()
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (!EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().register(this)
+    }
+
+    override fun onDestroy() {
+        EventBus.getDefault().unregister(this)
+        super.onDestroy()
+    }
+
+    @Subscribe
+    fun onDeleteWalletFinish(deletingWalletFinish: DeletingWalletFinish) {
+        activity?.finish()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -158,16 +176,18 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
             Constant.REQUEST_CODE_REQUEST_PIN2_FOR_PURGE -> if (resultCode == Activity.RESULT_OK)
                 (activity as VerifyCardActivity).navigator.showPurge(context as Activity, ctx)
 
-            Constant.REQUEST_CODE_PURGE -> if (resultCode == Activity.RESULT_OK) {
-                if (data == null) {
-                    ctx.saveToIntent(data)
-                    data?.putExtra(Constant.EXTRA_MODIFICATION, "delete")
-                } else
-                    data.putExtra(Constant.EXTRA_MODIFICATION, "update")
+//            Constant.REQUEST_CODE_PURGE -> if (resultCode == Activity.RESULT_OK) {
+//                if (data == null) {
+//                    ctx.saveToIntent(data)
+//                    data?.putExtra(Constant.EXTRA_MODIFICATION, "delete")
+//                } else
+//                    data.putExtra(Constant.EXTRA_MODIFICATION, "update")
+//
+//                activity?.setResult(Activity.RESULT_OK, data)
+//                activity?.finish()
+//            }
 
-                activity?.setResult(Activity.RESULT_OK, data)
-                activity?.finish()
-            } else {
+            else {
                 if (data != null && data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
                     val updatedCard = TangemCard(data.getStringExtra("UID"))
                     updatedCard.loadFromBundle(data.getBundleExtra("Card"))
