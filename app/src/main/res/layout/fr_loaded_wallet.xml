@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -11,7 +11,7 @@
     tools:ignore="contentDescription"
     tools:showIn="@layout/activity_loaded_wallet">
 
-    <android.support.v4.widget.SwipeRefreshLayout
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/srl"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -22,7 +22,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0">
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_alignParentBottom="false"
@@ -84,7 +84,7 @@
 
             </RelativeLayout>
 
-            <android.support.constraint.ConstraintLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -157,7 +157,7 @@
 
                 </LinearLayout>
 
-                <android.support.constraint.Guideline
+                <androidx.constraintlayout.widget.Guideline
                     android:id="@+id/guideline"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -212,7 +212,7 @@
                             android:layout_height="match_parent"
                             android:orientation="horizontal">
 
-                            <android.support.v7.widget.AppCompatButton
+                            <androidx.appcompat.widget.AppCompatButton
                                 android:id="@+id/btnExplore"
                                 style="@style/AppTheme.RoundedCornerMaterialButton"
                                 android:layout_width="0dp"
@@ -229,7 +229,7 @@
                                 android:text="@string/explore"
                                 android:textColor="@color/primary_dark" />
 
-                            <android.support.v7.widget.AppCompatButton
+                            <androidx.appcompat.widget.AppCompatButton
                                 android:id="@+id/btnCopy"
                                 style="@style/AppTheme.RoundedCornerMaterialButton"
                                 android:layout_width="0dp"
@@ -250,11 +250,11 @@
                     </LinearLayout>
 
                 </LinearLayout>
-            </android.support.constraint.ConstraintLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
-        </android.support.constraint.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </android.support.v4.widget.SwipeRefreshLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <RelativeLayout
         android:id="@+id/rlMessageAndError"
@@ -303,7 +303,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/rlAuxButtons">
 
-        <android.support.v7.widget.AppCompatButton
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnLoad"
             style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="0dp"
@@ -318,7 +318,7 @@
             android:text="@string/load"
             android:textSize="@dimen/text_size_large" />
 
-        <android.support.v7.widget.AppCompatButton
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnExtract"
             style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="0dp"
@@ -345,7 +345,7 @@
         android:paddingBottom="10dp"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <android.support.v7.widget.AppCompatButton
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnDetails"
             style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="0dp"
@@ -362,7 +362,7 @@
             android:text="@string/details"
             android:textColor="@color/primary_dark" />
 
-        <android.support.v7.widget.AppCompatButton
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnNewScan"
             style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="0dp"
@@ -381,4 +381,4 @@
 
     </LinearLayout>
 
-</android.support.constraint.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
