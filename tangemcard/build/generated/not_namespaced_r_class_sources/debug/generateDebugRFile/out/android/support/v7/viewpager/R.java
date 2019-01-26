@@ -4,7 +4,7 @@
  * gradle plugin from the resource data it found. It
  * should not be modified by hand.
  */
-package android.support.v7.viewpager;
+package androidx.appcompat.viewpager;
 
 public final class R {
     private R() {}
