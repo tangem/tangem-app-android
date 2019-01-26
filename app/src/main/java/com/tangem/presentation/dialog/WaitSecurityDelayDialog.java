@@ -104,14 +104,15 @@ public class WaitSecurityDelayDialog extends DialogFragment {
 //        return instance;
 //    }
 
-    private final static int MinRemainingDelayToShowDialog=1000;
-    private final static int DelayBeforeShowDialog=5000;
+    private final static int MinRemainingDelayToShowDialog = 1000;
+    private final static int DelayBeforeShowDialog = 5000;
 
     public static void onReadBeforeRequest(final AppCompatActivity activity, final int timeout) {
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (timerToShowDelayDialog != null || timeout < DelayBeforeShowDialog+MinRemainingDelayToShowDialog) return;
+                if (timerToShowDelayDialog != null || timeout < DelayBeforeShowDialog + MinRemainingDelayToShowDialog)
+                    return;
                 timerToShowDelayDialog = new Timer();
                 timerToShowDelayDialog.schedule(new TimerTask() {
                     @Override
@@ -149,13 +150,14 @@ public class WaitSecurityDelayDialog extends DialogFragment {
 
                 if (msec == 0) {
                     if (instance != null) {
+                        //TODO remove onNext java.lang.IllegalStateException: Fragment WaitSecurityDelayDialog{ba2c429 (2368a785-523e-4c3d-b46a-402d2c4f102b)} not associated with a fragment manager.
                         instance.dismiss();
                         instance = null;
                     }
                     return;
                 }
                 if (instance == null) {
-                    if( msec>MinRemainingDelayToShowDialog ) {
+                    if (msec > MinRemainingDelayToShowDialog) {
                         instance = new WaitSecurityDelayDialog();
                         // 1000ms - card delay notification interval
                         instance.setup(msec + 1000, 1000);
