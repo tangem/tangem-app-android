@@ -20,12 +20,14 @@ import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.presentation.event.DeletingWalletFinish
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.asBundle
 import com.tangem.tangemcard.util.Util
 import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_purge.*
+import org.greenrobot.eventbus.EventBus
 
 class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
     companion object {
@@ -132,6 +134,9 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
                     intent.putExtra("UID", cardProtocol.card.uid)
                     intent.putExtra("Card", cardProtocol.card.asBundle)
                     setResult(Activity.RESULT_OK, intent)
+
+                    EventBus.getDefault().post(DeletingWalletFinish())
+
                     finish()
                 }
             } else {
