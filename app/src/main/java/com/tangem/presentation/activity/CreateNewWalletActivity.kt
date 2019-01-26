@@ -93,26 +93,6 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         animate()
     }
 
-    private fun animate() {
-        val lp = llHand.layoutParams as RelativeLayout.LayoutParams
-        val lp2 = llNfc.layoutParams as RelativeLayout.LayoutParams
-        val dp = resources.displayMetrics.density
-        val lm = dp * (69 + antenna.x * 75)
-        lp.topMargin = (dp * (-100 + antenna.y * 250)).toInt()
-        lp2.topMargin = (dp * (-125 + antenna.y * 250)).toInt()
-        llNfc.layoutParams = lp2
-
-        val a = object : Animation() {
-            override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
-                lp.leftMargin = (lm * interpolatedTime).toInt()
-                llHand.layoutParams = lp
-            }
-        }
-        a.duration = 2000
-        a.interpolator = DecelerateInterpolator()
-        llHand.startAnimation(a)
-    }
-
     override fun onTagDiscovered(tag: Tag) {
         try {
             // get IsoDep handle and run cardReader thread
@@ -257,6 +237,26 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
 
     override fun onReadAfterRequest() {
         WaitSecurityDelayDialog.onReadAfterRequest(this)
+    }
+
+    private fun animate() {
+        val lp = llHand.layoutParams as RelativeLayout.LayoutParams
+        val lp2 = llNfc.layoutParams as RelativeLayout.LayoutParams
+        val dp = resources.displayMetrics.density
+        val lm = dp * (69 + antenna.x * 75)
+        lp.topMargin = (dp * (-100 + antenna.y * 250)).toInt()
+        lp2.topMargin = (dp * (-125 + antenna.y * 250)).toInt()
+        llNfc.layoutParams = lp2
+
+        val a = object : Animation() {
+            override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
+                lp.leftMargin = (lm * interpolatedTime).toInt()
+                llHand.layoutParams = lp
+            }
+        }
+        a.duration = 2000
+        a.interpolator = DecelerateInterpolator()
+        llHand.startAnimation(a)
     }
 
 }
