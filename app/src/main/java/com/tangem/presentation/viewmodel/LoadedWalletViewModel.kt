@@ -1,6 +1,6 @@
 package com.tangem.presentation.viewmodel
 
-import android.arch.lifecycle.MutableLiveData
+import androidx.lifecycle.MutableLiveData
 import com.tangem.data.network.exception.Failure
 
 class LoadedWalletViewModel : BaseViewModel() {
