@@ -10,7 +10,6 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import androidx.core.content.ContextCompat
 import android.text.Html
 import android.view.Gravity
@@ -35,6 +34,7 @@ import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.presentation.dialog.ShowQRCodeDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.presentation.event.DeletingWalletFinish
 import com.tangem.presentation.event.TransactionFinishWithError
 import com.tangem.presentation.event.TransactionFinishWithSuccess
 import com.tangem.tangemcard.android.reader.NfcManager
@@ -315,6 +315,11 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
     fun onTransactionFinishWithError(transactionFinishWithError: TransactionFinishWithError) {
         ctx.error = transactionFinishWithError.message
         updateViews()
+    }
+
+    @Subscribe
+    fun onDeleteWalletFinish(deletingWalletFinish: DeletingWalletFinish) {
+        activity?.finish()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
