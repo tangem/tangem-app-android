@@ -10,14 +10,15 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v4.content.ContextCompat
+import androidx.fragment.app.Fragment
+import androidx.core.content.ContextCompat
 import android.text.Html
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Blockchain
@@ -57,7 +58,7 @@ import java.io.InputStream
 import java.util.*
 import kotlin.concurrent.timerTask
 
-class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, SharedPreferences.OnSharedPreferenceChangeListener {
+class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, SharedPreferences.OnSharedPreferenceChangeListener {
     companion object {
         val TAG: String = LoadedWallet::class.java.simpleName
     }
@@ -151,7 +152,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
                     getString(R.string.load_via_qr) -> {
                         val engine = CoinEngineFactory.create(ctx)
-                        ShowQRCodeDialog.show(activity, engine!!.shareWalletUri.toString())
+                        ShowQRCodeDialog.show(activity as AppCompatActivity?, engine!!.shareWalletUri.toString())
                     }
 
                     getString(R.string.via_cryptonit) -> {
@@ -354,7 +355,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 else
                     bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_use_default))
                 pinSwapWarningDialog.arguments = bundle
-                pinSwapWarningDialog.show(activity?.supportFragmentManager, PINSwapWarningDialog.TAG)
+                activity?.supportFragmentManager?.let { pinSwapWarningDialog.show(it, PINSwapWarningDialog.TAG) }
             }
 
             Constant.REQUEST_CODE_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
@@ -473,7 +474,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     lastReadSuccess = false
                     if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported)
                         if (!NoExtendedLengthSupportDialog.allReadyShowed)
-                            NoExtendedLengthSupportDialog().show(activity?.supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
+                            activity?.supportFragmentManager?.let { NoExtendedLengthSupportDialog().show(it, NoExtendedLengthSupportDialog.TAG) }
                         else
                             Toast.makeText(activity, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show()
                 }
@@ -501,11 +502,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     override fun onReadWait(msec: Int) {
-        WaitSecurityDelayDialog.onReadWait(activity, msec)
+        WaitSecurityDelayDialog.onReadWait(activity as AppCompatActivity?, msec)
     }
 
     override fun onReadBeforeRequest(timeout: Int) {
-        WaitSecurityDelayDialog.onReadBeforeRequest(activity, timeout)
+        WaitSecurityDelayDialog.onReadBeforeRequest(activity as AppCompatActivity?, timeout)
     }
 
     override fun onReadAfterRequest() {
