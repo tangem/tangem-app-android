@@ -5,8 +5,8 @@ import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v4.content.ContextCompat
+import androidx.fragment.app.Fragment
+import androidx.core.content.ContextCompat
 import android.text.Html
 import android.text.format.DateUtils
 import android.view.LayoutInflater
@@ -33,7 +33,7 @@ import kotlinx.android.synthetic.main.fr_verify_card.*
 import java.io.IOException
 import java.util.*
 
-class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
+class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
     companion object {
         val TAG: String = VerifyCard::class.java.simpleName
     }
@@ -124,7 +124,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 else
                     bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_use_default))
                 pinSwapWarningDialog.arguments = bundle
-                pinSwapWarningDialog.show(activity?.supportFragmentManager, PINSwapWarningDialog.TAG)
+                activity?.supportFragmentManager?.let { pinSwapWarningDialog.show(it, PINSwapWarningDialog.TAG) }
             }
 
             Constant.REQUEST_CODE_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {

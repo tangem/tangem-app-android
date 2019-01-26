@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
-import android.support.v7.app.AppCompatDialogFragment
+import androidx.appcompat.app.AppCompatDialogFragment
 import android.widget.ProgressBar
 import com.tangem.presentation.event.ReadAfterRequest
 import com.tangem.presentation.event.ReadBeforeRequest
@@ -82,8 +82,11 @@ class WaitSecurityDelayDialogNew : AppCompatDialogFragment() {
             override fun run() {
                 setup(readBeforeRequest.timeout!!, DELAY_BEFORE_SHOW_DIALOG)
                 isCancelable = false
-                if (!isAdded)
-                    show(activity?.supportFragmentManager, TAG)
+
+
+
+//                if (!isAdded)
+//                    show(activity?.supportFragmentManager, TAG)
             }
         }, DELAY_BEFORE_SHOW_DIALOG.toLong())
     }
