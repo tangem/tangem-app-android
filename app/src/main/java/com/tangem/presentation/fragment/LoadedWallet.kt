@@ -52,6 +52,8 @@ import com.tangem.util.LOG
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
+import kotlinx.android.synthetic.main.layout_btn_details.*
+import kotlinx.android.synthetic.main.layout_tangem_card.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import java.io.InputStream
