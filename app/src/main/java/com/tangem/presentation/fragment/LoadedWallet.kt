@@ -652,7 +652,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
             coinEngine!!.requestBalanceAndUnspentTransactions(
                     object : CoinEngine.BlockchainRequestsCallbacks {
                         override fun onComplete(success: Boolean) {
-                            LOG.i(TAG, "requestBalanceAndUnspentTransactions onComplete: " + success.toString() + ", request counter " + requestCounter.toString())
+                            LOG.i(TAG, "requestBalanceAndUnspentTransactions onComplete: $success, request counter $requestCounter")
                             if (activity == null) return
                             requestCounter--
                             if (!success) {
@@ -671,8 +671,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                         }
 
                         override fun allowAdvance(): Boolean {
-// [REDACTED_TODO_COMMENT]
-                            return UtilHelper.isOnline(context as Activity)
+                            return context?.let { UtilHelper.isOnline(it) }!!
                         }
                     }
             )
