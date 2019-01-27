@@ -37,7 +37,7 @@ object UtilHelper {
         return bmp
     }
 
-    fun isOnline(context: Activity): Boolean {
+    fun isOnline(context: Context): Boolean {
         return try {
             val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val netInfo: NetworkInfo?
