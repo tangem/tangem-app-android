@@ -148,6 +148,8 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
     }
 
     override fun onReadStart(cardProtocol: CardProtocol) {
+        rlProgressBar.post { rlProgressBar.visibility = View.VISIBLE }
+
         progressBar.post {
             progressBar.visibility = View.VISIBLE
             progressBar.progress = 5
@@ -159,6 +161,8 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
 
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
+                rlProgressBar.post { rlProgressBar.visibility = View.GONE }
+
                 progressBar?.post {
                     progressBar?.progress = 100
                     progressBar?.progressTintList = ColorStateList.valueOf(Color.GREEN)
@@ -208,6 +212,14 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
                 }
             }
         }
+
+        rlProgressBar?.postDelayed({
+            try {
+                rlProgressBar.visibility = View.GONE
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }, 500)
 
         progressBar?.postDelayed({
             try {
