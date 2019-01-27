@@ -41,16 +41,6 @@ class NetworkModule {
                 .build();
     }
 
-//    //@Singleton // TODO:check
-//    @Provides
-//    @Named("Insight")
-//    Retrofit provideRetrofitInsight(String insightURL) {
-//        return new Retrofit.Builder()
-//                .baseUrl(insightURL)
-//                .addConverterFactory(GsonConverterFactory.create())
-//                .build();
-//    }
-
     @Singleton
     @Provides
     @Named(Server.ApiEstimatefee.URL_ESTIMATEFEE)
