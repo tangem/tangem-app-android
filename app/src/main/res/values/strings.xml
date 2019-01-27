@@ -49,6 +49,15 @@
     <string name="reading">READING…</string>
     <string name="verifying">VERIFYING…</string>
     <string name="debug_settings">Дебаг</string>
+    <string name="select_loading_method">Select loading method</string>
+    <string name="via_cryptonit">via CRYPTONIT</string>
+    <string name="via_cryptonit2">via CRYPTONIT2</string>
+    <string name="via_kraken">via KRAKEN</string>
+    <string name="in_app">Another wallet app</string>
+    <string name="load_via_share_address">Share address</string>
+    <string name="load_via_qr">Show QR-code</string>
+    <string name="show_wallet_qr_code">LOAD</string>
+    <string name="beta">BETA</string>
 
     <!-- dialogs -->
     <string name="device_is_rooted">Your Android device is rooted. Security at risk!</string>
@@ -62,14 +71,6 @@
     <string name="please_hold_banknote">Please hold the banknote firmly\n until the operation is completed…</string>
     <string name="you_may_be_required_to_repeat">You may be required to repeat this operation a few times depending on the NFC performance of your smartphone.\n This is made for safety of your funds.</string>
 
-    <string name="select_loading_method">Select loading method</string>
-    <string name="via_cryptonit">via CRYPTONIT</string>
-    <string name="via_cryptonit2">via CRYPTONIT2</string>
-    <string name="via_kraken">via KRAKEN</string>
-    <string name="in_app">Another wallet app</string>
-    <string name="load_via_share_address">Share address</string>
-    <string name="load_via_qr">Show QR-code</string>
-    <string name="show_wallet_qr_code">LOAD</string>
     <!-- menu main -->
     <string name="clean_up">Clean up</string>
     <string name="manage_user_pin_1">Manage user PIN1…</string>
@@ -127,9 +128,6 @@
     <string name="details">DETAILS</string>
     <string name="new_scan">NEW SCAN</string>
     <string name="verifying_in_blockchain">Verifying in blockchain…</string>
-
-    <!-- LogoActivity -->
-    <string name="beta">BETA</string>
 
     <!-- CreateNewWalletActivity, PurgeActivity, SignTransactionActivity -->
     <string name="now_touch_the_banknote_with_id">Now touch the banknote with ID</string>
@@ -258,4 +256,5 @@
     <string name="kraken_not_enough_account_data">Please enter account data</string>
     <string name="kraken_request_balance">Get balance</string>
     <string name="kraken_request_withdrawal">Withdrawal</string>
+
 </resources>
