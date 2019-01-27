@@ -155,7 +155,6 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
             if (cardProtocol.error == null) {
                 rlProgressBar.post { rlProgressBar.visibility = View.GONE }
 
-
                 progressBar!!.post {
                     progressBar!!.progress = 100
                     progressBar!!.progressTintList = ColorStateList.valueOf(Color.GREEN)
