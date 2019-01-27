@@ -30,6 +30,7 @@ import com.tangem.tangemcard.util.Util
 import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_empty_wallet.*
+import kotlinx.android.synthetic.main.layout_tangem_card.*
 import javax.inject.Inject
 
 class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
@@ -62,6 +63,8 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
+
+
         tvIssuer.text = ctx.card!!.issuerDescription
 
         if (ctx.card!!.tokenSymbol.length > 1) {
@@ -71,7 +74,7 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
             tvBlockchain.text = ctx.blockchainName
 
         tvCardID.text = ctx.card!!.cidDescription
-        imgBlockchain.setImageResource(ctx.blockchain.getImageResource(this, ctx.card!!.tokenSymbol))
+        ivTangemCard.setImageBitmap(App.localStorage.getCardArtworkBitmap(ctx.card))
 
         if (ctx.card!!.useDefaultPIN1()) {
             imgPIN.setImageResource(R.drawable.unlock_pin1)
