@@ -653,7 +653,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
             coinEngine!!.requestBalanceAndUnspentTransactions(
                     object : CoinEngine.BlockchainRequestsCallbacks {
                         override fun onComplete(success: Boolean) {
-                            LOG.i(TAG, "requestBalanceAndUnspentTransactions onComplete: " + success.toString() + ", request counter " + requestCounter.toString())
+                            LOG.i(TAG, "requestBalanceAndUnspentTransactions onComplete: $success, request counter $requestCounter")
                             if (activity == null) return
                             requestCounter--
                             if (!success) {
@@ -672,8 +672,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                         }
 
                         override fun allowAdvance(): Boolean {
-                            // TODO Caused by: kotlin.TypeCastException: null cannot be cast to non-null type android.app.Activity
-                            return UtilHelper.isOnline(context as Activity)
+                            return context?.let { UtilHelper.isOnline(it) }!!
                         }
                     }
             )
