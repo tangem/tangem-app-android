@@ -457,8 +457,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
     }
 
     override fun onReadStart(cardProtocol: CardProtocol) {
-        if (rlProgressBar != null)
-            rlProgressBar.post { rlProgressBar.visibility = View.VISIBLE }
+        rlProgressBar?.post { rlProgressBar.visibility = View.VISIBLE }
     }
 
     override fun onReadProgress(protocol: CardProtocol, progress: Int) {
@@ -714,7 +713,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                 Blockchain.BitcoinCash -> "bitcoin-cash"
                 Blockchain.Litecoin -> "litecoin"
                 Blockchain.Rootstock -> "bitcoin"
-                Blockchain.RootstockToken ->"bitcoin"
+                Blockchain.RootstockToken -> "bitcoin"
                 else -> {
                     throw Exception("Can''t get rate for blockchain " + ctx.blockchainName)
                 }
