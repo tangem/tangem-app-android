@@ -1,6 +1,6 @@
 package com.tangem.data.network;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.tangem.App;
@@ -38,19 +38,19 @@ public class ServerApiRootstock {
         return requestsCount <= 0;
     }
 
-    private RootstockBodyListener rootstockBodyListener;
+    private ResponseListener responseListener;
 
-    public interface RootstockBodyListener {
+    public interface ResponseListener {
         void onSuccess(String method, InfuraResponse infuraResponse);
 
         void onFail(String method, String message);
     }
 
-    public void setRootstockResponse(RootstockBodyListener listener) {
-        rootstockBodyListener = listener;
+    public void setResponseListener(ResponseListener listener) {
+        responseListener = listener;
     }
 
-    public void rootstock(String method, int id, String wallet, String contract, String tx) {
+    public void requestData(String method, int id, String wallet, String contract, String tx) {
         requestsCount++;
         RootstockApi rootstockApi = App.getNetworkComponent().getRetrofitRootstock().create(RootstockApi.class);
 
@@ -86,18 +86,18 @@ public class ServerApiRootstock {
             public void onResponse(@NonNull Call<InfuraResponse> call, @NonNull Response<InfuraResponse> response) {
                 if (response.code() == 200) {
                     requestsCount--;
-                    rootstockBodyListener.onSuccess(method, response.body());
-                    Log.i(TAG, "rootstock " + method + " onResponse " + response.code());
+                    responseListener.onSuccess(method, response.body());
+                    Log.i(TAG, "requestData " + method + " onResponse " + response.code());
                 } else {
-                    rootstockBodyListener.onFail(method, String.valueOf(response.code()));
-                    Log.e(TAG, "rootstock " + method + " onResponse " + response.code());
+                    responseListener.onFail(method, String.valueOf(response.code()));
+                    Log.e(TAG, "requestData " + method + " onResponse " + response.code());
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<InfuraResponse> call, @NonNull Throwable t) {
-                rootstockBodyListener.onFail(method, String.valueOf(t.getMessage()));
-                Log.e(TAG, "rootstock " + method + " onFailure " + t.getMessage());
+                responseListener.onFail(method, String.valueOf(t.getMessage()));
+                Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
             }
         });
     }
