@@ -10,10 +10,10 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.PopupMenu
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.PopupMenu
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -48,6 +48,7 @@ import com.tangem.util.PhoneUtility
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.layout_touch_card.*
 import java.io.File
 import java.util.*
 import javax.inject.Inject
@@ -65,7 +66,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     private lateinit var nfcManager: NfcManager
 
     private var zipFile: File? = null
-    private var antenna: DeviceNFCAntennaLocation? = null
+    private lateinit var antenna: DeviceNFCAntennaLocation
     private var unsuccessReadCount = 0
     private var lastTag: Tag? = null
     private var readCardInfoTask: ReadCardInfoTask? = null
@@ -98,11 +99,12 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
         rippleBackgroundNfc.startRippleAnimation()
 
+        // get NFC Antenna
         antenna = DeviceNFCAntennaLocation()
-        antenna!!.getAntennaLocation()
+        antenna.getAntennaLocation()
 
         // set card orientation
-        when (antenna!!.orientation) {
+        when (antenna.orientation) {
             DeviceNFCAntennaLocation.CARD_ORIENTATION_HORIZONTAL -> {
                 ivHandCardHorizontal.visibility = View.VISIBLE
                 ivHandCardVertical.visibility = View.GONE
@@ -115,18 +117,18 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         }
 
         // set card z position
-        when (antenna!!.z) {
+        when (antenna.z) {
             DeviceNFCAntennaLocation.CARD_ON_BACK -> llHand.elevation = 0.0f
             DeviceNFCAntennaLocation.CARD_ON_FRONT -> llHand.elevation = 30.0f
         }
 
+        animate()
+
         // set phone name
-        if (antenna!!.fullName != "")
+        if (antenna.fullName != "")
             tvNFCHint.text = String.format(getString(R.string.scan_banknote), antenna!!.fullName)
         else
             tvNFCHint.text = String.format(getString(R.string.scan_banknote), getString(R.string.phone))
-
-        animate()
 
         // NFC
         val intent = intent
@@ -388,9 +390,9 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         val lp = llHand.layoutParams as RelativeLayout.LayoutParams
         val lp2 = llNfc.layoutParams as RelativeLayout.LayoutParams
         val dp = resources.displayMetrics.density
-        val lm = dp * (69 + antenna!!.x * 75)
-        lp.topMargin = (dp * (-100 + antenna!!.y * 250)).toInt()
-        lp2.topMargin = (dp * (-125 + antenna!!.y * 250)).toInt()
+        val lm = dp * (69 + antenna.x * 75)
+        lp.topMargin = (dp * (-100 + antenna.y * 250)).toInt()
+        lp2.topMargin = (dp * (-125 + antenna.y * 250)).toInt()
         llNfc.layoutParams = lp2
 
         val a = object : Animation() {
