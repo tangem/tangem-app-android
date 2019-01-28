@@ -8,6 +8,7 @@ import android.graphics.Color
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.text.Html
@@ -69,7 +70,10 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         tvIssuer.text = ctx.card!!.issuerDescription
 
         if (ctx.card!!.tokenSymbol.length > 1) {
-            val html = Html.fromHtml(ctx.blockchainName)
+            @Suppress("DEPRECATION") val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                Html.fromHtml(ctx.blockchainName, Html.FROM_HTML_MODE_LEGACY)
+            else
+                Html.fromHtml(ctx.blockchainName)
             tvBlockchain.text = html
         } else
             tvBlockchain.text = ctx.blockchainName
