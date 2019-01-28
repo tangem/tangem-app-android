@@ -176,7 +176,7 @@ public class LtcEngine extends BtcEngine {
     }
 
     @Override
-    public Uri getShareWalletUriExplorer() {
+    public Uri getWalletExplorerUri() {
         return Uri.parse("https://live.blockcypher.com/ltc/address/" + ctx.getCoinData().getWallet());
     }
 
@@ -394,7 +394,7 @@ public class LtcEngine extends BtcEngine {
     }
 
     @Override
-    public SignTask.PaymentToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
+    public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         final ArrayList<UnspentOutputInfo> unspentOutputs;
         checkBlockchainDataExists();
 
@@ -439,7 +439,7 @@ public class LtcEngine extends BtcEngine {
             bodyDoubleHash[i] = Util.calculateSHA256(bodyHash[i]);
         }
 
-        return new SignTask.PaymentToSign() {
+        return new SignTask.TransactionToSign() {
 
             @Override
             public boolean isSigningMethodSupported(TangemCard.SigningMethod signingMethod) {
@@ -489,7 +489,7 @@ public class LtcEngine extends BtcEngine {
                 }
 
                 byte[] txForSend=BTCUtils.buildTXForSend(targetAddress, myAddress, unspentOutputs, amountFinal, changeFinal);
-                notifyOnNeedSendPayment(txForSend);
+                notifyOnNeedSendTransaction(txForSend);
                 return txForSend;
             }
         };
@@ -507,7 +507,7 @@ public class LtcEngine extends BtcEngine {
 
         final ServerApiElectrum serverApiElectrum = new ServerApiElectrum();
 
-        final ServerApiElectrum.ElectrumRequestDataListener electrumListener  = new ServerApiElectrum.ElectrumRequestDataListener () {
+        final ServerApiElectrum.ResponseListener electrumListener  = new ServerApiElectrum.ResponseListener() {
             @Override
             public void onSuccess(ElectrumRequest electrumRequest) {
                 BigDecimal fee;
@@ -516,13 +516,13 @@ public class LtcEngine extends BtcEngine {
                         fee = new BigDecimal(electrumRequest.getResultString()); //fee per KB
 
                         if (fee.equals(BigDecimal.ZERO)) {
-                            serverApiElectrum.electrumRequestData(ctx, ElectrumRequest.getFee());
+                            serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
                         }
 
 //                        if (calcSize != 0) {
                         fee = fee.multiply(new BigDecimal(calcSize)).divide(new BigDecimal(1024)); // (per KB -> per byte)*size
 //                        } else {
-//                            serverApiElectrum.electrumRequestData(ctx, ElectrumRequest.getFee());
+//                            serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
 //                        }
 
                         //compare fee to usual relay fee
@@ -553,8 +553,8 @@ public class LtcEngine extends BtcEngine {
                 blockchainRequestsCallbacks.onComplete(false);
             }
         };
-        serverApiElectrum.setElectrumRequestData(electrumListener);
+        serverApiElectrum.setResponseListener(electrumListener);
 
-        serverApiElectrum.electrumRequestData(ctx, ElectrumRequest.getFee());
+        serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
     }
 }
