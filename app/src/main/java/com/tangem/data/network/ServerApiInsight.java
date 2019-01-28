@@ -1,6 +1,6 @@
 package com.tangem.data.network;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.tangem.data.network.model.InsightBody;
@@ -32,21 +32,21 @@ public class ServerApiInsight {
         return requestsCount <= 0;
     }
 
-    private InsightBodyListener insightBodyListener;
+    private ResponseListener responseListener;
 
-    public interface InsightBodyListener {
+    public interface ResponseListener {
         void onSuccess(String method, InsightResponse insightResponse);
         void onSuccess(String method, List<InsightResponse> utxoList);
         void onFail(String method, String message);
     }
 
-    public void setInsightResponse(InsightBodyListener listener) {
-        insightBodyListener = listener;
+    public void setResponseListener(ResponseListener listener) {
+        responseListener = listener;
     }
 
-    public void insight(String method, String wallet, String tx) {
+    public void requestData(String method, String wallet, String tx) {
         requestsCount++;
-        String insightURL = "http://130.185.109.17:3001/insight-api"; //TODO: make random selection
+        String insightURL = "http://130.185.109.17:3001/requestData-api"; //TODO: make random selection
         this.lastNode = insightURL; //TODO: show node instead of URL
 
         Retrofit retrofitInsight = new Retrofit.Builder() //TODO: move to NetworkModule+NetworkComponent if possible
@@ -64,18 +64,18 @@ public class ServerApiInsight {
                 public void onResponse(@NonNull Call<List<InsightResponse>> call, @NonNull Response<List<InsightResponse>> response) {
                     if (response.code() == 200) {
                         requestsCount--;
-                        insightBodyListener.onSuccess(method, response.body());
-                        Log.i(TAG, "insight " + method + " onResponse " + response.code());
+                        responseListener.onSuccess(method, response.body());
+                        Log.i(TAG, "requestData " + method + " onResponse " + response.code());
                     } else {
-                        insightBodyListener.onFail(method, String.valueOf(response.code()));
-                        Log.e(TAG, "insight " + method + " onResponse " + response.code());
+                        responseListener.onFail(method, String.valueOf(response.code()));
+                        Log.e(TAG, "requestData " + method + " onResponse " + response.code());
                     }
                 }
 
                 @Override
                 public void onFailure(@NonNull Call<List<InsightResponse>> call, @NonNull Throwable t) {
-                    insightBodyListener.onFail(method, String.valueOf(t.getMessage()));
-                    Log.e(TAG, "insight " + method + " onFailure " + t.getMessage());
+                    responseListener.onFail(method, String.valueOf(t.getMessage()));
+                    Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
                 }
             });
 
@@ -112,18 +112,18 @@ public class ServerApiInsight {
                 public void onResponse(@NonNull Call<InsightResponse> call, @NonNull Response<InsightResponse> response) {
                     if (response.code() == 200) {
                         requestsCount--;
-                        insightBodyListener.onSuccess(method, response.body());
-                        Log.i(TAG, "insight " + method + " onResponse " + response.code());
+                        responseListener.onSuccess(method, response.body());
+                        Log.i(TAG, "requestData " + method + " onResponse " + response.code());
                     } else {
-                        insightBodyListener.onFail(method, String.valueOf(response.code()));
-                        Log.e(TAG, "insight " + method + " onResponse " + response.code());
+                        responseListener.onFail(method, String.valueOf(response.code()));
+                        Log.e(TAG, "requestData " + method + " onResponse " + response.code());
                     }
                 }
 
                 @Override
                 public void onFailure(@NonNull Call<InsightResponse> call, @NonNull Throwable t) {
-                    insightBodyListener.onFail(method, String.valueOf(t.getMessage()));
-                    Log.e(TAG, "insight " + method + " onFailure " + t.getMessage());
+                    responseListener.onFail(method, String.valueOf(t.getMessage()));
+                    Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
                 }
             });
         }

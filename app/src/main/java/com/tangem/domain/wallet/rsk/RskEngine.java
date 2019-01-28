@@ -60,15 +60,15 @@ public class RskEngine extends EthEngine {
     }
 
     @Override
-    public Uri getShareWalletUriExplorer() {
+    public Uri getWalletExplorerUri()) {
         return Uri.parse("https://explorer.rsk.co/address/" + ctx.getCoinData().getWallet());
     }
 
     @Override
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
         final ServerApiRootstock serverApiRootstock = new ServerApiRootstock();
-        // request rootstock listener
-        ServerApiRootstock.RootstockBodyListener rootstockBodyListener = new ServerApiRootstock.RootstockBodyListener() {
+        // request requestData listener
+        ServerApiRootstock.ResponseListener responseListener = new ServerApiRootstock.ResponseListener() {
             @Override
             public void onSuccess(String method, InfuraResponse rootstockResponse) {
                 switch (method) {
@@ -120,18 +120,18 @@ public class RskEngine extends EthEngine {
                 }
             }
         };
-        serverApiRootstock.setRootstockResponse(rootstockBodyListener);
+        serverApiRootstock.setResponseListener(responseListener);
 
-        serverApiRootstock.rootstock(ServerApiRootstock.ROOTSTOCK_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
-        serverApiRootstock.rootstock(ServerApiRootstock.ROOTSTOCK_ETH_GET_TRANSACTION_COUNT, 67, coinData.getWallet(), "", "");
-        serverApiRootstock.rootstock(ServerApiRootstock.ROOTSTOCK_ETH_GET_PENDING_COUNT, 67, coinData.getWallet(), "", "");
+        serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
+        serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_GET_TRANSACTION_COUNT, 67, coinData.getWallet(), "", "");
+        serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_GET_PENDING_COUNT, 67, coinData.getWallet(), "", "");
     }
 
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
         ServerApiRootstock serverApiRootstock = new ServerApiRootstock();
-        // request rootstock gasPrice listener
-        ServerApiRootstock.RootstockBodyListener rootstockBodyListener = new ServerApiRootstock.RootstockBodyListener() {
+        // request requestData gasPrice listener
+        ServerApiRootstock.ResponseListener responseListener = new ServerApiRootstock.ResponseListener() {
             @Override
             public void onSuccess(String method, InfuraResponse rootstockResponse) {
                 String gasPrice = rootstockResponse.getResult();
@@ -169,9 +169,9 @@ public class RskEngine extends EthEngine {
                 blockchainRequestsCallbacks.onComplete(false);
             }
         };
-        serverApiRootstock.setRootstockResponse(rootstockBodyListener);
+        serverApiRootstock.setResponseListener(responseListener);
 
-        serverApiRootstock.rootstock(ServerApiRootstock.ROOTSTOCK_ETH_GAS_PRICE, 67, coinData.getWallet(), "", "");
+        serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_GAS_PRICE, 67, coinData.getWallet(), "", "");
     }
 
     @Override
@@ -180,7 +180,7 @@ public class RskEngine extends EthEngine {
         String txStr = String.format("0x%s", BTCUtils.toHex(txForSend));
 
         ServerApiRootstock serverApiRootstock = new ServerApiRootstock();
-        ServerApiRootstock.RootstockBodyListener rootstockBodyListener = new ServerApiRootstock.RootstockBodyListener() {
+        ServerApiRootstock.ResponseListener responseListener = new ServerApiRootstock.ResponseListener() {
             @Override
             public void onSuccess(String method, InfuraResponse rootstockResponse) {
                 if (method.equals(ServerApiRootstock.ROOTSTOCK_ETH_SEND_RAW_TRANSACTION)) {
@@ -206,9 +206,9 @@ public class RskEngine extends EthEngine {
             }
         };
 
-        serverApiRootstock.setRootstockResponse(rootstockBodyListener);
+        serverApiRootstock.setResponseListener(responseListener);
 
-        serverApiRootstock.rootstock(ServerApiRootstock.ROOTSTOCK_ETH_SEND_RAW_TRANSACTION, 67, coinData.getWallet(), "", txStr);
+        serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_SEND_RAW_TRANSACTION, 67, coinData.getWallet(), "", txStr);
 
     }
 
