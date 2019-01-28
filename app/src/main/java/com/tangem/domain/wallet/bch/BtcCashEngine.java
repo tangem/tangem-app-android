@@ -185,7 +185,7 @@ public class BtcCashEngine extends CoinEngine {
     }
 
     @Override
-    public Uri getShareWalletUriExplorer() {
+    public Uri getWalletExplorerUri() {
         return Uri.parse("https://bch.btc.com/" + ctx.getCoinData().getWallet());
     }
 
@@ -454,7 +454,7 @@ public class BtcCashEngine extends CoinEngine {
 
 
     @Override
-    public SignTask.PaymentToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
+    public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         checkBlockchainDataExists();
 
         String srcLegacyAddress = convertToLegacyAddress(ctx.getCoinData().getWallet());
@@ -500,7 +500,7 @@ public class BtcCashEngine extends CoinEngine {
             bodyDoubleHash[i] = Util.calculateSHA256(bodyHash[i]);
         }
 
-        return new SignTask.PaymentToSign() {
+        return new SignTask.TransactionToSign() {
 
             @Override
             public boolean isSigningMethodSupported(TangemCard.SigningMethod signingMethod) {
@@ -551,7 +551,7 @@ public class BtcCashEngine extends CoinEngine {
 
                 byte[] txForSend = BCHUtils.buildTXForSend(destLegacyAddress, srcLegacyAddress, unspentOutputs, amountFinal, changeFinal);
 
-                notifyOnNeedSendPayment(txForSend);
+                notifyOnNeedSendTransaction(txForSend);
                 return txForSend;
             }
         };
@@ -561,7 +561,7 @@ public class BtcCashEngine extends CoinEngine {
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) throws Exception {
         final ServerApiElectrum serverApiElectrum = new ServerApiElectrum();
 
-        ServerApiElectrum.ElectrumRequestDataListener electrumBodyListener = new ServerApiElectrum.ElectrumRequestDataListener() {
+        ServerApiElectrum.ResponseListener electrumBodyListener = new ServerApiElectrum.ResponseListener() {
             @Override
             public void onSuccess(ElectrumRequest electrumRequest) {
                 if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetBalance)) {
@@ -606,7 +606,7 @@ public class BtcCashEngine extends CoinEngine {
                             String hash = jsUnspent.getString("tx_hash");
                             if (height != -1) {
                                 if (blockchainRequestsCallbacks.allowAdvance()) {
-                                    serverApiElectrum.electrumRequestData(ctx, ElectrumRequest.getTransaction(walletAddress, hash));
+                                    serverApiElectrum.requestData(ctx, ElectrumRequest.getTransaction(walletAddress, hash));
                                 } else {
                                     ctx.setError("Terminated by user");
                                 }
@@ -649,22 +649,22 @@ public class BtcCashEngine extends CoinEngine {
             }
         };
 
-        serverApiElectrum.setElectrumRequestData(electrumBodyListener);
+        serverApiElectrum.setResponseListener(electrumBodyListener);
 
-        serverApiElectrum.electrumRequestData(ctx, ElectrumRequest.checkBalance(convertToLegacyAddress(coinData.getWallet())));
-        serverApiElectrum.electrumRequestData(ctx, ElectrumRequest.listUnspent(convertToLegacyAddress(coinData.getWallet())));
+        serverApiElectrum.requestData(ctx, ElectrumRequest.checkBalance(convertToLegacyAddress(coinData.getWallet())));
+        serverApiElectrum.requestData(ctx, ElectrumRequest.listUnspent(convertToLegacyAddress(coinData.getWallet())));
     }
 
     private Integer calculateEstimatedTransactionSize(String outputAddress, String outAmount) {
         try {
-            SignTask.PaymentToSign ps=constructPayment(new Amount(outAmount, getBalanceCurrency()),new Amount("0.00",getFeeCurrency()), true, outputAddress );
-            OnNeedSendPayment onNeedSendPaymentBackup=onNeedSendPayment;
-            onNeedSendPayment=(tx)->{}; // empty function to bypass exception
+            SignTask.TransactionToSign ps= constructTransaction(new Amount(outAmount, getBalanceCurrency()),new Amount("0.00",getFeeCurrency()), true, outputAddress );
+            OnNeedSendTransaction onNeedSendTransactionBackup = onNeedSendTransaction;
+            onNeedSendTransaction =(tx)->{}; // empty function to bypass exception
 
             byte[][] hashesToSign=ps.getHashesToSign();
             byte[] signFromCard = new byte[64 * hashesToSign.length];
             byte[] txForSend=ps.onSignCompleted(signFromCard);
-            onNeedSendPayment=onNeedSendPaymentBackup;
+            onNeedSendTransaction = onNeedSendTransactionBackup;
             Log.e(TAG,"txForSend.length="+String.valueOf(txForSend.length));
             return txForSend.length;
         } catch (Exception e) {
@@ -686,7 +686,7 @@ public class BtcCashEngine extends CoinEngine {
 
         final ServerApiElectrum serverApiElectrum = new ServerApiElectrum();
 
-        final ServerApiElectrum.ElectrumRequestDataListener electrumListener  = new ServerApiElectrum.ElectrumRequestDataListener () {
+        final ServerApiElectrum.ResponseListener electrumListener  = new ServerApiElectrum.ResponseListener() {
             @Override
             public void onSuccess(ElectrumRequest electrumRequest) {
                 BigDecimal fee;
@@ -695,13 +695,13 @@ public class BtcCashEngine extends CoinEngine {
                         fee = new BigDecimal(electrumRequest.getResultString()); //fee per KB
 
                         if (fee.equals(BigDecimal.ZERO)) {
-                            serverApiElectrum.electrumRequestData(ctx, ElectrumRequest.getFee());
+                            serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
                         }
 
 //                        if (calcSize != 0) {
                             fee = fee.multiply(new BigDecimal(calcSize)).divide(new BigDecimal(1024)); // (per KB -> per byte)*size
 //                        } else {
-//                            serverApiElectrum.electrumRequestData(ctx, ElectrumRequest.getFee());
+//                            serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
 //                        }
 
                         //compare fee to usual relay fee
@@ -732,9 +732,9 @@ public class BtcCashEngine extends CoinEngine {
                 blockchainRequestsCallbacks.onComplete(false);
             }
         };
-        serverApiElectrum.setElectrumRequestData(electrumListener);
+        serverApiElectrum.setResponseListener(electrumListener);
 
-        serverApiElectrum.electrumRequestData(ctx, ElectrumRequest.getFee());
+        serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
     }
 
     @Override
@@ -742,7 +742,7 @@ public class BtcCashEngine extends CoinEngine {
         final ServerApiElectrum serverApiElectrum = new ServerApiElectrum();
         final String txStr = BTCUtils.toHex(txForSend);
 
-        ServerApiElectrum.ElectrumRequestDataListener electrumBodyListener = new ServerApiElectrum.ElectrumRequestDataListener() {
+        ServerApiElectrum.ResponseListener electrumBodyListener = new ServerApiElectrum.ResponseListener() {
             @Override
             public void onSuccess(ElectrumRequest electrumRequest) {
                 if (electrumRequest.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
@@ -773,10 +773,10 @@ public class BtcCashEngine extends CoinEngine {
                 blockchainRequestsCallbacks.onComplete(false);
             }
         };
-        serverApiElectrum.setElectrumRequestData(electrumBodyListener);
+        serverApiElectrum.setResponseListener(electrumBodyListener);
 
 
-        serverApiElectrum.electrumRequestData(ctx, ElectrumRequest.broadcast(ctx.getCoinData().getWallet(), txStr));
+        serverApiElectrum.requestData(ctx, ElectrumRequest.broadcast(ctx.getCoinData().getWallet(), txStr));
 
     }
 
