@@ -639,11 +639,8 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
 
         updateViews()
 
-        // Bitcoin
-        // Litecoin
-        // BitcoinCash
-        if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet ||
-                ctx.blockchain == Blockchain.Litecoin || ctx.blockchain == Blockchain.BitcoinCash) {
+        // Bitcoin, Litecoin, BitcoinCash
+        if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet || ctx.blockchain == Blockchain.Litecoin || ctx.blockchain == Blockchain.BitcoinCash) {
             ctx.coinData.setIsBalanceEqual(true)
         }
 
@@ -673,9 +670,6 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                             if (!success) {
                                 LOG.e(TAG, "requestBalanceAndUnspentTransactions ctx.error: " + ctx.error)
                             }
-//                            if (!UtilHelper.isOnline(activity!!)) {
-//                                ctx.error = getString(R.string.no_connection)
-//                            }
                             updateViews()
                         }
 
@@ -706,9 +700,6 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
         } else {
             ctx.error = getString(R.string.no_connection)
             updateViews()
-            //Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-            //LOG.e(TAG, "+++++++++++ Hide refresh 1")
-            //srl?.isRefreshing = false
         }
     }
 
@@ -734,9 +725,6 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
         } else {
             ctx.error = getString(R.string.no_connection)
             updateViews()
-//            Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
-//            LOG.e(TAG, "+++++++++++ Hide refresh 2")
-//            srl?.isRefreshing = false
         }
     }
 
