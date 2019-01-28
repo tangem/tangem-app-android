@@ -9,7 +9,6 @@ import com.tangem.domain.wallet.bch.BitcoinCashNode;
 import com.tangem.domain.wallet.btc.BitcoinNode;
 import com.tangem.domain.wallet.btc.BitcoinNodeTestNet;
 import com.tangem.domain.wallet.ltc.LitecoinNode;
-import com.tangem.tangemcard.reader.CardProtocol;
 import com.tangem.wallet.R;
 
 import java.io.BufferedReader;
@@ -24,7 +23,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,13 +45,13 @@ import io.reactivex.schedulers.Schedulers;
 /**
  * Request processor for Electrum Api
  * Every request live cycle:
- * 1. In application create request and call {@link ServerApiElectrum}.electrumRequestData(..)
+ * 1. In application create request and call {@link ServerApiElectrum}.requestData(..)
  * 2. Try send every request for max 4 times,
- * 3. If all 4 times fail call DefaultObserver<ElectrumRequest>.onError (defined in .electrumRequestData(..)) and than
- *    {@link ElectrumRequestDataListener}.onFail(...) callback
+ * 3. If all 4 times fail call DefaultObserver<ElectrumRequest>.onError (defined in .requestData(..)) and than
+ *    {@link ResponseListener}.onFail(...) callback
  *    Error can be acquired with {@link ElectrumRequest}.getError() method
- * 4. If request network communication finished successfully then call DefaultObserver<ElectrumRequest>.onComplete (defined in .electrumRequestData) and than
- *    {@link ElectrumRequestDataListener}.onSuccess(...) callback
+ * 4. If request network communication finished successfully then call DefaultObserver<ElectrumRequest>.onComplete (defined in .requestData) and than
+ *    {@link ResponseListener}.onSuccess(...) callback
  */
 public class ServerApiElectrum {
     private static String TAG = ServerApiElectrum.class.getSimpleName();
@@ -62,7 +60,7 @@ public class ServerApiElectrum {
      * TCP, SSL
      * Used in BTC, BCH
      */
-    private ElectrumRequestDataListener electrumRequestDataListener;
+    private ResponseListener responseListener;
     private String host;
     private int port;
 
@@ -76,7 +74,7 @@ public class ServerApiElectrum {
     /**
      * Interface for notification every request result
      */
-    public interface ElectrumRequestDataListener {
+    public interface ResponseListener {
 
         /**
          * Notify that request processing was successful
@@ -94,8 +92,8 @@ public class ServerApiElectrum {
      * Set notificaion listener
      * @param listener
      */
-    public void setElectrumRequestData(ElectrumRequestDataListener listener) {
-        electrumRequestDataListener = listener;
+    public void setResponseListener(ResponseListener listener) {
+        responseListener = listener;
     }
 
 
@@ -104,7 +102,7 @@ public class ServerApiElectrum {
      * @param ctx
      * @param electrumRequest
      */
-    public void electrumRequestData(TangemContext ctx, ElectrumRequest electrumRequest) {
+    public void requestData(TangemContext ctx, ElectrumRequest electrumRequest) {
         requestsCount++;
         Log.i(TAG, String.format("New request[%d]: %s", requestsCount,electrumRequest.getMethod()));
         Observable<ElectrumRequest> checkElectrumDataObserver = Observable.just(electrumRequest)
@@ -129,20 +127,20 @@ public class ServerApiElectrum {
             @Override
             public void onNext(ElectrumRequest v) {
                 if (electrumRequest.answerData != null) {
-                    Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onNext != null");
+                    Log.i(TAG, "requestData " + electrumRequest.getMethod() + " onNext != null");
                 } else {
-                    Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onNext == null");
+                    Log.e(TAG, "requestData " + electrumRequest.getMethod() + " onNext == null");
                 }
             }
 
             @Override
             public void onError(Throwable e) {
                 requestsCount--;
-                Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onError " + e.getMessage());
+                Log.e(TAG, "requestData " + electrumRequest.getMethod() + " onError " + e.getMessage());
                 Log.e(TAG, String.format("%d requests left in processing",requestsCount));
                 electrumRequest.setError(ctx.getString(R.string.cannot_obtain_data_from_blockchain));
                 //setErrorOccurred(e.getMessage());//;
-                electrumRequestDataListener.onFail(electrumRequest);
+                responseListener.onFail(electrumRequest);
             }
 
             /**
@@ -152,16 +150,16 @@ public class ServerApiElectrum {
             public void onComplete() {
                 requestsCount--;
                 if (electrumRequest.answerData != null) {
-                    Log.i(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onComplete, answerData!=null");
+                    Log.i(TAG, "requestData " + electrumRequest.getMethod() + " onComplete, answerData!=null");
                 } else {
-                    Log.e(TAG, "electrumRequestData " + electrumRequest.getMethod() + " onComplete, answerData==null");
+                    Log.e(TAG, "requestData " + electrumRequest.getMethod() + " onComplete, answerData==null");
                 }
                 Log.e(TAG, String.format("%d requests left in processing",requestsCount));
                 if (electrumRequest.answerData != null && electrumRequest.getError()==null) {
-                    electrumRequestDataListener.onSuccess(electrumRequest);
+                    responseListener.onSuccess(electrumRequest);
                 } else {
 //                    if( error==null || error.isEmpty() ) setErrorOccurred(ctx.getString(R.string.cannot_obtain_data_from_blockchain));
-                    electrumRequestDataListener.onFail(electrumRequest);
+                    responseListener.onFail(electrumRequest);
                 }
             }
 
@@ -257,7 +255,7 @@ public class ServerApiElectrum {
 
             } catch (ConnectException e) {
                 //e.printStackTrace();
-                //electrumRequestDataListener.onFail(e.getMessage());
+                //responseListener.onFail(e.getMessage());
                 electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_no_connection));
                 Log.e(TAG, "doElectrumRequestTcp " + electrumRequest.getMethod() + " ConnectException " + e.getMessage());
             } finally {
@@ -274,7 +272,7 @@ public class ServerApiElectrum {
             }
         } catch (IOException e) {
             //e.printStackTrace();
-            //electrumRequestDataListener.onFail(e.getMessage());
+            //responseListener.onFail(e.getMessage());
             electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_communication_error));
             Log.e(TAG, "doElectrumRequestTcp " + electrumRequest.getMethod() + " IOException " + e.getMessage());
         }

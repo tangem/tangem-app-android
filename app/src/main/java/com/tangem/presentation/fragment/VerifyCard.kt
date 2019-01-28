@@ -5,8 +5,7 @@ import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v4.content.ContextCompat
+import androidx.core.content.ContextCompat
 import android.text.Html
 import android.text.format.DateUtils
 import android.view.LayoutInflater
@@ -21,24 +20,27 @@ import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.activity.*
 import com.tangem.presentation.dialog.PINSwapWarningDialog
+import com.tangem.presentation.event.DeletingWalletFinish
 import com.tangem.tangemcard.android.data.PINStorage
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
 import com.tangem.tangemcard.reader.CardProtocol
+import com.tangem.util.LOG
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_verify_card.*
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
 import java.io.IOException
 import java.util.*
 
-class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
-
+class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
     companion object {
         val TAG: String = VerifyCard::class.java.simpleName
     }
 
-    private var nfcManager: NfcManager? = null
+    private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
 
     private var requestPIN2Count = 0
@@ -49,7 +51,6 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         nfcManager = NfcManager(activity, this)
-
         ctx = TangemContext.loadFromBundle(activity, activity?.intent?.extras)
     }
 
@@ -74,24 +75,25 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        nfcManager!!.onResume()
+    override fun onStart() {
+        super.onStart()
+        if (!EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().register(this)
     }
 
-    override fun onPause() {
-        super.onPause()
-        nfcManager!!.onPause()
+    override fun onDestroy() {
+        EventBus.getDefault().unregister(this)
+        super.onDestroy()
     }
 
-    override fun onStop() {
-        super.onStop()
-        nfcManager!!.onStop()
+    @Subscribe
+    fun onDeleteWalletFinish(deletingWalletFinish: DeletingWalletFinish) {
+        activity?.finish()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-//        var data = data
         super.onActivityResult(requestCode, resultCode, data)
+        LOG.i(TAG, "requestCode $requestCode resultCode $resultCode")
         when (requestCode) {
             Constant.REQUEST_CODE_ENTER_NEW_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (data != null) {
@@ -109,6 +111,7 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                     }
                 }
             }
+
             Constant.REQUEST_CODE_ENTER_NEW_PIN2 -> if (resultCode == Activity.RESULT_OK) {
                 if (data != null) {
                     if (data.extras!!.containsKey("confirmPIN2")) {
@@ -125,10 +128,11 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                     }
                 }
             }
+
             Constant.REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (newPIN == "") newPIN = ctx.card!!.pin
 
-                if (newPIN2 == "") newPIN2 = App.pinStorage.getPIN2()
+                if (newPIN2 == "") newPIN2 = App.pinStorage.piN2
 
                 val pinSwapWarningDialog = PINSwapWarningDialog()
                 pinSwapWarningDialog.setOnRefreshPage { (activity as VerifyCardActivity).navigator.showPinSwap(context as Activity, newPIN, newPIN2) }
@@ -138,12 +142,11 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 else
                     bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_use_default))
                 pinSwapWarningDialog.arguments = bundle
-                pinSwapWarningDialog.show(activity?.supportFragmentManager, PINSwapWarningDialog.TAG)
+                activity?.supportFragmentManager?.let { pinSwapWarningDialog.show(it, PINSwapWarningDialog.TAG) }
             }
 
             Constant.REQUEST_CODE_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
-//                    data = Intent()
                     ctx.saveToIntent(data)
                     data?.putExtra("modification", "delete")
                 } else
@@ -173,16 +176,18 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
             Constant.REQUEST_CODE_REQUEST_PIN2_FOR_PURGE -> if (resultCode == Activity.RESULT_OK)
                 (activity as VerifyCardActivity).navigator.showPurge(context as Activity, ctx)
 
-            Constant.REQUEST_CODE_PURGE -> if (resultCode == Activity.RESULT_OK) {
-                if (data == null) {
-                    ctx.saveToIntent(data)
-                    data?.putExtra(Constant.EXTRA_MODIFICATION, "delete")
-                } else {
-                    data.putExtra(Constant.EXTRA_MODIFICATION, "update")
-                }
-                activity!!.setResult(Activity.RESULT_OK, data)
-                activity!!.finish()
-            } else {
+//            Constant.REQUEST_CODE_PURGE -> if (resultCode == Activity.RESULT_OK) {
+//                if (data == null) {
+//                    ctx.saveToIntent(data)
+//                    data?.putExtra(Constant.EXTRA_MODIFICATION, "delete")
+//                } else
+//                    data.putExtra(Constant.EXTRA_MODIFICATION, "update")
+//
+//                activity?.setResult(Activity.RESULT_OK, data)
+//                activity?.finish()
+//            }
+
+            else {
                 if (data != null && data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
                     val updatedCard = TangemCard(data.getStringExtra("UID"))
                     updatedCard.loadFromBundle(data.getBundleExtra("Card"))
@@ -205,9 +210,24 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
         }
     }
 
-    override fun onTagDiscovered(tag: Tag) {
+    override fun onResume() {
+        super.onResume()
+        nfcManager.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        nfcManager.onPause()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        nfcManager.onStop()
+    }
+
+    override fun onTagDiscovered(tag: Tag?) {
         try {
-            nfcManager!!.ignoreTag(tag)
+            nfcManager.ignoreTag(tag)
         } catch (e: IOException) {
             e.printStackTrace()
         }
@@ -369,20 +389,6 @@ class VerifyCard : Fragment(), NfcAdapter.ReaderCallback {
                 tvWallet!!.setText(R.string.not_available)
                 tvWalletIdentity.setText(R.string.no_data_string)
             }
-
-//            timerHideErrorAndMessage = Timer()
-//            timerHideErrorAndMessage!!.schedule(object : TimerTask() {
-//                override fun run() {
-//                    tvError.post {
-//                        tvMessage!!.visibility = View.GONE
-//                        tvError!!.visibility = View.GONE
-//                        mCard!!.error = null
-//                        mCard!!.message = null
-//                    }
-//                }
-//            }, 5000)
-
-
         } catch (e: Exception) {
             e.printStackTrace()
         }
