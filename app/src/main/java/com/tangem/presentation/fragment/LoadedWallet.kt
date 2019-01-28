@@ -1,5 +1,6 @@
 package com.tangem.presentation.fragment
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.*
@@ -9,6 +10,7 @@ import android.content.res.ColorStateList
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
+import android.os.Build
 import android.os.Bundle
 import androidx.core.content.ContextCompat
 import android.text.Html
@@ -562,7 +564,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                     5000)
         }
 
-        if (srl!!.isRefreshing) {
+        if (srl.isRefreshing) {
             tvBalanceLine1.setTextColor(resources.getColor(R.color.primary))
             tvBalanceLine1.text = getString(R.string.verifying_in_blockchain)
             tvBalanceLine2.text = ""
@@ -580,21 +582,32 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
         val engine = CoinEngineFactory.create(ctx)
         when {
             engine!!.hasBalanceInfo() -> {
-                val html = Html.fromHtml(engine.balanceHTML)
+                @Suppress("DEPRECATION") val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                    Html.fromHtml(engine.balanceHTML, Html.FROM_HTML_MODE_LEGACY)
+                else
+                    Html.fromHtml(engine.balanceHTML)
                 tvBalance.text = html
                 tvBalanceEquivalent.text = engine.balanceEquivalent
             }
-            ctx.card!!.offlineBalance != null -> {
-                val html = Html.fromHtml(engine.offlineBalanceHTML)
+
+            ctx.card?.offlineBalance != null -> {
+                @Suppress("DEPRECATION") val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                    Html.fromHtml(engine.offlineBalanceHTML, Html.FROM_HTML_MODE_LEGACY)
+                else
+                    Html.fromHtml(engine.offlineBalanceHTML)
                 tvBalance.text = html
             }
+
             else -> tvBalance.text = getString(R.string.no_data_string)
         }
 
         tvWallet.text = ctx.coinData!!.wallet
 
         if (ctx.card!!.tokenSymbol.length > 1) {
-            val html = Html.fromHtml(ctx.blockchainName)
+            @Suppress("DEPRECATION") val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                Html.fromHtml(ctx.blockchainName, Html.FROM_HTML_MODE_LEGACY)
+            else
+                Html.fromHtml(ctx.blockchainName)
             tvBlockchain.text = html
         } else
             tvBlockchain.text = ctx.blockchainName
@@ -607,7 +620,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
             btnExtract.backgroundTintList = inactiveColor
         }
 
-        //TODO why ???
+//        //TODO why ???
 //        ctx.error = null
 //        ctx.message = null
     }
