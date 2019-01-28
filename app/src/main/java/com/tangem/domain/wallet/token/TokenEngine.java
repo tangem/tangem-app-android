@@ -68,7 +68,7 @@ public class TokenEngine extends CoinEngine {
     }
 
     protected int getChainIdNum() {
-        return ctx.getBlockchain() == Blockchain.Ethereum ? EthTransaction.ChainEnum.Mainnet.getValue() : EthTransaction.ChainEnum.Rinkeby.getValue();
+        return EthTransaction.ChainEnum.Mainnet.getValue();
     }
 
     @Override
