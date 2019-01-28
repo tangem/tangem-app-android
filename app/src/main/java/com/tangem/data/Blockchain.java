@@ -11,11 +11,11 @@ public enum Blockchain {
     BitcoinTestNet("BTC/test", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin_testnet, "Bitcoin Testnet"),
     Ethereum("ETH", "ETH", 1.0, R.drawable.ic_logo_ethereum, "Ethereum"),
     EthereumTestNet("ETH/test", "ETH", 1.0, R.drawable.ic_logo_ethereum_testnet, "Ethereum Testnet"),
-    Token("Token", "ERC20", 1.0, R.drawable.ic_logo_bat_token, "Ethereum"),
+    Token("Token", "ETH", 1.0, R.drawable.ic_logo_bat_token, "Ethereum"),
     BitcoinCash("BCH", "BCH", 100000000.0, R.drawable.ic_logo_bitcoin_cash, "Bitcoin Cash"),
     Litecoin("LTC", "LTC", 100000000.0, R.drawable.ic_logo_bitcoin, "Litecoin"),
     Rootstock("RSK", "RBTC", 1.0, R.drawable.ic_logo_bitcoin, "Rootstock"),
-    RootstockToken("Token", "ERC20", 1.0, R.drawable.ic_logo_bat_token, "Rootstock");
+    RootstockToken("Token", "RSK", 1.0, R.drawable.ic_logo_bat_token, "Rootstock");
 
     Blockchain(String ID, String currency, double multiplier, int imageResource, String officialName) {
         mID = ID;
