@@ -28,6 +28,7 @@ import com.tangem.tangemcard.reader.CardProtocol
 import com.tangem.tangemcard.tasks.VerifyCardTask
 import com.tangem.tangemcard.util.Util
 import com.tangem.util.LOG
+import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_empty_wallet.*
 import kotlinx.android.synthetic.main.layout_tangem_card.*
@@ -53,6 +54,8 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
     private var verifyCardTask: VerifyCardTask? = null
     private var requestPIN2Count = 0
 
+    private var cardProtocol: CardProtocol? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_empty_wallet)
@@ -62,8 +65,6 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         nfcManager = NfcManager(this, this)
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
-
-
 
         tvIssuer.text = ctx.card!!.issuerDescription
 
@@ -76,33 +77,6 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         tvCardID.text = ctx.card!!.cidDescription
         ivTangemCard.setImageBitmap(App.localStorage.getCardArtworkBitmap(ctx.card))
 
-        if (ctx.card!!.useDefaultPIN1()) {
-            imgPIN.setImageResource(R.drawable.unlock_pin1)
-            imgPIN.setOnClickListener { Toast.makeText(this@EmptyWalletActivity, R.string.this_banknote_protected_default_PIN1_code, Toast.LENGTH_LONG).show() }
-        } else {
-            imgPIN.setImageResource(R.drawable.lock_pin1)
-            imgPIN.setOnClickListener { Toast.makeText(this@EmptyWalletActivity, R.string.this_banknote_protected_user_PIN1_code, Toast.LENGTH_LONG).show() }
-        }
-
-        if (ctx.card!!.pauseBeforePIN2 > 0 && (ctx.card!!.useDefaultPIN2()!! || !ctx.card!!.useSmartSecurityDelay())) {
-            imgPIN2orSecurityDelay.setImageResource(R.drawable.timer)
-            imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(this@EmptyWalletActivity, String.format(getString(R.string.this_banknote_will_enforce), ctx.card!!.pauseBeforePIN2 / 1000.0), Toast.LENGTH_LONG).show() }
-
-        } else if (ctx.card!!.useDefaultPIN2()!!) {
-            imgPIN2orSecurityDelay.setImageResource(R.drawable.unlock_pin2)
-            imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(this@EmptyWalletActivity, R.string.this_banknote_protected_default_PIN2_code, Toast.LENGTH_LONG).show() }
-        } else {
-            imgPIN2orSecurityDelay.setImageResource(R.drawable.lock_pin2)
-            imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(this@EmptyWalletActivity, R.string.this_banknote_protected_user_PIN2_code, Toast.LENGTH_LONG).show() }
-        }
-
-        if (ctx.card!!.useDevelopersFirmware()!!) {
-            imgDeveloperVersion.setImageResource(R.drawable.ic_developer_version)
-            imgDeveloperVersion.visibility = View.VISIBLE
-            imgDeveloperVersion.setOnClickListener { Toast.makeText(this@EmptyWalletActivity, R.string.unlocked_banknote_only_development_use, Toast.LENGTH_LONG).show() }
-        } else
-            imgDeveloperVersion.visibility = View.INVISIBLE
-
         // set listeners
         btnNewWallet.setOnClickListener {
             requestPIN2Count = 0
@@ -111,6 +85,13 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
             intent.putExtra("UID", ctx.card!!.uid)
             intent.putExtra("Card", ctx.card!!.asBundle)
             startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2)
+        }
+
+        btnDetails.setOnClickListener {
+            if (cardProtocol != null)
+                navigator.showVerifyCard(this, ctx)
+            else
+                UtilHelper.showSingleToast(this, getString(R.string.need_attach_card_again))
         }
     }
 
@@ -132,7 +113,6 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == Constant.REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY) {
             if (resultCode == Activity.RESULT_OK) {
-
                 if (data != null) {
                     data.putExtra("modification", "updateAndViewCard")
                     data.putExtra("updateDelay", 0)
@@ -178,23 +158,24 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                 LOG.d(TAG, "UID: $sUID")
             }
 
-            if (lastReadSuccess) {
+            if (lastReadSuccess)
                 isoDep.timeout = 1000
-            } else {
+            else
                 isoDep.timeout = 65000
-            }
-            //lastTag = tag;
+
             verifyCardTask = VerifyCardTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, App.firmwaresStorage, this)
-            verifyCardTask!!.start()
+            verifyCardTask?.start()
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
     override fun onReadStart(cardProtocol: CardProtocol) {
-        progressBar!!.post {
-            progressBar!!.visibility = View.VISIBLE
-            progressBar!!.progress = 5
+        rlProgressBar?.post { rlProgressBar.visibility = View.VISIBLE }
+
+        progressBar?.post {
+            progressBar?.visibility = View.VISIBLE
+            progressBar?.progress = 5
         }
     }
 
@@ -202,37 +183,42 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         verifyCardTask = null
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
-                progressBar!!.post {
-                    progressBar!!.progress = 100
-                    progressBar!!.progressTintList = ColorStateList.valueOf(Color.GREEN)
-//                    val intent = Intent(this@EmptyWalletActivity, VerifyCardActivity::class.java)
-//                    intent.putExtra("UID", cardProtocol.card.uid)
-//                    intent.putExtra("Card", cardProtocol.card.asBundle)
-//                    startActivityForResult(intent, REQUEST_CODE_VERIFY_CARD)
-                    //addCard(cardProtocol.getCard());
+                rlProgressBar?.post { rlProgressBar.visibility = View.GONE }
+
+                progressBar?.post {
+                    progressBar?.progress = 100
+                    progressBar?.progressTintList = ColorStateList.valueOf(Color.GREEN)
+                    this.cardProtocol = cardProtocol
                 }
             } else {
                 // remove last UIDs because of error and no card read
-                progressBar!!.post {
+                progressBar?.post {
                     lastReadSuccess = false
                     if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported) {
-                        if (!NoExtendedLengthSupportDialog.allReadyShowed) {
+                        if (!NoExtendedLengthSupportDialog.allReadyShowed)
                             NoExtendedLengthSupportDialog().show(supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
-                        }
-                    } else {
+                    } else
                         Toast.makeText(this@EmptyWalletActivity, R.string.try_to_scan_again, Toast.LENGTH_LONG).show()
-                    }
-                    progressBar!!.progress = 100
-                    progressBar!!.progressTintList = ColorStateList.valueOf(Color.RED)
+
+                    progressBar?.progress = 100
+                    progressBar?.progressTintList = ColorStateList.valueOf(Color.RED)
                 }
             }
         }
 
-        progressBar!!.postDelayed({
+        rlProgressBar?.postDelayed({
             try {
-                progressBar!!.progress = 0
-                progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
-                progressBar!!.visibility = View.INVISIBLE
+                rlProgressBar?.visibility = View.GONE
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }, 500)
+
+        progressBar?.postDelayed({
+            try {
+                progressBar?.progress = 0
+                progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+                progressBar?.visibility = View.INVISIBLE
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -240,16 +226,25 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
     }
 
     override fun onReadProgress(protocol: CardProtocol, progress: Int) {
-        progressBar!!.post { progressBar!!.progress = progress }
+        progressBar?.post { progressBar!!.progress = progress }
     }
 
     override fun onReadCancel() {
         verifyCardTask = null
-        progressBar!!.postDelayed({
+
+        rlProgressBar?.postDelayed({
             try {
-                progressBar!!.progress = 0
-                progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
-                progressBar!!.visibility = View.INVISIBLE
+                rlProgressBar?.visibility = View.GONE
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }, 500)
+
+        progressBar?.postDelayed({
+            try {
+                progressBar?.progress = 0
+                progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+                progressBar?.visibility = View.INVISIBLE
             } catch (e: Exception) {
                 e.printStackTrace()
             }
