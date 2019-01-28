@@ -29,9 +29,6 @@ public interface NetworkComponent {
     @Named(Server.ApiRootstock.URL_ROOTSTOCK)
     Retrofit getRetrofitRootstock();
 
-//    @Named("Insight") //TODO:check
-//    Retrofit getRetrofitInsight(String insightURL);
-
     @Named("socket")
     Socket getSocket();
 
