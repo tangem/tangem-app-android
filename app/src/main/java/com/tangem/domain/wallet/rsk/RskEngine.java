@@ -8,20 +8,12 @@ import com.tangem.data.network.ServerApiRootstock;
 import com.tangem.data.network.model.InfuraResponse;
 import com.tangem.domain.wallet.BTCUtils;
 import com.tangem.domain.wallet.CoinEngine;
-import com.tangem.domain.wallet.ECDSASignatureETH;
 import com.tangem.domain.wallet.EthTransaction;
 import com.tangem.domain.wallet.TangemContext;
-import com.tangem.domain.wallet.eth.EthData;
 import com.tangem.domain.wallet.eth.EthEngine;
-import com.tangem.tangemcard.data.TangemCard;
-import com.tangem.tangemcard.tasks.SignTask;
-import com.tangem.util.CryptoUtil;
 import com.tangem.wallet.R;
 
-import org.bitcoinj.core.ECKey;
-
 import java.math.BigInteger;
-import java.util.Arrays;
 
 public class RskEngine extends EthEngine {
 
@@ -60,7 +52,7 @@ public class RskEngine extends EthEngine {
     }
 
     @Override
-    public Uri getWalletExplorerUri()) {
+    public Uri getWalletExplorerUri() {
         return Uri.parse("https://explorer.rsk.co/address/" + ctx.getCoinData().getWallet());
     }
 
