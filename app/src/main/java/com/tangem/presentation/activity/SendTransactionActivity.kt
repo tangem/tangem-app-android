@@ -4,7 +4,7 @@ import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.view.KeyEvent
 import android.widget.Toast
 import com.tangem.Constant
@@ -43,7 +43,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                         if (success)
                             finishWithSuccess()
                         else
-                            finishWithError(this@SendTransactionActivity.getString(R.string.try_again_failed_to_send_transaction))
+                            finishWithError(ctx.error)
                     }
 
                     override fun onProgress() {
