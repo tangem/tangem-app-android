@@ -21,6 +21,7 @@
     <dimen name="text_size_small">13sp</dimen>
     <dimen name="text_size_1_small">15sp</dimen>
     <dimen name="text_size_medium">19sp</dimen>
+    <dimen name="text_size_1_large">23sp</dimen>
     <dimen name="text_size_large">26sp</dimen>
     <dimen name="text_size_pin">34sp</dimen>
 

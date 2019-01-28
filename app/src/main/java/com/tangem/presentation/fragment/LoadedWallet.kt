@@ -10,14 +10,14 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v4.content.ContextCompat
+import androidx.core.content.ContextCompat
 import android.text.Html
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Blockchain
@@ -34,6 +34,7 @@ import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.presentation.dialog.ShowQRCodeDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.presentation.event.DeletingWalletFinish
 import com.tangem.presentation.event.TransactionFinishWithError
 import com.tangem.presentation.event.TransactionFinishWithSuccess
 import com.tangem.tangemcard.android.reader.NfcManager
@@ -51,13 +52,15 @@ import com.tangem.util.LOG
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
+import kotlinx.android.synthetic.main.layout_btn_details.*
+import kotlinx.android.synthetic.main.layout_tangem_card.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import java.io.InputStream
 import java.util.*
 import kotlin.concurrent.timerTask
 
-class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, SharedPreferences.OnSharedPreferenceChangeListener {
+class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, SharedPreferences.OnSharedPreferenceChangeListener {
     companion object {
         val TAG: String = LoadedWallet::class.java.simpleName
     }
@@ -90,6 +93,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 //updateViews()
             } else if (srl != null && !srl.isRefreshing) srl.isRefreshing = true
         }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         nfcManager = NfcManager(activity, this)
@@ -123,7 +127,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         btnExplore.setOnClickListener {
             val engine = CoinEngineFactory.create(ctx)
-            startActivity(Intent(Intent.ACTION_VIEW, engine?.shareWalletUriExplorer))
+            startActivity(Intent(Intent.ACTION_VIEW, engine?.walletExplorerUri))
         }
         btnCopy.setOnClickListener { doShareWallet(false) }
 
@@ -150,19 +154,19 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
                     getString(R.string.load_via_qr) -> {
                         val engine = CoinEngineFactory.create(ctx)
-                        ShowQRCodeDialog.show(activity, engine!!.shareWalletUri.toString())
+                        ShowQRCodeDialog.show(activity as AppCompatActivity?, engine!!.shareWalletUri.toString())
                     }
 
                     getString(R.string.via_cryptonit) -> {
                         val intent = Intent(activity, PrepareCryptonitWithdrawalActivity::class.java)
                         ctx.saveToIntent(intent)
-                        startActivityForResult(intent, Constant.REQUEST_CODE_RECEIVE_PAYMENT)
+                        startActivityForResult(intent, Constant.REQUEST_CODE_RECEIVE_TRANSACTION)
                     }
 
                     getString(R.string.via_kraken) -> {
                         val intent = Intent(activity, PrepareKrakenWithdrawalActivity::class.java)
                         ctx.saveToIntent(intent)
-                        startActivityForResult(intent, Constant.REQUEST_CODE_RECEIVE_PAYMENT)
+                        startActivityForResult(intent, Constant.REQUEST_CODE_RECEIVE_TRANSACTION)
                     }
                     else -> {
                     }
@@ -182,7 +186,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 else if (ctx.card!!.remainingSignatures == 0)
                     UtilHelper.showSingleToast(context, getString(R.string.card_has_no_remaining_signature))
                 else
-                    (activity as LoadedWalletActivity).navigator.showPreparePayment(context as Activity, ctx)
+                    (activity as LoadedWalletActivity).navigator.showPrepareTransaction(context as Activity, ctx)
             else
                 Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
         }
@@ -258,8 +262,8 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         serverApiTangem.setArtworkListener(artworkListener)
 
         // request rate info listener
-        serverApiCommon.setRateInfoData {
-            if (activity == null || !UtilHelper.isOnline(activity!!)) return@setRateInfoData
+        serverApiCommon.setRateInfoListener {
+            if (activity == null || !UtilHelper.isOnline(activity!!)) return@setRateInfoListener
             val rate = it.priceUsd.toFloat()
             ctx.coinData!!.rate = rate
             ctx.coinData!!.rateAlter = rate
@@ -305,7 +309,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         ctx.message = transactionFinishWithSuccess.message
         ctx.coinData.clearInfo()
         updateViews()
-        srl?.isRefreshing=true
+        srl?.isRefreshing = true
         srl?.postDelayed({ refresh() }, 5000)
     }
 
@@ -313,6 +317,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     fun onTransactionFinishWithError(transactionFinishWithError: TransactionFinishWithError) {
         ctx.error = transactionFinishWithError.message
         updateViews()
+    }
+
+    @Subscribe
+    fun onDeleteWalletFinish(deletingWalletFinish: DeletingWalletFinish) {
+        activity?.finish()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -353,7 +362,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 else
                     bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_use_default))
                 pinSwapWarningDialog.arguments = bundle
-                pinSwapWarningDialog.show(activity?.supportFragmentManager, PINSwapWarningDialog.TAG)
+                activity?.supportFragmentManager?.let { pinSwapWarningDialog.show(it, PINSwapWarningDialog.TAG) }
             }
 
             Constant.REQUEST_CODE_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
@@ -416,7 +425,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 updateViews()
             }
 
-            Constant.REQUEST_CODE_SEND_PAYMENT, Constant.REQUEST_CODE_RECEIVE_PAYMENT -> {
+            Constant.REQUEST_CODE_SEND_TRANSACTION, Constant.REQUEST_CODE_RECEIVE_TRANSACTION -> {
                 if (resultCode == Activity.RESULT_OK) {
                     ctx.coinData?.clearInfo()
                     srl?.postDelayed({ this.refresh() }, 5000)
@@ -448,8 +457,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     override fun onReadStart(cardProtocol: CardProtocol) {
-        if (rlProgressBar != null)
-            rlProgressBar.post { rlProgressBar.visibility = View.VISIBLE }
+        rlProgressBar?.post { rlProgressBar.visibility = View.VISIBLE }
     }
 
     override fun onReadProgress(protocol: CardProtocol, progress: Int) {
@@ -472,7 +480,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     lastReadSuccess = false
                     if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported)
                         if (!NoExtendedLengthSupportDialog.allReadyShowed)
-                            NoExtendedLengthSupportDialog().show(activity?.supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
+                            activity?.supportFragmentManager?.let { NoExtendedLengthSupportDialog().show(it, NoExtendedLengthSupportDialog.TAG) }
                         else
                             Toast.makeText(activity, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show()
                 }
@@ -500,11 +508,11 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     override fun onReadWait(msec: Int) {
-        WaitSecurityDelayDialog.onReadWait(activity, msec)
+        WaitSecurityDelayDialog.onReadWait(activity as AppCompatActivity?, msec)
     }
 
     override fun onReadBeforeRequest(timeout: Int) {
-        WaitSecurityDelayDialog.onReadBeforeRequest(activity, timeout)
+        WaitSecurityDelayDialog.onReadBeforeRequest(activity as AppCompatActivity?, timeout)
     }
 
     override fun onReadAfterRequest() {
@@ -632,8 +640,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         requestRateInfo()
 
-        if( requestCounter==0 )
-        {
+        if (requestCounter == 0) {
             // if no connection and no requests posted
             srl?.isRefreshing = false
             updateViews()
@@ -647,7 +654,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
             coinEngine!!.requestBalanceAndUnspentTransactions(
                     object : CoinEngine.BlockchainRequestsCallbacks {
                         override fun onComplete(success: Boolean) {
-                            LOG.i(TAG, "requestBalanceAndUnspentTransactions onComplete: " + success.toString() + ", request counter " + requestCounter.toString())
+                            LOG.i(TAG, "requestBalanceAndUnspentTransactions onComplete: $success, request counter $requestCounter")
                             if (activity == null) return
                             requestCounter--
                             if (!success) {
@@ -666,7 +673,7 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                         }
 
                         override fun allowAdvance(): Boolean {
-                            return UtilHelper.isOnline(context as Activity)
+                            return context?.let { UtilHelper.isOnline(it) }!!
                         }
                     }
             )
@@ -706,12 +713,12 @@ class LoadedWallet : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 Blockchain.BitcoinCash -> "bitcoin-cash"
                 Blockchain.Litecoin -> "litecoin"
                 Blockchain.Rootstock -> "bitcoin"
-                Blockchain.RootstockToken ->"bitcoin"
+                Blockchain.RootstockToken -> "bitcoin"
                 else -> {
                     throw Exception("Can''t get rate for blockchain " + ctx.blockchainName)
                 }
             }
-            serverApiCommon.rateInfoData(cryptoId)
+            serverApiCommon.requestRateInfo(cryptoId)
         } else {
             ctx.error = getString(R.string.no_connection)
             updateViews()
