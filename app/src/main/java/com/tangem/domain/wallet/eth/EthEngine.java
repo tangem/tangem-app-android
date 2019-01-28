@@ -453,7 +453,7 @@ public class EthEngine extends CoinEngine {
                     throw new Exception("Error in " + this.getClass().getSimpleName() + " - invalid v");
                 }
                 tx.signature.v = (byte) v;
-                Log.e(this.getClass().getSimpleName(), " V: " +String.valueOf(v));
+                Log.e(this.getClass().getSimpleName(), " V: " + String.valueOf(v));
 
                 byte[] txForSend = tx.getEncoded();
                 notifyOnNeedSendTransaction(txForSend);
@@ -588,7 +588,7 @@ public class EthEngine extends CoinEngine {
                         blockchainRequestsCallbacks.onComplete(false);
                     } else {
                         BigInteger nonce = coinData.getConfirmedTXCount();
-                        nonce=nonce.add(BigInteger.valueOf(1));
+                        nonce = nonce.add(BigInteger.valueOf(1));
                         coinData.setConfirmedTXCount(nonce);
                         ctx.setError(null);
                         blockchainRequestsCallbacks.onComplete(true);
