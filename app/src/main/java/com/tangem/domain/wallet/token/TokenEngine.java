@@ -49,13 +49,13 @@ public class TokenEngine extends CoinEngine {
             coinData = (TokenData) ctx.getCoinData();
         } else if (ctx.getCoinData() instanceof EthData) {
             // special case with receive card data substitution from server at the moment
-            Bundle B=new Bundle();
+            Bundle B = new Bundle();
             ctx.getCoinData().saveToBundle(B);
             coinData = new TokenData();
             coinData.loadFromBundle(B);
             ctx.setCoinData(coinData);
         } else {
-            throw new Exception("Invalid type of Blockchain data for TokenEngine");
+            throw new Exception("Invalid type of Blockchain data for " + this.getClass().getSimpleName());
         }
     }
 
@@ -63,6 +63,13 @@ public class TokenEngine extends CoinEngine {
         super();
     }
 
+    public Blockchain getBlockchain() {
+        return Blockchain.Token;
+    }
+
+    protected int getChainIdNum() {
+        return ctx.getBlockchain() == Blockchain.Ethereum ? EthTransaction.ChainEnum.Mainnet.getValue() : EthTransaction.ChainEnum.Rinkeby.getValue();
+    }
 
     @Override
     public boolean awaitingConfirmation() {
@@ -90,7 +97,7 @@ public class TokenEngine extends CoinEngine {
     public String getBalanceHTML() {
         if (hasBalanceInfo()) {
             try {
-                return " " + convertToAmount(coinData.getBalanceInInternalUnits()).toDescriptionString(getTokenDecimals()) + " <br><small><small>  + " + convertToAmount(coinData.getBalanceAlterInInternalUnits()).toDescriptionString(getEthDecimals()) + " for fee</small></small>";
+                return " " + convertToAmount(coinData.getBalanceInInternalUnits()).toDescriptionString(getTokenDecimals()) + " <br><small><small>  + " + convertToAmount(coinData.getBalanceAlterInInternalUnits()).toDescriptionString(getChainDecimals()) + " for fee</small></small>";
             } catch (Exception e) {
                 e.printStackTrace();
                 return "";
@@ -109,7 +116,7 @@ public class TokenEngine extends CoinEngine {
             if (coinData.getBalanceInInternalUnits().notZero()) {
                 return currency;
             } else {
-                return Blockchain.Ethereum.getCurrency();
+                return this.getBlockchain().getCurrency();
             }
         } else {
             return currency;
@@ -122,13 +129,13 @@ public class TokenEngine extends CoinEngine {
         if (coinData.getBalanceInInternalUnits().notZero()) {
             return new InputFilter[]{new DecimalDigitsInputFilter(getTokenDecimals())};
         } else {
-            return new InputFilter[]{new DecimalDigitsInputFilter(getEthDecimals())};
+            return new InputFilter[]{new DecimalDigitsInputFilter(getChainDecimals())};
         }
     }
 
     @Override
     public String getFeeCurrency() {
-        return Blockchain.Ethereum.getCurrency();
+        return this.getBlockchain().getCurrency();
     }
 
     @Override
@@ -136,7 +143,7 @@ public class TokenEngine extends CoinEngine {
         return ctx.getString(R.string.not_implemented);
     }
 
-    protected static int getEthDecimals() {
+    protected static int getChainDecimals() {
         return 18;
     }
 
@@ -178,7 +185,8 @@ public class TokenEngine extends CoinEngine {
     @Override
     public boolean isBalanceNotZero() {
         if (coinData == null) return false;
-        if (coinData.getBalanceInInternalUnits() == null && coinData.getBalanceAlterInInternalUnits() == null) return false;
+        if (coinData.getBalanceInInternalUnits() == null && coinData.getBalanceAlterInInternalUnits() == null)
+            return false;
         return coinData.getBalanceInInternalUnits().notZero() || coinData.getBalanceAlterInInternalUnits().notZero();
     }
 
@@ -226,8 +234,8 @@ public class TokenEngine extends CoinEngine {
     @Override
     public Amount convertToAmount(InternalAmount internalAmount) throws Exception {
         if (internalAmount.getCurrency().equals("wei")) {
-            BigDecimal d = internalAmount.divide(new BigDecimal("1000000000000000000"), getEthDecimals(), RoundingMode.DOWN);
-            return new Amount(d, Blockchain.Ethereum.getCurrency());
+            BigDecimal d = internalAmount.divide(new BigDecimal("1000000000000000000"), getChainDecimals(), RoundingMode.DOWN);
+            return new Amount(d, this.getBlockchain().getCurrency());
         } else if (internalAmount.getCurrency().equals(ctx.getCard().getTokenSymbol())) {
             BigDecimal p = new BigDecimal(10);
             p = p.pow(getTokenDecimals());
@@ -244,7 +252,7 @@ public class TokenEngine extends CoinEngine {
 
     @Override
     public InternalAmount convertToInternalAmount(Amount amount) throws Exception {
-        if (amount.getCurrency().equals(Blockchain.Ethereum.getCurrency())) {
+        if (amount.getCurrency().equals(this.getBlockchain().getCurrency())) {
             BigDecimal d = amount.multiply(new BigDecimal("1000000000000000000"));
             return new InternalAmount(d, "wei");
         } else if (amount.getCurrency().equals(ctx.getCard().getTokenSymbol())) {
@@ -325,7 +333,7 @@ public class TokenEngine extends CoinEngine {
         try {
             if (amount.getCurrency().equals(ctx.getCard().tokenSymbol)) {
                 balance = convertToAmount(coinData.getBalanceInInternalUnits());
-            } else if (amount.getCurrency().equals(Blockchain.Ethereum.getCurrency()) && coinData.getBalanceInInternalUnits().isZero()) {
+            } else if (amount.getCurrency().equals(this.getBlockchain().getCurrency()) && coinData.getBalanceInInternalUnits().isZero()) {
                 balance = convertToAmount(coinData.getBalanceAlterInInternalUnits());
             } else {
                 return false;
@@ -352,21 +360,19 @@ public class TokenEngine extends CoinEngine {
                 // token transaction
                 if (fee.compareTo(balanceETH) > 0)
                     return false;
-            } else if (amount.getCurrency().equals(Blockchain.Ethereum.getCurrency()) && coinData.getBalanceInInternalUnits().isZero()) {
+            } else if (amount.getCurrency().equals(this.getBlockchain().getCurrency()) && coinData.getBalanceInInternalUnits().isZero()) {
                 // standard ETH transaction
 //                try {
-                    if (isFeeIncluded && (amount.compareTo(balanceETH) > 0 || fee.compareTo(balanceETH) > 0))
-                        return false;
+                if (isFeeIncluded && (amount.compareTo(balanceETH) > 0 || fee.compareTo(balanceETH) > 0))
+                    return false;
 
-                    if (!isFeeIncluded && amount.add(fee).compareTo(balanceETH) > 0)
-                        return false;
+                if (!isFeeIncluded && amount.add(fee).compareTo(balanceETH) > 0)
+                    return false;
 
 //                } catch (NumberFormatException e) {
 //                    e.printStackTrace();
 //                }
-            } else
-
-            {
+            } else {
                 return false;
             }
         } catch (Exception e) {
@@ -432,15 +438,15 @@ public class TokenEngine extends CoinEngine {
 
     @Override
     public SignTask.PaymentToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
-        if (amountValue.getCurrency().equals(Blockchain.Ethereum.getCurrency())) {
-            return constructPaymentETH(feeValue, amountValue, IncFee, targetAddress);
+        if (amountValue.getCurrency().equals(this.getBlockchain().getCurrency())) {
+            return constructPaymentCoin(feeValue, amountValue, IncFee, targetAddress);
         } else {
             return constructPaymentToken(feeValue, amountValue, IncFee, targetAddress);
         }
     }
 
-    private SignTask.PaymentToSign constructPaymentETH(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
-        Log.e(TAG, "Construct ETH payment "+amountValue.toString()+" with fee "+feeValue.toString()+(IncFee?" including":" excluding"));
+    protected SignTask.PaymentToSign constructPaymentCoin(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
+        Log.e(TAG, "Construct " + this.getBlockchain().getCurrency() + " payment " + amountValue.toString() + " with fee " + feeValue.toString() + (IncFee ? " including" : " excluding"));
 
         BigInteger nonceValue = coinData.getConfirmedTXCount();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
@@ -454,8 +460,7 @@ public class TokenEngine extends CoinEngine {
 
         BigInteger gasPrice = weiFee.divide(BigInteger.valueOf(21000));
         BigInteger gasLimit = BigInteger.valueOf(21000);
-//        Integer chainId = ctx.getBlockchain() == Blockchain.Ethereum ? EthTransaction.ChainEnum.Mainnet.getValue() : EthTransaction.ChainEnum.Rinkeby.getValue();
-        Integer chainId = EthTransaction.ChainEnum.Mainnet.getValue(); // Token support on main net only!!!
+        Integer chainId = this.getChainIdNum(); // Token support on main net only!!!
 
         String to = targetAddress;
 
@@ -480,12 +485,12 @@ public class TokenEngine extends CoinEngine {
 
             @Override
             public byte[] getRawDataToSign() throws Exception {
-                throw new Exception("Signing of raw transaction not supported for ETH");
+                throw new Exception("Signing of raw transaction not supported for " + this.getClass().getSimpleName());
             }
 
             @Override
             public String getHashAlgToSign() throws Exception {
-                throw new Exception("Signing of raw transaction not supported for ETH");
+                throw new Exception("Signing of raw transaction not supported for " + this.getClass().getSimpleName());
             }
 
             @Override
@@ -503,17 +508,17 @@ public class TokenEngine extends CoinEngine {
                 boolean f = ECKey.verify(for_hash, new ECKey.ECDSASignature(r, s), pbKey);
 
                 if (!f) {
-                    Log.e("ETH-CHECK", "sign Failed.");
+                    Log.e(this.getClass().getSimpleName() + "-CHECK", "sign Failed.");
                 }
 
                 tx.signature = new ECDSASignatureETH(r, s);
                 int v = tx.BruteRecoveryID2(tx.signature, for_hash, pbKey);
                 if (v != 27 && v != 28) {
                     Log.e(TAG, "invalid v");
-                    throw new Exception("Error in EthEngine - invalid v");
+                    throw new Exception("Error in " + this.getClass().getSimpleName() + " - invalid v");
                 }
                 tx.signature.v = (byte) v;
-                Log.e(TAG,"ETH_v "+ String.valueOf(v));
+                Log.e(TAG, this.getClass().getSimpleName() + " V: " + String.valueOf(v));
 
                 byte[] txForSend = tx.getEncoded();
                 notifyOnNeedSendPayment(txForSend);
@@ -522,8 +527,8 @@ public class TokenEngine extends CoinEngine {
         };
     }
 
-    private SignTask.PaymentToSign constructPaymentToken(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
-        Log.e(TAG, "Construct TOKEN payment "+amountValue.toString()+" with fee "+feeValue.toString()+(IncFee?" including":" excluding"));
+    protected SignTask.PaymentToSign constructPaymentToken(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
+        Log.e(TAG, "Construct TOKEN payment " + amountValue.toString() + " with fee " + feeValue.toString() + (IncFee ? " including" : " excluding"));
 
         BigInteger nonceValue = coinData.getConfirmedTXCount();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
@@ -543,7 +548,7 @@ public class TokenEngine extends CoinEngine {
 
         BigInteger gasPrice = weiFee.divide(BigInteger.valueOf(60000));
         BigInteger gasLimit = BigInteger.valueOf(60000);
-        Integer chainId = EthTransaction.ChainEnum.Mainnet.getValue();
+        Integer chainId = this.getChainIdNum();
         BigInteger amountZero = BigInteger.ZERO;
 
         String to = targetAddress;
@@ -611,17 +616,17 @@ public class TokenEngine extends CoinEngine {
                 boolean f = ECKey.verify(for_hash, new ECKey.ECDSASignature(r, s), pbKey);
 
                 if (!f) {
-                    Log.e("ETH-CHECK", "sign Failed.");
+                    Log.e(this.getClass().getSimpleName() + "-CHECK", "sign Failed.");
                 }
 
                 tx.signature = new ECDSASignatureETH(r, s);
                 int v = tx.BruteRecoveryID2(tx.signature, for_hash, pbKey);
                 if (v != 27 && v != 28) {
                     Log.e(TAG, "invalid v");
-                    throw new Exception("Error in EthEngine - invalid v");
+                    throw new Exception("Error in " + this.getClass().getSimpleName() + " - invalid v");
                 }
                 tx.signature.v = (byte) v;
-                Log.e(TAG,"ETH_v: "+ String.valueOf(v));
+                Log.e(TAG, this.getClass().getSimpleName() + " V: " + String.valueOf(v));
 
                 byte[] txForSend = tx.getEncoded();
                 notifyOnNeedSendPayment(txForSend);
@@ -729,27 +734,28 @@ public class TokenEngine extends CoinEngine {
                 // rounding gas price to integer gwei
                 BigInteger l = new BigInteger(gasPrice, 16);
 
-                Log.i(TAG, "Infura gas price: "+gasPrice+" ("+l.toString()+")");
+                Log.i(TAG, "Infura gas price: " + gasPrice + " (" + l.toString() + ")");
                 BigInteger m;
-                if (!amount.getCurrency().equals(Blockchain.Ethereum.getCurrency())) m = BigInteger.valueOf(60000);
+                if (!amount.getCurrency().equals(Blockchain.Ethereum.getCurrency()))
+                    m = BigInteger.valueOf(60000);
                 else m = BigInteger.valueOf(21000);
 
-                Log.i(TAG, "fee multiplier: "+m.toString());
+                Log.i(TAG, "fee multiplier: " + m.toString());
 
                 CoinEngine.InternalAmount weiMinFee = new CoinEngine.InternalAmount(l.multiply(m), "wei");
                 CoinEngine.InternalAmount weiNormalFee = new CoinEngine.InternalAmount(l.multiply(BigInteger.valueOf(12)).divide(BigInteger.valueOf(10)).multiply(m), "wei");
                 CoinEngine.InternalAmount weiMaxFee = new CoinEngine.InternalAmount(l.multiply(BigInteger.valueOf(15)).divide(BigInteger.valueOf(10)).multiply(m), "wei");
-                Log.i(TAG, "min fee   : "+weiMinFee.toValueString()+" wei");
-                Log.i(TAG, "normal fee: "+weiNormalFee.toValueString()+" wei");
-                Log.i(TAG, "max fee   : "+weiMaxFee.toValueString()+" wei");
+                Log.i(TAG, "min fee   : " + weiMinFee.toValueString() + " wei");
+                Log.i(TAG, "normal fee: " + weiNormalFee.toValueString() + " wei");
+                Log.i(TAG, "max fee   : " + weiMaxFee.toValueString() + " wei");
 
                 try {
                     coinData.minFee = convertToAmount(weiMinFee);
                     coinData.normalFee = convertToAmount(weiNormalFee);
                     coinData.maxFee = convertToAmount(weiMaxFee);
-                    Log.i(TAG, "min fee   : "+coinData.minFee.toString());
-                    Log.i(TAG, "normal fee: "+coinData.normalFee.toString());
-                    Log.i(TAG, "max fee   : "+coinData.maxFee.toString());
+                    Log.i(TAG, "min fee   : " + coinData.minFee.toString());
+                    Log.i(TAG, "normal fee: " + coinData.normalFee.toString());
+                    Log.i(TAG, "max fee   : " + coinData.maxFee.toString());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -783,7 +789,7 @@ public class TokenEngine extends CoinEngine {
                         blockchainRequestsCallbacks.onComplete(false);
                     } else {
                         BigInteger nonce = coinData.getConfirmedTXCount();
-                        nonce=nonce.add(BigInteger.valueOf(1));
+                        nonce = nonce.add(BigInteger.valueOf(1));
                         coinData.setConfirmedTXCount(nonce);
                         ctx.setError(null);
                         blockchainRequestsCallbacks.onComplete(true);
