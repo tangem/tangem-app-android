@@ -45,7 +45,7 @@
 
         <include layout="@layout/layout_pin_buttons" />
 
-        <android.support.v7.widget.AppCompatButton
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnContinue"
             style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="match_parent"
