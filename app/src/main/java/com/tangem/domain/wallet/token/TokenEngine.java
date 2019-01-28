@@ -437,7 +437,7 @@ public class TokenEngine extends CoinEngine {
     }
 
     @Override
-    public SignTask.TransactionToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
+    public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         if (amountValue.getCurrency().equals(this.getBlockchain().getCurrency())) {
             return constructTransactionCoin(feeValue, amountValue, IncFee, targetAddress);
         } else {
@@ -528,7 +528,7 @@ public class TokenEngine extends CoinEngine {
     }
 
     private SignTask.TransactionToSign constructTransactionToken(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
-        Log.e(TAG, "Construct TOKEN transaction "+amountValue.toString()+" with fee "+feeValue.toString()+(IncFee?" including":" excluding"));
+        Log.e(TAG, "Construct TOKEN transaction " + amountValue.toString() + " with fee " + feeValue.toString() + (IncFee ? " including" : " excluding"));
 
         BigInteger nonceValue = coinData.getConfirmedTXCount();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
@@ -593,12 +593,12 @@ public class TokenEngine extends CoinEngine {
 
             @Override
             public byte[] getRawDataToSign() throws Exception {
-                throw new Exception("Signing of raw transaction not supported for ETH");
+                throw new Exception("Signing of raw transaction not supported for " + this.getClass().getSimpleName());
             }
 
             @Override
             public String getHashAlgToSign() throws Exception {
-                throw new Exception("Signing of raw transaction not supported for ETH");
+                throw new Exception("Signing of raw transaction not supported for " + this.getClass().getSimpleName());
             }
 
             @Override
