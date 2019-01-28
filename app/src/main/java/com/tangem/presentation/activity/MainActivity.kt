@@ -126,7 +126,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
         // set phone name
         if (antenna.fullName != "")
-            tvNFCHint.text = String.format(getString(R.string.scan_banknote), antenna!!.fullName)
+            tvNFCHint.text = String.format(getString(R.string.scan_banknote), antenna.fullName)
         else
             tvNFCHint.text = String.format(getString(R.string.scan_banknote), getString(R.string.phone))
 
@@ -309,7 +309,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
                     val uid = cardInfo.getString("UID")
                     val card = TangemCard(uid)
-                    card.loadFromBundle(cardInfo.getBundle("Card"))
+                    cardInfo.getBundle("Card")?.let { card.loadFromBundle(it) }
 
                     val ctx = TangemContext(card)
                     when {
@@ -317,8 +317,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                             val engineCoin = CoinEngineFactory.create(ctx)
                                     ?: throw CardProtocol.TangemException("Can't create CoinEngine!")
                             engineCoin.defineWallet()
-                            //mCard.setWallet(Blockchain.calculateWalletAddress(mCard, pkUncompressed));
-
                             navigator.showLoadedWallet(this, it, ctx)
                         }
                         card.status == TangemCard.Status.Empty -> navigator.showEmptyWallet(this, ctx)
