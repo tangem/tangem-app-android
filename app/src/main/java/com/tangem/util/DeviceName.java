@@ -28,7 +28,7 @@ package com.tangem.util;
         import android.os.Build;
         import android.os.Handler;
         import android.os.Looper;
-        import android.support.annotation.WorkerThread;
+        import androidx.annotation.WorkerThread;
         import android.text.TextUtils;
         import java.io.BufferedReader;
         import java.io.IOException;
