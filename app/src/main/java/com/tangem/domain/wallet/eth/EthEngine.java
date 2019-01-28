@@ -236,7 +236,7 @@ public class EthEngine extends CoinEngine {
     }
 
     @Override
-    public Uri getShareWalletUriExplorer() {
+    public Uri getWalletExplorerUri() {
         if (ctx.getBlockchain() == Blockchain.EthereumTestNet)
             return Uri.parse("https://rinkeby.etherscan.io/address/" + ctx.getCoinData().getWallet());
         else
@@ -379,9 +379,9 @@ public class EthEngine extends CoinEngine {
     }
 
     @Override
-    public SignTask.PaymentToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) {
+    public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) {
 
-        Log.e(TAG, "Construct payment " + amountValue.toString() + " with fee " + feeValue.toString() + (IncFee ? " including" : " excluding"));
+        Log.e(TAG, "Construct transaction " + amountValue.toString() + " with fee " + feeValue.toString() + (IncFee ? " including" : " excluding"));
 
         BigInteger nonceValue = coinData.getConfirmedTXCount();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
@@ -405,7 +405,7 @@ public class EthEngine extends CoinEngine {
 
         final EthTransaction tx = EthTransaction.create(to, weiAmount, nonceValue, gasPrice, gasLimit, chainId);
 
-        return new SignTask.PaymentToSign() {
+        return new SignTask.TransactionToSign() {
             @Override
             public boolean isSigningMethodSupported(TangemCard.SigningMethod signingMethod) {
                 return signingMethod == TangemCard.SigningMethod.Sign_Hash;
@@ -456,7 +456,7 @@ public class EthEngine extends CoinEngine {
                 Log.e(this.getClass().getSimpleName(), " V: " +String.valueOf(v));
 
                 byte[] txForSend = tx.getEncoded();
-                notifyOnNeedSendPayment(txForSend);
+                notifyOnNeedSendTransaction(txForSend);
                 return txForSend;
             }
         };
@@ -465,8 +465,8 @@ public class EthEngine extends CoinEngine {
     @Override
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
         final ServerApiInfura serverApiInfura = new ServerApiInfura();
-        // request infura listener
-        ServerApiInfura.InfuraBodyListener infuraBodyListener = new ServerApiInfura.InfuraBodyListener() {
+        // request requestData listener
+        ServerApiInfura.ResponseListener responseListener = new ServerApiInfura.ResponseListener() {
             @Override
             public void onSuccess(String method, InfuraResponse infuraResponse) {
                 switch (method) {
@@ -518,18 +518,18 @@ public class EthEngine extends CoinEngine {
                 }
             }
         };
-        serverApiInfura.setInfuraResponse(infuraBodyListener);
+        serverApiInfura.setResponseListener(responseListener);
 
-        serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
-        serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT, 67, coinData.getWallet(), "", "");
-        serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, 67, coinData.getWallet(), "", "");
+        serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
+        serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT, 67, coinData.getWallet(), "", "");
+        serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, 67, coinData.getWallet(), "", "");
     }
 
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
         ServerApiInfura serverApiInfura = new ServerApiInfura();
-        // request infura eth gasPrice listener
-        ServerApiInfura.InfuraBodyListener infuraBodyListener = new ServerApiInfura.InfuraBodyListener() {
+        // request requestData eth gasPrice listener
+        ServerApiInfura.ResponseListener responseListener = new ServerApiInfura.ResponseListener() {
             @Override
             public void onSuccess(String method, InfuraResponse infuraResponse) {
                 String gasPrice = infuraResponse.getResult();
@@ -567,9 +567,9 @@ public class EthEngine extends CoinEngine {
                 blockchainRequestsCallbacks.onComplete(false);
             }
         };
-        serverApiInfura.setInfuraResponse(infuraBodyListener);
+        serverApiInfura.setResponseListener(responseListener);
 
-        serverApiInfura.infura(ServerApiInfura.INFURA_ETH_GAS_PRICE, 67, coinData.getWallet(), "", "");
+        serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GAS_PRICE, 67, coinData.getWallet(), "", "");
     }
 
     @Override
@@ -578,8 +578,8 @@ public class EthEngine extends CoinEngine {
         String txStr = String.format("0x%s", BTCUtils.toHex(txForSend));
 
         ServerApiInfura serverApiInfura = new ServerApiInfura();
-        // request infura eth gasPrice listener
-        ServerApiInfura.InfuraBodyListener infuraBodyListener = new ServerApiInfura.InfuraBodyListener() {
+        // request requestData eth gasPrice listener
+        ServerApiInfura.ResponseListener responseListener = new ServerApiInfura.ResponseListener() {
             @Override
             public void onSuccess(String method, InfuraResponse infuraResponse) {
                 if (method.equals(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION)) {
@@ -605,9 +605,9 @@ public class EthEngine extends CoinEngine {
             }
         };
 
-        serverApiInfura.setInfuraResponse(infuraBodyListener);
+        serverApiInfura.setResponseListener(responseListener);
 
-        serverApiInfura.infura(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION, 67, coinData.getWallet(), "", txStr);
+        serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION, 67, coinData.getWallet(), "", txStr);
 
     }
 }
