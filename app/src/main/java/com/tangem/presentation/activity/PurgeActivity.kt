@@ -24,7 +24,11 @@ import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.presentation.dialog.WaitSecurityDelayDialogNew
 import com.tangem.presentation.event.DeletingWalletFinish
+import com.tangem.presentation.event.ReadAfterRequest
+import com.tangem.presentation.event.ReadBeforeRequest
+import com.tangem.presentation.event.ReadWait
 import com.tangem.tangemcard.android.nfc.DeviceNFCAntennaLocation
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.asBundle
@@ -34,6 +38,7 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_purge.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
 import org.greenrobot.eventbus.EventBus
+import javax.inject.Inject
 
 class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
     companion object {
@@ -48,6 +53,9 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
         const val RESULT_INVALID_PIN = Activity.RESULT_FIRST_USER
     }
 
+    @Inject
+    internal lateinit var waitSecurityDelayDialogNew: WaitSecurityDelayDialogNew
+
     private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
 
@@ -58,6 +66,8 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_purge)
+
+        App.getNavigatorComponent().inject(this)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
@@ -137,14 +147,29 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
 
     override fun onReadWait(msec: Int) {
         WaitSecurityDelayDialog.onReadWait(this, msec)
+
+//        val readWait = ReadWait()
+//        readWait.msec = msec
+//        EventBus.getDefault().post(readWait)
     }
 
     override fun onReadBeforeRequest(timeout: Int) {
         WaitSecurityDelayDialog.onReadBeforeRequest(this, timeout)
+
+//        if (!waitSecurityDelayDialogNew.isAdded)
+//            waitSecurityDelayDialogNew.show(supportFragmentManager, WaitSecurityDelayDialogNew.TAG)
+//
+//
+//        val readBeforeRequest = ReadBeforeRequest()
+//        readBeforeRequest.timeout = timeout
+//        EventBus.getDefault().post(readBeforeRequest)
     }
 
     override fun onReadAfterRequest() {
         WaitSecurityDelayDialog.onReadAfterRequest(this)
+
+//        val readAfterRequest = ReadAfterRequest()
+//        EventBus.getDefault().post(readAfterRequest)
     }
 
     override fun onReadStart(cardProtocol: CardProtocol) {
