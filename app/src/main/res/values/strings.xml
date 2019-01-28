@@ -35,7 +35,7 @@
     <string name="last_withdrawal">Last withdrawal</string>
     <string name="try_to_scan_again">Try to scan again</string>
     <string name="cannot_erase_wallet_with_non_zero_balance">Cannot erase wallet with non-zero balance</string>
-    <string name="send_payment">Send payment</string>
+    <string name="send_transaction">Send payment</string>
     <string name="from_banknote">From banknote</string>
     <string name="on_banknote">on banknote</string>
     <string name="with_balance">with balance</string>
@@ -49,6 +49,15 @@
     <string name="reading">READING…</string>
     <string name="verifying">VERIFYING…</string>
     <string name="debug_settings">Дебаг</string>
+    <string name="select_loading_method">Select loading method</string>
+    <string name="via_cryptonit">via CRYPTONIT</string>
+    <string name="via_cryptonit2">via CRYPTONIT2</string>
+    <string name="via_kraken">via KRAKEN</string>
+    <string name="in_app">Another wallet app</string>
+    <string name="load_via_share_address">Share address</string>
+    <string name="load_via_qr">Show QR-code</string>
+    <string name="show_wallet_qr_code">LOAD</string>
+    <string name="beta">BETA</string>
 
     <!-- dialogs -->
     <string name="device_is_rooted">Your Android device is rooted. Security at risk!</string>
@@ -62,14 +71,6 @@
     <string name="please_hold_banknote">Please hold the banknote firmly\n until the operation is completed…</string>
     <string name="you_may_be_required_to_repeat">You may be required to repeat this operation a few times depending on the NFC performance of your smartphone.\n This is made for safety of your funds.</string>
 
-    <string name="select_loading_method">Select loading method</string>
-    <string name="via_cryptonit">via CRYPTONIT</string>
-    <string name="via_cryptonit2">via CRYPTONIT2</string>
-    <string name="via_kraken">via KRAKEN</string>
-    <string name="in_app">Another wallet app</string>
-    <string name="load_via_share_address">Share address</string>
-    <string name="load_via_qr">Show QR-code</string>
-    <string name="show_wallet_qr_code">LOAD</string>
     <!-- menu main -->
     <string name="clean_up">Clean up</string>
     <string name="manage_user_pin_1">Manage user PIN1…</string>
@@ -128,19 +129,16 @@
     <string name="new_scan">NEW SCAN</string>
     <string name="verifying_in_blockchain">Verifying in blockchain…</string>
 
-    <!-- LogoActivity -->
-    <string name="beta">BETA</string>
-
-    <!-- CreateNewWalletActivity, PurgeActivity, SignPaymentActivity -->
+    <!-- CreateNewWalletActivity, PurgeActivity, SignTransactionActivity -->
     <string name="now_touch_the_banknote_with_id">Now touch the banknote with ID</string>
     <string name="to_create_the_wallet">to create the wallet</string>
     <string name="to_erase_the_wallet">to erase the wallet</string>
-    <string name="to_sign_the_payment">to sign the payment</string>
+    <string name="to_sign_the_transaction">to sign the payment</string>
     <string name="to_change_pin_codes">to change PIN/PIN2 codes</string>
     <string name="by_tapping_the_card">By tapping the card, you will permanently remove the blockchain wallet. Ensure there will be no further incoming transactions</string>
     <string name="cannot_erase_wallet">Cannot erase wallet. Make sure you enter correct PIN2!</string>
 
-    <!-- PreparePaymentActivity -->
+    <!-- PrepareTransactionActivity -->
     <string name="enter_wallet_address">enter wallet address</string>
     <string name="enter_amount">enter amount</string>
     <string name="verify">Verify</string>
@@ -164,15 +162,15 @@
     <string name="cannot_sign_transaction_make_sure_you_enter_correct_pin_2">Cannot sign transaction. Make sure you enter correct PIN2!</string>
     <string name="cannot_sign_transaction_wrong_amount">Amount and fee exceed total wallet balance!</string>
 
-    <!-- PreparePaymentActivity -->
+    <!-- PrepareTransactionActivity -->
     <string name="not_enough_funds_on_your_card">Not enough funds</string>
     <string name="unknown_amount_format">Unknown amount format</string>
     <string name="incorrect_destination_wallet_address">Incorrect destination wallet address</string>
     <string name="destination_wallet_address_equal_source_address">Destination wallet address equal source address</string>
 
-    <!-- ConfirmPaymentActivity -->
+    <!-- ConfirmTransactionActivity -->
     <string name="target_wallet_address">target wallet address</string>
-    <string name="payment_amount">payment amount</string>
+    <string name="transaction_amount">payment amount</string>
     <string name="fee">Fee</string>
     <string name="send_1">Send</string>
     <string name="minimal">Minimal</string>
@@ -191,8 +189,9 @@
     <string name="please_wait_for_confirmation_of_incoming_transaction">Please wait for confirmation of incoming transaction</string>
     <string name="not_enough_eth_for_fee">Not enough ETH funds for fee</string>
     <string name="not_enough_rbtc_for_fee">Not enough RBTC funds for fee</string>
-    <string name="pin_2_is_required_to_sign_the_payment">PIN2 is required to sign the payment</string>
+    <string name="pin_2_is_required_to_sign_the_transaction">PIN2 is required to sign the payment</string>
     <string name="not_enough_funds">Not enough funds</string>
+    <string name="service_unavailable">Service unavailable</string>
 
     <!-- EmptyWalletActivity -->
     <string name="wallet_has_not_been_yet_created">Wallet hasn\'t been yet created</string>
@@ -257,4 +256,5 @@
     <string name="kraken_not_enough_account_data">Please enter account data</string>
     <string name="kraken_request_balance">Get balance</string>
     <string name="kraken_request_withdrawal">Withdrawal</string>
+
 </resources>
