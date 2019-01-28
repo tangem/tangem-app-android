@@ -45,7 +45,7 @@ public class EthEngine extends CoinEngine {
         } else if (ctx.getCoinData() instanceof EthData) {
             coinData = (EthData) ctx.getCoinData();
         } else {
-            throw new Exception("Invalid type of Blockchain data for EthEngine");
+            throw new Exception("Invalid type of Blockchain data for " + this.getClass().getSimpleName());
         }
     }
 
@@ -57,7 +57,7 @@ public class EthEngine extends CoinEngine {
         return 18;
     }
 
-    protected int getChainId() {
+    protected int getChainIdNum() {
         return ctx.getBlockchain() == Blockchain.Ethereum ? EthTransaction.ChainEnum.Mainnet.getValue() : EthTransaction.ChainEnum.Rinkeby.getValue();
     }
 
@@ -395,6 +395,7 @@ public class EthEngine extends CoinEngine {
 
         BigInteger gasPrice = weiFee.divide(BigInteger.valueOf(21000));
         BigInteger gasLimit = BigInteger.valueOf(21000);
+        Integer chainId = this.getChainIdNum();
 
         String to = targetAddress;
 
@@ -402,7 +403,7 @@ public class EthEngine extends CoinEngine {
             to = to.substring(2);
         }
 
-        final EthTransaction tx = EthTransaction.create(to, weiAmount, nonceValue, gasPrice, gasLimit, this.getChainId());
+        final EthTransaction tx = EthTransaction.create(to, weiAmount, nonceValue, gasPrice, gasLimit, chainId);
 
         return new SignTask.PaymentToSign() {
             @Override
@@ -419,12 +420,12 @@ public class EthEngine extends CoinEngine {
 
             @Override
             public byte[] getRawDataToSign() throws Exception {
-                throw new Exception("Signing of raw transaction not supported for ETH");
+                throw new Exception("Signing of raw transaction not supported for " + this.getClass().getSimpleName());
             }
 
             @Override
             public String getHashAlgToSign() throws Exception {
-                throw new Exception("Signing of raw transaction not supported for ETH");
+                throw new Exception("Signing of raw transaction not supported for " + this.getClass().getSimpleName());
             }
 
             @Override
@@ -442,17 +443,17 @@ public class EthEngine extends CoinEngine {
                 boolean f = ECKey.verify(for_hash, new ECKey.ECDSASignature(r, s), pbKey);
 
                 if (!f) {
-                    Log.e("ETH-CHECK", "sign Failed.");
+                    Log.e(this.getClass().getSimpleName() + "-CHECK", "sign Failed.");
                 }
 
                 tx.signature = new ECDSASignatureETH(r, s);
                 int v = tx.BruteRecoveryID2(tx.signature, for_hash, pbKey);
                 if (v != 27 && v != 28) {
-                    Log.e(TAG, "invalid v");
-                    throw new Exception("Error in EthEngine - invalid v");
+                    Log.e(this.getClass().getSimpleName(), "invalid v");
+                    throw new Exception("Error in " + this.getClass().getSimpleName() + " - invalid v");
                 }
                 tx.signature.v = (byte) v;
-                Log.e(TAG, "ETH_v: " +String.valueOf(v));
+                Log.e(this.getClass().getSimpleName(), " V: " +String.valueOf(v));
 
                 byte[] txForSend = tx.getEncoded();
                 notifyOnNeedSendPayment(txForSend);
