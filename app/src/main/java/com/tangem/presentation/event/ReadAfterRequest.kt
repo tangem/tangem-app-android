@@ -1,4 +1,3 @@
 package com.tangem.presentation.event
 
-class ReadAfterRequest {
-}
+class ReadAfterRequest
