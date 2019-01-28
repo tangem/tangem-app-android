@@ -55,7 +55,7 @@
             app:layout_constraintTop_toBottomOf="@+id/textView6" />
 
         <include
-            android:id="@+id/include2"
+            android:id="@+id/btnDetails"
             layout="@layout/layout_btn_details"
             android:layout_width="150dp"
             android:layout_height="wrap_content"
@@ -76,7 +76,7 @@
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/include2">
+            app:layout_constraintTop_toBottomOf="@+id/btnDetails">
 
             <TextView
                 android:layout_width="@dimen/empty_wallet_left_col_width"
@@ -166,45 +166,6 @@
             android:textSize="@dimen/text_size_small" />
 
     </LinearLayout>
-
-    <ImageView
-        android:id="@+id/imgPIN"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_alignParentStart="false"
-        android:layout_alignParentBottom="true"
-        android:layout_margin="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:layout_toStartOf="@+id/imgPIN2orSecurityDelay"
-        android:src="@drawable/unlock_pin1"
-        app:layout_constraintBottom_toBottomOf="@+id/linearLayout2"
-        app:layout_constraintEnd_toStartOf="@+id/imgPIN2orSecurityDelay" />
-
-    <ImageView
-        android:id="@+id/imgPIN2orSecurityDelay"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_alignParentStart="false"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:src="@drawable/unlock_pin2"
-        app:layout_constraintBottom_toBottomOf="@+id/linearLayout2"
-        app:layout_constraintEnd_toEndOf="@+id/linearLayout2" />
-
-    <ImageView
-        android:id="@+id/imgDeveloperVersion"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="8dp"
-        android:layout_marginBottom="8dp"
-        android:src="@drawable/ic_developer_version"
-        app:layout_constraintBottom_toBottomOf="@+id/linearLayout2"
-        app:layout_constraintStart_toStartOf="parent" />
 
     <ProgressBar
         android:id="@+id/progressBar"
