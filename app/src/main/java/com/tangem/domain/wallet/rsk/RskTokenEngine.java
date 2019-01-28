@@ -3,27 +3,17 @@ package com.tangem.domain.wallet.rsk;
 import android.net.Uri;
 import android.util.Log;
 
-import com.google.common.base.Strings;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiRootstock;
 import com.tangem.data.network.model.InfuraResponse;
 import com.tangem.domain.wallet.BTCUtils;
 import com.tangem.domain.wallet.CoinEngine;
-import com.tangem.domain.wallet.ECDSASignatureETH;
 import com.tangem.domain.wallet.EthTransaction;
 import com.tangem.domain.wallet.TangemContext;
 import com.tangem.domain.wallet.token.TokenEngine;
-import com.tangem.tangemcard.data.TangemCard;
-import com.tangem.tangemcard.tasks.SignTask;
-import com.tangem.util.CryptoUtil;
 import com.tangem.wallet.R;
 
-import org.bitcoinj.core.ECKey;
-
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
-import java.util.Arrays;
 
 public class RskTokenEngine extends TokenEngine {
 
@@ -48,7 +38,9 @@ public class RskTokenEngine extends TokenEngine {
     }
 
     @Override
-    public Uri getWalletExplorerUri() { return Uri.parse("https://explorer.rsk.co/address/" + ctx.getCoinData().getWallet()); } // Only RSK explorer for now
+    public Uri getWalletExplorerUri() {
+        return Uri.parse("https://explorer.rsk.co/address/" + ctx.getCoinData().getWallet());
+    } // Only RSK explorer for now
 
     @Override
     public Uri getShareWalletUri() {
