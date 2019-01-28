@@ -1,17 +1,17 @@
 package com.tangem.presentation.activity
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
+import android.os.Build
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.text.Html
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Blockchain
@@ -25,7 +25,6 @@ import java.io.IOException
 import javax.inject.Inject
 
 class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
-
     companion object {
         val TAG: String = PrepareTransactionActivity::class.java.simpleName
         fun callingIntent(context: Context, ctx: TangemContext): Intent {
@@ -35,14 +34,12 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         }
     }
 
-
     @Inject
     internal lateinit var navigator: Navigator
 
     private lateinit var ctx: TangemContext
     private lateinit var nfcManager: NfcManager
 
-    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_transaction)
@@ -53,19 +50,21 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
-        tvCardID.text = ctx.card!!.cidDescription
+        tvCardID.text = ctx.card?.cidDescription
         val engine = CoinEngineFactory.create(ctx)
 
-        val html = Html.fromHtml(engine!!.balanceHTML)
+        @Suppress("DEPRECATION") val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+            Html.fromHtml(engine!!.balanceHTML, Html.FROM_HTML_MODE_LEGACY)
+         else
+            Html.fromHtml(engine!!.balanceHTML)
         tvBalance.text = html
 
         //TODO - to engine
         if ((ctx.blockchain == Blockchain.Token && engine.balance.currency!=Blockchain.Ethereum.currency) ||
            ((ctx.blockchain == Blockchain.RootstockToken && engine.balance.currency!=Blockchain.Rootstock.currency))){
-            rgIncFee!!.visibility = View.INVISIBLE
-        } else {
-            rgIncFee!!.visibility = View.VISIBLE
-        }
+            rgIncFee.visibility = View.INVISIBLE
+        } else
+            rgIncFee.visibility = View.VISIBLE
 
         if (ctx.card!!.remainingSignatures < 2)
             etAmount.isEnabled = false
@@ -77,7 +76,7 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         etAmount.filters = engine.amountInputFilters
 
         // set listeners
-        etAmount.setOnEditorActionListener { lv, actionId, event ->
+        etAmount.setOnEditorActionListener { lv, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 val imm = lv.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.hideSoftInputFromWindow(lv.windowToken, 0)
@@ -87,6 +86,7 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
                 false
             }
         }
+
         btnVerify.setOnClickListener {
             val engine1 = CoinEngineFactory.create(ctx)
 
@@ -168,7 +168,7 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
                 else -> {
                 }
             }
-            etWallet!!.setText(code)
+            etWallet?.setText(code)
         } else if (requestCode == Constant.REQUEST_CODE_SEND_TRANSACTION__) {
             setResult(resultCode, data)
             finish()
