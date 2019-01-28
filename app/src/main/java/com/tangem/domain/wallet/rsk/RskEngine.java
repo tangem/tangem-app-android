@@ -28,15 +28,7 @@ public class RskEngine extends EthEngine {
     private static final String TAG = RskEngine.class.getSimpleName();
 
     public RskEngine(TangemContext ctx) throws Exception {
-        this.ctx = ctx;
-        if (ctx.getCoinData() == null) {
-            coinData = new EthData();
-            ctx.setCoinData(coinData);
-        } else if (ctx.getCoinData() instanceof EthData) {
-            coinData = (EthData) ctx.getCoinData();
-        } else {
-            throw new Exception("Invalid type of Blockchain data for RskEngine");
-        }
+        super(ctx);
     }
 
     public RskEngine() {
@@ -48,7 +40,7 @@ public class RskEngine extends EthEngine {
     }
 
     @Override
-    protected int getChainId() {
+    protected int getChainIdNum() {
         return EthTransaction.ChainEnum.Rootstock_mainnet.getValue();
     }
 
@@ -63,93 +55,13 @@ public class RskEngine extends EthEngine {
     }
 
     @Override
-    public Uri getShareWalletUri() { return Uri.parse(ctx.getCoinData().getWallet()); }
+    public Uri getShareWalletUri() {
+        return Uri.parse(ctx.getCoinData().getWallet());
+    }
 
     @Override
-    public Uri getShareWalletUriExplorer() { return Uri.parse("https://explorer.rsk.co/address/" + ctx.getCoinData().getWallet()); }
-
-    @Override
-    public SignTask.PaymentToSign constructPayment(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) {
-
-        Log.e(TAG, "Construct payment " + amountValue.toString() + " with fee " + feeValue.toString() + (IncFee ? " including" : " excluding"));
-
-        BigInteger nonceValue = coinData.getConfirmedTXCount();
-        byte[] pbKey = ctx.getCard().getWalletPublicKey();
-
-        BigInteger weiFee = convertToInternalAmount(feeValue).toBigIntegerExact();
-        BigInteger weiAmount = convertToInternalAmount(amountValue).toBigIntegerExact();
-
-        if (IncFee) {
-            weiAmount = weiAmount.subtract(weiFee);
-        }
-
-        BigInteger gasPrice = weiFee.divide(BigInteger.valueOf(21000));
-        BigInteger gasLimit = BigInteger.valueOf(21000);
-        Integer chainId = EthTransaction.ChainEnum.Rootstock_mainnet.getValue();
-
-        String to = targetAddress;
-
-        if (to.startsWith("0x") || to.startsWith("0X")) {
-            to = to.substring(2);
-        }
-
-        final EthTransaction tx = EthTransaction.create(to, weiAmount, nonceValue, gasPrice, gasLimit, chainId);
-
-        return new SignTask.PaymentToSign() {
-            @Override
-            public boolean isSigningMethodSupported(TangemCard.SigningMethod signingMethod) {
-                return signingMethod == TangemCard.SigningMethod.Sign_Hash;
-            }
-
-            @Override
-            public byte[][] getHashesToSign() {
-                byte[][] hashesForSign = new byte[1][];
-                hashesForSign[0] = tx.getRawHash();
-                return hashesForSign;
-            }
-
-            @Override
-            public byte[] getRawDataToSign() throws Exception {
-                throw new Exception("Signing of raw transaction not supported for RSK");
-            }
-
-            @Override
-            public String getHashAlgToSign() throws Exception {
-                throw new Exception("Signing of raw transaction not supported for RSK");
-            }
-
-            @Override
-            public byte[] getIssuerTransactionSignature(byte[] dataToSignByIssuer) throws Exception {
-                throw new Exception("Transaction validation by issuer not supported in this version");
-            }
-
-            @Override
-            public byte[] onSignCompleted(byte[] signFromCard) throws Exception {
-                byte[] for_hash = tx.getRawHash();
-                BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, 0, 32));
-                BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, 32, 64));
-                s = CryptoUtil.toCanonicalised(s);
-
-                boolean f = ECKey.verify(for_hash, new ECKey.ECDSASignature(r, s), pbKey);
-
-                if (!f) {
-                    Log.e("RSK-CHECK", "sign Failed.");
-                }
-
-                tx.signature = new ECDSASignatureETH(r, s);
-                int v = tx.BruteRecoveryID2(tx.signature, for_hash, pbKey);
-                if (v != 27 && v != 28) {
-                    Log.e(TAG, "invalid v");
-                    throw new Exception("Error in RskEngine - invalid v");
-                }
-                tx.signature.v = (byte) v;
-                Log.e(TAG, "RSK_v: " +String.valueOf(v));
-
-                byte[] txForSend = tx.getEncoded();
-                notifyOnNeedSendPayment(txForSend);
-                return txForSend;
-            }
-        };
+    public Uri getShareWalletUriExplorer() {
+        return Uri.parse("https://explorer.rsk.co/address/" + ctx.getCoinData().getWallet());
     }
 
     @Override
@@ -277,7 +189,7 @@ public class RskEngine extends EthEngine {
                         blockchainRequestsCallbacks.onComplete(false);
                     } else {
                         BigInteger nonce = coinData.getConfirmedTXCount();
-                        nonce=nonce.add(BigInteger.valueOf(1));
+                        nonce = nonce.add(BigInteger.valueOf(1));
                         coinData.setConfirmedTXCount(nonce);
                         ctx.setError(null);
                         blockchainRequestsCallbacks.onComplete(true);
