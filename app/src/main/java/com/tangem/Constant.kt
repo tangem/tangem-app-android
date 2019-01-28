@@ -13,7 +13,7 @@ object Constant {
     const val EXTRA_MODIFICATION_UPDATE = "update"
 
     // LoadedWallet, VerifyCard
-    const val REQUEST_CODE_SEND_PAYMENT = 1
+    const val REQUEST_CODE_SEND_TRANSACTION = 1
     const val REQUEST_CODE_PURGE = 2
     const val REQUEST_CODE_REQUEST_PIN2_FOR_PURGE = 3
     const val REQUEST_CODE_VERIFY_CARD = 4
@@ -21,7 +21,7 @@ object Constant {
     const val REQUEST_CODE_ENTER_NEW_PIN2 = 6
     const val REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN = 7
     const val REQUEST_CODE_SWAP_PIN = 8
-    const val REQUEST_CODE_RECEIVE_PAYMENT = 9
+    const val REQUEST_CODE_RECEIVE_TRANSACTION = 9
 
     // MainActivity
     const val REQUEST_CODE_SHOW_CARD_ACTIVITY = 1
@@ -57,26 +57,26 @@ object Constant {
     const val REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY = 2
     const val REQUEST_CODE_REQUEST_PIN2 = 3
 
-    // ConfirmPaymentActivity
-    const val REQUEST_CODE_SIGN_PAYMENT = 1
+    // ConfirmTransactionActivity
+    const val REQUEST_CODE_SIGN_TRANSACTION = 1
     const val REQUEST_CODE_REQUEST_PIN2_ = 2
 
     // SendTransactionActivity
     const val EXTRA_TX: String = "TX"
 
-    // SignPaymentActivity
+    // SignTransactionActivity
     const val EXTRA_AMOUNT = "Amount"
     const val EXTRA_AMOUNT_CURRENCY = "AmountCurrency"
     const val EXTRA_FEE = "Fee"
     const val EXTRA_FEE_CURRENCY = "FeeCurrency"
     const val EXTRA_FEE_INCLUDED = "FeeIncluded"
     const val EXTRA_TARGET_ADDRESS = "TargetAddress"
-    const val REQUEST_CODE_SEND_PAYMENT_ = 1
+    const val REQUEST_CODE_SEND_TRANSACTION_ = 1
     const val RESULT_INVALID_PIN_ = Activity.RESULT_FIRST_USER
 
-    // PreparePaymentActivity
+    // PrepareTransactionActivity
     const val REQUEST_CODE_SCAN_QR = 1
-    const val REQUEST_CODE_SEND_PAYMENT__ = 2
+    const val REQUEST_CODE_SEND_TRANSACTION__ = 2
 
     // PrepareCryptonitOtherApiWithdrawalActivity
     const val REQUEST_CODE_SCAN_QR_KEY = 1

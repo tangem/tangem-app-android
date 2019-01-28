@@ -144,6 +144,7 @@ public class CardProtocol {
 
     /**
      * Constructor
+     *
      * @param reader        - NFC Reader interface
      * @param card          - TangemCard object, stored data from previous reading or null for reading a card for the first time
      * @param notifications - UI notification callbacks
@@ -151,11 +152,10 @@ public class CardProtocol {
     public CardProtocol(NfcReader reader, TangemCard card, Notifications notifications) {
         mIsoDep = reader;
         mNotifications = notifications;
-        if (card != null)
-        {
+        if (card != null) {
             mPIN = card.getPIN();
             mCard = card;
-        }else{
+        } else {
             mPIN = null;
             mCard = new TangemCard(Util.byteArrayToHexString(mIsoDep.getId()));
         }
@@ -177,6 +177,7 @@ public class CardProtocol {
         public TangemException_TagLost() {
             super("Tag lost");
         }
+
         public TangemException_TagLost(String message) {
             super(message);
         }
@@ -231,7 +232,7 @@ public class CardProtocol {
      * @return UID byte array
      */
     public byte[] GetUID() {
-        if (mIsoDep == null ) return null;
+        if (mIsoDep == null) return null;
         return mIsoDep.getId();
     }
 
@@ -239,7 +240,7 @@ public class CardProtocol {
      * Return ISO 14443-3 tag reading timeout
      */
     public int getTimeout() {
-        if (mIsoDep == null ) return 60000;
+        if (mIsoDep == null) return 60000;
         return mIsoDep.getTimeout();
     }
 
@@ -410,10 +411,10 @@ public class CardProtocol {
      * Should have a prior opened encryption session if encryption is used
      * See [1] 4
      *
-     * @param cmdApdu           - APDU command to send
-     * @param breakOnNeedPause  - Specifies what to do when the card requests a security delay (interrupt transfer or wait till the end of the delay )
-     * @return                  - response APDU
-     * @throws Exception        - if something went wrong
+     * @param cmdApdu          - APDU command to send
+     * @param breakOnNeedPause - Specifies what to do when the card requests a security delay (interrupt transfer or wait till the end of the delay )
+     * @return - response APDU
+     * @throws Exception - if something went wrong
      */
     private ResponseApdu SendAndReceive(CommandApdu cmdApdu, boolean breakOnNeedPause) throws Exception {
         if (mCard.encryptionMode != TangemCard.EncryptionMode.None) {
@@ -548,8 +549,7 @@ public class CardProtocol {
         return readResult != null;
     }
 
-    public TLVList getReadResult()
-    {
+    public TLVList getReadResult() {
         return readResult;
     }
 
@@ -707,12 +707,13 @@ public class CardProtocol {
         TLVList checkResult = run_CheckWallet();
         if (checkResult == null) return;
 
+        TLV tlvCurveID = readResult.getTLV(TLV.Tag.TAG_CurveID);
         TLV tlvPublicKey = readResult.getTLV(TLV.Tag.TAG_Wallet_PublicKey);
         TLV tlvChallenge = checkResult.getTLV(TLV.Tag.TAG_Challenge);
         TLV tlvSalt = checkResult.getTLV(TLV.Tag.TAG_Salt);
         TLV tlvSignature = checkResult.getTLV(TLV.Tag.TAG_Signature);
 
-        if (tlvPublicKey == null || tlvChallenge == null || tlvSalt == null || tlvSignature == null) {
+        if (tlvCurveID == null || tlvPublicKey == null || tlvChallenge == null || tlvSalt == null || tlvSignature == null) {
             throw new TangemException("Not all data read, can't check signature!");
         }
 
@@ -721,7 +722,7 @@ public class CardProtocol {
         bs.write(tlvSalt.Value);
         byte[] dataArray = bs.toByteArray();
 
-        if (CardCrypto.VerifySignature(tlvPublicKey.Value, dataArray, tlvSignature.Value)) {
+        if (CardCrypto.VerifySignature(tlvCurveID.getAsString(), tlvPublicKey.Value, dataArray, tlvSignature.Value)) {
             Log.i(logTag, "Signature verification OK");
             mCard.setWalletPublicKeyValid(true);
         } else {
@@ -810,16 +811,17 @@ public class CardProtocol {
     /**
      * SIGN command to sign hashes - SigningMethod=0,2,4 (see {@link TangemCard.SigningMethod})
      * See [1] 8.6
-     * @param PIN2                - PIN2 code to confirm operation
-     * @param hashes              - array of digests to sign (max 10 digest at a time)
+     *
+     * @param PIN2                       - PIN2 code to confirm operation
+     * @param hashes                     - array of digests to sign (max 10 digest at a time)
      * @param issuerTransactionSignature - signature of hashes, if card need issuer validation before sign (for SigningMethod=2)
-     * @param issuerData          - new issuerData to write on card (only for SigningMethod=4, null for other)
-     * @param issuerDataSignature - signature of issuerData, if issuerData specified(for SigningMethod=4)
+     * @param issuerData                 - new issuerData to write on card (only for SigningMethod=4, null for other)
+     * @param issuerDataSignature        - signature of issuerData, if issuerData specified(for SigningMethod=4)
      * @return TLVList with card answer contained wallet signatures of digests from hashes array (in case of success)
      * @throws Exception - if something went wrong
      */
     public TLVList run_SignHashes(String PIN2, byte[][] hashes, byte[] issuerTransactionSignature, byte[] issuerData, byte[] issuerDataSignature) throws Exception {
-        if ( mCard.getSigningMethod()!=TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer && mCard.getSigningMethod()!=TangemCard.SigningMethod.Sign_Hash ){
+        if (mCard.getSigningMethod() != TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer && mCard.getSigningMethod() != TangemCard.SigningMethod.Sign_Hash) {
             throw new TangemException("Card don't support signing hashes!");
         }
 
@@ -835,19 +837,19 @@ public class CardProtocol {
         rqApdu.addTLV_U8(TLV.Tag.TAG_TrOut_HashSize, hashes[0].length);
         rqApdu.addTLV(TLV.Tag.TAG_TrOut_Hash, bs.toByteArray());
         if (issuerData != null) {
-            if ( mCard.getSigningMethod()!=TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer_And_WriteIssuerData )
+            if (mCard.getSigningMethod() != TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer_And_WriteIssuerData)
                 throw new TangemException("Card don't support simultaneous sign with write issuer data!");
 
-            if (issuerDataSignature == null )
+            if (issuerDataSignature == null)
                 throw new TangemException("Card require issuer validation before write issuer data");
             bs.write(issuerData);
             rqApdu.addTLV(TLV.Tag.TAG_Issuer_Data, issuerData);
             rqApdu.addTLV(TLV.Tag.TAG_Issuer_Data_Signature, issuerDataSignature);
         }
-        if (issuerTransactionSignature!=null) {
+        if (issuerTransactionSignature != null) {
             //byte[] issuerSignature = CardCrypto.Signature(issuer.getPrivateTransactionKey(), bs.toByteArray());
             rqApdu.addTLV(TLV.Tag.TAG_Issuer_Transaction_Signature, issuerTransactionSignature);
-        }else if ( mCard.getSigningMethod()==TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer ){
+        } else if (mCard.getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer) {
             throw new TangemException("Card require issuer validation before sign the transaction!");
         }
 
@@ -875,12 +877,13 @@ public class CardProtocol {
     /**
      * SIGN raw tx - SigningMethod=1 (see {@link TangemCard.SigningMethod})
      * See [1] 8.6
-     * @param PIN2 - PIN2 code to confirm operation
-     * @param hashAlgID - name of hash alg, used for signature
-     * @param bTxOutData - part of raw transaction to sign
+     *
+     * @param PIN2                       - PIN2 code to confirm operation
+     * @param hashAlgID                  - name of hash alg, used for signature
+     * @param bTxOutData                 - part of raw transaction to sign
      * @param issuerTransactionSignature - signature of hashes, if card need issuer validation before sign (for SigningMethod=2)
-     * @param issuerData          - new issuerData to write on card (only for SigningMethod=4, null for other)
-     * @param issuerDataSignature - signature of issuerData, if issuerData specified(for SigningMethod=4)
+     * @param issuerData                 - new issuerData to write on card (only for SigningMethod=4, null for other)
+     * @param issuerDataSignature        - signature of issuerData, if issuerData specified(for SigningMethod=4)
      * @return TLVList with card answer contained wallet signatures of bTxOutData(in case of success)
      * @throws Exception - if something went wrong
      */
@@ -897,18 +900,18 @@ public class CardProtocol {
         bs.write(bTxOutData);
 
         if (issuerData != null) {
-            if ( mCard.getSigningMethod()!=TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer_And_WriteIssuerData )
+            if (mCard.getSigningMethod() != TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer_And_WriteIssuerData)
                 throw new TangemException("Card don't support simultaneous sign with write issuer data!");
 
-            if (issuerDataSignature == null )
+            if (issuerDataSignature == null)
                 throw new TangemException("Card require issuer validation before write issuer data");
             bs.write(issuerData);
             rqApdu.addTLV(TLV.Tag.TAG_Issuer_Data, issuerData);
             rqApdu.addTLV(TLV.Tag.TAG_Issuer_Data_Signature, issuerDataSignature);
         }
-        if (issuerTransactionSignature!=null) {
+        if (issuerTransactionSignature != null) {
             rqApdu.addTLV(TLV.Tag.TAG_Issuer_Transaction_Signature, issuerTransactionSignature);
-        }else if ( mCard.getSigningMethod()==TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer ){
+        } else if (mCard.getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer) {
             throw new TangemException("Card require issuer validation before sign the transaction!");
         }
 
@@ -940,10 +943,11 @@ public class CardProtocol {
      * VERIFY_CODE command internally reads a segment of COS binary code beginning at Code_Page_Address and having length of [64 x Code_Page_Count] bytes.
      * Then it appends Challenge to the code segment, calculates resulting hash and returns it in the response.
      * The application needs to ensure that returned hash coincides with the one stored in the hash library (see {@see Firmwares}).
-     * @param hashAlgID - ‘sha-256’, ‘sha-1’, ‘sha-224’, ‘sha-384’, ‘sha-512’, ‘crc-16’
+     *
+     * @param hashAlgID       - ‘sha-256’, ‘sha-1’, ‘sha-224’, ‘sha-384’, ‘sha-512’, ‘crc-16’
      * @param codePageAddress - Value from 0 to ~3000, take from {@see Firmwares}
-     * @param codePageCount - Number of 32-byte pages to read: from 1 to 5, take from {@see Firmwares}
-     * @param challenge - Additional challenge value from 1 to 10, take from {@see Firmwares}
+     * @param codePageCount   - Number of 32-byte pages to read: from 1 to 5, take from {@see Firmwares}
+     * @param challenge       - Additional challenge value from 1 to 10, take from {@see Firmwares}
      * @return digest bytes to compare with one stored in {@see Firmwares}
      * @throws Exception - if something went wrong
      */
@@ -979,6 +983,7 @@ public class CardProtocol {
      * Card_Validation_Counter and its signature to issuer’s card validation back-end (server). The server should verify the signature and update Card_Validation_Counter value if
      * previous value is less than the new one. If the server reveals that submitted Card_Validation_Counter value is less than previous value, then the card having this CID is
      * deemed compromised and should not be accepted by the application.
+     *
      * @param PIN2 - PIN2 code to confirm operation
      * @throws Exception - if something went wrong
      */
@@ -1011,12 +1016,13 @@ public class CardProtocol {
      * This command re-writes Issuer_Data data block (max 512 bytes) and its issuer’s signature.
      * Issuer_Data is never changed or parsed from within the Tangem COS. The issuer defines purpose of use, format and payload of Issuer_Data.
      * For example, this field may contain information about wallet balance signed by the issuer or additional issuer’s attestation data
-     * @param issuerData - new issuerData
+     *
+     * @param issuerData      - new issuerData
      * @param issuerSignature - signature of issuerData with IssuerDataKey
      * @throws Exception - if something went wrong
      */
     public void run_WriteIssuerData(byte[] issuerData, byte[] issuerSignature) throws Exception {
-        if( readResult==null ) throw new TangemException("Before run_VerifyCard execute run_Read card first!");
+        if (readResult == null) throw new TangemException("Before run_VerifyCard execute run_Read card first!");
 
         CommandApdu rqApdu = StartPrepareCommand(INS.WriteIssuerData);
         rqApdu.addTLV(TLV.Tag.TAG_Issuer_Data, issuerData);
@@ -1037,6 +1043,7 @@ public class CardProtocol {
      * GET_ISSUER_DATA command and verify verify issuer signature of returned data
      * See [1] 3.3, 8.7
      * This command returns Issuer_Data data block and its issuer’s signature.
+     *
      * @return TLVList with issuerData (if success read and verify)
      * @throws Exception - if something went wrong
      */
@@ -1084,6 +1091,7 @@ public class CardProtocol {
      * Execute consecutive READ commands with increasing encryption level from EncryptionMode.None to EncryptionMode.Strong, see {@link TangemCard.EncryptionMode}
      * If card requires stricter encryption level it returns SW.NEED_ENCRYPTION status word
      * Once READ is successfully executed - save answer to {@see readResult}, save current PIN and encryption mode to {@link TangemCard} and return
+     *
      * @throws Exception - if something went wrong
      */
     public void run_GetSupportedEncryption() throws Exception {
