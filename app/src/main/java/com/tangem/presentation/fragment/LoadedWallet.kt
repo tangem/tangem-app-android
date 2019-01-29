@@ -1,6 +1,5 @@
 package com.tangem.presentation.fragment
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.*
@@ -112,8 +111,9 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (ctx.blockchain == Blockchain.Token || ctx.blockchain == Blockchain.RootstockToken)
-            tvBalance.setSingleLine(false)
+        val engine=CoinEngineFactory.create(ctx)
+
+        tvBalance.setSingleLine(!engine!!.needMultipleLinesForBalance())
 
         ivTangemCard.setImageBitmap(App.localStorage.getCardArtworkBitmap(ctx.card))
 
