@@ -54,6 +54,7 @@ import io.reactivex.schedulers.Schedulers;
  *    {@link ResponseListener}.onSuccess(...) callback
  */
 public class ServerApiElectrum {
+    public static final String ERROR_STARTS_WITH_CODE_32601 = "{\"code\":-32601,";
     private static String TAG = ServerApiElectrum.class.getSimpleName();
 
     /**
@@ -248,6 +249,12 @@ public class ServerApiElectrum {
                 electrumRequest.port = port;
                 if (electrumRequest.answerData != null) {
                     Log.i(TAG, ">> " + electrumRequest.answerData);
+                    if( (electrumRequest.getError()!=null && electrumRequest.getError().startsWith(ERROR_STARTS_WITH_CODE_32601)) )
+                    {
+                        // method unknown error???
+                        electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain));
+                        electrumRequest.answerData=null;
+                    }
                 } else {
                     electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_no_answer));
                     Log.i(TAG, ">> <NULL>");
@@ -331,6 +338,12 @@ public class ServerApiElectrum {
                     electrumRequest.answerData = in.readLine();
                     if (electrumRequest.answerData != null) {
                         Log.i(TAG, ">> " + electrumRequest.answerData);
+                        if( (electrumRequest.getError()!=null && electrumRequest.getError().startsWith(ERROR_STARTS_WITH_CODE_32601)) )
+                        {
+                            // method unknown error???
+                            electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain));
+                            electrumRequest.answerData=null;
+                        }
                     } else {
                         electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_no_answer));
                         Log.i(TAG, ">> <NULL>");
