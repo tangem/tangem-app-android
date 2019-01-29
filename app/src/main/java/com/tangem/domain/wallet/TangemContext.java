@@ -84,6 +84,9 @@ public class TangemContext {
     public void setError(String error) {
         this.error = error;
     }
+    public void setError(int valueId) {
+        this.error = getString(valueId);
+    }
 
     public String getError() {
         return error;
