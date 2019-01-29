@@ -609,6 +609,7 @@ public class BtcEngine extends CoinEngine {
             public void onFail(ElectrumRequest electrumRequest) {
                 Log.i(TAG, "onFail: "+electrumRequest.getMethod()+" "+electrumRequest.getError());
                 ctx.setError(electrumRequest.getError());
+//                ctx.setError(R.string.cannot_obtain_data_from_blockchain);
                 if (serverApiElectrum.isRequestsSequenceCompleted()) {
                     blockchainRequestsCallbacks.onComplete(false);//serverApiElectrum.isErrorOccurred(), serverApiElectrum.getError());
                 }else{
