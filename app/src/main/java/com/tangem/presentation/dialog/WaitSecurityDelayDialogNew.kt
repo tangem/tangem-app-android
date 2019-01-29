@@ -83,10 +83,11 @@ class WaitSecurityDelayDialogNew : AppCompatDialogFragment() {
                 setup(readBeforeRequest.timeout!!, DELAY_BEFORE_SHOW_DIALOG)
                 isCancelable = false
 
-
-
 //                if (!isAdded)
-//                    show(activity?.supportFragmentManager, TAG)
+                    show(activity!!.supportFragmentManager, TAG)
+
+//                if (isHidden)
+//                    activity?.supportFragmentManager?.let { show(it, TAG) }
             }
         }, DELAY_BEFORE_SHOW_DIALOG.toLong())
     }
@@ -120,8 +121,9 @@ class WaitSecurityDelayDialogNew : AppCompatDialogFragment() {
             // 1000ms - card delay notification interval
             setup(readWait.msec!! + 1000, 1000)
             isCancelable = false
-//            if (!isAdded)
-//                show(activity?.supportFragmentManager, TAG)
+
+            if (isHidden)
+                activity?.supportFragmentManager?.let { show(it, TAG) }
 
         } else
             setRemainingTimeout(readWait.msec!!)
