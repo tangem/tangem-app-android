@@ -34,6 +34,7 @@ import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.RootFoundDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.presentation.dialog.WaitSecurityDelayDialogNew
 import com.tangem.tangemcard.android.nfc.DeviceNFCAntennaLocation
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
