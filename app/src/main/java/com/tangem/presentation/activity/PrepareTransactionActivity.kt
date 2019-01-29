@@ -55,16 +55,15 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
 
         @Suppress("DEPRECATION") val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
             Html.fromHtml(engine!!.balanceHTML, Html.FROM_HTML_MODE_LEGACY)
-         else
+        else
             Html.fromHtml(engine!!.balanceHTML)
         tvBalance.text = html
 
-        //TODO - to engine
-        if ((ctx.blockchain == Blockchain.Token && engine.balance.currency!=Blockchain.Ethereum.currency) ||
-           ((ctx.blockchain == Blockchain.RootstockToken && engine.balance.currency!=Blockchain.Rootstock.currency))){
+        if (!engine.allowSelectFeeInclusion()) {
             rgIncFee.visibility = View.INVISIBLE
-        } else
+        } else {
             rgIncFee.visibility = View.VISIBLE
+        }
 
         if (ctx.card!!.remainingSignatures < 2)
             etAmount.isEnabled = false

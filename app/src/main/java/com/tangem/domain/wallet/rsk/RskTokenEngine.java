@@ -238,4 +238,13 @@ public class RskTokenEngine extends TokenEngine {
 
     }
 
+    @Override
+    public boolean needMultipleLinesForBalance() {
+        return true;
+    }
+
+    @Override
+    public boolean allowSelectFeeInclusion() {
+        return getBalance().getCurrency().equals(Blockchain.Rootstock.getCurrency());
+    }
 }
