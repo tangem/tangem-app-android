@@ -61,10 +61,10 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
 
         amount = CoinEngine.Amount(intent.getStringExtra(Constant.EXTRA_AMOUNT), intent.getStringExtra(Constant.EXTRA_AMOUNT_CURRENCY))
 
-        if (ctx.blockchain == Blockchain.Token && amount.currency != Blockchain.Ethereum.currency)
-            tvIncFee.visibility = View.INVISIBLE
-        else
+        if (engine.allowSelectFeeInclusion())
             tvIncFee.visibility = View.VISIBLE
+        else
+            tvIncFee.visibility = View.INVISIBLE
 
         etAmount.setText(amount.toValueString())
         tvCurrency.text = engine.balanceCurrency
@@ -74,8 +74,9 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
 
         btnSend.visibility = View.INVISIBLE
 
+        val allowFeeLevelSelection = engine!!.allowSelectFeeLevel()
         for (lol in rgFee.touchables) {
-            lol.isEnabled = !(ctx.blockchain == Blockchain.Ethereum || ctx.blockchain == Blockchain.EthereumTestNet || ctx.blockchain == Blockchain.Token || ctx.blockchain == Blockchain.BitcoinCash || ctx.blockchain == Blockchain.Litecoin)
+            lol.isEnabled = allowFeeLevelSelection
         }
 
         // set listeners
