@@ -557,4 +557,9 @@ public class LtcEngine extends BtcEngine {
 
         serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
     }
+
+    @Override
+    public boolean allowSelectFeeLevel() {
+        return false;
+    }
 }
