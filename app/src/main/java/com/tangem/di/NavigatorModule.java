@@ -1,5 +1,7 @@
 package com.tangem.di;
 
+import com.tangem.presentation.dialog.WaitSecurityDelayDialogNew;
+
 import javax.inject.Singleton;
 
 import dagger.Module;
@@ -12,6 +14,12 @@ class NavigatorModule {
     @Provides
     Navigator provideNavigator() {
         return new Navigator();
+    }
+
+    @Singleton
+    @Provides
+    WaitSecurityDelayDialogNew provideWaitSecurityDelayDialogNew() {
+        return new WaitSecurityDelayDialogNew();
     }
 
 }
