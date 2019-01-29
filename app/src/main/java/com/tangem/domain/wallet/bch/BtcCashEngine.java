@@ -780,4 +780,8 @@ public class BtcCashEngine extends CoinEngine {
 
     }
 
+    @Override
+    public boolean allowSelectFeeLevel() {
+        return false;
+    }
 }
