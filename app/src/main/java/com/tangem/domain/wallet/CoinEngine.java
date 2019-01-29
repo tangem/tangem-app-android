@@ -21,7 +21,6 @@ import java.util.Locale;
 
 public abstract class CoinEngine {
 
-
     public static class InternalAmount extends BigDecimal {
         private String currency;
 
@@ -339,4 +338,28 @@ public abstract class CoinEngine {
      * @throws Exception if something goes wrong
      */
     public abstract void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) throws Exception;
+
+
+    /**
+     * @return true if blockchain need multiple lines to show balance (e.g. need show additional balance information, Token count for example)
+     */
+    public boolean needMultipleLinesForBalance() {
+        return false;
+    }
+
+    /**
+     * @return true to allow user select fee level - min, normal or priority
+     */
+    public boolean allowSelectFeeLevel() {
+        return true;
+    }
+
+    /**
+     * @return true to allow user select include or exclude fee
+     */
+    public boolean allowSelectFeeInclusion() {
+        return true;
+    }
+
+
 }
