@@ -812,4 +812,13 @@ public class TokenEngine extends CoinEngine {
 
     }
 
+    @Override
+    public boolean needMultipleLinesForBalance() {
+        return true;
+    }
+
+    @Override
+    public boolean allowSelectFeeInclusion() {
+        return getBalance().getCurrency().equals(Blockchain.Ethereum.getCurrency());
+    }
 }
