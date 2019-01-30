@@ -111,7 +111,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val engine=CoinEngineFactory.create(ctx)
+        val engine = CoinEngineFactory.create(ctx)
 
         tvBalance.setSingleLine(!engine!!.needMultipleLinesForBalance())
 
@@ -663,6 +663,8 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
             requestCounter++
             coinEngine!!.requestBalanceAndUnspentTransactions(
                     object : CoinEngine.BlockchainRequestsCallbacks {
+
+
                         override fun onComplete(success: Boolean) {
                             LOG.i(TAG, "requestBalanceAndUnspentTransactions onComplete: $success, request counter $requestCounter")
                             if (activity == null) return
@@ -680,7 +682,12 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                         }
 
                         override fun allowAdvance(): Boolean {
-                            return context?.let { UtilHelper.isOnline(it) }!!
+                            return try {
+                                context?.let { UtilHelper.isOnline(it) }!!
+                            } catch (e: KotlinNullPointerException) {
+                                e.printStackTrace()
+                                false
+                            }
                         }
                     }
             )
