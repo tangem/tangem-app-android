@@ -29,8 +29,8 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="16dp"
                 android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
                 android:background="@color/white"
                 android:orientation="vertical">
 
@@ -44,8 +44,8 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
                         android:layout_alignParentTop="true"
-                        android:layout_marginBottom="24dp"
                         android:layout_marginTop="8dp"
+                        android:layout_marginBottom="24dp"
                         android:fontFamily="@font/maaxmedium"
                         android:text="@string/card_id"
                         android:textAlignment="center"
@@ -57,8 +57,8 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
                         android:layout_alignParentTop="true"
-                        android:layout_marginBottom="4dp"
                         android:layout_marginTop="32dp"
+                        android:layout_marginBottom="4dp"
                         android:fontFamily="@font/maax"
                         android:text="@string/no_data_string_1"
                         android:textAlignment="center"
@@ -71,8 +71,8 @@
                     android:id="@+id/view"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:layout_marginBottom="8dp"
                     android:layout_marginTop="6dp"
+                    android:layout_marginBottom="8dp"
                     android:layout_weight="1"
                     android:background="@android:color/darker_gray" />
 
@@ -134,7 +134,9 @@
                         android:layout_height="32dp"
                         android:layout_marginEnd="8dp"
                         android:src="@drawable/tangem_logo_small_new"
-                        app:layout_constraintEnd_toEndOf="parent" />
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -293,8 +295,8 @@
                     android:id="@+id/view2"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:layout_marginBottom="6dp"
                     android:layout_marginTop="6dp"
+                    android:layout_marginBottom="6dp"
                     android:layout_weight="1"
                     android:background="@android:color/darker_gray" />
 
@@ -408,8 +410,8 @@
                     android:id="@+id/view3"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:layout_marginBottom="6dp"
                     android:layout_marginTop="6dp"
+                    android:layout_marginBottom="6dp"
                     android:layout_weight="1"
                     android:background="@android:color/darker_gray" />
 
@@ -527,8 +529,6 @@
                     android:shadowDx="2"
                     android:shadowDy="2"
                     android:shadowRadius="2"
-
-
                     android:textAlignment="center"
                     android:textColor="@color/black"
                     android:textStyle="bold"
@@ -537,8 +537,6 @@
 
                 <TextView
                     android:id="@+id/tvMessage"
-
-
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/msg_err"
@@ -569,9 +567,9 @@
             android:id="@+id/imgPIN"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentEnd="false"
             android:layout_alignParentStart="false"
+            android:layout_alignParentEnd="false"
+            android:layout_alignParentBottom="true"
             android:layout_toStartOf="@+id/imgPIN2orSecurityDelay"
             android:src="@drawable/unlock_pin1" />
 
@@ -590,8 +588,8 @@
             android:id="@+id/imgDeveloperVersion"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:layout_alignParentBottom="true"
             android:layout_alignParentStart="true"
+            android:layout_alignParentBottom="true"
             android:layout_marginStart="4dp"
             android:src="@drawable/ic_developer_version" />
 
