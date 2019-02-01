@@ -679,12 +679,15 @@ public class TokenEngine extends CoinEngine {
 //
                     case ServerApiInfura.INFURA_ETH_CALL: {
                         try {
-                            String balanceCap = infuraResponse.getResult();
-                            balanceCap = balanceCap.substring(2);
-                            BigInteger l = new BigInteger(balanceCap, 16);
-                            coinData.setBalanceInInternalUnits(new CoinEngine.InternalAmount(l, ctx.getCard().tokenSymbol));
-
-//                            Log.i("$TAG eth_call", balanceCap)
+                            if (validateAddress(getContractAddress(ctx.getCard()))) {
+                                String balanceCap = infuraResponse.getResult();
+                                balanceCap = balanceCap.substring(2);
+                                BigInteger l = new BigInteger(balanceCap, 16);
+                                coinData.setBalanceInInternalUnits(new CoinEngine.InternalAmount(l, ctx.getCard().tokenSymbol));
+//                              Log.i("$TAG eth_call", balanceCap)
+                            } else {
+                                ctx.setError("Smart contract address not defined");
+                            }
 
                             if (blockchainRequestsCallbacks.allowAdvance()) {
                                 serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
