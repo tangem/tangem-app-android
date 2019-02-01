@@ -105,12 +105,15 @@ public class RskTokenEngine extends TokenEngine {
 //
                     case ServerApiRootstock.ROOTSTOCK_ETH_CALL: {
                         try {
-                            String balanceCap = rootstockResponse.getResult();
-                            balanceCap = balanceCap.substring(2);
-                            BigInteger l = new BigInteger(balanceCap, 16);
-                            coinData.setBalanceInInternalUnits(new CoinEngine.InternalAmount(l, ctx.getCard().tokenSymbol));
-
-//                            Log.i("$TAG eth_call", balanceCap)
+                            if (validateAddress(getContractAddress(ctx.getCard()))) {
+                                String balanceCap = rootstockResponse.getResult();
+                                balanceCap = balanceCap.substring(2);
+                                BigInteger l = new BigInteger(balanceCap, 16);
+                                coinData.setBalanceInInternalUnits(new CoinEngine.InternalAmount(l, ctx.getCard().tokenSymbol));
+//                              Log.i("$TAG eth_call", balanceCap)
+                            } else {
+                                ctx.setError("Smart contract address not defined");
+                            }
 
                             if (blockchainRequestsCallbacks.allowAdvance()) {
                                 serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
