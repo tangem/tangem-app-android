@@ -35,6 +35,7 @@ import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.presentation.event.DeletingWalletFinish
 import com.tangem.presentation.event.TransactionFinishWithError
 import com.tangem.presentation.event.TransactionFinishWithSuccess
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD
