@@ -10,7 +10,7 @@ import android.widget.ImageView
 import android.widget.RelativeLayout
 import androidx.appcompat.widget.LinearLayoutCompat
 
-class DeviceNFCAntennaLocation(private var context: Context,
+class NfcDeviceAntennaLocation(private var context: Context,
                                private var ivHandCardHorizontal: ImageView,
                                private var ivHandCardVertical: ImageView,
                                private var llHand: LinearLayoutCompat,
@@ -65,7 +65,7 @@ class DeviceNFCAntennaLocation(private var context: Context,
         this.y = 0.35f
         this.z = 0
 
-        for (nfcLocation in NFCLocation.values()) {
+        for (nfcLocation in NfcLocation.values()) {
             if (codename.startsWith(nfcLocation.codename)) {
                 this.fullName = nfcLocation.fullName
                 this.orientation = nfcLocation.orientation
@@ -91,8 +91,8 @@ class DeviceNFCAntennaLocation(private var context: Context,
 
         // set card z position
         when (z) {
-            DeviceNFCAntennaLocation.CARD_ON_BACK -> llHand.elevation = 0.0f
-            DeviceNFCAntennaLocation.CARD_ON_FRONT -> llHand.elevation = 30.0f
+            NfcDeviceAntennaLocation.CARD_ON_BACK -> llHand.elevation = 0.0f
+            NfcDeviceAntennaLocation.CARD_ON_FRONT -> llHand.elevation = 30.0f
         }
     }
 
