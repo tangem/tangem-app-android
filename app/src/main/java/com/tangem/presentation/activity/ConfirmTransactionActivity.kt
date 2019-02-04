@@ -13,11 +13,11 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.Toast
 import com.tangem.Constant
-import com.tangem.data.Blockchain
 import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.event.TransactionFinishWithError
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
