@@ -100,6 +100,7 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         setContentView(R.layout.activity_pin_request)
 
         nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         mode = Mode.valueOf(intent.getStringExtra(Constant.EXTRA_MODE))
 
@@ -171,7 +172,6 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
 
     override fun onPause() {
         super.onPause()
-
         if (fingerprintHelper != null)
             fingerprintHelper!!.cancel()
 
@@ -179,8 +179,6 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
             startFingerprintReaderTask!!.cancel(true)
             startFingerprintReaderTask = null
         }
-
-        nfcManager.onPause()
     }
 
     override fun onStop() {
@@ -192,13 +190,10 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
             startFingerprintReaderTask!!.cancel(true)
             startFingerprintReaderTask = null
         }
-
-        nfcManager.onStop()
     }
 
     override fun onResume() {
         super.onResume()
-        nfcManager.onResume()
         if (allowFingerprint)
             startFingerprintReader()
     }
