@@ -10,28 +10,21 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.DecelerateInterpolator
-import android.view.animation.Transformation
-import android.widget.RelativeLayout
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
-import com.tangem.tangemcard.tasks.PurgeTask
-import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialogNew
 import com.tangem.presentation.event.DeletingWalletFinish
-import com.tangem.presentation.event.ReadAfterRequest
-import com.tangem.presentation.event.ReadBeforeRequest
-import com.tangem.presentation.event.ReadWait
 import com.tangem.tangemcard.android.nfc.DeviceNFCAntennaLocation
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.asBundle
+import com.tangem.tangemcard.reader.CardProtocol
+import com.tangem.tangemcard.tasks.PurgeTask
 import com.tangem.tangemcard.util.Util
 import com.tangem.util.LOG
 import com.tangem.wallet.R
@@ -72,6 +65,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
@@ -84,20 +78,12 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
         progressBar.visibility = View.INVISIBLE
     }
 
-    public override fun onResume() {
-        super.onResume()
-        nfcManager.onResume()
-    }
-
     public override fun onPause() {
-        nfcManager.onPause()
         purgeTask?.cancel(true)
         super.onPause()
     }
 
     public override fun onStop() {
-        // dismiss enable NFC dialog
-        nfcManager.onStop()
         purgeTask?.cancel(true)
         super.onStop()
     }
