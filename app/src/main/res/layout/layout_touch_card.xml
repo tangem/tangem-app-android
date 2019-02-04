@@ -24,7 +24,7 @@
 
     </LinearLayout>
 
-    <LinearLayout
+    <androidx.appcompat.widget.LinearLayoutCompat
         android:id="@+id/llNfc"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -45,9 +45,9 @@
             app:rb_strokeWidth="8dp"
             app:rb_type="strokeRipple" />
 
-    </LinearLayout>
+    </androidx.appcompat.widget.LinearLayoutCompat>
 
-    <LinearLayout
+    <androidx.appcompat.widget.LinearLayoutCompat
         android:id="@+id/llHand"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -68,7 +68,7 @@
             android:layout_height="wrap_content"
             app:srcCompat="@drawable/hand_card_vertical" />
 
-    </LinearLayout>
+    </androidx.appcompat.widget.LinearLayoutCompat>
 
     <RelativeLayout
         android:id="@+id/rlProgressBar"
