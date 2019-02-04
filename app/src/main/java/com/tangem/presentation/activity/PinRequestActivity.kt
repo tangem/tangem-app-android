@@ -25,6 +25,7 @@ import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.data.fingerprint.FingerprintHelper
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.tangemcard.android.data.PINStorage
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD
