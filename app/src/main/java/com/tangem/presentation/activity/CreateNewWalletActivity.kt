@@ -9,14 +9,9 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.DecelerateInterpolator
-import android.view.animation.Transformation
-import android.widget.ProgressBar
-import android.widget.RelativeLayout
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.domain.wallet.TangemContext
@@ -57,6 +52,7 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         setContentView(R.layout.activity_create_new_wallet)
 
         nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
@@ -96,24 +92,9 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         }
     }
 
-    public override fun onResume() {
-        super.onResume()
-        nfcManager.onResume()
-    }
-
     public override fun onPause() {
-        nfcManager.onPause()
-        if (createNewWalletTask != null)
-            createNewWalletTask!!.cancel(true)
+        createNewWalletTask?.cancel(true)
         super.onPause()
-    }
-
-    public override fun onStop() {
-        // dismiss enable NFC dialog
-        nfcManager.onStop()
-        if (createNewWalletTask != null)
-            createNewWalletTask!!.cancel(true)
-        super.onStop()
     }
 
     override fun onReadStart(cardProtocol: CardProtocol) {
