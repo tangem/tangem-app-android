@@ -13,6 +13,7 @@ import android.nfc.Tag;
 import android.nfc.tech.IsoDep;
 import android.os.Build;
 import android.os.Bundle;
+
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
@@ -99,7 +100,6 @@ public class NfcManager {
     }
 
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
-        @SuppressWarnings("deprecation")
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -156,11 +156,7 @@ public class NfcManager {
 
         if (permission != PackageManager.PERMISSION_GRANTED) {
             // We don't have permission so prompt the user
-            ActivityCompat.requestPermissions(
-                    activity,
-                    PERMISSIONS_NFC,
-                    REQUEST_NFC_PERMISSIONS
-            );
+            ActivityCompat.requestPermissions(activity, PERMISSIONS_NFC, REQUEST_NFC_PERMISSIONS);
         }
     }
 
