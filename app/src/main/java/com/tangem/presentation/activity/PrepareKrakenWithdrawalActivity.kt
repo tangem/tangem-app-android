@@ -23,6 +23,7 @@ import com.tangem.data.Blockchain
 import com.tangem.di.Navigator
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_kraken_withdrawal.*
 import java.io.IOException
