@@ -59,7 +59,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
     private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
 
-    private lateinit var antenna: DeviceNFCAntennaLocation
+    private lateinit var nfcAntenna: DeviceNFCAntennaLocation
 
     private var purgeTask: PurgeTask? = null
 
@@ -75,34 +75,13 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
+        // init NFC Antenna
+        nfcAntenna = DeviceNFCAntennaLocation(this, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
+        nfcAntenna.init()
+
         tvCardID.text = ctx.card!!.cidDescription
         progressBar.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
         progressBar.visibility = View.INVISIBLE
-
-        // get NFC Antenna
-        antenna = DeviceNFCAntennaLocation()
-        antenna.getAntennaLocation()
-
-        // set card orientation
-        when (antenna.orientation) {
-            DeviceNFCAntennaLocation.CARD_ORIENTATION_HORIZONTAL -> {
-                ivHandCardHorizontal.visibility = View.VISIBLE
-                ivHandCardVertical.visibility = View.GONE
-            }
-
-            DeviceNFCAntennaLocation.CARD_ORIENTATION_VERTICAL -> {
-                ivHandCardVertical.visibility = View.VISIBLE
-                ivHandCardHorizontal.visibility = View.GONE
-            }
-        }
-
-        // set card z position
-        when (antenna.z) {
-            DeviceNFCAntennaLocation.CARD_ON_BACK -> llHand.elevation = 0.0f
-            DeviceNFCAntennaLocation.CARD_ON_FRONT -> llHand.elevation = 30.0f
-        }
-
-        animate()
     }
 
     public override fun onResume() {
@@ -126,7 +105,8 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
     override fun onTagDiscovered(tag: Tag) {
         try {
             // get IsoDep handle and run cardReader thread
-            val isoDep = IsoDep.get(tag) ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
+            val isoDep = IsoDep.get(tag)
+                    ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag.id
             val sUID = Util.byteArrayToHexString(uid)
             LOG.d(TAG, "UID: $sUID")
@@ -272,26 +252,6 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
                 e.printStackTrace()
             }
         }, 500)
-    }
-
-    private fun animate() {
-        val lp = llHand.layoutParams as RelativeLayout.LayoutParams
-        val lp2 = llNfc.layoutParams as RelativeLayout.LayoutParams
-        val dp = resources.displayMetrics.density
-        val lm = dp * (69 + antenna.x * 75)
-        lp.topMargin = (dp * (-100 + antenna.y * 250)).toInt()
-        lp2.topMargin = (dp * (-125 + antenna.y * 250)).toInt()
-        llNfc.layoutParams = lp2
-
-        val a = object : Animation() {
-            override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
-                lp.leftMargin = (lm * interpolatedTime).toInt()
-                llHand.layoutParams = lp
-            }
-        }
-        a.duration = 2000
-        a.interpolator = DecelerateInterpolator()
-        llHand.startAnimation(a)
     }
 
 }
