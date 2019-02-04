@@ -226,7 +226,7 @@ public class Logger {
 //
 //            verifyStoragePermissions(activity);
 //            initLogFile(activity.getApplicationContext());
-//            t.start();
+//            t.init();
 //        } catch (Exception e) {
 //            e.printStackTrace();
 //        }
