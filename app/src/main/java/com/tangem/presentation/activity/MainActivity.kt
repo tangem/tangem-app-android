@@ -86,6 +86,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         verifyPermissions()
 
@@ -243,18 +244,14 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         super.onResume()
         nfcAntenna.animate()
         ReadCardInfoTask.resetLastReadInfo()
-        nfcManager.onResume()
     }
 
     public override fun onPause() {
-        nfcManager.onPause()
         readCardInfoTask?.cancel(true)
         super.onPause()
     }
 
     public override fun onStop() {
-        // dismiss enable NFC dialog
-        nfcManager.onStop()
         readCardInfoTask?.cancel(true)
         super.onStop()
     }
