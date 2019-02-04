@@ -79,11 +79,6 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
         progressBar.visibility = View.INVISIBLE
     }
 
-    public override fun onPause() {
-        purgeTask?.cancel(true)
-        super.onPause()
-    }
-
     public override fun onStop() {
         purgeTask?.cancel(true)
         super.onStop()
