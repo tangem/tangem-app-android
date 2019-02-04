@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
+import android.os.Build
 import android.os.Bundle
 import androidx.core.content.ContextCompat
 import android.text.Html
@@ -257,7 +258,11 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
             tvIssuer.text = ctx.card!!.issuerDescription
 
             tvCardRegistredDate.text = DateUtils.formatDateTime(null, ctx.card!!.personalizationDateTime.time, DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_NUMERIC_DATE or DateUtils.FORMAT_SHOW_YEAR)
-            val html = Html.fromHtml(ctx.blockchainName)
+
+            @Suppress("DEPRECATION") val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                Html.fromHtml(ctx.blockchainName, Html.FROM_HTML_MODE_LEGACY)
+            else
+                Html.fromHtml(ctx.blockchainName)
             tvBlockchain.text = html
 
             tvValidationNode.text = ctx.coinData!!.validationNodeDescription
