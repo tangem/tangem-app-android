@@ -2,6 +2,8 @@
 
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
     <string name="no_connection">No connection with blockchain nodes</string>
     <string name="contin">Continue</string>
     <string name="not_found">Not found</string>
@@ -247,6 +249,7 @@
     <string name="cryptonit_request_balance">Get balance</string>
     <string name="cryptonit_request_withdrawal">Withdrawal</string>
     <string name="withdrawal_fee">operation fee</string>
+    <string name="withdrawal_successful">Withdrawal successful!</string>
 
     <!-- PrepareKrakenWithdrawal -->
     <string name="kraken_payment">KRAKEN payment</string>
@@ -256,5 +259,7 @@
     <string name="kraken_not_enough_account_data">Please enter account data</string>
     <string name="kraken_request_balance">Get balance</string>
     <string name="kraken_request_withdrawal">Withdrawal</string>
+    <string name="operation_canceled">Operation canceled!</string>
+    <string name="please_confirm_withdraw">Please confirm withdraw</string>
 
 </resources>
