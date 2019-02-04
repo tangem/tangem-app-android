@@ -19,7 +19,8 @@ import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialogNew
 import com.tangem.presentation.event.DeletingWalletFinish
-import com.tangem.tangemcard.android.nfc.DeviceNFCAntennaLocation
+import com.tangem.tangemcard.android.nfc.NfcDeviceAntennaLocation
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.asBundle
@@ -52,7 +53,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
     private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
 
-    private lateinit var nfcAntenna: DeviceNFCAntennaLocation
+    private lateinit var nfcDeviceAntenna: NfcDeviceAntennaLocation
 
     private var purgeTask: PurgeTask? = null
 
@@ -70,8 +71,8 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
         // init NFC Antenna
-        nfcAntenna = DeviceNFCAntennaLocation(this, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
-        nfcAntenna.init()
+        nfcDeviceAntenna = NfcDeviceAntennaLocation(this, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
+        nfcDeviceAntenna.init()
 
         tvCardID.text = ctx.card!!.cidDescription
         progressBar.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
