@@ -8,15 +8,11 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.view.KeyEvent
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.DecelerateInterpolator
-import android.view.animation.Transformation
 import android.widget.ProgressBar
-import android.widget.RelativeLayout
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.domain.wallet.CoinEngine
@@ -34,6 +30,7 @@ import com.tangem.tangemcard.util.Util
 import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_sign_transaction.*
+import kotlinx.android.synthetic.main.layout_progress_horizontal.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
 
 class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
@@ -45,7 +42,7 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
     private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
 
-    private lateinit var antenna: DeviceNFCAntennaLocation
+    private lateinit var nfcAntenna: DeviceNFCAntennaLocation
 
     private var signTransactionTask: SignTask? = null
 
@@ -55,8 +52,6 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
     private var outAddressStr: String? = null
     private var lastReadSuccess = true
 
-    private var progressBar: ProgressBar? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_transaction)
@@ -65,41 +60,18 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
+        // init NFC Antenna
+        nfcAntenna = DeviceNFCAntennaLocation(this, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
+        nfcAntenna.init()
+
         amount = CoinEngine.Amount(intent.getStringExtra(Constant.EXTRA_AMOUNT), intent.getStringExtra(Constant.EXTRA_AMOUNT_CURRENCY))
         fee = CoinEngine.Amount(intent.getStringExtra(Constant.EXTRA_FEE), intent.getStringExtra(Constant.EXTRA_FEE_CURRENCY))
         isIncludeFee = intent.getBooleanExtra(Constant.EXTRA_FEE_INCLUDED, true)
         outAddressStr = intent.getStringExtra(Constant.EXTRA_TARGET_ADDRESS)
 
         tvCardID.text = ctx.card!!.cidDescription
-
-        progressBar = findViewById(R.id.progressBar)
-        progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
-        progressBar!!.visibility = View.INVISIBLE
-
-        // get NFC Antenna
-        antenna = DeviceNFCAntennaLocation()
-        antenna.getAntennaLocation()
-
-        // set card orientation
-        when (antenna.orientation) {
-            DeviceNFCAntennaLocation.CARD_ORIENTATION_HORIZONTAL -> {
-                ivHandCardHorizontal.visibility = View.VISIBLE
-                ivHandCardVertical.visibility = View.GONE
-            }
-
-            DeviceNFCAntennaLocation.CARD_ORIENTATION_VERTICAL -> {
-                ivHandCardVertical.visibility = View.VISIBLE
-                ivHandCardHorizontal.visibility = View.GONE
-            }
-        }
-
-        // set card z position
-        when (antenna.z) {
-            DeviceNFCAntennaLocation.CARD_ON_BACK -> llHand.elevation = 0.0f
-            DeviceNFCAntennaLocation.CARD_ON_FRONT -> llHand.elevation = 30.0f
-        }
-
-        animate()
+        progressBar.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+        progressBar.visibility = View.INVISIBLE
     }
 
     public override fun onResume() {
@@ -194,14 +166,14 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
     override fun onReadStart(cardProtocol: CardProtocol) {
         rlProgressBar.post { rlProgressBar.visibility = View.VISIBLE }
 
-        progressBar!!.post {
-            progressBar!!.visibility = View.VISIBLE
-            progressBar!!.progress = 5
+        progressBar?.post {
+            progressBar?.visibility = View.VISIBLE
+            progressBar?.progress = 5
         }
     }
 
     override fun onReadProgress(protocol: CardProtocol, progress: Int) {
-        progressBar!!.post { progressBar!!.progress = progress }
+        progressBar?.post { progressBar!!.progress = progress }
     }
 
     override fun onReadFinish(cardProtocol: CardProtocol?) {
@@ -311,7 +283,6 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
 //        val readBeforeRequest = ReadBeforeRequest()
 //        readBeforeRequest.timeout = timeout
 //        EventBus.getDefault().post(readBeforeRequest)
-
     }
 
     override fun onReadAfterRequest() {
@@ -320,7 +291,6 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
 
 //        val readAfterRequest = ReadAfterRequest()
 //        EventBus.getDefault().post(readAfterRequest)
-
     }
 
     override fun onReadWait(msec: Int) {
@@ -330,29 +300,6 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
 //        val readWait = ReadWait()
 //        readWait.msec = msec
 //        EventBus.getDefault().post(readWait)
-
-
     }
-
-    private fun animate() {
-        val lp = llHand.layoutParams as RelativeLayout.LayoutParams
-        val lp2 = llNfc.layoutParams as RelativeLayout.LayoutParams
-        val dp = resources.displayMetrics.density
-        val lm = dp * (69 + antenna.x * 75)
-        lp.topMargin = (dp * (-100 + antenna.y * 250)).toInt()
-        lp2.topMargin = (dp * (-125 + antenna.y * 250)).toInt()
-        llNfc.layoutParams = lp2
-
-        val a = object : Animation() {
-            override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
-                lp.leftMargin = (lm * interpolatedTime).toInt()
-                llHand.layoutParams = lp
-            }
-        }
-        a.duration = 2000
-        a.interpolator = DecelerateInterpolator()
-        llHand.startAnimation(a)
-    }
-
 
 }
