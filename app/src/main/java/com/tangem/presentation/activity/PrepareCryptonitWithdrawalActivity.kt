@@ -65,10 +65,10 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
                 val imm = lv.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.hideSoftInputFromWindow(lv.windowToken, 0)
                 true
-            } else {
+            } else
                 false
-            }
         }
+
         when (ctx.blockchain) {
             Blockchain.Bitcoin -> {
                 etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(5))
