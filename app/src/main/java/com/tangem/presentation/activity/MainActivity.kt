@@ -30,7 +30,8 @@ import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.RootFoundDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
-import com.tangem.tangemcard.android.nfc.DeviceNFCAntennaLocation
+import com.tangem.tangemcard.android.nfc.NfcDeviceAntennaLocation
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.TangemCard
@@ -62,7 +63,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     private lateinit var nfcManager: NfcManager
 
     private var zipFile: File? = null
-    private lateinit var nfcAntenna: DeviceNFCAntennaLocation
+    private lateinit var nfcDeviceAntenna: NfcDeviceAntennaLocation
     private var unsuccessReadCount = 0
     private var lastTag: Tag? = null
     private var readCardInfoTask: ReadCardInfoTask? = null
@@ -97,12 +98,12 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         rippleBackgroundNfc.startRippleAnimation()
 
         // init NFC Antenna
-        nfcAntenna = DeviceNFCAntennaLocation(this, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
-        nfcAntenna.init()
+        nfcDeviceAntenna = NfcDeviceAntennaLocation(this, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
+        nfcDeviceAntenna.init()
 
         // set phone name
-        if (nfcAntenna.fullName != "")
-            tvNFCHint.text = String.format(getString(R.string.scan_banknote), nfcAntenna.fullName)
+        if (nfcDeviceAntenna.fullName != "")
+            tvNFCHint.text = String.format(getString(R.string.scan_banknote), nfcDeviceAntenna.fullName)
         else
             tvNFCHint.text = String.format(getString(R.string.scan_banknote), getString(R.string.phone))
 
@@ -242,7 +243,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
     public override fun onResume() {
         super.onResume()
-        nfcAntenna.animate()
+        nfcDeviceAntenna.animate()
         ReadCardInfoTask.resetLastReadInfo()
     }
 
