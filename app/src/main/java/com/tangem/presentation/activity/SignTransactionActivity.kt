@@ -10,7 +10,6 @@ import android.nfc.tech.IsoDep
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
-import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
@@ -57,6 +56,7 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         setContentView(R.layout.activity_sign_transaction)
 
         nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
@@ -74,23 +74,13 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         progressBar.visibility = View.INVISIBLE
     }
 
-    public override fun onResume() {
-        super.onResume()
-        nfcManager.onResume()
-    }
-
     public override fun onPause() {
-        nfcManager.onPause()
-        if (signTransactionTask != null)
-            signTransactionTask!!.cancel(true)
+        signTransactionTask?.cancel(true)
         super.onPause()
     }
 
     public override fun onStop() {
-        // dismiss enable NFC dialog
-        nfcManager.onStop()
-        if (signTransactionTask != null)
-            signTransactionTask!!.cancel(true)
+        signTransactionTask?.cancel(true)
         super.onStop()
     }
 
