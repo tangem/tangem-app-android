@@ -31,6 +31,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         setContentView(R.layout.activity_send_transaction)
 
         nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
         tx = intent.getByteArrayExtra(Constant.EXTRA_TX)
@@ -65,21 +66,6 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             }
         }
         return super.onKeyDown(keyCode, event)
-    }
-
-    public override fun onResume() {
-        super.onResume()
-        nfcManager.onResume()
-    }
-
-    public override fun onPause() {
-        super.onPause()
-        nfcManager.onPause()
-    }
-
-    public override fun onStop() {
-        super.onStop()
-        nfcManager.onStop()
     }
 
     override fun onTagDiscovered(tag: Tag) {
