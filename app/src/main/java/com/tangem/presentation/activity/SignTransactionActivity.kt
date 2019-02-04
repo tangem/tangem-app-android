@@ -19,7 +19,8 @@ import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
-import com.tangem.tangemcard.android.nfc.DeviceNFCAntennaLocation
+import com.tangem.tangemcard.android.nfc.NfcDeviceAntennaLocation
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.asBundle
@@ -41,7 +42,7 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
     private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
 
-    private lateinit var nfcAntenna: DeviceNFCAntennaLocation
+    private lateinit var nfcDeviceAntenna: NfcDeviceAntennaLocation
 
     private var signTransactionTask: SignTask? = null
 
@@ -61,8 +62,8 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
         // init NFC Antenna
-        nfcAntenna = DeviceNFCAntennaLocation(this, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
-        nfcAntenna.init()
+        nfcDeviceAntenna = NfcDeviceAntennaLocation(this, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
+        nfcDeviceAntenna.init()
 
         amount = CoinEngine.Amount(intent.getStringExtra(Constant.EXTRA_AMOUNT), intent.getStringExtra(Constant.EXTRA_AMOUNT_CURRENCY))
         fee = CoinEngine.Amount(intent.getStringExtra(Constant.EXTRA_FEE), intent.getStringExtra(Constant.EXTRA_FEE_CURRENCY))
