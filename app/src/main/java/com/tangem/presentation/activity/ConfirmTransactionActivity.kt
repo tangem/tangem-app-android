@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.text.Editable
@@ -50,7 +51,10 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
 
         val engine = CoinEngineFactory.create(ctx)
 
-        val html = Html.fromHtml(engine!!.balanceHTML)
+        @Suppress("DEPRECATION") val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+            Html.fromHtml(engine!!.balanceHTML, Html.FROM_HTML_MODE_LEGACY)
+        else
+            Html.fromHtml(engine!!.balanceHTML)
         tvBalance.text = html
 
         isIncludeFee = intent.getBooleanExtra(Constant.EXTRA_FEE_INCLUDED, true)
@@ -75,7 +79,7 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
 
         btnSend.visibility = View.INVISIBLE
 
-        val allowFeeLevelSelection = engine!!.allowSelectFeeLevel()
+        val allowFeeLevelSelection = engine.allowSelectFeeLevel()
         for (lol in rgFee.touchables) {
             lol.isEnabled = allowFeeLevelSelection
         }
