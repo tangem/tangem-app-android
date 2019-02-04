@@ -47,6 +47,7 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         App.getNavigatorComponent().inject(this)
 
         nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
@@ -127,21 +128,6 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         }
 
         ivCamera.setOnClickListener { navigator.showQrScanActivity(this, Constant.REQUEST_CODE_SCAN_QR) }
-    }
-
-    public override fun onResume() {
-        super.onResume()
-        nfcManager.onResume()
-    }
-
-    public override fun onPause() {
-        super.onPause()
-        nfcManager.onPause()
-    }
-
-    public override fun onStop() {
-        super.onStop()
-        nfcManager.onStop()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
