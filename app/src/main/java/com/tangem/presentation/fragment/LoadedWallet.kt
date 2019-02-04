@@ -27,10 +27,7 @@ import com.tangem.domain.wallet.BalanceValidator
 import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
-import com.tangem.presentation.activity.LoadedWalletActivity
-import com.tangem.presentation.activity.PinRequestActivity
-import com.tangem.presentation.activity.PrepareCryptonitWithdrawalActivity
-import com.tangem.presentation.activity.PrepareKrakenWithdrawalActivity
+import com.tangem.presentation.activity.*
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.presentation.dialog.ShowQRCodeDialog
@@ -97,9 +94,10 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        nfcManager = NfcManager(activity, this)
-
         ctx = TangemContext.loadFromBundle(activity, activity?.intent?.extras)
+
+        nfcManager = NfcManager(activity, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         lastTag = activity?.intent?.getParcelableExtra(Constant.EXTRA_LAST_DISCOVERED_TAG)
     }
@@ -276,14 +274,8 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
         startVerify(lastTag)
     }
 
-    override fun onResume() {
-        super.onResume()
-        nfcManager.onResume()
-    }
-
     override fun onPause() {
         super.onPause()
-        nfcManager.onPause()
         if (timerHideErrorAndMessage != null) {
             timerHideErrorAndMessage!!.cancel()
             timerHideErrorAndMessage = null
@@ -294,11 +286,6 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
         super.onStart()
         if (!EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().register(this)
-    }
-
-    override fun onStop() {
-        super.onStop()
-        nfcManager.onStop()
     }
 
     override fun onDestroy() {
