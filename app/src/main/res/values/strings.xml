@@ -10,10 +10,6 @@
     <string name="wrong_tag_err">Not ISO tag!</string>
     <string name="msgCardMustBeLoaded">Card must be loaded first!</string>
     <string name="tag_lost_err">Tag lost!</string>
-    <string name="dialog_ok">OK</string>
-    <string name="dialog_quit">Quit</string>
-    <string name="nfc_disabled">Enable NFC?</string>
-    <string name="enable_nfc">This app is useless when NFC is disabled. Reader mode depends on it. Hit OK to go to Settings, where you can enable NFC.</string>
     <string name="cmd_suffix">command</string>
     <string name="rsp_suffix">response</string>
     <string name="section_format">Hello World from section: %1$d</string>
