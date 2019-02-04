@@ -50,8 +50,10 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        nfcManager = NfcManager(activity, this)
         ctx = TangemContext.loadFromBundle(activity, activity?.intent?.extras)
+
+        nfcManager = NfcManager(activity, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -60,7 +62,6 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         updateViews()
 
         srlVerifyCard.setOnRefreshListener { srlVerifyCard.isRefreshing = false }
@@ -208,21 +209,6 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
                 updateViews()
             }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        nfcManager.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        nfcManager.onPause()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        nfcManager.onStop()
     }
 
     override fun onTagDiscovered(tag: Tag?) {
