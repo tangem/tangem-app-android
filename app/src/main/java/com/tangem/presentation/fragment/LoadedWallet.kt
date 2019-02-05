@@ -620,6 +620,13 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
             btnExtract.backgroundTintList = inactiveColor
         }
 
+        if (engine.isNftToken) {
+            btnLoad.isEnabled = false
+            btnLoad.backgroundTintList = inactiveColor
+            btnExtract.isEnabled = false
+            btnExtract.backgroundTintList = inactiveColor
+        }
+
 //        //TODO why ???
 //        ctx.error = null
 //        ctx.message = null
@@ -714,6 +721,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                 Blockchain.Ethereum -> "ethereum"
                 Blockchain.EthereumTestNet -> "ethereum"
                 Blockchain.Token -> "ethereum"
+                Blockchain.NftToken -> "ethereum"
                 Blockchain.BitcoinCash -> "bitcoin-cash"
                 Blockchain.Litecoin -> "litecoin"
                 Blockchain.Rootstock -> "bitcoin"
