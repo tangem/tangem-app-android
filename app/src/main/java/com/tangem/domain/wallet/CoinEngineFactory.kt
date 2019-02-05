@@ -8,6 +8,7 @@ import com.tangem.domain.wallet.token.TokenEngine
 import com.tangem.domain.wallet.bch.BtcCashEngine
 import com.tangem.data.Blockchain
 import com.tangem.domain.wallet.ltc.LtcEngine
+import com.tangem.domain.wallet.nftToken.NftTokenEngine
 import com.tangem.domain.wallet.rsk.RskEngine
 import com.tangem.domain.wallet.rsk.RskTokenEngine
 
@@ -28,6 +29,7 @@ object CoinEngineFactory {
             Blockchain.BitcoinCash -> BtcCashEngine()
             Blockchain.Ethereum, Blockchain.EthereumTestNet -> EthEngine()
             Blockchain.Token -> TokenEngine()
+            Blockchain.NftToken -> NftTokenEngine()
             Blockchain.Litecoin -> LtcEngine()
             Blockchain.Rootstock -> RskEngine()
             Blockchain.RootstockToken -> RskTokenEngine()
@@ -47,6 +49,8 @@ object CoinEngineFactory {
                 EthEngine(context)
             else if (Blockchain.Token == context.blockchain)
                 TokenEngine(context)
+            else if (Blockchain.NftToken == context.blockchain)
+                NftTokenEngine(context)
             else if (Blockchain.Litecoin == context.blockchain)
                 LtcEngine(context)
             else if (Blockchain.Rootstock == context.blockchain)
