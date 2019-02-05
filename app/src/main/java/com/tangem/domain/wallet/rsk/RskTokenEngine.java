@@ -39,7 +39,7 @@ public class RskTokenEngine extends TokenEngine {
 
     @Override
     public Uri getWalletExplorerUri() {
-        return Uri.parse("https://explorer.rsk.co/address/" + ctx.getCoinData().getWallet());
+        return Uri.parse("https://explorer.rsk.co/address/" + ctx.getCoinData().getWallet() + "?__tab=tokens");
     } // Only RSK explorer for now
 
     @Override
@@ -105,15 +105,11 @@ public class RskTokenEngine extends TokenEngine {
 //
                     case ServerApiRootstock.ROOTSTOCK_ETH_CALL: {
                         try {
-                            if (validateAddress(getContractAddress(ctx.getCard()))) {
-                                String balanceCap = rootstockResponse.getResult();
-                                balanceCap = balanceCap.substring(2);
-                                BigInteger l = new BigInteger(balanceCap, 16);
-                                coinData.setBalanceInInternalUnits(new CoinEngine.InternalAmount(l, ctx.getCard().tokenSymbol));
+                            String balanceCap = rootstockResponse.getResult();
+                            balanceCap = balanceCap.substring(2);
+                            BigInteger l = new BigInteger(balanceCap, 16);
+                            coinData.setBalanceInInternalUnits(new CoinEngine.InternalAmount(l, ctx.getCard().tokenSymbol));
 //                              Log.i("$TAG eth_call", balanceCap)
-                            } else {
-                                ctx.setError("Smart contract address not defined");
-                            }
 
                             if (blockchainRequestsCallbacks.allowAdvance()) {
                                 serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
@@ -147,7 +143,12 @@ public class RskTokenEngine extends TokenEngine {
         };
         serverApiRootstock.setResponseListener(responseListener);
 
-        serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_CALL, 67, coinData.getWallet(), getContractAddress(ctx.getCard()), "");
+        if (validateAddress(getContractAddress(ctx.getCard()))) {
+            serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_CALL, 67, coinData.getWallet(), getContractAddress(ctx.getCard()), "");
+        } else {
+            ctx.setError("Smart contract address not defined");
+            blockchainRequestsCallbacks.onComplete(false);
+        }
     }
 
     @Override
