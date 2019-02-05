@@ -361,5 +361,9 @@ public abstract class CoinEngine {
         return true;
     }
 
+    public boolean isNftToken() {
+        return false;
+    }
+
 
 }
