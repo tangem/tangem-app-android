@@ -679,15 +679,13 @@ public class TokenEngine extends CoinEngine {
 //
                     case ServerApiInfura.INFURA_ETH_CALL: {
                         try {
-                            if (validateAddress(getContractAddress(ctx.getCard()))) {
-                                String balanceCap = infuraResponse.getResult();
-                                balanceCap = balanceCap.substring(2);
-                                BigInteger l = new BigInteger(balanceCap, 16);
-                                coinData.setBalanceInInternalUnits(new CoinEngine.InternalAmount(l, ctx.getCard().tokenSymbol));
+
+                            String balanceCap = infuraResponse.getResult();
+                            balanceCap = balanceCap.substring(2);
+                            BigInteger l = new BigInteger(balanceCap, 16);
+                            coinData.setBalanceInInternalUnits(new CoinEngine.InternalAmount(l, ctx.getCard().tokenSymbol));
 //                              Log.i("$TAG eth_call", balanceCap)
-                            } else {
-                                ctx.setError("Smart contract address not defined");
-                            }
+
 
                             if (blockchainRequestsCallbacks.allowAdvance()) {
                                 serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
@@ -721,7 +719,12 @@ public class TokenEngine extends CoinEngine {
         };
         serverApiInfura.setResponseListener(responseListener);
 
-        serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_CALL, 67, coinData.getWallet(), getContractAddress(ctx.getCard()), "");
+        if (validateAddress(getContractAddress(ctx.getCard()))) {
+            serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_CALL, 67, coinData.getWallet(), getContractAddress(ctx.getCard()), "");
+        } else {
+            ctx.setError("Smart contract address not defined");
+            blockchainRequestsCallbacks.onComplete(false);
+        }
     }
 
     @Override
