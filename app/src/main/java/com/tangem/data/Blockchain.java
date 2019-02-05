@@ -12,6 +12,7 @@ public enum Blockchain {
     Ethereum("ETH", "ETH", 1.0, R.drawable.ic_logo_ethereum, "Ethereum"),
     EthereumTestNet("ETH/test", "ETH", 1.0, R.drawable.ic_logo_ethereum_testnet, "Ethereum Testnet"),
     Token("Token", "ETH", 1.0, R.drawable.ic_logo_bat_token, "Ethereum"),
+    NftToken("NftToken", "", 1.0, R.drawable.ic_logo_bat_token, "Ethereum"),
     BitcoinCash("BCH", "BCH", 100000000.0, R.drawable.ic_logo_bitcoin_cash, "Bitcoin Cash"),
     Litecoin("LTC", "LTC", 100000000.0, R.drawable.ic_logo_bitcoin, "Litecoin"),
     Rootstock("RSK", "RBTC", 1.0, R.drawable.ic_logo_bitcoin, "Rootstock"),
