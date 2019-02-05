@@ -50,7 +50,9 @@ class LocalStorage
         }
 
         if (artworks.count() == 0) {
+//          forceSave=true only on the last one
             putResourceArtworkToCatalog(R.drawable.card_default, false)
+            putResourceArtworkToCatalog(R.drawable.card_default_nft, false)
             putResourceArtworkToCatalog(R.drawable.card_ru006, false)
             putResourceArtworkToCatalog(R.drawable.card_ru007, false)
             putResourceArtworkToCatalog(R.drawable.card_ru011, false)
@@ -62,12 +64,12 @@ class LocalStorage
             putResourceArtworkToCatalog(R.drawable.card_ru020, false)
             putResourceArtworkToCatalog(R.drawable.card_ru021, false)
             putResourceArtworkToCatalog(R.drawable.card_ru022, false)
-            putResourceArtworkToCatalog(R.drawable.card_ru023, true)
-            putResourceArtworkToCatalog(R.drawable.card_ru024, true)
-            putResourceArtworkToCatalog(R.drawable.card_ru028, true)
-            putResourceArtworkToCatalog(R.drawable.card_ru029, true)
-            putResourceArtworkToCatalog(R.drawable.card_ru030, true)
-            putResourceArtworkToCatalog(R.drawable.card_ru031, true)
+            putResourceArtworkToCatalog(R.drawable.card_ru023, false)
+            putResourceArtworkToCatalog(R.drawable.card_ru024, false)
+            putResourceArtworkToCatalog(R.drawable.card_ru028, false)
+            putResourceArtworkToCatalog(R.drawable.card_ru029, false)
+            putResourceArtworkToCatalog(R.drawable.card_ru030, false)
+            putResourceArtworkToCatalog(R.drawable.card_ru031, false)
             putResourceArtworkToCatalog(R.drawable.card_ru032, true)
         }
         if (batchesFile.exists()) {
@@ -175,14 +177,25 @@ class LocalStorage
         }
     }
 
-    private fun getDefaultArtworkBitmap(): Bitmap {
-        val defaultArtworkId = context.resources.getResourceEntryName(R.drawable.card_default)
+    private fun getDefaultArtworkBitmap(card: TangemCard): Bitmap {
+        val defaultArtworkId: String
+        if (card.tokenSymbol.startsWith("NFT:")) {
+            defaultArtworkId = context.resources.getResourceEntryName(R.drawable.card_default_nft)
+        } else {
+            defaultArtworkId = context.resources.getResourceEntryName(R.drawable.card_default)
+        }
         val info = artworks[defaultArtworkId]
         var bitmap: Bitmap? = null
         if (info != null && !info.isResource) {
             bitmap = loadArtworkBitmapFromFile(defaultArtworkId)
         }
-        if (bitmap == null) return BitmapFactory.decodeResource(context.resources, R.drawable.card_default)
+        if (bitmap == null) {
+            if (card.tokenSymbol.startsWith("NFT:")) {
+                return BitmapFactory.decodeResource(context.resources, R.drawable.card_default_nft)
+            } else {
+                return BitmapFactory.decodeResource(context.resources, R.drawable.card_default)
+            }
+        }
         return bitmap
     }
 
@@ -236,11 +249,11 @@ class LocalStorage
 
         if (artworkResourceId != null) {
             val artworkId = context.resources.getResourceEntryName(artworkResourceId)
-            return getArtworkBitmap(artworkId) ?: return getDefaultArtworkBitmap()
+            return getArtworkBitmap(artworkId) ?: return getDefaultArtworkBitmap(card)
         }
-        val batchInfo = batches[card.batch] ?: return getDefaultArtworkBitmap()
-        val artworkId = batchInfo.artworkId ?: return getDefaultArtworkBitmap()
-        return getArtworkBitmap(artworkId) ?: return getDefaultArtworkBitmap()
+        val batchInfo = batches[card.batch] ?: return getDefaultArtworkBitmap(card)
+        val artworkId = batchInfo.artworkId ?: return getDefaultArtworkBitmap(card)
+        return getArtworkBitmap(artworkId) ?: return getDefaultArtworkBitmap(card)
     }
 
     override fun applySubstitution(card: TangemCard) {
