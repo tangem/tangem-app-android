@@ -11,7 +11,7 @@ import com.tangem.tangemcard.data.TangemCardExtensionsKt;
 
 
 public class TangemContext {
-//    public static final String EXTRA_BLOCKCHAIN_DATA = "BLOCKCHAIN_DATA";
+    //    public static final String EXTRA_BLOCKCHAIN_DATA = "BLOCKCHAIN_DATA";
     private Context context;
     private TangemCard card;
     private CoinData coinData;
@@ -28,13 +28,15 @@ public class TangemContext {
 
     public Blockchain getBlockchain() {
         if (card == null) return Blockchain.Unknown;
-        Blockchain blockchain=Blockchain.fromId(card.getBlockchainID());
-        if( (blockchain==Blockchain.Ethereum || blockchain==Blockchain.EthereumTestNet)&& card.isToken() )
-        {
-            return Blockchain.Token;
+        Blockchain blockchain = Blockchain.fromId(card.getBlockchainID());
+        if ((blockchain == Blockchain.Ethereum || blockchain == Blockchain.EthereumTestNet) && card.isToken()) {
+            if (card.getTokenSymbol().startsWith("NFT:")) {
+                return Blockchain.NftToken;
+            } else {
+                return Blockchain.Token;
+            }
         }
-        if( (blockchain==Blockchain.Rootstock)&& card.isToken() )
-        {
+        if ((blockchain == Blockchain.Rootstock) && card.isToken()) {
             return Blockchain.RootstockToken;
         }
         return blockchain;
@@ -48,13 +50,15 @@ public class TangemContext {
 //    private String blockchainName = "";
 
     public String getBlockchainName() {
-        Blockchain blockchain=getBlockchain();
-        if( blockchain==Blockchain.Token || blockchain==Blockchain.RootstockToken ) {
+        Blockchain blockchain = getBlockchain();
+        if (blockchain == Blockchain.Token || blockchain == Blockchain.RootstockToken) {
             String token = card.getTokenSymbol();
             return token + " <br><small><small> " + getBlockchain().getOfficialName() + " smart contract token</small></small>";
-        }else {
-            return blockchain.getOfficialName();
         }
+        if (blockchain == Blockchain.NftToken) {
+            return card.getTokenSymbol().substring(4) + " <br><small><small> " + getBlockchain().getOfficialName() + " smart contract token</small></small>";
+        }
+        return blockchain.getOfficialName();
     }
 
     public Context getContext() {
@@ -84,6 +88,7 @@ public class TangemContext {
     public void setError(String error) {
         this.error = error;
     }
+
     public void setError(int valueId) {
         this.error = getString(valueId);
     }
@@ -93,7 +98,7 @@ public class TangemContext {
     }
 
     public boolean hasError() {
-        return error!=null && !error.isEmpty();
+        return error != null && !error.isEmpty();
     }
 
     public void setMessage(String value) {
@@ -154,13 +159,13 @@ public class TangemContext {
 
     public void setDenomination(byte[] denomination) {
         try {
-            CoinEngine engine= CoinEngineFactory.INSTANCE.create(getBlockchain());
-            CoinEngine.InternalAmount internalAmount=engine.convertToInternalAmount(denomination);
-            CoinEngine.Amount amount=engine.convertToAmount(internalAmount);
-            card.setDenomination(denomination,amount.toString());
+            CoinEngine engine = CoinEngineFactory.INSTANCE.create(getBlockchain());
+            CoinEngine.InternalAmount internalAmount = engine.convertToInternalAmount(denomination);
+            CoinEngine.Amount amount = engine.convertToAmount(internalAmount);
+            card.setDenomination(denomination, amount.toString());
         } catch (Exception e) {
             e.printStackTrace();
-            card.setDenomination(denomination,"N/A");
+            card.setDenomination(denomination, "N/A");
         }
     }
 
