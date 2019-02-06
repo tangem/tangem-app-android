@@ -1,6 +1,5 @@
 package com.tangem.data.network;
 
-import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.tangem.data.network.model.InsightBody;
@@ -8,6 +7,7 @@ import com.tangem.data.network.model.InsightResponse;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -19,11 +19,11 @@ public class ServerApiInsight {
 
     public static final String INSIGHT_ADDRESS = "/addr/{address}";
     public static final String INSIGHT_UNSPENT_OUTPUTS = "/addr/{address}/utxo";
-    public static final String INSIGHT_TRANSACTION = "/rawtx/{transaction}";
+    public static final String INSIGHT_TRANSACTION = "/rawtx/{txId}";
     public static final String INSIGHT_FEE = "/utils/estimatefee?nbBlocks=2,3,6";
     public static final String INSIGHT_SEND = "/tx/send";
 
-    private int requestsCount=0;
+    private int requestsCount = 0;
 
     public static String lastNode;
 
@@ -36,7 +36,9 @@ public class ServerApiInsight {
 
     public interface ResponseListener {
         void onSuccess(String method, InsightResponse insightResponse);
+
         void onSuccess(String method, List<InsightResponse> utxoList);
+
         void onFail(String method, String message);
     }
 
@@ -46,10 +48,10 @@ public class ServerApiInsight {
 
     public void requestData(String method, String wallet, String tx) {
         requestsCount++;
-        String insightURL = "http://130.185.109.17:3001/requestData-api"; //TODO: make random selection
+        String insightURL = "http://130.185.109.17:3001/insigth-api"; //TODO: make random selection
         this.lastNode = insightURL; //TODO: show node instead of URL
 
-        Retrofit retrofitInsight = new Retrofit.Builder() //TODO: move to NetworkModule+NetworkComponent if possible
+        Retrofit retrofitInsight = new Retrofit.Builder()
                 .baseUrl(insightURL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
@@ -80,15 +82,11 @@ public class ServerApiInsight {
             });
 
         } else {
-            Call<InsightResponse> call = null;
+            Call<InsightResponse> call;
 
             switch (method) {
                 case INSIGHT_ADDRESS:
                     call = insightApi.insightAddress(wallet);
-                    break;
-
-                case INSIGHT_UNSPENT_OUTPUTS:
-
                     break;
 
                 case INSIGHT_TRANSACTION:
