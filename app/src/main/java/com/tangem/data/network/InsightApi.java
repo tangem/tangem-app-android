@@ -21,7 +21,7 @@ public interface InsightApi {
     Call<List<InsightResponse>> insightUnspent(@Path("address") String address);
 
     @GET(ServerApiInsight.INSIGHT_TRANSACTION)
-    Call<InsightResponse> insightTransaction(@Path("transaction") String transaction);
+    Call<InsightResponse> insightTransaction(@Path("txId") String txId);
 
     @GET(ServerApiInsight.INSIGHT_FEE)
     Call<InsightResponse> insightFee();
