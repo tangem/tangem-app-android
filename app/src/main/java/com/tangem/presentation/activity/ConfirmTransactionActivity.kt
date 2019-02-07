@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.text.Editable
@@ -13,11 +14,11 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.Toast
 import com.tangem.Constant
-import com.tangem.data.Blockchain
 import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.event.TransactionFinishWithError
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
@@ -44,12 +45,16 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         setContentView(R.layout.activity_confirm_transaction)
 
         nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
         val engine = CoinEngineFactory.create(ctx)
 
-        val html = Html.fromHtml(engine!!.balanceHTML)
+        @Suppress("DEPRECATION") val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+            Html.fromHtml(engine!!.balanceHTML, Html.FROM_HTML_MODE_LEGACY)
+        else
+            Html.fromHtml(engine!!.balanceHTML)
         tvBalance.text = html
 
         isIncludeFee = intent.getBooleanExtra(Constant.EXTRA_FEE_INCLUDED, true)
@@ -74,7 +79,7 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
 
         btnSend.visibility = View.INVISIBLE
 
-        val allowFeeLevelSelection = engine!!.allowSelectFeeLevel()
+        val allowFeeLevelSelection = engine.allowSelectFeeLevel()
         for (lol in rgFee.touchables) {
             lol.isEnabled = allowFeeLevelSelection
         }
@@ -183,21 +188,6 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
                 },
                 etWallet.text.toString(),
                 amount)
-    }
-
-    public override fun onResume() {
-        super.onResume()
-        nfcManager.onResume()
-    }
-
-    public override fun onPause() {
-        super.onPause()
-        nfcManager.onPause()
-    }
-
-    public override fun onStop() {
-        super.onStop()
-        nfcManager.onStop()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
