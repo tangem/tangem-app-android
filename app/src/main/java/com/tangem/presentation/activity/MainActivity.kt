@@ -18,10 +18,6 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.DecelerateInterpolator
-import android.view.animation.Transformation
-import android.widget.RelativeLayout
 import android.widget.Toast
 import com.scottyab.rootbeer.RootBeer
 import com.tangem.App
@@ -34,8 +30,8 @@ import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.RootFoundDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
-import com.tangem.presentation.dialog.WaitSecurityDelayDialogNew
-import com.tangem.tangemcard.android.nfc.DeviceNFCAntennaLocation
+import com.tangem.tangemcard.android.nfc.NfcDeviceAntennaLocation
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.TangemCard
@@ -67,7 +63,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     private lateinit var nfcManager: NfcManager
 
     private var zipFile: File? = null
-    private lateinit var antenna: DeviceNFCAntennaLocation
+    private lateinit var nfcDeviceAntenna: NfcDeviceAntennaLocation
     private var unsuccessReadCount = 0
     private var lastTag: Tag? = null
     private var readCardInfoTask: ReadCardInfoTask? = null
@@ -86,11 +82,12 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        App.getNavigatorComponent().inject(this)
+        App.navigatorComponent?.inject(this)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         verifyPermissions()
 
@@ -100,34 +97,13 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
         rippleBackgroundNfc.startRippleAnimation()
 
-        // get NFC Antenna
-        antenna = DeviceNFCAntennaLocation()
-        antenna.getAntennaLocation()
-
-        // set card orientation
-        when (antenna.orientation) {
-            DeviceNFCAntennaLocation.CARD_ORIENTATION_HORIZONTAL -> {
-                ivHandCardHorizontal.visibility = View.VISIBLE
-                ivHandCardVertical.visibility = View.GONE
-            }
-
-            DeviceNFCAntennaLocation.CARD_ORIENTATION_VERTICAL -> {
-                ivHandCardVertical.visibility = View.VISIBLE
-                ivHandCardHorizontal.visibility = View.GONE
-            }
-        }
-
-        // set card z position
-        when (antenna.z) {
-            DeviceNFCAntennaLocation.CARD_ON_BACK -> llHand.elevation = 0.0f
-            DeviceNFCAntennaLocation.CARD_ON_FRONT -> llHand.elevation = 30.0f
-        }
-
-        animate()
+        // init NFC Antenna
+        nfcDeviceAntenna = NfcDeviceAntennaLocation(this, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
+        nfcDeviceAntenna.init()
 
         // set phone name
-        if (antenna.fullName != "")
-            tvNFCHint.text = String.format(getString(R.string.scan_banknote), antenna.fullName)
+        if (nfcDeviceAntenna.fullName != "")
+            tvNFCHint.text = String.format(getString(R.string.scan_banknote), nfcDeviceAntenna.fullName)
         else
             tvNFCHint.text = String.format(getString(R.string.scan_banknote), getString(R.string.phone))
 
@@ -267,20 +243,16 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
     public override fun onResume() {
         super.onResume()
-        animate()
+        nfcDeviceAntenna.animate()
         ReadCardInfoTask.resetLastReadInfo()
-        nfcManager.onResume()
     }
 
     public override fun onPause() {
-        nfcManager.onPause()
         readCardInfoTask?.cancel(true)
         super.onPause()
     }
 
     public override fun onStop() {
-        // dismiss enable NFC dialog
-        nfcManager.onStop()
         readCardInfoTask?.cancel(true)
         super.onStop()
     }
@@ -383,26 +355,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
     private fun setNfcAdapterReaderCallback(callback: NfcAdapter.ReaderCallback) {
         onNfcReaderCallback = callback
-    }
-
-    private fun animate() {
-        val lp = llHand.layoutParams as RelativeLayout.LayoutParams
-        val lp2 = llNfc.layoutParams as RelativeLayout.LayoutParams
-        val dp = resources.displayMetrics.density
-        val lm = dp * (69 + antenna.x * 75)
-        lp.topMargin = (dp * (-100 + antenna.y * 250)).toInt()
-        lp2.topMargin = (dp * (-125 + antenna.y * 250)).toInt()
-        llNfc.layoutParams = lp2
-
-        val a = object : Animation() {
-            override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
-                lp.leftMargin = (lm * interpolatedTime).toInt()
-                llHand.layoutParams = lp
-            }
-        }
-        a.duration = 2000
-        a.interpolator = DecelerateInterpolator()
-        llHand.startAnimation(a)
     }
 
     private fun showMenu(v: View) {
