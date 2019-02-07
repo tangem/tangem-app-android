@@ -36,7 +36,7 @@ public class ServerApiCommon {
     }
 
     public void requestBtcEstimatedFee(int blockCount) {
-        EstimatefeeApi estimatefeeApi = App.getNetworkComponent().getRetrofitEstimatefee().create(EstimatefeeApi.class);
+        EstimatefeeApi estimatefeeApi = App.Companion.getNetworkComponent().getRetrofitEstimatefee().create(EstimatefeeApi.class);
 
         Call<String> call;
         switch (blockCount) {
@@ -91,7 +91,7 @@ public class ServerApiCommon {
 
     @SuppressLint("CheckResult")
     public void requestRateInfo(String cryptoId) {
-        CoinmarketApi coinmarketApi = App.getNetworkComponent().getRetrofitCoinmarketcap().create(CoinmarketApi.class);
+        CoinmarketApi coinmarketApi = App.Companion.getNetworkComponent().getRetrofitCoinmarketcap().create(CoinmarketApi.class);
 
         coinmarketApi.getRateInfoList()
                 .subscribeOn(Schedulers.io())
@@ -126,7 +126,7 @@ public class ServerApiCommon {
     }
 
     public void requestLastVersion() {
-        UpdateVersionApi updateVersionApi = App.getNetworkComponent().getRetrofitGithubusercontent().create(UpdateVersionApi.class);
+        UpdateVersionApi updateVersionApi = App.Companion.getNetworkComponent().getRetrofitGitHubUserContent().create(UpdateVersionApi.class);
 
         Call<ResponseBody> call = updateVersionApi.getLastVersion();
         call.enqueue(new Callback<ResponseBody>() {
