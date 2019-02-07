@@ -64,14 +64,10 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
         val TAG: String = LoadedWallet::class.java.simpleName
     }
 
+    private lateinit var ctx: TangemContext
     private lateinit var nfcManager: NfcManager
-
     private var serverApiCommon: ServerApiCommon = ServerApiCommon()
     private var serverApiTangem: ServerApiTangem = ServerApiTangem()
-
-
-    private lateinit var ctx: TangemContext
-
     private var lastTag: Tag? = null
     private var lastReadSuccess = true
     private var verifyCardTask: VerifyCardTask? = null
@@ -80,24 +76,37 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
     private var newPIN = ""
     private var newPIN2 = ""
     private var cardProtocol: CardProtocol? = null
-    private val inactiveColor: ColorStateList by lazy { resources.getColorStateList(R.color.btn_dark) }
-    private val activeColor: ColorStateList by lazy { resources.getColorStateList(R.color.colorAccent) }
+    private val inactiveColor: ColorStateList by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            resources.getColorStateList(R.color.btn_dark, activity?.theme)
+        else
+            @Suppress("DEPRECATION")
+            resources.getColorStateList(R.color.btn_dark)
+    }
+    private val activeColor: ColorStateList by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            resources.getColorStateList(R.color.colorAccent, activity?.theme)
+        else
+            @Suppress("DEPRECATION")
+            resources.getColorStateList(R.color.colorAccent)
+    }
     private var requestCounter: Int = 0
         set(value) {
             field = value
             LOG.i(TAG, "requestCounter, set $field")
             if (field <= 0) {
                 LOG.e(TAG, "+++++++++++ FINISH REFRESH")
-                if (srl != null && srl.isRefreshing) srl.isRefreshing = false
-                //updateViews()
-            } else if (srl != null && !srl.isRefreshing) srl.isRefreshing = true
+                if (srl != null && srl.isRefreshing)
+                    srl.isRefreshing = false
+            } else if (srl != null && !srl.isRefreshing)
+                srl.isRefreshing = true
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ctx = TangemContext.loadFromBundle(activity, activity?.intent?.extras)
 
-        nfcManager = NfcManager(activity, this)
+        nfcManager = NfcManager(activity!!, this)
         lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         lastTag = activity?.intent?.getParcelableExtra(Constant.EXTRA_LAST_DISCOVERED_TAG)
@@ -141,7 +150,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                     getString(R.string.in_app) -> {
                         try {
                             val engine = CoinEngineFactory.create(ctx)
-                            val intent = Intent(Intent.ACTION_VIEW, engine!!.shareWalletUri)
+                            val intent = Intent(Intent.ACTION_VIEW, engine?.shareWalletUri)
                             intent.addCategory(Intent.CATEGORY_DEFAULT)
                             startActivity(intent)
                         } catch (e: ActivityNotFoundException) {
@@ -561,7 +570,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
         } else {
             val validator = BalanceValidator()
             // TODO why attest=false?
-            validator.Check(ctx, false)
+            validator.check(ctx, false)
             context?.let { ContextCompat.getColor(it, validator.color) }?.let { tvBalanceLine1.setTextColor(it) }
             tvBalanceLine1.text = validator.firstLine
             tvBalanceLine2.text = validator.getSecondLine(false)
@@ -607,10 +616,6 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
             btnExtract.isEnabled = false
             btnExtract.backgroundTintList = inactiveColor
         }
-
-//        //TODO why ???
-//        ctx.error = null
-//        ctx.message = null
     }
 
     private fun refresh() {
