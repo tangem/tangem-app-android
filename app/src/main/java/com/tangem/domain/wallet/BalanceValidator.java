@@ -49,7 +49,7 @@ public class BalanceValidator {
         }
     }
 
-    public void Check(TangemContext ctx, Boolean attest) {
+    public void check(TangemContext ctx, Boolean attest) {
         firstLine = "Verification failed";
         secondLine = "";
         TangemCard card = ctx.getCard();
