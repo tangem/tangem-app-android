@@ -31,7 +31,7 @@ class LogoActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_logo)
 
-        App.getNavigatorComponent().inject(this)
+        App.navigatorComponent?.inject(this)
 
         ivLogo.setOnClickListener { hide() }
     }
