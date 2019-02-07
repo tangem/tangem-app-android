@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
+import android.os.Build
 import android.os.Bundle
 import androidx.core.content.ContextCompat
 import android.text.Html
@@ -22,6 +23,7 @@ import com.tangem.presentation.activity.*
 import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.presentation.event.DeletingWalletFinish
 import com.tangem.tangemcard.android.data.PINStorage
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
@@ -50,8 +52,10 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        nfcManager = NfcManager(activity, this)
         ctx = TangemContext.loadFromBundle(activity, activity?.intent?.extras)
+
+        nfcManager = NfcManager(activity!!, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -60,7 +64,6 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         updateViews()
 
         srlVerifyCard.setOnRefreshListener { srlVerifyCard.isRefreshing = false }
@@ -210,24 +213,9 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        nfcManager.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        nfcManager.onPause()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        nfcManager.onStop()
-    }
-
     override fun onTagDiscovered(tag: Tag?) {
         try {
-            nfcManager.ignoreTag(tag)
+            nfcManager.ignoreTag(tag!!)
         } catch (e: IOException) {
             e.printStackTrace()
         }
@@ -270,7 +258,11 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
             tvIssuer.text = ctx.card!!.issuerDescription
 
             tvCardRegistredDate.text = DateUtils.formatDateTime(null, ctx.card!!.personalizationDateTime.time, DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_NUMERIC_DATE or DateUtils.FORMAT_SHOW_YEAR)
-            val html = Html.fromHtml(ctx.blockchainName)
+
+            @Suppress("DEPRECATION") val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                Html.fromHtml(ctx.blockchainName, Html.FROM_HTML_MODE_LEGACY)
+            else
+                Html.fromHtml(ctx.blockchainName)
             tvBlockchain.text = html
 
             tvValidationNode.text = ctx.coinData!!.validationNodeDescription
