@@ -62,7 +62,7 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_empty_wallet)
 
-        App.getNavigatorComponent().inject(this)
+        App.navigatorComponent?.inject(this)
 
         nfcManager = NfcManager(this, this)
         lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
