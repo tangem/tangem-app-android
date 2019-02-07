@@ -16,6 +16,7 @@ import com.tangem.data.network.CryptonitOtherApi
 import com.tangem.di.Navigator
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_cryptonit_other_api_withdrawal.*
@@ -41,9 +42,10 @@ class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapt
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_cryptonit_other_api_withdrawal)
 
-        App.getNavigatorComponent().inject(this)
+        App.navigatorComponent?.inject(this)
 
         nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
@@ -129,47 +131,6 @@ class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapt
         doRequestBalance()
     }
 
-    private fun doRequestBalance() {
-        if (cryptonit!!.havaAccountInfo()) {
-            rlProgressBar.visibility = View.VISIBLE
-            tvProgressDescription.text = getString(R.string.cryptonit_request_balance)
-            tvError.visibility = View.INVISIBLE
-            cryptonit!!.requestBalance(ctx.blockchain.currency, "USD")
-        } else {
-            tvError.visibility = View.VISIBLE
-            tvError.text = getString(R.string.cryptonit_not_enough_account_data)
-        }
-    }
-
-//    private fun EditText.afterTextChanged(afterTextChanged: (String) -> Unit) {
-//        this.addTextChangedListener(object : TextWatcher {
-//            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-//            }
-//
-//            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-//            }
-//
-//            override fun afterTextChanged(editable: Editable?) {
-//                afterTextChanged.invoke(editable.toString())
-//            }
-//        })
-//    }
-
-    public override fun onResume() {
-        super.onResume()
-        nfcManager.onResume()
-    }
-
-    public override fun onPause() {
-        super.onPause()
-        nfcManager.onPause()
-    }
-
-    public override fun onStop() {
-        super.onStop()
-        nfcManager.onStop()
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK && data != null && data.extras!!.containsKey("QRCode")) {
@@ -198,7 +159,18 @@ class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapt
         } catch (e: IOException) {
             e.printStackTrace()
         }
+    }
 
+    private fun doRequestBalance() {
+        if (cryptonit!!.havaAccountInfo()) {
+            rlProgressBar.visibility = View.VISIBLE
+            tvProgressDescription.text = getString(R.string.cryptonit_request_balance)
+            tvError.visibility = View.INVISIBLE
+            cryptonit!!.requestBalance(ctx.blockchain.currency, "USD")
+        } else {
+            tvError.visibility = View.VISIBLE
+            tvError.text = getString(R.string.cryptonit_not_enough_account_data)
+        }
     }
 
 }
