@@ -23,6 +23,7 @@ import com.tangem.data.Blockchain
 import com.tangem.di.Navigator
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_kraken_withdrawal.*
 import java.io.IOException
@@ -38,7 +39,8 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
     }
 
     private lateinit var ctx: TangemContext
-    private var nfcManager: NfcManager? = null
+    private lateinit var nfcManager: NfcManager
+
     private var kraken: Kraken? = null
     private var fee: BigDecimal? = null
 
@@ -50,11 +52,12 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_kraken_withdrawal)
 
-        App.getNavigatorComponent().inject(this)
-
-        nfcManager = NfcManager(this, this)
+        App.navigatorComponent?.inject(this)
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
+
+        nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         kraken = Kraken(this)
 
@@ -68,7 +71,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
         tvCurrency.text = engine!!.balanceCurrency
 
         etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toValueString())
-        etAmount.filters=engine.amountInputFilters
+        etAmount.filters = engine.amountInputFilters
 
         etAmount.setOnEditorActionListener { lv, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
@@ -167,7 +170,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
         val builder = AlertDialog.Builder(this)
 
         // Set a title for alert dialog
-        builder.setTitle("Please confirm withdraw")
+        builder.setTitle(R.string.please_confirm_withdraw)
 
         // Set a message for alert dialog
         builder.setMessage(String.format("Continue with fee %s %s?", fee!!.toString().trimEnd('0'), ctx.blockchain.currency))
@@ -186,23 +189,22 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
                         rlProgressBar.visibility = View.VISIBLE
                         tvProgressDescription.text = getString(R.string.kraken_request_withdrawal)
 
-                        //Toast.makeText(this, String.format("Withdraw %s!",dblAmount.toString()), Toast.LENGTH_LONG).show()
                         kraken!!.requestWithdraw(ctx.blockchain.currency, dblAmount.toString(), ctx.coinData!!.wallet)
                     } catch (e: Exception) {
                         etAmount.error = getString(R.string.unknown_amount_format)
                     }
                 }
                 DialogInterface.BUTTON_NEGATIVE -> {
-                    Toast.makeText(this, "Operation canceled!", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, R.string.operation_canceled, Toast.LENGTH_LONG).show()
                 }
             }
         }
 
         // Set the alert dialog positive/yes button
-        builder.setPositiveButton("YES", dialogClickListener)
+        builder.setPositiveButton(R.string.yes, dialogClickListener)
 
         // Set the alert dialog negative/no button
-        builder.setNegativeButton("NO", dialogClickListener)
+        builder.setNegativeButton(R.string.no, dialogClickListener)
 
 
         // Initialize the AlertDialog using builder object
@@ -222,21 +224,6 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
             tvError.visibility = View.VISIBLE
             tvError.text = getString(R.string.kraken_not_enough_account_data)
         }
-    }
-
-    public override fun onResume() {
-        super.onResume()
-        nfcManager!!.onResume()
-    }
-
-    public override fun onPause() {
-        super.onPause()
-        nfcManager!!.onPause()
-    }
-
-    public override fun onStop() {
-        super.onStop()
-        nfcManager!!.onStop()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -262,12 +249,10 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
 
     override fun onTagDiscovered(tag: Tag) {
         try {
-//            Log.w(javaClass.name, "Ignore discovered tag!")
-            nfcManager!!.ignoreTag(tag)
+            nfcManager.ignoreTag(tag)
         } catch (e: IOException) {
             e.printStackTrace()
         }
-
     }
 
 }
