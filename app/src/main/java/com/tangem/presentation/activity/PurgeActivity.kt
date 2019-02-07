@@ -10,28 +10,22 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.DecelerateInterpolator
-import android.view.animation.Transformation
-import android.widget.RelativeLayout
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
-import com.tangem.tangemcard.tasks.PurgeTask
-import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialogNew
 import com.tangem.presentation.event.DeletingWalletFinish
-import com.tangem.presentation.event.ReadAfterRequest
-import com.tangem.presentation.event.ReadBeforeRequest
-import com.tangem.presentation.event.ReadWait
-import com.tangem.tangemcard.android.nfc.DeviceNFCAntennaLocation
+import com.tangem.tangemcard.android.nfc.NfcDeviceAntennaLocation
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
+import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.asBundle
+import com.tangem.tangemcard.reader.CardProtocol
+import com.tangem.tangemcard.tasks.PurgeTask
 import com.tangem.tangemcard.util.Util
 import com.tangem.util.LOG
 import com.tangem.wallet.R
@@ -59,7 +53,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
     private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
 
-    private lateinit var antenna: DeviceNFCAntennaLocation
+    private lateinit var nfcDeviceAntenna: NfcDeviceAntennaLocation
 
     private var purgeTask: PurgeTask? = null
 
@@ -67,58 +61,25 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_purge)
 
-        App.getNavigatorComponent().inject(this)
+        App.navigatorComponent?.inject(this)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
+
+        // init NFC Antenna
+        nfcDeviceAntenna = NfcDeviceAntennaLocation(this, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
+        nfcDeviceAntenna.init()
 
         tvCardID.text = ctx.card!!.cidDescription
         progressBar.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
         progressBar.visibility = View.INVISIBLE
-
-        // get NFC Antenna
-        antenna = DeviceNFCAntennaLocation()
-        antenna.getAntennaLocation()
-
-        // set card orientation
-        when (antenna.orientation) {
-            DeviceNFCAntennaLocation.CARD_ORIENTATION_HORIZONTAL -> {
-                ivHandCardHorizontal.visibility = View.VISIBLE
-                ivHandCardVertical.visibility = View.GONE
-            }
-
-            DeviceNFCAntennaLocation.CARD_ORIENTATION_VERTICAL -> {
-                ivHandCardVertical.visibility = View.VISIBLE
-                ivHandCardHorizontal.visibility = View.GONE
-            }
-        }
-
-        // set card z position
-        when (antenna.z) {
-            DeviceNFCAntennaLocation.CARD_ON_BACK -> llHand.elevation = 0.0f
-            DeviceNFCAntennaLocation.CARD_ON_FRONT -> llHand.elevation = 30.0f
-        }
-
-        animate()
-    }
-
-    public override fun onResume() {
-        super.onResume()
-        nfcManager.onResume()
-    }
-
-    public override fun onPause() {
-        nfcManager.onPause()
-        purgeTask?.cancel(true)
-        super.onPause()
     }
 
     public override fun onStop() {
-        // dismiss enable NFC dialog
-        nfcManager.onStop()
         purgeTask?.cancel(true)
         super.onStop()
     }
@@ -126,7 +87,8 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
     override fun onTagDiscovered(tag: Tag) {
         try {
             // get IsoDep handle and run cardReader thread
-            val isoDep = IsoDep.get(tag) ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
+            val isoDep = IsoDep.get(tag)
+                    ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag.id
             val sUID = Util.byteArrayToHexString(uid)
             LOG.d(TAG, "UID: $sUID")
@@ -272,26 +234,6 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
                 e.printStackTrace()
             }
         }, 500)
-    }
-
-    private fun animate() {
-        val lp = llHand.layoutParams as RelativeLayout.LayoutParams
-        val lp2 = llNfc.layoutParams as RelativeLayout.LayoutParams
-        val dp = resources.displayMetrics.density
-        val lm = dp * (69 + antenna.x * 75)
-        lp.topMargin = (dp * (-100 + antenna.y * 250)).toInt()
-        lp2.topMargin = (dp * (-125 + antenna.y * 250)).toInt()
-        llNfc.layoutParams = lp2
-
-        val a = object : Animation() {
-            override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
-                lp.leftMargin = (lm * interpolatedTime).toInt()
-                llHand.layoutParams = lp
-            }
-        }
-        a.duration = 2000
-        a.interpolator = DecelerateInterpolator()
-        llHand.startAnimation(a)
     }
 
 }

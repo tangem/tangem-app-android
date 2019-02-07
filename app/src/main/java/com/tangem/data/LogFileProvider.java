@@ -51,7 +51,7 @@ public class LogFileProvider extends ContentProvider {
         Log.v(LOG_TAG,
                 "Called with uri: '" + uri + "'." + uri.getLastPathSegment());
 
-        // Check incoming Uri against the matcher
+        // check incoming Uri against the matcher
         switch (uriMatcher.match(uri)) {
 
             // If it returns 1 - then it matches the Uri defined in onCreate
