@@ -32,7 +32,7 @@ class LoadedWalletActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_loaded_wallet)
 
-        App.getNavigatorComponent().inject(this)
+        App.navigatorComponent?.inject(this)
 
         if (intent.extras!!.containsKey(NfcAdapter.EXTRA_TAG)) {
             val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)

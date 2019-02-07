@@ -9,20 +9,16 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.DecelerateInterpolator
-import android.view.animation.Transformation
-import android.widget.ProgressBar
-import android.widget.RelativeLayout
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
-import com.tangem.tangemcard.android.nfc.DeviceNFCAntennaLocation
+import com.tangem.tangemcard.android.nfc.NfcDeviceAntennaLocation
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.asBundle
@@ -31,6 +27,7 @@ import com.tangem.tangemcard.tasks.CreateNewWalletTask
 import com.tangem.tangemcard.util.Util
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_create_new_wallet.*
+import kotlinx.android.synthetic.main.layout_progress_horizontal.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
 
 class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
@@ -46,51 +43,27 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
     private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
 
-    private lateinit var antenna: DeviceNFCAntennaLocation
+    private lateinit var nfcDeviceAntenna: NfcDeviceAntennaLocation
 
     private var createNewWalletTask: CreateNewWalletTask? = null
     private var lastReadSuccess = true
-
-    private var progressBar: ProgressBar? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_new_wallet)
 
         nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
+        // init NFC Antenna
+        nfcDeviceAntenna = NfcDeviceAntennaLocation(this, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
+        nfcDeviceAntenna.init()
+
         tvCardId.text = ctx.card!!.cidDescription
-
-        progressBar = findViewById(R.id.progressBar)
-        progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
-        progressBar!!.visibility = View.INVISIBLE
-
-        // get NFC Antenna
-        antenna = DeviceNFCAntennaLocation()
-        antenna.getAntennaLocation()
-
-        // set card orientation
-        when (antenna.orientation) {
-            DeviceNFCAntennaLocation.CARD_ORIENTATION_HORIZONTAL -> {
-                ivHandCardHorizontal.visibility = View.VISIBLE
-                ivHandCardVertical.visibility = View.GONE
-            }
-
-            DeviceNFCAntennaLocation.CARD_ORIENTATION_VERTICAL -> {
-                ivHandCardVertical.visibility = View.VISIBLE
-                ivHandCardHorizontal.visibility = View.GONE
-            }
-        }
-
-        // set card z position
-        when (antenna.z) {
-            DeviceNFCAntennaLocation.CARD_ON_BACK -> llHand.elevation = 0.0f
-            DeviceNFCAntennaLocation.CARD_ON_FRONT -> llHand.elevation = 30.0f
-        }
-
-        animate()
+        progressBar.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+        progressBar.visibility = View.INVISIBLE
     }
 
     override fun onTagDiscovered(tag: Tag) {
@@ -120,32 +93,17 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         }
     }
 
-    public override fun onResume() {
-        super.onResume()
-        nfcManager.onResume()
-    }
-
     public override fun onPause() {
-        nfcManager.onPause()
-        if (createNewWalletTask != null)
-            createNewWalletTask!!.cancel(true)
+        createNewWalletTask?.cancel(true)
         super.onPause()
     }
 
-    public override fun onStop() {
-        // dismiss enable NFC dialog
-        nfcManager.onStop()
-        if (createNewWalletTask != null)
-            createNewWalletTask!!.cancel(true)
-        super.onStop()
-    }
-
     override fun onReadStart(cardProtocol: CardProtocol) {
-        rlProgressBar.post { rlProgressBar.visibility = View.VISIBLE }
+        rlProgressBar?.post { rlProgressBar.visibility = View.VISIBLE }
 
-        progressBar!!.post {
-            progressBar!!.visibility = View.VISIBLE
-            progressBar!!.progress = 5
+        progressBar?.post {
+            progressBar?.visibility = View.VISIBLE
+            progressBar?.progress = 5
         }
     }
 
@@ -210,11 +168,11 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
             }
         }, 500)
 
-        progressBar!!.postDelayed({
+        progressBar?.postDelayed({
             try {
-                progressBar!!.progress = 0
-                progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
-                progressBar!!.visibility = View.INVISIBLE
+                progressBar?.progress = 0
+                progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+                progressBar?.visibility = View.INVISIBLE
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -222,17 +180,17 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
     }
 
     override fun onReadProgress(protocol: CardProtocol, progress: Int) {
-        progressBar!!.post { progressBar!!.progress = progress }
+        progressBar?.post { progressBar?.progress = progress }
     }
 
     override fun onReadCancel() {
         createNewWalletTask = null
 
-        progressBar!!.postDelayed({
+        progressBar?.postDelayed({
             try {
-                progressBar!!.progress = 0
-                progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
-                progressBar!!.visibility = View.INVISIBLE
+                progressBar?.progress = 0
+                progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+                progressBar?.visibility = View.INVISIBLE
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -249,26 +207,6 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
 
     override fun onReadAfterRequest() {
         WaitSecurityDelayDialog.onReadAfterRequest(this)
-    }
-
-    private fun animate() {
-        val lp = llHand.layoutParams as RelativeLayout.LayoutParams
-        val lp2 = llNfc.layoutParams as RelativeLayout.LayoutParams
-        val dp = resources.displayMetrics.density
-        val lm = dp * (69 + antenna.x * 75)
-        lp.topMargin = (dp * (-100 + antenna.y * 250)).toInt()
-        lp2.topMargin = (dp * (-125 + antenna.y * 250)).toInt()
-        llNfc.layoutParams = lp2
-
-        val a = object : Animation() {
-            override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
-                lp.leftMargin = (lm * interpolatedTime).toInt()
-                llHand.layoutParams = lp
-            }
-        }
-        a.duration = 2000
-        a.interpolator = DecelerateInterpolator()
-        llHand.startAnimation(a)
     }
 
 }
