@@ -52,7 +52,7 @@ public class ServerApiRootstock {
 
     public void requestData(String method, int id, String wallet, String contract, String tx) {
         requestsCount++;
-        RootstockApi rootstockApi = App.getNetworkComponent().getRetrofitRootstock().create(RootstockApi.class);
+        RootstockApi rootstockApi = App.Companion.getNetworkComponent().getRetrofitRootstock().create(RootstockApi.class);
 
         InfuraBody infuraBody;
         switch (method) {

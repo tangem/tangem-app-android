@@ -17,6 +17,7 @@ import com.tangem.App
 import com.tangem.Constant
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.*
@@ -56,6 +57,7 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
         setContentView(R.layout.activity_pin_swap)
 
         nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         card = TangemCard(intent.getStringExtra(EXTRA_TANGEM_CARD_UID))
         card!!.loadFromBundle(intent.extras!!.getBundle(EXTRA_TANGEM_CARD))
@@ -92,23 +94,13 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
         }
     }
 
-    public override fun onResume() {
-        super.onResume()
-        nfcManager.onResume()
-    }
-
     public override fun onPause() {
-        nfcManager.onPause()
-        if (swapPinTask != null)
-            swapPinTask!!.cancel(true)
+        swapPinTask?.cancel(true)
         super.onPause()
     }
 
     public override fun onStop() {
-        // dismiss enable NFC dialog
-        nfcManager.onStop()
-        if (swapPinTask != null)
-            swapPinTask!!.cancel(true)
+        swapPinTask?.cancel(true)
         super.onStop()
     }
 
