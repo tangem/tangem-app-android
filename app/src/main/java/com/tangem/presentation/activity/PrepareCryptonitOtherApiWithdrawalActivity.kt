@@ -42,7 +42,7 @@ class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapt
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_cryptonit_other_api_withdrawal)
 
-        App.getNavigatorComponent().inject(this)
+        App.navigatorComponent?.inject(this)
 
         nfcManager = NfcManager(this, this)
         lifecycle.addObserver(NfcLifecycleObserver(nfcManager))

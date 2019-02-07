@@ -29,7 +29,7 @@ class VerifyCardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_verify_card)
 
-        App.getNavigatorComponent().inject(this)
+        App.navigatorComponent?.inject(this)
     }
 
     override fun onBackPressed() {
