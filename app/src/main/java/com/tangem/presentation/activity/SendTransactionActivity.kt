@@ -13,6 +13,7 @@ import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.event.TransactionFinishWithError
 import com.tangem.presentation.event.TransactionFinishWithSuccess
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
@@ -31,6 +32,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         setContentView(R.layout.activity_send_transaction)
 
         nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
         tx = intent.getByteArrayExtra(Constant.EXTRA_TX)
@@ -65,21 +67,6 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             }
         }
         return super.onKeyDown(keyCode, event)
-    }
-
-    public override fun onResume() {
-        super.onResume()
-        nfcManager.onResume()
-    }
-
-    public override fun onPause() {
-        super.onPause()
-        nfcManager.onPause()
-    }
-
-    public override fun onStop() {
-        super.onStop()
-        nfcManager.onStop()
     }
 
     override fun onTagDiscovered(tag: Tag) {
