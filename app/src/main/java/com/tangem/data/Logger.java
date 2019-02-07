@@ -226,7 +226,7 @@ public class Logger {
 //
 //            verifyStoragePermissions(activity);
 //            initLogFile(activity.getApplicationContext());
-//            t.start();
+//            t.init();
 //        } catch (Exception e) {
 //            e.printStackTrace();
 //        }
@@ -268,7 +268,7 @@ public class Logger {
 //    //Checks if the app has permission to write to device storage
 //    //If the app does not has permission then the user will be prompted to grant permissions
 //    public static void verifyStoragePermissions(Activity activity) {
-//        // Check if we have write permission
+//        // check if we have write permission
 //        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
 //
 //        if (permission != PackageManager.PERMISSION_GRANTED) {
