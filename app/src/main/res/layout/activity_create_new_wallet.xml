@@ -58,7 +58,6 @@
     </LinearLayout>
 
     <include
-        android:id="@+id/progressBar"
         layout="@layout/layout_progress_horizontal" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
