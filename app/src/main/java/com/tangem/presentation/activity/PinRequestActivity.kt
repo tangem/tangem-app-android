@@ -25,6 +25,7 @@ import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.data.fingerprint.FingerprintHelper
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.tangemcard.android.data.PINStorage
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD
@@ -100,6 +101,7 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         setContentView(R.layout.activity_pin_request)
 
         nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         mode = Mode.valueOf(intent.getStringExtra(Constant.EXTRA_MODE))
 
@@ -171,34 +173,26 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
 
     override fun onPause() {
         super.onPause()
-
-        if (fingerprintHelper != null)
-            fingerprintHelper!!.cancel()
+        fingerprintHelper?.cancel()
 
         if (startFingerprintReaderTask != null) {
             startFingerprintReaderTask!!.cancel(true)
             startFingerprintReaderTask = null
         }
-
-        nfcManager.onPause()
     }
 
     override fun onStop() {
         super.onStop()
-        if (fingerprintHelper != null)
-            fingerprintHelper!!.cancel()
+        fingerprintHelper?.cancel()
 
         if (startFingerprintReaderTask != null) {
             startFingerprintReaderTask!!.cancel(true)
             startFingerprintReaderTask = null
         }
-
-        nfcManager.onStop()
     }
 
     override fun onResume() {
         super.onResume()
-        nfcManager.onResume()
         if (allowFingerprint)
             startFingerprintReader()
     }
@@ -218,7 +212,7 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
 
     @TargetApi(Build.VERSION_CODES.M)
     override fun authenticationSucceeded(result: FingerprintManager.AuthenticationResult) {
-        LOG.i(TAG,"Authentication succeeded!")
+        LOG.i(TAG, "Authentication succeeded!")
         val cipher = result.cryptoObject.cipher
 
         if (mode == Mode.RequestNewPIN || mode == Mode.ConfirmNewPIN) {
@@ -246,34 +240,33 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         finish()
     }
 
-    @SuppressLint("SetTextI18n")
     private fun buttonClick(button: Button) {
-        tvPin!!.text = tvPin!!.text.toString() + button.text as String
+        tvPin.text = tvPin.text.toString() + button.text.toString()
     }
 
     @SuppressLint("NewApi")
     private fun testFingerPrintSettings(): Boolean {
-        LOG.i(TAG,"Testing Fingerprint Settings")
+        LOG.i(TAG, "Testing Fingerprint Settings")
 
         val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
         fingerprintManager = getSystemService(Context.FINGERPRINT_SERVICE) as FingerprintManager
 
         if (!keyguardManager.isKeyguardSecure) {
-            LOG.i(TAG,"User hasn't enabled Lock Screen")
+            LOG.i(TAG, "User hasn't enabled Lock Screen")
             return false
         }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
-            LOG.i(TAG,"User hasn't granted permission to use Fingerprint")
+            LOG.i(TAG, "User hasn't granted permission to use Fingerprint")
             return false
         }
 
         if (!fingerprintManager!!.hasEnrolledFingerprints()) {
-            LOG.i(TAG,"User hasn't registered any fingerprints")
+            LOG.i(TAG, "User hasn't registered any fingerprints")
             return false
         }
 
-        LOG.i(TAG,"Fingerprint authentication is set.\n")
+        LOG.i(TAG, "Fingerprint authentication is set.\n")
 
         return true
     }
