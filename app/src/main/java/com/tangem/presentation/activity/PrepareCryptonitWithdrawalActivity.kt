@@ -17,6 +17,7 @@ import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.data.Blockchain
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.util.DecimalDigitsInputFilter
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_cryptonit_withdrawal.*
@@ -28,8 +29,8 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         val TAG: String = PrepareCryptonitWithdrawalActivity::class.java.simpleName
     }
 
-    private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
+    private lateinit var nfcManager: NfcManager
 
     private var cryptonit: Cryptonit? = null
 
@@ -38,9 +39,10 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_cryptonit_withdrawal)
 
-        nfcManager = NfcManager(this, this)
-
         ctx = TangemContext.loadFromBundle(this, intent.extras)
+
+        nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         cryptonit = Cryptonit(this)
 
@@ -56,17 +58,17 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         tvFeeCurrency.text = engine.feeCurrency
 
         etAmount.setText(engine.convertToAmount(engine.convertToInternalAmount(ctx.card!!.denomination)).toValueString())
-        etAmount.filters=engine.amountInputFilters
+        etAmount.filters = engine.amountInputFilters
 
-        etAmount.setOnEditorActionListener { lv, actionId, event ->
+        etAmount.setOnEditorActionListener { lv, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 val imm = lv.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.hideSoftInputFromWindow(lv.windowToken, 0)
                 true
-            } else {
+            } else
                 false
-            }
         }
+
         when (ctx.blockchain) {
             Blockchain.Bitcoin -> {
                 etAmount.filters = arrayOf<InputFilter>(DecimalDigitsInputFilter(5))
@@ -125,7 +127,7 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         cryptonit!!.setWithdrawalListener { response ->
             rlProgressBar.visibility = View.INVISIBLE
             if (response.success != null && response.success!!) {
-                Toast.makeText(this, "Withdrawal successful!", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.withdrawal_successful, Toast.LENGTH_LONG).show();
                 finish()
             } else {
                 tvError.visibility = View.VISIBLE
@@ -134,6 +136,14 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
         }
         btnLoad.visibility = View.INVISIBLE
         doRequestBalance()
+    }
+
+    override fun onTagDiscovered(tag: Tag) {
+        try {
+            nfcManager.ignoreTag(tag)
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
     }
 
     private fun doRequestBalance() {
@@ -146,30 +156,6 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
             tvError.visibility = View.VISIBLE
             tvError.text = getString(R.string.cryptonit_not_enough_account_data)
         }
-    }
-
-    public override fun onResume() {
-        super.onResume()
-        nfcManager.onResume()
-    }
-
-    public override fun onPause() {
-        super.onPause()
-        nfcManager.onPause()
-    }
-
-    public override fun onStop() {
-        super.onStop()
-        nfcManager.onStop()
-    }
-
-    override fun onTagDiscovered(tag: Tag) {
-        try {
-            nfcManager.ignoreTag(tag)
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-
     }
 
 }
