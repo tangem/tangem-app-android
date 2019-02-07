@@ -11,6 +11,7 @@ import android.text.Html
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
@@ -18,7 +19,9 @@ import com.tangem.data.Blockchain
 import com.tangem.di.Navigator
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
+import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_transaction.*
 import java.io.IOException
@@ -44,9 +47,10 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_transaction)
 
-        App.getNavigatorComponent().inject(this)
+        App.navigatorComponent?.inject(this)
 
         nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
@@ -87,8 +91,12 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         }
 
         btnVerify.setOnClickListener {
-            val engine1 = CoinEngineFactory.create(ctx)
+            if (!UtilHelper.isOnline(this)) {
+                Toast.makeText(this, R.string.no_connection, Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
 
+            val engine1 = CoinEngineFactory.create(ctx)
             val strAmount: String = etAmount.text.toString().replace(",", ".")
             val amount = engine1!!.convertToAmount(etAmount.text.toString(), tvCurrency.text.toString())
 
@@ -127,21 +135,6 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         }
 
         ivCamera.setOnClickListener { navigator.showQrScanActivity(this, Constant.REQUEST_CODE_SCAN_QR) }
-    }
-
-    public override fun onResume() {
-        super.onResume()
-        nfcManager.onResume()
-    }
-
-    public override fun onPause() {
-        super.onPause()
-        nfcManager.onPause()
-    }
-
-    public override fun onStop() {
-        super.onStop()
-        nfcManager.onStop()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

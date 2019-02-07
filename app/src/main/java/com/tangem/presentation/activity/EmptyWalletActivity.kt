@@ -20,6 +20,7 @@ import com.tangem.di.Navigator
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
+import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.TangemCard
@@ -61,9 +62,10 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_empty_wallet)
 
-        App.getNavigatorComponent().inject(this)
+        App.navigatorComponent?.inject(this)
 
         nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
@@ -97,21 +99,6 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
             else
                 UtilHelper.showSingleToast(this, getString(R.string.need_attach_card_again))
         }
-    }
-
-    public override fun onResume() {
-        super.onResume()
-        nfcManager.onResume()
-    }
-
-    public override fun onPause() {
-        super.onPause()
-        nfcManager.onPause()
-    }
-
-    public override fun onStop() {
-        super.onStop()
-        nfcManager.onStop()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
