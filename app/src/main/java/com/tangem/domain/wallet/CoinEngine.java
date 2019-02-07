@@ -247,10 +247,10 @@ public abstract class CoinEngine {
      * Transaction processing sequence:
      * 1. User enter transaction attributes
      * 2. Application create instance of {@link SignTask.TransactionToSign} by call {@see constructTransaction}
-     * 3. Application set notification when transaction were prepared {@see setOnNeedSendTransaction} and start {@link SignTask}
+     * 3. Application set notification when transaction were prepared {@see setOnNeedSendTransaction} and init {@link SignTask}
      * 4. User tap card and card sign transaction
      * 5. Application receive {@link OnNeedSendTransaction} notification with prepared raw transaction
-     * 6. Application show user information that transaction ready for sending and start sending procedure by call {@see requestSendTransaction}
+     * 6. Application show user information that transaction ready for sending and init sending procedure by call {@see requestSendTransaction}
      * 7. Application receive notification of sending result through {@link CoinEngine.BlockchainRequestsCallbacks} and show result to user
      *
      * @param amountValue   - amount of desired transaction
