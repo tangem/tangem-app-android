@@ -52,7 +52,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_kraken_withdrawal)
 
-        App.getNavigatorComponent().inject(this)
+        App.navigatorComponent?.inject(this)
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
 
