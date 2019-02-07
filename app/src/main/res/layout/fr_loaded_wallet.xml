@@ -88,9 +88,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/maaxmedium"
-                        android:text=" "
                         android:textAlignment="center"
-                        android:visibility="visible" />
+                        android:visibility="visible"
+                        tools:text="Verified balance"
+                        tools:textColor="@color/confirmed" />
 
                     <TextView
                         android:id="@+id/tvBalanceLine2"
@@ -100,7 +101,6 @@
                         android:fontFamily="@font/maax"
                         android:paddingStart="5dp"
                         android:paddingEnd="5dp"
-                        android:text=" "
                         android:textAlignment="center"
                         android:visibility="visible" />
 
@@ -117,12 +117,12 @@
                     android:id="@+id/loWallet"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
+                    android:baselineAligned="false"
                     android:gravity="top|center"
                     android:orientation="horizontal"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintHeight_min="wrap"
-                    app:layout_constraintTop_toBottomOf="@+id/guideline"
-                    android:baselineAligned="false">
+                    app:layout_constraintTop_toBottomOf="@+id/guideline">
 
                     <LinearLayout
                         android:layout_width="0dp"
