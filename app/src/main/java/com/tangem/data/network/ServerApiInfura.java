@@ -52,7 +52,7 @@ public class ServerApiInfura {
 
     public void requestData(String method, int id, String wallet, String contract, String tx) {
         requestsCount++;
-        InfuraApi infuraApi = App.getNetworkComponent().getRetrofitInfura().create(InfuraApi.class);
+        InfuraApi infuraApi = App.Companion.getNetworkComponent().getRetrofitInfura().create(InfuraApi.class);
 
         InfuraBody infuraBody;
         switch (method) {
