@@ -54,7 +54,7 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
         super.onCreate(savedInstanceState)
         ctx = TangemContext.loadFromBundle(activity, activity?.intent?.extras)
 
-        nfcManager = NfcManager(activity, this)
+        nfcManager = NfcManager(activity!!, this)
         lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
     }
 
@@ -215,7 +215,7 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
 
     override fun onTagDiscovered(tag: Tag?) {
         try {
-            nfcManager.ignoreTag(tag)
+            nfcManager.ignoreTag(tag!!)
         } catch (e: IOException) {
             e.printStackTrace()
         }
