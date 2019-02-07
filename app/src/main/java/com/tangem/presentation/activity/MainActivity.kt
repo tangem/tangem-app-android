@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        App.getNavigatorComponent().inject(this)
+        App.navigatorComponent?.inject(this)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
