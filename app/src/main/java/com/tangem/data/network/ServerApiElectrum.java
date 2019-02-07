@@ -230,7 +230,7 @@ public class ServerApiElectrum {
 
     private void doElectrumRequestTcp(ElectrumRequest electrumRequest, String host, int port) {
         try {
-            Socket socket = App.getNetworkComponent().getSocket();
+            Socket socket = App.Companion.getNetworkComponent().getSocket();
             socket.setSoTimeout(3000);
             Log.i(TAG, "Start process "+electrumRequest.getMethod()+" @ "+host + ":" + port);
             socket.connect(new InetSocketAddress(InetAddress.getByName(host), port));
@@ -252,18 +252,18 @@ public class ServerApiElectrum {
                     if( (electrumRequest.getError()!=null && electrumRequest.getError().startsWith(ERROR_STARTS_WITH_CODE_32601)) )
                     {
                         // method unknown error???
-                        electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain));
+                        electrumRequest.setError(App.Companion.getInstance().getString(R.string.cannot_obtain_data_from_blockchain));
                         electrumRequest.answerData=null;
                     }
                 } else {
-                    electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_no_answer));
+                    electrumRequest.setError(App.Companion.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_no_answer));
                     Log.i(TAG, ">> <NULL>");
                 }
 
             } catch (ConnectException e) {
                 //e.printStackTrace();
                 //responseListener.onFail(e.getMessage());
-                electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_no_connection));
+                electrumRequest.setError(App.Companion.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_no_connection));
                 Log.e(TAG, "doElectrumRequestTcp " + electrumRequest.getMethod() + " ConnectException " + e.getMessage());
             } finally {
                 Log.i(TAG, "doElectrumRequestTcp " + electrumRequest.getMethod() + " socket.close");
@@ -274,13 +274,13 @@ public class ServerApiElectrum {
                 {
                     e.printStackTrace();
                     Log.e(TAG,"Can't close socket");
-                    electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_communication_error));
+                    electrumRequest.setError(App.Companion.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_communication_error));
                 }
             }
         } catch (IOException e) {
             //e.printStackTrace();
             //responseListener.onFail(e.getMessage());
-            electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_communication_error));
+            electrumRequest.setError(App.Companion.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_communication_error));
             Log.e(TAG, "doElectrumRequestTcp " + electrumRequest.getMethod() + " IOException " + e.getMessage());
         }
     }
@@ -341,17 +341,17 @@ public class ServerApiElectrum {
                         if( (electrumRequest.getError()!=null && electrumRequest.getError().startsWith(ERROR_STARTS_WITH_CODE_32601)) )
                         {
                             // method unknown error???
-                            electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain));
+                            electrumRequest.setError(App.Companion.getInstance().getString(R.string.cannot_obtain_data_from_blockchain));
                             electrumRequest.answerData=null;
                         }
                     } else {
-                        electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_no_answer));
+                        electrumRequest.setError(App.Companion.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_no_answer));
                         Log.i(TAG, ">> <NULL>");
                     }
 
                 } catch (ConnectException e) {
                     e.printStackTrace();
-                    electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_no_connection));
+                    electrumRequest.setError(App.Companion.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_no_connection));
                     Log.e(TAG, "doElectrumRequestSsl " + electrumRequest.getMethod() + " ConnectException " + e.getMessage());
                 } finally {
                     Log.i(TAG, "doElectrumRequestSsl " + electrumRequest.getMethod() + " socket.close");
@@ -360,7 +360,7 @@ public class ServerApiElectrum {
                     }
                     catch (Exception e)
                     {
-                        electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_communication_error));
+                        electrumRequest.setError(App.Companion.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_communication_error));
                         e.printStackTrace();
                         Log.e(TAG, "Can't close ssl socket");
                     }
@@ -368,11 +368,11 @@ public class ServerApiElectrum {
 
             } catch (IOException e) {
                 e.printStackTrace();
-                electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_communication_error));
+                electrumRequest.setError(App.Companion.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_communication_error));
                 Log.e(TAG, "doElectrumRequestSsl " + electrumRequest.getMethod() + " IOException " + e.getMessage());
             }
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
-            electrumRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain));
+            electrumRequest.setError(App.Companion.getInstance().getString(R.string.cannot_obtain_data_from_blockchain));
             Log.e(TAG, e.getMessage());
         }
     }
