@@ -88,12 +88,14 @@ class NfcManager(private val activity: FragmentActivity, private val readerCallb
 
     @Throws(IOException::class)
     fun ignoreTag(tag: Tag) {
-        //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        //            nfcAdapter.ignore(tag, 500, null, null);
-        //        }else{
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            nfcAdapter?.ignore(tag, 500, null, null);
+        } else {
+
+        }
+
         val isoDep = IsoDep.get(tag)
         isoDep?.close()
-        //        }
     }
 
     fun notifyReadResult(success: Boolean) {
