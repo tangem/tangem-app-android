@@ -11,7 +11,6 @@ import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Build
 import android.os.Bundle
-import androidx.core.content.ContextCompat
 import android.text.Html
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -19,6 +18,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Blockchain
@@ -27,7 +27,10 @@ import com.tangem.domain.wallet.BalanceValidator
 import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
-import com.tangem.presentation.activity.*
+import com.tangem.presentation.activity.LoadedWalletActivity
+import com.tangem.presentation.activity.PinRequestActivity
+import com.tangem.presentation.activity.PrepareCryptonitWithdrawalActivity
+import com.tangem.presentation.activity.PrepareKrakenWithdrawalActivity
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.presentation.dialog.ShowQRCodeDialog
@@ -467,6 +470,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
         verifyCardTask = null
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
+
                 rlProgressBar?.post {
                     rlProgressBar?.visibility = View.GONE
                     this.cardProtocol = cardProtocol
@@ -747,7 +751,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                     ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag!!.id
             val sUID = Util.byteArrayToHexString(uid)
-            if (ctx.card.uid != sUID) {
+            if (ctx.card.uid != sUID || cardProtocol != null) {
                 nfcManager.ignoreTag(isoDep.tag)
                 return
             }
@@ -756,6 +760,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                 isoDep.timeout = 1000
             else
                 isoDep.timeout = 65000
+
 
             verifyCardTask = VerifyCardTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, App.firmwaresStorage, this)
             verifyCardTask?.start()
