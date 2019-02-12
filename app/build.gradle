@@ -15,8 +15,8 @@ android {
         applicationId "com.tangem.wallet"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 103
-        versionName "0.902.1." + generateVersionName()
+        versionCode 104
+        versionName "0.902.2." + generateVersionName()
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     androidExtensions {
