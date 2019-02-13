@@ -1,7 +1,7 @@
 apply plugin: 'java-library'
 apply plugin: 'com.github.dcendents.android-maven'
 
-group='com.tangem.wallet'
+group='com.github.TangemCash'
 
 dependencies {
     def spongycastle_version = "1.56.0.0"
