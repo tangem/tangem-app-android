@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'com.github.dcendents.android-maven'
 
-group='com.tangem.wallet'
+group='com.github.TangemCash'
 
 android {
     compileSdkVersion 28
