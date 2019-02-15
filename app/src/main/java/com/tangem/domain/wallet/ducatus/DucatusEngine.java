@@ -253,7 +253,7 @@ public class DucatusEngine extends BtcEngine {
             return false;
         }
 
-        if (coinData.isBalanceReceived() && coinData.isBalanceEqual()) {
+        if (coinData.isBalanceReceived()) {// && coinData.isBalanceEqual()) { TODO:check
             balanceValidator.setScore(100);
             balanceValidator.setFirstLine("Verified balance");
             balanceValidator.setSecondLine("Balance confirmed in blockchain");
