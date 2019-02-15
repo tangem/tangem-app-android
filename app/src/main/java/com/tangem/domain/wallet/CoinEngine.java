@@ -15,6 +15,8 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
+import co.nstant.in.cbor.CborException;
+
 /**
  * Created by Ilia on 15.02.2018.
  */
@@ -214,7 +216,7 @@ public abstract class CoinEngine {
 
     public abstract boolean validateAddress(String address);
 
-    public abstract String calculateAddress(byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException;
+    public abstract String calculateAddress(byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException, CborException;
 
     public abstract Amount convertToAmount(InternalAmount internalAmount) throws Exception;
 
