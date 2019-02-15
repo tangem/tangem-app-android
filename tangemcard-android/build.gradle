@@ -26,7 +26,9 @@ android {
 }
 
 dependencies {
-    implementation project(':tangemcard-common')
+//    implementation project(':tangemcard-common')
+    implementation 'com.github.TangemCash.tangemcard-common:tangemcard-android:0.1.0'
+
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.1.0-alpha01'
     implementation 'com.google.code.gson:gson:2.8.5'
