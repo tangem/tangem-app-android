@@ -44,11 +44,12 @@ android {
 }
 
 dependencies {
-//    implementation project(':tangemcard-common')
-    implementation 'com.github.TangemCash.tangemcard-common:tangemcard-android:0.1.0'
+    implementation project(':tangemcard-common')
+//    implementation 'com.github.TangemCash.tangemcard-common:tangemcard-android:0.1.0'
 
     implementation project(':tangemcard-android')
     implementation project(':tangemserver-android')
+
     implementation 'androidx.appcompat:appcompat:1.1.0-alpha01'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0'
