@@ -14,6 +14,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.Toast
 import com.tangem.Constant
+import com.tangem.data.Blockchain
 import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
@@ -71,10 +72,17 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         else
             tvIncFee.visibility = View.INVISIBLE
 
-        etAmount.setText(amount.toValueString())
+        if (ctx.card.blockchainID == Blockchain.Token.id) {
+            // for Blockchain.Token limit decimals
+            etAmount.setText(amount.toValueString(ctx.card.tokensDecimal))
+        } else {
+            // for others
+            etAmount.setText(amount.toValueString())
+        }
+
         tvCurrency.text = engine.balanceCurrency
         tvCurrency2.text = engine.feeCurrency
-        tvCardID.text = ctx.card!!.cidDescription
+        tvCardID.text = ctx.card.cidDescription
         etWallet.setText(intent.getStringExtra(Constant.EXTRA_TARGET_ADDRESS))
 
         btnSend.visibility = View.INVISIBLE
