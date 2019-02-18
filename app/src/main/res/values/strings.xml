@@ -168,7 +168,8 @@
 
     <!-- ConfirmTransactionActivity -->
     <string name="target_wallet_address">target wallet address</string>
-    <string name="transaction_amount">payment amount</string>
+    <string name="payment_amount">payment amount</string>
+    <string name="fee_amount">fee amount</string>
     <string name="fee">Fee</string>
     <string name="send_1">Send</string>
     <string name="minimal">Minimal</string>
