@@ -303,7 +303,7 @@ public class CardanoEngine extends CoinEngine {
 
         final CRC32 crc32 = new CRC32();
         crc32.update(addr);
-        int checksum = (int) crc32.getValue();
+        long checksum = crc32.getValue();
 
         DataItem addrItem = new CborBuilder().add(addr).build().get(0);
         addrItem.setTag(24);
@@ -550,7 +550,7 @@ public class CardanoEngine extends CoinEngine {
                     coinData.setValidationNodeDescription(ServerApiAdalite.lastNode);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    Log.e(TAG, "FAIL INSIGHT_ADDRESS Exception");
+                    Log.e(TAG, "FAIL ADALITE_ADDRESS Exception");
                 }
 
                 if (serverApiAdalite.isRequestsSequenceCompleted()) {
