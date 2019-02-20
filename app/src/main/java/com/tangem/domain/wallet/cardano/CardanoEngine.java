@@ -22,8 +22,12 @@ import com.tangem.tangemcard.util.Util;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.wallet.R;
 
+import org.spongycastle.crypto.Digest;
+import org.spongycastle.crypto.util.DigestFactory;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -285,10 +289,34 @@ public class CardanoEngine extends CoinEngine {
     }
 
     @Override
-    public String calculateAddress(byte[] pkUncompressed) throws CborException {
+    public String calculateAddress(byte[] pkUncompressed) throws CborException, IOException {
+
+        ByteArrayOutputStream exBaos = new ByteArrayOutputStream();
+        exBaos.write(pkUncompressed);
+        exBaos.write(BTCUtils.fromHex("0000000000000000000000000000000000000000000000000000000000000000"));
+        byte[] pkExtended = exBaos.toByteArray();
+
+        exBaos.reset();
+        new CborEncoder(exBaos).encode(new CborBuilder()
+                .addArray()
+                .add(0)
+                .addArray()
+                .add(0)
+                .add(pkExtended)
+                .end()
+                .addMap()
+                .end()
+                .end()
+                .build());
+        byte[] forSha3 = exBaos.toByteArray();
+
+        Digest sha3 = DigestFactory.createSHA3_256();
+        sha3.update(forSha3, 0, forSha3.length);
+        byte[] forBlake = new byte[32];
+        sha3.doFinal(forBlake, 0);
 
         final Blake2b blake2b = Blake2b.Digest.newInstance(28);
-        byte[] pkHash = blake2b.digest(pkUncompressed);
+        byte[] pkHash = blake2b.digest(forBlake);
 
         //pkHash + attributes
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -461,13 +489,12 @@ public class CardanoEngine extends CoinEngine {
 
         //dataToSign prefix
         baos.reset();
-        baos.write(new byte[] {(byte) 0x01});
+        baos.write(new byte[]{(byte) 0x01});
         baos.write(magic);
         baos.write(new byte[]{(byte) 0x58, (byte) 0x20});
 
         baos.write(txHash);
         byte[] dataToSign = baos.toByteArray();
-
 
 
         return new SignTask.TransactionToSign() {
@@ -501,11 +528,16 @@ public class CardanoEngine extends CoinEngine {
 
             @Override
             public byte[] onSignCompleted(byte[] signFromCard) throws Exception {
+                ByteArrayOutputStream exBaos = new ByteArrayOutputStream();
+                exBaos.write(ctx.getCard().getWalletPublicKey());
+                exBaos.write(BTCUtils.fromHex("0000000000000000000000000000000000000000000000000000000000000000"));
+                byte[] pkExtended = exBaos.toByteArray();
+
                 //pubkey + signature
                 baos.reset();
                 new CborEncoder(baos).encode(new CborBuilder()
                         .addArray()
-                        .add(ctx.getCard().getWalletPublicKey())
+                        .add(pkExtended)
                         .add(signFromCard)
                         .end()
                         .build());
@@ -517,22 +549,27 @@ public class CardanoEngine extends CoinEngine {
                 baos.reset();
                 new CborEncoder(baos).encode(new CborBuilder()
                         .addArray()
+                        .addArray()
                         .add(0)
                         .add(witnessBodyItem)
+                        .end()
                         .end()
                         .build());
                 byte[] witness = baos.toByteArray();
 
                 baos.reset();
-                new CborEncoder(baos).encode(new CborBuilder()
-                        .addArray()
-                        .add(txBody)
-                        .add(witness)
-                        .end()
-                        .build());
+                baos.write(new byte[]{(byte) 0x82});
+                baos.write(txBody);
+                baos.write(witness);
+//                new CborEncoder(baos).encode(new CborBuilder()
+//                        .addArray()
+//                        .add(txBody)
+//                        .add(witness)
+//                        .end()
+//                        .build());
                 byte[] txForSend = baos.toByteArray();
                 notifyOnNeedSendTransaction(txForSend);
-                String hex = BTCUtils.toHex(txForSend);
+//                String hex = BTCUtils.toHex(txForSend);
                 return txForSend;
             }
         };
@@ -613,9 +650,9 @@ public class CardanoEngine extends CoinEngine {
 
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
-        coinData.minFee = new Amount(new BigDecimal(0.2).setScale(6, RoundingMode.DOWN), ctx.getBlockchain().getCurrency());
-        coinData.normalFee = new Amount(new BigDecimal(0.2).setScale(6, RoundingMode.DOWN), ctx.getBlockchain().getCurrency());
-        coinData.maxFee = new Amount(new BigDecimal(0.2).setScale(6, RoundingMode.DOWN), ctx.getBlockchain().getCurrency());
+        coinData.minFee = new Amount(new BigDecimal(0.2).setScale(getDecimals(), RoundingMode.DOWN), getFeeCurrency());
+        coinData.normalFee = new Amount(new BigDecimal(0.2).setScale(getDecimals(), RoundingMode.DOWN), getFeeCurrency());
+        coinData.maxFee = new Amount(new BigDecimal(0.2).setScale(getDecimals(), RoundingMode.DOWN), getFeeCurrency());
 
         blockchainRequestsCallbacks.onComplete(true);
     }
@@ -624,7 +661,7 @@ public class CardanoEngine extends CoinEngine {
     public void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) {
         final ServerApiAdalite serverApiAdalite = new ServerApiAdalite();
         final String txStr = Base64.encodeToString(txForSend, Base64.NO_WRAP);
-               // BTCUtils.toHex(txForSend);
+        // BTCUtils.toHex(txForSend);
 
         final ServerApiAdalite.ResponseListener responseListener = new ServerApiAdalite.ResponseListener() {
             @Override
