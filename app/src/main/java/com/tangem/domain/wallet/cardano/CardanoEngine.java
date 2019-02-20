@@ -2,6 +2,7 @@ package com.tangem.domain.wallet.cardano;
 
 import android.net.Uri;
 import android.text.InputFilter;
+import android.util.Base64;
 import android.util.Log;
 
 import com.tangem.data.network.ServerApiAdalite;
@@ -129,7 +130,7 @@ public class CardanoEngine extends CoinEngine {
 
     @Override
     public String getFeeCurrency() {
-        return "BTC";
+        return "ADA";
     }
 
     @Override
@@ -396,8 +397,9 @@ public class CardanoEngine extends CoinEngine {
         }
 
         CborBuilder cborBuilder = new CborBuilder();
-        ArrayBuilder<CborBuilder> inputsArray = cborBuilder.startArray();
-        ArrayBuilder<CborBuilder> outputsArray = cborBuilder.startArray();
+        ArrayBuilder<CborBuilder> txArray = cborBuilder.addArray();
+        ArrayBuilder<ArrayBuilder<CborBuilder>> inputsArray = txArray.startArray();
+        ArrayBuilder<ArrayBuilder<CborBuilder>> outputsArray = txArray.startArray();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         //Inputs
@@ -443,11 +445,14 @@ public class CardanoEngine extends CoinEngine {
 
         inputsArray.end();
         outputsArray.end();
+
+        txArray.addMap().end();
+
         baos.reset();
         new CborEncoder(baos).encode(cborBuilder.build());
         byte[] txBody = baos.toByteArray();
 
-        final Blake2b blake2b = Blake2b.Digest.newInstance(28);
+        final Blake2b blake2b = Blake2b.Digest.newInstance(32);//28?
         byte[] txHash = blake2b.digest(txBody);
 
         baos.reset();
@@ -500,7 +505,7 @@ public class CardanoEngine extends CoinEngine {
                 baos.reset();
                 new CborEncoder(baos).encode(new CborBuilder()
                         .addArray()
-                        .add(ctx.getCard().getCardPublicKey())
+                        .add(ctx.getCard().getWalletPublicKey())
                         .add(signFromCard)
                         .end()
                         .build());
@@ -526,6 +531,8 @@ public class CardanoEngine extends CoinEngine {
                         .end()
                         .build());
                 byte[] txForSend = baos.toByteArray();
+                notifyOnNeedSendTransaction(txForSend);
+                String hex = BTCUtils.toHex(txForSend);
                 return txForSend;
             }
         };
@@ -616,7 +623,8 @@ public class CardanoEngine extends CoinEngine {
     @Override
     public void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) {
         final ServerApiAdalite serverApiAdalite = new ServerApiAdalite();
-        final String txStr = BTCUtils.toHex(txForSend);
+        final String txStr = Base64.encodeToString(txForSend, Base64.NO_WRAP);
+               // BTCUtils.toHex(txForSend);
 
         final ServerApiAdalite.ResponseListener responseListener = new ServerApiAdalite.ResponseListener() {
             @Override
