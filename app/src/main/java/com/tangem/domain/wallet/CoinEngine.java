@@ -6,6 +6,7 @@ import android.text.InputFilter;
 import com.tangem.tangemcard.reader.CardProtocol;
 import com.tangem.tangemcard.tasks.SignTask;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -216,7 +217,7 @@ public abstract class CoinEngine {
 
     public abstract boolean validateAddress(String address);
 
-    public abstract String calculateAddress(byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException, CborException;
+    public abstract String calculateAddress(byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException, CborException, IOException;
 
     public abstract Amount convertToAmount(InternalAmount internalAmount) throws Exception;
 
