@@ -2,6 +2,7 @@ package com.tangem.data.network;
 
 import android.util.Log;
 
+import com.tangem.data.network.model.AdaliteBody;
 import com.tangem.data.network.model.AdaliteResponse;
 import com.tangem.data.network.model.AdaliteResponseUtxo;
 
@@ -19,7 +20,7 @@ public class ServerApiAdalite {
     public static final String ADALITE_ADDRESS = "/api/addresses/summary/{address}";
     public static final String ADALITE_UNSPENT_OUTPUTS = "/api/bulk/addresses/utxo";
     //    public static final String ADALITE_TRANSACTION = "/api/txs/raw/{txId}}";
-    public static final String ADALITE_SEND = "/tx/send";
+    public static final String ADALITE_SEND = "/api/v2/txs/signed";
 
     private int requestsCount = 0;
 
@@ -46,7 +47,7 @@ public class ServerApiAdalite {
 
     public void requestData(String method, String wallet, String tx) {
         requestsCount++;
-        String adaliteURL = "https://explorer.adalite.io"; //TODO: make random selection
+        String adaliteURL = "https://explorer2.adalite.io"; //TODO: make random selection
         this.lastNode = adaliteURL; //TODO: show node instead of URL
 
         Retrofit retrofitAdalite = new Retrofit.Builder()
@@ -90,7 +91,7 @@ public class ServerApiAdalite {
 //                break;
 
                 case ADALITE_SEND:
-                    call = adaliteApi.adaliteSend(tx);
+                    call = adaliteApi.adaliteSend(new AdaliteBody(tx));
                     break;
 
                 default:
