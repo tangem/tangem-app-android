@@ -1,5 +1,6 @@
 package com.tangem.data.network;
 
+import com.tangem.data.network.model.AdaliteBody;
 import com.tangem.data.network.model.AdaliteResponse;
 import com.tangem.data.network.model.AdaliteResponseUtxo;
 
@@ -25,5 +26,5 @@ public interface AdaliteApi {
 
     @Headers("Content-Type: application/json")
     @POST(ServerApiAdalite.ADALITE_SEND)
-    Call<AdaliteResponse> adaliteSend(@Body String rawTx );
+    Call<AdaliteResponse> adaliteSend(@Body AdaliteBody adaliteBody);
 }
