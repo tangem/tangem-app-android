@@ -38,7 +38,10 @@ import co.nstant.in.cbor.CborDecoder;
 import co.nstant.in.cbor.CborEncoder;
 import co.nstant.in.cbor.CborException;
 import co.nstant.in.cbor.builder.ArrayBuilder;
+import co.nstant.in.cbor.model.Array;
+import co.nstant.in.cbor.model.ByteString;
 import co.nstant.in.cbor.model.DataItem;
+import co.nstant.in.cbor.model.UnsignedInteger;
 
 import static com.tangem.domain.wallet.Base58.decodeBase58;
 import static com.tangem.domain.wallet.Base58.encodeBase58;
@@ -151,21 +154,19 @@ public class CardanoEngine extends CoinEngine {
 
         ByteArrayInputStream bais = new ByteArrayInputStream(decAddress);
         try {
-            List<DataItem> list = new CborDecoder(bais).decode();
-//            DataItem[] array = (DataItem[]) list.toArray(); TODO: Complete
-//            byte[] addressDataEncoded = (byte[]) array[0].getTag().getValue();
-//            int crc32Checksum = (int) array[1].getTag().getValue();
-//            CRC32 Checksum = new CRC32();
-//            Checksum.update();
-//            if (crc32Checksum !== CRC32(addressDataEncoded)) {
-//                return false
-//            }
-        } catch (CborException e) {
-            return false;
-        }
+            List<DataItem> addressList = ((Array)new CborDecoder(bais).decode().get(0)).getDataItems();
+            byte[] addressBytes = ((ByteString)addressList.get(0)).getBytes();
+            long addressChecksum = ((UnsignedInteger)addressList.get(1)).getValue().longValue();
 
+            final CRC32 crc32 = new CRC32();
+            crc32.update(addressBytes);
+            long calculatedChecksum = crc32.getValue();
 
-        if (address.length() < 30) { //TODO: Check
+            if (addressChecksum != calculatedChecksum) {
+                return false;
+            }
+
+        } catch (Exception e) {
             return false;
         }
 
@@ -545,16 +546,21 @@ public class CardanoEngine extends CoinEngine {
                 DataItem witnessBodyItem = new CborBuilder().add(witnessBody).build().get(0);
                 witnessBodyItem.setTag(24);
 
+                //array of witnesses
+                CborBuilder witnessBuilder = new CborBuilder();
+                ArrayBuilder<CborBuilder> witnessArrayBuilder = witnessBuilder.addArray();
+
                 //witness type + witness body
+                for (CardanoData.UnspentOutput utxo : coinData.getUnspentOutputs()) {
+                    witnessArrayBuilder
+                            .addArray()
+                            .add(0)
+                            .add(witnessBodyItem)
+                            .end();
+                }
+
                 baos.reset();
-                new CborEncoder(baos).encode(new CborBuilder()
-                        .addArray()
-                        .addArray()
-                        .add(0)
-                        .add(witnessBodyItem)
-                        .end()
-                        .end()
-                        .build());
+                new CborEncoder(baos).encode(witnessBuilder.build());
                 byte[] witness = baos.toByteArray();
 
                 baos.reset();
@@ -569,7 +575,7 @@ public class CardanoEngine extends CoinEngine {
 //                        .build());
                 byte[] txForSend = baos.toByteArray();
                 notifyOnNeedSendTransaction(txForSend);
-//                String hex = BTCUtils.toHex(txForSend);
+                //String hex = BTCUtils.toHex(txForSend);
                 return txForSend;
             }
         };
@@ -631,6 +637,12 @@ public class CardanoEngine extends CoinEngine {
             }
 
             @Override
+            public void onSuccess(String method, List listResponse) {
+                Log.e(TAG, "Wrong response type for requestBalanceAndUnspentTransactions");
+                ctx.setError("Wrong response type for requestBalanceAndUnspentTransactions");
+            }
+
+            @Override
             public void onFail(String method, String message) {
                 Log.i(TAG, "onFail: " + method + " " + message);
                 ctx.setError(message);
@@ -666,8 +678,20 @@ public class CardanoEngine extends CoinEngine {
         final ServerApiAdalite.ResponseListener responseListener = new ServerApiAdalite.ResponseListener() {
             @Override
             public void onSuccess(String method, AdaliteResponse adaliteResponse) {
+                Log.e(TAG, "Wrong response type for requestSendTransaction");
+                ctx.setError("Wrong response type for requestSendTransaction");
+            }
+
+            @Override
+            public void onSuccess(String method, AdaliteResponseUtxo adaliteResponseUtxo) {
+                Log.e(TAG, "Wrong response type for requestSendTransaction");
+                ctx.setError("Wrong response type for requestSendTransaction");
+            }
+
+            @Override
+            public void onSuccess(String method, List listResponse) {
                 if (method.equals(ServerApiAdalite.ADALITE_SEND)) {
-                    String resultString = adaliteResponse.toString();
+                    String resultString = listResponse.toString();
                     try {
                         if (resultString.isEmpty()) {
                             ctx.setError("No response from node");
@@ -687,12 +711,6 @@ public class CardanoEngine extends CoinEngine {
                         }
                     }
                 }
-            }
-
-            @Override
-            public void onSuccess(String method, AdaliteResponseUtxo adaliteResponseUtxo) {
-                Log.e(TAG, "Wrong response type for ADALITE_SEND");
-                ctx.setError("Wrong response type for ADALITE_SEND");
             }
 
             @Override
