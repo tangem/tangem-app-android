@@ -26,5 +26,5 @@ public interface AdaliteApi {
 
     @Headers("Content-Type: application/json")
     @POST(ServerApiAdalite.ADALITE_SEND)
-    Call<AdaliteResponse> adaliteSend(@Body AdaliteBody adaliteBody);
+    Call<List> adaliteSend(@Body AdaliteBody adaliteBody);
 }
