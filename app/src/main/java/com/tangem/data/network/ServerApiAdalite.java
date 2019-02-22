@@ -6,6 +6,8 @@ import com.tangem.data.network.model.AdaliteBody;
 import com.tangem.data.network.model.AdaliteResponse;
 import com.tangem.data.network.model.AdaliteResponseUtxo;
 
+import java.util.List;
+
 import androidx.annotation.NonNull;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -38,6 +40,8 @@ public class ServerApiAdalite {
 
         void onSuccess(String method, AdaliteResponseUtxo adaliteResponseUtxo);
 
+        void onSuccess(String method, List listResponse);
+
         void onFail(String method, String message);
     }
 
@@ -58,9 +62,34 @@ public class ServerApiAdalite {
 
         AdaliteApi adaliteApi = retrofitAdalite.create(AdaliteApi.class);
 
-        if (method.equals(ADALITE_UNSPENT_OUTPUTS)) {
-            Call<AdaliteResponseUtxo> call = adaliteApi.adaliteUnspent("[\"" + wallet + "\"]");
-            call.enqueue(new Callback<AdaliteResponseUtxo>() {
+        switch (method) {
+            case ADALITE_ADDRESS:
+
+                Call<AdaliteResponse> addressCall = adaliteApi.adaliteAddress(wallet);
+                addressCall.enqueue(new Callback<AdaliteResponse>() {
+                    @Override
+                    public void onResponse(@NonNull Call<AdaliteResponse> call, @NonNull Response<AdaliteResponse> response) {
+                        if (response.code() == 200) {
+                            requestsCount--;
+                            responseListener.onSuccess(method, response.body());
+                            Log.i(TAG, "requestData " + method + " onResponse " + response.code());
+                        } else {
+                            responseListener.onFail(method, String.valueOf(response.code()));
+                            Log.e(TAG, "requestData " + method + " onResponse " + response.code());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<AdaliteResponse> call, @NonNull Throwable t) {
+                        responseListener.onFail(method, String.valueOf(t.getMessage()));
+                        Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
+                    }
+                });
+                break;
+
+            case ADALITE_UNSPENT_OUTPUTS:
+            Call<AdaliteResponseUtxo> outputsCall = adaliteApi.adaliteUnspent("[\"" + wallet + "\"]");
+            outputsCall.enqueue(new Callback<AdaliteResponseUtxo>() {
                 @Override
                 public void onResponse(@NonNull Call<AdaliteResponseUtxo> call, @NonNull Response<AdaliteResponseUtxo> response) {
                     if (response.code() == 200) {
@@ -79,46 +108,37 @@ public class ServerApiAdalite {
                     Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
                 }
             });
-        } else {
-            Call<AdaliteResponse> call;
-            switch (method) {
-                case ADALITE_ADDRESS:
-                    call = adaliteApi.adaliteAddress(wallet);
-                    break;
+            break;
 
-//            case ADALITE_TRANSACTION:
-//                call = adaliteApi.adaliteTransaction(tx);
-//                break;
+            case ADALITE_SEND:
+                Call<List> sendCall = adaliteApi.adaliteSend(new AdaliteBody(tx));
+                sendCall.enqueue(new Callback<List>() {
+                    @Override
+                    public void onResponse(@NonNull Call<List> call, @NonNull Response<List> response) {
+                        if (response.code() == 200) {
+                            requestsCount--;
+                            responseListener.onSuccess(method, response.body());
+                            Log.i(TAG, "requestData " + method + " onResponse " + response.code());
+                        } else {
+                            responseListener.onFail(method, String.valueOf(response.code()));
+                            Log.e(TAG, "requestData " + method + " onResponse " + response.code());
+                        }
+                    }
 
-                case ADALITE_SEND:
-                    call = adaliteApi.adaliteSend(new AdaliteBody(tx));
-                    break;
+                    @Override
+                    public void onFailure(@NonNull Call<List> call, @NonNull Throwable t) {
+                        responseListener.onFail(method, String.valueOf(t.getMessage()));
+                        Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
+                    }
+                });
+                break;
 
                 default:
-                    call = adaliteApi.adaliteAddress(wallet);
+                    responseListener.onFail(method, "undeclared method");
+                    Log.e(TAG, "requestData " + method + " onFailure - undeclared method");
                     break;
             }
 
-            call.enqueue(new Callback<AdaliteResponse>() {
-                @Override
-                public void onResponse(@NonNull Call<AdaliteResponse> call, @NonNull Response<AdaliteResponse> response) {
-                    if (response.code() == 200) {
-                        requestsCount--;
-                        responseListener.onSuccess(method, response.body());
-                        Log.i(TAG, "requestData " + method + " onResponse " + response.code());
-                    } else {
-                        responseListener.onFail(method, String.valueOf(response.code()));
-                        Log.e(TAG, "requestData " + method + " onResponse " + response.code());
-                    }
-                }
-
-                @Override
-                public void onFailure(@NonNull Call<AdaliteResponse> call, @NonNull Throwable t) {
-                    responseListener.onFail(method, String.valueOf(t.getMessage()));
-                    Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
-                }
-            });
-        }
     }
 }
 
