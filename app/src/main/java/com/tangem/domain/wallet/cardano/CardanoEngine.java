@@ -154,9 +154,9 @@ public class CardanoEngine extends CoinEngine {
 
         ByteArrayInputStream bais = new ByteArrayInputStream(decAddress);
         try {
-            List<DataItem> addressList = ((Array)new CborDecoder(bais).decode().get(0)).getDataItems();
-            byte[] addressBytes = ((ByteString)addressList.get(0)).getBytes();
-            long addressChecksum = ((UnsignedInteger)addressList.get(1)).getValue().longValue();
+            List<DataItem> addressList = ((Array) new CborDecoder(bais).decode().get(0)).getDataItems();
+            byte[] addressBytes = ((ByteString) addressList.get(0)).getBytes();
+            long addressChecksum = ((UnsignedInteger) addressList.get(1)).getValue().longValue();
 
             final CRC32 crc32 = new CRC32();
             crc32.update(addressBytes);
@@ -581,6 +581,25 @@ public class CardanoEngine extends CoinEngine {
         };
     }
 
+    private int calculateEstimatedTransactionSize(String targetAddress, Amount amount) {
+        Amount feeDummy = new Amount(new BigDecimal(0.2).setScale(getDecimals(), RoundingMode.DOWN), getFeeCurrency());
+        try {
+            OnNeedSendTransaction onNeedSendTransactionBackup = onNeedSendTransaction;
+            onNeedSendTransaction =(tx)->{}; // empty function to bypass exception
+
+            SignTask.TransactionToSign ttsDummy = constructTransaction(amount, feeDummy, true, targetAddress);
+            byte[] txForSendDummy = ttsDummy.onSignCompleted(new byte[64]);
+
+            onNeedSendTransaction = onNeedSendTransactionBackup;
+            Log.e(TAG, "txForSendDummy.length=" + String.valueOf(txForSendDummy.length));
+            return txForSendDummy.length;
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, "Can't calculate transaction size -> use default!");
+            return 1000;
+        }
+    }
+
     @Override
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
         final ServerApiAdalite serverApiAdalite = new ServerApiAdalite();
@@ -662,9 +681,16 @@ public class CardanoEngine extends CoinEngine {
 
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
-        coinData.minFee = new Amount(new BigDecimal(0.2).setScale(getDecimals(), RoundingMode.DOWN), getFeeCurrency());
-        coinData.normalFee = new Amount(new BigDecimal(0.2).setScale(getDecimals(), RoundingMode.DOWN), getFeeCurrency());
-        coinData.maxFee = new Amount(new BigDecimal(0.2).setScale(getDecimals(), RoundingMode.DOWN), getFeeCurrency());
+        final double A = 0.155381;
+        final double B = 0.000043946;
+        int calcSize = calculateEstimatedTransactionSize(targetAddress, amount);
+
+        double fee = A + B * calcSize;
+        Amount feeAmount = new Amount(new BigDecimal(fee).setScale(getDecimals(), RoundingMode.UP), getFeeCurrency());
+
+        coinData.minFee = feeAmount;
+        coinData.normalFee = feeAmount;
+        coinData.maxFee = feeAmount;
 
         blockchainRequestsCallbacks.onComplete(true);
     }
@@ -724,5 +750,10 @@ public class CardanoEngine extends CoinEngine {
         serverApiAdalite.setResponseListener(responseListener);
 
         serverApiAdalite.requestData(ServerApiAdalite.ADALITE_SEND, "", txStr);
+    }
+
+    @Override
+    public boolean allowSelectFeeLevel() {
+        return false;
     }
 }
