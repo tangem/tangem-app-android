@@ -112,7 +112,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action || NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action)) {
             val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
             if (tag != null && onNfcReaderCallback != null) {
-                onNfcReaderCallback!!.onTagDiscovered(tag)
+                onNfcReaderCallback?.onTagDiscovered(tag)
             }
         }
 
@@ -231,7 +231,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
             lastTag = tag
 
             readCardInfoTask = ReadCardInfoTask(NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
-            readCardInfoTask!!.start()
+            readCardInfoTask?.start()
 
             LOG.i(TAG, "onTagDiscovered " + Arrays.toString(tag.id))
 
