@@ -26,10 +26,10 @@ import com.tangem.data.fingerprint.FingerprintHelper
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.tangemcard.android.data.PINStorage
 import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
-import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD_UID
+import com.tangem.tangemcommon.data.TangemCard
 import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_pin_request.*
