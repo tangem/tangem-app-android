@@ -16,7 +16,7 @@ import android.os.Bundle
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.FragmentActivity
 import com.tangem.tangemcard.android.presentation.dialog.NfcEnableDialog
-import com.tangem.tangemcard.util.Log
+import com.tangem.tangemcommon.util.Log
 import java.io.IOException
 
 class NfcManager(private val activity: FragmentActivity, private val readerCallback: NfcAdapter.ReaderCallback) {
