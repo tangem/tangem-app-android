@@ -25,9 +25,9 @@ import com.tangem.presentation.event.DeletingWalletFinish
 import com.tangem.tangemcard.android.data.PINStorage
 import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
-import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
-import com.tangem.tangemcard.reader.CardProtocol
+import com.tangem.tangemcommon.data.TangemCard
+import com.tangem.tangemcommon.reader.CardProtocol
 import com.tangem.util.LOG
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R

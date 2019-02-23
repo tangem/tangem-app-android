@@ -44,11 +44,11 @@ import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD_UID
-import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
-import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.tasks.VerifyCardTask
-import com.tangem.tangemcard.util.Util
+import com.tangem.tangemcommon.data.TangemCard
+import com.tangem.tangemcommon.reader.CardProtocol
+import com.tangem.tangemcommon.tasks.VerifyCardTask
+import com.tangem.tangemcommon.util.Util
 import com.tangem.tangemserver.android.ServerApiTangem
 import com.tangem.tangemserver.android.model.CardVerifyAndGetInfo
 import com.tangem.util.LOG
