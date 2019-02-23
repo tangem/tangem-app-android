@@ -143,10 +143,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
 
         tvWallet.setOnClickListener { doShareWallet(false) }
 
-        btnExplore.setOnClickListener {
-            val engine = CoinEngineFactory.create(ctx)
-            startActivity(Intent(Intent.ACTION_VIEW, engine?.walletExplorerUri))
-        }
+        btnExplore.setOnClickListener { startActivity(Intent(Intent.ACTION_VIEW, engine?.walletExplorerUri)) }
 
         btnCopy.setOnClickListener { doShareWallet(false) }
 
@@ -158,8 +155,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                 when (items[which]) {
                     getString(R.string.in_app) -> {
                         try {
-                            val engine = CoinEngineFactory.create(ctx)
-                            val intent = Intent(Intent.ACTION_VIEW, engine?.shareWalletUri)
+                            val intent = Intent(Intent.ACTION_VIEW, engine.shareWalletUri)
                             intent.addCategory(Intent.CATEGORY_DEFAULT)
                             startActivity(intent)
                         } catch (e: ActivityNotFoundException) {
@@ -172,8 +168,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                     }
 
                     getString(R.string.load_via_qr) -> {
-                        val engine = CoinEngineFactory.create(ctx)
-                        ShowQRCodeDialog.show(activity as AppCompatActivity?, engine!!.shareWalletUri.toString())
+                        ShowQRCodeDialog.show(activity as AppCompatActivity?, engine.shareWalletUri.toString())
                     }
 
                     getString(R.string.via_cryptonit) -> {
@@ -198,9 +193,8 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
         }
 
         btnExtract.setOnClickListener {
-            val engine = CoinEngineFactory.create(ctx)
             if (UtilHelper.isOnline(context as Activity))
-                if (!engine!!.isExtractPossible)
+                if (!engine.isExtractPossible)
                     UtilHelper.showSingleToast(context, ctx.message)
                 else if (ctx.card!!.remainingSignatures == 0)
                     UtilHelper.showSingleToast(context, getString(R.string.card_has_no_remaining_signature))
@@ -447,14 +441,6 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                         updatedCard.loadFromBundle(data.getBundleExtra(EXTRA_TANGEM_CARD))
                         ctx.card = updatedCard
                     }
-//                    if (data.extras!!.containsKey("message")) {
-//                        if (resultCode == Activity.RESULT_OK) {
-//                            ctx.message = data.getStringExtra("message")
-//                        } else {
-//                            ctx.error = data.getStringExtra("message")
-//                        }
-//                    }
-//                    updateViews()
                 }
             }
         }
