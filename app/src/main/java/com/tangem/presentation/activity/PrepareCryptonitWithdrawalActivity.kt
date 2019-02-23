@@ -92,7 +92,6 @@ class PrepareCryptonitWithdrawalActivity : AppCompatActivity(), NfcAdapter.Reade
                 val strAmount: String = etAmount.text.toString().replace(",", ".")
                 val strFee: String = etFee.text.toString().replace(",", ".")
                 val dblAmount: Double = strAmount.toDouble()
-                var dblFee: Double = strFee.toDouble()
                 cryptonit!!.fee = strFee
 
                 rlProgressBar.visibility = View.VISIBLE
