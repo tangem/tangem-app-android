@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.media.MediaPlayer
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
@@ -41,6 +42,7 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
 
     private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
+    private lateinit var mpFinishSignSound: MediaPlayer
 
     private lateinit var nfcDeviceAntenna: NfcDeviceAntennaLocation
 
@@ -60,6 +62,8 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         ctx = TangemContext.loadFromBundle(this, intent.extras)
+
+        mpFinishSignSound = MediaPlayer.create(this, R.raw.scan_card_sound)
 
         // init NFC Antenna
         nfcDeviceAntenna = NfcDeviceAntennaLocation(this, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
@@ -173,22 +177,24 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
             if (cardProtocol.error == null) {
                 rlProgressBar.post { rlProgressBar.visibility = View.GONE }
 
-                progressBar!!.post {
-                    progressBar!!.progress = 100
-                    progressBar!!.progressTintList = ColorStateList.valueOf(Color.GREEN)
+                progressBar?.post {
+                    progressBar?.progress = 100
+                    progressBar?.progressTintList = ColorStateList.valueOf(Color.GREEN)
                 }
+
+                mpFinishSignSound.start()
             } else {
                 lastReadSuccess = false
                 if (cardProtocol.error.javaClass == CardProtocol.TangemException_InvalidPIN::class.java) {
-                    progressBar!!.post {
-                        progressBar!!.progress = 100
-                        progressBar!!.progressTintList = ColorStateList.valueOf(Color.RED)
+                    progressBar?.post {
+                        progressBar?.progress = 100
+                        progressBar?.progressTintList = ColorStateList.valueOf(Color.RED)
                     }
-                    progressBar!!.postDelayed({
+                    progressBar?.postDelayed({
                         try {
-                            progressBar!!.progress = 0
-                            progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
-                            progressBar!!.visibility = View.INVISIBLE
+                            progressBar?.progress = 0
+                            progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+                            progressBar?.visibility = View.INVISIBLE
                             val intent = Intent()
                             intent.putExtra("message", getString(R.string.cannot_sign_transaction_make_sure_you_enter_correct_pin_2))
                             intent.putExtra("UID", cardProtocol.card.uid)
