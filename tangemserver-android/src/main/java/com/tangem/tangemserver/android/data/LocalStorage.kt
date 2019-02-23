@@ -13,7 +13,7 @@ import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
 import com.tangem.tangemserver.android.model.CardVerifyAndGetInfo
-import com.tangem.tangemcard.R
+import com.tangem.tangemserver.R
 import com.tangem.tangemcommon.data.external.CardDataSubstitutionProvider
 import com.tangem.tangemcommon.reader.CardCrypto
 import com.tangem.tangemcommon.util.Util
