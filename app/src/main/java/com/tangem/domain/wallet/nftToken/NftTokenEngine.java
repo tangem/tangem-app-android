@@ -22,7 +22,6 @@ import com.tangem.wallet.R;
 
 import java.math.BigInteger;
 
-
 public class NftTokenEngine extends CoinEngine {
 
     private static final String TAG = NftTokenEngine.class.getSimpleName();
