@@ -101,8 +101,7 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
 
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
                 try {
-                    val engine = CoinEngineFactory.create(ctx)
-                    val eqFee = engine?.evaluateFeeEquivalent(etFee!!.text.toString())
+                    val eqFee = engine.evaluateFeeEquivalent(etFee!!.text.toString())
                     tvFeeEquivalent.text = eqFee
 
                     if (!ctx.coinData!!.amountEquivalentDescriptionAvailable) {
