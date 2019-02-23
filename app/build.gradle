@@ -44,8 +44,8 @@ android {
 }
 
 dependencies {
-    implementation project(':tangemcard-common')
-//    implementation 'com.github.TangemCash.tangemcard-common:tangemcard-android:0.1.0'
+//    implementation project(':tangemcommon')
+    implementation 'com.github.TangemCash.tangemcard-common:tangemcard-android:0.1.0'
 
     implementation project(':tangemcard-android')
     implementation project(':tangemserver-android')
