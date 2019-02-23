@@ -9,7 +9,6 @@ import com.tangem.data.Blockchain;
 import com.tangem.tangemcard.data.TangemCard;
 import com.tangem.tangemcard.data.TangemCardExtensionsKt;
 
-
 public class TangemContext {
     //    public static final String EXTRA_BLOCKCHAIN_DATA = "BLOCKCHAIN_DATA";
     private Context context;
