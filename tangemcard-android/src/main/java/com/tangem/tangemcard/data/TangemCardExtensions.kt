@@ -1,7 +1,8 @@
 package com.tangem.tangemcard.data
 
 import android.os.Bundle
-import com.tangem.tangemcard.util.Log
+import com.tangem.tangemcommon.data.Manufacturer
+import com.tangem.tangemcommon.data.TangemCard
 import java.util.*
 
 const val EXTRA_TANGEM_CARD = "Card"
