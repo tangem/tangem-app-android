@@ -24,9 +24,9 @@ import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.asBundle
-import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.tasks.PurgeTask
-import com.tangem.tangemcard.util.Util
+import com.tangem.tangemcommon.reader.CardProtocol
+import com.tangem.tangemcommon.tasks.PurgeTask
+import com.tangem.tangemcommon.util.Util
 import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_purge.*
