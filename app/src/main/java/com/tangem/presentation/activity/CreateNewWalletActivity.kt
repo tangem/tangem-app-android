@@ -22,9 +22,9 @@ import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.asBundle
-import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.tasks.CreateNewWalletTask
-import com.tangem.tangemcard.util.Util
+import com.tangem.tangemcommon.reader.CardProtocol
+import com.tangem.tangemcommon.tasks.CreateNewWalletTask
+import com.tangem.tangemcommon.util.Util
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_create_new_wallet.*
 import kotlinx.android.synthetic.main.layout_progress_horizontal.*
