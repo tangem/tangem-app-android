@@ -6,6 +6,7 @@ import android.content.*
 import android.content.Context.CLIPBOARD_SERVICE
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
+import android.media.MediaPlayer
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
@@ -69,6 +70,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
 
     private lateinit var ctx: TangemContext
     private lateinit var nfcManager: NfcManager
+    private lateinit var mpSecondScanSound: MediaPlayer
     private var serverApiCommon: ServerApiCommon = ServerApiCommon()
     private var serverApiTangem: ServerApiTangem = ServerApiTangem()
     private var lastTag: Tag? = null
@@ -105,6 +107,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                 srl.isRefreshing = true
         }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ctx = TangemContext.loadFromBundle(activity, activity?.intent?.extras)
@@ -113,6 +116,8 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
         lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         lastTag = activity?.intent?.getParcelableExtra(Constant.EXTRA_LAST_DISCOVERED_TAG)
+
+        mpSecondScanSound = MediaPlayer.create(activity, R.raw.scan_card_sound)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -142,6 +147,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
             val engine = CoinEngineFactory.create(ctx)
             startActivity(Intent(Intent.ACTION_VIEW, engine?.walletExplorerUri))
         }
+
         btnCopy.setOnClickListener { doShareWallet(false) }
 
         btnLoad.setOnClickListener {
@@ -470,12 +476,15 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
         verifyCardTask = null
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
-
                 rlProgressBar?.post {
                     rlProgressBar?.visibility = View.GONE
                     this.cardProtocol = cardProtocol
-                    if (!cardProtocol.card.isWalletPublicKeyValid) refresh()
-                    else updateViews()
+                    if (!cardProtocol.card.isWalletPublicKeyValid)
+                        refresh()
+                    else
+                        updateViews()
+
+                    mpSecondScanSound.start()
                 }
             } else {
                 // remove last UIDs because of error and no card read
