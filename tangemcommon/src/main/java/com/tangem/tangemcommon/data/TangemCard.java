@@ -426,7 +426,7 @@ public class TangemCard {
         Sign_Hash_Validated_By_Issuer_And_WriteIssuerData(4, "sign hash validated by issuer and write issuer data"),
         Sign_Raw_Validated_By_Issuer_And_WriteIssuerData(5, "sign raw tx validated by issuer and write issuer data");
 
-        int ID;
+        public int ID;
         String mDescription;
 
         SigningMethod(int ID, String description) {
