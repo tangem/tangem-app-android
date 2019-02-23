@@ -23,12 +23,12 @@ import com.tangem.presentation.dialog.WaitSecurityDelayDialog
 import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
-import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.asBundle
 import com.tangem.tangemcard.data.loadFromBundle
-import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.tasks.VerifyCardTask
-import com.tangem.tangemcard.util.Util
+import com.tangem.tangemcommon.data.TangemCard
+import com.tangem.tangemcommon.reader.CardProtocol
+import com.tangem.tangemcommon.tasks.VerifyCardTask
+import com.tangem.tangemcommon.util.Util
 import com.tangem.util.LOG
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
