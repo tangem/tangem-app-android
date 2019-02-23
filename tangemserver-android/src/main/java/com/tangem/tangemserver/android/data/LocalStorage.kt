@@ -1,7 +1,7 @@
 package com.tangem.tangemserver.android.data
 
 import android.content.Context
-import com.tangem.tangemcard.data.TangemCard
+import com.tangem.tangemcommon.data.TangemCard
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
@@ -14,9 +14,9 @@ import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
 import com.tangem.tangemserver.android.model.CardVerifyAndGetInfo
 import com.tangem.tangemcard.R
-import com.tangem.tangemcard.data.external.CardDataSubstitutionProvider
-import com.tangem.tangemcard.reader.CardCrypto
-import com.tangem.tangemcard.util.Util
+import com.tangem.tangemcommon.data.external.CardDataSubstitutionProvider
+import com.tangem.tangemcommon.reader.CardCrypto
+import com.tangem.tangemcommon.util.Util
 import java.io.InputStream
 import java.lang.Exception
 import java.nio.charset.StandardCharsets
