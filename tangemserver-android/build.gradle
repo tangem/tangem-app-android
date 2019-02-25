@@ -1,5 +1,8 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply plugin: 'com.github.dcendents.android-maven'
+
+group='com.github.TangemCash'
 
 android {
     compileSdkVersion 28
@@ -23,9 +26,9 @@ android {
 }
 
 dependencies {
-    implementation project(':tangemcard-common')
-    implementation project(':tangemcard-android')
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation project(':tangemcommon')
+//    implementation 'com.github.TangemCash.tangemcard-common:tangemcard-android:0.1.0'
+
     implementation 'androidx.appcompat:appcompat:1.1.0-alpha01'
     implementation 'com.google.code.gson:gson:2.8.5'
     implementation 'com.squareup.retrofit2:converter-gson:2.5.0'
