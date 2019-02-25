@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
-import com.tangem.tangemcard.util.Util;
+import com.tangem.tangemcommon.util.Util;
 import com.tangem.wallet.R;
 
 import org.spongycastle.util.encoders.Base64;

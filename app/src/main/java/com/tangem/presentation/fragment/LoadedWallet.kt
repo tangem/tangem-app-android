@@ -6,6 +6,7 @@ import android.content.*
 import android.content.Context.CLIPBOARD_SERVICE
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
+import android.media.MediaPlayer
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
@@ -43,11 +44,11 @@ import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD
 import com.tangem.tangemcard.data.EXTRA_TANGEM_CARD_UID
-import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
-import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.tasks.VerifyCardTask
-import com.tangem.tangemcard.util.Util
+import com.tangem.tangemcommon.data.TangemCard
+import com.tangem.tangemcommon.reader.CardProtocol
+import com.tangem.tangemcommon.tasks.VerifyCardTask
+import com.tangem.tangemcommon.util.Util
 import com.tangem.tangemserver.android.ServerApiTangem
 import com.tangem.tangemserver.android.model.CardVerifyAndGetInfo
 import com.tangem.util.LOG
@@ -69,6 +70,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
 
     private lateinit var ctx: TangemContext
     private lateinit var nfcManager: NfcManager
+    private lateinit var mpSecondScanSound: MediaPlayer
     private var serverApiCommon: ServerApiCommon = ServerApiCommon()
     private var serverApiTangem: ServerApiTangem = ServerApiTangem()
     private var lastTag: Tag? = null
@@ -105,6 +107,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                 srl.isRefreshing = true
         }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ctx = TangemContext.loadFromBundle(activity, activity?.intent?.extras)
@@ -113,6 +116,8 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
         lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         lastTag = activity?.intent?.getParcelableExtra(Constant.EXTRA_LAST_DISCOVERED_TAG)
+
+        mpSecondScanSound = MediaPlayer.create(activity, R.raw.scan_card_sound)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -138,10 +143,8 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
 
         tvWallet.setOnClickListener { doShareWallet(false) }
 
-        btnExplore.setOnClickListener {
-            val engine = CoinEngineFactory.create(ctx)
-            startActivity(Intent(Intent.ACTION_VIEW, engine?.walletExplorerUri))
-        }
+        btnExplore.setOnClickListener { startActivity(Intent(Intent.ACTION_VIEW, engine?.walletExplorerUri)) }
+
         btnCopy.setOnClickListener { doShareWallet(false) }
 
         btnLoad.setOnClickListener {
@@ -152,8 +155,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                 when (items[which]) {
                     getString(R.string.in_app) -> {
                         try {
-                            val engine = CoinEngineFactory.create(ctx)
-                            val intent = Intent(Intent.ACTION_VIEW, engine?.shareWalletUri)
+                            val intent = Intent(Intent.ACTION_VIEW, engine.shareWalletUri)
                             intent.addCategory(Intent.CATEGORY_DEFAULT)
                             startActivity(intent)
                         } catch (e: ActivityNotFoundException) {
@@ -166,8 +168,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                     }
 
                     getString(R.string.load_via_qr) -> {
-                        val engine = CoinEngineFactory.create(ctx)
-                        ShowQRCodeDialog.show(activity as AppCompatActivity?, engine!!.shareWalletUri.toString())
+                        ShowQRCodeDialog.show(activity as AppCompatActivity?, engine.shareWalletUri.toString())
                     }
 
                     getString(R.string.via_cryptonit) -> {
@@ -192,9 +193,8 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
         }
 
         btnExtract.setOnClickListener {
-            val engine = CoinEngineFactory.create(ctx)
             if (UtilHelper.isOnline(context as Activity))
-                if (!engine!!.isExtractPossible)
+                if (!engine.isExtractPossible)
                     UtilHelper.showSingleToast(context, ctx.message)
                 else if (ctx.card!!.remainingSignatures == 0)
                     UtilHelper.showSingleToast(context, getString(R.string.card_has_no_remaining_signature))
@@ -441,14 +441,6 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                         updatedCard.loadFromBundle(data.getBundleExtra(EXTRA_TANGEM_CARD))
                         ctx.card = updatedCard
                     }
-//                    if (data.extras!!.containsKey("message")) {
-//                        if (resultCode == Activity.RESULT_OK) {
-//                            ctx.message = data.getStringExtra("message")
-//                        } else {
-//                            ctx.error = data.getStringExtra("message")
-//                        }
-//                    }
-//                    updateViews()
                 }
             }
         }
@@ -470,12 +462,15 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
         verifyCardTask = null
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
-
                 rlProgressBar?.post {
                     rlProgressBar?.visibility = View.GONE
                     this.cardProtocol = cardProtocol
-                    if (!cardProtocol.card.isWalletPublicKeyValid) refresh()
-                    else updateViews()
+                    if (!cardProtocol.card.isWalletPublicKeyValid)
+                        refresh()
+                    else
+                        updateViews()
+
+                    mpSecondScanSound.start()
                 }
             } else {
                 // remove last UIDs because of error and no card read
