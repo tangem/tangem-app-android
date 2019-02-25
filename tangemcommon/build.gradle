@@ -1,0 +1,16 @@
+apply plugin: 'java-library'
+apply plugin: 'com.github.dcendents.android-maven'
+
+group='com.github.TangemCash'
+
+dependencies {
+    def spongycastle_version = "1.56.0.0"
+
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "com.madgag.spongycastle:core:$spongycastle_version"
+    implementation "com.madgag.spongycastle:prov:$spongycastle_version"
+    implementation 'net.i2p.crypto:eddsa:0.3.0'
+}
+
+sourceCompatibility = "7"
+targetCompatibility = "7"
