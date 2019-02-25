@@ -6,9 +6,8 @@ import android.os.Bundle;
 
 import com.tangem.Constant;
 import com.tangem.data.Blockchain;
-import com.tangem.tangemcard.data.TangemCard;
 import com.tangem.tangemcard.data.TangemCardExtensionsKt;
-
+import com.tangem.tangemcommon.data.TangemCard;
 
 public class TangemContext {
     //    public static final String EXTRA_BLOCKCHAIN_DATA = "BLOCKCHAIN_DATA";
