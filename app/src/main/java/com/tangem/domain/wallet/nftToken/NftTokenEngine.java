@@ -16,12 +16,11 @@ import com.tangem.domain.wallet.Keccak256;
 import com.tangem.domain.wallet.TangemContext;
 import com.tangem.domain.wallet.eth.EthData;
 import com.tangem.domain.wallet.token.TokenData;
-import com.tangem.tangemcard.data.TangemCard;
-import com.tangem.tangemcard.tasks.SignTask;
+import com.tangem.tangemcommon.data.TangemCard;
+import com.tangem.tangemcommon.tasks.SignTask;
 import com.tangem.wallet.R;
 
 import java.math.BigInteger;
-
 
 public class NftTokenEngine extends CoinEngine {
 
