@@ -10,9 +10,7 @@ import com.tangem.di.NavigatorComponent
 import com.tangem.di.NetworkComponent
 import com.tangem.tangemcard.android.data.Firmwares
 import com.tangem.tangemcard.android.data.PINStorage
-import com.tangem.tangemcard.data.Issuer
-import com.tangem.tangemcard.data.external.FirmwaresDigestsProvider
-import com.tangem.tangemcard.data.external.PINsProvider
+import com.tangem.tangemcommon.data.Issuer
 import com.tangem.tangemserver.android.data.LocalStorage
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
@@ -32,9 +30,9 @@ class App : Application() {
         var navigatorComponent: NavigatorComponent? = null
             private set
 
-        lateinit var firmwaresStorage: FirmwaresDigestsProvider
+        lateinit var firmwaresStorage: Firmwares
         lateinit var localStorage: LocalStorage
-        lateinit var pinStorage: PINsProvider
+        lateinit var pinStorage: PINStorage
     }
 
     override fun onCreate() {
