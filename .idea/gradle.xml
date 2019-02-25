@@ -10,7 +10,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/tangemcard-android" />
-            <option value="$PROJECT_DIR$/tangemcard-common" />
+            <option value="$PROJECT_DIR$/tangemcommon" />
             <option value="$PROJECT_DIR$/tangemserver-android" />
           </set>
         </option>
