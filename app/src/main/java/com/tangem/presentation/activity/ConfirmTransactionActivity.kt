@@ -14,14 +14,15 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.Toast
 import com.tangem.Constant
+import com.tangem.data.Blockchain
 import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.event.TransactionFinishWithError
 import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
-import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
+import com.tangem.tangemcommon.data.TangemCard
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_confirm_transaction.*
@@ -71,10 +72,17 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         else
             tvIncFee.visibility = View.INVISIBLE
 
-        etAmount.setText(amount.toValueString())
+        if (ctx.card.blockchainID == Blockchain.Token.id) {
+            // for Blockchain.Token limit decimals
+            etAmount.setText(amount.toValueString(ctx.card.tokensDecimal))
+        } else {
+            // for others
+            etAmount.setText(amount.toValueString())
+        }
+
         tvCurrency.text = engine.balanceCurrency
         tvCurrency2.text = engine.feeCurrency
-        tvCardID.text = ctx.card!!.cidDescription
+        tvCardID.text = ctx.card.cidDescription
         etWallet.setText(intent.getStringExtra(Constant.EXTRA_TARGET_ADDRESS))
 
         btnSend.visibility = View.INVISIBLE
@@ -93,8 +101,7 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
 
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
                 try {
-                    val engine = CoinEngineFactory.create(ctx)
-                    val eqFee = engine?.evaluateFeeEquivalent(etFee!!.text.toString())
+                    val eqFee = engine.evaluateFeeEquivalent(etFee!!.text.toString())
                     tvFeeEquivalent.text = eqFee
 
                     if (!ctx.coinData!!.amountEquivalentDescriptionAvailable) {
