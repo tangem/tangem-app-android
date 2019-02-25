@@ -34,11 +34,11 @@ import com.tangem.tangemcard.android.nfc.NfcDeviceAntennaLocation
 import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
-import com.tangem.tangemcard.data.TangemCard
 import com.tangem.tangemcard.data.loadFromBundle
 import com.tangem.tangemcard.data.saveToBundle
-import com.tangem.tangemcard.reader.CardProtocol
-import com.tangem.tangemcard.tasks.ReadCardInfoTask
+import com.tangem.tangemcommon.data.TangemCard
+import com.tangem.tangemcommon.reader.CardProtocol
+import com.tangem.tangemcommon.tasks.ReadCardInfoTask
 import com.tangem.util.CommonUtil
 import com.tangem.util.LOG
 import com.tangem.util.PhoneUtility
@@ -112,7 +112,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action || NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action)) {
             val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
             if (tag != null && onNfcReaderCallback != null) {
-                onNfcReaderCallback!!.onTagDiscovered(tag)
+                onNfcReaderCallback?.onTagDiscovered(tag)
             }
         }
 
@@ -231,7 +231,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
             lastTag = tag
 
             readCardInfoTask = ReadCardInfoTask(NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
-            readCardInfoTask!!.start()
+            readCardInfoTask?.start()
 
             LOG.i(TAG, "onTagDiscovered " + Arrays.toString(tag.id))
 
