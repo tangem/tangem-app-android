@@ -9,7 +9,7 @@ import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 
 import com.tangem.Constant;
-import com.tangem.tangemcard.android.data.PINStorage;
+import com.tangem.cardandroid.android.data.PINStorage;
 import com.tangem.presentation.activity.PinRequestActivity;
 import com.tangem.util.LOG;
 
