@@ -21,10 +21,10 @@ import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.*
-import com.tangem.tangemcommon.data.TangemCard
-import com.tangem.tangemcommon.reader.CardProtocol
-import com.tangem.tangemcommon.tasks.SwapPINTask
-import com.tangem.tangemcommon.util.Util
+import com.tangem.cardcommon.data.TangemCard
+import com.tangem.cardcommon.reader.CardProtocol
+import com.tangem.cardcommon.tasks.SwapPINTask
+import com.tangem.cardcommon.util.Util
 import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_pin_swap.*
