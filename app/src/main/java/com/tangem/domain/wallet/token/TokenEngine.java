@@ -394,8 +394,8 @@ public class TokenEngine extends CoinEngine {
 
         if (!coinData.getUnconfirmedTXCount().equals(coinData.getConfirmedTXCount())) {
             balanceValidator.setScore(0);
-            balanceValidator.setFirstLine("Unguaranteed balance");
-            balanceValidator.setSecondLine("Transaction is in progress. Wait for confirmation in blockchain.");
+            balanceValidator.setFirstLine("Transaction in progress");
+            balanceValidator.setSecondLine("Wait for confirmation in blockchain");
             return false;
         }
 
