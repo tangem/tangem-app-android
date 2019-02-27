@@ -192,7 +192,6 @@ public abstract class CoinEngine {
 
     public abstract boolean checkNewTransactionAmount(Amount amount);
 
-    // TODO - move minFeeInInternalUnits to CoinData
     public abstract boolean checkNewTransactionAmountAndFee(Amount amount, Amount fee, Boolean isFeeIncluded);
 
     public abstract boolean validateBalance(BalanceValidator balanceValidator);
