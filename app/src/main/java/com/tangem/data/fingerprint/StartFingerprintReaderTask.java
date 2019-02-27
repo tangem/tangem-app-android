@@ -10,7 +10,7 @@ import android.security.keystore.KeyProperties;
 
 import com.tangem.Constant;
 import com.tangem.cardandroid.android.data.PINStorage;
-import com.tangem.presentation.activity.PinRequestActivity;
+import com.tangem.ui.activity.PinRequestActivity;
 import com.tangem.util.LOG;
 
 import java.io.IOException;
