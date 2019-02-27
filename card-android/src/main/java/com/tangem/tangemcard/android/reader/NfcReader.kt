@@ -5,7 +5,7 @@ import android.nfc.tech.IsoDep
 data class NfcReader(
         val nfcManager: NfcManager,
         val isoDep: IsoDep
-) : com.tangem.tangemcommon.reader.NfcReader {
+) : com.tangem.cardcommon.reader.NfcReader {
     override fun getId(): ByteArray {
         return isoDep.tag.id
     }
