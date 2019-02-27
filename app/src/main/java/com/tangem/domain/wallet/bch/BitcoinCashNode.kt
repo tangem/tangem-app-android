@@ -8,8 +8,7 @@ enum class BitcoinCashNode(val host: String, val port: Int, val proto: String) {
     N_005("bch.crypto.mldlabs.com", 50002, "ssl"),
     N_006("electron.coinucopia.io", 50002, "ssl"),
     N_007("blackie.c3-soft.com", 50002, "ssl"),
-    N_008("electroncash.ueo.ch", 51002, "ssl"),
-    N_009("electrum.imaginary.cash", 50002, "ssl"),
-    N_010("bitcoincash.quangld.com", 50002, "ssl"),
-    N_011("bch.stitthappens.com", 50002, "ssl"),
+    N_008("electrum.imaginary.cash", 50002, "ssl"),
+    N_009("bitcoincash.quangld.com", 50002, "ssl"),
+    N_010("bch.stitthappens.com", 50002, "ssl"),
 }
