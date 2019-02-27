@@ -1,6 +1,6 @@
 package com.tangem.di
 
-import com.tangem.presentation.dialog.WaitSecurityDelayDialogNew
+import com.tangem.ui.dialog.WaitSecurityDelayDialogNew
 
 import javax.inject.Singleton
 
