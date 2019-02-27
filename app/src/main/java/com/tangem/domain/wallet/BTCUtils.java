@@ -11,7 +11,7 @@ import com.tangem.domain.wallet.btc.BitcoinOutputStream;
 import com.tangem.domain.wallet.btc.BtcData;
 import com.tangem.util.CryptoUtil;
 import com.tangem.util.FormatUtil;
-import com.tangem.tangemcommon.util.Util;
+import com.tangem.cardcommon.util.Util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
