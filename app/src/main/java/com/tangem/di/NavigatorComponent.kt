@@ -1,14 +1,14 @@
 package com.tangem.di
 
-import com.tangem.presentation.activity.EmptyWalletActivity
-import com.tangem.presentation.activity.LoadedWalletActivity
-import com.tangem.presentation.activity.LogoActivity
-import com.tangem.presentation.activity.MainActivity
-import com.tangem.presentation.activity.PrepareCryptonitOtherApiWithdrawalActivity
-import com.tangem.presentation.activity.PrepareKrakenWithdrawalActivity
-import com.tangem.presentation.activity.PrepareTransactionActivity
-import com.tangem.presentation.activity.PurgeActivity
-import com.tangem.presentation.activity.VerifyCardActivity
+import com.tangem.ui.activity.EmptyWalletActivity
+import com.tangem.ui.activity.LoadedWalletActivity
+import com.tangem.ui.activity.LogoActivity
+import com.tangem.ui.activity.MainActivity
+import com.tangem.ui.activity.PrepareCryptonitOtherApiWithdrawalActivity
+import com.tangem.ui.activity.PrepareKrakenWithdrawalActivity
+import com.tangem.ui.activity.PrepareTransactionActivity
+import com.tangem.ui.activity.PurgeActivity
+import com.tangem.ui.activity.VerifyCardActivity
 
 import javax.inject.Singleton
 
