@@ -4,7 +4,7 @@
  * gradle plugin from the resource data it found. It
  * should not be modified by hand.
  */
-package com.tangem.tangemcard;
+package com.tangem.cardandroid;
 
 public final class R {
     private R() {}
