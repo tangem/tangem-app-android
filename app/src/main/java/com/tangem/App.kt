@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.tangem.data.local.PendingTransactionsStorage
 import com.tangem.di.DaggerNavigatorComponent
 import com.tangem.di.DaggerNetworkComponent
 import com.tangem.di.NavigatorComponent
@@ -33,6 +34,7 @@ class App : Application() {
         lateinit var firmwaresStorage: Firmwares
         lateinit var localStorage: LocalStorage
         lateinit var pinStorage: PINStorage
+        lateinit var pendingTransactionsStorage: PendingTransactionsStorage
     }
 
     override fun onCreate() {
@@ -52,6 +54,7 @@ class App : Application() {
         firmwaresStorage = Firmwares(applicationContext)
         localStorage = LocalStorage(applicationContext)
         pinStorage = PINStorage()
+        pendingTransactionsStorage = PendingTransactionsStorage(applicationContext)
     }
 
     private fun buildNavigatorComponent(): NavigatorComponent {
