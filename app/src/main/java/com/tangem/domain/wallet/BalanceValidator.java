@@ -1,6 +1,6 @@
 package com.tangem.domain.wallet;
 
-import com.tangem.tangemcommon.data.TangemCard;
+import com.tangem.cardcommon.data.TangemCard;
 import com.tangem.wallet.R;
 
 public class BalanceValidator {
