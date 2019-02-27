@@ -1,5 +1,6 @@
 package com.tangem.domain.wallet;
 
+import com.tangem.App;
 import com.tangem.tangemcommon.data.TangemCard;
 import com.tangem.wallet.R;
 
@@ -7,6 +8,7 @@ public class BalanceValidator {
     private String firstLine;
     private String secondLine;
     private int score;
+    private boolean hasPending;
 
     public String getFirstLine() {
         return firstLine;
@@ -38,6 +40,10 @@ public class BalanceValidator {
     }
 
     public int getColor() {
+        if( hasPending )
+        {
+            return R.color.primary_dark;
+        }
         if (score > 89) {
             return R.color.confirmed;
         } else if (score > 74) {
@@ -56,6 +62,15 @@ public class BalanceValidator {
         CoinEngine engine = CoinEngineFactory.INSTANCE.create(ctx);
 
         if (!engine.validateBalance(this)) return;
+
+        hasPending=App.pendingTransactionsStorage.hasTransactions(card);
+
+        if( hasPending )
+        {
+            firstLine = "Pending transaction...";
+            secondLine = "";
+            return;
+        }
 
         // Verify card?
         if (attest) {
