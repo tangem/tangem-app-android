@@ -1,6 +1,6 @@
-package com.tangem.tangemserver.android;
+package com.tangem.tangemserver;
 
-import com.tangem.tangemserver.android.model.CardVerifyAndGetInfo;
+import com.tangem.tangemserver.model.CardVerifyAndGetInfo;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
