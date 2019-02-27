@@ -87,9 +87,8 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
 
         btnSend.visibility = View.INVISIBLE
 
-        val allowFeeLevelSelection = engine.allowSelectFeeLevel()
-        for (lol in rgFee.touchables) {
-            lol.isEnabled = allowFeeLevelSelection
+        if (!engine.allowSelectFeeLevel()) {
+            rgFee.visibility = View.INVISIBLE
         }
 
         // set listeners
