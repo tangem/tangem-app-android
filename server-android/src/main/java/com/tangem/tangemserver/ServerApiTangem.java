@@ -3,9 +3,9 @@ package com.tangem.tangemserver;
 import androidx.annotation.NonNull;
 import android.util.Log;
 
-import com.tangem.tangemcommon.data.TangemCard;
+import com.tangem.cardcommon.data.TangemCard;
 import com.tangem.tangemserver.model.CardVerifyAndGetInfo;
-import com.tangem.tangemcommon.util.Util;
+import com.tangem.cardcommon.util.Util;
 
 import java.io.InputStream;
 import java.util.ArrayList;
