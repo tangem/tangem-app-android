@@ -49,7 +49,7 @@ class LocalStorage
             artworks = HashMap()
         }
 
-        if (artworks.count() == 0) {
+        if (artworks.count() < 21) {
 //          forceSave=true only on the last one
             putResourceArtworkToCatalog(R.drawable.card_default, false)
             putResourceArtworkToCatalog(R.drawable.card_default_nft, false)
@@ -70,7 +70,8 @@ class LocalStorage
             putResourceArtworkToCatalog(R.drawable.card_ru029, false)
             putResourceArtworkToCatalog(R.drawable.card_ru030, false)
             putResourceArtworkToCatalog(R.drawable.card_ru031, false)
-            putResourceArtworkToCatalog(R.drawable.card_ru032, true)
+            putResourceArtworkToCatalog(R.drawable.card_ru032, false)
+            putResourceArtworkToCatalog(R.drawable.card_ff32, true)
         }
         if (batchesFile.exists()) {
             try {
@@ -243,6 +244,7 @@ class LocalStorage
             card.batch == "0020" -> R.drawable.card_ru030
             card.batch == "0021" -> R.drawable.card_ru031
             card.batch == "0022" -> R.drawable.card_ru032
+            card.batch == "FF32" -> R.drawable.card_ff32
 
             else -> null
         }
