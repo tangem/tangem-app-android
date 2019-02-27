@@ -1,4 +1,4 @@
-package com.tangem.tangemserver.android;
+package com.tangem.tangemserver;
 
 public class Server {
     /**
