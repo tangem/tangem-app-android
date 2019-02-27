@@ -5,8 +5,8 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Base64;
 
-import com.tangem.tangemcommon.data.external.PINsProvider;
-import com.tangem.tangemcommon.reader.CardProtocol;
+import com.tangem.cardcommon.data.external.PINsProvider;
+import com.tangem.cardcommon.reader.CardProtocol;
 
 import java.util.ArrayList;
 import java.util.List;
