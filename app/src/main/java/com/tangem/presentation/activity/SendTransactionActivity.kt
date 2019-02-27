@@ -7,6 +7,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.view.KeyEvent
 import android.widget.Toast
+import com.tangem.App
 import com.tangem.Constant
 import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.CoinEngineFactory
@@ -15,6 +16,7 @@ import com.tangem.presentation.event.TransactionFinishWithError
 import com.tangem.presentation.event.TransactionFinishWithSuccess
 import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
 import com.tangem.tangemcard.android.reader.NfcManager
+import com.tangem.tangemcommon.util.Util
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import org.greenrobot.eventbus.EventBus
@@ -42,9 +44,10 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         engine!!.requestSendTransaction(
                 object : CoinEngine.BlockchainRequestsCallbacks {
                     override fun onComplete(success: Boolean) {
-                        if (success)
+                        if (success) {
+                            App.pendingTransactionsStorage.putTransaction(ctx.card, Util.bytesToHex(tx), engine.pendingTransactionTimeoutInSeconds())
                             finishWithSuccess()
-                        else
+                        }else
                             finishWithError(ctx.error)
                     }
 

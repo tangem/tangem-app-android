@@ -366,4 +366,6 @@ public abstract class CoinEngine {
     }
 
 
+    public int pendingTransactionTimeoutInSeconds() { return 30; }
+
 }
