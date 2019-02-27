@@ -6,7 +6,7 @@ import android.os.Bundle;
 
 import com.tangem.Constant;
 import com.tangem.data.Blockchain;
-import com.tangem.tangemcard.data.TangemCardExtensionsKt;
+import com.tangem.cardandroid.data.TangemCardExtensionsKt;
 import com.tangem.cardcommon.data.TangemCard;
 
 public class TangemContext {
