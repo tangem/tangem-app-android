@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.tangem.tangemcard" >
+    package="com.tangem.cardandroid" >
     <uses-feature
         android:name="android.hardware.nfc"
         android:required="true" />

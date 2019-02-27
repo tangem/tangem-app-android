@@ -20,11 +20,11 @@ import com.tangem.di.Navigator
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
-import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
-import com.tangem.tangemcard.android.reader.NfcManager
-import com.tangem.tangemcard.android.reader.NfcReader
-import com.tangem.tangemcard.data.asBundle
-import com.tangem.tangemcard.data.loadFromBundle
+import com.tangem.cardandroid.android.nfc.NfcLifecycleObserver
+import com.tangem.cardandroid.android.reader.NfcManager
+import com.tangem.cardandroid.android.reader.NfcReader
+import com.tangem.cardandroid.data.asBundle
+import com.tangem.cardandroid.data.loadFromBundle
 import com.tangem.cardcommon.data.TangemCard
 import com.tangem.cardcommon.reader.CardProtocol
 import com.tangem.cardcommon.tasks.VerifyCardTask
