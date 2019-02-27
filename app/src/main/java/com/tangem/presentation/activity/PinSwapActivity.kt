@@ -17,10 +17,10 @@ import com.tangem.App
 import com.tangem.Constant
 import com.tangem.presentation.dialog.NoExtendedLengthSupportDialog
 import com.tangem.presentation.dialog.WaitSecurityDelayDialog
-import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
-import com.tangem.tangemcard.android.reader.NfcManager
-import com.tangem.tangemcard.android.reader.NfcReader
-import com.tangem.tangemcard.data.*
+import com.tangem.cardandroid.android.nfc.NfcLifecycleObserver
+import com.tangem.cardandroid.android.reader.NfcManager
+import com.tangem.cardandroid.android.reader.NfcReader
+import com.tangem.cardandroid.data.*
 import com.tangem.cardcommon.data.TangemCard
 import com.tangem.cardcommon.reader.CardProtocol
 import com.tangem.cardcommon.tasks.SwapPINTask
