@@ -8,10 +8,10 @@ import com.tangem.di.DaggerNavigatorComponent
 import com.tangem.di.DaggerNetworkComponent
 import com.tangem.di.NavigatorComponent
 import com.tangem.di.NetworkComponent
-import com.tangem.tangemcard.android.data.Firmwares
-import com.tangem.tangemcard.android.data.PINStorage
+import com.tangem.cardandroid.android.data.Firmwares
+import com.tangem.cardandroid.android.data.PINStorage
 import com.tangem.cardcommon.data.Issuer
-import com.tangem.tangemserver.data.LocalStorage
+import com.tangem.serverandroid.data.LocalStorage
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 
