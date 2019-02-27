@@ -25,10 +25,10 @@ import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.asBundle
 import com.tangem.tangemcard.data.loadFromBundle
-import com.tangem.tangemcommon.data.TangemCard
-import com.tangem.tangemcommon.reader.CardProtocol
-import com.tangem.tangemcommon.tasks.VerifyCardTask
-import com.tangem.tangemcommon.util.Util
+import com.tangem.cardcommon.data.TangemCard
+import com.tangem.cardcommon.reader.CardProtocol
+import com.tangem.cardcommon.tasks.VerifyCardTask
+import com.tangem.cardcommon.util.Util
 import com.tangem.util.LOG
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R

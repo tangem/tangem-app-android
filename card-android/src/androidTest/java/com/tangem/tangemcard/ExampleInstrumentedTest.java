@@ -1,4 +1,4 @@
-package com.tangem.tangemcard.android;
+package com.tangem.tangemcard;
 
 import android.content.Context;
 import androidx.test.InstrumentationRegistry;
