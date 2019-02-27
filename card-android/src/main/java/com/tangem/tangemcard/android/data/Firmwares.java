@@ -5,8 +5,8 @@ import android.content.Context;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.tangem.tangemcommon.data.external.FirmwaresDigestsProvider;
-import com.tangem.tangemcommon.util.Util;
+import com.tangem.cardcommon.data.external.FirmwaresDigestsProvider;
+import com.tangem.cardcommon.util.Util;
 
 import java.io.IOException;
 import java.io.InputStream;

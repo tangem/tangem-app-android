@@ -36,9 +36,9 @@ import com.tangem.tangemcard.android.reader.NfcManager
 import com.tangem.tangemcard.android.reader.NfcReader
 import com.tangem.tangemcard.data.loadFromBundle
 import com.tangem.tangemcard.data.saveToBundle
-import com.tangem.tangemcommon.data.TangemCard
-import com.tangem.tangemcommon.reader.CardProtocol
-import com.tangem.tangemcommon.tasks.ReadCardInfoTask
+import com.tangem.cardcommon.data.TangemCard
+import com.tangem.cardcommon.reader.CardProtocol
+import com.tangem.cardcommon.tasks.ReadCardInfoTask
 import com.tangem.util.CommonUtil
 import com.tangem.util.LOG
 import com.tangem.util.PhoneUtility
