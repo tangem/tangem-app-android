@@ -22,10 +22,10 @@ import com.tangem.domain.wallet.TangemContext
 import com.tangem.presentation.activity.*
 import com.tangem.presentation.dialog.PINSwapWarningDialog
 import com.tangem.presentation.event.DeletingWalletFinish
-import com.tangem.tangemcard.android.data.PINStorage
-import com.tangem.tangemcard.android.nfc.NfcLifecycleObserver
-import com.tangem.tangemcard.android.reader.NfcManager
-import com.tangem.tangemcard.data.loadFromBundle
+import com.tangem.cardandroid.android.data.PINStorage
+import com.tangem.cardandroid.android.nfc.NfcLifecycleObserver
+import com.tangem.cardandroid.android.reader.NfcManager
+import com.tangem.cardandroid.data.loadFromBundle
 import com.tangem.cardcommon.data.TangemCard
 import com.tangem.cardcommon.reader.CardProtocol
 import com.tangem.util.LOG
