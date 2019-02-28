@@ -6,6 +6,7 @@ import android.text.InputFilter;
 import com.tangem.tangemcommon.reader.CardProtocol;
 import com.tangem.tangemcommon.tasks.SignTask;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -14,6 +15,8 @@ import java.security.NoSuchProviderException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
+
+import co.nstant.in.cbor.CborException;
 
 /**
  * Created by Ilia on 15.02.2018.
@@ -189,7 +192,6 @@ public abstract class CoinEngine {
 
     public abstract boolean checkNewTransactionAmount(Amount amount);
 
-    // TODO - move minFeeInInternalUnits to CoinData
     public abstract boolean checkNewTransactionAmountAndFee(Amount amount, Amount fee, Boolean isFeeIncluded);
 
     public abstract boolean validateBalance(BalanceValidator balanceValidator);
@@ -214,7 +216,7 @@ public abstract class CoinEngine {
 
     public abstract boolean validateAddress(String address);
 
-    public abstract String calculateAddress(byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException;
+    public abstract String calculateAddress(byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException, CborException, IOException;
 
     public abstract Amount convertToAmount(InternalAmount internalAmount) throws Exception;
 
