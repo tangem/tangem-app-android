@@ -3,7 +3,7 @@ package com.tangem.data.local
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.tangem.tangemcommon.data.TangemCard
+import com.tangem.card_common.data.TangemCard
 import java.io.File
 import java.util.*
 import kotlin.collections.HashMap
