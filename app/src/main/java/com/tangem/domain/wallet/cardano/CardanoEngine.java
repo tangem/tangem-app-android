@@ -5,9 +5,12 @@ import android.text.InputFilter;
 import android.util.Base64;
 import android.util.Log;
 
+import com.tangem.App;
+import com.tangem.data.local.PendingTransactionsStorage;
 import com.tangem.data.network.ServerApiAdalite;
 import com.tangem.data.network.model.AdaliteResponse;
 import com.tangem.data.network.model.AdaliteResponseUtxo;
+import com.tangem.data.network.model.TxData;
 import com.tangem.data.network.model.UtxoData;
 import com.tangem.domain.wallet.BTCUtils;
 import com.tangem.domain.wallet.BalanceValidator;
@@ -617,6 +620,20 @@ public class CardanoEngine extends CoinEngine {
                     coinData.setBalanceReceived(true);
                     coinData.setBalance(adaliteResponse.getRight().getCaBalance().getGetCoin());
                     coinData.setValidationNodeDescription(ServerApiAdalite.lastNode);
+
+                    //check pending
+                    if (App.pendingTransactionsStorage.hasTransactions(ctx.getCard())) {
+                        for (PendingTransactionsStorage.TransactionInfo pendingTx : App.pendingTransactionsStorage.getTransactions(ctx.getCard()).getTransactions()) {
+                            String pendingId = CalculateTxHash(pendingTx.getTx());
+                            int x = 0;
+                            for (TxData walletTx : adaliteResponse.getRight().getCaTxList()) {
+                                if (walletTx.getCtbId().equals(pendingId)) {
+                                    App.pendingTransactionsStorage.removeTransaction(ctx.getCard(), pendingTx.getTx());
+                                }
+                            }
+                        }
+                    }
+
                 } catch (Exception e) {
                     e.printStackTrace();
                     Log.e(TAG, "FAIL ADALITE_ADDRESS Exception");
@@ -755,5 +772,20 @@ public class CardanoEngine extends CoinEngine {
     @Override
     public boolean allowSelectFeeLevel() {
         return false;
+    }
+
+    @Override
+    public int pendingTransactionTimeoutInSeconds() { return 60; }
+
+    private String CalculateTxHash(String tx) throws CborException {
+        Array txArray = (Array) CborDecoder.decode(BTCUtils.fromHex(tx)).get(0);
+        DataItem txBodyItem = txArray.getDataItems().get(0);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        new CborEncoder(baos).encode(txBodyItem);
+        byte[] txBody = baos.toByteArray();
+
+        final Blake2b blake2b = Blake2b.Digest.newInstance(32);
+        return BTCUtils.toHex(blake2b.digest(txBody));
     }
 }
