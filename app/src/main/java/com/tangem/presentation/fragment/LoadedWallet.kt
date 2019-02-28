@@ -729,6 +729,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                 Blockchain.Litecoin -> "litecoin"
                 Blockchain.Rootstock -> "bitcoin"
                 Blockchain.RootstockToken -> "bitcoin"
+                Blockchain.Cardano -> "cardano"
                 else -> {
                     throw Exception("Can''t get rate for blockchain " + ctx.blockchainName)
                 }
