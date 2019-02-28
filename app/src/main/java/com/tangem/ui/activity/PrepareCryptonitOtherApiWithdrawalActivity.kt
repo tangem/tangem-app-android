@@ -16,8 +16,8 @@ import com.tangem.data.network.CryptonitOtherApi
 import com.tangem.di.Navigator
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
-import com.tangem.cardandroid.android.nfc.NfcLifecycleObserver
-import com.tangem.cardandroid.android.reader.NfcManager
+import com.tangem.card_android.android.nfc.NfcLifecycleObserver
+import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_prepare_cryptonit_other_api_withdrawal.*
 import java.io.IOException

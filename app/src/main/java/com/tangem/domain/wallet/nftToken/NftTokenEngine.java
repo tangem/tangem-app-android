@@ -16,8 +16,8 @@ import com.tangem.domain.wallet.Keccak256;
 import com.tangem.domain.wallet.TangemContext;
 import com.tangem.domain.wallet.eth.EthData;
 import com.tangem.domain.wallet.token.TokenData;
-import com.tangem.cardcommon.data.TangemCard;
-import com.tangem.cardcommon.tasks.SignTask;
+import com.tangem.card_common.data.TangemCard;
+import com.tangem.card_common.tasks.SignTask;
 import com.tangem.wallet.R;
 
 import java.math.BigInteger;
