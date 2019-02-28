@@ -143,7 +143,7 @@ public abstract class CoinData {
 
     public void clearInfo() {
         setIsBalanceEqual(false);
-        setBalanceReceived(false); // TODO check
+        setBalanceReceived(false);
         setValidationNodeDescription("");
         minFee=null;
         maxFee=null;
