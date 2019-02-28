@@ -19,10 +19,10 @@ import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.ui.event.TransactionFinishWithError
-import com.tangem.cardandroid.android.nfc.NfcLifecycleObserver
-import com.tangem.cardandroid.android.reader.NfcManager
-import com.tangem.cardandroid.data.loadFromBundle
-import com.tangem.cardcommon.data.TangemCard
+import com.tangem.card_android.android.nfc.NfcLifecycleObserver
+import com.tangem.card_android.android.reader.NfcManager
+import com.tangem.card_android.data.loadFromBundle
+import com.tangem.card_common.data.TangemCard
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_confirm_transaction.*
