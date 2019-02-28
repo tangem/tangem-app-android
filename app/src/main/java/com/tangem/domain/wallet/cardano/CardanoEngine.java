@@ -18,10 +18,10 @@ import com.tangem.domain.wallet.Base58;
 import com.tangem.domain.wallet.CoinData;
 import com.tangem.domain.wallet.CoinEngine;
 import com.tangem.domain.wallet.TangemContext;
-import com.tangem.tangemcommon.data.TangemCard;
-import com.tangem.tangemcommon.reader.CardProtocol;
-import com.tangem.tangemcommon.tasks.SignTask;
-import com.tangem.tangemcommon.util.Util;
+import com.tangem.card_common.data.TangemCard;
+import com.tangem.card_common.reader.CardProtocol;
+import com.tangem.card_common.tasks.SignTask;
+import com.tangem.card_common.util.Util;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.wallet.R;
 
