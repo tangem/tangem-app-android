@@ -608,6 +608,7 @@ public class EthEngine extends CoinEngine {
         serverApiInfura.setResponseListener(responseListener);
 
         serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION, 67, coinData.getWallet(), "", txStr);
-
     }
+
+    public int pendingTransactionTimeoutInSeconds() { return 10; }
 }
