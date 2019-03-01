@@ -201,8 +201,8 @@ public class RskEngine extends EthEngine {
         serverApiRootstock.setResponseListener(responseListener);
 
         serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_SEND_RAW_TRANSACTION, 67, coinData.getWallet(), "", txStr);
-
     }
 
+    public int pendingTransactionTimeoutInSeconds() { return 10; }
 }
 
