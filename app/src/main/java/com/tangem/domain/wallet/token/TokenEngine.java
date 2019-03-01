@@ -827,4 +827,6 @@ public class TokenEngine extends CoinEngine {
     public boolean allowSelectFeeInclusion() {
         return getBalance().getCurrency().equals(Blockchain.Ethereum.getCurrency());
     }
+
+    public int pendingTransactionTimeoutInSeconds() { return 10; }
 }
