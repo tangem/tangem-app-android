@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF"
-    tools:context="com.tangem.presentation.activity.LogoActivity"
+    tools:context="com.tangem.ui.activity.LogoActivity"
     tools:ignore="contentDescription">
 
     <ImageView
