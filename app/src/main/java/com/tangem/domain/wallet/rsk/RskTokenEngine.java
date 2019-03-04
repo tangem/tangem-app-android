@@ -162,19 +162,19 @@ public class RskTokenEngine extends TokenEngine {
                 gasPrice = gasPrice.substring(2);
 
                 // rounding gas price to integer gwei
-                BigInteger l = new BigInteger(gasPrice, 16);
+                BigInteger gasPriceBI = new BigInteger(gasPrice, 16).divide(BigInteger.valueOf(10000000)).multiply(BigInteger.valueOf(10000000));
 
-                Log.i(TAG, "Rootstock gas price: " + gasPrice + " (" + l.toString() + ")");
-                BigInteger m;
+                Log.i(TAG, "Rootstock gas price: " + gasPrice + " (" + gasPriceBI.toString() + ")");
+                BigInteger gasUsed;
                 if (!amount.getCurrency().equals(Blockchain.Rootstock.getCurrency()))
-                    m = BigInteger.valueOf(60000);
-                else m = BigInteger.valueOf(21000);
+                    gasUsed = BigInteger.valueOf(60000);
+                else gasUsed = BigInteger.valueOf(21000);
 
-                Log.i(TAG, "fee multiplier: " + m.toString());
+                Log.i(TAG, "fee multiplier: " + gasUsed.toString());
 
-                CoinEngine.InternalAmount weiMinFee = new CoinEngine.InternalAmount(l.multiply(m), "wei");
-                CoinEngine.InternalAmount weiNormalFee = new CoinEngine.InternalAmount(l.multiply(BigInteger.valueOf(12)).divide(BigInteger.valueOf(10)).multiply(m), "wei");
-                CoinEngine.InternalAmount weiMaxFee = new CoinEngine.InternalAmount(l.multiply(BigInteger.valueOf(15)).divide(BigInteger.valueOf(10)).multiply(m), "wei");
+                CoinEngine.InternalAmount weiMinFee = new CoinEngine.InternalAmount(gasPriceBI.multiply(gasUsed), "wei");
+                CoinEngine.InternalAmount weiNormalFee = new CoinEngine.InternalAmount(gasPriceBI.multiply(BigInteger.valueOf(12)).divide(BigInteger.valueOf(10)).multiply(gasUsed), "wei");
+                CoinEngine.InternalAmount weiMaxFee = new CoinEngine.InternalAmount(gasPriceBI.multiply(BigInteger.valueOf(15)).divide(BigInteger.valueOf(10)).multiply(gasUsed), "wei");
                 Log.i(TAG, "min fee   : " + weiMinFee.toValueString() + " wei");
                 Log.i(TAG, "normal fee: " + weiNormalFee.toValueString() + " wei");
                 Log.i(TAG, "max fee   : " + weiMaxFee.toValueString() + " wei");
@@ -251,4 +251,6 @@ public class RskTokenEngine extends TokenEngine {
     public boolean allowSelectFeeInclusion() {
         return getBalance().getCurrency().equals(Blockchain.Rootstock.getCurrency());
     }
+
+    public int pendingTransactionTimeoutInSeconds() { return 10; }
 }
