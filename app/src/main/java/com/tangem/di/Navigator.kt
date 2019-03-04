@@ -4,7 +4,7 @@ import android.app.Activity
 import android.nfc.Tag
 import com.tangem.Constant
 import com.tangem.domain.wallet.TangemContext
-import com.tangem.presentation.activity.*
+import com.tangem.ui.activity.*
 
 class Navigator {
 
