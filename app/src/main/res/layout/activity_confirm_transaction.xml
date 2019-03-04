@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.tangem.presentation.activity.ConfirmTransactionActivity"
+    tools:context="com.tangem.ui.activity.ConfirmTransactionActivity"
     tools:ignore="Autofill">
 
     <TextView
@@ -278,7 +278,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintWidth_min="130dp" />
+                app:layout_constraintWidth_min="100dp" />
 
             <TextView
                 android:id="@+id/tvCurrency2"
