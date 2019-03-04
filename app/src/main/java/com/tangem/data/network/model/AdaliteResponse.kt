@@ -17,7 +17,10 @@ data class AddressData(
         var caAddress: String? = null,
 
         @SerializedName("caBalance")
-        var caBalance: AdaliteCoins? = null
+        var caBalance: AdaliteCoins? = null,
+
+        @SerializedName("caTxList")
+        var caTxList: List<TxData>
 )
 
 data class AdaliteCoins(
@@ -34,4 +37,9 @@ data class UtxoData(
 
         @SerializedName("cuCoins")
         var cuCoins: AdaliteCoins? = null
+)
+
+data class TxData(
+        @SerializedName("ctbId")
+        var ctbId: String? = null
 )
