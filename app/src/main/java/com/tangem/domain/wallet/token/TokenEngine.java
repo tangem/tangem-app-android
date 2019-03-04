@@ -18,8 +18,8 @@ import com.tangem.domain.wallet.EthTransaction;
 import com.tangem.domain.wallet.Keccak256;
 import com.tangem.domain.wallet.TangemContext;
 import com.tangem.domain.wallet.eth.EthData;
-import com.tangem.tangemcommon.data.TangemCard;
-import com.tangem.tangemcommon.tasks.SignTask;
+import com.tangem.card_common.data.TangemCard;
+import com.tangem.card_common.tasks.SignTask;
 import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.wallet.R;
@@ -827,4 +827,6 @@ public class TokenEngine extends CoinEngine {
     public boolean allowSelectFeeInclusion() {
         return getBalance().getCurrency().equals(Blockchain.Ethereum.getCurrency());
     }
+
+    public int pendingTransactionTimeoutInSeconds() { return 10; }
 }

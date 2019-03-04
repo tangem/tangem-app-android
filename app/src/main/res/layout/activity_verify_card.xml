@@ -5,11 +5,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.tangem.presentation.activity.VerifyCardActivity">
+    tools:context="com.tangem.ui.activity.VerifyCardActivity">
 
     <fragment
         android:id="@+id/verify_card_fragment"
-        android:name="com.tangem.presentation.fragment.VerifyCard"
+        android:name="com.tangem.ui.fragment.VerifyCard"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
