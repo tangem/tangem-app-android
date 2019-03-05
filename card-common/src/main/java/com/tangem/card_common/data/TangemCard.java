@@ -5,6 +5,7 @@ import com.tangem.card_common.reader.SettingsMask;
 import com.tangem.card_common.util.Util;
 
 import java.util.Date;
+import java.util.EnumSet;
 
 /**
  * Created by dvol on 16.07.2017.
@@ -449,8 +450,38 @@ public class TangemCard {
 
     private SigningMethod signingMethod;
 
+    private EnumSet<SigningMethod> allowedSigningMethod = EnumSet.noneOf(SigningMethod.class);
+
     public void setSigningMethod(int signingMethodID) {
-        this.signingMethod = SigningMethod.FindByID(signingMethodID);
+        allowedSigningMethod.clear();
+        this.signingMethod = null;
+        if ((signingMethodID & 0x80) != 0) {
+            this.signingMethod = null;
+            for (int i = 0; i < 6; i++) {
+                if ((signingMethodID & (0x01 << i)) != 0) {
+                    allowedSigningMethod.add(SigningMethod.FindByID(i));
+                }
+            }
+            if (allowedSigningMethod.contains(SigningMethod.Sign_Hash)) {
+                signingMethod = SigningMethod.Sign_Hash;
+            } else if (allowedSigningMethod.contains(SigningMethod.Sign_Raw)) {
+                signingMethod = SigningMethod.Sign_Raw;
+            } else if (allowedSigningMethod.contains(SigningMethod.Sign_Hash_Validated_By_Issuer)) {
+                signingMethod = SigningMethod.Sign_Hash_Validated_By_Issuer;
+            } else if (allowedSigningMethod.contains(SigningMethod.Sign_Raw_Validated_By_Issuer)) {
+                signingMethod = SigningMethod.Sign_Raw_Validated_By_Issuer;
+            } else if (allowedSigningMethod.contains(SigningMethod.Sign_Hash_Validated_By_Issuer_And_WriteIssuerData)) {
+                signingMethod = SigningMethod.Sign_Hash_Validated_By_Issuer_And_WriteIssuerData;
+            } else if (allowedSigningMethod.contains(SigningMethod.Sign_Raw_Validated_By_Issuer_And_WriteIssuerData)) {
+                signingMethod = SigningMethod.Sign_Raw_Validated_By_Issuer_And_WriteIssuerData;
+            } else {
+                signingMethod = SigningMethod.Sign_Hash;
+            }
+        } else {
+            allowedSigningMethod.clear();
+            allowedSigningMethod.add(SigningMethod.FindByID(signingMethodID));
+            this.signingMethod = SigningMethod.FindByID(signingMethodID);
+        }
     }
 
     public SigningMethod getSigningMethod() {
