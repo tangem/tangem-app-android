@@ -68,7 +68,7 @@ public class BalanceValidator {
         if( hasPending )
         {
             firstLine = "Pending transaction...";
-            secondLine = "";
+            secondLine = "Swipe down to refresh";
             return;
         }
 
