@@ -278,7 +278,21 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
             else
                 tvReusable.setText(R.string.one_off_banknote)
 
-            tvSigningMethod.text = ctx.card!!.signingMethod.description
+            var s=""
+            for(signingM in ctx.card!!.allowedSigningMethod) {
+                s += if(signingM==ctx.card!!.signingMethod) {
+                    ", <b>${signingM.description}</b>"
+                } else {
+                    ", <small>${signingM.description}</small>"
+                }
+            }
+            s=s.substring(2,s.length)
+            @Suppress("DEPRECATION")
+            tvSigningMethod.text = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                Html.fromHtml(s, Html.FROM_HTML_MODE_LEGACY)
+            else
+                Html.fromHtml(s)
+
 
             if (ctx.card!!.status == TangemCard.Status.Loaded || ctx.card!!.status == TangemCard.Status.Purged) {
 
