@@ -450,7 +450,7 @@ public class TangemCard {
 
     private SigningMethod signingMethod;
 
-    private EnumSet<SigningMethod> allowedSigningMethod = EnumSet.noneOf(SigningMethod.class);
+    public EnumSet<SigningMethod> allowedSigningMethod = EnumSet.noneOf(SigningMethod.class);
 
     public void setSigningMethod(int signingMethodID) {
         allowedSigningMethod.clear();
