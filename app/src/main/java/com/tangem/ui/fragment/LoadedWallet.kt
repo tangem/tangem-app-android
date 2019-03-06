@@ -309,10 +309,10 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
     @Subscribe
     fun onTransactionFinishWithSuccess(transactionFinishWithSuccess: TransactionFinishWithSuccess) {
         ctx.message = transactionFinishWithSuccess.message
-        ctx.coinData.clearInfo()
+        //ctx.coinData.clearInfo()
         updateViews()
-        srl?.isRefreshing = true
-        srl?.postDelayed({ refresh() }, 5000)
+        //srl?.isRefreshing = true
+        srl?.postDelayed({ refresh() }, 10000)
     }
 
     @Subscribe
