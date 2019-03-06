@@ -30,7 +30,7 @@ fun TangemCard.loadFromBundle(B: Bundle) {
     if (B.containsKey("settingsMask")) settingsMask = B.getInt("settingsMask")
     pauseBeforePIN2 = B.getInt("pauseBeforePIN2")
     if (B.containsKey("signingMethod"))
-        setSigningMethod(TangemCard.SigningMethod.valueOf(B.getString("signingMethod")!!).ID)
+        setSigningMethod(B.getInt("signingMethod"))
     if (B.containsKey("Manufacturer"))
         setManufacturer(Manufacturer.valueOf(B.getString("Manufacturer")!!), B.getBoolean("ManufacturerConfirmed", false))
     if (B.containsKey("EncryptionMode"))
@@ -108,7 +108,14 @@ fun TangemCard.saveToBundle(B: Bundle) {
         B.putInt("Health", health)
         if (settingsMask != null) B.putInt("settingsMask", settingsMask)
         B.putInt("pauseBeforePIN2", pauseBeforePIN2)
-        if (signingMethod != null) B.putString("signingMethod", signingMethod.name)
+        if( allowedSigningMethod!=null ){
+            var iSigningMethod=0x80
+            for(sM in allowedSigningMethod)
+            {
+                iSigningMethod=iSigningMethod.or(0x01.shl(sM.ID))
+            }
+            B.putInt("signingMethod", iSigningMethod)
+        }
         if (manufacturer != null) B.putString("Manufacturer", manufacturer.name)
         if (encryptionMode != null) B.putString("EncryptionMode", encryptionMode.name)
         if (issuer != null) B.putString("Issuer", issuer.getID())
