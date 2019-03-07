@@ -35,6 +35,8 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_empty_wallet.*
 import kotlinx.android.synthetic.main.layout_tangem_card.*
 import javax.inject.Inject
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 
 class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
     companion object {
@@ -88,8 +90,8 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
             requestPIN2Count = 0
             val intent = Intent(baseContext, PinRequestActivity::class.java)
             intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-            intent.putExtra("UID", ctx.card!!.uid)
-            intent.putExtra("Card", ctx.card!!.asBundle)
+            intent.putExtra(EXTRA_TANGEM_CARD_UID, ctx.card!!.uid)
+            intent.putExtra(EXTRA_TANGEM_CARD, ctx.card!!.asBundle)
             startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2)
         }
 
@@ -111,17 +113,17 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                 }
                 finish()
             } else {
-                if (data != null && data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
-                    val updatedCard = TangemCard(data.getStringExtra("UID"))
-                    updatedCard.loadFromBundle(data.getBundleExtra("Card"))
+                if (data != null && data.extras!!.containsKey(EXTRA_TANGEM_CARD_UID) && data.extras!!.containsKey(EXTRA_TANGEM_CARD)) {
+                    val updatedCard = TangemCard(data.getStringExtra(EXTRA_TANGEM_CARD_UID))
+                    updatedCard.loadFromBundle(data.getBundleExtra(EXTRA_TANGEM_CARD))
                     ctx.card = updatedCard
                 }
                 if (resultCode == Constant.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
                     val intent = Intent(baseContext, PinRequestActivity::class.java)
                     intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
-                    intent.putExtra("UID", ctx.card!!.uid)
-                    intent.putExtra("Card", ctx.card!!.asBundle)
+                    intent.putExtra(EXTRA_TANGEM_CARD_UID, ctx.card!!.uid)
+                    intent.putExtra(EXTRA_TANGEM_CARD, ctx.card!!.asBundle)
                     startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2)
                     return
                 }
