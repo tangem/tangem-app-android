@@ -29,13 +29,15 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_create_new_wallet.*
 import kotlinx.android.synthetic.main.layout_progress_horizontal.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 
 class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
     companion object {
         fun callingIntent(context: Context, ctx: TangemContext): Intent {
             val intent = Intent(context, CreateNewWalletActivity::class.java)
-            intent.putExtra("UID", ctx.card!!.uid)
-            intent.putExtra("Card", ctx.card!!.asBundle)
+            intent.putExtra(EXTRA_TANGEM_CARD_UID, ctx.card!!.uid)
+            intent.putExtra(EXTRA_TANGEM_CARD, ctx.card!!.asBundle)
             return intent
         }
     }
@@ -113,31 +115,31 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
             if (cardProtocol.error == null) {
                 rlProgressBar.post { rlProgressBar.visibility = View.GONE }
 
-                progressBar!!.post {
-                    progressBar!!.progress = 100
-                    progressBar!!.progressTintList = ColorStateList.valueOf(Color.GREEN)
+                progressBar?.post {
+                    progressBar?.progress = 100
+                    progressBar?.progressTintList = ColorStateList.valueOf(Color.GREEN)
                     val intent = Intent()
-                    intent.putExtra("UID", cardProtocol.card.uid)
-                    intent.putExtra("Card", cardProtocol.card.asBundle)
+                    intent.putExtra(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
+                    intent.putExtra(EXTRA_TANGEM_CARD, cardProtocol.card.asBundle)
                     setResult(Activity.RESULT_OK, intent)
                     finish()
                 }
             } else {
                 lastReadSuccess = false
                 if (cardProtocol.error is CardProtocol.TangemException_InvalidPIN) {
-                    progressBar!!.post {
-                        progressBar!!.progress = 100
-                        progressBar!!.progressTintList = ColorStateList.valueOf(Color.RED)
+                    progressBar?.post {
+                        progressBar?.progress = 100
+                        progressBar?.progressTintList = ColorStateList.valueOf(Color.RED)
                     }
-                    progressBar!!.postDelayed({
+                    progressBar?.postDelayed({
                         try {
-                            progressBar!!.progress = 0
-                            progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
-                            progressBar!!.visibility = View.INVISIBLE
+                            progressBar?.progress = 0
+                            progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+                            progressBar?.visibility = View.INVISIBLE
                             val intent = Intent()
-                            intent.putExtra("message", "Cannot create wallet. Make sure you enter correct PIN2!")
-                            intent.putExtra("UID", cardProtocol.card.uid)
-                            intent.putExtra("Card", cardProtocol.card!!.asBundle)
+                            intent.putExtra(Constant.EXTRA_MESSAGE, getString(R.string.cannot_create_wallet))
+                            intent.putExtra(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
+                            intent.putExtra(EXTRA_TANGEM_CARD, cardProtocol.card!!.asBundle)
                             setResult(Constant.RESULT_INVALID_PIN, intent)
                             finish()
                         } catch (e: Exception) {
