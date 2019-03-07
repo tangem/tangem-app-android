@@ -28,6 +28,8 @@ import com.tangem.card_common.util.Util
 import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_pin_swap.*
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 
 class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
     companion object {
@@ -121,8 +123,8 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
                     progressBar!!.progress = 100
                     progressBar!!.progressTintList = ColorStateList.valueOf(Color.GREEN)
                     val intent = Intent()
-                    intent.putExtra("UID", cardProtocol.card.uid)
-                    intent.putExtra("Card", cardProtocol.card.asBundle)
+                    intent.putExtra(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
+                    intent.putExtra(EXTRA_TANGEM_CARD, cardProtocol.card.asBundle)
                     setResult(Activity.RESULT_OK, intent)
                     finish()
                 }
@@ -138,8 +140,8 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
                             progressBar!!.visibility = View.INVISIBLE
                             val intent = Intent()
                             intent.putExtra("message", "Cannot change PIN(s). Make sure you enter correct PIN2!")
-                            intent.putExtra("UID", cardProtocol.card.uid)
-                            intent.putExtra("Card", cardProtocol.card.asBundle)
+                            intent.putExtra(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
+                            intent.putExtra(EXTRA_TANGEM_CARD, cardProtocol.card.asBundle)
                             setResult(RESULT_INVALID_PIN, intent)
                             finish()
                         } catch (e: Exception) {
@@ -160,11 +162,11 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
                 }
             }
 
-            progressBar!!.postDelayed({
+            progressBar?.postDelayed({
                 try {
-                    progressBar!!.progress = 0
-                    progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
-                    progressBar!!.visibility = View.INVISIBLE
+                    progressBar?.progress = 0
+                    progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+                    progressBar?.visibility = View.INVISIBLE
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
