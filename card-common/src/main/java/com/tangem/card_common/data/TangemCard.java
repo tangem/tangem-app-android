@@ -492,7 +492,6 @@ public class TangemCard {
         this.UID = UID;
     }
 
-
     public enum Status {
         NotPersonalized(0), Empty(1), Loaded(2), Purged(3);
 
