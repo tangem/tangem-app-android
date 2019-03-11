@@ -47,7 +47,7 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
 
     private lateinit var nfcManager: NfcManager
 
-    private var card: TangemCard? = null
+    private lateinit var card: TangemCard;
     private var newPIN: String? = null
     private var newPIN2: String? = null
 
@@ -63,33 +63,30 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
         lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         card = TangemCard(intent.getStringExtra(EXTRA_TANGEM_CARD_UID))
-        card!!.loadFromBundle(intent.extras!!.getBundle(EXTRA_TANGEM_CARD))
+
+        card.loadFromBundle(intent.extras!!.getBundle(EXTRA_TANGEM_CARD))
 
         newPIN = intent.getStringExtra(Constant.EXTRA_NEW_PIN)
         newPIN2 = intent.getStringExtra(Constant.EXTRA_NEW_PIN_2)
 
-        tvCardID.text = card!!.cidDescription
+        tvCardID.text = card.cidDescription
 
         progressBar = findViewById(R.id.progressBar)
-        progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
-        progressBar!!.visibility = View.INVISIBLE
+        progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+        progressBar?.visibility = View.INVISIBLE
     }
 
     override fun onTagDiscovered(tag: Tag) {
         try {
             // get IsoDep handle and run cardReader thread
             val isoDep = IsoDep.get(tag)
-                    ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag.id
             val sUID = Util.byteArrayToHexString(uid)
-            LOG.d(TAG, "UID: $sUID")
-
-            if (sUID == card!!.uid) {
-                isoDep.timeout = card!!.pauseBeforePIN2 + 65000
+            if (sUID == card.uid) {
+                isoDep.timeout = card.pauseBeforePIN2 + 65000
                 swapPinTask = SwapPINTask(card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, newPIN, newPIN2)
-                swapPinTask!!.start()
+                swapPinTask?.start()
             } else {
-                LOG.d(TAG, "Mismatch card UID (" + sUID + " instead of " + card!!.uid + ")")
                 nfcManager.ignoreTag(isoDep.tag)
             }
         } catch (e: Exception) {
