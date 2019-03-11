@@ -76,7 +76,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
         nfcDeviceAntenna = NfcDeviceAntennaLocation(this, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
         nfcDeviceAntenna.init()
 
-        tvCardID.text = ctx.card!!.cidDescription
+        tvCardID.text = ctx.card.cidDescription
         progressBar.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
         progressBar.visibility = View.INVISIBLE
     }
@@ -90,20 +90,15 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
         try {
             // get IsoDep handle and run cardReader thread
             val isoDep = IsoDep.get(tag)
-                    ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag.id
             val sUID = Util.byteArrayToHexString(uid)
-            LOG.d(TAG, "UID: $sUID")
-
-            if (sUID == ctx.card!!.uid) {
-                isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 65000
+            if (sUID == ctx.card.uid) {
+                isoDep.timeout = ctx.card.pauseBeforePIN2 + 65000
                 purgeTask = PurgeTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
-                purgeTask!!.start()
+                purgeTask?.start()
             } else {
-                LOG.d(TAG, "Mismatch card UID (" + sUID + " instead of " + ctx.card.uid + ")")
                 nfcManager.ignoreTag(isoDep.tag)
             }
-
         } catch (e: Exception) {
             e.printStackTrace()
         }
