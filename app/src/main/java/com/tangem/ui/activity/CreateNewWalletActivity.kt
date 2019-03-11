@@ -72,24 +72,20 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         try {
             // get IsoDep handle and run cardReader thread
             val isoDep = IsoDep.get(tag)
-                    ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag.id
             val sUID = Util.byteArrayToHexString(uid)
-//            Log.v(TAG, "UID: " + sUID);
 
-            if (sUID == ctx.card!!.uid) {
+            if (sUID == ctx.card.uid) {
                 if (lastReadSuccess)
-                    isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 5000
+                    isoDep.timeout = ctx.card.pauseBeforePIN2 + 5000
                 else
-                    isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 65000
+                    isoDep.timeout = ctx.card.pauseBeforePIN2 + 65000
 
                 createNewWalletTask = CreateNewWalletTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
-                createNewWalletTask!!.start()
+                createNewWalletTask?.start()
             } else {
-//                Log.d(TAG, "Mismatch card UID (" + sUID + " instead of " + mCard.getUID() + ")");
                 nfcManager.ignoreTag(isoDep.tag)
             }
-
         } catch (e: Exception) {
             e.printStackTrace()
         }
