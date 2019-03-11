@@ -116,7 +116,6 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         try {
             // get IsoDep handle and run cardReader thread
             val isoDep = IsoDep.get(tag)
-                    ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag.id
             val sUID = Util.byteArrayToHexString(uid)
 
@@ -127,8 +126,7 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                     isoDep.timeout = ctx.card.pauseBeforePIN2 + 65000
 
                 val coinEngine = CoinEngineFactory.create(ctx)
-                        ?: throw CardProtocol.TangemException(getString(R.string.ex_cant_create_coinEngine))
-                coinEngine.setOnNeedSendTransaction { tx ->
+                coinEngine?.setOnNeedSendTransaction { tx ->
                     if (tx != null) {
                         val intent = Intent(this, SendTransactionActivity::class.java)
                         ctx.saveToIntent(intent)
@@ -136,10 +134,10 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                         startActivityForResult(intent, Constant.REQUEST_CODE_SEND_TRANSACTION_)
                     }
                 }
-                val transactionToSign = coinEngine.constructTransaction(amount, fee, isIncludeFee, outAddressStr)
+                val transactionToSign = coinEngine?.constructTransaction(amount, fee, isIncludeFee, outAddressStr)
 
                 signTransactionTask = SignTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, transactionToSign)
-                signTransactionTask!!.start()
+                signTransactionTask?.start()
             } else
                 nfcManager.ignoreTag(isoDep.tag)
 
