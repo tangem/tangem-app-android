@@ -140,15 +140,11 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
     override fun onTagDiscovered(tag: Tag) {
         try {
             val isoDep = IsoDep.get(tag)
-                    ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag.id
             val sUID = Util.byteArrayToHexString(uid)
-            if (ctx.card!!.uid != sUID) {
-                LOG.d(TAG, "Invalid UID: $sUID")
+            if (ctx.card.uid != sUID) {
                 nfcManager.ignoreTag(isoDep.tag)
                 return
-            } else {
-                LOG.d(TAG, "UID: $sUID")
             }
 
             if (lastReadSuccess)
