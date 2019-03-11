@@ -744,8 +744,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
     private fun startVerify(tag: Tag?) {
         try {
             val isoDep = IsoDep.get(tag)
-                    ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
-            val uid = tag!!.id
+            val uid = tag?.id
             val sUID = Util.byteArrayToHexString(uid)
             if (ctx.card.uid != sUID || cardProtocol != null) {
                 nfcManager.ignoreTag(isoDep.tag)
@@ -756,7 +755,6 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                 isoDep.timeout = 1000
             else
                 isoDep.timeout = 65000
-
 
             verifyCardTask = VerifyCardTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, App.firmwaresStorage, this)
             verifyCardTask?.start()
