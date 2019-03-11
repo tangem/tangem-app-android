@@ -220,21 +220,15 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         try {
             // get IsoDep handle and run cardReader thread
             val isoDep = IsoDep.get(tag)
-                    ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
-
-            LOG.e(TAG, "setTimeout(" + (1000 + 3000 * unsuccessReadCount) + ")")
-            if (unsuccessReadCount < 2) {
+            if (unsuccessReadCount < 2)
                 isoDep.timeout = 2000 + 5000 * unsuccessReadCount
-            } else {
+            else
                 isoDep.timeout = 90000
-            }
+
             lastTag = tag
 
             readCardInfoTask = ReadCardInfoTask(NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
             readCardInfoTask?.start()
-
-            LOG.i(TAG, "onTagDiscovered " + Arrays.toString(tag.id))
-
         } catch (e: Exception) {
             e.printStackTrace()
             nfcManager.notifyReadResult(false)
@@ -274,10 +268,11 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                     rlProgressBar.visibility = View.GONE
 // [REDACTED_TODO_COMMENT]
                     val cardInfo = Bundle()
-                    cardInfo.putString(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
                     val bCard = Bundle()
-                    cardProtocol.card.saveToBundle(bCard)
+
+                    cardInfo.putString(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
                     cardInfo.putBundle(EXTRA_TANGEM_CARD, bCard)
+                    cardProtocol.card.saveToBundle(bCard)
 
                     val uid = cardInfo.getString("UID")
                     val card = TangemCard(uid)
@@ -287,10 +282,12 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                     when {
                         card.status == TangemCard.Status.Loaded -> lastTag?.let {
                             val engineCoin = CoinEngineFactory.create(ctx)
-                                    ?: throw CardProtocol.TangemException("Can't create CoinEngine!")
-                            engineCoin.defineWallet()
-                            navigator.showLoadedWallet(this, it, ctx)
+                            if (engineCoin != null) {
+                                engineCoin.defineWallet()
+                                navigator.showLoadedWallet(this, it, ctx)
+                            }
                         }
+//                                ?: throw CardProtocol.TangemException("Can't create CoinEngine!")
                         card.status == TangemCard.Status.Empty -> navigator.showEmptyWallet(this, ctx)
                         card.status == TangemCard.Status.Purged -> Toast.makeText(this, R.string.erased_wallet, Toast.LENGTH_SHORT).show()
                         card.status == TangemCard.Status.NotPersonalized -> Toast.makeText(this, R.string.not_personalized, Toast.LENGTH_SHORT).show()
