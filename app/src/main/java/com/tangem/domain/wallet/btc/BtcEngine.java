@@ -738,10 +738,11 @@ public class BtcEngine extends CoinEngine {
 
             byte[][] hashesToSign = ps.getHashesToSign();
             byte[] signFromCard = new byte[64 * hashesToSign.length];
+            Arrays.fill(signFromCard, (byte) 0x01);
             byte[] txForSend = ps.onSignCompleted(signFromCard);
             onNeedSendTransaction = onNeedSendTransactionBackup;
             Log.e(TAG, "txForSend.length=" + String.valueOf(txForSend.length));
-            return txForSend.length;
+            return txForSend.length + 1;
 
 //            Log.e(TAG,"txForSend.length="+String.valueOf(txForSend.length)+" realTX.length="+String.valueOf(realTX.length));
 //
