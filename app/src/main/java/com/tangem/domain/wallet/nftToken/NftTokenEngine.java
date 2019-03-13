@@ -64,7 +64,7 @@ public class NftTokenEngine extends CoinEngine {
     public String getBalanceHTML() {
         if (hasBalanceInfo()) {
             if (isBalanceNotZero()) {
-                return "AUTHENTIC";// + getBalanceCurrency();
+                return "GENUINE";// + getBalanceCurrency();
             } else {
                 return "NOT FOUND";
             }
