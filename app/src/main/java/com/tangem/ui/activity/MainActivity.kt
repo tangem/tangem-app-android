@@ -10,26 +10,17 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.PopupMenu
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.PopupMenu
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.scottyab.rootbeer.RootBeer
 import com.tangem.App
 import com.tangem.Constant
-import com.tangem.data.Logger
-import com.tangem.data.network.ServerApiCommon
-import com.tangem.di.Navigator
-import com.tangem.domain.wallet.CoinEngineFactory
-import com.tangem.domain.wallet.TangemContext
-import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
-import com.tangem.ui.dialog.RootFoundDialog
-import com.tangem.ui.dialog.WaitSecurityDelayDialog
 import com.tangem.card_android.android.nfc.NfcDeviceAntennaLocation
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager
@@ -39,6 +30,14 @@ import com.tangem.card_android.data.saveToBundle
 import com.tangem.card_common.data.TangemCard
 import com.tangem.card_common.reader.CardProtocol
 import com.tangem.card_common.tasks.ReadCardInfoTask
+import com.tangem.data.Logger
+import com.tangem.data.network.ServerApiCommon
+import com.tangem.di.Navigator
+import com.tangem.domain.wallet.CoinEngineFactory
+import com.tangem.domain.wallet.TangemContext
+import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
+import com.tangem.ui.dialog.RootFoundDialog
+import com.tangem.ui.dialog.WaitSecurityDelayDialog
 import com.tangem.util.CommonUtil
 import com.tangem.util.LOG
 import com.tangem.util.PhoneUtility
@@ -49,6 +48,8 @@ import kotlinx.android.synthetic.main.layout_touch_card.*
 import java.io.File
 import java.util.*
 import javax.inject.Inject
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 
 class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, PopupMenu.OnMenuItemClickListener {
 
@@ -142,7 +143,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     private fun verifyPermissions() {
         NfcManager.verifyPermissions(this)
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            Log.e("QRScanActivity", "User hasn't granted permission to use camera")
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), Constant.REQUEST_CODE_REQUEST_CAMERA_PERMISSIONS)
         }
     }
@@ -220,21 +220,15 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         try {
             // get IsoDep handle and run cardReader thread
             val isoDep = IsoDep.get(tag)
-                    ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
-
-            LOG.e(TAG, "setTimeout(" + (1000 + 3000 * unsuccessReadCount) + ")")
-            if (unsuccessReadCount < 2) {
+            if (unsuccessReadCount < 2)
                 isoDep.timeout = 2000 + 5000 * unsuccessReadCount
-            } else {
+            else
                 isoDep.timeout = 90000
-            }
+
             lastTag = tag
 
             readCardInfoTask = ReadCardInfoTask(NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
             readCardInfoTask?.start()
-
-            LOG.i(TAG, "onTagDiscovered " + Arrays.toString(tag.id))
-
         } catch (e: Exception) {
             e.printStackTrace()
             nfcManager.notifyReadResult(false)
@@ -275,23 +269,26 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
                     // TODO - ??? remove save and load???
                     val cardInfo = Bundle()
-                    cardInfo.putString("UID", cardProtocol.card.uid)
                     val bCard = Bundle()
+
+                    cardInfo.putString(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
+                    cardInfo.putBundle(EXTRA_TANGEM_CARD, bCard)
                     cardProtocol.card.saveToBundle(bCard)
-                    cardInfo.putBundle("Card", bCard)
 
                     val uid = cardInfo.getString("UID")
                     val card = TangemCard(uid)
-                    cardInfo.getBundle("Card")?.let { card.loadFromBundle(it) }
+                    cardInfo.getBundle(EXTRA_TANGEM_CARD)?.let { card.loadFromBundle(it) }
 
                     val ctx = TangemContext(card)
                     when {
                         card.status == TangemCard.Status.Loaded -> lastTag?.let {
                             val engineCoin = CoinEngineFactory.create(ctx)
-                                    ?: throw CardProtocol.TangemException("Can't create CoinEngine!")
-                            engineCoin.defineWallet()
-                            navigator.showLoadedWallet(this, it, ctx)
+                            if (engineCoin != null) {
+                                engineCoin.defineWallet()
+                                navigator.showLoadedWallet(this, it, ctx)
+                            }
                         }
+//                                ?: throw CardProtocol.TangemException("Can't create CoinEngine!")
                         card.status == TangemCard.Status.Empty -> navigator.showEmptyWallet(this, ctx)
                         card.status == TangemCard.Status.Purged -> Toast.makeText(this, R.string.erased_wallet, Toast.LENGTH_SHORT).show()
                         card.status == TangemCard.Status.NotPersonalized -> Toast.makeText(this, R.string.not_personalized, Toast.LENGTH_SHORT).show()
