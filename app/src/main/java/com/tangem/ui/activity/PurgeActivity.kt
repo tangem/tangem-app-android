@@ -33,6 +33,8 @@ import kotlinx.android.synthetic.main.activity_purge.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
 import org.greenrobot.eventbus.EventBus
 import javax.inject.Inject
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 
 class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
     companion object {
@@ -74,7 +76,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
         nfcDeviceAntenna = NfcDeviceAntennaLocation(this, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
         nfcDeviceAntenna.init()
 
-        tvCardID.text = ctx.card!!.cidDescription
+        tvCardID.text = ctx.card.cidDescription
         progressBar.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
         progressBar.visibility = View.INVISIBLE
     }
@@ -88,20 +90,15 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
         try {
             // get IsoDep handle and run cardReader thread
             val isoDep = IsoDep.get(tag)
-                    ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag.id
             val sUID = Util.byteArrayToHexString(uid)
-            LOG.d(TAG, "UID: $sUID")
-
-            if (sUID == ctx.card!!.uid) {
-                isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 65000
+            if (sUID == ctx.card.uid) {
+                isoDep.timeout = ctx.card.pauseBeforePIN2 + 65000
                 purgeTask = PurgeTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
-                purgeTask!!.start()
+                purgeTask?.start()
             } else {
-                LOG.d(TAG, "Mismatch card UID (" + sUID + " instead of " + ctx.card.uid + ")")
                 nfcManager.ignoreTag(isoDep.tag)
             }
-
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -155,8 +152,8 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
                     progressBar?.progressTintList = ColorStateList.valueOf(Color.GREEN)
 
                     val intent = Intent()
-                    intent.putExtra("UID", cardProtocol.card.uid)
-                    intent.putExtra("Card", cardProtocol.card.asBundle)
+                    intent.putExtra(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
+                    intent.putExtra(EXTRA_TANGEM_CARD, cardProtocol.card.asBundle)
                     setResult(Activity.RESULT_OK, intent)
 
                     EventBus.getDefault().post(DeletingWalletFinish())
@@ -176,8 +173,8 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
                             progressBar?.visibility = View.INVISIBLE
 
                             val intent = Intent()
-                            intent.putExtra("UID", cardProtocol.card.uid)
-                            intent.putExtra("Card", cardProtocol.card.asBundle)
+                            intent.putExtra(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
+                            intent.putExtra(EXTRA_TANGEM_CARD, cardProtocol.card.asBundle)
                             intent.putExtra("message", getString(R.string.cannot_erase_wallet))
                             setResult(RESULT_INVALID_PIN, intent)
                             finish()
@@ -186,15 +183,15 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
                         }
                     }, 500)
                 } else {
-                    progressBar!!.post {
+                    progressBar?.post {
                         if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported) {
                             if (!NoExtendedLengthSupportDialog.allReadyShowed)
                                 NoExtendedLengthSupportDialog().show(supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
                         } else
                             Toast.makeText(baseContext, R.string.try_to_scan_again, Toast.LENGTH_LONG).show()
 
-                        progressBar!!.progress = 100
-                        progressBar!!.progressTintList = ColorStateList.valueOf(Color.RED)
+                        progressBar?.progress = 100
+                        progressBar?.progressTintList = ColorStateList.valueOf(Color.RED)
                     }
                 }
             }
