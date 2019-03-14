@@ -7,7 +7,7 @@
     <string name="no_connection">No connection with blockchain nodes</string>
     <string name="contin">Continue</string>
     <string name="not_found">Not found</string>
-    <string name="wrong_tag_err">Not ISO tag!</string>
+    <!--<string name="wrong_tag_err">Not ISO tag!</string>-->
     <string name="msgCardMustBeLoaded">Card must be loaded first!</string>
     <string name="tag_lost_err">Tag lost!</string>
     <string name="cmd_suffix">command</string>
@@ -135,6 +135,7 @@
     <string name="to_change_pin_codes">to change PIN/PIN2 codes</string>
     <string name="by_tapping_the_card">By tapping the card, you will permanently remove the blockchain wallet. Ensure there will be no further incoming transactions</string>
     <string name="cannot_erase_wallet">Cannot erase wallet. Make sure you enter correct PIN2!</string>
+    <string name="cannot_create_wallet">Cannot create wallet. Make sure you enter correct PIN2!</string>
 
     <!-- PrepareTransactionActivity -->
     <string name="enter_wallet_address">enter wallet address</string>
