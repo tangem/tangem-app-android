@@ -29,6 +29,8 @@ import kotlinx.android.synthetic.main.activity_confirm_transaction.*
 import org.greenrobot.eventbus.EventBus
 import java.io.IOException
 import java.util.*
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 
 class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
@@ -200,9 +202,9 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == Constant.REQUEST_CODE_SIGN_TRANSACTION) {
             if (data != null && data.extras != null) {
-                if (data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
-                    val updatedCard = TangemCard(data.getStringExtra("UID"))
-                    updatedCard.loadFromBundle(data.getBundleExtra("Card"))
+                if (data.extras!!.containsKey(EXTRA_TANGEM_CARD_UID) && data.extras!!.containsKey(EXTRA_TANGEM_CARD)) {
+                    val updatedCard = TangemCard(data.getStringExtra(EXTRA_TANGEM_CARD_UID))
+                    updatedCard.loadFromBundle(data.getBundleExtra(EXTRA_TANGEM_CARD))
                     ctx.card = updatedCard
                 }
             }
@@ -288,7 +290,7 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         EventBus.getDefault().post(transactionFinishWithError)
 
         val intent = Intent()
-        intent.putExtra("message", message)
+        intent.putExtra(Constant.EXTRA_MESSAGE, message)
         setResult(errorCode, intent)
         finish()
     }
