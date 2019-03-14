@@ -15,24 +15,26 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
+import com.tangem.card_android.android.nfc.NfcDeviceAntennaLocation
+import com.tangem.card_android.android.nfc.NfcLifecycleObserver
+import com.tangem.card_android.android.reader.NfcManager
+import com.tangem.card_android.android.reader.NfcReader
+import com.tangem.card_common.reader.CardProtocol
+import com.tangem.card_common.tasks.SignTask
+import com.tangem.card_common.util.Util
 import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
 import com.tangem.ui.dialog.WaitSecurityDelayDialog
-import com.tangem.card_android.android.nfc.NfcDeviceAntennaLocation
-import com.tangem.card_android.android.nfc.NfcLifecycleObserver
-import com.tangem.card_android.android.reader.NfcManager
-import com.tangem.card_android.android.reader.NfcReader
-import com.tangem.card_android.data.asBundle
-import com.tangem.card_common.reader.CardProtocol
-import com.tangem.card_common.tasks.SignTask
-import com.tangem.card_common.util.Util
 import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_sign_transaction.*
 import kotlinx.android.synthetic.main.layout_progress_horizontal.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
+import com.tangem.card_android.data.asBundle
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 
 class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
 
@@ -114,20 +116,17 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         try {
             // get IsoDep handle and run cardReader thread
             val isoDep = IsoDep.get(tag)
-                    ?: throw CardProtocol.TangemException(getString(R.string.wrong_tag_err))
             val uid = tag.id
             val sUID = Util.byteArrayToHexString(uid)
 
-            if (sUID == ctx.card!!.uid) {
-                if (lastReadSuccess) {
-                    isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 5000
-                } else {
-                    isoDep.timeout = ctx.card!!.pauseBeforePIN2 + 65000
-                }
+            if (sUID == ctx.card.uid) {
+                if (lastReadSuccess)
+                    isoDep.timeout = ctx.card.pauseBeforePIN2 + 5000
+                else
+                    isoDep.timeout = ctx.card.pauseBeforePIN2 + 65000
 
                 val coinEngine = CoinEngineFactory.create(ctx)
-                        ?: throw CardProtocol.TangemException("Can't create CoinEngine!")
-                coinEngine.setOnNeedSendTransaction { tx ->
+                coinEngine?.setOnNeedSendTransaction { tx ->
                     if (tx != null) {
                         val intent = Intent(this, SendTransactionActivity::class.java)
                         ctx.saveToIntent(intent)
@@ -135,19 +134,19 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                         startActivityForResult(intent, Constant.REQUEST_CODE_SEND_TRANSACTION_)
                     }
                 }
-                val transactionToSign = coinEngine.constructTransaction(amount, fee, isIncludeFee, outAddressStr)
+                val transactionToSign = coinEngine?.constructTransaction(amount, fee, isIncludeFee, outAddressStr)
 
                 signTransactionTask = SignTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, transactionToSign)
-                signTransactionTask!!.start()
+                signTransactionTask?.start()
             } else
                 nfcManager.ignoreTag(isoDep.tag)
 
         } catch (e: CardProtocol.TangemException_WrongAmount) {
             try {
                 val intent = Intent()
-                intent.putExtra("message", getString(R.string.cannot_sign_transaction_wrong_amount))
-                intent.putExtra("UID", ctx.card.uid)
-                intent.putExtra("Card", ctx.card.asBundle)
+                intent.putExtra(Constant.EXTRA_MESSAGE, getString(R.string.cannot_sign_transaction_wrong_amount))
+                intent.putExtra(EXTRA_TANGEM_CARD_UID, ctx.card.uid)
+                intent.putExtra(EXTRA_TANGEM_CARD, ctx.card.asBundle)
                 setResult(Activity.RESULT_CANCELED, intent)
                 finish()
             } catch (e: Exception) {
@@ -196,9 +195,9 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                             progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
                             progressBar?.visibility = View.INVISIBLE
                             val intent = Intent()
-                            intent.putExtra("message", getString(R.string.cannot_sign_transaction_make_sure_you_enter_correct_pin_2))
-                            intent.putExtra("UID", cardProtocol.card.uid)
-                            intent.putExtra("Card", cardProtocol.card.asBundle)
+                            intent.putExtra(Constant.EXTRA_MESSAGE, getString(R.string.cannot_sign_transaction_make_sure_you_enter_correct_pin_2))
+                            intent.putExtra(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
+                            intent.putExtra(EXTRA_TANGEM_CARD, cardProtocol.card.asBundle)
                             setResult(Constant.RESULT_INVALID_PIN_, intent)
                             finish()
                         } catch (e: Exception) {
@@ -209,16 +208,16 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                     if (cardProtocol.error is CardProtocol.TangemException_WrongAmount) {
                         try {
                             val intent = Intent()
-                            intent.putExtra("message", getString(R.string.cannot_sign_transaction_wrong_amount))
-                            intent.putExtra("UID", cardProtocol.card.uid)
-                            intent.putExtra("Card", cardProtocol.card.asBundle)
+                            intent.putExtra(Constant.EXTRA_MESSAGE, getString(R.string.cannot_sign_transaction_wrong_amount))
+                            intent.putExtra(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
+                            intent.putExtra(EXTRA_TANGEM_CARD, cardProtocol.card.asBundle)
                             setResult(Activity.RESULT_CANCELED, intent)
                             finish()
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
                     }
-                    progressBar!!.post {
+                    progressBar?.post {
                         if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported) {
                             if (!NoExtendedLengthSupportDialog.allReadyShowed) {
                                 NoExtendedLengthSupportDialog.message = getText(R.string.the_nfc_adapter_length_apdu).toString() + "\n" + getText(R.string.the_nfc_adapter_length_apdu_advice).toString()
@@ -227,8 +226,8 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                         } else {
                             Toast.makeText(baseContext, R.string.try_to_scan_again, Toast.LENGTH_LONG).show()
                         }
-                        progressBar!!.progress = 100
-                        progressBar!!.progressTintList = ColorStateList.valueOf(Color.RED)
+                        progressBar?.progress = 100
+                        progressBar?.progressTintList = ColorStateList.valueOf(Color.RED)
                     }
                 }
             }
@@ -242,11 +241,11 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
             }
         }, 500)
 
-        progressBar!!.postDelayed({
+        progressBar?.postDelayed({
             try {
-                progressBar!!.progress = 0
-                progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
-                progressBar!!.visibility = View.INVISIBLE
+                progressBar?.progress = 0
+                progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+                progressBar?.visibility = View.INVISIBLE
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -256,11 +255,11 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
     override fun onReadCancel() {
         signTransactionTask = null
 
-        progressBar!!.postDelayed({
+        progressBar?.postDelayed({
             try {
-                progressBar!!.progress = 0
-                progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
-                progressBar!!.visibility = View.INVISIBLE
+                progressBar?.progress = 0
+                progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+                progressBar?.visibility = View.INVISIBLE
             } catch (e: Exception) {
                 e.printStackTrace()
             }
