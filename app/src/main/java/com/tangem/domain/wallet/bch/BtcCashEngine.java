@@ -663,10 +663,11 @@ public class BtcCashEngine extends CoinEngine {
 
             byte[][] hashesToSign=ps.getHashesToSign();
             byte[] signFromCard = new byte[64 * hashesToSign.length];
+            Arrays.fill(signFromCard, (byte) 0x01);
             byte[] txForSend=ps.onSignCompleted(signFromCard);
             onNeedSendTransaction = onNeedSendTransactionBackup;
             Log.e(TAG,"txForSend.length="+String.valueOf(txForSend.length));
-            return txForSend.length;
+            return txForSend.length +1;
         } catch (Exception e) {
             e.printStackTrace();
             Log.e(TAG, "Can't calculate transaction size -> use default!");
