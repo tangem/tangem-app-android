@@ -218,15 +218,15 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         if (mode == Mode.RequestNewPIN || mode == Mode.ConfirmNewPIN) {
             val resultData = Intent()
             val pin = PINStorage.loadEncryptedPIN(cipher)
-            resultData.putExtra("newPIN", pin)
-            resultData.putExtra("confirmPIN", pin)
+            resultData.putExtra(Constant.EXTRA_NEW_PIN, pin)
+            resultData.putExtra(Constant.EXTRA_CONFIRM_PIN, pin)
             setResult(Activity.RESULT_OK, resultData)
             finish()
         } else if (mode == Mode.RequestNewPIN2 || mode == Mode.ConfirmNewPIN2) {
             val resultData = Intent()
             val pin = PINStorage.loadEncryptedPIN2(cipher)
-            resultData.putExtra("newPIN2", pin)
-            resultData.putExtra("confirmPIN2", pin)
+            resultData.putExtra(Constant.EXTRA_NEW_PIN_2, pin)
+            resultData.putExtra(Constant.EXTRA_CONFIRM_PIN_2, pin)
             setResult(Activity.RESULT_OK, resultData)
             finish()
         } else if (mode == Mode.RequestPIN) {
@@ -297,13 +297,13 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         var focusView: View? = null
 
         if (mode == Mode.ConfirmNewPIN) {
-            if (pin != intent.getStringExtra("newPIN")) {
+            if (pin != intent.getStringExtra(Constant.EXTRA_NEW_PIN)) {
                 tvPin!!.error = getString(R.string.error_pin_confirmation_failed)
                 focusView = tvPin
                 cancel = true
             }
         } else if (mode == Mode.ConfirmNewPIN2) {
-            if (pin != intent.getStringExtra("newPIN2")) {
+            if (pin != intent.getStringExtra(Constant.EXTRA_NEW_PIN_2)) {
                 tvPin!!.error = getString(R.string.error_pin_confirmation_failed)
                 focusView = tvPin
                 cancel = true
@@ -321,17 +321,17 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         else {
             if (mode == Mode.RequestNewPIN || mode == Mode.ConfirmNewPIN) {
                 val resultData = Intent()
-                resultData.putExtra("newPIN", pin)
+                resultData.putExtra(Constant.EXTRA_NEW_PIN, pin)
                 if (mode == Mode.ConfirmNewPIN)
-                    resultData.putExtra("confirmPIN", pin)
+                    resultData.putExtra(Constant.EXTRA_CONFIRM_PIN, pin)
 
                 setResult(Activity.RESULT_OK, resultData)
                 finish()
             } else if (mode == Mode.RequestNewPIN2 || mode == Mode.ConfirmNewPIN2) {
                 val resultData = Intent()
-                resultData.putExtra("newPIN2", pin)
+                resultData.putExtra(Constant.EXTRA_NEW_PIN_2, pin)
                 if (mode == Mode.ConfirmNewPIN2)
-                    resultData.putExtra("confirmPIN2", pin)
+                    resultData.putExtra(Constant.EXTRA_CONFIRM_PIN_2, pin)
 
                 setResult(Activity.RESULT_OK, resultData)
                 finish()
