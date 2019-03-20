@@ -4,6 +4,8 @@ import android.app.Activity
 
 object Constant {
 
+    const val URL_TANGEM = "https://play.google.com/store/apps/details?id=com.tangem.wallet"
+
     const val EXTRA_BLOCKCHAIN_DATA = "BLOCKCHAIN_DATA"
 
     const val EXTRA_MESSAGE = "message"
