@@ -6,7 +6,6 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Build
 import android.os.Bundle
-import androidx.core.content.ContextCompat
 import android.text.Html
 import android.text.format.DateUtils
 import android.view.LayoutInflater
@@ -14,21 +13,24 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import com.tangem.App
 import com.tangem.Constant
-import com.tangem.data.Blockchain
-import com.tangem.domain.wallet.CoinEngineFactory
-import com.tangem.domain.wallet.TangemContext
-import com.tangem.ui.activity.*
-import com.tangem.ui.dialog.PINSwapWarningDialog
-import com.tangem.ui.event.DeletingWalletFinish
 import com.tangem.card_android.android.data.PINStorage
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 import com.tangem.card_android.data.loadFromBundle
 import com.tangem.card_common.data.TangemCard
 import com.tangem.card_common.reader.CardProtocol
-import com.tangem.util.LOG
+import com.tangem.data.Blockchain
+import com.tangem.domain.wallet.CoinEngineFactory
+import com.tangem.domain.wallet.TangemContext
+import com.tangem.ui.activity.PinRequestActivity
+import com.tangem.ui.activity.VerifyCardActivity
+import com.tangem.ui.dialog.PINSwapWarningDialog
+import com.tangem.ui.event.DeletingWalletFinish
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fr_verify_card.*
@@ -73,7 +75,7 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
 
         btnOk.setOnClickListener {
             val data = prepareResultIntent()
-            data.putExtra(Constant.EXTRA_MODIFICATION, "update")
+            data.putExtra(Constant.EXTRA_MODIFICATION, getString(R.string.update))
             activity?.finish()
         }
     }
@@ -96,20 +98,19 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        LOG.i(TAG, "requestCode $requestCode resultCode $resultCode")
         when (requestCode) {
             Constant.REQUEST_CODE_ENTER_NEW_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (data != null) {
-                    if (data.extras!!.containsKey("confirmPIN")) {
+                    if (data.extras!!.containsKey(Constant.EXTRA_CONFIRM_PIN)) {
                         val intent = Intent(context, PinRequestActivity::class.java)
-                        intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
+                        intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
                         ctx.saveToIntent(intent)
-                        newPIN = data.getStringExtra("newPIN")
+                        newPIN = data.getStringExtra(Constant.EXTRA_NEW_PIN)
                         startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
                     } else {
                         val intent = Intent(context, PinRequestActivity::class.java)
-                        intent.putExtra("newPIN", data.getStringExtra("newPIN"))
-                        intent.putExtra("mode", PinRequestActivity.Mode.ConfirmNewPIN.toString())
+                        intent.putExtra(Constant.EXTRA_NEW_PIN, data.getStringExtra(Constant.EXTRA_NEW_PIN))
+                        intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.ConfirmNewPIN.toString())
                         startActivityForResult(intent, Constant.REQUEST_CODE_ENTER_NEW_PIN)
                     }
                 }
@@ -117,16 +118,16 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
 
             Constant.REQUEST_CODE_ENTER_NEW_PIN2 -> if (resultCode == Activity.RESULT_OK) {
                 if (data != null) {
-                    if (data.extras!!.containsKey("confirmPIN2")) {
+                    if (data.extras!!.containsKey(Constant.EXTRA_CONFIRM_PIN_2)) {
                         val intent = Intent(context, PinRequestActivity::class.java)
-                        intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
+                        intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
                         ctx.saveToIntent(intent)
-                        newPIN2 = data.getStringExtra("newPIN2")
+                        newPIN2 = data.getStringExtra(Constant.EXTRA_NEW_PIN_2)
                         startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
                     } else {
                         val intent = Intent(context, PinRequestActivity::class.java)
-                        intent.putExtra("newPIN2", data.getStringExtra("newPIN2"))
-                        intent.putExtra("mode", PinRequestActivity.Mode.ConfirmNewPIN2.toString())
+                        intent.putExtra(Constant.EXTRA_NEW_PIN_2, data.getStringExtra(Constant.EXTRA_NEW_PIN_2))
+                        intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.ConfirmNewPIN2.toString())
                         startActivityForResult(intent, Constant.REQUEST_CODE_ENTER_NEW_PIN2)
                     }
                 }
@@ -141,9 +142,9 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
                 pinSwapWarningDialog.setOnRefreshPage { (activity as VerifyCardActivity).navigator.showPinSwap(context as Activity, newPIN, newPIN2) }
                 val bundle = Bundle()
                 if (!CardProtocol.isDefaultPIN(newPIN) || !CardProtocol.isDefaultPIN2(newPIN2))
-                    bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_forget))
+                    bundle.putString(Constant.EXTRA_MESSAGE, getString(R.string.if_you_forget))
                 else
-                    bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_use_default))
+                    bundle.putString(Constant.EXTRA_MESSAGE, getString(R.string.if_you_use_default))
                 pinSwapWarningDialog.arguments = bundle
                 activity?.supportFragmentManager?.let { pinSwapWarningDialog.show(it, PINSwapWarningDialog.TAG) }
             }
@@ -151,27 +152,27 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
             Constant.REQUEST_CODE_SWAP_PIN -> if (resultCode == Activity.RESULT_OK) {
                 if (data == null) {
                     ctx.saveToIntent(data)
-                    data?.putExtra("modification", "delete")
+                    data?.putExtra(Constant.EXTRA_MODIFICATION, Constant.EXTRA_MODIFICATION_DELETE)
                 } else
-                    data.putExtra("modification", "update")
-                activity!!.setResult(Activity.RESULT_OK, data)
-                activity!!.finish()
+                    data.putExtra(Constant.EXTRA_MODIFICATION, Constant.EXTRA_MODIFICATION_UPDATE)
+                activity?.setResult(Activity.RESULT_OK, data)
+                activity?.finish()
             } else {
-                if (data != null && data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
-                    val updatedCard = TangemCard(data.getStringExtra("UID"))
-                    updatedCard.loadFromBundle(data.getBundleExtra("Card"))
+                if (data != null && data.extras!!.containsKey(EXTRA_TANGEM_CARD_UID) && data.extras!!.containsKey(EXTRA_TANGEM_CARD)) {
+                    val updatedCard = TangemCard(data.getStringExtra(EXTRA_TANGEM_CARD_UID))
+                    updatedCard.loadFromBundle(data.getBundleExtra(EXTRA_TANGEM_CARD))
                     ctx.card = updatedCard
                 }
                 if (resultCode == Constant.RESULT_INVALID_PIN && requestPIN2Count < 2) {
                     requestPIN2Count++
                     val intent = Intent(context, PinRequestActivity::class.java)
-                    intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
+                    intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
                     ctx.saveToIntent(intent)
                     startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_FOR_SWAP_PIN)
                     return
                 } else {
-                    if (data != null && data.extras!!.containsKey("message")) {
-                        ctx.error = data.getStringExtra("message")
+                    if (data != null && data.extras!!.containsKey(Constant.EXTRA_MESSAGE)) {
+                        ctx.error = data.getStringExtra(Constant.EXTRA_MESSAGE)
                     }
                 }
             }
@@ -179,21 +180,10 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
             Constant.REQUEST_CODE_REQUEST_PIN2_FOR_PURGE -> if (resultCode == Activity.RESULT_OK)
                 (activity as VerifyCardActivity).navigator.showPurge(context as Activity, ctx)
 
-//            Constant.REQUEST_CODE_PURGE -> if (resultCode == Activity.RESULT_OK) {
-//                if (data == null) {
-//                    ctx.saveToIntent(data)
-//                    data?.putExtra(Constant.EXTRA_MODIFICATION, "delete")
-//                } else
-//                    data.putExtra(Constant.EXTRA_MODIFICATION, "update")
-//
-//                activity?.setResult(Activity.RESULT_OK, data)
-//                activity?.finish()
-//            }
-
             else {
-                if (data != null && data.extras!!.containsKey("UID") && data.extras!!.containsKey("Card")) {
-                    val updatedCard = TangemCard(data.getStringExtra("UID"))
-                    updatedCard.loadFromBundle(data.getBundleExtra("Card"))
+                if (data != null && data.extras!!.containsKey(EXTRA_TANGEM_CARD_UID) && data.extras!!.containsKey(EXTRA_TANGEM_CARD)) {
+                    val updatedCard = TangemCard(data.getStringExtra(EXTRA_TANGEM_CARD_UID))
+                    updatedCard.loadFromBundle(data.getBundleExtra(EXTRA_TANGEM_CARD))
                     ctx.card = updatedCard
                 }
                 if (resultCode == Constant.RESULT_INVALID_PIN && requestPIN2Count < 2) {
@@ -204,8 +194,8 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
                     startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_FOR_PURGE)
                     return
                 } else {
-                    if (data != null && data.extras!!.containsKey("message")) {
-                        ctx.error = data.getStringExtra("message")
+                    if (data != null && data.extras!!.containsKey(Constant.EXTRA_MESSAGE)) {
+                        ctx.error = data.getStringExtra(Constant.EXTRA_MESSAGE)
                     }
                 }
                 updateViews()
@@ -403,7 +393,7 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
     private fun doSetPin() {
         requestPIN2Count = 0
         val intent = Intent(context, PinRequestActivity::class.java)
-        intent.putExtra("mode", PinRequestActivity.Mode.RequestNewPIN.toString())
+        intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestNewPIN.toString())
         newPIN = ""
         newPIN2 = ""
         startActivityForResult(intent, Constant.REQUEST_CODE_ENTER_NEW_PIN)
@@ -412,7 +402,7 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
     private fun doResetPin() {
         requestPIN2Count = 0
         val intent = Intent(context, PinRequestActivity::class.java)
-        intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
+        intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
         ctx.saveToIntent(intent)
         newPIN = PINStorage.getDefaultPIN()
         newPIN2 = ""
@@ -422,7 +412,7 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
     private fun doResetPin2() {
         requestPIN2Count = 0
         val intent = Intent(context, PinRequestActivity::class.java)
-        intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
+        intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
         ctx.saveToIntent(intent)
         newPIN = ""
         newPIN2 = PINStorage.getDefaultPIN2()
@@ -432,7 +422,7 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
     private fun doResetPins() {
         requestPIN2Count = 0
         val intent = Intent(context, PinRequestActivity::class.java)
-        intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
+        intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
         ctx.saveToIntent(intent)
         newPIN = PINStorage.getDefaultPIN()
         newPIN2 = PINStorage.getDefaultPIN2()
@@ -442,7 +432,7 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
     private fun doSetPin2() {
         requestPIN2Count = 0
         val intent = Intent(context, PinRequestActivity::class.java)
-        intent.putExtra("mode", PinRequestActivity.Mode.RequestNewPIN2.toString())
+        intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestNewPIN2.toString())
         newPIN = ""
         newPIN2 = ""
         startActivityForResult(intent, Constant.REQUEST_CODE_ENTER_NEW_PIN2)
@@ -459,7 +449,7 @@ class VerifyCard : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback {
         }
 
         val intent = Intent(context, PinRequestActivity::class.java)
-        intent.putExtra("mode", PinRequestActivity.Mode.RequestPIN2.toString())
+        intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
         ctx.saveToIntent(intent)
         startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_FOR_PURGE)
     }
