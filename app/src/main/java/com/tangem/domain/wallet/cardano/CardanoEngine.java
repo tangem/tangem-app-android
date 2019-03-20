@@ -509,7 +509,7 @@ public class CardanoEngine extends CoinEngine {
             }
 
             @Override
-            public byte[][] getHashesToSign() throws Exception {
+            public byte[][] getHashesToSign() {
                 byte[][] dataForSign = new byte[1][];
                 dataForSign[0] = dataToSign;
                 return dataForSign;
@@ -517,17 +517,17 @@ public class CardanoEngine extends CoinEngine {
 
             @Override
             public byte[] getRawDataToSign() throws Exception {
-                throw new Exception("Signing Raw Data is not supported for Cardano");
+                throw new Exception("Signing of raw transaction not supported for " + this.getClass().getSimpleName());
             }
 
             @Override
-            public String getHashAlgToSign() {
-                return "sha-256x2";
+            public String getHashAlgToSign() throws Exception {
+                throw new Exception("Signing of raw transaction not supported for " + this.getClass().getSimpleName());
             }
 
             @Override
             public byte[] getIssuerTransactionSignature(byte[] dataToSignByIssuer) throws Exception {
-                throw new Exception("Issuer validation not supported!");
+                throw new Exception("Transaction validation by issuer not supported in this version");
             }
 
             @Override
@@ -625,7 +625,6 @@ public class CardanoEngine extends CoinEngine {
                     if (App.pendingTransactionsStorage.hasTransactions(ctx.getCard())) {
                         for (PendingTransactionsStorage.TransactionInfo pendingTx : App.pendingTransactionsStorage.getTransactions(ctx.getCard()).getTransactions()) {
                             String pendingId = CalculateTxHash(pendingTx.getTx());
-                            int x = 0;
                             for (TxData walletTx : adaliteResponse.getRight().getCaTxList()) {
                                 if (walletTx.getCtbId().equals(pendingId)) {
                                     App.pendingTransactionsStorage.removeTransaction(ctx.getCard(), pendingTx.getTx());
