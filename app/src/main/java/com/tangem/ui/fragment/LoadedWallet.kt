@@ -360,9 +360,9 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                 pinSwapWarningDialog.setOnRefreshPage { (activity as LoadedWalletActivity).navigator.showPinSwap(context as Activity, newPIN, newPIN2) }
                 val bundle = Bundle()
                 if (!CardProtocol.isDefaultPIN(newPIN) || !CardProtocol.isDefaultPIN2(newPIN2))
-                    bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_forget))
+                    bundle.putString(Constant.EXTRA_MESSAGE, getString(R.string.if_you_forget))
                 else
-                    bundle.putString(PINSwapWarningDialog.EXTRA_MESSAGE, getString(R.string.if_you_use_default))
+                    bundle.putString(Constant.EXTRA_MESSAGE, getString(R.string.if_you_use_default))
                 pinSwapWarningDialog.arguments = bundle
                 activity?.supportFragmentManager?.let { pinSwapWarningDialog.show(it, PINSwapWarningDialog.TAG) }
             }
@@ -388,8 +388,8 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                     (activity as LoadedWalletActivity).navigator.showPinRequestRequestPin2(context as Activity, PinRequestActivity.Mode.RequestPIN2.toString(), ctx)
                     return
                 } else {
-                    if (data != null && data.extras!!.containsKey("message")) {
-                        ctx.error = data.getStringExtra("message")
+                    if (data != null && data.extras!!.containsKey(Constant.EXTRA_MESSAGE)) {
+                        ctx.error = data.getStringExtra(Constant.EXTRA_MESSAGE)
                     }
                 }
             }
@@ -420,8 +420,8 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
 
                     return
                 } else {
-                    if (data != null && data.extras!!.containsKey("message")) {
-                        ctx.error = data.getStringExtra("message")
+                    if (data != null && data.extras!!.containsKey(Constant.EXTRA_MESSAGE)) {
+                        ctx.error = data.getStringExtra(Constant.EXTRA_MESSAGE)
                     }
                 }
                 updateViews()
@@ -622,10 +622,6 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
             btnExtract.isEnabled = false
             btnExtract.backgroundTintList = inactiveColor
         }
-
-//        //TODO why ???
-//        ctx.error = null
-//        ctx.message = null
     }
 
     private fun refresh() {
@@ -766,10 +762,10 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
     private fun doShareWallet(useURI: Boolean) {
         if (useURI) {
             val engine = CoinEngineFactory.create(ctx)
-            val txtShare = engine!!.shareWalletUri.toString()
+            val txtShare = engine?.shareWalletUri.toString()
             val intent = Intent(Intent.ACTION_SEND)
-            intent.type = "text/plain"
-            intent.putExtra(Intent.EXTRA_SUBJECT, "Wallet address")
+            intent.type = Constant.INTENT_TYPE_TEXT_PLAIN
+            intent.putExtra(Intent.EXTRA_SUBJECT, Constant.WALLET_ADDRESS)
             intent.putExtra(Intent.EXTRA_TEXT, txtShare)
 
             val packageManager = activity?.packageManager
