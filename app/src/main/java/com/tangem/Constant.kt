@@ -8,11 +8,17 @@ object Constant {
 
     const val EXTRA_BLOCKCHAIN_DATA = "BLOCKCHAIN_DATA"
 
+    const val WALLET_ADDRESS = "Wallet address"
+
     const val EXTRA_MESSAGE = "message"
 
     const val EXTRA_MODIFICATION = "modification"
     const val EXTRA_MODIFICATION_DELETE = "delete"
     const val EXTRA_MODIFICATION_UPDATE = "update"
+
+    const val EXTRA_MODE = "mode"
+
+    const val INTENT_TYPE_TEXT_PLAIN = "text/plain"
 
     // LoadedWallet, VerifyCard
     const val REQUEST_CODE_SEND_TRANSACTION = 1
@@ -39,7 +45,7 @@ object Constant {
     const val MILLIS_AUTO_HIDE = 1000
 
     // PinRequestActivity
-    const val EXTRA_MODE = "mode"
+
     const val KEY_ALIAS = "pinKey"
     const val KEYSTORE = "AndroidKeyStore"
 
