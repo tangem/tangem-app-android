@@ -91,6 +91,8 @@
     <string name="last_unspent">Last unspent</string>
     <string name="erased_wallet">Wallet was erased</string>
     <string name="not_personalized">Not personalized</string>
+    <string name="new_app_version">There is a new application version: %1$s</string>
+    <string name="update">Update</string>
 
     <!-- LoadedWalletActivity, LoadedWallet -->
     <string name="wallet_empty">The wallet is empty</string>
