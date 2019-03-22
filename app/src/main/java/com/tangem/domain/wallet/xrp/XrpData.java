@@ -67,6 +67,10 @@ public class XrpData extends CoinData {
         this.sequence = sequence;
     }
 
+    public Long getSequence() {
+        return sequence;
+    }
+
     public boolean hasBalanceInfo() {
         return balanceConfirmed != null || balanceUnconfirmed != null;
     }
