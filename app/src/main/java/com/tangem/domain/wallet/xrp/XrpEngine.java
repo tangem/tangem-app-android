@@ -2,15 +2,19 @@ package com.tangem.domain.wallet.xrp;
 
 import android.net.Uri;
 import android.text.InputFilter;
+import android.util.Log;
 
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.uint.UInt32;
 import com.ripple.core.types.known.tx.signed.SignedTransaction;
 import com.ripple.core.types.known.tx.txns.Payment;
+import com.ripple.encodings.addresses.Addresses;
 import com.tangem.card_common.data.TangemCard;
 import com.tangem.card_common.reader.CardProtocol;
 import com.tangem.card_common.tasks.SignTask;
 import com.tangem.card_common.util.Util;
+import com.tangem.data.network.ServerApiRipple;
+import com.tangem.data.network.model.RippleResponse;
 import com.tangem.domain.wallet.BTCUtils;
 import com.tangem.domain.wallet.BalanceValidator;
 import com.tangem.domain.wallet.CoinData;
@@ -23,6 +27,7 @@ import com.tangem.wallet.R;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.Arrays;
@@ -133,23 +138,9 @@ public class XrpEngine extends CoinEngine {
         if (!address.startsWith("r")) {
             return false;
         }
-
-        byte[] decAddress = XrpBase58.decodeBase58(address);
-
-        if (decAddress == null || decAddress.length == 0) {
-            return false;
-        }
-
-        byte[] payload = new byte[21];
-        System.arraycopy(decAddress, 0, payload, 0, 21);
-
-        byte[] checksum = new byte[4];
-        System.arraycopy(decAddress, 21, checksum, 0, 4);
-
-        byte[] calcChecksum = new byte[4];
-        System.arraycopy(CryptoUtil.doubleSha256(payload),0,calcChecksum,0,4);
-
-        if (!Arrays.equals(checksum, calcChecksum)) {
+        try {
+            Addresses.decodeAccountID(address);
+        } catch (Exception e) {
             return false;
         }
 
@@ -164,6 +155,10 @@ public class XrpEngine extends CoinEngine {
     @Override
     public Uri getWalletExplorerUri() {
         return Uri.parse("https://xrpscan.com/account/" + ctx.getCoinData().getWallet());
+    }
+
+    public Uri getShareWalletUri() {
+        return Uri.parse(ctx.getCoinData().getWallet());
     }
 
     @Override
@@ -274,18 +269,14 @@ public class XrpEngine extends CoinEngine {
         return balance.toEquivalentString(coinData.getRate());
     }
 
-    public String calculateAddress(byte[] pkCompressed) throws NoSuchAlgorithmException, NoSuchProviderException, IOException {
-        byte[] pkForHash = canonicalPubBytes(pkCompressed);
+    public String calculateAddress(byte[] pkCompressed) {
+        byte[] canonisedPubKey = canonisePubKey(pkCompressed);
+        byte[] accountId = CryptoUtil.sha256ripemd160(canonisedPubKey);
+        String address = Addresses.encodeAccountID(accountId);
 
-        ByteArrayOutputStream address = new ByteArrayOutputStream();
-        address.write((byte) 0x00);
-        byte[] accountId = CryptoUtil.sha256ripemd160(pkForHash);
-        address.write(accountId);
+        boolean valid = validateAddress(address);
 
-        byte [] doubleSha256 = CryptoUtil.doubleSha256(address.toByteArray());
-        address.write(Arrays.copyOfRange(doubleSha256,0,4));
-
-        return BTCUtils.toHex(address.toByteArray());
+        return address;
     }
 
     @Override
@@ -337,25 +328,23 @@ public class XrpEngine extends CoinEngine {
         try {
             String wallet = calculateAddress(ctx.getCard().getWalletPublicKeyRar());
             ctx.getCoinData().setWallet(wallet);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             ctx.getCoinData().setWallet("ERROR");
             throw new CardProtocol.TangemException("Can't define wallet address");
         }
     }
 
-    public byte[] canonicalPubBytes(byte[] pkCompressed) {
-        byte[] pkForHash = new byte[33];
+    public byte[] canonisePubKey(byte[] pkCompressed) {
+        byte[] canonicalPubKey = new byte[33];
 
         if (pkCompressed.length == 32) {
-            pkForHash[0] =  (byte) 0xED;
-            System.arraycopy(pkCompressed, 0, pkForHash, 1,32);
+            canonicalPubKey[0] = (byte) 0xED;
+            System.arraycopy(pkCompressed, 0, canonicalPubKey, 1, 32);
         } else {
-            pkForHash = pkCompressed;
+            canonicalPubKey = pkCompressed;
         }
+        return canonicalPubKey;
     }
-}
 
     @Override
     public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
@@ -364,13 +353,13 @@ public class XrpEngine extends CoinEngine {
         Payment payment = new Payment();
 
         // Put `as` AccountID field Account, `Object` o
-        payment.as(AccountID.Account, "rGZG674DSZJfoY8abMPSgChxZTJZEhyMRm");
-        payment.as(AccountID.Destination, "rPMh7Pi9ct699iZUTWaytJUoHcJ7cgyziK");
-        payment.as(com.ripple.core.coretypes.Amount.Amount, "1000000000");
-        payment.as(UInt32.Sequence, 10);
-        payment.as(com.ripple.core.coretypes.Amount.Fee, "10000");
+        payment.as(AccountID.Account, coinData.getWallet());
+        payment.as(AccountID.Destination, targetAddress);
+        payment.as(com.ripple.core.coretypes.Amount.Amount, amountValue);
+        payment.as(UInt32.Sequence, coinData.getSequence());
+        payment.as(com.ripple.core.coretypes.Amount.Fee, feeValue);
 
-        SignedTransaction signedTx = payment.prepare(canonicalPubBytes(ctx.getCard().getWalletPublicKeyRar()));
+        SignedTransaction signedTx = payment.prepare(canonisePubKey(ctx.getCard().getWalletPublicKeyRar()));
 
         return new SignTask.TransactionToSign() {
 
@@ -408,4 +397,162 @@ public class XrpEngine extends CoinEngine {
             }
         };
     }
+
+    public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
+        final ServerApiRipple serverApiRipple = new ServerApiRipple();
+
+        ServerApiRipple.ResponseListener rippleListener = new ServerApiRipple.ResponseListener() {
+            @Override
+            public void onSuccess(String method, RippleResponse rippleResponse) {
+                Log.i(TAG, "onSuccess: " + method);
+                switch (method) {
+                    case ServerApiRipple.RIPPLE_ACCOUNT_INFO: {
+                        try {
+                            String walletAddress = rippleResponse.getResult().getAccount_data().getAccount();
+                            if (!walletAddress.equals(coinData.getWallet())) {
+                                throw new Exception("Invalid wallet address in answer!");
+                            }
+
+                            coinData.setBalanceConfirmed(Long.parseLong(rippleResponse.getResult().getAccount_data().getBalance()));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Log.e(TAG, "FAIL RIPPLE_ACCOUNT_INFO Exception");
+                        }
+                    }
+                    break;
+
+                    case ServerApiRipple.RIPPLE_ACCOUNT_UNCONFIRMED: {
+                        try {
+                            String walletAddress = rippleResponse.getResult().getAccount_data().getAccount();
+                            if (!walletAddress.equals(coinData.getWallet())) {
+                                throw new Exception("Invalid wallet address in answer!");
+                            }
+
+                            coinData.setBalanceReceived(true);
+                            coinData.setBalanceUnconfirmed(Long.parseLong(rippleResponse.getResult().getAccount_data().getBalance()));
+                            coinData.setSequence(rippleResponse.getResult().getAccount_data().getSequence());
+                            coinData.setValidationNodeDescription(ServerApiRipple.lastNode);
+
+//                    //check pending
+//                    if (App.pendingTransactionsStorage.hasTransactions(ctx.getCard())) {
+//                        for (PendingTransactionsStorage.TransactionInfo pendingTx : App.pendingTransactionsStorage.getTransactions(ctx.getCard()).getTransactions()) {
+//                            String pendingId = CalculateTxHash(pendingTx.getTx());
+//                            int x = 0;
+//                            for (TxData walletTx : adaliteResponse.getRight().getCaTxList()) {
+//                                if (walletTx.getCtbId().equals(pendingId)) {
+//                                    App.pendingTransactionsStorage.removeTransaction(ctx.getCard(), pendingTx.getTx());
+//                                }
+//                            }
+//                        }
+//                    }
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Log.e(TAG, "FAIL RIPPLE_ACCOUNT_INFO Exception");
+                        }
+                    }
+                    break;
+                }
+
+                if (serverApiRipple.isRequestsSequenceCompleted()) {
+                    blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                } else {
+                    blockchainRequestsCallbacks.onProgress();
+                }
+            }
+
+            @Override
+            public void onFail(String method, String message) {
+                Log.i(TAG, "onFail: " + method + " " + message);
+                ctx.setError(message);
+                if (serverApiRipple.isRequestsSequenceCompleted()) {
+                    blockchainRequestsCallbacks.onComplete(false);
+                } else {
+                    blockchainRequestsCallbacks.onProgress();
+                }
+            }
+        };
+
+        serverApiRipple.setResponseListener(rippleListener);
+
+        serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, coinData.getWallet(), "");
+        serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_UNCONFIRMED, coinData.getWallet(), "");
+    }
+
+    @Override
+    public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
+        final ServerApiRipple serverApiRipple = new ServerApiRipple();
+
+        ServerApiRipple.ResponseListener rippleListener = new ServerApiRipple.ResponseListener() {
+            @Override
+            public void onSuccess(String method, RippleResponse rippleResponse) {
+                BigDecimal minFee = new BigDecimal(rippleResponse.getResult().getDrops().getMinimum_fee()).divide(new BigDecimal(getDecimals()));
+                BigDecimal normalFee = new BigDecimal(rippleResponse.getResult().getDrops().getOpen_ledger_fee()).divide(new BigDecimal(getDecimals()));
+                BigDecimal maxFee = new BigDecimal(rippleResponse.getResult().getDrops().getMedian_fee()).divide(new BigDecimal(getDecimals()));
+
+                coinData.minFee = new Amount(minFee.setScale(getDecimals(), RoundingMode.UP), getFeeCurrency());
+                coinData.normalFee = new Amount(normalFee.setScale(getDecimals(), RoundingMode.UP), getFeeCurrency());
+                coinData.maxFee = new Amount(maxFee.setScale(getDecimals(), RoundingMode.UP), getFeeCurrency());
+
+                blockchainRequestsCallbacks.onComplete(true);
+            }
+
+            @Override
+            public void onFail(String method, String message) {
+                Log.i(TAG, "onFail: " + method + " " + message);
+                ctx.setError(message);
+                blockchainRequestsCallbacks.onComplete(false);
+            }
+        };
+
+        serverApiRipple.setResponseListener(rippleListener);
+
+        serverApiRipple.requestData(ServerApiRipple.RIPPLE_FEE, "", "");
+    }
+
+    @Override
+    public void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) {
+        final String  txStr = BTCUtils.toHex(txForSend);
+
+        final ServerApiRipple serverApiRipple = new ServerApiRipple();
+
+        final ServerApiRipple.ResponseListener responseListener = new ServerApiRipple.ResponseListener() {
+            @Override
+            public void onSuccess(String method, RippleResponse rippleResponse) {
+                try {
+                    if (rippleResponse.getResult().getEngine_result_code() != null) {
+                        if (rippleResponse.getResult().getEngine_result_code() == 0) {
+                            ctx.setError(null);
+                            blockchainRequestsCallbacks.onComplete(true);
+                        } else {
+                            ctx.setError(rippleResponse.getResult().getEngine_result_message());
+                            blockchainRequestsCallbacks.onComplete(false);
+                        }
+                    } else {
+                        ctx.setError(rippleResponse.getResult().getError() + " - " + rippleResponse.getResult().getError_exception());
+                        blockchainRequestsCallbacks.onComplete(false);
+                    }
+                } catch (Exception e) {
+                    if (e.getMessage() != null) {
+                        ctx.setError(e.getMessage());
+                        blockchainRequestsCallbacks.onComplete(false);
+                    } else {
+                        ctx.setError(e.getClass().getName());
+                        blockchainRequestsCallbacks.onComplete(false);
+                        Log.e(TAG, rippleResponse.toString());
+                    }
+                }
+            }
+
+            @Override
+            public void onFail(String method, String message) {
+                ctx.setError(message);
+                blockchainRequestsCallbacks.onComplete(false);
+            }
+        };
+        serverApiRipple.setResponseListener(responseListener);
+
+        serverApiRipple.requestData(ServerApiRipple.RIPPLE_SUBMIT, "", txStr);
+    }
+
 }

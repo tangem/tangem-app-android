@@ -10,6 +10,6 @@ import retrofit2.http.POST;
 
 public interface RippleApi {
     @Headers("Content-Type: application/json")
-    @POST
+    @POST("./")
     Call<RippleResponse> ripple(@Body RippleBody body);
 }
