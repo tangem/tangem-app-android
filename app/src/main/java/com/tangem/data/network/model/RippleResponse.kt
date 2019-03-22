@@ -19,12 +19,21 @@ data class RippleResult(
         var drops: FeeDrops? = null,
 
         //for RIPPLE_SUBMIT
-        @SerializedName("engine_result")
-        var engine_result: String? = null,
+        @SerializedName("engine_result_code")
+        var engine_result_code: Int? = null,
 
         //for RIPPLE_SUBMIT
         @SerializedName ("engine_result_message")
-        var engine_result_message: String? = null
+        var engine_result_message: String? = null,
+
+        //for RIPPLE_SUBMIT
+        @SerializedName("error")
+        var error: String? = null,
+
+        //for RIPPLE_SUBMIT
+        @SerializedName("error_exception")
+        var error_exception: String? = null
+
 )
 
 data class RippleAccountData(
@@ -35,7 +44,7 @@ data class RippleAccountData(
         var balance: String? = null,
 
         @SerializedName("Sequence")
-        var sequence: Int? = null
+        var sequence: Long? = null
 )
 
 data class FeeDrops(
