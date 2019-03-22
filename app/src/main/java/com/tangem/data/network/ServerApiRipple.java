@@ -36,7 +36,7 @@ public class ServerApiRipple {
     private ResponseListener responseListener;
 
     public interface ResponseListener {
-        void onSuccess(String method, RippleResponse infuraResponse);
+        void onSuccess(String method, RippleResponse rippleResponse);
 
         void onFail(String method, String message);
     }
@@ -45,9 +45,9 @@ public class ServerApiRipple {
         responseListener = listener;
     }
 
-    public void requestData(String method, int id, String wallet, String tx) {
+    public void requestData(String method, String wallet, String tx) {
         requestsCount++;
-        String rippleURL = "http://s1.ripple.com:51234/"; //TODO: make random selection
+        String rippleURL = "https://s1.ripple.com:51234"; //TODO: make random selection
         lastNode = rippleURL; //TODO: show node instead of URL
 
         Retrofit retrofitRipple = new Retrofit.Builder()
