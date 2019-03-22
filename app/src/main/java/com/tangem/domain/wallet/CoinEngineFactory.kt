@@ -12,11 +12,13 @@ import com.tangem.domain.wallet.ltc.LtcEngine
 import com.tangem.domain.wallet.nftToken.NftTokenEngine
 import com.tangem.domain.wallet.rsk.RskEngine
 import com.tangem.domain.wallet.rsk.RskTokenEngine
+import com.tangem.domain.wallet.xrp.XrpEngine
 
 /**
  * Factory for create specific engine
  *
- * @param Blockchain
+ * @param
+ * Blockchain
  * @param TangemContext
  *
  */
@@ -35,6 +37,7 @@ object CoinEngineFactory {
             Blockchain.Rootstock -> RskEngine()
             Blockchain.RootstockToken -> RskTokenEngine()
             Blockchain.Cardano -> CardanoEngine()
+            Blockchain.Ripple -> XrpEngine()
             else -> null
         }
     }
@@ -61,6 +64,8 @@ object CoinEngineFactory {
                 RskTokenEngine(context)
             else if (Blockchain.Cardano == context.blockchain)
                 CardanoEngine(context)
+            else if (Blockchain.Ripple == context.blockchain)
+                XrpEngine(context)
             else
                 return null
         } catch (e: Exception) {
