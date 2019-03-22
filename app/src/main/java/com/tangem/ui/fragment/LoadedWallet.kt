@@ -143,7 +143,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
 
         tvWallet.setOnClickListener { doShareWallet(false) }
 
-        btnExplore.setOnClickListener { startActivity(Intent(Intent.ACTION_VIEW, engine?.walletExplorerUri)) }
+        btnExplore.setOnClickListener { startActivity(Intent(Intent.ACTION_VIEW, engine.walletExplorerUri)) }
 
         btnCopy.setOnClickListener { doShareWallet(false) }
 
@@ -729,6 +729,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                 Blockchain.Rootstock -> "bitcoin"
                 Blockchain.RootstockToken -> "bitcoin"
                 Blockchain.Cardano -> "cardano"
+                Blockchain.Ripple -> "ripple"
                 else -> {
                     throw Exception("Can''t get rate for blockchain " + ctx.blockchainName)
                 }
