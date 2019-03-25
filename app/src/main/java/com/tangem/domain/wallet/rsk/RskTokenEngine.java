@@ -40,7 +40,7 @@ public class RskTokenEngine extends TokenEngine {
     @Override
     public Uri getWalletExplorerUri() {
         return Uri.parse("https://explorer.rsk.co/address/" + ctx.getCoinData().getWallet() + "?__tab=tokens");
-    } // Only RSK explorer for now
+    }
 
     @Override
     public Uri getShareWalletUri() {
@@ -62,6 +62,11 @@ public class RskTokenEngine extends TokenEngine {
         }
         return false;
     }
+
+    @Override
+    public String evaluateFeeEquivalent(String fee) {
+            return "";
+        }
 
     @Override
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
