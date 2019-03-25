@@ -21,7 +21,8 @@ public class XrpData extends CoinData {
 
         if (B.containsKey("BalanceConfirmed")) balanceConfirmed = B.getLong("BalanceConfirmed");
         else balanceConfirmed = null;
-        if (B.containsKey("BalanceUnconfirmed")) balanceUnconfirmed = B.getLong("BalanceUnconfirmed");
+        if (B.containsKey("BalanceUnconfirmed"))
+            balanceUnconfirmed = B.getLong("BalanceUnconfirmed");
         else balanceUnconfirmed = null;
         if (B.containsKey("Sequence")) sequence = B.getLong("Sequence");
     }
@@ -48,7 +49,10 @@ public class XrpData extends CoinData {
 
     // balanceUnconfirmed is just the latest balance, it equals balanceConfirmed if no unconfirmed transaction present
     public CoinEngine.InternalAmount getBalanceInInternalUnits() {
-        return new CoinEngine.InternalAmount(BigDecimal.valueOf(balanceUnconfirmed), "Drops");
+        if (balanceUnconfirmed != null)
+            return new CoinEngine.InternalAmount(BigDecimal.valueOf(balanceUnconfirmed), "Drops");
+        else
+            return new CoinEngine.InternalAmount(BigDecimal.valueOf(balanceConfirmed), "Drops");
     }
 
 //    public Long getBalanceUnconfirmed() {
