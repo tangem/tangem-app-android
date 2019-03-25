@@ -85,6 +85,7 @@ public class SignTask extends CustomReadCardTask {
         }
 
         transactionToSign.onSignCompleted(signResult.getTLV(TLV.Tag.TAG_Signature).Value);
+        //TODO: maybe we should move notifyOnNeedSendTransaction(txForSend) here?
         mNotifications.onReadProgress(protocol, 100);
 
     }
