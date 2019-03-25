@@ -57,6 +57,11 @@ public class RskEngine extends EthEngine {
     }
 
     @Override
+    public String evaluateFeeEquivalent(String fee) {
+        return "";
+    }
+
+    @Override
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
         final ServerApiRootstock serverApiRootstock = new ServerApiRootstock();
         // request requestData listener
