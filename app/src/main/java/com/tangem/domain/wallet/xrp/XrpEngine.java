@@ -72,7 +72,7 @@ public class XrpEngine extends CoinEngine {
     public String getBalanceHTML() {
         Amount balance = getBalance();
         if (balance != null) {
-            return balance.toDescriptionString(getDecimals());
+            return " " + balance.toDescriptionString(getDecimals()) + " <br><small><small> + " + convertToAmount(coinData.getReserveInInternalUnits()).toDescriptionString(getDecimals()) + " reserve</small></small>";
         } else {
             return "";
         }
@@ -158,7 +158,7 @@ public class XrpEngine extends CoinEngine {
     }
 
     public Uri getShareWalletUri() {
-        return Uri.parse(ctx.getCoinData().getWallet());
+        return Uri.parse("ripple:" + ctx.getCoinData().getWallet());
     }
 
     @Override
@@ -350,14 +350,24 @@ public class XrpEngine extends CoinEngine {
     public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         checkBlockchainDataExists();
 
+        String amount, fee;
+
+        if (IncFee) {
+            amount = convertToInternalAmount(amountValue).subtract(convertToInternalAmount(feeValue)).setScale(0).toPlainString();
+        } else {
+            amount = Long.toString(convertToInternalAmount(amountValue).longValueExact());
+        }
+
+        fee = Long.toString(convertToInternalAmount(feeValue).longValueExact());
+
         Payment payment = new Payment();
 
         // Put `as` AccountID field Account, `Object` o
         payment.as(AccountID.Account, coinData.getWallet());
         payment.as(AccountID.Destination, targetAddress);
-        payment.as(com.ripple.core.coretypes.Amount.Amount, amountValue);
+        payment.as(com.ripple.core.coretypes.Amount.Amount, amount);
         payment.as(UInt32.Sequence, coinData.getSequence());
-        payment.as(com.ripple.core.coretypes.Amount.Fee, feeValue);
+        payment.as(com.ripple.core.coretypes.Amount.Fee, fee);
 
         SignedTransaction signedTx = payment.prepare(canonisePubKey(ctx.getCard().getWalletPublicKeyRar()));
 
@@ -391,9 +401,11 @@ public class XrpEngine extends CoinEngine {
             }
 
             @Override
-            public byte[] onSignCompleted(byte[] signFromCard) {
+            public byte[] onSignCompleted(byte[] signFromCard) throws Exception {
                 signedTx.addSign(signFromCard);
-                return BTCUtils.fromHex(signedTx.tx_blob);
+                byte[] txForSend = BTCUtils.fromHex(signedTx.tx_blob);
+                notifyOnNeedSendTransaction(txForSend);
+                return txForSend;
             }
         };
     }
@@ -486,13 +498,13 @@ public class XrpEngine extends CoinEngine {
         ServerApiRipple.ResponseListener rippleListener = new ServerApiRipple.ResponseListener() {
             @Override
             public void onSuccess(String method, RippleResponse rippleResponse) {
-                BigDecimal minFee = new BigDecimal(rippleResponse.getResult().getDrops().getMinimum_fee()).divide(new BigDecimal(getDecimals()));
-                BigDecimal normalFee = new BigDecimal(rippleResponse.getResult().getDrops().getOpen_ledger_fee()).divide(new BigDecimal(getDecimals()));
-                BigDecimal maxFee = new BigDecimal(rippleResponse.getResult().getDrops().getMedian_fee()).divide(new BigDecimal(getDecimals()));
+                InternalAmount minFee = new InternalAmount(Long.valueOf(rippleResponse.getResult().getDrops().getMinimum_fee()), "Drops");
+                InternalAmount normalFee = new InternalAmount(Long.valueOf(rippleResponse.getResult().getDrops().getOpen_ledger_fee()), "Drops");
+                InternalAmount maxFee = new InternalAmount(Long.valueOf(rippleResponse.getResult().getDrops().getMedian_fee()), "Drops");
 
-                coinData.minFee = new Amount(minFee.setScale(getDecimals(), RoundingMode.UP), getFeeCurrency());
-                coinData.normalFee = new Amount(normalFee.setScale(getDecimals(), RoundingMode.UP), getFeeCurrency());
-                coinData.maxFee = new Amount(maxFee.setScale(getDecimals(), RoundingMode.UP), getFeeCurrency());
+                coinData.minFee = convertToAmount(minFee);
+                coinData.normalFee = convertToAmount(normalFee);
+                coinData.maxFee = convertToAmount(maxFee);
 
                 blockchainRequestsCallbacks.onComplete(true);
             }
@@ -553,6 +565,13 @@ public class XrpEngine extends CoinEngine {
         serverApiRipple.setResponseListener(responseListener);
 
         serverApiRipple.requestData(ServerApiRipple.RIPPLE_SUBMIT, "", txStr);
+    }
+
+    @Override
+    public int pendingTransactionTimeoutInSeconds() { return 10; }
+
+    public boolean needMultipleLinesForBalance() {
+        return true;
     }
 
 }
