@@ -117,89 +117,83 @@
                     android:id="@+id/loWallet"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
+                    android:layout_weight="1"
                     android:baselineAligned="false"
-                    android:gravity="top|center"
-                    android:orientation="horizontal"
+                    android:gravity="center_vertical|center_horizontal"
+                    android:orientation="vertical"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintHeight_min="wrap"
                     app:layout_constraintTop_toBottomOf="@+id/guideline">
 
-                    <LinearLayout
-                        android:layout_width="0dp"
+                    <TextView
+                        android:id="@+id/tvBlockchain"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center_vertical|center_horizontal"
-                        android:orientation="vertical">
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:fontFamily="@font/maaxmedium"
+                        android:textAlignment="center"
+                        android:textColor="@color/primary_dark"
+                        android:textSize="18sp"
+                        android:textStyle="normal"
+                        tools:text="Bitcoin" />
 
-                        <TextView
-                            android:id="@+id/tvBlockchain"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                    <TextView
+                        android:id="@+id/tvWallet"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="3dp"
+                        android:layout_marginRight="3dp"
+                        android:layout_marginBottom="5dp"
+                        android:fontFamily="@font/maax"
+                        android:textAlignment="center"
+                        android:textColor="@android:color/black"
+                        android:textSize="@dimen/text_size_1_small"
+                        tools:text="1DoQdnSYshhZ5Tqt5Sk6svZt29jqoYVwQY" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btnExplore"
+                            style="@style/AppTheme.RoundedCornerMaterialButton"
+                            android:layout_width="0dp"
+                            android:layout_height="34dp"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginBottom="5dp"
+                            android:layout_weight="1"
+                            android:backgroundTint="@color/white"
+                            android:drawableStart="@drawable/ic_explore_black_24dp"
+                            android:elevation="15dp"
+                            android:fontFamily="@font/saira_condensed_bold"
+                            android:paddingLeft="20dp"
+                            android:paddingRight="20dp"
+                            android:text="@string/explore"
+                            android:textColor="@color/primary_dark" />
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btnCopy"
+                            style="@style/AppTheme.RoundedCornerMaterialButton"
+                            android:layout_width="0dp"
+                            android:layout_height="34dp"
                             android:layout_marginTop="10dp"
                             android:layout_marginBottom="10dp"
-                            android:fontFamily="@font/maaxmedium"
-                            android:textAlignment="center"
-                            android:textColor="@color/primary_dark"
-                            android:textSize="18sp"
-                            android:textStyle="normal"
-                            tools:text="Bitcoin" />
-
-                        <TextView
-                            android:id="@+id/tvWallet"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="3dp"
-                            android:layout_marginRight="3dp"
-                            android:layout_marginBottom="5dp"
-                            android:fontFamily="@font/maax"
-                            android:textAlignment="center"
-                            android:textColor="@android:color/black"
-                            android:textSize="@dimen/text_size_1_small"
-                            tools:text="1DoQdnSYshhZ5Tqt5Sk6svZt29jqoYVwQY" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:orientation="horizontal">
-
-                            <androidx.appcompat.widget.AppCompatButton
-                                android:id="@+id/btnExplore"
-                                style="@style/AppTheme.RoundedCornerMaterialButton"
-                                android:layout_width="0dp"
-                                android:layout_height="34dp"
-                                android:layout_marginTop="10dp"
-                                android:layout_marginBottom="5dp"
-                                android:layout_weight="1"
-                                android:backgroundTint="@color/white"
-                                android:drawableStart="@drawable/ic_explore_black_24dp"
-                                android:elevation="15dp"
-                                android:fontFamily="@font/saira_condensed_bold"
-                                android:paddingLeft="20dp"
-                                android:paddingRight="20dp"
-                                android:text="@string/explore"
-                                android:textColor="@color/primary_dark" />
-
-                            <androidx.appcompat.widget.AppCompatButton
-                                android:id="@+id/btnCopy"
-                                style="@style/AppTheme.RoundedCornerMaterialButton"
-                                android:layout_width="0dp"
-                                android:layout_height="34dp"
-                                android:layout_marginTop="10dp"
-                                android:layout_marginBottom="10dp"
-                                android:layout_weight="1"
-                                android:backgroundTint="@color/white"
-                                android:drawableStart="@drawable/ic_content_copy_black_24dp"
-                                android:elevation="15dp"
-                                android:fontFamily="@font/saira_condensed_bold"
-                                android:paddingLeft="20dp"
-                                android:paddingRight="20dp"
-                                android:text="@string/copy"
-                                android:textColor="@color/primary_dark" />
-                        </LinearLayout>
+                            android:layout_weight="1"
+                            android:backgroundTint="@color/white"
+                            android:drawableStart="@drawable/ic_content_copy_black_24dp"
+                            android:elevation="15dp"
+                            android:fontFamily="@font/saira_condensed_bold"
+                            android:paddingLeft="20dp"
+                            android:paddingRight="20dp"
+                            android:text="@string/copy"
+                            android:textColor="@color/primary_dark" />
 
                     </LinearLayout>
 
                 </LinearLayout>
+
             </androidx.constraintlayout.widget.ConstraintLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
@@ -236,7 +230,7 @@
             android:elevation="3dp"
             android:fontFamily="@font/maax"
             android:padding="4dp"
-            android:shadowColor="@color/cardview_shadow_start_color"
+            android:shadowColor="@color/cardview_shadow_star"
             android:textAlignment="center"
             android:textColor="@color/white"
             android:textStyle="bold"
