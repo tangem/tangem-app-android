@@ -350,14 +350,17 @@ public class XrpEngine extends CoinEngine {
     public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         checkBlockchainDataExists();
 
+        String amount = Long.toString(convertToInternalAmount(amountValue).longValueExact());
+        String fee = Long.toString(convertToInternalAmount(feeValue).longValueExact());
+
         Payment payment = new Payment();
 
         // Put `as` AccountID field Account, `Object` o
         payment.as(AccountID.Account, coinData.getWallet());
         payment.as(AccountID.Destination, targetAddress);
-        payment.as(com.ripple.core.coretypes.Amount.Amount, amountValue);
+        payment.as(com.ripple.core.coretypes.Amount.Amount, amount);
         payment.as(UInt32.Sequence, coinData.getSequence());
-        payment.as(com.ripple.core.coretypes.Amount.Fee, feeValue);
+        payment.as(com.ripple.core.coretypes.Amount.Fee, fee);
 
         SignedTransaction signedTx = payment.prepare(canonisePubKey(ctx.getCard().getWalletPublicKeyRar()));
 
@@ -391,9 +394,11 @@ public class XrpEngine extends CoinEngine {
             }
 
             @Override
-            public byte[] onSignCompleted(byte[] signFromCard) {
+            public byte[] onSignCompleted(byte[] signFromCard) throws Exception {
                 signedTx.addSign(signFromCard);
-                return BTCUtils.fromHex(signedTx.tx_blob);
+                byte[] txForSend = BTCUtils.fromHex(signedTx.tx_blob);
+                notifyOnNeedSendTransaction(txForSend);
+                return txForSend;
             }
         };
     }
@@ -486,9 +491,9 @@ public class XrpEngine extends CoinEngine {
         ServerApiRipple.ResponseListener rippleListener = new ServerApiRipple.ResponseListener() {
             @Override
             public void onSuccess(String method, RippleResponse rippleResponse) {
-                BigDecimal minFee = new BigDecimal(rippleResponse.getResult().getDrops().getMinimum_fee()).divide(new BigDecimal(getDecimals()));
-                BigDecimal normalFee = new BigDecimal(rippleResponse.getResult().getDrops().getOpen_ledger_fee()).divide(new BigDecimal(getDecimals()));
-                BigDecimal maxFee = new BigDecimal(rippleResponse.getResult().getDrops().getMedian_fee()).divide(new BigDecimal(getDecimals()));
+                BigDecimal minFee = new BigDecimal(Long.valueOf(rippleResponse.getResult().getDrops().getMinimum_fee())).divide(new BigDecimal(1000000));
+                BigDecimal normalFee = new BigDecimal(Long.valueOf(rippleResponse.getResult().getDrops().getOpen_ledger_fee())).divide(new BigDecimal(1000000));
+                BigDecimal maxFee = new BigDecimal(Long.valueOf(rippleResponse.getResult().getDrops().getMedian_fee())).divide(new BigDecimal(1000000));
 
                 coinData.minFee = new Amount(minFee.setScale(getDecimals(), RoundingMode.UP), getFeeCurrency());
                 coinData.normalFee = new Amount(normalFee.setScale(getDecimals(), RoundingMode.UP), getFeeCurrency());
