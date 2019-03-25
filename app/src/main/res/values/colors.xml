@@ -37,5 +37,6 @@
     <color name="not_confirmed">#7c0a02</color>
     <color name="bg_err">#600600</color>
     <color name="bg_msg">#bff2af</color>
+    <color name="cardview_shadow_star">#37000000</color>
 
 </resources>
