@@ -54,6 +54,7 @@ import java.util.*
 import javax.inject.Inject
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
+import com.tangem.di.ToastHelper
 
 class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, PopupMenu.OnMenuItemClickListener {
 
@@ -64,6 +65,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
     @Inject
     internal lateinit var navigator: Navigator
+    @Inject
+    internal lateinit var toastHelper: ToastHelper
 
     private lateinit var nfcManager: NfcManager
 
@@ -87,7 +90,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        App.navigatorComponent?.inject(this)
+        App.navigatorComponent.inject(this)
+        App.toastHelperComponent.inject(this)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
@@ -138,23 +142,12 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                 val responseBuildVersion = responseVersionName.split('.').last()
                 val appBuildVersion = BuildConfig.VERSION_NAME.split('.').last()
                 if (responseBuildVersion.toInt() > appBuildVersion.toInt())
-                    Snackbar.make(cl, String.format(getString(R.string.new_app_version), responseVersionName), Snackbar.LENGTH_INDEFINITE)
-                            .setAction(R.string.update) {
-                                try {
-                                    val intent = Intent(Intent.ACTION_VIEW)
-                                    intent.data = Uri.parse(Constant.URL_TANGEM)
-                                    startActivity(intent)
-                                } catch (e: ActivityNotFoundException) {
-                                    e.printStackTrace()
-                                }
-                            }.show()
+                    toastHelper.showSnackbarUpdateVersion(this, cl, responseVersionName)
             } catch (E: Exception) {
                 E.printStackTrace()
             }
         }
         apiHelper.requestLastVersion()
-
-
     }
 
     private fun verifyPermissions() {
