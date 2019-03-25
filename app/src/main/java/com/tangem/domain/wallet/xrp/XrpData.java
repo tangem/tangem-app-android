@@ -14,6 +14,7 @@ public class XrpData extends CoinData {
     }
 
     private Long balanceConfirmed, balanceUnconfirmed, sequence;
+    private Long reserve = 20000000L;
 
     @Override
     public void loadFromBundle(Bundle B) {
@@ -21,7 +22,8 @@ public class XrpData extends CoinData {
 
         if (B.containsKey("BalanceConfirmed")) balanceConfirmed = B.getLong("BalanceConfirmed");
         else balanceConfirmed = null;
-        if (B.containsKey("BalanceUnconfirmed")) balanceUnconfirmed = B.getLong("BalanceUnconfirmed");
+        if (B.containsKey("BalanceUnconfirmed"))
+            balanceUnconfirmed = B.getLong("BalanceUnconfirmed");
         else balanceUnconfirmed = null;
         if (B.containsKey("Sequence")) sequence = B.getLong("Sequence");
     }
@@ -48,7 +50,10 @@ public class XrpData extends CoinData {
 
     // balanceUnconfirmed is just the latest balance, it equals balanceConfirmed if no unconfirmed transaction present
     public CoinEngine.InternalAmount getBalanceInInternalUnits() {
-        return new CoinEngine.InternalAmount(BigDecimal.valueOf(balanceUnconfirmed), "Drops");
+        if (balanceUnconfirmed != null)
+            return new CoinEngine.InternalAmount(BigDecimal.valueOf(balanceUnconfirmed).subtract(BigDecimal.valueOf(reserve)), "Drops");
+        else
+            return new CoinEngine.InternalAmount(BigDecimal.valueOf(balanceConfirmed).subtract(BigDecimal.valueOf(reserve)), "Drops");
     }
 
 //    public Long getBalanceUnconfirmed() {
@@ -69,6 +74,14 @@ public class XrpData extends CoinData {
 
     public Long getSequence() {
         return sequence;
+    }
+
+    public void setReserve(Long reserve) {
+        this.reserve = reserve;
+    }
+
+    public CoinEngine.InternalAmount getReserveInInternalUnits() {
+        return new CoinEngine.InternalAmount(BigDecimal.valueOf(reserve), "Drops");
     }
 
     public boolean hasBalanceInfo() {
