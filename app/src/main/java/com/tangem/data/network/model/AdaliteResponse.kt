@@ -4,15 +4,15 @@ import com.google.gson.annotations.SerializedName
 
 data class AdaliteResponse(
         @SerializedName("Right")
-        var right: AddressData? = null
+        var right: AdaliteAddressData? = null
 )
 
 data class AdaliteResponseUtxo(
         @SerializedName("Right")
-        var right: List<UtxoData>
+        var right: List<AdaliteUtxoData>
 )
 
-data class AddressData(
+data class AdaliteAddressData(
         @SerializedName("caAddress")
         var caAddress: String? = null,
 
@@ -20,7 +20,7 @@ data class AddressData(
         var caBalance: AdaliteCoins? = null,
 
         @SerializedName("caTxList")
-        var caTxList: List<TxData>
+        var caTxList: List<AdaliteTxData>
 )
 
 data class AdaliteCoins(
@@ -28,7 +28,7 @@ data class AdaliteCoins(
         var getCoin: Long? = null
 )
 
-data class UtxoData(
+data class AdaliteUtxoData(
         @SerializedName("cuId")
         var cuId: String? = null,
 
@@ -39,7 +39,7 @@ data class UtxoData(
         var cuCoins: AdaliteCoins? = null
 )
 
-data class TxData(
+data class AdaliteTxData(
         @SerializedName("ctbId")
         var ctbId: String? = null
 )
