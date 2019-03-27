@@ -10,8 +10,8 @@ import com.tangem.data.local.PendingTransactionsStorage;
 import com.tangem.data.network.ServerApiAdalite;
 import com.tangem.data.network.model.AdaliteResponse;
 import com.tangem.data.network.model.AdaliteResponseUtxo;
-import com.tangem.data.network.model.TxData;
-import com.tangem.data.network.model.UtxoData;
+import com.tangem.data.network.model.AdaliteTxData;
+import com.tangem.data.network.model.AdaliteUtxoData;
 import com.tangem.domain.wallet.BTCUtils;
 import com.tangem.domain.wallet.BalanceValidator;
 import com.tangem.domain.wallet.Base58;
@@ -625,7 +625,7 @@ public class CardanoEngine extends CoinEngine {
                     if (App.pendingTransactionsStorage.hasTransactions(ctx.getCard())) {
                         for (PendingTransactionsStorage.TransactionInfo pendingTx : App.pendingTransactionsStorage.getTransactions(ctx.getCard()).getTransactions()) {
                             String pendingId = CalculateTxHash(pendingTx.getTx());
-                            for (TxData walletTx : adaliteResponse.getRight().getCaTxList()) {
+                            for (AdaliteTxData walletTx : adaliteResponse.getRight().getCaTxList()) {
                                 if (walletTx.getCtbId().equals(pendingId)) {
                                     App.pendingTransactionsStorage.removeTransaction(ctx.getCard(), pendingTx.getTx());
                                 }
@@ -651,7 +651,7 @@ public class CardanoEngine extends CoinEngine {
                 Log.i(TAG, "onSuccess: " + method);
                 try {
                     coinData.getUnspentOutputs().clear();
-                    for (UtxoData utxo : adaliteResponseUtxo.getRight()) {
+                    for (AdaliteUtxoData utxo : adaliteResponseUtxo.getRight()) {
                         CardanoData.UnspentOutput unspentOutput = new CardanoData.UnspentOutput();
                         unspentOutput.txID = utxo.getCuId();
                         unspentOutput.Amount = utxo.getCuCoins().getGetCoin();
