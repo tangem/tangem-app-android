@@ -14,6 +14,7 @@ public class XrpData extends CoinData {
     }
 
     private Long balanceConfirmed, balanceUnconfirmed, sequence;
+
     private Long reserve = 20000000L;
 
     @Override
@@ -22,10 +23,12 @@ public class XrpData extends CoinData {
 
         if (B.containsKey("BalanceConfirmed")) balanceConfirmed = B.getLong("BalanceConfirmed");
         else balanceConfirmed = null;
-        if (B.containsKey("BalanceUnconfirmed"))
-            balanceUnconfirmed = B.getLong("BalanceUnconfirmed");
+        if (B.containsKey("BalanceUnconfirmed")) balanceUnconfirmed = B.getLong("BalanceUnconfirmed");
         else balanceUnconfirmed = null;
         if (B.containsKey("Sequence")) sequence = B.getLong("Sequence");
+        else  sequence = null;
+        if (B.containsKey("Reserve")) reserve = B.getLong("Reserve");
+        else reserve = 20000000L;
     }
 
     @Override
@@ -35,6 +38,7 @@ public class XrpData extends CoinData {
             if (balanceConfirmed != null) B.putLong("BalanceConfirmed", balanceConfirmed);
             if (balanceUnconfirmed != null) B.putLong("BalanceUnconfirmed", balanceUnconfirmed);
             if (sequence != null) B.putLong("Sequence", sequence);
+            if (reserve != null) B.putLong("Reserve", reserve);
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());
         }
@@ -46,6 +50,7 @@ public class XrpData extends CoinData {
         balanceConfirmed = null;
         balanceUnconfirmed = null;
         sequence = null;
+        reserve = 20000000L;
     }
 
     // balanceUnconfirmed is just the latest balance, it equals balanceConfirmed if no unconfirmed transaction present
