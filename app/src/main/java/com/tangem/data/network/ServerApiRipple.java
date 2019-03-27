@@ -2,12 +2,10 @@ package com.tangem.data.network;
 
 import android.util.Log;
 
-import com.tangem.App;
 import com.tangem.data.network.model.RippleBody;
 import com.tangem.data.network.model.RippleResponse;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import androidx.annotation.NonNull;
 import retrofit2.Call;
@@ -23,8 +21,9 @@ public class ServerApiRipple {
     public static final String RIPPLE_ACCOUNT_UNCONFIRMED = "account_unconfirmed";
     public static final String RIPPLE_SUBMIT = "submit";
     public static final String RIPPLE_FEE = "fee";
+    public static final String RIPPLE_SERVER_STATE = "server_state";
 
-    private int requestsCount=0;
+    private int requestsCount = 0;
 
     public static String lastNode;
 
@@ -74,6 +73,10 @@ public class ServerApiRipple {
                 paramsMap.put("ledger_index", "current");
 //                paramsMap.put("queue", "true"); TODO: make queue check if needed
                 rippleBody = new RippleBody(RIPPLE_ACCOUNT_INFO, paramsMap);
+                break;
+
+            case RIPPLE_SERVER_STATE:
+                rippleBody = new RippleBody(method, new HashMap<>());
                 break;
 
             case RIPPLE_FEE:
