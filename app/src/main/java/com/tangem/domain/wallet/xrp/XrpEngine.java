@@ -24,13 +24,7 @@ import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.wallet.R;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.util.Arrays;
 
 public class XrpEngine extends CoinEngine {
 
@@ -450,7 +444,7 @@ public class XrpEngine extends CoinEngine {
 //                        for (PendingTransactionsStorage.TransactionInfo pendingTx : App.pendingTransactionsStorage.getTransactions(ctx.getCard()).getTransactions()) {
 //                            String pendingId = CalculateTxHash(pendingTx.getTx());
 //                            int x = 0;
-//                            for (TxData walletTx : adaliteResponse.getRight().getCaTxList()) {
+//                            for (AdaliteTxData walletTx : adaliteResponse.getRight().getCaTxList()) {
 //                                if (walletTx.getCtbId().equals(pendingId)) {
 //                                    App.pendingTransactionsStorage.removeTransaction(ctx.getCard(), pendingTx.getTx());
 //                                }
@@ -458,6 +452,16 @@ public class XrpEngine extends CoinEngine {
 //                        }
 //                    }
 
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Log.e(TAG, "FAIL RIPPLE_ACCOUNT_INFO Exception");
+                        }
+                    }
+                    break;
+
+                    case ServerApiRipple.RIPPLE_SERVER_STATE: {
+                        try {
+                            coinData.setReserve(rippleResponse.getResult().getState().getValidated_ledger().getReserve_base());
                         } catch (Exception e) {
                             e.printStackTrace();
                             Log.e(TAG, "FAIL RIPPLE_ACCOUNT_INFO Exception");
@@ -489,6 +493,7 @@ public class XrpEngine extends CoinEngine {
 
         serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, coinData.getWallet(), "");
         serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_UNCONFIRMED, coinData.getWallet(), "");
+        serverApiRipple.requestData(ServerApiRipple.RIPPLE_SERVER_STATE, "", "");
     }
 
     @Override
@@ -498,15 +503,20 @@ public class XrpEngine extends CoinEngine {
         ServerApiRipple.ResponseListener rippleListener = new ServerApiRipple.ResponseListener() {
             @Override
             public void onSuccess(String method, RippleResponse rippleResponse) {
-                InternalAmount minFee = new InternalAmount(Long.valueOf(rippleResponse.getResult().getDrops().getMinimum_fee()), "Drops");
-                InternalAmount normalFee = new InternalAmount(Long.valueOf(rippleResponse.getResult().getDrops().getOpen_ledger_fee()), "Drops");
-                InternalAmount maxFee = new InternalAmount(Long.valueOf(rippleResponse.getResult().getDrops().getMedian_fee()), "Drops");
+                try {
+                    InternalAmount minFee = new InternalAmount(Long.valueOf(rippleResponse.getResult().getDrops().getMinimum_fee()), "Drops");
+                    InternalAmount normalFee = new InternalAmount(Long.valueOf(rippleResponse.getResult().getDrops().getOpen_ledger_fee()), "Drops");
+                    InternalAmount maxFee = new InternalAmount(Long.valueOf(rippleResponse.getResult().getDrops().getMedian_fee()), "Drops");
 
-                coinData.minFee = convertToAmount(minFee);
-                coinData.normalFee = convertToAmount(normalFee);
-                coinData.maxFee = convertToAmount(maxFee);
+                    coinData.minFee = convertToAmount(minFee);
+                    coinData.normalFee = convertToAmount(normalFee);
+                    coinData.maxFee = convertToAmount(maxFee);
 
-                blockchainRequestsCallbacks.onComplete(true);
+                    blockchainRequestsCallbacks.onComplete(true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.e(TAG, "FAIL RIPPLE_FEE Exception");
+                }
             }
 
             @Override
@@ -524,7 +534,7 @@ public class XrpEngine extends CoinEngine {
 
     @Override
     public void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) {
-        final String  txStr = BTCUtils.toHex(txForSend);
+        final String txStr = BTCUtils.toHex(txForSend);
 
         final ServerApiRipple serverApiRipple = new ServerApiRipple();
 
@@ -568,7 +578,9 @@ public class XrpEngine extends CoinEngine {
     }
 
     @Override
-    public int pendingTransactionTimeoutInSeconds() { return 10; }
+    public int pendingTransactionTimeoutInSeconds() {
+        return 10;
+    }
 
     public boolean needMultipleLinesForBalance() {
         return true;
