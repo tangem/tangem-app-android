@@ -16,7 +16,7 @@ data class RippleResult(
 
         //for RIPPLE_FEE
         @SerializedName("drops")
-        var drops: FeeDrops? = null,
+        var drops: RippleFeeDrops? = null,
 
         //for RIPPLE_SUBMIT
         @SerializedName("engine_result_code")
@@ -32,8 +32,11 @@ data class RippleResult(
 
         //for RIPPLE_SUBMIT
         @SerializedName("error_exception")
-        var error_exception: String? = null
+        var error_exception: String? = null,
 
+        //for RIPPLE_SERVER_STATE
+        @SerializedName("state")
+        var state: RippleState? = null
 )
 
 data class RippleAccountData(
@@ -47,7 +50,7 @@ data class RippleAccountData(
         var sequence: Long? = null
 )
 
-data class FeeDrops(
+data class RippleFeeDrops(
         //enough to put tx to queue
         @SerializedName("minimum_fee")
         var minimum_fee: String? = null,
@@ -58,4 +61,14 @@ data class FeeDrops(
 
         @SerializedName("median_fee")
         var median_fee: String? = null
+)
+
+data class RippleState(
+        @SerializedName("validated_ledger")
+        var validated_ledger: RippleLedger? = null
+)
+
+data class RippleLedger(
+        @SerializedName("reserve_base")
+        var reserve_base: Long? = null
 )
