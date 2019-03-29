@@ -17,6 +17,8 @@ public class XrpData extends CoinData {
 
     private Long reserve = 20000000L;
 
+    private Boolean accountNotFound = false;
+
     @Override
     public void loadFromBundle(Bundle B) {
         super.loadFromBundle(B);
@@ -29,6 +31,8 @@ public class XrpData extends CoinData {
         else  sequence = null;
         if (B.containsKey("Reserve")) reserve = B.getLong("Reserve");
         else reserve = 20000000L;
+        if (B.containsKey("AccoundNotFound")) accountNotFound = B.getBoolean("AccoundNotFound");
+        else reserve = 20000000L;
     }
 
     @Override
@@ -39,6 +43,7 @@ public class XrpData extends CoinData {
             if (balanceUnconfirmed != null) B.putLong("BalanceUnconfirmed", balanceUnconfirmed);
             if (sequence != null) B.putLong("Sequence", sequence);
             if (reserve != null) B.putLong("Reserve", reserve);
+            if (accountNotFound != null) B.putBoolean("AccoundNotFound", accountNotFound);
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());
         }
@@ -51,6 +56,7 @@ public class XrpData extends CoinData {
         balanceUnconfirmed = null;
         sequence = null;
         reserve = 20000000L;
+        accountNotFound = false;
     }
 
     // balanceUnconfirmed is just the latest balance, it equals balanceConfirmed if no unconfirmed transaction present
@@ -87,6 +93,14 @@ public class XrpData extends CoinData {
 
     public CoinEngine.InternalAmount getReserveInInternalUnits() {
         return new CoinEngine.InternalAmount(BigDecimal.valueOf(reserve), "Drops");
+    }
+
+    public boolean isAccountNotFound() {
+        return accountNotFound;
+    }
+
+    public void setAccountNotFound(boolean accountFound) {
+        this.accountNotFound = accountFound;
     }
 
     public boolean hasBalanceInfo() {
