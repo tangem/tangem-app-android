@@ -8,7 +8,9 @@ import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.uint.UInt32;
 import com.ripple.core.types.known.tx.signed.SignedTransaction;
 import com.ripple.core.types.known.tx.txns.Payment;
+import com.ripple.crypto.ecdsa.ECDSASignature;
 import com.ripple.encodings.addresses.Addresses;
+import com.ripple.utils.HashUtils;
 import com.tangem.card_common.data.TangemCard;
 import com.tangem.card_common.reader.CardProtocol;
 import com.tangem.card_common.tasks.SignTask;
@@ -24,7 +26,13 @@ import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.wallet.R;
 
+import org.spongycastle.asn1.ASN1EncodableVector;
+import org.spongycastle.asn1.ASN1Integer;
+import org.spongycastle.asn1.DERSequence;
+
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Arrays;
 
 public class XrpEngine extends CoinEngine {
 
@@ -66,7 +74,7 @@ public class XrpEngine extends CoinEngine {
     public String getBalanceHTML() {
         Amount balance = getBalance();
         if (balance != null) {
-            return " " + balance.toDescriptionString(getDecimals()) + " <br><small><small> + " + convertToAmount(coinData.getReserveInInternalUnits()).toDescriptionString(getDecimals()) + " reserve</small></small>";
+            return " " + balance.toDescriptionString(getDecimals()) + " <br><small><small>+ " + convertToAmount(coinData.getReserveInInternalUnits()).toDescriptionString(getDecimals()) + " reserve</small></small>";
         } else {
             return "";
         }
@@ -201,6 +209,13 @@ public class XrpEngine extends CoinEngine {
     @Override
     public boolean validateBalance(BalanceValidator balanceValidator) {
         try {
+            if (coinData.isAccountNotFound()) {
+                balanceValidator.setScore(0);
+                balanceValidator.setFirstLine("Account not found");
+                balanceValidator.setSecondLine("Load 20+ XRP to create account");
+                return false;
+            }
+
             if (((ctx.getCard().getOfflineBalance() == null) && !ctx.getCoinData().isBalanceReceived()) || (!ctx.getCoinData().isBalanceReceived() && (ctx.getCard().getRemainingSignatures() != ctx.getCard().getMaxSignatures()))) {
                 balanceValidator.setScore(0);
                 balanceValidator.setFirstLine("Unknown balance");
@@ -263,7 +278,7 @@ public class XrpEngine extends CoinEngine {
         return balance.toEquivalentString(coinData.getRate());
     }
 
-    public String calculateAddress(byte[] pkCompressed) {
+    public String calculateAddress(byte[] pkCompressed) throws Exception {
         byte[] canonisedPubKey = canonisePubKey(pkCompressed);
         byte[] accountId = CryptoUtil.sha256ripemd160(canonisedPubKey);
         String address = Addresses.encodeAccountID(accountId);
@@ -301,9 +316,6 @@ public class XrpEngine extends CoinEngine {
     @Override
     public byte[] convertToByteArray(InternalAmount internalAmount) {
         byte[] bytes = Util.longToByteArray(internalAmount.longValueExact());
-//        byte[] reversed = new byte[bytes.length]; TODO: check if needed
-//        for (int i = 0; i < bytes.length; i++) reversed[i] = bytes[bytes.length - i - 1];
-//        return reversed;
         return bytes;
     }
 
@@ -328,15 +340,16 @@ public class XrpEngine extends CoinEngine {
         }
     }
 
-    public byte[] canonisePubKey(byte[] pkCompressed) {
+    public byte[] canonisePubKey(byte[] pkCompressed) throws Exception {
         byte[] canonicalPubKey = new byte[33];
 
         if (pkCompressed.length == 32) {
             canonicalPubKey[0] = (byte) 0xED;
             System.arraycopy(pkCompressed, 0, canonicalPubKey, 1, 32);
-        } else {
+        } else if (pkCompressed.length == 33)
             canonicalPubKey = pkCompressed;
-        }
+        else
+            throw new Exception("Invalid pubkey length");
         return canonicalPubKey;
     }
 
@@ -373,9 +386,14 @@ public class XrpEngine extends CoinEngine {
             }
 
             @Override
-            public byte[][] getHashesToSign() {
+            public byte[][] getHashesToSign() throws Exception {
                 byte[][] dataForSign = new byte[1][];
-                dataForSign[0] = signedTx.signingData;
+                if (ctx.getCard().getWalletPublicKeyRar().length == 33)
+                    dataForSign[0] = HashUtils.halfSha512(signedTx.signingData);
+                else if (ctx.getCard().getWalletPublicKeyRar().length == 32)
+                    dataForSign[0] = signedTx.signingData;
+                else
+                    throw new Exception("Invalid pubkey length");
                 return dataForSign;
             }
 
@@ -396,7 +414,21 @@ public class XrpEngine extends CoinEngine {
 
             @Override
             public byte[] onSignCompleted(byte[] signFromCard) throws Exception {
-                signedTx.addSign(signFromCard);
+                if (ctx.getCard().getWalletPublicKeyRar().length == 33) {
+                    int size = signFromCard.length / 2;
+                    BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, 0, size));
+                    BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, size, size * 2));
+                    s = CryptoUtil.toCanonicalised(s);
+                    ECDSASignature sig = new ECDSASignature(r, s);
+                    byte[] sigDer = sig.encodeToDER();
+                    if (!ECDSASignature.isStrictlyCanonical(sigDer)) {
+                        throw new IllegalStateException("Signature is not strictly canonical");
+                    }
+                    signedTx.addSign(sigDer);
+                } else if (ctx.getCard().getWalletPublicKeyRar().length == 32)
+                    signedTx.addSign(signFromCard);
+                else
+                    throw new Exception("Invalid pubkey length");
                 byte[] txForSend = BTCUtils.fromHex(signedTx.tx_blob);
                 notifyOnNeedSendTransaction(txForSend);
                 return txForSend;
@@ -414,12 +446,15 @@ public class XrpEngine extends CoinEngine {
                 switch (method) {
                     case ServerApiRipple.RIPPLE_ACCOUNT_INFO: {
                         try {
-                            String walletAddress = rippleResponse.getResult().getAccount_data().getAccount();
-                            if (!walletAddress.equals(coinData.getWallet())) {
-                                throw new Exception("Invalid wallet address in answer!");
+                            if (rippleResponse.getResult().getAccount_data() != null) {
+                                String walletAddress = rippleResponse.getResult().getAccount_data().getAccount();
+                                if (!walletAddress.equals(coinData.getWallet())) {
+                                    throw new Exception("Invalid wallet address in answer!");
+                                }
+                                coinData.setBalanceConfirmed(Long.parseLong(rippleResponse.getResult().getAccount_data().getBalance()));
                             }
-
-                            coinData.setBalanceConfirmed(Long.parseLong(rippleResponse.getResult().getAccount_data().getBalance()));
+                            else if (rippleResponse.getResult().getError_code().equals(19)) // "Account not found"
+                                coinData.setAccountNotFound(true);
                         } catch (Exception e) {
                             e.printStackTrace();
                             Log.e(TAG, "FAIL RIPPLE_ACCOUNT_INFO Exception");
