@@ -594,7 +594,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                 tvBalance.text = html
             }
 
-            else -> tvBalance.text = getString(R.string.no_data_string)
+            else -> tvBalance.text = ""
         }
 
         tvWallet.text = ctx.coinData!!.wallet
