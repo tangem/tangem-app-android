@@ -36,7 +36,11 @@ data class RippleResult(
 
         //for RIPPLE_SERVER_STATE
         @SerializedName("state")
-        var state: RippleState? = null
+        var state: RippleState? = null,
+
+        //for "Account not found error"
+        @SerializedName("error_code")
+        var error_code: Int? = null
 )
 
 data class RippleAccountData(

@@ -216,7 +216,7 @@ public abstract class CoinEngine {
 
     public abstract boolean validateAddress(String address);
 
-    public abstract String calculateAddress(byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException, CborException, IOException;
+    public abstract String calculateAddress(byte[] pkUncompressed) throws NoSuchProviderException, NoSuchAlgorithmException, CborException, IOException, Exception;
 
     public abstract Amount convertToAmount(InternalAmount internalAmount) throws Exception;
 
