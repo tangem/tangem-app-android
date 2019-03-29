@@ -230,7 +230,7 @@ public class XrpEngine extends CoinEngine {
                 return false;
             }
 
-            if (coinData.isBalanceReceived()) {// && coinData.isBalanceEqual()) { TODO:check
+            if (coinData.isBalanceReceived()) {
                 balanceValidator.setScore(100);
                 balanceValidator.setFirstLine("Verified balance");
                 balanceValidator.setSecondLine("Balance confirmed in blockchain");
@@ -281,11 +281,8 @@ public class XrpEngine extends CoinEngine {
     public String calculateAddress(byte[] pkCompressed) throws Exception {
         byte[] canonisedPubKey = canonisePubKey(pkCompressed);
         byte[] accountId = CryptoUtil.sha256ripemd160(canonisedPubKey);
-        String address = Addresses.encodeAccountID(accountId);
 
-        boolean valid = validateAddress(address);
-
-        return address;
+        return Addresses.encodeAccountID(accountId);
     }
 
     @Override
