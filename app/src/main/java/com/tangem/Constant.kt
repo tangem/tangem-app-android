@@ -4,6 +4,9 @@ import android.app.Activity
 
 object Constant {
 
+    const val FLAVOR_TANGEM_ACCESS = "tangemAccess"
+    const val FLAVOR_TANGEM_CARDANO = "tangemCardano"
+
     const val URL_TANGEM = "https://play.google.com/store/apps/details?id=com.tangem.wallet"
 
     const val EXTRA_BLOCKCHAIN_DATA = "BLOCKCHAIN_DATA"
