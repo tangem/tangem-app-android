@@ -1,9 +1,9 @@
 package com.tangem.ui.activity
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
@@ -36,14 +36,25 @@ class LogoActivity : AppCompatActivity() {
         ivLogo.setOnClickListener { hide() }
     }
 
-    @SuppressLint("SetTextI18n")
     override fun onPostCreate(savedInstanceState: Bundle?) {
         super.onPostCreate(savedInstanceState)
 
+        // set beta version name
         if (BuildConfig.DEBUG)
-            tvAppVersion.text = "BETA v." + BuildConfig.VERSION_NAME + "\n" + "dev" + "\n" + "build " + BuildConfig.VERSION_CODE
+            tvAppVersion.text = String.format(getString(R.string.version_name_debug), BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE)
         else
-            tvAppVersion.text = "BETA v." + BuildConfig.VERSION_NAME
+            tvAppVersion.text = String.format(getString(R.string.version_name_release), BuildConfig.VERSION_NAME)
+
+        // set flavor app name
+        when (BuildConfig.FLAVOR) {
+            Constant.FLAVOR_TANGEM_CARDANO -> {
+                tvExtension.visibility = View.VISIBLE
+                tvExtension.text = getString(R.string.cardano)
+            }
+            else -> {
+                tvExtension.visibility = View.GONE
+            }
+        }
 
         if (intent.getBooleanExtra(Constant.EXTRA_AUTO_HIDE, true))
             ivLogo.postDelayed(hideRunnable, Constant.MILLIS_AUTO_HIDE.toLong())

@@ -20,6 +20,7 @@
     <string name="_9">9</string>
     <string name="_0">0</string>
 
+    <string name="log_file_provider_authorities">com.tangem.data.LogFileProvider</string>
     <string name="ex_cant_create_coinEngine">Can\'t create CoinEngine!</string>
 
 </resources>
