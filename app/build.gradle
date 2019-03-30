@@ -12,11 +12,8 @@ static def generateVersionName() {
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "com.tangem.wallet"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 106
-        versionName "0.903.2." + generateVersionName()
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     androidExtensions {
@@ -33,6 +30,21 @@ android {
             debuggable true
             minifyEnabled false
             applicationIdSuffix ".debug"
+            signingConfig signingConfigs.debug
+        }
+    }
+    flavorDimensions ""
+    productFlavors {
+        tangemAccess {
+            versionName "0.903.2." + generateVersionName()
+            versionCode 106
+            applicationId "com.tangem.wallet"
+            signingConfig signingConfigs.debug
+        }
+        tangemCardano {
+            versionName "0.1.0"
+            versionCode 1
+            applicationId "com.tangem.cardano"
             signingConfig signingConfigs.debug
         }
     }
