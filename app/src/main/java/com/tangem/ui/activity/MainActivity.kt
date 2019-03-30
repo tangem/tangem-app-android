@@ -142,7 +142,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                 val responseBuildVersion = responseVersionName.split('.').last()
                 val appBuildVersion = BuildConfig.VERSION_NAME.split('.').last()
                 if (responseBuildVersion.toInt() > appBuildVersion.toInt())
-                    toastHelper.showSnackbarUpdateVersion(this, cl, responseVersionName)
+                    if (BuildConfig.FLAVOR.equals(Constant.FLAVOR_TANGEM_ACCESS))
+                        toastHelper.showSnackbarUpdateVersion(this, cl, responseVersionName)
             } catch (E: Exception) {
                 E.printStackTrace()
             }
