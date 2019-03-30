@@ -37,7 +37,8 @@ public class LogFileProvider extends ContentProvider {
         // 'content://it.my.app.LogFileProvider/*'
         // and return 1 in the case that the incoming Uri matches this pattern
 
-        uriMatcher.addURI(Objects.requireNonNull(getContext()).getString(R.string.log_file_provider_authorities), "*", 1);
+//        uriMatcher.addURI(Objects.requireNonNull(getContext()).getString(R.string.log_file_provider_authorities), "*", 1);
+//        uriMatcher.addURI(Objects.requireNonNull("com.tangem.data.LogFileProvider"), "*", 1);
 
         return true;
     }
