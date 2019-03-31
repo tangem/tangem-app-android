@@ -61,7 +61,7 @@ public class LogFileProvider extends ContentProvider {
                 // The desired file name is specified by the last segment of the
                 // path
                 // E.g.
-                // 'content://it.my.app.LogFileProvider/Test.txt'
+                // 'content://it.my.app.LogFileProvider/Test1.txt'
                 // Take this and build the path to the file
                 String fileLocation = getContext().getCacheDir() + File.separator
                         + uri.getLastPathSegment();
