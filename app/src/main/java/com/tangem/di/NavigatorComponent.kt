@@ -6,7 +6,7 @@ import com.tangem.ui.activity.LogoActivity
 import com.tangem.ui.activity.MainActivity
 import com.tangem.ui.activity.PrepareCryptonitOtherApiWithdrawalActivity
 import com.tangem.ui.activity.PrepareKrakenWithdrawalActivity
-import com.tangem.ui.activity.PrepareTransactionActivity
+import com.tangem.ui.PrepareTransactionActivity
 import com.tangem.ui.activity.PurgeActivity
 import com.tangem.ui.activity.VerifyCardActivity
 
