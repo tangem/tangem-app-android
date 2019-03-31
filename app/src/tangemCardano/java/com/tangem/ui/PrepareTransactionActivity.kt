@@ -8,23 +8,24 @@ import android.nfc.Tag
 import android.os.Build
 import android.os.Bundle
 import android.text.Html
+import android.view.MotionEvent
 import android.view.View
+import android.view.View.OnTouchListener
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
+import com.tangem.card_android.android.nfc.NfcLifecycleObserver
+import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.data.Blockchain
 import com.tangem.di.Navigator
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
-import com.tangem.card_android.android.nfc.NfcLifecycleObserver
-import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.tangemCardano.activity_prepare_transaction.*
-
 import java.io.IOException
 import javax.inject.Inject
 
@@ -136,6 +137,16 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         }
 
         ivCamera.setOnClickListener { navigator.showQrScanActivity(this, Constant.REQUEST_CODE_SCAN_QR) }
+
+        etWallet.setOnTouchListener(OnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_UP) {
+                if (event.rawX >= etWallet.right - etWallet.compoundDrawables[2].bounds.width()) {
+                    etWallet.text.clear()
+                    return@OnTouchListener true
+                }
+            }
+            false
+        })
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
