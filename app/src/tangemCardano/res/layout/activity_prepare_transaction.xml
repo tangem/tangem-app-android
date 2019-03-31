@@ -135,6 +135,7 @@
         </LinearLayout>
 
         <EditText
+            android:drawableEnd="@android:drawable/ic_menu_close_clear_cancel"
             android:id="@+id/etWallet"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
