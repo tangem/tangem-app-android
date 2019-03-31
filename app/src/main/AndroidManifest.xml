@@ -104,7 +104,7 @@
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.ui.activity.ConfirmTransactionActivity"
+            android:name="com.tangem.ui.ConfirmTransactionActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
