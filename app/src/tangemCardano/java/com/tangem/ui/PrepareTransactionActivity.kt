@@ -1,4 +1,4 @@
-package com.tangem.ui.activity
+package com.tangem.ui
 
 import android.app.Activity
 import android.content.Context
@@ -21,9 +21,11 @@ import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager
+import com.tangem.ui.activity.ConfirmTransactionActivity
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.activity_prepare_transaction.*
+import kotlinx.android.synthetic.tangemCardano.activity_prepare_transaction.*
+
 import java.io.IOException
 import javax.inject.Inject
 
