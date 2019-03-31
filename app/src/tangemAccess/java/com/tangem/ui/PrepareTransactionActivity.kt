@@ -21,7 +21,6 @@ import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager
-import com.tangem.ui.activity.ConfirmTransactionActivity
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.tangemAccess.activity_prepare_transaction.*
