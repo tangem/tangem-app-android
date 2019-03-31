@@ -99,7 +99,7 @@
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.ui.activity.PrepareTransactionActivity"
+            android:name="com.tangem.ui.PrepareTransactionActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
