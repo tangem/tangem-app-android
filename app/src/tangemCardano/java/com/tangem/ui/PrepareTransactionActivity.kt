@@ -38,6 +38,12 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
             ctx.saveToIntent(intent)
             return intent
         }
+
+        fun callingIntent(context: Context): Intent {
+            val intent = Intent(context, PrepareTransactionActivity::class.java)
+//            ctx.saveToIntent(intent)
+            return intent
+        }
     }
 
     @Inject
