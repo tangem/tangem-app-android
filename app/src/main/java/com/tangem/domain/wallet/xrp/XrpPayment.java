@@ -1,5 +1,6 @@
 package com.tangem.domain.wallet.xrp;
 
+
 import com.ripple.core.types.known.tx.txns.Payment;
 
 public class XrpPayment extends Payment {
