@@ -11,7 +11,6 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/card-android" />
             <option value="$PROJECT_DIR$/card-common" />
-            <option value="$PROJECT_DIR$/ripple-core" />
             <option value="$PROJECT_DIR$/server-android" />
           </set>
         </option>
