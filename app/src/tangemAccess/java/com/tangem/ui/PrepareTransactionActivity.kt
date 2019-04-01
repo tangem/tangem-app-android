@@ -69,14 +69,14 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
             rgIncFee.visibility = View.VISIBLE
         }
 
-        if (ctx.card!!.remainingSignatures < 2)
-            etAmount.isEnabled = false
+//        if (ctx.card!!.remainingSignatures < 2)
+//            etAmount.isEnabled = false
 
-        tvCurrency.text = engine.balance.currency
-        etAmount.setText(engine.balance.toValueString())
+//        tvCurrency.text = engine.balance.currency
+//        etAmount.setText(engine.balance.toValueString())
 
         // limit number of symbols after comma
-        etAmount.filters = engine.amountInputFilters
+//        etAmount.filters = engine.amountInputFilters
 
         // set listeners
         etAmount.setOnEditorActionListener { lv, actionId, _ ->
