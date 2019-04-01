@@ -1,41 +1,32 @@
-package com.ripple.core.types.known.tx.signed;
+package com.tangem.domain.wallet.xrp;
 
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.Blob;
 import com.ripple.core.coretypes.STObject;
 import com.ripple.core.coretypes.hash.HalfSha512;
-import com.ripple.core.coretypes.hash.Hash256;
 import com.ripple.core.coretypes.hash.prefixes.HashPrefix;
 import com.ripple.core.coretypes.uint.UInt32;
 import com.ripple.core.serialized.BytesList;
 import com.ripple.core.serialized.MultiSink;
-import com.ripple.core.serialized.enums.TransactionType;
 import com.ripple.core.types.known.tx.Transaction;
+import com.ripple.core.types.known.tx.signed.SignedTransaction;
 
 import java.util.Arrays;
 
-public class SignedTransaction {
-    private SignedTransaction(Transaction of) {
-        // TODO: is this just over kill ?
+public class XrpSignedTransaction extends SignedTransaction {
+    private XrpSignedTransaction(Transaction of) {
         txn = (Transaction) STObject.fromBytes(of.toBytes());
     }
 
-    protected SignedTransaction() {
+    protected XrpSignedTransaction() {
     }
 
-    public Transaction txn;
-    public Hash256 hash;
-
-    public byte[] signingData;
-    public byte[] previousSigningData;
-    public String tx_blob;
-
-    public static SignedTransaction fromTx(Transaction tx) {
-        return new SignedTransaction(tx);
+    public static XrpSignedTransaction fromTx(Transaction tx) {
+        return new XrpSignedTransaction(tx);
     }
 
     public void prepare(byte[] pubKeyBytes) {
-        prepare(pubKeyBytes,null, null, null);
+        prepare(pubKeyBytes, null, null, null);
     }
 
     public void prepare(byte[] pubKeyBytes,
@@ -86,9 +77,5 @@ public class SignedTransaction {
         } /*else {*/
         previousSigningData = signingData;
         // }
-    }
-
-    public TransactionType transactionType() {
-        return txn.transactionType();
     }
 }
