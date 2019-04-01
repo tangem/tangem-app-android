@@ -44,10 +44,10 @@ android {
 }
 
 dependencies {
-    implementation project(':ripple-core')
     implementation project(':card-common')
     implementation project(':card-android')
     implementation project(':server-android')
+    implementation project(':ripple-core-0.0.1')
 
 //    implementation 'com.github.TangemCash:card-common:0.1.2'
 //    implementation 'com.github.TangemCash:card-android:0.1.3'
