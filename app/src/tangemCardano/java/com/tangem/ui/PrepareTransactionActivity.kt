@@ -20,6 +20,7 @@ import com.tangem.Constant
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.data.Blockchain
+import com.tangem.data.dp.PrefsManager
 import com.tangem.di.Navigator
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
@@ -80,6 +81,8 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         // limit number of symbols after comma
         etAmount.filters = engine.amountInputFilters
 
+        etWallet.setText(PrefsManager.getInstance().lastWalletAddress)
+
         // set listeners
         etAmount.setOnEditorActionListener { lv, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
@@ -134,9 +137,14 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
             intent.putExtra(Constant.EXTRA_AMOUNT, strAmount)
             intent.putExtra(Constant.EXTRA_AMOUNT_CURRENCY, tvCurrency.text.toString())
             startActivityForResult(intent, Constant.REQUEST_CODE_SEND_TRANSACTION__)
+
+            PrefsManager.getInstance().saveLastWalletAddress(etWallet.text.toString())
         }
 
-        ivCamera.setOnClickListener { navigator.showQrScanActivity(this, Constant.REQUEST_CODE_SCAN_QR) }
+        ivCamera.setOnClickListener {
+            navigator.showQrScanActivity(this, Constant.REQUEST_CODE_SCAN_QR)
+            etWallet.text.clear()
+        }
 
         etWallet.setOnTouchListener(OnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_UP) {
