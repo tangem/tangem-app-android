@@ -73,6 +73,10 @@ class Navigator {
         context.startActivityForResult(PrepareTransactionActivity.callingIntent(context, ctx), Constant.REQUEST_CODE_SEND_TRANSACTION)
     }
 
+    fun showPrepareTransaction(context: Activity) {
+        context.startActivity(PrepareTransactionActivity.callingIntent(context))
+    }
+
     fun showCreateNewWallet(context: Activity, ctx: TangemContext) {
         context.startActivityForResult(CreateNewWalletActivity.callingIntent(context, ctx), Constant.REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY)
     }
