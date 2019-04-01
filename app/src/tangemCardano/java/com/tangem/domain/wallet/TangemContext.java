@@ -117,20 +117,22 @@ public class TangemContext {
         TangemContext tangemContext = new TangemContext();
         tangemContext.setContext(context);
 
-        if (bundle.containsKey(TangemCardExtensionsKt.EXTRA_TANGEM_CARD_UID)) {
-            tangemContext.card = new TangemCard(bundle.getString(TangemCardExtensionsKt.EXTRA_TANGEM_CARD_UID));
-            TangemCardExtensionsKt.loadFromBundle(tangemContext.card, bundle.getBundle(TangemCardExtensionsKt.EXTRA_TANGEM_CARD));
-        }
+//        if (bundle.containsKey(TangemCardExtensionsKt.EXTRA_TANGEM_CARD_UID)) {
+//            tangemContext.card = new TangemCard(bundle.getString(TangemCardExtensionsKt.EXTRA_TANGEM_CARD_UID));
+//            TangemCardExtensionsKt.loadFromBundle(tangemContext.card, bundle.getBundle(TangemCardExtensionsKt.EXTRA_TANGEM_CARD));
+//        }
 
-        if (tangemContext.getBlockchain() != null) {
-            if (bundle.containsKey(Constant.EXTRA_BLOCKCHAIN_DATA)) {
-                tangemContext.coinData = CoinData.fromBundle(tangemContext.getBlockchain(), bundle.getBundle(Constant.EXTRA_BLOCKCHAIN_DATA));
-            } else {
-                tangemContext.coinData = CoinEngineFactory.INSTANCE.create(tangemContext).createCoinData();
-            }
-        }
-        tangemContext.error = bundle.getString("Error");
-        tangemContext.message = bundle.getString("Message");
+        tangemContext.coinData = CoinEngineFactory.INSTANCE.createCardano(tangemContext).createCoinData();
+
+//        if (tangemContext.getBlockchain() != null) {
+//            if (bundle.containsKey(Constant.EXTRA_BLOCKCHAIN_DATA)) {
+//                tangemContext.coinData = CoinData.fromBundle(tangemContext.getBlockchain(), bundle.getBundle(Constant.EXTRA_BLOCKCHAIN_DATA));
+//            } else {
+//                tangemContext.coinData = CoinEngineFactory.INSTANCE.create(tangemContext).createCoinData();
+//            }
+//        }
+//        tangemContext.error = bundle.getString("Error");
+//        tangemContext.message = bundle.getString("Message");
 
         return tangemContext;
     }
