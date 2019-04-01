@@ -47,7 +47,14 @@ dependencies {
     implementation project(':card-common')
     implementation project(':card-android')
     implementation project(':server-android')
-    implementation project(':ripple-core-0.0.1')
+    implementation project(':ripple-core')
+
+    //for ripple-core TODO: move to ripple-core?
+    implementation 'net.i2p.crypto:eddsa:0.2.0'
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.58'
+    //noinspection DuplicatePlatformClasses
+    implementation 'org.json:json:20171018'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.3'
 
 //    implementation 'com.github.TangemCash:card-common:0.1.2'
 //    implementation 'com.github.TangemCash:card-android:0.1.3'
