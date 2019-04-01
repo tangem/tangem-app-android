@@ -29,7 +29,6 @@ import com.tangem.card_common.data.TangemCard
 import com.tangem.card_common.reader.CardProtocol
 import com.tangem.card_common.tasks.VerifyCardTask
 import com.tangem.card_common.util.Util
-import com.tangem.util.LOG
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_empty_wallet.*
