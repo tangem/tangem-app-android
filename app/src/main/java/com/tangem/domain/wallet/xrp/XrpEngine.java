@@ -6,8 +6,6 @@ import android.util.Log;
 
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.uint.UInt32;
-import com.ripple.core.types.known.tx.signed.SignedTransaction;
-import com.ripple.core.types.known.tx.txns.Payment;
 import com.ripple.crypto.ecdsa.ECDSASignature;
 import com.ripple.encodings.addresses.Addresses;
 import com.ripple.utils.HashUtils;
@@ -25,10 +23,6 @@ import com.tangem.domain.wallet.TangemContext;
 import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.wallet.R;
-
-import org.spongycastle.asn1.ASN1EncodableVector;
-import org.spongycastle.asn1.ASN1Integer;
-import org.spongycastle.asn1.DERSequence;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -364,7 +358,7 @@ public class XrpEngine extends CoinEngine {
 
         fee = Long.toString(convertToInternalAmount(feeValue).longValueExact());
 
-        Payment payment = new Payment();
+        XrpPayment payment = new XrpPayment();
 
         // Put `as` AccountID field Account, `Object` o
         payment.as(AccountID.Account, coinData.getWallet());
@@ -373,7 +367,7 @@ public class XrpEngine extends CoinEngine {
         payment.as(UInt32.Sequence, coinData.getSequence());
         payment.as(com.ripple.core.coretypes.Amount.Fee, fee);
 
-        SignedTransaction signedTx = payment.prepare(canonisePubKey(ctx.getCard().getWalletPublicKeyRar()));
+        XrpSignedTransaction signedTx = payment.prepare(canonisePubKey(ctx.getCard().getWalletPublicKeyRar()));
 
         return new SignTask.TransactionToSign() {
 
@@ -449,8 +443,7 @@ public class XrpEngine extends CoinEngine {
                                     throw new Exception("Invalid wallet address in answer!");
                                 }
                                 coinData.setBalanceConfirmed(Long.parseLong(rippleResponse.getResult().getAccount_data().getBalance()));
-                            }
-                            else if (rippleResponse.getResult().getError_code().equals(19)) // "Account not found"
+                            } else if (rippleResponse.getResult().getError_code().equals(19)) // "Account not found"
                                 coinData.setAccountNotFound(true);
                         } catch (Exception e) {
                             e.printStackTrace();
