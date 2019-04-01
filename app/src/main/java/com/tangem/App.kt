@@ -8,6 +8,7 @@ import com.tangem.data.local.PendingTransactionsStorage
 import com.tangem.card_android.android.data.Firmwares
 import com.tangem.card_android.android.data.PINStorage
 import com.tangem.card_common.data.Issuer
+import com.tangem.data.dp.PrefsManager
 import com.tangem.di.*
 import com.tangem.server_android.data.LocalStorage
 import java.io.InputStreamReader
@@ -41,6 +42,8 @@ class App : Application() {
         networkComponent = DaggerNetworkComponent.create()
         navigatorComponent = buildNavigatorComponent()
         toastHelperComponent = buildToastHelperComponent()
+
+        PrefsManager.getInstance().init(this)
 
         // common init
         if (PINStorage.needInit())
