@@ -40,7 +40,6 @@ object CoinEngineFactory {
     }
 
     fun create(context: TangemContext): CoinEngine? {
-
         var result: CoinEngine?
         try {
             result = if (Blockchain.BitcoinCash == context.blockchain)
@@ -67,6 +66,19 @@ object CoinEngineFactory {
             e.printStackTrace()
             result = null
             Log.e(TAG, "Can't create CoinEngine!")
+        }
+        return result
+    }
+
+    fun createCardano(context: TangemContext): CoinEngine? {
+        var result: CoinEngine?
+        try {
+            result = CardanoEngine(context)
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            result = null
+            Log.e(TAG, "Can't create Cardano CoinEngine!")
         }
         return result
     }
