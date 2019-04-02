@@ -14,6 +14,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
+import com.tangem.Constant
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
 import com.tangem.ui.dialog.WaitSecurityDelayDialog
@@ -63,7 +64,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_purge)
 
-        App.navigatorComponent?.inject(this)
+        App.navigatorComponent.inject(this)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
@@ -175,7 +176,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
                             val intent = Intent()
                             intent.putExtra(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
                             intent.putExtra(EXTRA_TANGEM_CARD, cardProtocol.card.asBundle)
-                            intent.putExtra("message", getString(R.string.cannot_erase_wallet))
+                            intent.putExtra(Constant.EXTRA_MESSAGE, getString(R.string.cannot_erase_wallet))
                             setResult(RESULT_INVALID_PIN, intent)
                             finish()
                         } catch (e: Exception) {
