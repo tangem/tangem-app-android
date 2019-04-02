@@ -61,14 +61,14 @@ class LogoActivity : AppCompatActivity() {
     }
 
     private fun hide() {
-        when (BuildConfig.FLAVOR) {
-            Constant.FLAVOR_TANGEM_CARDANO -> {
-                navigator.showPrepareTransaction(this)
-            }
-            else -> {
+//        when (BuildConfig.FLAVOR) {
+//            Constant.FLAVOR_TANGEM_CARDANO -> {
+//                navigator.showPrepareTransaction(this)
+//            }
+//            else -> {
                 navigator.showMain(this)
-            }
-        }
+//            }
+//        }
 
         finish()
     }
