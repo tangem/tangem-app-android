@@ -2,10 +2,13 @@ package com.tangem.ui.activity
 
 import android.Manifest
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.net.Uri
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
@@ -18,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.android.material.snackbar.Snackbar
 import com.scottyab.rootbeer.RootBeer
 import com.tangem.App
 import com.tangem.Constant
@@ -50,6 +54,7 @@ import java.util.*
 import javax.inject.Inject
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
+import com.tangem.di.ToastHelper
 
 class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, PopupMenu.OnMenuItemClickListener {
 
@@ -60,6 +65,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
     @Inject
     internal lateinit var navigator: Navigator
+    @Inject
+    internal lateinit var toastHelper: ToastHelper
 
     private lateinit var nfcManager: NfcManager
 
@@ -83,7 +90,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        App.navigatorComponent?.inject(this)
+        App.navigatorComponent.inject(this)
+        App.toastHelperComponent.inject(this)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
@@ -128,11 +136,13 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
         val apiHelper = ServerApiCommon()
         apiHelper.setLastVersionListener { response ->
             try {
-                if (response.isNullOrEmpty()) return@setLastVersionListener
+                if (response.isNullOrEmpty())
+                    return@setLastVersionListener
                 val responseVersionName = response.trim(' ', '\n', '\r', '\t')
                 val responseBuildVersion = responseVersionName.split('.').last()
                 val appBuildVersion = BuildConfig.VERSION_NAME.split('.').last()
-                if (responseBuildVersion.toInt() > appBuildVersion.toInt()) Toast.makeText(this, "There is a new application version: $responseVersionName", Toast.LENGTH_LONG).show()
+                if (responseBuildVersion.toInt() > appBuildVersion.toInt())
+                    toastHelper.showSnackbarUpdateVersion(this, cl, responseVersionName)
             } catch (E: Exception) {
                 E.printStackTrace()
             }
@@ -275,7 +285,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                     cardInfo.putBundle(EXTRA_TANGEM_CARD, bCard)
                     cardProtocol.card.saveToBundle(bCard)
 
-                    val uid = cardInfo.getString("UID")
+                    val uid = cardInfo.getString(EXTRA_TANGEM_CARD_UID)
                     val card = TangemCard(uid)
                     cardInfo.getBundle(EXTRA_TANGEM_CARD)?.let { card.loadFromBundle(it) }
 
@@ -288,7 +298,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                                 navigator.showLoadedWallet(this, it, ctx)
                             }
                         }
-//                                ?: throw CardProtocol.TangemException("Can't create CoinEngine!")
                         card.status == TangemCard.Status.Empty -> navigator.showEmptyWallet(this, ctx)
                         card.status == TangemCard.Status.Purged -> Toast.makeText(this, R.string.erased_wallet, Toast.LENGTH_SHORT).show()
                         card.status == TangemCard.Status.NotPersonalized -> Toast.makeText(this, R.string.not_personalized, Toast.LENGTH_SHORT).show()
