@@ -82,9 +82,9 @@ dependencies {
 
     implementation files('libs/ripple-core-0.0.1.jar')
     //4 dependencies for ripple-core TODO: move to module?
-    implementation 'net.i2p.crypto:eddsa:0.2.0'
+    implementation 'net.i2p.crypto:eddsa:0.3.0'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.58'
     //noinspection DuplicatePlatformClasses
-    implementation 'org.json:json:20171018'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.3'
+    implementation 'org.json:json:20180813'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
 }
