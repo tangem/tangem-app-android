@@ -1,3 +1,5 @@
+@file:Suppress("ObsoleteExperimentalCoroutines")
+
 package com.tangem.ui.activity
 
 import android.Manifest
@@ -25,14 +27,23 @@ import com.tangem.card_android.android.nfc.NfcDeviceAntennaLocation
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.card_android.android.reader.NfcReader
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 import com.tangem.card_android.data.loadFromBundle
 import com.tangem.card_android.data.saveToBundle
 import com.tangem.card_common.data.TangemCard
 import com.tangem.card_common.reader.CardProtocol
+import com.tangem.card_common.tasks.CustomReadCardTask
+import com.tangem.card_common.tasks.OneTouchSignTask
 import com.tangem.card_common.tasks.ReadCardInfoTask
+import com.tangem.card_common.tasks.SignTask
+import com.tangem.card_common.util.Log
+import com.tangem.data.Blockchain
 import com.tangem.data.Logger
 import com.tangem.data.network.ServerApiCommon
 import com.tangem.di.Navigator
+import com.tangem.di.ToastHelper
+import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
@@ -48,9 +59,9 @@ import kotlinx.android.synthetic.main.layout_touch_card.*
 import java.io.File
 import java.util.*
 import javax.inject.Inject
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
-import com.tangem.di.ToastHelper
+import kotlinx.coroutines.runBlocking
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, PopupMenu.OnMenuItemClickListener {
 
@@ -70,7 +81,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     private lateinit var nfcDeviceAntenna: NfcDeviceAntennaLocation
     private var unsuccessReadCount = 0
     private var lastTag: Tag? = null
-    private var readCardInfoTask: ReadCardInfoTask? = null
+//    private var readCardInfoTask: ReadCardInfoTask? = null
+    private var task: CustomReadCardTask? = null
     private var onNfcReaderCallback: NfcAdapter.ReaderCallback? = null
 
     override fun onNewIntent(intent: Intent?) {
@@ -234,8 +246,77 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
             lastTag = tag
 
-            readCardInfoTask = ReadCardInfoTask(NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
-            readCardInfoTask?.start()
+//            readCardInfoTask = ReadCardInfoTask(NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
+            //readCardInfoTask?.start()
+            val tx: OneTouchSignTask.TransactionToSign = object : OneTouchSignTask.TransactionToSign {
+                var txToSign: SignTask.TransactionToSign?=null
+                var ctx: TangemContext?=null
+                var coinEngine: CoinEngine?=null
+                val amount: CoinEngine.Amount=CoinEngine.Amount(10,"")
+                val fee: CoinEngine.Amount=CoinEngine.Amount(1,"")
+                val incFee: Boolean = true
+                val targetAddress: String = "aaaa"
+
+                suspend fun requestBalanceAndUnspentTransactions(): Boolean = suspendCoroutine { cont ->
+                    coinEngine!!.requestBalanceAndUnspentTransactions(object : CoinEngine.BlockchainRequestsCallbacks {
+                        override fun onComplete(success: Boolean?) {
+                            cont.resume(success!!)
+                        }
+
+                        override fun onProgress() {
+                        }
+
+                        override fun allowAdvance(): Boolean {
+                            return true
+                        }
+                    })
+                }
+
+                fun initData(card: TangemCard)
+                {
+                    if( ctx==null ) ctx= TangemContext(card)
+                    if( coinEngine==null ) {
+                        coinEngine=CoinEngineFactory.createCardano(ctx!!)!!
+                        coinEngine!!.defineWallet()
+                        runBlocking { requestBalanceAndUnspentTransactions() }
+                        Log.e(TAG, "requestBalanceAndUnspentTransactions completed")
+                    }
+                    if( txToSign==null ) txToSign=coinEngine!!.constructTransaction(amount,fee,true, targetAddress)
+                }
+
+                override fun isSigningOnCardSupported(card: TangemCard?): Boolean {
+                    initData(card!!)
+                    return (card?.blockchainID==Blockchain.Cardano.id)and(txToSign!!.isSigningMethodSupported(card?.signingMethod))
+                }
+
+                override fun getHashesToSign(card: TangemCard?): Array<ByteArray> {
+                    initData(card!!)
+                    return txToSign!!.hashesToSign
+                }
+
+                override fun getRawDataToSign(card: TangemCard?): ByteArray {
+                    initData(card!!)
+                    return txToSign!!.rawDataToSign
+                }
+
+                override fun getHashAlgToSign(card: TangemCard?): String {
+                    initData(card!!)
+                    return txToSign!!.hashAlgToSign
+                }
+
+                override fun getIssuerTransactionSignature(card: TangemCard?, dataToSignByIssuer: ByteArray?): ByteArray {
+                    initData(card!!)
+                    return txToSign!!.getIssuerTransactionSignature(dataToSignByIssuer)
+                }
+
+                override fun onSignCompleted(card: TangemCard?, signature: ByteArray?) {
+                    initData(card!!)
+                    txToSign!!.onSignCompleted(signature)
+                }
+
+            }
+            task = OneTouchSignTask(NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, tx)
+            task?.start()
         } catch (e: Exception) {
             e.printStackTrace()
             nfcManager.notifyReadResult(false)
@@ -249,12 +330,12 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     }
 
     public override fun onPause() {
-        readCardInfoTask?.cancel(true)
+        task?.cancel(true)
         super.onPause()
     }
 
     public override fun onStop() {
-        readCardInfoTask?.cancel(true)
+        task?.cancel(true)
         super.onStop()
     }
 
@@ -267,7 +348,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     }
 
     override fun onReadFinish(cardProtocol: CardProtocol?) {
-        readCardInfoTask = null
+        task = null
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
                 nfcManager.notifyReadResult(true)
@@ -333,7 +414,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     }
 
     override fun onReadCancel() {
-        readCardInfoTask = null
+        task = null
         ReadCardInfoTask.resetLastReadInfo()
         rlProgressBar.postDelayed({
             try {
