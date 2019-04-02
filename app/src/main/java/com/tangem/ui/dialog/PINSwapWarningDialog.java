@@ -8,13 +8,13 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 
+import com.tangem.Constant;
 import com.tangem.wallet.R;
 
 public class PINSwapWarningDialog extends DialogFragment {
     public static final String TAG = PINSwapWarningDialog.class.getSimpleName();
 
-    public static final String EXTRA_MESSAGE = "message";
-    private String message;
+    private String message = "";
     private OnPositiveButton mOnPositiveButton;
 
     public interface OnPositiveButton {
@@ -28,7 +28,9 @@ public class PINSwapWarningDialog extends DialogFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        message = getArguments().getString(EXTRA_MESSAGE);
+        if (getArguments() != null) {
+            message = getArguments().getString(Constant.EXTRA_MESSAGE);
+        }
     }
 
     @NonNull
@@ -45,7 +47,7 @@ public class PINSwapWarningDialog extends DialogFragment {
     }
 
     @Override
-    public void onCancel(DialogInterface dialog) {
+    public void onCancel(@NonNull DialogInterface dialog) {
         super.onCancel(dialog);
     }
 
