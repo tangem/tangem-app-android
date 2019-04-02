@@ -667,7 +667,7 @@ public class CardanoEngine extends CoinEngine {
                     blockchainRequestsCallbacks.onComplete(!ctx.hasError());
                 } else {
                     blockchainRequestsCallbacks.onProgress();
-                    Log.e(TAG, "FAIL INSIGHT_UNSPENT_OUTPUTS Exception");
+                    Log.e(TAG, "FAIL ADALITE_UNSPENT_OUTPUTS Exception");
                 }
             }
 
@@ -675,17 +675,14 @@ public class CardanoEngine extends CoinEngine {
             public void onSuccess(String method, List listResponse) {
                 Log.e(TAG, "Wrong response type for requestBalanceAndUnspentTransactions");
                 ctx.setError("Wrong response type for requestBalanceAndUnspentTransactions");
+                blockchainRequestsCallbacks.onComplete(false);
             }
 
             @Override
             public void onFail(String method, String message) {
                 Log.i(TAG, "onFail: " + method + " " + message);
                 ctx.setError(message);
-                if (serverApiAdalite.isRequestsSequenceCompleted()) {
-                    blockchainRequestsCallbacks.onComplete(false);
-                } else {
-                    blockchainRequestsCallbacks.onProgress();
-                }
+                blockchainRequestsCallbacks.onComplete(false);
             }
         };
 
