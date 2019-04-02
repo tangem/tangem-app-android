@@ -21,6 +21,8 @@ import androidx.fragment.app.DialogFragment;
  * Created by dvol on 06.03.2018.
  */
 public class ShowQRCodeDialog extends DialogFragment {
+    public static final String TAG = ShowQRCodeDialog.class.getSimpleName();
+
     private ImageView ivQR;
     private TextView tvQRaddress;
     private Bitmap bmQR;
@@ -71,7 +73,7 @@ public class ShowQRCodeDialog extends DialogFragment {
         activity.runOnUiThread(() -> {
                     ShowQRCodeDialog instance = new ShowQRCodeDialog();
                     instance.setup(content);
-                    instance.show(activity.getSupportFragmentManager(), "ShowQRCodeDialog");
+                    instance.show(activity.getSupportFragmentManager(), TAG);
                 });
     }
 

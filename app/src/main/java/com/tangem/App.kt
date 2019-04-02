@@ -5,13 +5,10 @@ import androidx.appcompat.app.AppCompatDelegate
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.tangem.data.local.PendingTransactionsStorage
-import com.tangem.di.DaggerNavigatorComponent
-import com.tangem.di.DaggerNetworkComponent
-import com.tangem.di.NavigatorComponent
-import com.tangem.di.NetworkComponent
 import com.tangem.card_android.android.data.Firmwares
 import com.tangem.card_android.android.data.PINStorage
 import com.tangem.card_common.data.Issuer
+import com.tangem.di.*
 import com.tangem.server_android.data.LocalStorage
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
@@ -26,10 +23,9 @@ class App : Application() {
             AppCompatDelegate.setCompatVectorFromResourcesEnabled(true)
         }
 
-        var networkComponent: NetworkComponent? = null
-            private set
-        var navigatorComponent: NavigatorComponent? = null
-            private set
+        lateinit var networkComponent: NetworkComponent
+        lateinit var navigatorComponent: NavigatorComponent
+        lateinit var toastHelperComponent: ToastHelperComponent
 
         lateinit var firmwaresStorage: Firmwares
         lateinit var localStorage: LocalStorage
@@ -44,6 +40,7 @@ class App : Application() {
 
         networkComponent = DaggerNetworkComponent.create()
         navigatorComponent = buildNavigatorComponent()
+        toastHelperComponent = buildToastHelperComponent()
 
         // common init
         if (PINStorage.needInit())
@@ -59,6 +56,11 @@ class App : Application() {
 
     private fun buildNavigatorComponent(): NavigatorComponent {
         return DaggerNavigatorComponent.builder()
+                .build()
+    }
+
+    private fun buildToastHelperComponent(): ToastHelperComponent {
+        return DaggerToastHelperComponent.builder()
                 .build()
     }
 
