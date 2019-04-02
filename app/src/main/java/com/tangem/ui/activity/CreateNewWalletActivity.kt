@@ -33,6 +33,7 @@ import com.tangem.card_android.data.EXTRA_TANGEM_CARD
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 
 class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
+
     companion object {
         fun callingIntent(context: Context, ctx: TangemContext): Intent {
             val intent = Intent(context, CreateNewWalletActivity::class.java)
@@ -69,26 +70,21 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
     }
 
     override fun onTagDiscovered(tag: Tag) {
-        try {
-            // get IsoDep handle and run cardReader thread
-            val isoDep = IsoDep.get(tag)
-            val uid = tag.id
-            val sUID = Util.byteArrayToHexString(uid)
+        // get IsoDep handle and run cardReader thread
+        val isoDep = IsoDep.get(tag)
+        val uid = tag.id
+        val sUID = Util.byteArrayToHexString(uid)
 
-            if (sUID == ctx.card.uid) {
-                if (lastReadSuccess)
-                    isoDep.timeout = ctx.card.pauseBeforePIN2 + 5000
-                else
-                    isoDep.timeout = ctx.card.pauseBeforePIN2 + 65000
+        if (sUID == ctx.card.uid) {
+            if (lastReadSuccess)
+                isoDep.timeout = ctx.card.pauseBeforePIN2 + 5000
+            else
+                isoDep.timeout = ctx.card.pauseBeforePIN2 + 65000
 
-                createNewWalletTask = CreateNewWalletTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
-                createNewWalletTask?.start()
-            } else {
-                nfcManager.ignoreTag(isoDep.tag)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+            createNewWalletTask = CreateNewWalletTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
+            createNewWalletTask?.start()
+        } else
+            nfcManager.ignoreTag(isoDep.tag)
     }
 
     public override fun onPause() {
@@ -143,37 +139,27 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                         }
                     }, 500)
                 } else {
-                    progressBar!!.post {
+                    progressBar?.post {
                         if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported) {
                             if (!NoExtendedLengthSupportDialog.allReadyShowed) {
                                 NoExtendedLengthSupportDialog().show(supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
                             }
-                        } else {
-                            Toast.makeText(baseContext, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show()
-                        }
-                        progressBar!!.progress = 100
-                        progressBar!!.progressTintList = ColorStateList.valueOf(Color.RED)
+                        } else
+                            Toast.makeText(this, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show()
+
+                        progressBar?.progress = 100
+                        progressBar?.progressTintList = ColorStateList.valueOf(Color.RED)
                     }
                 }
             }
         }
 
-        rlProgressBar.postDelayed({
-            try {
-                rlProgressBar.visibility = View.GONE
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }, 500)
+        rlProgressBar.postDelayed({ rlProgressBar?.visibility = View.GONE }, 500)
 
         progressBar?.postDelayed({
-            try {
-                progressBar?.progress = 0
-                progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
-                progressBar?.visibility = View.INVISIBLE
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            progressBar?.progress = 0
+            progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+            progressBar?.visibility = View.INVISIBLE
         }, 500)
     }
 
@@ -185,13 +171,9 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         createNewWalletTask = null
 
         progressBar?.postDelayed({
-            try {
-                progressBar?.progress = 0
-                progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
-                progressBar?.visibility = View.INVISIBLE
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            progressBar?.progress = 0
+            progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
+            progressBar?.visibility = View.INVISIBLE
         }, 500)
     }
 
