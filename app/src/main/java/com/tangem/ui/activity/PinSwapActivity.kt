@@ -136,7 +136,7 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
                             progressBar!!.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
                             progressBar!!.visibility = View.INVISIBLE
                             val intent = Intent()
-                            intent.putExtra("message", "Cannot change PIN(s). Make sure you enter correct PIN2!")
+                            intent.putExtra(Constant.EXTRA_MESSAGE, "Cannot change PIN(s). Make sure you enter correct PIN2!")
                             intent.putExtra(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
                             intent.putExtra(EXTRA_TANGEM_CARD, cardProtocol.card.asBundle)
                             setResult(RESULT_INVALID_PIN, intent)
