@@ -81,6 +81,17 @@ object CoinEngineFactory {
             Log.e(TAG, "Can't create Cardano CoinEngine!")
         }
         return result
+
+//        var result: EthEngine?
+//        try {
+//            result = EthEngine(context)
+//
+//        } catch (e: Exception) {
+//            e.printStackTrace()
+//            result = null
+//            Log.e(TAG, "Can't create Cardano CoinEngine!")
+//        }
+//        return result
     }
 
 }
