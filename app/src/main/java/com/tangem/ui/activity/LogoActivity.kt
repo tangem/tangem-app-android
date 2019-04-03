@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.di.Navigator
+import com.tangem.domain.wallet.TangemContext
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_logo.*
@@ -63,7 +64,7 @@ class LogoActivity : AppCompatActivity() {
     private fun hide() {
         when (BuildConfig.FLAVOR) {
             Constant.FLAVOR_TANGEM_CARDANO -> {
-                navigator.showPrepareTransaction(this)
+                navigator.showPrepareTransaction(this, TangemContext())
             }
             else -> {
                 navigator.showMain(this)
