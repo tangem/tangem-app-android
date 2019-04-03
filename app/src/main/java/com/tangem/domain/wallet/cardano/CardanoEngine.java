@@ -6,6 +6,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.tangem.App;
+import com.tangem.Constant;
 import com.tangem.data.local.PendingTransactionsStorage;
 import com.tangem.data.network.ServerApiAdalite;
 import com.tangem.data.network.model.AdaliteResponse;
@@ -23,6 +24,7 @@ import com.tangem.card_common.reader.CardProtocol;
 import com.tangem.card_common.tasks.SignTask;
 import com.tangem.card_common.util.Util;
 import com.tangem.util.DecimalDigitsInputFilter;
+import com.tangem.wallet.BuildConfig;
 import com.tangem.wallet.R;
 
 import org.spongycastle.crypto.Digest;
@@ -198,6 +200,9 @@ public class CardanoEngine extends CoinEngine {
 
     @Override
     public boolean checkNewTransactionAmount(Amount amount) {
+        if( BuildConfig.FLAVOR==Constant.FLAVOR_TANGEM_CARDANO ) {
+            return true;
+        }
         if (coinData == null) return false;
         if (amount.compareTo(convertToAmount(coinData.getBalanceInInternalUnits())) > 0) {
             return false;
@@ -424,9 +429,10 @@ public class CardanoEngine extends CoinEngine {
         final long amountFinal = amount;
         final long changeFinal = change;
 
-        if (amount + fees > fullAmount) {
-            throw new CardProtocol.TangemException_WrongAmount(String.format("Balance (%d) < change (%d) + amount (%d)", fullAmount, change, amount));
-        }
+        //TODO - uncomment
+//        if (amount + fees > fullAmount) {
+//            throw new CardProtocol.TangemException_WrongAmount(String.format("Balance (%d) < change (%d) + amount (%d)", fullAmount, change, amount));
+//        }
 
         CborBuilder cborBuilder = new CborBuilder();
         ArrayBuilder<CborBuilder> txArray = cborBuilder.addArray();
