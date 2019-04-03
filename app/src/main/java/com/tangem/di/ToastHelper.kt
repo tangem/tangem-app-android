@@ -9,6 +9,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.tangem.Constant
 import com.tangem.wallet.R
 
+
 class ToastHelper {
 
     fun showSnackbarUpdateVersion(context: Context, vg: ViewGroup, versionName: String) {
@@ -24,6 +25,20 @@ class ToastHelper {
                 }.show()
     }
 
+    fun showSnackbarSuccess(context: Context, vg: ViewGroup, message: String) {
+        val snackbar = Snackbar.make(vg, message, Snackbar.LENGTH_INDEFINITE)
+        snackbar.setAction(R.string.ok) {
+            snackbar.dismiss()
+        }
+        snackbar.show()
+    }
 
+    fun showSnackbarError(context: Context, vg: ViewGroup, message: String) {
+        val snackbar = Snackbar.make(vg, message, Snackbar.LENGTH_INDEFINITE)
+        snackbar.setAction(R.string.ok) {
+            snackbar.dismiss()
+        }
+        snackbar.show()
+    }
 
 }
