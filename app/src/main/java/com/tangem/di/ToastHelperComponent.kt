@@ -1,5 +1,6 @@
 package com.tangem.di
 
+import com.tangem.ui.PrepareTransactionActivity
 import com.tangem.ui.activity.MainActivity
 import dagger.Component
 import javax.inject.Singleton
@@ -9,5 +10,7 @@ import javax.inject.Singleton
 interface ToastHelperComponent {
 
     fun inject(activity: MainActivity)
+
+    fun inject(activity: PrepareTransactionActivity)
 
 }
