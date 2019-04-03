@@ -20,14 +20,18 @@ import com.tangem.App
 import com.tangem.Constant
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager
-import com.tangem.data.Blockchain
 import com.tangem.data.dp.PrefsManager
 import com.tangem.di.Navigator
+import com.tangem.di.ToastHelper
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
+import com.tangem.ui.event.TransactionFinishWithError
+import com.tangem.ui.event.TransactionFinishWithSuccess
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.tangemCardano.activity_prepare_transaction.*
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
 import java.io.IOException
 import javax.inject.Inject
 
@@ -43,15 +47,39 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
 
     @Inject
     internal lateinit var navigator: Navigator
+    @Inject
+    internal lateinit var toastHelper: ToastHelper
 
     //    private lateinit var ctx: TangemContext
     private lateinit var nfcManager: NfcManager
+
+    override fun onStart() {
+        super.onStart()
+        if (!EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().register(this)
+    }
+
+    override fun onDestroy() {
+        EventBus.getDefault().unregister(this)
+        super.onDestroy()
+    }
+
+    @Subscribe
+    fun onTransactionFinishWithSuccess(transactionFinishWithSuccess: TransactionFinishWithSuccess) {
+        transactionFinishWithSuccess.message?.let { toastHelper.showSnackbarSuccess(this, cl, it) }
+    }
+
+    @Subscribe
+    fun onTransactionFinishWithError(transactionFinishWithError: TransactionFinishWithError) {
+        transactionFinishWithError.message?.let { toastHelper.showSnackbarError(this, cl, it) }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_transaction)
 
         App.navigatorComponent.inject(this)
+        App.toastHelperComponent.inject(this)
 
         nfcManager = NfcManager(this, this)
         lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
