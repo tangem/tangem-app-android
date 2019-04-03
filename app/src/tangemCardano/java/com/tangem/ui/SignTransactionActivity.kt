@@ -175,7 +175,7 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                         ctx.card = card
                     }
                     if (ctx.coinData == null) {
-                        ctx.coinData = CardanoData()
+                        ctx.coinData = CoinEngineFactory.createCardanoData()
                     }
                     if (ctx.coinData.wallet.isNullOrEmpty()) {
                         coinEngine.defineWallet()
@@ -197,7 +197,7 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
 
                 override fun isSigningOnCardSupported(card: TangemCard?): Boolean {
                     initData(card!!)
-                    return (card?.blockchainID == Blockchain.Cardano.id) and (txToSign!!.isSigningMethodSupported(card?.signingMethod))
+                    return CoinEngineFactory.isCardano(card?.blockchainID) and (txToSign!!.isSigningMethodSupported(card?.signingMethod))
                 }
 
                 override fun getHashesToSign(card: TangemCard?): Array<ByteArray> {
