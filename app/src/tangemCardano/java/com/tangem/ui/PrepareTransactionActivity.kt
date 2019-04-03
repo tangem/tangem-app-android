@@ -66,26 +66,26 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
 //        tvCardID.text = ctx.card?.cidDescription
         val engine = CoinEngineFactory.create(TangemContext())
 
-        @Suppress("DEPRECATION") val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-            Html.fromHtml(engine!!.balanceHTML, Html.FROM_HTML_MODE_LEGACY)
-        else
-            Html.fromHtml(engine!!.balanceHTML)
-        tvBalance.text = html
+//        @Suppress("DEPRECATION") val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+//            Html.fromHtml(engine?.balanceHTML, Html.FROM_HTML_MODE_LEGACY)
+//        else
+//            Html.fromHtml(engine?.balanceHTML)
+//        tvBalance.text = html
 
-        if (!engine.allowSelectFeeInclusion()) {
-            rgIncFee.visibility = View.INVISIBLE
-        } else {
-            rgIncFee.visibility = View.VISIBLE
-        }
+//        if (!engine.allowSelectFeeInclusion()) {
+//            rgIncFee.visibility = View.INVISIBLE
+//        } else {
+//            rgIncFee.visibility = View.VISIBLE
+//        }
 
 //        if (ctx.card!!.remainingSignatures < 2)
 //            etAmount.isEnabled = false
 
-        tvCurrency.text = engine.balance.currency
-        etAmount.setText(engine.balance.toValueString())
+        tvCurrency.text = engine?.balance?.currency
+        etAmount.setText(engine?.balance?.toValueString())
 
         // limit number of symbols after comma
-        etAmount.filters = engine.amountInputFilters
+//        etAmount.filters = engine?.amountInputFilters
 
         etWallet.setText(PrefsManager.getInstance().lastWalletAddress)
 
@@ -113,10 +113,10 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
             val amount = engine1!!.convertToAmount(etAmount.text.toString(), tvCurrency.text.toString())
 
             try {
-                if (!engine.checkNewTransactionAmount(amount))
-                    etAmount.error = getString(R.string.not_enough_funds_on_your_card)
-                else
-                    etAmount.error = null
+//                if (!engine.checkNewTransactionAmount(amount))
+//                    etAmount.error = getString(R.string.not_enough_funds_on_your_card)
+//                else
+//                    etAmount.error = null
             } catch (e: Exception) {
                 etAmount.error = getString(R.string.unknown_amount_format)
             }
