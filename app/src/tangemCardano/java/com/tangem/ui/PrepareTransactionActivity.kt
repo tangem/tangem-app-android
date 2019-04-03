@@ -49,7 +49,7 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
     @Inject
     internal lateinit var navigator: Navigator
 
-    private lateinit var ctx: TangemContext
+//    private lateinit var ctx: TangemContext
     private lateinit var nfcManager: NfcManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,10 +61,10 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         nfcManager = NfcManager(this, this)
         lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
-        ctx = TangemContext.loadFromBundle(this, intent.extras)
+//        ctx = TangemContext.loadFromBundle(this, intent.extras)
 
-        tvCardID.text = ctx.card?.cidDescription
-        val engine = CoinEngineFactory.create(ctx)
+//        tvCardID.text = ctx.card?.cidDescription
+        val engine = CoinEngineFactory.create(TangemContext())
 
         @Suppress("DEPRECATION") val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
             Html.fromHtml(engine!!.balanceHTML, Html.FROM_HTML_MODE_LEGACY)
@@ -78,8 +78,8 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
             rgIncFee.visibility = View.VISIBLE
         }
 
-        if (ctx.card!!.remainingSignatures < 2)
-            etAmount.isEnabled = false
+//        if (ctx.card!!.remainingSignatures < 2)
+//            etAmount.isEnabled = false
 
         tvCurrency.text = engine.balance.currency
         etAmount.setText(engine.balance.toValueString())
@@ -107,7 +107,8 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
                 return@setOnClickListener
             }
 
-            val engine1 = CoinEngineFactory.create(ctx)
+//            val engine1 = CoinEngineFactory.create(ctx)
+            val engine1 = CoinEngineFactory.create(TangemContext())
             val strAmount: String = etAmount.text.toString().replace(",", ".")
             val amount = engine1!!.convertToAmount(etAmount.text.toString(), tvCurrency.text.toString())
 
@@ -127,17 +128,17 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
             } else
                 etWallet.error = null
 
-            if (etWallet.text.toString() == ctx.coinData!!.wallet) {
-                etWallet.error = getString(R.string.destination_wallet_address_equal_source_address)
-                return@setOnClickListener
-            }
+//            if (etWallet.text.toString() == ctx.coinData!!.wallet) {
+//                etWallet.error = getString(R.string.destination_wallet_address_equal_source_address)
+//                return@setOnClickListener
+//            }
 
             if (!etAmount.error.isNullOrEmpty() || !etWallet.error.isNullOrEmpty()) {
                 return@setOnClickListener
             }
 
             val intent = Intent(baseContext, ConfirmTransactionActivity::class.java)
-            ctx.saveToIntent(intent)
+//            ctx.saveToIntent(intent)
             intent.putExtra(Constant.EXTRA_TARGET_ADDRESS, etWallet!!.text.toString())
             intent.putExtra(Constant.EXTRA_FEE_INCLUDED, (rgIncFee!!.checkedRadioButtonId == R.id.rbFeeIn))
             intent.putExtra(Constant.EXTRA_AMOUNT, strAmount)
@@ -167,25 +168,25 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == Constant.REQUEST_CODE_SCAN_QR && resultCode == Activity.RESULT_OK && data != null && data.extras!!.containsKey("QRCode")) {
             var code = data.getStringExtra("QRCode")
-            when (ctx.blockchain) {
-                Blockchain.Bitcoin -> {
-                    if (code.contains("bitcoin:")) {
-                        val tmp = code.split("bitcoin:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                        code = tmp[1]
-                    }
-                }
-                Blockchain.Ethereum, Blockchain.Token -> {
-                    if (code.contains("ethereum:")) {
-                        val tmp = code.split("ethereum:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                        code = tmp[1]
-                    } else if (code.contains("blockchain:")) {
-                        val tmp = code.split("blockchain:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                        code = tmp[1]
-                    }
-                }
-                else -> {
-                }
-            }
+//            when (ctx.blockchain) {
+//                Blockchain.Bitcoin -> {
+//                    if (code.contains("bitcoin:")) {
+//                        val tmp = code.split("bitcoin:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+//                        code = tmp[1]
+//                    }
+//                }
+//                Blockchain.Ethereum, Blockchain.Token -> {
+//                    if (code.contains("ethereum:")) {
+//                        val tmp = code.split("ethereum:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+//                        code = tmp[1]
+//                    } else if (code.contains("blockchain:")) {
+//                        val tmp = code.split("blockchain:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+//                        code = tmp[1]
+//                    }
+//                }
+//                else -> {
+//                }
+//            }
             etWallet?.setText(code)
         } else if (requestCode == Constant.REQUEST_CODE_SEND_TRANSACTION__) {
             setResult(resultCode, data)
