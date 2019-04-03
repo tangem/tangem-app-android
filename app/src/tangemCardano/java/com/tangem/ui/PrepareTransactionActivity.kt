@@ -8,6 +8,7 @@ import android.nfc.Tag
 import android.os.Build
 import android.os.Bundle
 import android.text.Html
+import android.text.TextUtils
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnTouchListener
@@ -43,7 +44,7 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
     @Inject
     internal lateinit var navigator: Navigator
 
-//    private lateinit var ctx: TangemContext
+    //    private lateinit var ctx: TangemContext
     private lateinit var nfcManager: NfcManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -101,10 +102,22 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
                 return@setOnClickListener
             }
 
-            val engine1 = CoinEngineFactory.createCardano(TangemContext())
-            val strAmount: String = etAmount.text.toString().replace(",", ".")
-            val amount = engine1!!.convertToAmount(etAmount.text.toString(), tvCurrency.text.toString())
+            // check on empty wallet address
+            if (etWallet.text.toString() == "") {
+                etWallet.error = getString(R.string.wallet_address_empty)
+                return@setOnClickListener
+            }
 
+            // check on empty amount
+            if (etAmount.text.toString() == "") {
+                etAmount.error = getString(R.string.amount_empty)
+                return@setOnClickListener
+            }
+
+            val strAmount: String = etAmount.text.toString().replace(",", ".")
+            val amount = engine.convertToAmount(etAmount.text.toString(), tvCurrency.text.toString())
+
+            // check amount
             try {
                 if (!engine.checkNewTransactionAmount(amount))
                     etAmount.error = getString(R.string.not_enough_funds_on_your_card)
@@ -115,7 +128,7 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
             }
 
             // check wallet address
-            if (!engine1.validateAddress(etWallet.text.toString())) {
+            if (!engine.validateAddress(etWallet.text.toString())) {
                 etWallet.error = getString(R.string.incorrect_destination_wallet_address)
                 return@setOnClickListener
             } else
