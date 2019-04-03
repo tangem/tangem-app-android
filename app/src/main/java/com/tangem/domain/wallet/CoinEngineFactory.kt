@@ -7,7 +7,9 @@ import com.tangem.domain.wallet.eth.EthEngine
 import com.tangem.domain.wallet.token.TokenEngine
 import com.tangem.domain.wallet.bch.BtcCashEngine
 import com.tangem.data.Blockchain
+import com.tangem.domain.wallet.cardano.CardanoData
 import com.tangem.domain.wallet.cardano.CardanoEngine
+import com.tangem.domain.wallet.eth.EthData
 import com.tangem.domain.wallet.ltc.LtcEngine
 import com.tangem.domain.wallet.nftToken.NftTokenEngine
 import com.tangem.domain.wallet.rsk.RskEngine
@@ -73,7 +75,7 @@ object CoinEngineFactory {
     fun createCardano(context: TangemContext): CoinEngine? {
         var result: CoinEngine?
         try {
-            result = CardanoEngine(context)
+            result = EthEngine(context)// CardanoEngine(context)
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -94,4 +96,11 @@ object CoinEngineFactory {
 //        return result
     }
 
+    fun createCardanoData(): CoinData? {
+        return EthData()// CardanoData()
+    }
+
+    fun isCardano(blockchainID: String): Boolean {
+        return blockchainID==Blockchain.Ethereum.id
+    }
 }
