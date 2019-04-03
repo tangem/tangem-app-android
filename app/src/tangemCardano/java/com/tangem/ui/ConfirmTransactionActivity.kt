@@ -14,7 +14,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.Toast
 import com.tangem.Constant
-import com.tangem.data.Blockchain
+import com.tangem.card_android.android.data.PINStorage
 import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
@@ -31,7 +31,6 @@ import java.util.*
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 import com.tangem.ui.activity.PinRequestActivity
-import com.tangem.ui.activity.SignTransactionActivity
 import kotlinx.android.synthetic.tangemCardano.activity_confirm_transaction.*
 
 class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
@@ -52,9 +51,9 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         nfcManager = NfcManager(this, this)
         lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
-        ctx = TangemContext.loadFromBundle(this, intent.extras)
+        ctx = TangemContext();//.loadFromBundle(this, intent.extras)
 
-        val engine = CoinEngineFactory.create(ctx)
+        val engine = CoinEngineFactory.createCardano(ctx) //create(ctx)
 
         @Suppress("DEPRECATION") val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
             Html.fromHtml(engine!!.balanceHTML, Html.FROM_HTML_MODE_LEGACY)
@@ -76,17 +75,17 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         else
             tvIncFee.visibility = View.INVISIBLE
 
-        if (ctx.card.blockchainID == Blockchain.Token.id) {
-            // for Blockchain.Token limit decimals
-            etAmount.setText(amount.toValueString(ctx.card.tokensDecimal))
-        } else {
+//        if (ctx.card.blockchainID == Blockchain.Token.id) {
+//            // for Blockchain.Token limit decimals
+//            etAmount.setText(amount.toValueString(ctx.card.tokensDecimal))
+//        } else {
             // for others
             etAmount.setText(amount.toValueString())
-        }
+//        }
 
         tvCurrency.text = engine.balanceCurrency
         tvCurrency2.text = engine.feeCurrency
-        tvCardID.text = ctx.card.cidDescription
+//        tvCardID.text = ctx.card.cidDescription
         etWallet.setText(intent.getStringExtra(Constant.EXTRA_TARGET_ADDRESS))
 
         btnSend.visibility = View.INVISIBLE
@@ -134,7 +133,7 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
                     return@setOnClickListener
                 }
 
-                val engineCoin = CoinEngineFactory.create(ctx)
+                val engineCoin = CoinEngineFactory.createCardano(ctx)
 
                 if (engineCoin!!.isNeedCheckNode && !nodeCheck) {
                     Toast.makeText(baseContext, getString(R.string.cannot_reach_current_active_blockchain_node_try_again), Toast.LENGTH_LONG).show()
@@ -144,39 +143,50 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
                 val txFee = engineCoin.convertToAmount(etFee.text.toString(), tvCurrency2.text.toString())
                 val txAmount = engineCoin.convertToAmount(etAmount.text.toString(), tvCurrency.text.toString())
 
-                if (!engineCoin.hasBalanceInfo()) {
-                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
-                    return@setOnClickListener
-
-                } else if (!engineCoin.isBalanceNotZero) {
-                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.the_wallet_is_empty))
-                    return@setOnClickListener
-
-                } else if (!engineCoin.isExtractPossible) {
-                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.please_wait_for_confirmation_of_incoming_transaction))
-                    return@setOnClickListener
-                }
-
-                if (!engineCoin.checkNewTransactionAmountAndFee(txAmount, txFee, isIncludeFee)) {
-                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.not_enough_funds_on_your_card))
-                    return@setOnClickListener
-                }
+//                if (!engineCoin.hasBalanceInfo()) {
+//                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
+//                    return@setOnClickListener
+//
+//                } else if (!engineCoin.isBalanceNotZero) {
+//                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.the_wallet_is_empty))
+//                    return@setOnClickListener
+//
+//                } else if (!engineCoin.isExtractPossible) {
+//                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.please_wait_for_confirmation_of_incoming_transaction))
+//                    return@setOnClickListener
+//                }
+//
+//                if (!engineCoin.checkNewTransactionAmountAndFee(txAmount, txFee, isIncludeFee)) {
+//                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.not_enough_funds_on_your_card))
+//                    return@setOnClickListener
+//                }
 
                 requestPIN2Count = 0
-                val intent = Intent(baseContext, PinRequestActivity::class.java)
-                intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
+//                val intent = Intent(baseContext, PinRequestActivity::class.java)
+//                intent.putExtra(Constant.EXTRA_MODE, PinRequestActivity.Mode.RequestPIN2.toString())
+//                ctx.saveToIntent(intent)
+//                intent.putExtra(Constant.EXTRA_FEE_INCLUDED, isIncludeFee)
+//                startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_)
+
+                //TODO - PIN2 workaround
+                PINStorage.setPIN2(PINStorage.getDefaultPIN2())
+                val intent = Intent(baseContext, SignTransactionActivity::class.java)
                 ctx.saveToIntent(intent)
+                intent.putExtra(Constant.EXTRA_TARGET_ADDRESS, etWallet!!.text.toString())
+                intent.putExtra(Constant.EXTRA_AMOUNT, etAmount.text.toString())
+                intent.putExtra(Constant.EXTRA_AMOUNT_CURRENCY, tvCurrency.text.toString())
+                intent.putExtra(Constant.EXTRA_FEE, etFee.text.toString())
+                intent.putExtra(Constant.EXTRA_FEE_CURRENCY, tvCurrency2.text.toString())
                 intent.putExtra(Constant.EXTRA_FEE_INCLUDED, isIncludeFee)
-                startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_)
+                startActivityForResult(intent, Constant.REQUEST_CODE_SIGN_TRANSACTION)
+
             } else
                 Toast.makeText(this, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
         }
 
-        val coinEngine = CoinEngineFactory.create(ctx)
-
         progressBar.visibility = View.VISIBLE
 
-        coinEngine!!.requestFee(
+        engine!!.requestFee(
                 object : CoinEngine.BlockchainRequestsCallbacks {
                     override fun onComplete(success: Boolean) {
                         if (success) {
