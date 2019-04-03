@@ -194,9 +194,9 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
 //                }
 //            }
             etWallet?.setText(code)
-        } else if (requestCode == Constant.REQUEST_CODE_SEND_TRANSACTION__) {
-            setResult(resultCode, data)
-            finish()
+//        } else if (requestCode == Constant.REQUEST_CODE_SEND_TRANSACTION__) {
+//            setResult(resultCode, data)
+//            finish()
         }
     }
 
