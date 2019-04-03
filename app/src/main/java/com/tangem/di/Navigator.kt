@@ -73,10 +73,10 @@ class Navigator {
     fun showPrepareTransaction(context: Activity, ctx: TangemContext) {
         when (BuildConfig.FLAVOR) {
             Constant.FLAVOR_TANGEM_CARDANO -> {
-                context.startActivity(PrepareTransactionActivity.callingIntent(context))
+                context.startActivity(PrepareTransactionActivity.callingIntent(context, ctx))
             }
             else -> {
-//                context.startActivityForResult(PrepareTransactionActivity.callingIntent(context, ctx), Constant.REQUEST_CODE_SEND_TRANSACTION)
+                context.startActivityForResult(PrepareTransactionActivity.callingIntent(context, ctx), Constant.REQUEST_CODE_SEND_TRANSACTION)
             }
         }
     }
