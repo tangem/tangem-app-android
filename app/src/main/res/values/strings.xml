@@ -149,6 +149,8 @@
     <string name="enter_wallet_address">enter wallet address</string>
     <string name="enter_amount">enter amount</string>
     <string name="verify">Verify</string>
+    <string name="wallet_address_empty">Wallet address is empty</string>
+    <string name="amount_empty">Amount is empty</string>
 
     <!-- PinRequestActivity -->
     <string name="enter_new_pin_or_use_fingerprint_scanner">Enter new PIN or use fingerprint scanner</string>
