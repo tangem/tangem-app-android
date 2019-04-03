@@ -86,7 +86,7 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         isIncludeFee = intent.getBooleanExtra(Constant.EXTRA_FEE_INCLUDED, true)
         outAddressStr = intent.getStringExtra(Constant.EXTRA_TARGET_ADDRESS)
 
-       // tvCardID.text = ctx.card!!.cidDescription
+        // tvCardID.text = ctx.card!!.cidDescription
         progressBar.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
         progressBar.visibility = View.INVISIBLE
     }
@@ -133,55 +133,54 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
 //                if (lastReadSuccess)
 //                    isoDep.timeout = ctx.card.pauseBeforePIN2 + 5000
 //                else
-                    isoDep.timeout = 65000
+            isoDep.timeout = 65000
 
-            val coinEngine=CoinEngineFactory.createCardano(ctx!!)!!
-                coinEngine?.setOnNeedSendTransaction { tx ->
-                    if (tx != null) {
-                        val intent = Intent(this, SendTransactionActivity::class.java)
-                        ctx.saveToIntent(intent)
-                        intent.putExtra(Constant.EXTRA_TX, tx)
-                        startActivityForResult(intent, Constant.REQUEST_CODE_SEND_TRANSACTION_)
-                    }
+            val coinEngine = CoinEngineFactory.createCardano(ctx!!)!!
+            coinEngine.setOnNeedSendTransaction { tx ->
+                if (tx != null) {
+                    val intent = Intent(this, SendTransactionActivity::class.java)
+                    ctx.saveToIntent(intent)
+                    intent.putExtra(Constant.EXTRA_TX, tx)
+                    startActivityForResult(intent, Constant.REQUEST_CODE_SEND_TRANSACTION_)
                 }
+            }
 //                val transactionToSign = coinEngine?.constructTransaction(amount, fee, isIncludeFee, outAddressStr)
 //
 //                task = SignTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, transactionToSign)
 //                task?.start()
 
 
-                val tx: OneTouchSignTask.TransactionToSign = object : OneTouchSignTask.TransactionToSign {
-                    var txToSign: SignTask.TransactionToSign?=null
-                    suspend fun requestBalanceAndUnspentTransactions(): Boolean = suspendCoroutine { cont ->
-                        coinEngine!!.requestBalanceAndUnspentTransactions(object : CoinEngine.BlockchainRequestsCallbacks {
-                            override fun onComplete(success: Boolean?) {
-                                cont.resume(success!!)
-                            }
+            val tx: OneTouchSignTask.TransactionToSign = object : OneTouchSignTask.TransactionToSign {
+                var txToSign: SignTask.TransactionToSign? = null
+                suspend fun requestBalanceAndUnspentTransactions(): Boolean = suspendCoroutine { cont ->
+                    coinEngine!!.requestBalanceAndUnspentTransactions(object : CoinEngine.BlockchainRequestsCallbacks {
+                        override fun onComplete(success: Boolean?) {
+                            cont.resume(success!!)
+                        }
 
-                            override fun onProgress() {
-                            }
+                        override fun onProgress() {
+                        }
 
-                            override fun allowAdvance(): Boolean {
-                                return true
-                            }
-                        })
-                    }
+                        override fun allowAdvance(): Boolean {
+                            return true
+                        }
+                    })
+                }
 
-                    fun initData(card: TangemCard)
-                    {
+                fun initData(card: TangemCard) {
 //                        if( ctx==null ){
 //                            ctx=TangemContext(card)
 //                        }
-                        if( ctx.card==null ){
-                            ctx.card=card
-                        }
-                        if( ctx.coinData==null ) {
-                            ctx.coinData = CardanoData()
-                        }
-                        if( ctx.coinData.wallet.isNullOrEmpty() ) {
-                            coinEngine!!.defineWallet()
-                            runBlocking { requestBalanceAndUnspentTransactions() }
-                            Log.e(MainActivity.TAG, "requestBalanceAndUnspentTransactions completed")
+                    if (ctx.card == null) {
+                        ctx.card = card
+                    }
+                    if (ctx.coinData == null) {
+                        ctx.coinData = CardanoData()
+                    }
+                    if (ctx.coinData.wallet.isNullOrEmpty()) {
+                        coinEngine.defineWallet()
+                        runBlocking { requestBalanceAndUnspentTransactions() }
+                        Log.e(MainActivity.TAG, "requestBalanceAndUnspentTransactions completed")
 
 //                            coinEngine?.setOnNeedSendTransaction { tx ->
 //                                if (tx != null) {
@@ -192,43 +191,43 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
 //                                }
 //                            }
 
-                        }
-                        if( txToSign==null ) txToSign=coinEngine!!.constructTransaction(amount,fee,isIncludeFee,outAddressStr)
                     }
-
-                    override fun isSigningOnCardSupported(card: TangemCard?): Boolean {
-                        initData(card!!)
-                        return (card?.blockchainID== Blockchain.Cardano.id)and(txToSign!!.isSigningMethodSupported(card?.signingMethod))
-                    }
-
-                    override fun getHashesToSign(card: TangemCard?): Array<ByteArray> {
-                        initData(card!!)
-                        return txToSign!!.hashesToSign
-                    }
-
-                    override fun getRawDataToSign(card: TangemCard?): ByteArray {
-                        initData(card!!)
-                        return txToSign!!.rawDataToSign
-                    }
-
-                    override fun getHashAlgToSign(card: TangemCard?): String {
-                        initData(card!!)
-                        return txToSign!!.hashAlgToSign
-                    }
-
-                    override fun getIssuerTransactionSignature(card: TangemCard?, dataToSignByIssuer: ByteArray?): ByteArray {
-                        initData(card!!)
-                        return txToSign!!.getIssuerTransactionSignature(dataToSignByIssuer)
-                    }
-
-                    override fun onSignCompleted(card: TangemCard?, signature: ByteArray?) {
-                        initData(card!!)
-                        txToSign!!.onSignCompleted(signature)
-                    }
-
+                    if (txToSign == null) txToSign = coinEngine!!.constructTransaction(amount, fee, isIncludeFee, outAddressStr)
                 }
-                task = OneTouchSignTask(NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, tx)
-                task!!.start()
+
+                override fun isSigningOnCardSupported(card: TangemCard?): Boolean {
+                    initData(card!!)
+                    return (card?.blockchainID == Blockchain.Cardano.id) and (txToSign!!.isSigningMethodSupported(card?.signingMethod))
+                }
+
+                override fun getHashesToSign(card: TangemCard?): Array<ByteArray> {
+                    initData(card!!)
+                    return txToSign!!.hashesToSign
+                }
+
+                override fun getRawDataToSign(card: TangemCard?): ByteArray {
+                    initData(card!!)
+                    return txToSign!!.rawDataToSign
+                }
+
+                override fun getHashAlgToSign(card: TangemCard?): String {
+                    initData(card!!)
+                    return txToSign!!.hashAlgToSign
+                }
+
+                override fun getIssuerTransactionSignature(card: TangemCard?, dataToSignByIssuer: ByteArray?): ByteArray {
+                    initData(card!!)
+                    return txToSign!!.getIssuerTransactionSignature(dataToSignByIssuer)
+                }
+
+                override fun onSignCompleted(card: TangemCard?, signature: ByteArray?) {
+                    initData(card!!)
+                    txToSign!!.onSignCompleted(signature)
+                }
+
+            }
+            task = OneTouchSignTask(NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, tx)
+            task!!.start()
 
 //            } else
 //                nfcManager.ignoreTag(isoDep.tag)
