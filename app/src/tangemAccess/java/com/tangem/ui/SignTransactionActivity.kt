@@ -1,4 +1,4 @@
-package com.tangem.ui
+package com.tangem.ui.activity
 
 import android.app.Activity
 import android.content.Intent
@@ -29,22 +29,12 @@ import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
 import com.tangem.ui.dialog.WaitSecurityDelayDialog
 import com.tangem.util.LOG
 import com.tangem.wallet.R
+import kotlinx.android.synthetic.main.activity_sign_transaction.*
 import kotlinx.android.synthetic.main.layout_progress_horizontal.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
 import com.tangem.card_android.data.asBundle
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
-import com.tangem.card_common.data.TangemCard
-import com.tangem.card_common.tasks.CustomReadCardTask
-import com.tangem.card_common.tasks.OneTouchSignTask
-import com.tangem.card_common.util.Log
-import com.tangem.data.Blockchain
-import com.tangem.domain.wallet.cardano.CardanoData
-import com.tangem.ui.activity.MainActivity
-import com.tangem.ui.activity.SendTransactionActivity
-import kotlinx.coroutines.runBlocking
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
 
@@ -58,7 +48,7 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
 
     private lateinit var nfcDeviceAntenna: NfcDeviceAntennaLocation
 
-    private var task: CustomReadCardTask? = null
+    private var signTransactionTask: SignTask? = null
 
     private lateinit var amount: CoinEngine.Amount
     private lateinit var fee: CoinEngine.Amount
@@ -86,18 +76,18 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         isIncludeFee = intent.getBooleanExtra(Constant.EXTRA_FEE_INCLUDED, true)
         outAddressStr = intent.getStringExtra(Constant.EXTRA_TARGET_ADDRESS)
 
-        // tvCardID.text = ctx.card!!.cidDescription
+        tvCardID.text = ctx.card!!.cidDescription
         progressBar.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
         progressBar.visibility = View.INVISIBLE
     }
 
     public override fun onPause() {
-        task?.cancel(true)
+        signTransactionTask?.cancel(true)
         super.onPause()
     }
 
     public override fun onStop() {
-        task?.cancel(true)
+        signTransactionTask?.cancel(true)
         super.onStop()
     }
 
@@ -127,110 +117,29 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
             // get IsoDep handle and run cardReader thread
             val isoDep = IsoDep.get(tag)
             val uid = tag.id
-//            val sUID = Util.byteArrayToHexString(uid)
+            val sUID = Util.byteArrayToHexString(uid)
 
-//            if (sUID == ctx.card.uid){
-//                if (lastReadSuccess)
-//                    isoDep.timeout = ctx.card.pauseBeforePIN2 + 5000
-//                else
-            isoDep.timeout = 65000
+            if (sUID == ctx.card.uid) {
+                if (lastReadSuccess)
+                    isoDep.timeout = ctx.card.pauseBeforePIN2 + 5000
+                else
+                    isoDep.timeout = ctx.card.pauseBeforePIN2 + 65000
 
-            val coinEngine = CoinEngineFactory.createCardano(ctx!!)!!
-            coinEngine.setOnNeedSendTransaction { tx ->
-                if (tx != null) {
-                    val intent = Intent(this, SendTransactionActivity::class.java)
-                    ctx.saveToIntent(intent)
-                    intent.putExtra(Constant.EXTRA_TX, tx)
-                    startActivityForResult(intent, Constant.REQUEST_CODE_SEND_TRANSACTION_)
-                }
-            }
-//                val transactionToSign = coinEngine?.constructTransaction(amount, fee, isIncludeFee, outAddressStr)
-//
-//                task = SignTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, transactionToSign)
-//                task?.start()
-
-
-            val tx: OneTouchSignTask.TransactionToSign = object : OneTouchSignTask.TransactionToSign {
-                var txToSign: SignTask.TransactionToSign? = null
-                suspend fun requestBalanceAndUnspentTransactions(): Boolean = suspendCoroutine { cont ->
-                    coinEngine!!.requestBalanceAndUnspentTransactions(object : CoinEngine.BlockchainRequestsCallbacks {
-                        override fun onComplete(success: Boolean?) {
-                            cont.resume(success!!)
-                        }
-
-                        override fun onProgress() {
-                        }
-
-                        override fun allowAdvance(): Boolean {
-                            return true
-                        }
-                    })
-                }
-
-                fun initData(card: TangemCard) {
-//                        if( ctx==null ){
-//                            ctx=TangemContext(card)
-//                        }
-                    if (ctx.card == null) {
-                        ctx.card = card
+                val coinEngine = CoinEngineFactory.create(ctx)
+                coinEngine?.setOnNeedSendTransaction { tx ->
+                    if (tx != null) {
+                        val intent = Intent(this, SendTransactionActivity::class.java)
+                        ctx.saveToIntent(intent)
+                        intent.putExtra(Constant.EXTRA_TX, tx)
+                        startActivityForResult(intent, Constant.REQUEST_CODE_SEND_TRANSACTION_)
                     }
-                    if (ctx.coinData == null) {
-                        ctx.coinData = CardanoData()
-                    }
-                    if (ctx.coinData.wallet.isNullOrEmpty()) {
-                        coinEngine.defineWallet()
-                        runBlocking { requestBalanceAndUnspentTransactions() }
-                        Log.e(MainActivity.TAG, "requestBalanceAndUnspentTransactions completed")
-
-//                            coinEngine?.setOnNeedSendTransaction { tx ->
-//                                if (tx != null) {
-//                                    val intent = Intent(this@SignTransactionActivity, SendTransactionActivity::class.java)
-//                                    ctx!!.saveToIntent(intent)
-//                                    intent.putExtra(Constant.EXTRA_TX, tx)
-//                                    startActivityForResult(intent, Constant.REQUEST_CODE_SEND_TRANSACTION_)
-//                                }
-//                            }
-
-                    }
-                    if (txToSign == null) txToSign = coinEngine!!.constructTransaction(amount, fee, isIncludeFee, outAddressStr)
                 }
+                val transactionToSign = coinEngine?.constructTransaction(amount, fee, isIncludeFee, outAddressStr)
 
-                override fun isSigningOnCardSupported(card: TangemCard?): Boolean {
-                    initData(card!!)
-                    return (card?.blockchainID == Blockchain.Cardano.id) and (txToSign!!.isSigningMethodSupported(card?.signingMethod))
-                }
-
-                override fun getHashesToSign(card: TangemCard?): Array<ByteArray> {
-                    initData(card!!)
-                    return txToSign!!.hashesToSign
-                }
-
-                override fun getRawDataToSign(card: TangemCard?): ByteArray {
-                    initData(card!!)
-                    return txToSign!!.rawDataToSign
-                }
-
-                override fun getHashAlgToSign(card: TangemCard?): String {
-                    initData(card!!)
-                    return txToSign!!.hashAlgToSign
-                }
-
-                override fun getIssuerTransactionSignature(card: TangemCard?, dataToSignByIssuer: ByteArray?): ByteArray {
-                    initData(card!!)
-                    return txToSign!!.getIssuerTransactionSignature(dataToSignByIssuer)
-                }
-
-                override fun onSignCompleted(card: TangemCard?, signature: ByteArray?) {
-                    initData(card!!)
-                    txToSign!!.onSignCompleted(signature)
-                }
-
-            }
-            task = OneTouchSignTask(NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, tx)
-            task!!.start()
-
-//            } else
-//                nfcManager.ignoreTag(isoDep.tag)
+                signTransactionTask = SignTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, transactionToSign)
+                signTransactionTask?.start()
+            } else
+                nfcManager.ignoreTag(isoDep.tag)
 
         } catch (e: CardProtocol.TangemException_WrongAmount) {
             try {
@@ -262,7 +171,7 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
     }
 
     override fun onReadFinish(cardProtocol: CardProtocol?) {
-        task = null
+        signTransactionTask = null
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
                 rlProgressBar.post { rlProgressBar.visibility = View.GONE }
@@ -344,7 +253,7 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
     }
 
     override fun onReadCancel() {
-        task = null
+        signTransactionTask = null
 
         progressBar?.postDelayed({
             try {
