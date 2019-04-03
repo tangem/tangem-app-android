@@ -109,7 +109,7 @@
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.ui.activity.SignTransactionActivity"
+            android:name="com.tangem.ui.SignTransactionActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
