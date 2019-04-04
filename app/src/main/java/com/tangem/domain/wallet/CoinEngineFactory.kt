@@ -76,31 +76,20 @@ object CoinEngineFactory {
         var result: CoinEngine?
         try {
             result = EthEngine(context)// CardanoEngine(context)
-
         } catch (e: Exception) {
             e.printStackTrace()
             result = null
             Log.e(TAG, "Can't create Cardano CoinEngine!")
         }
         return result
-
-//        var result: EthEngine?
-//        try {
-//            result = EthEngine(context)
-//
-//        } catch (e: Exception) {
-//            e.printStackTrace()
-//            result = null
-//            Log.e(TAG, "Can't create Cardano CoinEngine!")
-//        }
-//        return result
     }
 
     fun createCardanoData(): CoinData? {
-        return EthData()// CardanoData()
+        return CardanoData()
     }
 
     fun isCardano(blockchainID: String): Boolean {
-        return blockchainID==Blockchain.Ethereum.id
+        return blockchainID == Blockchain.Cardano.id
     }
+
 }
