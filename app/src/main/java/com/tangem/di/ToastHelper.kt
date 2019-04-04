@@ -27,6 +27,8 @@ class ToastHelper {
 
     fun showSnackbarSuccess(context: Context, vg: ViewGroup, message: String) {
         val snackbar = Snackbar.make(vg, message, Snackbar.LENGTH_INDEFINITE)
+        val snackView = snackbar.view
+        snackView.setBackgroundColor(context.resources.getColor(R.color.msg_okay))
         snackbar.setAction(R.string.ok) {
             snackbar.dismiss()
         }
@@ -35,6 +37,8 @@ class ToastHelper {
 
     fun showSnackbarError(context: Context, vg: ViewGroup, message: String) {
         val snackbar = Snackbar.make(vg, message, Snackbar.LENGTH_INDEFINITE)
+        val snackView = snackbar.view
+        snackView.setBackgroundColor(context.resources.getColor(R.color.msg_err))
         snackbar.setAction(R.string.ok) {
             snackbar.dismiss()
         }
