@@ -75,7 +75,8 @@ object CoinEngineFactory {
     fun createCardano(context: TangemContext): CoinEngine? {
         var result: CoinEngine?
         try {
-            result = EthEngine(context)// CardanoEngine(context)
+            result = CardanoEngine(context)//EthEngine(context)//
+
         } catch (e: Exception) {
             e.printStackTrace()
             result = null
@@ -85,11 +86,10 @@ object CoinEngineFactory {
     }
 
     fun createCardanoData(): CoinData? {
-        return CardanoData()
+        return CardanoData()//EthData()// CardanoData()
     }
 
     fun isCardano(blockchainID: String): Boolean {
-        return blockchainID == Blockchain.Cardano.id
+        return blockchainID==Blockchain.Cardano.id//Ethereum.id
     }
-
 }
