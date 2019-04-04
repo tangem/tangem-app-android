@@ -325,6 +325,7 @@ public class ServerApiElectrum {
             try {
                 Log.i(TAG, host + " " + port);
                 sslSocket = (SSLSocket) sf.createSocket(host, port);
+                sslSocket.setSoTimeout(3000);
                 try {
                     OutputStream os = sslSocket.getOutputStream();
                     OutputStreamWriter out = new OutputStreamWriter(os, "UTF-8");
