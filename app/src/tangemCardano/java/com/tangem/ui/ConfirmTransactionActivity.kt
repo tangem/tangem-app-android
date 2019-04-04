@@ -91,7 +91,7 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         btnSend.visibility = View.INVISIBLE
 
         if (!engine.allowSelectFeeLevel()) {
-            rgFee.visibility = View.INVISIBLE
+            rgFee.visibility = View.GONE
         }
 
         // set listeners

@@ -419,6 +419,7 @@ public class CustomReadCardTask extends Thread {
 
                 } finally {
                     Log.i(TAG, String.format("[-- Finish task -- %s --]", getClass().getSimpleName()));
+                    mNotifications.onReadWait(0);
                     mNotifications.onReadFinish(protocol);
                 }
             } finally {
