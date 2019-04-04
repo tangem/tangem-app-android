@@ -23,6 +23,7 @@ import com.tangem.card_android.data.EXTRA_TANGEM_CARD
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 import com.tangem.card_android.data.asBundle
 import com.tangem.card_common.data.TangemCard
+import com.tangem.card_common.reader.CardCrypto
 import com.tangem.card_common.reader.CardProtocol
 import com.tangem.card_common.tasks.CustomReadCardTask
 import com.tangem.card_common.tasks.OneTouchSignTask
@@ -123,13 +124,7 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         try {
             // get IsoDep handle and run cardReader thread
             val isoDep = IsoDep.get(tag)
-            val uid = tag.id
-//            val sUID = Util.byteArrayToHexString(uid)
 
-//            if (sUID == ctx.card.uid){
-//                if (lastReadSuccess)
-//                    isoDep.timeout = ctx.card.pauseBeforePIN2 + 5000
-//                else
             isoDep.timeout = 65000
 
             val coinEngine = CoinEngineFactory.createCardano(ctx!!)!!
@@ -141,11 +136,6 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                     startActivityForResult(intent, Constant.REQUEST_CODE_SEND_TRANSACTION_)
                 }
             }
-//                val transactionToSign = coinEngine?.constructTransaction(amount, fee, isIncludeFee, outAddressStr)
-//
-//                task = SignTask(ctx.card, NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, transactionToSign)
-//                task?.start()
-
 
             val tx: OneTouchSignTask.TransactionToSign = object : OneTouchSignTask.TransactionToSign {
                 var txToSign: SignTask.TransactionToSign? = null
@@ -165,9 +155,6 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                 }
 
                 fun initData(card: TangemCard) {
-//                        if( ctx==null ){
-//                            ctx=TangemContext(card)
-//                        }
                     if (ctx.card == null) {
                         ctx.card = card
                     }
@@ -178,16 +165,6 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                         coinEngine.defineWallet()
                         runBlocking { requestBalanceAndUnspentTransactions() }
                         Log.e(MainActivity.TAG, "requestBalanceAndUnspentTransactions completed")
-
-//                            coinEngine?.setOnNeedSendTransaction { tx ->
-//                                if (tx != null) {
-//                                    val intent = Intent(this@SignTransactionActivity, SendTransactionActivity::class.java)
-//                                    ctx!!.saveToIntent(intent)
-//                                    intent.putExtra(Constant.EXTRA_TX, tx)
-//                                    startActivityForResult(intent, Constant.REQUEST_CODE_SEND_TRANSACTION_)
-//                                }
-//                            }
-
                     }
                     if (txToSign == null) txToSign = coinEngine!!.constructTransaction(amount, fee, isIncludeFee, outAddressStr)
                 }
@@ -195,6 +172,22 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                 override fun isSigningOnCardSupported(card: TangemCard?): Boolean {
                     initData(card!!)
                     return CoinEngineFactory.isCardano(card?.blockchainID) and (txToSign!!.isSigningMethodSupported(card?.signingMethod))
+                }
+
+                override fun isIssuerCanSignData(card: TangemCard?): Boolean {
+                    return try {
+                        card?.issuer?.privateDataKey!=null
+                    } catch (e: java.lang.Exception) {
+                        false
+                    }
+                }
+
+                override fun isIssuerCanSignTransaction(card: TangemCard?): Boolean {
+                    return try {
+                        card?.issuer?.privateTransactionKey!=null
+                    } catch (e: java.lang.Exception) {
+                        false
+                    }
                 }
 
                 override fun getHashesToSign(card: TangemCard?): Array<ByteArray> {
@@ -214,6 +207,10 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
 
                 override fun getIssuerTransactionSignature(card: TangemCard?, dataToSignByIssuer: ByteArray?): ByteArray {
                     initData(card!!)
+                    if( card.issuer!=null && card.issuer.privateTransactionKey!=null)
+                    {
+                        return CardCrypto.Signature(card.issuer.privateTransactionKey, dataToSignByIssuer)
+                    }
                     return txToSign!!.getIssuerTransactionSignature(dataToSignByIssuer)
                 }
 
@@ -225,9 +222,6 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
             }
             task = OneTouchSignTask(NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this, tx)
             task!!.start()
-
-//            } else
-//                nfcManager.ignoreTag(isoDep.tag)
 
         } catch (e: CardProtocol.TangemException_WrongAmount) {
             try {
@@ -354,36 +348,19 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         }, 500)
     }
 
-//    private val waitSecurityDelayDialogNew = WaitSecurityDelayDialogNew()
-
     override fun onReadBeforeRequest(timeout: Int) {
         LOG.i(TAG, "onReadBeforeRequest timeout $timeout")
         WaitSecurityDelayDialog.onReadBeforeRequest(this, timeout)
-
-//        if (!waitSecurityDelayDialogNew.isAdded)
-//            waitSecurityDelayDialogNew.show(supportFragmentManager, WaitSecurityDelayDialogNew.TAG)
-
-
-//        val readBeforeRequest = ReadBeforeRequest()
-//        readBeforeRequest.timeout = timeout
-//        EventBus.getDefault().post(readBeforeRequest)
     }
 
     override fun onReadAfterRequest() {
         LOG.i(TAG, "onReadAfterRequest")
         WaitSecurityDelayDialog.onReadAfterRequest(this)
-
-//        val readAfterRequest = ReadAfterRequest()
-//        EventBus.getDefault().post(readAfterRequest)
     }
 
     override fun onReadWait(msec: Int) {
         LOG.i(TAG, "onReadWait msec $msec")
         WaitSecurityDelayDialog.onReadWait(this, msec)
-
-//        val readWait = ReadWait()
-//        readWait.msec = msec
-//        EventBus.getDefault().post(readWait)
     }
 
 }
