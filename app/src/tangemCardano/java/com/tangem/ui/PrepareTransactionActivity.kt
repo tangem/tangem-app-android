@@ -53,30 +53,11 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
     //    private lateinit var ctx: TangemContext
     private lateinit var nfcManager: NfcManager
 
-    override fun onStart() {
-        super.onStart()
-        if (!EventBus.getDefault().isRegistered(this))
-            EventBus.getDefault().register(this)
-    }
-
-    override fun onDestroy() {
-        EventBus.getDefault().unregister(this)
-        super.onDestroy()
-    }
-
-    @Subscribe
-    fun onTransactionFinishWithSuccess(transactionFinishWithSuccess: TransactionFinishWithSuccess) {
-        transactionFinishWithSuccess.message?.let { toastHelper.showSnackbarSuccess(this, cl, it) }
-    }
-
-    @Subscribe
-    fun onTransactionFinishWithError(transactionFinishWithError: TransactionFinishWithError) {
-        transactionFinishWithError.message?.let { toastHelper.showSnackbarError(this, cl, it) }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_transaction)
+
+
 
         App.navigatorComponent.inject(this)
         App.toastHelperComponent.inject(this)
@@ -84,9 +65,6 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         nfcManager = NfcManager(this, this)
         lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
-//        ctx = TangemContext.loadFromBundle(this, intent.extras)
-
-//        tvCardID.text = ctx.card?.cidDescription
         val engine = CoinEngineFactory.createCardano(TangemContext())
 
         @Suppress("DEPRECATION") val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
@@ -100,9 +78,6 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         } else {
             rgIncFee.visibility = View.VISIBLE
         }
-
-//        if (ctx.card!!.remainingSignatures < 2)
-//            etAmount.isEnabled = false
 
         tvCurrency.text = engine.balance?.currency
         etAmount.setText(engine.balance?.toValueString())
@@ -162,17 +137,11 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
             } else
                 etWallet.error = null
 
-//            if (etWallet.text.toString() == ctx.coinData!!.wallet) {
-//                etWallet.error = getString(R.string.destination_wallet_address_equal_source_address)
-//                return@setOnClickListener
-//            }
-
             if (!etAmount.error.isNullOrEmpty() || !etWallet.error.isNullOrEmpty()) {
                 return@setOnClickListener
             }
 
             val intent = Intent(baseContext, ConfirmTransactionActivity::class.java)
-//            ctx.saveToIntent(intent)
             intent.putExtra(Constant.EXTRA_TARGET_ADDRESS, etWallet!!.text.toString())
             intent.putExtra(Constant.EXTRA_FEE_INCLUDED, (rgIncFee!!.checkedRadioButtonId == R.id.rbFeeIn))
             intent.putExtra(Constant.EXTRA_AMOUNT, strAmount)
@@ -196,6 +165,27 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
             }
             false
         })
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (!EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().register(this)
+    }
+
+    override fun onDestroy() {
+        EventBus.getDefault().unregister(this)
+        super.onDestroy()
+    }
+
+    @Subscribe
+    fun onTransactionFinishWithSuccess(transactionFinishWithSuccess: TransactionFinishWithSuccess) {
+        transactionFinishWithSuccess.message?.let { toastHelper.showSnackbarSuccess(this, cl, it) }
+    }
+
+    @Subscribe
+    fun onTransactionFinishWithError(transactionFinishWithError: TransactionFinishWithError) {
+        transactionFinishWithError.message?.let { toastHelper.showSnackbarError(this, cl, it) }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
