@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ProgressBar;
 
+import com.tangem.card_common.util.Log;
 import com.tangem.wallet.R;
 
 import java.util.Timer;
@@ -104,22 +105,39 @@ public class WaitSecurityDelayDialog extends DialogFragment {
     }
 
     public static void onReadWait(final AppCompatActivity activity, final int msec) {
+        Log.e(TAG, "onReadWait callback(" + msec + ")");
         activity.runOnUiThread(() -> {
+            Log.e(TAG, "onReadWait on ui thread(" + msec + ")");
             if (timerToShowDelayDialog != null) {
                 timerToShowDelayDialog.cancel();
                 timerToShowDelayDialog = null;
             }
 
             if (msec == 0) {
-                if (instance != null && instance.isAdded()) {
-                    instance.dismiss();
-                    instance = null;
+                if (instance != null) {
+                    if (instance.isAdded()) {
+                        instance.dismiss();
+                        instance = null;
+                    } else {
+                        Log.e(TAG, "onReadWait(0) with not added dialog");
+//                        instance.progressBar.postDelayed(() -> {
+//                            Log.e(TAG, "onReadWait(0) dismiss delayed");
+                        try {
+                            instance.dismiss();
+                            instance = null;
+                        }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+                        }
+//                        }, 10000);
+                    }
                 }
                 return;
             }
 
             if (instance == null) {
-                if (msec > minRemainingDelayToShowDialog) {
+                if (msec > delayBeforeShowDialog + minRemainingDelayToShowDialog) {
                     instance = new WaitSecurityDelayDialog();
                     // 1000ms - card delay notification interval
                     instance.setup(msec + 1000, 1000);
