@@ -20,6 +20,10 @@ public class OneTouchSignTask extends ReadCardInfoTask {
     public interface TransactionToSign {
         boolean isSigningOnCardSupported(TangemCard card);
 
+        boolean isIssuerCanSignData(TangemCard card);
+
+        boolean isIssuerCanSignTransaction(TangemCard card);
+
         byte[][] getHashesToSign(TangemCard card) throws Exception;
 
         byte[] getRawDataToSign(TangemCard card) throws Exception;
@@ -46,45 +50,51 @@ public class OneTouchSignTask extends ReadCardInfoTask {
         mNotifications.onReadProgress(protocol, 30);
         if (isCancelled) return;
 
-        if (mCard.getPauseBeforePIN2() > 0) {
-            mNotifications.onReadWait(mCard.getPauseBeforePIN2());
-        }
-
         if (!transactionToSign.isSigningOnCardSupported(mCard)) {
             throw new CardProtocol.TangemException("Signing method isn't supported!");
         }
 
         TLVList signResult;
-        switch (mCard.getSigningMethod()) {
-            case Sign_Hash:
-                signResult = protocol.run_SignHashes(pinsProvider.getPIN2(), transactionToSign.getHashesToSign(mCard), null, null, null);
-                break;
-            case Sign_Hash_Validated_By_Issuer:
-            case Sign_Hash_Validated_By_Issuer_And_WriteIssuerData:
-                ByteArrayOutputStream bs = new ByteArrayOutputStream();
-                byte[][] hashes = transactionToSign.getHashesToSign(mCard);
-                if (hashes.length > 10) throw new CardProtocol.TangemException("To much hashes in one transaction!");
-                for (int i = 0; i < hashes.length; i++) {
-                    if (i != 0 && hashes[0].length != hashes[i].length)
-                        throw new CardProtocol.TangemException("Hashes length must be identical!");
-                    bs.write(hashes[i]);
-                }
-                signResult = protocol.run_SignHashes(pinsProvider.getPIN2(), hashes, transactionToSign.getIssuerTransactionSignature(mCard, bs.toByteArray()), null, null);
-                break;
-            case Sign_Raw:
-                signResult = protocol.run_SignRaw(pinsProvider.getPIN2(), transactionToSign.getHashAlgToSign(mCard), transactionToSign.getRawDataToSign(mCard), null, null, null);
-                break;
-            case Sign_Raw_Validated_By_Issuer:
-            case Sign_Raw_Validated_By_Issuer_And_WriteIssuerData:
-                byte[] txOut = transactionToSign.getRawDataToSign(mCard);
-                signResult = protocol.run_SignRaw(pinsProvider.getPIN2(), transactionToSign.getHashAlgToSign(mCard), txOut, transactionToSign.getIssuerTransactionSignature(mCard, txOut), null, null);
-                break;
-            default:
-                throw new CardProtocol.TangemException("Signing method isn't supported!");
+
+        if (transactionToSign.isIssuerCanSignTransaction(mCard) &&
+                (
+                        mCard.allowedSigningMethod.contains(TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer) ||
+                                (
+                                        transactionToSign.isIssuerCanSignData(mCard) &&
+                                                mCard.allowedSigningMethod.contains(TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer_And_WriteIssuerData)
+                                )
+                )
+        ) {
+            ByteArrayOutputStream bs = new ByteArrayOutputStream();
+            byte[][] hashes = transactionToSign.getHashesToSign(mCard);
+            if (hashes.length > 10) throw new CardProtocol.TangemException("To much hashes in one transaction!");
+            for (int i = 0; i < hashes.length; i++) {
+                if (i != 0 && hashes[0].length != hashes[i].length)
+                    throw new CardProtocol.TangemException("Hashes length must be identical!");
+                bs.write(hashes[i]);
+            }
+            signResult = protocol.run_SignHashes(pinsProvider.getPIN2(), hashes, transactionToSign.getIssuerTransactionSignature(mCard, bs.toByteArray()), null, null);
+        } else if (
+                transactionToSign.isIssuerCanSignTransaction(mCard) &&
+                        (
+                                mCard.allowedSigningMethod.contains(TangemCard.SigningMethod.Sign_Raw_Validated_By_Issuer) ||
+                                        (
+                                                transactionToSign.isIssuerCanSignData(mCard) &&
+                                                        mCard.allowedSigningMethod.contains(TangemCard.SigningMethod.Sign_Raw_Validated_By_Issuer_And_WriteIssuerData)
+                                        )
+                        )
+        ) {
+            byte[] txOut = transactionToSign.getRawDataToSign(mCard);
+            signResult = protocol.run_SignRaw(pinsProvider.getPIN2(), transactionToSign.getHashAlgToSign(mCard), txOut, transactionToSign.getIssuerTransactionSignature(mCard, txOut), null, null);
+        } else if (mCard.allowedSigningMethod.contains(TangemCard.SigningMethod.Sign_Hash)) {
+            signResult = protocol.run_SignHashes(pinsProvider.getPIN2(), transactionToSign.getHashesToSign(mCard), null, null, null);
+        } else if (mCard.allowedSigningMethod.contains(TangemCard.SigningMethod.Sign_Raw)) {
+            signResult = protocol.run_SignRaw(pinsProvider.getPIN2(), transactionToSign.getHashAlgToSign(mCard), transactionToSign.getRawDataToSign(mCard), null, null, null);
+        } else {
+            throw new CardProtocol.TangemException("Signing method isn't supported!");
         }
 
         transactionToSign.onSignCompleted(mCard, signResult.getTLV(TLV.Tag.TAG_Signature).Value);
         mNotifications.onReadProgress(protocol, 100);
-
     }
 }
