@@ -8,7 +8,6 @@ import android.nfc.Tag
 import android.os.Build
 import android.os.Bundle
 import android.text.Html
-import android.text.TextUtils
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnTouchListener
@@ -50,14 +49,11 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
     @Inject
     internal lateinit var toastHelper: ToastHelper
 
-    //    private lateinit var ctx: TangemContext
     private lateinit var nfcManager: NfcManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prepare_transaction)
-
-
 
         App.navigatorComponent.inject(this)
         App.toastHelperComponent.inject(this)
