@@ -16,7 +16,7 @@ public enum Blockchain {
     BitcoinCash("BCH", "BCH", 100000000.0, R.drawable.ic_logo_bitcoin_cash, "Bitcoin Cash"),
     Litecoin("LTC", "LTC", 100000000.0, R.drawable.tangem2, "Litecoin"),
     Rootstock("RSK", "RBTC", 1.0, R.drawable.tangem2, "Rootstock"),
-    RootstockToken("Token", "RBTC", 1.0, R.drawable.tangem2, "Rootstock"),
+    RootstockToken("RskToken", "RBTC", 1.0, R.drawable.tangem2, "Rootstock"),
     Cardano("CARDANO", "ADA", 1000000.0, R.drawable.tangem2, "Cardano"),
     Ripple ("XRP", "XRP", 1000000.0, R.drawable.tangem2, "Ripple");
 
