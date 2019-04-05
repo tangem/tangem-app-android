@@ -768,30 +768,26 @@ public class BtcEngine extends CoinEngine {
         final ServerApiElectrum.ResponseListener electrumListener  = new ServerApiElectrum.ResponseListener() {
             @Override
             public void onSuccess(ElectrumRequest electrumRequest) {
-                BigDecimal fee;
+                BigDecimal kbFee;
                 if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetFee)) {
                     try {
-                        fee = new BigDecimal(electrumRequest.getResultString()); //fee per KB
+                        kbFee = new BigDecimal(electrumRequest.getResultString()); //fee per KB
 
-                        if (fee.equals(BigDecimal.ZERO)) {
+                        if (kbFee.equals(BigDecimal.ZERO)) {
                             serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
                         }
 
-//                        if (calcSize != 0) {
-                        fee = fee.multiply(new BigDecimal(calcSize)).divide(new BigDecimal(1024)); // (per KB -> per byte)*size
-//                        } else {
-//                            serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
-//                        }
+                        BigDecimal minByteFee = kbFee.divide(new BigDecimal(1024)); // per KB -> per byte
+                        BigDecimal normalByteFee = minByteFee.add(new BigDecimal(0.00000010));
+                        BigDecimal maxByteFee = minByteFee.add(new BigDecimal(0.00000025));
 
-                        //compare fee to usual relay fee
-//                        if (fee.compareTo(relayFee) < 0) {
-//                            fee = relayFee;
-//                        }
-                        fee = fee.setScale(8, RoundingMode.DOWN);
+                        BigDecimal minFee = minByteFee.multiply(new BigDecimal(calcSize)).setScale(8, RoundingMode.DOWN);
+                        BigDecimal normalFee = normalByteFee.multiply(new BigDecimal(calcSize)).setScale(8, RoundingMode.DOWN);
+                        BigDecimal maxFee = maxByteFee.multiply(new BigDecimal(calcSize)).setScale(8, RoundingMode.DOWN);
 
-                        CoinEngine.Amount minAmount = new CoinEngine.Amount(fee,  ctx.getBlockchain().getCurrency());
-                        CoinEngine.Amount normalAmount = new CoinEngine.Amount(fee.multiply(new BigDecimal(3)),  ctx.getBlockchain().getCurrency());
-                        CoinEngine.Amount maxAmount = new CoinEngine.Amount(fee.multiply(new BigDecimal(6)),  ctx.getBlockchain().getCurrency());
+                        CoinEngine.Amount minAmount = new CoinEngine.Amount(minFee,  ctx.getBlockchain().getCurrency());
+                        CoinEngine.Amount normalAmount = new CoinEngine.Amount(normalFee,  ctx.getBlockchain().getCurrency());
+                        CoinEngine.Amount maxAmount = new CoinEngine.Amount(maxFee,  ctx.getBlockchain().getCurrency());
 
                         coinData.minFee = minAmount;
                         coinData.normalFee = normalAmount;
