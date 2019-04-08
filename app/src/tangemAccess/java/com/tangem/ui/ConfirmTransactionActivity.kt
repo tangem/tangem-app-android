@@ -1,4 +1,4 @@
-package com.tangem.ui.activity
+package com.tangem.ui
 
 import android.app.Activity
 import android.content.Intent
@@ -25,12 +25,14 @@ import com.tangem.card_android.data.loadFromBundle
 import com.tangem.card_common.data.TangemCard
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.activity_confirm_transaction.*
 import org.greenrobot.eventbus.EventBus
 import java.io.IOException
 import java.util.*
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
+import com.tangem.ui.activity.PinRequestActivity
+import com.tangem.ui.activity.SignTransactionActivity
+import kotlinx.android.synthetic.tangemAccess.activity_confirm_transaction.*
 
 class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
