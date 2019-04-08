@@ -2,9 +2,10 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cl"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.tangem.ui.activity.PrepareTransactionActivity"
+    tools:context="com.tangem.ui.PrepareTransactionActivity"
     tools:ignore="contentDescription">
 
     <TextView
@@ -32,6 +33,7 @@
         android:paddingTop="24dp"
         android:paddingEnd="8dp"
         android:paddingBottom="24dp"
+        android:visibility="gone"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -139,6 +141,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
+            android:drawableEnd="@android:drawable/ic_menu_close_clear_cancel"
             android:fontFamily="@font/maax"
             android:hint="@string/enter_wallet_address"
             android:imeOptions="actionNext"
