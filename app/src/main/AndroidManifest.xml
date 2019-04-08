@@ -29,12 +29,12 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <provider
-            android:name="com.tangem.data.LogFileProvider"
-            android:authorities="@string/log_file_provider_authorities"
-            android:enabled="true"
-            android:exported="false"
-            android:grantUriPermissions="true" />
+        <!--<provider-->
+            <!--android:name="com.tangem.data.LogFileProvider"-->
+            <!--android:authorities="@string/log_file_provider_authorities"-->
+            <!--android:enabled="true"-->
+            <!--android:exported="false"-->
+            <!--android:grantUriPermissions="true" />-->
 
         <activity
             android:name="com.tangem.ui.activity.LogoActivity"
@@ -99,17 +99,17 @@
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.ui.activity.PrepareTransactionActivity"
+            android:name="com.tangem.ui.PrepareTransactionActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.ui.activity.ConfirmTransactionActivity"
+            android:name="com.tangem.ui.ConfirmTransactionActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.ui.activity.SignTransactionActivity"
+            android:name="com.tangem.ui.SignTransactionActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
