@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.tangem.ui.activity.ConfirmTransactionActivity"
+    tools:context="com.tangem.ui.ConfirmTransactionActivity"
     tools:ignore="Autofill">
 
     <TextView
@@ -43,7 +43,8 @@
             android:fontFamily="@font/maax"
             android:text="@string/from_banknote"
             android:textColor="@color/primary"
-            android:textSize="@dimen/text_size_medium" />
+            android:textSize="@dimen/text_size_medium"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/tvCardID"
@@ -55,6 +56,7 @@
             android:textColor="@color/black"
             android:textSize="@dimen/text_size_medium"
             android:textStyle="bold"
+            android:visibility="gone"
             tools:text="BB00 0000 1210 0233" />
 
         <TextView
@@ -64,7 +66,8 @@
             android:fontFamily="@font/maax"
             android:text="@string/with_balance"
             android:textColor="@color/primary"
-            android:textSize="@dimen/text_size_medium" />
+            android:textSize="@dimen/text_size_medium"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/tvBalance"
@@ -76,6 +79,7 @@
             android:textColor="@color/black"
             android:textSize="@dimen/text_size_medium"
             android:textStyle="bold"
+            android:visibility="gone"
             tools:text="4.51735 BTC" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -139,7 +143,7 @@
                 android:layout_marginBottom="1dp"
                 android:fontFamily="@font/maax"
                 android:textColor="@color/primary"
-                android:textSize="14dp"
+                android:textSize="14sp"
                 app:layout_constraintBottom_toBottomOf="@+id/textView3"
                 app:layout_constraintLeft_toRightOf="@+id/textView3"
                 tools:text="(including fee)" />
