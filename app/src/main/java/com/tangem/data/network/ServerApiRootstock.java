@@ -16,7 +16,7 @@ public class ServerApiRootstock {
 
     /**
      * HTTP
-     * Infura
+     * Rootstock
      * <p>
      * eth_getBalance
      * eth_getTransactionCount
