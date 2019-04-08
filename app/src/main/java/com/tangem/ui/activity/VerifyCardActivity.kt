@@ -7,7 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.di.Navigator
-import com.tangem.domain.wallet.TangemContext
+import com.tangem.wallet.TangemContext
 import com.tangem.ui.fragment.VerifyCard
 import com.tangem.wallet.R
 import javax.inject.Inject
