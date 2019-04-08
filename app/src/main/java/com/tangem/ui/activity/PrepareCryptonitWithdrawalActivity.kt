@@ -15,8 +15,8 @@ import android.widget.Toast
 import com.tangem.data.network.Cryptonit
 import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.data.Blockchain
-import com.tangem.domain.wallet.CoinEngineFactory
-import com.tangem.domain.wallet.TangemContext
+import com.tangem.wallet.CoinEngineFactory
+import com.tangem.wallet.TangemContext
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.util.DecimalDigitsInputFilter
 import com.tangem.wallet.R
