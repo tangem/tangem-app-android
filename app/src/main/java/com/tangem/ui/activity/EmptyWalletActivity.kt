@@ -17,7 +17,7 @@ import android.widget.Toast
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.di.Navigator
-import com.tangem.domain.wallet.TangemContext
+import com.tangem.wallet.TangemContext
 import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
 import com.tangem.ui.dialog.WaitSecurityDelayDialog
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
