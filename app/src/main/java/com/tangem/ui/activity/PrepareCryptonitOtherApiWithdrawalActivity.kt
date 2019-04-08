@@ -14,8 +14,8 @@ import com.tangem.Constant
 import com.tangem.data.Blockchain
 import com.tangem.data.network.CryptonitOtherApi
 import com.tangem.di.Navigator
-import com.tangem.domain.wallet.CoinEngineFactory
-import com.tangem.domain.wallet.TangemContext
+import com.tangem.wallet.CoinEngineFactory
+import com.tangem.wallet.TangemContext
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.wallet.R
