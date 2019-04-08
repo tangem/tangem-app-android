@@ -1,14 +1,13 @@
+@file:Suppress("ObsoleteExperimentalCoroutines")
+
 package com.tangem.ui.activity
 
 import android.Manifest
 import android.app.Activity
-import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
-import android.graphics.Color
-import android.net.Uri
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
@@ -21,7 +20,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.android.material.snackbar.Snackbar
 import com.scottyab.rootbeer.RootBeer
 import com.tangem.App
 import com.tangem.Constant
@@ -29,14 +27,23 @@ import com.tangem.card_android.android.nfc.NfcDeviceAntennaLocation
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.card_android.android.reader.NfcReader
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 import com.tangem.card_android.data.loadFromBundle
 import com.tangem.card_android.data.saveToBundle
 import com.tangem.card_common.data.TangemCard
 import com.tangem.card_common.reader.CardProtocol
+import com.tangem.card_common.tasks.CustomReadCardTask
+import com.tangem.card_common.tasks.OneTouchSignTask
 import com.tangem.card_common.tasks.ReadCardInfoTask
+import com.tangem.card_common.tasks.SignTask
+import com.tangem.card_common.util.Log
+import com.tangem.data.Blockchain
 import com.tangem.data.Logger
 import com.tangem.data.network.ServerApiCommon
 import com.tangem.di.Navigator
+import com.tangem.di.ToastHelper
+import com.tangem.domain.wallet.CoinEngine
 import com.tangem.domain.wallet.CoinEngineFactory
 import com.tangem.domain.wallet.TangemContext
 import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
@@ -52,9 +59,9 @@ import kotlinx.android.synthetic.main.layout_touch_card.*
 import java.io.File
 import java.util.*
 import javax.inject.Inject
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
-import com.tangem.di.ToastHelper
+import kotlinx.coroutines.runBlocking
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, PopupMenu.OnMenuItemClickListener {
 
@@ -74,7 +81,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     private lateinit var nfcDeviceAntenna: NfcDeviceAntennaLocation
     private var unsuccessReadCount = 0
     private var lastTag: Tag? = null
-    private var readCardInfoTask: ReadCardInfoTask? = null
+    private var task: CustomReadCardTask? = null
     private var onNfcReaderCallback: NfcAdapter.ReaderCallback? = null
 
     override fun onNewIntent(intent: Intent?) {
@@ -142,7 +149,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                 val responseBuildVersion = responseVersionName.split('.').last()
                 val appBuildVersion = BuildConfig.VERSION_NAME.split('.').last()
                 if (responseBuildVersion.toInt() > appBuildVersion.toInt())
-                    toastHelper.showSnackbarUpdateVersion(this, cl, responseVersionName)
+                    if (BuildConfig.FLAVOR.equals(Constant.FLAVOR_TANGEM_ACCESS))
+                        toastHelper.showSnackbarUpdateVersion(this, cl, responseVersionName)
             } catch (E: Exception) {
                 E.printStackTrace()
             }
@@ -237,8 +245,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
 
             lastTag = tag
 
-            readCardInfoTask = ReadCardInfoTask(NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
-            readCardInfoTask?.start()
+            task = ReadCardInfoTask(NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
+            task?.start()
         } catch (e: Exception) {
             e.printStackTrace()
             nfcManager.notifyReadResult(false)
@@ -252,12 +260,12 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     }
 
     public override fun onPause() {
-        readCardInfoTask?.cancel(true)
+        task?.cancel(true)
         super.onPause()
     }
 
     public override fun onStop() {
-        readCardInfoTask?.cancel(true)
+        task?.cancel(true)
         super.onStop()
     }
 
@@ -270,7 +278,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     }
 
     override fun onReadFinish(cardProtocol: CardProtocol?) {
-        readCardInfoTask = null
+        task = null
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
                 nfcManager.notifyReadResult(true)
@@ -336,7 +344,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
     }
 
     override fun onReadCancel() {
-        readCardInfoTask = null
+        task = null
         ReadCardInfoTask.resetLastReadInfo()
         rlProgressBar.postDelayed({
             try {
