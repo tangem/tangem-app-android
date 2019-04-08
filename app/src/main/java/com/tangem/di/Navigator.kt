@@ -4,7 +4,9 @@ import android.app.Activity
 import android.nfc.Tag
 import com.tangem.Constant
 import com.tangem.domain.wallet.TangemContext
+import com.tangem.ui.PrepareTransactionActivity
 import com.tangem.ui.activity.*
+import com.tangem.wallet.BuildConfig
 
 class Navigator {
 
@@ -69,7 +71,14 @@ class Navigator {
     }
 
     fun showPrepareTransaction(context: Activity, ctx: TangemContext) {
-        context.startActivityForResult(PrepareTransactionActivity.callingIntent(context, ctx), Constant.REQUEST_CODE_SEND_TRANSACTION)
+        when (BuildConfig.FLAVOR) {
+            Constant.FLAVOR_TANGEM_CARDANO -> {
+                context.startActivity(PrepareTransactionActivity.callingIntent(context, ctx))
+            }
+            else -> {
+                context.startActivityForResult(PrepareTransactionActivity.callingIntent(context, ctx), Constant.REQUEST_CODE_SEND_TRANSACTION)
+            }
+        }
     }
 
     fun showCreateNewWallet(context: Activity, ctx: TangemContext) {
