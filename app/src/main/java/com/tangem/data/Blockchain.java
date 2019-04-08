@@ -12,12 +12,13 @@ public enum Blockchain {
     Ethereum("ETH", "ETH", 1.0, R.drawable.ic_logo_ethereum, "Ethereum"),
     EthereumTestNet("ETH/test", "ETH", 1.0, R.drawable.ic_logo_ethereum_testnet, "Ethereum Testnet"),
     Token("Token", "ETH", 1.0, R.drawable.ic_logo_bat_token, "Ethereum"),
-    NftToken("NftToken", "", 1.0, R.drawable.ic_logo_bat_token, "Ethereum"),
+    NftToken("NftToken", "", 1.0, R.drawable.tangem2, "Ethereum"),
     BitcoinCash("BCH", "BCH", 100000000.0, R.drawable.ic_logo_bitcoin_cash, "Bitcoin Cash"),
-    Litecoin("LTC", "LTC", 100000000.0, R.drawable.ic_logo_bitcoin, "Litecoin"),
-    Rootstock("RSK", "RBTC", 1.0, R.drawable.ic_logo_bitcoin, "Rootstock"),
-    RootstockToken("Token", "RBTC", 1.0, R.drawable.ic_logo_bat_token, "Rootstock"),
-    Cardano("CARDANO", "ADA", 1000000.0,R.drawable.ic_logo_bitcoin, "Cardano");
+    Litecoin("LTC", "LTC", 100000000.0, R.drawable.tangem2, "Litecoin"),
+    Rootstock("RSK", "RBTC", 1.0, R.drawable.tangem2, "Rootstock"),
+    RootstockToken("RskToken", "RBTC", 1.0, R.drawable.tangem2, "Rootstock"),
+    Cardano("CARDANO", "ADA", 1000000.0, R.drawable.tangem2, "Cardano"),
+    Ripple ("XRP", "XRP", 1000000.0, R.drawable.tangem2, "Ripple");
 
     Blockchain(String ID, String currency, double multiplier, int imageResource, String officialName) {
         mID = ID;
@@ -91,6 +92,9 @@ public enum Blockchain {
         switch (blockchainID) {
             case "BTC":
                 return R.drawable.ic_logo_bitcoin;
+
+            case "BCH":
+                return R.drawable.ic_logo_bitcoin_cash;
 
             case "Token":
                 if (symbolName.equals("SEED"))
