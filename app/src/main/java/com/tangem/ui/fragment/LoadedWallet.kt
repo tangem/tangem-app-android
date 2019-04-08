@@ -24,10 +24,10 @@ import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Blockchain
 import com.tangem.data.network.ServerApiCommon
-import com.tangem.domain.wallet.BalanceValidator
-import com.tangem.domain.wallet.CoinEngine
-import com.tangem.domain.wallet.CoinEngineFactory
-import com.tangem.domain.wallet.TangemContext
+import com.tangem.wallet.BalanceValidator
+import com.tangem.wallet.CoinEngine
+import com.tangem.wallet.CoinEngineFactory
+import com.tangem.wallet.TangemContext
 import com.tangem.ui.activity.LoadedWalletActivity
 import com.tangem.ui.activity.PinRequestActivity
 import com.tangem.ui.activity.PrepareCryptonitWithdrawalActivity
