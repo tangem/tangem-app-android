@@ -29,9 +29,9 @@ import com.tangem.card_common.tasks.CustomReadCardTask
 import com.tangem.card_common.tasks.OneTouchSignTask
 import com.tangem.card_common.tasks.SignTask
 import com.tangem.card_common.util.Log
-import com.tangem.domain.wallet.CoinEngine
-import com.tangem.domain.wallet.CoinEngineFactory
-import com.tangem.domain.wallet.TangemContext
+import com.tangem.wallet.CoinEngine
+import com.tangem.wallet.CoinEngineFactory
+import com.tangem.wallet.TangemContext
 import com.tangem.ui.activity.MainActivity
 import com.tangem.ui.activity.SendTransactionActivity
 import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
