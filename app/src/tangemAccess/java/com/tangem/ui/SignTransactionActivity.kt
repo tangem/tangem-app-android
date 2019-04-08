@@ -22,19 +22,19 @@ import com.tangem.card_android.android.reader.NfcReader
 import com.tangem.card_common.reader.CardProtocol
 import com.tangem.card_common.tasks.SignTask
 import com.tangem.card_common.util.Util
-import com.tangem.domain.wallet.CoinEngine
-import com.tangem.domain.wallet.CoinEngineFactory
-import com.tangem.domain.wallet.TangemContext
+import com.tangem.wallet.CoinEngine
+import com.tangem.wallet.CoinEngineFactory
+import com.tangem.wallet.TangemContext
 import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
 import com.tangem.ui.dialog.WaitSecurityDelayDialog
 import com.tangem.util.LOG
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.activity_sign_transaction.*
 import kotlinx.android.synthetic.main.layout_progress_horizontal.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
 import com.tangem.card_android.data.asBundle
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
+import kotlinx.android.synthetic.tangemAccess.activity_prepare_transaction.*
 
 class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
 
