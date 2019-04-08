@@ -8,8 +8,10 @@ import com.tangem.data.local.PendingTransactionsStorage
 import com.tangem.card_android.android.data.Firmwares
 import com.tangem.card_android.android.data.PINStorage
 import com.tangem.card_common.data.Issuer
+import com.tangem.data.dp.PrefsManager
 import com.tangem.di.*
 import com.tangem.server_android.data.LocalStorage
+import com.tangem.wallet.BuildConfig
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 
@@ -42,6 +44,8 @@ class App : Application() {
         navigatorComponent = buildNavigatorComponent()
         toastHelperComponent = buildToastHelperComponent()
 
+        PrefsManager.getInstance().init(this)
+
         // common init
         if (PINStorage.needInit())
             PINStorage.init(applicationContext)
@@ -52,6 +56,24 @@ class App : Application() {
         localStorage = LocalStorage(applicationContext)
         pinStorage = PINStorage()
         pendingTransactionsStorage = PendingTransactionsStorage(applicationContext)
+
+        if (BuildConfig.DEBUG) {
+            com.tangem.card_common.util.Log.setLogger(
+                    object : com.tangem.card_common.util.LoggerInterface {
+                        override fun i(logTag: String, message: String) {
+                            android.util.Log.i(logTag, message)
+                        }
+
+                        override fun e(logTag: String, message: String) {
+                            android.util.Log.e(logTag, message)
+                        }
+
+                        override fun v(logTag: String, message: String) {
+                            android.util.Log.v(logTag, message)
+                        }
+                    }
+            )
+        }
     }
 
     private fun buildNavigatorComponent(): NavigatorComponent {
