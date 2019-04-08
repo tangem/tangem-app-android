@@ -32,6 +32,9 @@ public class Server {
         }
     }
 
+    /**
+     * https://public-node.rsk.co/
+     */
     public static class ApiRootstock {
         public static final String URL_ROOTSTOCK = ServerURL.API_ROOTSTOCK;
 
