@@ -14,8 +14,6 @@ android {
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 107
-        versionName "0.904.1." + generateVersionName()
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     androidExtensions {
@@ -39,14 +37,14 @@ android {
     flavorDimensions ""
     productFlavors {
         tangemAccess {
-            versionName "0.903.2." + generateVersionName()
-            versionCode 106
+            versionCode 107
+            versionName "0.904.1." + generateVersionName()
             applicationId "com.tangem.wallet"
             signingConfig signingConfigs.debug
         }
         tangemCardano {
-            versionName "0.1.0"
             versionCode 1
+            versionName "0.1.0"
             applicationId "com.tangem.cardano"
             signingConfig signingConfigs.debug
         }
