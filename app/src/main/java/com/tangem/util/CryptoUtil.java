@@ -2,7 +2,7 @@ package com.tangem.util;
 
 import android.util.Log;
 
-import com.tangem.domain.wallet.ECDSASignatureETH;
+import com.tangem.wallet.ECDSASignatureETH;
 import com.tangem.card_common.util.Util;
 
 import org.spongycastle.asn1.ASN1EncodableVector;
