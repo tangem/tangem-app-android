@@ -821,9 +821,9 @@ public class CardProtocol {
      * @throws Exception - if something went wrong
      */
     public TLVList run_SignHashes(String PIN2, byte[][] hashes, byte[] issuerTransactionSignature, byte[] issuerData, byte[] issuerDataSignature) throws Exception {
-        if (mCard.getSigningMethod() != TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer && mCard.getSigningMethod() != TangemCard.SigningMethod.Sign_Hash) {
-            throw new TangemException("Card don't support signing hashes!");
-        }
+//        if (mCard.getSigningMethod() != TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer && mCard.getSigningMethod() != TangemCard.SigningMethod.Sign_Hash) {
+//            throw new TangemException("Card don't support signing hashes!");
+//        }
 
         ByteArrayOutputStream bs = new ByteArrayOutputStream();
         if (hashes.length > 10) throw new TangemException("To much hashes in one transaction!");
@@ -837,7 +837,7 @@ public class CardProtocol {
         rqApdu.addTLV_U8(TLV.Tag.TAG_TrOut_HashSize, hashes[0].length);
         rqApdu.addTLV(TLV.Tag.TAG_TrOut_Hash, bs.toByteArray());
         if (issuerData != null) {
-            if (mCard.getSigningMethod() != TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer_And_WriteIssuerData)
+            if (!mCard.allowedSigningMethod.contains(TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer_And_WriteIssuerData))
                 throw new TangemException("Card don't support simultaneous sign with write issuer data!");
 
             if (issuerDataSignature == null)
@@ -849,7 +849,7 @@ public class CardProtocol {
         if (issuerTransactionSignature != null) {
             //byte[] issuerSignature = CardCrypto.Signature(issuer.getPrivateTransactionKey(), bs.toByteArray());
             rqApdu.addTLV(TLV.Tag.TAG_Issuer_Transaction_Signature, issuerTransactionSignature);
-        } else if (mCard.getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer) {
+        } else if (!mCard.allowedSigningMethod.contains(TangemCard.SigningMethod.Sign_Hash)) {
             throw new TangemException("Card require issuer validation before sign the transaction!");
         }
 
@@ -900,7 +900,7 @@ public class CardProtocol {
         bs.write(bTxOutData);
 
         if (issuerData != null) {
-            if (mCard.getSigningMethod() != TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer_And_WriteIssuerData)
+            if (!mCard.allowedSigningMethod.contains(TangemCard.SigningMethod.Sign_Raw_Validated_By_Issuer_And_WriteIssuerData))
                 throw new TangemException("Card don't support simultaneous sign with write issuer data!");
 
             if (issuerDataSignature == null)
@@ -911,7 +911,7 @@ public class CardProtocol {
         }
         if (issuerTransactionSignature != null) {
             rqApdu.addTLV(TLV.Tag.TAG_Issuer_Transaction_Signature, issuerTransactionSignature);
-        } else if (mCard.getSigningMethod() == TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer) {
+        } else if (!mCard.allowedSigningMethod.contains(TangemCard.SigningMethod.Sign_Raw)) {
             throw new TangemException("Card require issuer validation before sign the transaction!");
         }
 
