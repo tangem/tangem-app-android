@@ -15,7 +15,7 @@
         android:paddingBottom="16dp"
         android:singleLine="false"
         android:textAlignment="center"
-        android:textSize="36sp"
+        android:textSize="36dp"
         tools:ignore="TextViewEdits"
         tools:text="1234" />
 
