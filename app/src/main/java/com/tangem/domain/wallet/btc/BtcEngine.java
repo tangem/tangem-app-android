@@ -12,7 +12,6 @@ import com.tangem.card_common.util.Util;
 import com.tangem.data.Blockchain;
 import com.tangem.data.local.PendingTransactionsStorage;
 import com.tangem.data.network.ElectrumRequest;
-import com.tangem.data.network.ServerApiCommon;
 import com.tangem.data.network.ServerApiElectrum;
 import com.tangem.domain.wallet.BTCUtils;
 import com.tangem.domain.wallet.BalanceValidator;

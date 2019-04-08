@@ -1,6 +1,7 @@
 package com.tangem.card_common.data;
 
 import com.tangem.card_common.reader.CardCrypto;
+import com.tangem.card_common.util.PBKDF2;
 import com.tangem.card_common.util.Util;
 
 import java.util.ArrayList;
@@ -15,11 +16,25 @@ public class Issuer {
 
     static class KeyPair {
         String privateKey;
+        String privateKeyEncrypted;
         String publicKey;
+
 
         byte[] getPrivateKey() throws Exception {
             if (privateKey != null) {
                 return Util.hexToBytes(privateKey);
+            } else if (privateKeyEncrypted != null) {
+                byte[] A = PBKDF2.deriveKey(Util.calculateSHA256(Tangem().getPrivateTransactionKey()),Util.calculateSHA256(Tangem().getPrivateDataKey()), 100);
+                //String B = Util.bytesToHex(CardCrypto.Encrypt(A, Util.hexToBytes(""), true));
+                try {
+                    return CardCrypto.Decrypt(A, Util.hexToBytes(privateKeyEncrypted), true);
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                    throw new Exception("No private key!");
+                }
+
             } else {
                 throw new Exception("No private key!");
             }
@@ -57,8 +72,7 @@ public class Issuer {
         instances.add(unknown);
     }
 
-    public static void fillIssuers(List<Issuer> issuers)
-    {
+    public static void fillIssuers(List<Issuer> issuers) {
         instances.addAll(issuers);
     }
 
@@ -119,4 +133,9 @@ public class Issuer {
     public static Issuer Unknown() {
         return instances.get(0);
     }
+
+    public static Issuer Tangem() {
+        return instances.get(1);
+    }
+
 }
