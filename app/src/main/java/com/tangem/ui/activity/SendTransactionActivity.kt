@@ -9,9 +9,9 @@ import android.view.KeyEvent
 import android.widget.Toast
 import com.tangem.App
 import com.tangem.Constant
-import com.tangem.domain.wallet.CoinEngine
-import com.tangem.domain.wallet.CoinEngineFactory
-import com.tangem.domain.wallet.TangemContext
+import com.tangem.wallet.CoinEngine
+import com.tangem.wallet.CoinEngineFactory
+import com.tangem.wallet.TangemContext
 import com.tangem.ui.event.TransactionFinishWithError
 import com.tangem.ui.event.TransactionFinishWithSuccess
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
