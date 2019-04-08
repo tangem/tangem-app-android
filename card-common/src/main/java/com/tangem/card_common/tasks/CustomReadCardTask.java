@@ -38,7 +38,7 @@ public class CustomReadCardTask extends Thread {
     // this fields are static to optimize process when need enter pin and scan card again
     private static ArrayList<String> lastRead_UnsuccessfullPINs = new ArrayList<>();
     private static TangemCard.EncryptionMode lastRead_Encryption = null;
-    private static String lastRead_UID;
+    private static String lastRead_UID = "";
 
     public static void resetLastReadInfo() {
         lastRead_UID = "";
@@ -419,6 +419,7 @@ public class CustomReadCardTask extends Thread {
 
                 } finally {
                     Log.i(TAG, String.format("[-- Finish task -- %s --]", getClass().getSimpleName()));
+                    mNotifications.onReadWait(0);
                     mNotifications.onReadFinish(protocol);
                 }
             } finally {
