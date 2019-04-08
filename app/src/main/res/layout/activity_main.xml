@@ -30,7 +30,7 @@
             android:layout_marginTop="12dp"
             android:fontFamily="@font/maax"
             android:gravity="center"
-            android:lineSpacingExtra="8sp"
+            android:lineSpacingExtra="8dp"
             android:minHeight="200dp"
             android:paddingLeft="20dp"
             android:paddingTop="20dp"
