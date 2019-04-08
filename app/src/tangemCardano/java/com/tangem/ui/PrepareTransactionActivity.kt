@@ -22,8 +22,8 @@ import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.data.dp.PrefsManager
 import com.tangem.di.Navigator
 import com.tangem.di.ToastHelper
-import com.tangem.domain.wallet.CoinEngineFactory
-import com.tangem.domain.wallet.TangemContext
+import com.tangem.wallet.CoinEngineFactory
+import com.tangem.wallet.TangemContext
 import com.tangem.ui.event.TransactionFinishWithError
 import com.tangem.ui.event.TransactionFinishWithSuccess
 import com.tangem.util.UtilHelper
