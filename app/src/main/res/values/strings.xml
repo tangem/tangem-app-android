@@ -7,7 +7,6 @@
     <string name="no_connection">No connection with blockchain nodes</string>
     <string name="contin">Continue</string>
     <string name="not_found">Not found</string>
-    <!--<string name="wrong_tag_err">Not ISO tag!</string>-->
     <string name="msgCardMustBeLoaded">Card must be loaded first!</string>
     <string name="tag_lost_err">Tag lost!</string>
     <string name="cmd_suffix">command</string>
@@ -56,6 +55,7 @@
     <string name="load_via_qr">Show QR-code</string>
     <string name="show_wallet_qr_code">LOAD</string>
     <string name="beta">BETA</string>
+    <string name="cardano">Cardano</string>
 
     <!-- dialogs -->
     <string name="device_is_rooted">Your Android device is rooted. Security at risk!</string>
@@ -83,6 +83,12 @@
     <string name="reset_pin_2_to_default">Reset PIN2 to default</string>
     <string name="reset_pins_to_default">Reset PINs to default</string>
     <string name="erase_wallet">Erase wallet</string>
+
+    <!-- LogoActivity -->
+    <string name="version_name_debug">BETA v.%1$s \n dev \n build %2$s</string>
+    <string name="version_name_release">BETA v.%1$s</string>
+
+    <string name="welcome_messages">Hello, %1$s! You have %2$d new messages.</string>
 
     <!-- MainActivity -->
     <string name="tap_tangem_card">Tap Tangem card with your smartphone</string>
@@ -143,6 +149,8 @@
     <string name="enter_wallet_address">enter wallet address</string>
     <string name="enter_amount">enter amount</string>
     <string name="verify">Verify</string>
+    <string name="wallet_address_empty">Wallet address is empty</string>
+    <string name="amount_empty">Amount is empty</string>
 
     <!-- PinRequestActivity -->
     <string name="enter_new_pin_or_use_fingerprint_scanner">Enter new PIN or use fingerprint scanner</string>
