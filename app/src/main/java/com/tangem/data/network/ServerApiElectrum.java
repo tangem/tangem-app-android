@@ -3,12 +3,12 @@ package com.tangem.data.network;
 import android.util.Log;
 
 import com.tangem.App;
-import com.tangem.domain.wallet.TangemContext;
+import com.tangem.wallet.TangemContext;
 import com.tangem.data.Blockchain;
-import com.tangem.domain.wallet.bch.BitcoinCashNode;
-import com.tangem.domain.wallet.btc.BitcoinNode;
-import com.tangem.domain.wallet.btc.BitcoinNodeTestNet;
-import com.tangem.domain.wallet.ltc.LitecoinNode;
+import com.tangem.wallet.bch.BitcoinCashNode;
+import com.tangem.wallet.btc.BitcoinNode;
+import com.tangem.wallet.btc.BitcoinNodeTestNet;
+import com.tangem.wallet.ltc.LitecoinNode;
 import com.tangem.wallet.R;
 
 import java.io.BufferedReader;
