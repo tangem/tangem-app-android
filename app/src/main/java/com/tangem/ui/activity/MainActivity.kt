@@ -34,18 +34,13 @@ import com.tangem.card_android.data.saveToBundle
 import com.tangem.card_common.data.TangemCard
 import com.tangem.card_common.reader.CardProtocol
 import com.tangem.card_common.tasks.CustomReadCardTask
-import com.tangem.card_common.tasks.OneTouchSignTask
 import com.tangem.card_common.tasks.ReadCardInfoTask
-import com.tangem.card_common.tasks.SignTask
-import com.tangem.card_common.util.Log
-import com.tangem.data.Blockchain
 import com.tangem.data.Logger
 import com.tangem.data.network.ServerApiCommon
 import com.tangem.di.Navigator
 import com.tangem.di.ToastHelper
-import com.tangem.domain.wallet.CoinEngine
-import com.tangem.domain.wallet.CoinEngineFactory
-import com.tangem.domain.wallet.TangemContext
+import com.tangem.wallet.CoinEngineFactory
+import com.tangem.wallet.TangemContext
 import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
 import com.tangem.ui.dialog.RootFoundDialog
 import com.tangem.ui.dialog.WaitSecurityDelayDialog
@@ -59,9 +54,6 @@ import kotlinx.android.synthetic.main.layout_touch_card.*
 import java.io.File
 import java.util.*
 import javax.inject.Inject
-import kotlinx.coroutines.runBlocking
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, PopupMenu.OnMenuItemClickListener {
 
