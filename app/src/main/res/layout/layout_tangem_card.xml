@@ -42,7 +42,7 @@
             android:fontFamily="@font/maaxmedium"
             android:text="@string/verifying"
             android:textColor="@color/colorPrimary"
-            android:textSize="12sp"
+            android:textSize="12dp"
             android:textStyle="bold" />
 
         <ProgressBar
