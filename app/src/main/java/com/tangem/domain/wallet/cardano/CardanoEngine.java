@@ -10,8 +10,8 @@ import com.tangem.data.local.PendingTransactionsStorage;
 import com.tangem.data.network.ServerApiAdalite;
 import com.tangem.data.network.model.AdaliteResponse;
 import com.tangem.data.network.model.AdaliteResponseUtxo;
-import com.tangem.data.network.model.TxData;
-import com.tangem.data.network.model.UtxoData;
+import com.tangem.data.network.model.AdaliteTxData;
+import com.tangem.data.network.model.AdaliteUtxoData;
 import com.tangem.domain.wallet.BTCUtils;
 import com.tangem.domain.wallet.BalanceValidator;
 import com.tangem.domain.wallet.Base58;
@@ -509,7 +509,7 @@ public class CardanoEngine extends CoinEngine {
             }
 
             @Override
-            public byte[][] getHashesToSign() throws Exception {
+            public byte[][] getHashesToSign() {
                 byte[][] dataForSign = new byte[1][];
                 dataForSign[0] = dataToSign;
                 return dataForSign;
@@ -517,17 +517,17 @@ public class CardanoEngine extends CoinEngine {
 
             @Override
             public byte[] getRawDataToSign() throws Exception {
-                throw new Exception("Signing Raw Data is not supported for Cardano");
+                throw new Exception("Signing of raw transaction not supported for " + this.getClass().getSimpleName());
             }
 
             @Override
-            public String getHashAlgToSign() {
-                return "sha-256x2";
+            public String getHashAlgToSign() throws Exception {
+                throw new Exception("Signing of raw transaction not supported for " + this.getClass().getSimpleName());
             }
 
             @Override
             public byte[] getIssuerTransactionSignature(byte[] dataToSignByIssuer) throws Exception {
-                throw new Exception("Issuer validation not supported!");
+                throw new Exception("Transaction validation by issuer not supported in this version");
             }
 
             @Override
@@ -625,8 +625,7 @@ public class CardanoEngine extends CoinEngine {
                     if (App.pendingTransactionsStorage.hasTransactions(ctx.getCard())) {
                         for (PendingTransactionsStorage.TransactionInfo pendingTx : App.pendingTransactionsStorage.getTransactions(ctx.getCard()).getTransactions()) {
                             String pendingId = CalculateTxHash(pendingTx.getTx());
-                            int x = 0;
-                            for (TxData walletTx : adaliteResponse.getRight().getCaTxList()) {
+                            for (AdaliteTxData walletTx : adaliteResponse.getRight().getCaTxList()) {
                                 if (walletTx.getCtbId().equals(pendingId)) {
                                     App.pendingTransactionsStorage.removeTransaction(ctx.getCard(), pendingTx.getTx());
                                 }
@@ -652,7 +651,7 @@ public class CardanoEngine extends CoinEngine {
                 Log.i(TAG, "onSuccess: " + method);
                 try {
                     coinData.getUnspentOutputs().clear();
-                    for (UtxoData utxo : adaliteResponseUtxo.getRight()) {
+                    for (AdaliteUtxoData utxo : adaliteResponseUtxo.getRight()) {
                         CardanoData.UnspentOutput unspentOutput = new CardanoData.UnspentOutput();
                         unspentOutput.txID = utxo.getCuId();
                         unspentOutput.Amount = utxo.getCuCoins().getGetCoin();
@@ -668,7 +667,7 @@ public class CardanoEngine extends CoinEngine {
                     blockchainRequestsCallbacks.onComplete(!ctx.hasError());
                 } else {
                     blockchainRequestsCallbacks.onProgress();
-                    Log.e(TAG, "FAIL INSIGHT_UNSPENT_OUTPUTS Exception");
+                    Log.e(TAG, "FAIL ADALITE_UNSPENT_OUTPUTS Exception");
                 }
             }
 
@@ -676,17 +675,14 @@ public class CardanoEngine extends CoinEngine {
             public void onSuccess(String method, List listResponse) {
                 Log.e(TAG, "Wrong response type for requestBalanceAndUnspentTransactions");
                 ctx.setError("Wrong response type for requestBalanceAndUnspentTransactions");
+                blockchainRequestsCallbacks.onComplete(false);
             }
 
             @Override
             public void onFail(String method, String message) {
                 Log.i(TAG, "onFail: " + method + " " + message);
                 ctx.setError(message);
-                if (serverApiAdalite.isRequestsSequenceCompleted()) {
-                    blockchainRequestsCallbacks.onComplete(false);
-                } else {
-                    blockchainRequestsCallbacks.onProgress();
-                }
+                blockchainRequestsCallbacks.onComplete(false);
             }
         };
 
