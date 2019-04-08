@@ -28,7 +28,6 @@ import com.tangem.card_android.data.asBundle
 import com.tangem.card_common.reader.CardProtocol
 import com.tangem.card_common.tasks.PurgeTask
 import com.tangem.card_common.util.Util
-import com.tangem.util.LOG
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_purge.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
