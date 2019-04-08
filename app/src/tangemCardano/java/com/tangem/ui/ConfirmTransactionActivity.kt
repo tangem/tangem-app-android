@@ -15,9 +15,9 @@ import android.view.View
 import android.widget.Toast
 import com.tangem.Constant
 import com.tangem.card_android.android.data.PINStorage
-import com.tangem.domain.wallet.CoinEngine
-import com.tangem.domain.wallet.CoinEngineFactory
-import com.tangem.domain.wallet.TangemContext
+import com.tangem.wallet.CoinEngine
+import com.tangem.wallet.CoinEngineFactory
+import com.tangem.wallet.TangemContext
 import com.tangem.ui.event.TransactionFinishWithError
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager

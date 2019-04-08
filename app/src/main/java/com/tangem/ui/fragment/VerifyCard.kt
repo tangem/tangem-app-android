@@ -25,8 +25,8 @@ import com.tangem.card_android.data.loadFromBundle
 import com.tangem.card_common.data.TangemCard
 import com.tangem.card_common.reader.CardProtocol
 import com.tangem.data.Blockchain
-import com.tangem.domain.wallet.CoinEngineFactory
-import com.tangem.domain.wallet.TangemContext
+import com.tangem.wallet.CoinEngineFactory
+import com.tangem.wallet.TangemContext
 import com.tangem.ui.activity.PinRequestActivity
 import com.tangem.ui.activity.VerifyCardActivity
 import com.tangem.ui.dialog.PINSwapWarningDialog
