@@ -1,14 +1,11 @@
 package com.tangem.ui.fragment
 
 import android.os.Bundle
-import android.preference.PreferenceFragment
-
+import androidx.preference.PreferenceFragmentCompat
 import com.tangem.wallet.R
 
-class Settings : PreferenceFragment() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+class Settings : PreferenceFragmentCompat() {
+    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.pref_main)
     }
 
