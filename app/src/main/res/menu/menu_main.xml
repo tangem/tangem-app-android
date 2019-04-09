@@ -1,28 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu
-    xmlns:android="http://schemas.android.com/apk/res/android">
-    <!--<item-->
-        <!--android:id="@+id/cleanCards"-->
-        <!--android:title="@string/clean_up"/>-->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
     <item
         android:id="@+id/managePIN"
         android:enabled="false"
-        android:title="@string/manage_user_pin_1"/>
+        android:title="@string/manage_user_pin_1" />
     <item
         android:id="@+id/managePIN2"
         android:enabled="false"
-        android:title="@string/manage_user_pin_2"/>
+        android:title="@string/manage_user_pin_2" />
     <item
         android:id="@+id/sendLogs"
         android:title="@string/send_logs"
-        android:visible="false"/>
+        android:visible="false" />
 
-    <!--<item-->
-        <!--android:id="@+id/switchToAnotherBitcoinHost"-->
-        <!--android:title="Switch to another blockchain host"-->
-        <!--android:visible="false"/>-->
+    <item
+        android:id="@+id/settings"
+        android:title="@string/settings" />
 
     <item
         android:id="@+id/about"
-        android:title="@string/about"/>
+        android:title="@string/about" />
 </menu>
