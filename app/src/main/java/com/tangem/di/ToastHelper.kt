@@ -9,7 +9,6 @@ import com.google.android.material.snackbar.Snackbar
 import com.tangem.Constant
 import com.tangem.wallet.R
 
-
 class ToastHelper {
 
     fun showSnackbarUpdateVersion(context: Context, vg: ViewGroup, versionName: String) {
