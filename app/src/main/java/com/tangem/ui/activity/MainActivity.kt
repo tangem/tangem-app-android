@@ -218,6 +218,11 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                 return true
             }
 
+            R.id.settings -> {
+                navigator.showSettings(this)
+                return true
+            }
+
             R.id.about -> {
                 navigator.showLogo(this, false)
                 return true
