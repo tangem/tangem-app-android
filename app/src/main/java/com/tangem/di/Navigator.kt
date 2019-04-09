@@ -10,6 +10,10 @@ import com.tangem.wallet.BuildConfig
 
 class Navigator {
 
+    fun showSettings(context: Activity) {
+        context.startActivity(SettingsActivity.callingIntent(context))
+    }
+
     fun showMain(context: Activity) {
         context.startActivity(MainActivity.callingIntent(context))
     }
