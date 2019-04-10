@@ -36,6 +36,7 @@ import com.tangem.card_android.data.EXTRA_TANGEM_CARD
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 import kotlinx.android.synthetic.tangemAccess.activity_prepare_transaction.*
 
+
 class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
 
     companion object {
