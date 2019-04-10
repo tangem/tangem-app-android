@@ -159,7 +159,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                             intent.addCategory(Intent.CATEGORY_DEFAULT)
                             startActivity(intent)
                         } catch (e: ActivityNotFoundException) {
-                            UtilHelper.showSingleToast(context, getString(R.string.no_compatible_wallet))
+                            (activity as LoadedWalletActivity).toastHelper.showSingleToast(context, getString(R.string.no_compatible_wallet))
                         }
                     }
 
@@ -195,9 +195,9 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
         btnExtract.setOnClickListener {
             if (UtilHelper.isOnline(context as Activity))
                 if (!engine.isExtractPossible)
-                    UtilHelper.showSingleToast(context, ctx.message)
+                    (activity as LoadedWalletActivity).toastHelper.showSingleToast(context, ctx.message)
                 else if (ctx.card!!.remainingSignatures == 0)
-                    UtilHelper.showSingleToast(context, getString(R.string.card_has_no_remaining_signature))
+                    (activity as LoadedWalletActivity).toastHelper.showSingleToast(context, getString(R.string.card_has_no_remaining_signature))
                 else
                     (activity as LoadedWalletActivity).navigator.showPrepareTransaction(context as Activity, ctx)
             else
@@ -208,7 +208,7 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
             if (cardProtocol != null)
                 (activity as LoadedWalletActivity).navigator.showVerifyCard(context as Activity, ctx)
             else
-                UtilHelper.showSingleToast(context, getString(R.string.need_attach_card_again))
+                (activity as LoadedWalletActivity).toastHelper.showSingleToast(context, getString(R.string.need_attach_card_again))
         }
 
         btnNewScan.setOnClickListener { (activity as LoadedWalletActivity).navigator.showMain(context as Activity) }

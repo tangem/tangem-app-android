@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.di.Navigator
+import com.tangem.di.ToastHelper
 import com.tangem.wallet.TangemContext
 import com.tangem.ui.fragment.LoadedWallet
 import com.tangem.wallet.R
@@ -18,6 +19,8 @@ class LoadedWalletActivity : AppCompatActivity() {
 
     @Inject
     lateinit var navigator: Navigator
+    @Inject
+    internal lateinit var toastHelper: ToastHelper
 
     companion object {
         fun callingIntent(context: Context, lastTag: Tag, ctx: TangemContext): Intent {
@@ -33,6 +36,7 @@ class LoadedWalletActivity : AppCompatActivity() {
         setContentView(R.layout.activity_loaded_wallet)
 
         App.navigatorComponent.inject(this)
+        App.toastHelperComponent.inject(this)
 
         if (intent.extras!!.containsKey(NfcAdapter.EXTRA_TAG)) {
             val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
