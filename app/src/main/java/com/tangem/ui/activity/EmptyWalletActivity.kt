@@ -36,6 +36,7 @@ import kotlinx.android.synthetic.main.layout_tangem_card.*
 import javax.inject.Inject
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
+import com.tangem.di.ToastHelper
 
 class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
     companion object {
@@ -49,6 +50,8 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
 
     @Inject
     internal lateinit var navigator: Navigator
+    @Inject
+    internal lateinit var toastHelper: ToastHelper
 
     private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
@@ -64,6 +67,7 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
         setContentView(R.layout.activity_empty_wallet)
 
         App.navigatorComponent.inject(this)
+        App.toastHelperComponent.inject(this)
 
         nfcManager = NfcManager(this, this)
         lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
@@ -98,11 +102,12 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
             if (cardProtocol != null)
                 navigator.showVerifyCard(this, ctx)
             else
-                UtilHelper.showSingleToast(this, getString(R.string.need_attach_card_again))
+                toastHelper.showSingleToast(this, getString(R.string.need_attach_card_again))
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == Constant.REQUEST_CODE_CREATE_NEW_WALLET_ACTIVITY) {
             if (resultCode == Activity.RESULT_OK) {
                 if (data != null) {
