@@ -377,6 +377,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
             popup.menu.findItem(R.id.managePIN).isEnabled = true
             popup.menu.findItem(R.id.managePIN2).isEnabled = true
             popup.menu.findItem(R.id.sendLogs).isVisible = true
+            popup.menu.findItem(R.id.settings).isVisible = true
         }
 
         popup.setOnMenuItemClickListener(this)
