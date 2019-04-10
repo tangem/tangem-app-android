@@ -125,7 +125,7 @@
     <string name="swipe_down_to_refresh_data">Swipe down to refresh data</string>
     <string name="message">Message!</string>
     <string name="error">Error!</string>
-    <string name="send">SEND</string>
+    <string name="btn_send">Send</string>
     <string name="if_you_forget">If you forget your new PIN you will lose your money forever!</string>
     <string name="if_you_use_default">If you use default PIN someone can steal your money!</string>
     <string name="cannot_obtain_data_from_blockchain">Cannot obtain data from blockchain</string>
@@ -142,12 +142,12 @@
     <string name="this_banknote_will_enforce">This banknote will enforce %.0f seconds security delay for all operations requiring PIN2 code</string>
     <string name="share_wallet_address_with">Share wallet address with:</string>
     <string name="copied_clipboard">Copied to clipboard</string>
-    <string name="extract">EXTRACT</string>
-    <string name="load">LOAD</string>
-    <string name="explore">EXPLORE</string>
-    <string name="copy">COPY</string>
-    <string name="details">DETAILS</string>
-    <string name="new_scan">NEW SCAN</string>
+    <string name="btn_extract">Extract</string>
+    <string name="btn_load">Load</string>
+    <string name="btn_explore">Explore</string>
+    <string name="btn_copy">Copy</string>
+    <string name="btn_details">Details</string>
+    <string name="btn_new_scan">New scan</string>
     <string name="verifying_in_blockchain">Verifying in blockchain…</string>
 
     <!-- CreateNewWalletActivity, PurgeActivity, SignTransactionActivity -->
