@@ -16,6 +16,7 @@
 
     <item
         android:id="@+id/settings"
+        android:visible="false"
         android:title="@string/settings" />
 
     <item
