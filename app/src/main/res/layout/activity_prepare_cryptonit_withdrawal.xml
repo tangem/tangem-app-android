@@ -369,7 +369,7 @@
         android:layout_height="50dp"
         android:layout_marginBottom="16dp"
         android:fontFamily="@font/saira_condensed_bold"
-        android:text="@string/load"
+        android:text="@string/btn_load"
         android:textSize="@dimen/text_size_large"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
