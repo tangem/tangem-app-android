@@ -8,7 +8,6 @@ import androidx.appcompat.widget.Toolbar
 import com.tangem.wallet.R
 
 class SettingsActivity : AppCompatActivity() {
-
     companion object {
         fun callingIntent(context: Context) = Intent(context, SettingsActivity::class.java)
     }
