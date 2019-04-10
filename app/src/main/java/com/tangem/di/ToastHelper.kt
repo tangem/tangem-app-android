@@ -5,12 +5,13 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.view.ViewGroup
+import android.widget.Toast
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.Constant
 import com.tangem.wallet.R
+import java.util.*
 
 class ToastHelper {
-
     fun showSnackbarUpdateVersion(context: Context, vg: ViewGroup, versionName: String) {
         Snackbar.make(vg, String.format(context.getString(R.string.new_app_version), versionName), Snackbar.LENGTH_INDEFINITE)
                 .setAction(R.string.update) {
@@ -42,6 +43,21 @@ class ToastHelper {
             snackbar.dismiss()
         }
         snackbar.show()
+    }
+
+    private var singleToast: Toast? = null
+    private var showTime: Date = Date()
+
+    fun showSingleToast(context: Context?, text: String) {
+        if (singleToast == null || !singleToast!!.view.isShown || showTime.time + 2000 < Date().time) {
+            if (singleToast != null)
+                singleToast!!.cancel()
+            if (context != null) {
+                singleToast = Toast.makeText(context, text, Toast.LENGTH_LONG)
+                singleToast!!.show()
+                showTime = Date()
+            }
+        }
     }
 
 }
