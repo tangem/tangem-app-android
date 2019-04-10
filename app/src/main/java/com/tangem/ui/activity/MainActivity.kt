@@ -46,7 +46,7 @@ import com.tangem.ui.dialog.RootFoundDialog
 import com.tangem.ui.dialog.WaitSecurityDelayDialog
 import com.tangem.util.CommonUtil
 import com.tangem.util.LOG
-import com.tangem.util.PhoneUtility
+import com.tangem.util.UtilHelper
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_main.*
@@ -196,7 +196,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoco
                     f = Logger.collectLogs(this)
                     if (f != null) {
                         LOG.e(TAG, String.format("Collect %d log bytes", f.length()))
-                        CommonUtil.sendEmail(this, zipFile, TAG, "Logs", PhoneUtility.getDeviceInfo(), arrayOf(f))
+                        CommonUtil.sendEmail(this, zipFile, TAG, "Logs", UtilHelper.getDeviceInfo(), arrayOf(f))
                     } else {
                         LOG.e(TAG, "Can't create temporarily log file")
                     }
