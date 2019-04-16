@@ -20,10 +20,6 @@ class NfcLifecycleObserver(private var nfcManager: NfcManager) : LifecycleObserv
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     fun onPause() {
         nfcManager.onPause()
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun onStop() {
         nfcManager.onStop()
     }
 
