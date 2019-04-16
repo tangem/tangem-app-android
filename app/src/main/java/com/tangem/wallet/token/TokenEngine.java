@@ -790,7 +790,7 @@ public class TokenEngine extends CoinEngine {
             @Override
             public void onSuccess(String method, InfuraResponse infuraResponse) {
                 if (method.equals(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION)) {
-                    if (infuraResponse.getResult().isEmpty()) {
+                    if (infuraResponse.getResult()==null || infuraResponse.getResult().isEmpty()) {
                         ctx.setError("Rejected by node: " + infuraResponse.getError());
                         blockchainRequestsCallbacks.onComplete(false);
                     } else {
