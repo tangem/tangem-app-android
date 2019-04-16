@@ -2,6 +2,7 @@ package com.tangem.di
 
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import com.tangem.data.network.Server
+import com.tangem.wallet.BuildConfig
 
 import java.io.IOException
 import java.net.InetSocketAddress
@@ -25,52 +26,62 @@ internal class NetworkModule {
     @Provides
     @Named(Server.ApiInfura.URL_INFURA)
     fun provideRetrofitInfura(): Retrofit {
-        return Retrofit.Builder()
+        val builder = Retrofit.Builder()
                 .baseUrl(Server.ApiInfura.URL_INFURA)
                 .addConverterFactory(GsonConverterFactory.create())
-                .build()
+        if (BuildConfig.DEBUG)
+            builder.client(createOkHttpClient())
+        return builder.build()
     }
 
     @Singleton
     @Provides
     @Named(Server.ApiRootstock.URL_ROOTSTOCK)
     fun provideRetrofitRootstock(): Retrofit {
-        return Retrofit.Builder()
+        val builder = Retrofit.Builder()
                 .baseUrl(Server.ApiRootstock.URL_ROOTSTOCK)
                 .addConverterFactory(GsonConverterFactory.create())
-                .build()
+        if (BuildConfig.DEBUG)
+            builder.client(createOkHttpClient())
+        return builder.build()
     }
 
     @Singleton
     @Provides
     @Named(Server.ApiEstimatefee.URL_ESTIMATEFEE)
     fun provideRetrofitEstimatefee(): Retrofit {
-        return Retrofit.Builder()
+        val builder = Retrofit.Builder()
                 .baseUrl(Server.ApiEstimatefee.URL_ESTIMATEFEE)
                 .addConverterFactory(GsonConverterFactory.create())
-                .build()
+        if (BuildConfig.DEBUG)
+            builder.client(createOkHttpClient())
+        return builder.build()
     }
 
     @Singleton
     @Provides
     @Named(Server.ApiUpdateVersion.URL_UPDATE_VERSION)
     fun provideGithubusercontent(): Retrofit {
-        return Retrofit.Builder()
+        val builder = Retrofit.Builder()
                 .baseUrl(Server.ApiUpdateVersion.URL_UPDATE_VERSION)
                 .addConverterFactory(GsonConverterFactory.create())
                 .client(createOkHttpClient())
-                .build()
+        if (BuildConfig.DEBUG)
+            builder.client(createOkHttpClient())
+        return builder.build()
     }
 
     @Singleton
     @Provides
     @Named(Server.ApiCoinmarket.URL_COINMARKET)
     fun provideRetrofitCoinmarketcap(): Retrofit {
-        return Retrofit.Builder()
+        val builder = Retrofit.Builder()
                 .baseUrl(Server.ApiCoinmarket.URL_COINMARKET)
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .build()
+//        if (BuildConfig.DEBUG)
+//            builder.client(createOkHttpClient())
+        return builder.build()
     }
 
     private fun createOkHttpClient(): OkHttpClient {
