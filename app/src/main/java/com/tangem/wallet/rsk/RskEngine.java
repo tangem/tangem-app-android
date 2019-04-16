@@ -181,7 +181,7 @@ public class RskEngine extends EthEngine {
             @Override
             public void onSuccess(String method, InfuraResponse rootstockResponse) {
                 if (method.equals(ServerApiRootstock.ROOTSTOCK_ETH_SEND_RAW_TRANSACTION)) {
-                    if (rootstockResponse.getResult().isEmpty()) {
+                    if (rootstockResponse.getResult()==null ||  rootstockResponse.getResult().isEmpty()) {
                         ctx.setError("Rejected by node: " + rootstockResponse.getError());
                         blockchainRequestsCallbacks.onComplete(false);
                     } else {
