@@ -7,4 +7,5 @@ class ServerURL {
     static final String API_ESTIMATEFEE = "https://estimatefee.com/";
     static final String API_UPDATE_VERSION = "https://raw.githubusercontent.com/";
     static final String API_ROOTSTOCK = "https://public-node.rsk.co/";
+    static final String API_BINANCE = "https://testnet-dex.binance.org/";
 }
