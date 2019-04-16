@@ -219,7 +219,7 @@ public class RskTokenEngine extends TokenEngine {
             @Override
             public void onSuccess(String method, InfuraResponse infuraResponse) {
                 if (method.equals(ServerApiRootstock.ROOTSTOCK_ETH_SEND_RAW_TRANSACTION)) {
-                    if (infuraResponse.getResult().isEmpty()) {
+                    if (infuraResponse.getResult()==null || infuraResponse.getResult().isEmpty()) {
                         ctx.setError("Rejected by node: " + infuraResponse.getError());
                         blockchainRequestsCallbacks.onComplete(false);
                     } else {
