@@ -615,4 +615,9 @@ public class EthEngine extends CoinEngine {
     }
 
     public int pendingTransactionTimeoutInSeconds() { return 10; }
+
+    @Override
+    public boolean needMultipleLinesForBalance() {
+        return true;
+    }
 }
