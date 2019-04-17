@@ -55,4 +55,26 @@ public class Server {
             static final String N_6 = URL_ESTIMATEFEE + "n/6";
         }
     }
+
+    public static class ApiBinance {
+        public static final String URL_BINANCE = ServerURL.API_BINANCE;
+        static final String API_V1 = "api/v1/";
+
+        public static class Method {
+            static final String ACCOUNT = URL_BINANCE + API_V1 + "account";
+            static final String FEES = URL_BINANCE + API_V1 + "fees";
+            static final String BROADCAST = URL_BINANCE + API_V1 + "broadcast";
+        }
+    }
+
+    public static class ApiBlockcypher {
+        public static final String URL_BLOCKCYPHER = ServerURL.API_BLOCKCYPHER;
+        static final String V1_BTC_MAIN = "v1/btc/main";
+
+        public static class Method {
+            static final String MAIN = URL_BLOCKCYPHER + V1_BTC_MAIN;
+            static final String ADDRESS = MAIN + "/addrs/{address}?unspentOnly=true&includeScript=true";
+            static final String PUSH = MAIN + "/txs/push";
+        }
+    }
 }
