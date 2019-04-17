@@ -19,5 +19,5 @@ public interface SoChainApi {
 
     @Headers("Content-Type: application/json")
     @POST(Server.ApiSoChain.Method.SEND_TRANSACTION)
-    Call<SoChain.Response> sendTransaction(@Path("network") String network, @Body SoChain.Request.SendTx body);
+    Call<SoChain.Response.SendTx> sendTransaction(@Path("network") String network, @Body SoChain.Request.SendTx body);
 }
