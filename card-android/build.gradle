@@ -29,7 +29,7 @@ dependencies {
     implementation project(':card-common')
 //    implementation 'com.github.TangemCash.card_android-common:card_android-android:0.1.0'
 
-    implementation 'androidx.appcompat:appcompat:1.1.0-alpha01'
+    implementation 'androidx.appcompat:appcompat:1.1.0-alpha04'
     implementation 'com.google.code.gson:gson:2.8.5'
     implementation 'com.scottyab:rootbeer-lib:0.0.7'
     testImplementation 'junit:junit:4.12'
