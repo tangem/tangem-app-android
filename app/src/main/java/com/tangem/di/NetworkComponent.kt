@@ -29,6 +29,9 @@ interface NetworkComponent {
     @get:Named(Server.ApiRootstock.URL_ROOTSTOCK)
     val retrofitRootstock: Retrofit
 
+    @get:Named(Server.ApiSoChain.URL)
+    val retrofitSoChain: Retrofit
+
     @get:Named("socket")
     val socket: Socket
 
