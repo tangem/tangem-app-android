@@ -13,6 +13,7 @@ import com.tangem.data.Blockchain;
 import com.tangem.data.local.PendingTransactionsStorage;
 import com.tangem.data.network.ElectrumRequest;
 import com.tangem.data.network.Server;
+import com.tangem.data.network.ServerApiCommon;
 import com.tangem.data.network.ServerApiElectrum;
 import com.tangem.data.network.ServerApiSoChain;
 import com.tangem.data.network.model.SoChain;
@@ -639,7 +640,7 @@ public class BtcEngine extends CoinEngine {
         } else {
             final ServerApiSoChain serverApi = new ServerApiSoChain();
 
-            ServerApiSoChain.ResponseListener responseListener = new ServerApiSoChain.ResponseListener() {
+            ServerApiSoChain.AddressInfoListener addressInfoListener = new ServerApiSoChain.AddressInfoListener() {
                 @Override
                 public void onSuccess(SoChain.Response.AddressBalance response) {
                     try {
@@ -738,7 +739,7 @@ public class BtcEngine extends CoinEngine {
             };
 
 
-            serverApi.setResponseListener(responseListener);
+            serverApi.setAddressInfoListener(addressInfoListener);
 
             serverApi.requestAddressBalance(ctx.getBlockchain(), coinData.getWallet());
             serverApi.requestUnspentTx(ctx.getBlockchain(), coinData.getWallet());
@@ -888,71 +889,177 @@ public class BtcEngine extends CoinEngine {
         coinData.maxFee = null;
         coinData.normalFee = null;
 
-        final ServerApiElectrum serverApiElectrum = new ServerApiElectrum();
+        if (useElectrum) {
 
-        final ServerApiElectrum.ResponseListener electrumListener = new ServerApiElectrum.ResponseListener() {
-            @Override
-            public void onSuccess(ElectrumRequest electrumRequest) {
-                BigDecimal kbFee;
-                if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetFee)) {
-                    try {
-                        kbFee = new BigDecimal(electrumRequest.getResultString()); //fee per KB
+            final ServerApiElectrum serverApiElectrum = new ServerApiElectrum();
 
-                        if (kbFee.equals(BigDecimal.ZERO)) {
-                            serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
-                        }
+            final ServerApiElectrum.ResponseListener electrumListener = new ServerApiElectrum.ResponseListener() {
+                @Override
+                public void onSuccess(ElectrumRequest electrumRequest) {
+                    BigDecimal kbFee;
+                    if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetFee)) {
+                        try {
+                            kbFee = new BigDecimal(electrumRequest.getResultString()); //fee per KB
 
-                        BigDecimal minByteFee = kbFee.divide(new BigDecimal(1024)); // per KB -> per byte
-                        BigDecimal normalByteFee = minByteFee.add(new BigDecimal(0.00000010));
-                        BigDecimal maxByteFee = minByteFee.add(new BigDecimal(0.00000025));
+                            if (kbFee.equals(BigDecimal.ZERO)) {
+                                serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
+                            }
 
-                        BigDecimal minFee = minByteFee.multiply(new BigDecimal(calcSize)).setScale(8, RoundingMode.DOWN);
-                        BigDecimal normalFee = normalByteFee.multiply(new BigDecimal(calcSize)).setScale(8, RoundingMode.DOWN);
-                        BigDecimal maxFee = maxByteFee.multiply(new BigDecimal(calcSize)).setScale(8, RoundingMode.DOWN);
+                            BigDecimal minByteFee = kbFee.divide(new BigDecimal(1024)); // per KB -> per byte
+                            BigDecimal normalByteFee = minByteFee.add(new BigDecimal(0.00000010));
+                            BigDecimal maxByteFee = minByteFee.add(new BigDecimal(0.00000025));
 
-                        CoinEngine.Amount minAmount = new CoinEngine.Amount(minFee, ctx.getBlockchain().getCurrency());
-                        CoinEngine.Amount normalAmount = new CoinEngine.Amount(normalFee, ctx.getBlockchain().getCurrency());
-                        CoinEngine.Amount maxAmount = new CoinEngine.Amount(maxFee, ctx.getBlockchain().getCurrency());
+                            BigDecimal minFee = minByteFee.multiply(new BigDecimal(calcSize)).setScale(8, RoundingMode.DOWN);
+                            BigDecimal normalFee = normalByteFee.multiply(new BigDecimal(calcSize)).setScale(8, RoundingMode.DOWN);
+                            BigDecimal maxFee = maxByteFee.multiply(new BigDecimal(calcSize)).setScale(8, RoundingMode.DOWN);
 
-                        coinData.minFee = minAmount;
-                        coinData.normalFee = normalAmount;
-                        coinData.maxFee = maxAmount;
+                            CoinEngine.Amount minAmount = new CoinEngine.Amount(minFee, ctx.getBlockchain().getCurrency());
+                            CoinEngine.Amount normalAmount = new CoinEngine.Amount(normalFee, ctx.getBlockchain().getCurrency());
+                            CoinEngine.Amount maxAmount = new CoinEngine.Amount(maxFee, ctx.getBlockchain().getCurrency());
+
+                            coinData.minFee = minAmount;
+                            coinData.normalFee = normalAmount;
+                            coinData.maxFee = maxAmount;
 //                        if (coinData.minFee != null && coinData.normalFee != null && coinData.maxFee != null) {
-                        blockchainRequestsCallbacks.onComplete(true);
+                            blockchainRequestsCallbacks.onComplete(true);
 //                        } else {
 //                            blockchainRequestsCallbacks.onProgress();
 //                        }
 
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-            }
 
-            @Override
-            public void onFail(ElectrumRequest electrumRequest) {
-                ctx.setError(electrumRequest.getError());
-                blockchainRequestsCallbacks.onComplete(false);
-            }
-        };
-        serverApiElectrum.setResponseListener(electrumListener);
+                @Override
+                public void onFail(ElectrumRequest electrumRequest) {
+                    ctx.setError(electrumRequest.getError());
+                    blockchainRequestsCallbacks.onComplete(false);
+                }
+            };
+            serverApiElectrum.setResponseListener(electrumListener);
 
-        serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
+            serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
+        } else {
+
+            final ServerApiCommon serverApiCommon = new ServerApiCommon();
+
+            final ServerApiCommon.EstimatedFeeListener estimatedFeeListener = new ServerApiCommon.EstimatedFeeListener() {
+                @Override
+                public void onSuccess(int blockCount, String estimateFeeResponse) {
+                    BigDecimal fee = new BigDecimal(estimateFeeResponse); // BTC per 1 kb
+
+                    if (fee.equals(BigDecimal.ZERO)) {
+                        if (blockchainRequestsCallbacks.allowAdvance()) {
+                            serverApiCommon.requestBtcEstimatedFee(blockCount);
+                        }
+                        return;
+                    }
+
+                    if (calcSize != 0) {
+                        fee = fee.multiply(new BigDecimal(calcSize)).divide(new BigDecimal(1024), BigDecimal.ROUND_DOWN); // per Kb -> per byte
+                    } else {
+                        if (blockchainRequestsCallbacks.allowAdvance()) {
+                            serverApiCommon.requestBtcEstimatedFee(blockCount);
+                        }
+                        return;
+                    }
+
+                    fee = fee.setScale(8, RoundingMode.DOWN);
+
+                    switch (blockCount) {
+                        case ServerApiCommon.ESTIMATE_FEE_MINIMAL:
+                            coinData.minFee = new CoinEngine.Amount(fee, getFeeCurrency());
+                            break;
+                        case ServerApiCommon.ESTIMATE_FEE_NORMAL:
+                            coinData.normalFee = new CoinEngine.Amount(fee, getFeeCurrency());
+                            break;
+                        case ServerApiCommon.ESTIMATE_FEE_PRIORITY:
+                            coinData.maxFee = new CoinEngine.Amount(fee, getFeeCurrency());
+                            break;
+                    }
+
+                    if (coinData.minFee != null && coinData.normalFee != null && coinData.maxFee != null) {
+                        blockchainRequestsCallbacks.onComplete(true);
+                    } else {
+                        blockchainRequestsCallbacks.onProgress();
+                    }
+                }
+
+                @Override
+                public void onFail(int blockCount, String message) {
+                    // TODO - add fail counter to terminate after NNN tries
+                    if (blockchainRequestsCallbacks.allowAdvance()) {
+                        serverApiCommon.requestBtcEstimatedFee(blockCount);
+                        return;
+                    }
+                    ctx.setError(ctx.getContext().getString(R.string.cannot_calculate_fee_wrong_data_received_from_node));
+                    blockchainRequestsCallbacks.onComplete(false);
+                }
+            };
+            serverApiCommon.setBtcEstimatedFeeListener(estimatedFeeListener);
+
+            serverApiCommon.requestBtcEstimatedFee(ServerApiCommon.ESTIMATE_FEE_PRIORITY);
+            serverApiCommon.requestBtcEstimatedFee(ServerApiCommon.ESTIMATE_FEE_NORMAL);
+            serverApiCommon.requestBtcEstimatedFee(ServerApiCommon.ESTIMATE_FEE_MINIMAL);
+
+        }
     }
 
     @Override
-    public void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) {
-        final ServerApiElectrum serverApiElectrum = new ServerApiElectrum();
+    public void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) throws Exception {
         final String txStr = BTCUtils.toHex(txForSend);
+        if (useElectrum) {
+            final ServerApiElectrum serverApiElectrum = new ServerApiElectrum();
 
-        ServerApiElectrum.ResponseListener electrumListener = new ServerApiElectrum.ResponseListener() {
-            @Override
-            public void onSuccess(ElectrumRequest electrumRequest) {
-                if (electrumRequest.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
+            ServerApiElectrum.ResponseListener electrumListener = new ServerApiElectrum.ResponseListener() {
+                @Override
+                public void onSuccess(ElectrumRequest electrumRequest) {
+                    if (electrumRequest.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
+                        try {
+                            String resultString = electrumRequest.getResultString();
+                            if (resultString == null || resultString.isEmpty()) {
+                                ctx.setError("Rejected by node: " + electrumRequest.getError());
+                                blockchainRequestsCallbacks.onComplete(false);
+                            } else {
+                                ctx.setError(null);
+                                blockchainRequestsCallbacks.onComplete(true);
+                            }
+                        } catch (Exception e) {
+                            if (e.getMessage() != null) {
+                                ctx.setError(e.getMessage());
+                                blockchainRequestsCallbacks.onComplete(false);
+                            } else {
+                                ctx.setError(e.getClass().getName());
+                                blockchainRequestsCallbacks.onComplete(false);
+                            }
+                        }
+                    }
+                }
+
+                @Override
+                public void onFail(ElectrumRequest electrumRequest) {
+                    ctx.setError(electrumRequest.getError());
+                    blockchainRequestsCallbacks.onComplete(false);
+                }
+            };
+            serverApiElectrum.setResponseListener(electrumListener);
+
+
+            serverApiElectrum.requestData(ctx, ElectrumRequest.broadcast(ctx.getCoinData().getWallet(), txStr));
+        } else {
+            final ServerApiSoChain serverApi = new ServerApiSoChain();
+
+            ServerApiSoChain.SendTxListener listener = new ServerApiSoChain.SendTxListener() {
+                @Override
+                public void onSuccess(SoChain.Response.SendTx response) {
                     try {
-                        String resultString = electrumRequest.getResultString();
-                        if (resultString == null || resultString.isEmpty()) {
-                            ctx.setError("Rejected by node: " + electrumRequest.getError());
+                        if (response.getStatus() == null || response.getData() == null) {
+                            ctx.setError("Rejected by node: invalid answer received");
+                            blockchainRequestsCallbacks.onComplete(false);
+                        } else if (response.getStatus().equals("fail") || response.getData().getTxid() == null) {
+                            ctx.setError("Rejected by node: " + response.getData());
                             blockchainRequestsCallbacks.onComplete(false);
                         } else {
                             ctx.setError(null);
@@ -968,19 +1075,17 @@ public class BtcEngine extends CoinEngine {
                         }
                     }
                 }
-            }
 
-            @Override
-            public void onFail(ElectrumRequest electrumRequest) {
-                ctx.setError(electrumRequest.getError());
-                blockchainRequestsCallbacks.onComplete(false);
-            }
-        };
-        serverApiElectrum.setResponseListener(electrumListener);
+                @Override
+                public void onFail(String message) {
+                    ctx.setError(message);
+                    blockchainRequestsCallbacks.onComplete(false);
+                }
+            };
+            serverApi.setSendTxListener(listener);
+            serverApi.requestSendTransaction(ctx.getBlockchain(), txStr);
 
-
-        serverApiElectrum.requestData(ctx, ElectrumRequest.broadcast(ctx.getCoinData().getWallet(), txStr));
-
+        }
     }
 
 }
