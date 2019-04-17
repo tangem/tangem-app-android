@@ -84,6 +84,19 @@ internal class NetworkModule {
         return builder.build()
     }
 
+    @Singleton
+    @Provides
+    @Named(Server.ApiBlockcypher.URL_BLOCKCYPHER)
+    fun provideRetrofitBlockcypher(): Retrofit {
+        val builder = Retrofit.Builder()
+                .baseUrl(Server.ApiBlockcypher.URL_BLOCKCYPHER)
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(createOkHttpClient())
+        if (BuildConfig.DEBUG)
+            builder.client(createOkHttpClient())
+        return builder.build()
+    }
+
     private fun createOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder().addInterceptor(createHttpLoggingInterceptor()).build()
     }
