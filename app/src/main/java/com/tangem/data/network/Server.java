@@ -39,6 +39,7 @@ public class Server {
         public static class Method {
             public static final String ADDRESS_BALANCE = "api/v2/get_address_balance/{network}/{address}";
             public static final String UNSPENT_TX = "api/v2/get_tx_unspent/{network}/{address}";
+            public static final String GET_TX = "api/v2/get_tx/{network}/{txid}";
             public static final String SEND_TRANSACTION = "api/v2/send_tx/{network}";
         }
     }
