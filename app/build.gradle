@@ -30,7 +30,6 @@ android {
             debuggable true
             minifyEnabled false
             applicationIdSuffix ".debug"
-            versionNameSuffix '-DEBUG'
             signingConfig signingConfigs.debug
         }
     }
