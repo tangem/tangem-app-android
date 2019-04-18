@@ -17,6 +17,9 @@ public interface SoChainApi {
     @GET(Server.ApiSoChain.Method.UNSPENT_TX)
     Call<SoChain.Response.TxUnspent> getUnspentTx(@Path("network") String network, @Path("address") String address);
 
+    @GET(Server.ApiSoChain.Method.GET_TX)
+    Call<SoChain.Response.GetTx> getTx(@Path("network") String network, @Path("txid") String txId);
+
     @Headers("Content-Type: application/json")
     @POST(Server.ApiSoChain.Method.SEND_TRANSACTION)
     Call<SoChain.Response.SendTx> sendTransaction(@Path("network") String network, @Body SoChain.Request.SendTx body);
