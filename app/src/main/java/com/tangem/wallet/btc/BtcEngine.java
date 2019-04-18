@@ -758,7 +758,7 @@ public class BtcEngine extends CoinEngine {
                         Log.i(TAG, "onSuccess: " + electrumRequest.getMethod());
                         try {
                             if (electrumRequest.getResultString() != null) {
-                                App.pendingTransactionsStorage.removeTransaction(ctx.getCard(), electrumRequest.txHash);
+                                App.pendingTransactionsStorage.removeTransaction(ctx.getCard(), electrumRequest.txHash); //TODO Need remove transaction by RAW HEX
                             }
 
                         } catch (Exception e) {
@@ -789,7 +789,43 @@ public class BtcEngine extends CoinEngine {
                     serverApiElectrum.requestData(ctx, ElectrumRequest.getTransaction(ctx.getCoinData().getWallet(), txHash));
                 }
             } else {
-                throw new Exception("Not supported!");
+                ServerApiSoChain serverApi = new ServerApiSoChain();
+
+                ServerApiSoChain.TransactionInfoListener listener = new ServerApiSoChain.TransactionInfoListener() {
+                    @Override
+                    public void onSuccess(SoChain.Response.GetTx response) {
+                        Log.i(TAG, "onSuccess: GetTx");
+                        try {
+                            if (response.getData() != null && response.getData().getTx_hex() != null && response.getData().getTxid() != null) {
+                                App.pendingTransactionsStorage.removeTransaction(ctx.getCard(), response.getData().getTx_hex());
+                            }
+
+                        } catch (Exception e) {
+                            Log.e(TAG, "onFail: GetTx" + response);
+                        }
+                        if (serverApi.isRequestsSequenceCompleted()) {
+                            blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                        } else {
+                            blockchainRequestsCallbacks.onProgress();
+                        }
+                    }
+
+                    @Override
+                    public void onFail(String message) {
+                        Log.i(TAG, "onFail: GetTx " + message);
+                        if (serverApi.isRequestsSequenceCompleted()) {
+                            blockchainRequestsCallbacks.onComplete(false);//serverApiElectrum.isErrorOccurred(), serverApiElectrum.getError());
+                        } else {
+                            blockchainRequestsCallbacks.onProgress();
+                        }
+                    }
+                };
+
+                serverApi.setTransactionInfoListener(listener);
+                for (PendingTransactionsStorage.TransactionInfo pendingTx : App.pendingTransactionsStorage.getTransactions(ctx.getCard()).getTransactions()) {
+                    String txId = BTCUtils.toHex(BTCUtils.reverse(CryptoUtil.doubleSha256(BTCUtils.fromHex(pendingTx.getTx()))));
+                    serverApi.requestTransactionInfo(ctx.getBlockchain(), txId);
+                }
             }
         }
     }
