@@ -7,11 +7,13 @@ import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.PopupMenu
 import androidx.fragment.app.Fragment
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.card_android.android.nfc.NfcDeviceAntennaLocation
@@ -46,22 +48,14 @@ class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     }
 
     private lateinit var viewModel: MainViewModel
-
     private lateinit var nfcDeviceAntenna: NfcDeviceAntennaLocation
-
-
     private var unsuccessReadCount = 0
-
     private lateinit var nfcManager: NfcManager
-
     private var task: CustomReadCardTask? = null
-
-
     private var lastTag: Tag? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         nfcManager = NfcManager(activity!!, this)
         lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
     }
@@ -71,14 +65,8 @@ class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         return inflater.inflate(R.layout.main_fragment, container, false)
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         rippleBackgroundNfc.startRippleAnimation()
 
         // init NFC Antenna
@@ -112,6 +100,17 @@ class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         fab.setOnClickListener { showMenu(it) }
     }
 
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+
+//        viewModel.getVersionName().observe(this, Observer { text ->
+//            Log.d("", text)
+//            if (BuildConfig.FLAVOR.equals(Constant.FLAVOR_TANGEM_ACCESS))
+//                (activity as MainActivity).toastHelper.showSnackbarUpdateVersion(context!!, cl, text)
+//        })
+    }
+
     override fun onResume() {
         super.onResume()
         nfcDeviceAntenna.animate()
@@ -126,8 +125,6 @@ class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         task?.cancel(true)
         super.onStop()
     }
-
-
 
     override fun onTagDiscovered(tag: Tag) {
         try {
