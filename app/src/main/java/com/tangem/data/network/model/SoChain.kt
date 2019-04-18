@@ -52,5 +52,19 @@ class SoChain {
             var status: String? = null
             var data: Data? = null
         }
+
+        class GetTx {
+            class Data {
+                // restricted data
+                var network: String? = null
+                var address: String? = null
+                var txid: String? = null
+                var tx_hex: String? = null
+            }
+
+            var status: String? = null
+            var data: Data? = null
+        }
+
     }
 }
