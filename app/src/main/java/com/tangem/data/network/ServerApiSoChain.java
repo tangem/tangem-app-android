@@ -24,6 +24,7 @@ public class ServerApiSoChain {
         return requestsCount <= 0;
     }
 
+
     public interface AddressInfoListener {
         void onSuccess(SoChain.Response.AddressBalance response);
 
@@ -49,6 +50,20 @@ public class ServerApiSoChain {
     public void setSendTxListener(SendTxListener listener) {
         sendTxListener = listener;
     }
+
+
+    public interface TransactionInfoListener {
+        void onSuccess(SoChain.Response.GetTx response);
+
+        void onFail(String message);
+    }
+
+    private TransactionInfoListener txInfoListener;
+
+    public void setTransactionInfoListener(TransactionInfoListener listener) {
+        txInfoListener=listener;
+    }
+
 
     private String getNetwork(Blockchain blockchain) throws Exception {
         switch (blockchain) {
@@ -136,6 +151,31 @@ public class ServerApiSoChain {
             public void onFailure(@NonNull Call<SoChain.Response.SendTx> call, @NonNull Throwable t) {
                 Log.e(TAG, "requestAddressBalance  onFailure " + t.getMessage());
                 sendTxListener.onFail(String.valueOf(t.getMessage()));
+            }
+        });
+    }
+
+    public void requestTransactionInfo(Blockchain blockchain, String txId) throws Exception {
+        requestsCount++;
+        SoChainApi api = App.Companion.getNetworkComponent().getRetrofitSoChain().create(SoChainApi.class);
+
+        Call<SoChain.Response.GetTx> call = api.getTx(getNetwork(blockchain), txId);
+        call.enqueue(new Callback<SoChain.Response.GetTx>() {
+            @Override
+            public void onResponse(@NonNull Call<SoChain.Response.GetTx> call, @NonNull Response<SoChain.Response.GetTx> response) {
+                Log.i(TAG, "requestAddressBalance onResponse " + response.code());
+                if (response.code() == 200) {
+                    requestsCount--;
+                    txInfoListener.onSuccess(response.body());
+                } else {
+                    txInfoListener.onFail(String.valueOf(response.code()));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<SoChain.Response.GetTx> call, @NonNull Throwable t) {
+                Log.e(TAG, "requestAddressBalance  onFailure " + t.getMessage());
+                txInfoListener.onFail(String.valueOf(t.getMessage()));
             }
         });
     }
