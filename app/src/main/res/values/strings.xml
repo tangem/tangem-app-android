@@ -219,6 +219,7 @@
     <string name="pin_2_is_required_to_sign_the_transaction">PIN2 is required to sign the payment</string>
     <string name="not_enough_funds">Not enough funds</string>
     <string name="service_unavailable">Service unavailable</string>
+    <string name="risk_delaying">You have a risk of delaying transaction</string>
 
     <!-- EmptyWalletActivity -->
     <string name="wallet_has_not_been_yet_created">Wallet hasn\'t been yet created</string>
