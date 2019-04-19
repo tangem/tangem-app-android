@@ -1,20 +1,25 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory android:title="Common">
+    <PreferenceCategory
+        android:key="@string/pref_category_common"
+        android:title="@string/сommon">
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="@string/pref_manual_editing_fee"
+            android:title="@string/manual_editing_fee" />
 
         <Preference
-            android:defaultValue="true"
-            android:key="select_nodes"
+            android:key="@string/pref_select_nodes"
             android:title="@string/select_nodes" />
 
         <ListPreference
             android:defaultValue="0"
             android:entries="@array/encryption_modes_entries"
             android:entryValues="@array/encryption_mode_values"
-            android:key="encryption_modes"
+            android:key="@string/pref_encryption_modes"
             android:title="@string/encryption_modes" />
 
     </PreferenceCategory>
-
 
 </PreferenceScreen>
