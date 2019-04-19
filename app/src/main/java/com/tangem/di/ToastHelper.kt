@@ -45,6 +45,13 @@ class ToastHelper {
         snackbar.show()
     }
 
+    fun showSnackbarWarning(context: Context, vg: ViewGroup, message: String) {
+        val snackbar = Snackbar.make(vg, message, Snackbar.LENGTH_LONG)
+        val snackView = snackbar.view
+        snackView.setBackgroundColor(context.resources.getColor(R.color.msg_err))
+        snackbar.show()
+    }
+
     private var singleToast: Toast? = null
     private var showTime: Date = Date()
 
