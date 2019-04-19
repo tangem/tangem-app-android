@@ -246,7 +246,7 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
 
     @SuppressLint("NewApi")
     private fun testFingerPrintSettings(): Boolean {
-        LOG.i(TAG, "Testing Fingerprint Settings")
+        LOG.i(TAG, "Testing Fingerprint SettingsFragment")
 
         val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
         fingerprintManager = getSystemService(Context.FINGERPRINT_SERVICE) as FingerprintManager
