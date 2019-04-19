@@ -20,7 +20,7 @@
 
     <fragment
         android:id="@+id/thanks_fragment"
-        android:name="com.tangem.ui.fragment.Settings"
+        android:name="com.tangem.ui.fragment.SettingsFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/abl"
