@@ -58,6 +58,8 @@
     <string name="cardano">Cardano</string>
 
     <!-- SettingsActivity -->
+    <string name="сommon">Common</string>
+    <string name="manual_editing_fee">Manual editing Fee</string>
     <string name="settings">Settings</string>
     <string name="encryption_modes">Encryption modes</string>
     <string-array name="encryption_modes_entries">
