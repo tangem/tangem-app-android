@@ -5,15 +5,13 @@ import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
-import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import android.widget.PopupMenu
-import androidx.fragment.app.Fragment
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProviders
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.card_android.android.nfc.NfcDeviceAntennaLocation
@@ -28,23 +26,29 @@ import com.tangem.card_common.data.TangemCard
 import com.tangem.card_common.reader.CardProtocol
 import com.tangem.card_common.tasks.CustomReadCardTask
 import com.tangem.card_common.tasks.ReadCardInfoTask
+import com.tangem.data.Logger
 import com.tangem.data.network.ServerApiCommon
 import com.tangem.ui.activity.MainActivity
 import com.tangem.ui.activity.PinRequestActivity
 import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
 import com.tangem.ui.dialog.WaitSecurityDelayDialog
+import com.tangem.util.CommonUtil
+import com.tangem.util.LOG
+import com.tangem.util.UtilHelper
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.CoinEngineFactory
 import com.tangem.wallet.R
 import com.tangem.wallet.TangemContext
-import kotlinx.android.synthetic.main.main_fragment.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
+import kotlinx.android.synthetic.main.main_fragment.*
+import java.io.File
 import java.util.*
 
 class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, androidx.appcompat.widget.PopupMenu.OnMenuItemClickListener, PopupMenu.OnMenuItemClickListener {
 
     companion object {
         fun newInstance() = MainFragment()
+        val TAG: String = MainFragment::class.java.simpleName
     }
 
     private lateinit var viewModel: MainViewModel
@@ -53,6 +57,7 @@ class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     private lateinit var nfcManager: NfcManager
     private var task: CustomReadCardTask? = null
     private var lastTag: Tag? = null
+    private var zipFile: File? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -248,12 +253,12 @@ class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when (requestCode) {
-//            Constant.REQUEST_CODE_SEND_EMAIL -> {
-//                if (zipFile != null) {
-//                    zipFile!!.delete()
-//                    zipFile = null
-//                }
-//            }
+            Constant.REQUEST_CODE_SEND_EMAIL -> {
+                if (zipFile != null) {
+                    zipFile!!.delete()
+                    zipFile = null
+                }
+            }
             Constant.REQUEST_CODE_ENTER_PIN_ACTIVITY -> {
                 if (resultCode == Activity.RESULT_OK && lastTag != null)
                     onTagDiscovered(lastTag!!)
@@ -275,22 +280,22 @@ class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.sendLogs -> {
-//                var f: File? = null
-//                try {
-//                    f = Logger.collectLogs(this)
-//                    if (f != null) {
-//                        LOG.e(TAG, String.format("Collect %d log bytes", f.length()))
-//                        CommonUtil.sendEmail(this, zipFile, TAG, "Logs", UtilHelper.getDeviceInfo(), arrayOf(f))
-//                    } else {
-//                        LOG.e(TAG, "Can't create temporarily log file")
-//                    }
-//                } catch (e: Exception) {
-//                    e.printStackTrace()
-//                } finally {
-//                    if (f != null && f.exists())
-//                        f.delete()
-//                }
-//                return true
+                var f: File? = null
+                try {
+                    f = Logger.collectLogs(activity)
+                    if (f != null) {
+                        LOG.e(TAG, String.format("Collect %d log bytes", f.length()))
+                        CommonUtil.sendEmail(activity, zipFile, TAG, "Logs", UtilHelper.getDeviceInfo(), arrayOf(f))
+                    } else {
+                        LOG.e(TAG, "Can't create temporarily log file")
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                } finally {
+                    if (f != null && f.exists())
+                        f.delete()
+                }
+                return true
             }
             R.id.managePIN -> {
                 (activity as MainActivity).navigator.showPinSave(activity!!, false)
