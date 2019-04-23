@@ -11,6 +11,7 @@ import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.tangem.App
 import com.tangem.Constant
@@ -84,23 +85,6 @@ class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         else
             tvNFCHint.text = String.format(getString(R.string.scan_banknote), getString(R.string.phone))
 
-        val apiHelper = ServerApiCommon()
-        apiHelper.setLastVersionListener { response ->
-            try {
-                if (response.isNullOrEmpty())
-                    return@setLastVersionListener
-                val responseVersionName = response.trim(' ', '\n', '\r', '\t')
-                val responseBuildVersion = responseVersionName.split('.').last()
-                val appBuildVersion = BuildConfig.VERSION_NAME.split('.').last()
-                if (responseBuildVersion.toInt() > appBuildVersion.toInt())
-                    if (BuildConfig.FLAVOR.equals(Constant.FLAVOR_TANGEM_ACCESS))
-                        (activity as MainActivity).toastHelper.showSnackbarUpdateVersion(context!!, cl, responseVersionName)
-            } catch (E: Exception) {
-                E.printStackTrace()
-            }
-        }
-        apiHelper.requestLastVersion()
-
         // set listeners
         fab.setOnClickListener { showMenu(it) }
     }
@@ -109,11 +93,10 @@ class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
 
-//        viewModel.getVersionName().observe(this, Observer { text ->
-//            Log.d("", text)
-//            if (BuildConfig.FLAVOR.equals(Constant.FLAVOR_TANGEM_ACCESS))
-//                (activity as MainActivity).toastHelper.showSnackbarUpdateVersion(context!!, cl, text)
-//        })
+        // show snackbar about new version app
+        viewModel.getVersionName().observe(this, Observer { text ->
+            (activity as MainActivity).toastHelper.showSnackbarUpdateVersion(context!!, cl, text)
+        })
     }
 
     override fun onResume() {
@@ -184,7 +167,6 @@ class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                             val engineCoin = CoinEngineFactory.create(ctx)
                             if (engineCoin != null) {
                                 engineCoin.defineWallet()
-
 
 //                                val bundle = Bundle()
 //                                bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
