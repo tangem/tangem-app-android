@@ -8,6 +8,8 @@ import com.tangem.data.network.ServerApiCommon
 import com.tangem.wallet.BuildConfig
 
 class MainViewModel : ViewModel() {
+    private var serverApiCommon: ServerApiCommon = ServerApiCommon()
+
     private var versionName = MutableLiveData<String>()
 
     fun getVersionName(): LiveData<String> {
@@ -17,8 +19,7 @@ class MainViewModel : ViewModel() {
     }
 
     private fun requestVersionName() {
-        val apiHelper = ServerApiCommon()
-        apiHelper.setLastVersionListener { response ->
+        serverApiCommon.setLastVersionListener { response ->
             try {
                 if (response.isNullOrEmpty())
                     return@setLastVersionListener
@@ -32,6 +33,6 @@ class MainViewModel : ViewModel() {
                 E.printStackTrace()
             }
         }
-        apiHelper.requestLastVersion()
+        serverApiCommon.requestLastVersion()
     }
 }
