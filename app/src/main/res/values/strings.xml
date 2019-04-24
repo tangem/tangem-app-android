@@ -117,7 +117,7 @@
     <string name="new_app_version">There is a new application version: %1$s</string>
     <string name="update">Update</string>
 
-    <!-- LoadedWalletActivity, LoadedWallet -->
+    <!-- LoadedWalletActivity, LoadedWalletFragment -->
     <string name="wallet_empty">The wallet is empty</string>
     <string name="no_compatible_wallet">No compatible wallets installed</string>
     <string name="please_wait_while_previous">Please wait while previous transaction is confirmed in blockchain</string>
