@@ -7,7 +7,7 @@
     android:background="@color/white"
     android:orientation="vertical"
     android:padding="0dp"
-    tools:context="com.tangem.ui.fragment.LoadedWallet"
+    tools:context="com.tangem.ui.fragment.LoadedWalletFragment"
     tools:ignore="contentDescription"
     tools:showIn="@layout/activity_loaded_wallet">
 
