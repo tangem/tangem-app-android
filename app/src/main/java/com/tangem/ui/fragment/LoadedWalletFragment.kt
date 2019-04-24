@@ -278,16 +278,6 @@ class LoadedWalletFragment : androidx.fragment.app.Fragment(), NfcAdapter.Reader
         }
         serverApiTangem.setArtworkListener(artworkListener)
 
-        // request rate info listener
-//        serverApiCommon.setRateInfoListener {
-//            if (activity == null || !UtilHelper.isOnline(activity!!)) return@setRateInfoListener
-//            val rate = it.priceUsd.toFloat()
-//            ctx.coinData!!.rate = rate
-//            ctx.coinData!!.rateAlter = rate
-//
-//            Log.i(TAG, "scscscsc222 " + rate)
-//        }
-
         refresh()
 
         startVerify(lastTag)
@@ -298,19 +288,11 @@ class LoadedWalletFragment : androidx.fragment.app.Fragment(), NfcAdapter.Reader
         viewModel = ViewModelProviders.of(this).get(LoadedWalletViewModel::class.java)
 
         // set rate info to CoinData
-//        viewModel.getRateInfo(ctx).observe(this, Observer<Float> { rate ->
-//            Log.i(TAG, "scscscsc111 " + rate)
-//
-//            ctx.coinData.rate = rate
-//            ctx.coinData.rateAlter = rate
-//        })
-
-        viewModel.getRateInfo(ctx).observeForever { rate ->
-            Log.i(TAG, "scscscsc111 $rate")
-
+        viewModel.getRateInfo().observe(this, Observer<Float> { rate ->
             ctx.coinData.rate = rate
             ctx.coinData.rateAlter = rate
-        }
+        })
+        viewModel.requestRateInfo(ctx)
     }
 
     override fun onPause() {
@@ -673,11 +655,8 @@ class LoadedWalletFragment : androidx.fragment.app.Fragment(), NfcAdapter.Reader
 
         requestBalanceAndUnspentTransactions()
 
-//        requestRateInfo()
-        if (::viewModel.isInitialized) {
-            viewModel.getRateInfo(ctx)
-            Log.i(TAG, "isInitialized")
-        }
+        if (::viewModel.isInitialized)
+            viewModel.requestRateInfo(ctx)
 
         if (requestCounter == 0) {
             // if no connection and no requests posted
@@ -738,34 +717,6 @@ class LoadedWalletFragment : androidx.fragment.app.Fragment(), NfcAdapter.Reader
             updateViews()
         }
     }
-
-//    private fun requestRateInfo() {
-//        if (UtilHelper.isOnline(context as Activity)) {
-//            LOG.i(TAG, "requestRateInfo")
-//
-//            val cryptoId: String = when (ctx.blockchain) {
-//                Blockchain.Bitcoin -> "bitcoin"
-//                Blockchain.BitcoinTestNet -> "bitcoin"
-//                Blockchain.Ethereum -> "ethereum"
-//                Blockchain.EthereumTestNet -> "ethereum"
-//                Blockchain.Token -> "ethereum"
-//                Blockchain.NftToken -> "ethereum"
-//                Blockchain.BitcoinCash -> "bitcoin-cash"
-//                Blockchain.Litecoin -> "litecoin"
-//                Blockchain.Rootstock -> "bitcoin"
-//                Blockchain.RootstockToken -> "bitcoin"
-//                Blockchain.Cardano -> "cardano"
-//                Blockchain.Ripple -> "ripple"
-//                else -> {
-//                    throw Exception("Can''t get rate for blockchain " + ctx.blockchainName)
-//                }
-//            }
-//            serverApiCommon.requestRateInfo(cryptoId)
-//        } else {
-//            ctx.error = getString(R.string.no_connection)
-//            updateViews()
-//        }
-//    }
 
     private fun startVerify(tag: Tag?) {
         try {
