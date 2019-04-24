@@ -9,35 +9,20 @@ import com.tangem.wallet.TangemContext
 
 class LoadedWalletViewModel : ViewModel() {
     private var serverApiCommon: ServerApiCommon = ServerApiCommon()
-
     private lateinit var ctx: TangemContext
-
-//    private var rate = MutableLiveData<Float>()
-//
-//    fun getRateInfo(ctx: TangemContext): LiveData<Float> {
-//        this.ctx = ctx
-//        rate = MutableLiveData()
-//        requestRateInfo()
-//        return rate
-//    }
-
     private val rate: MutableLiveData<Float> by lazy {
         MutableLiveData<Float>().also {
-            requestRateInfo()
+            loadRateInfo()
         }
     }
 
-    fun getRateInfo(ctx: TangemContext): LiveData<Float> {
-        this.ctx = ctx
+    fun getRateInfo(): LiveData<Float> {
         return rate
     }
 
-    private fun requestRateInfo() {
-        serverApiCommon.setRateInfoListener {
-            val rate = it.priceUsd.toFloat()
-            this.rate.value = rate
-        }
-        // TODO - move requestRateInfo to CoinEngine
+    fun requestRateInfo(ctx: TangemContext) {
+        this.ctx = ctx
+        // TODO - move loadRateInfo to CoinEngine
         val cryptoId: String = when (ctx.blockchain) {
             Blockchain.Bitcoin -> "bitcoin"
             Blockchain.BitcoinTestNet -> "bitcoin"
@@ -58,8 +43,10 @@ class LoadedWalletViewModel : ViewModel() {
         serverApiCommon.requestRateInfo(cryptoId)
     }
 
-    override fun onCleared() {
-        super.onCleared()
-//        getRateInfo(ctx).removeObservers()
+    private fun loadRateInfo() {
+        serverApiCommon.setRateInfoListener {
+            val rate = it.priceUsd.toFloat()
+            this.rate.value = rate
+        }
     }
 }
