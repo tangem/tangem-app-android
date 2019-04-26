@@ -453,7 +453,7 @@ public class BinanceEngine extends CoinEngine {
             blockchainRequestsCallbacks.onComplete(true);
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e(TAG, "FAIL RIPPLE_FEE Exception");
+            Log.e(TAG, "FAIL Binance balance exception");
             ctx.setError(e.getMessage());
             blockchainRequestsCallbacks.onComplete(false);
         }
