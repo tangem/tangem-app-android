@@ -1,15 +1,20 @@
 package com.tangem.wallet.binance.client;
 
+import com.tangem.wallet.TangemContext;
+import com.tangem.wallet.binance.BinanceData;
 import com.tangem.wallet.binance.client.domain.*;
 import com.tangem.wallet.binance.client.domain.broadcast.*;
 import com.tangem.wallet.binance.client.domain.request.ClosedOrdersRequest;
 import com.tangem.wallet.binance.client.domain.request.OpenOrdersRequest;
 import com.tangem.wallet.binance.client.domain.request.TradesRequest;
 import com.tangem.wallet.binance.client.domain.request.TransactionsRequest;
+import com.tangem.wallet.binance.client.encoding.message.TransactionRequestAssemblerExtSign;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+
+import okhttp3.RequestBody;
 
 public interface BinanceDexApiRestClient {
     Time getTime();
@@ -56,6 +61,8 @@ public interface BinanceDexApiRestClient {
 
     TransactionPage getTransactions(TransactionsRequest request);
 
+    public List<TransactionMetadata> broadcastNoWallet(RequestBody requestBody, boolean sync) throws BinanceDexApiException;
+
     List<TransactionMetadata> newOrder(NewOrder newOrder, Wallet wallet, TransactionOption options, boolean sync)
             throws IOException, NoSuchAlgorithmException;
 
@@ -63,6 +70,9 @@ public interface BinanceDexApiRestClient {
             throws IOException, NoSuchAlgorithmException;
 
     List<TransactionMetadata> transfer(Transfer transfer, Wallet wallet, TransactionOption options, boolean sync)
+            throws IOException, NoSuchAlgorithmException;
+
+    TransactionRequestAssemblerExtSign prepareTransfer(Transfer transfer, BinanceData binanceData, byte[] pubKey, TransactionOption options, boolean sync)
             throws IOException, NoSuchAlgorithmException;
 
     List<TransactionMetadata> freeze(TokenFreeze freeze, Wallet wallet, TransactionOption options, boolean sync)
