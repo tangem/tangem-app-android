@@ -1,5 +1,9 @@
 package com.tangem.wallet.binance.client.impl;
 
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
 import com.tangem.wallet.binance.client.*;
 import com.tangem.wallet.binance.client.domain.*;
 import com.tangem.wallet.binance.client.domain.request.ClosedOrdersRequest;
@@ -94,6 +98,7 @@ public class BinanceDexApiAsyncRestClientImpl implements BinanceDexApiAsyncRestC
                 new BinanceDexApiCallbackAdapter<>(callback));
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void getClosedOrders(String address, BinanceDexApiCallback<OrderList> callback) {
         ClosedOrdersRequest request = new ClosedOrdersRequest();
@@ -101,6 +106,7 @@ public class BinanceDexApiAsyncRestClientImpl implements BinanceDexApiAsyncRestC
         getClosedOrders(request, callback);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void getClosedOrders(ClosedOrdersRequest request, BinanceDexApiCallback<OrderList> callback) {
         String sidStr = request.getSide() == null ? null : request.getSide().name();
