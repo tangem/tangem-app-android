@@ -8,4 +8,6 @@ class ServerURL {
     static final String API_UPDATE_VERSION = "https://raw.githubusercontent.com/";
     static final String API_ROOTSTOCK = "https://public-node.rsk.co/";
     static final String API_BLOCKCYPHER = "https://api.blockcypher.com/";
+    static final String API_BINANCE = "https://dex.binance.org/";
+    static final String API_BINANCE_TESTNET = "https://testnet-dex.binance.org/";
 }
