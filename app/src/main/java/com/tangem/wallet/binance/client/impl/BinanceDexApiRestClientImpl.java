@@ -4,6 +4,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.tangem.wallet.binance.BinanceData;
 import com.tangem.wallet.binance.client.*;
 import com.tangem.wallet.binance.client.domain.*;
 import com.tangem.wallet.binance.client.domain.broadcast.*;
@@ -12,6 +13,8 @@ import com.tangem.wallet.binance.client.domain.request.OpenOrdersRequest;
 import com.tangem.wallet.binance.client.domain.request.TradesRequest;
 import com.tangem.wallet.binance.client.domain.request.TransactionsRequest;
 import com.tangem.wallet.binance.client.encoding.message.TransactionRequestAssembler;
+import com.tangem.wallet.binance.client.encoding.message.TransactionRequestAssemblerExtSign;
+
 import okhttp3.RequestBody;
 
 import java.io.IOException;
@@ -167,6 +170,10 @@ public class BinanceDexApiRestClientImpl implements BinanceDexApiRestClient {
         }
     }
 
+    public List<TransactionMetadata> broadcastNoWallet(RequestBody requestBody, boolean sync) throws BinanceDexApiException {
+        return BinanceDexApiClientGenerator.executeSync(binanceDexApi.broadcast(sync, requestBody));
+    }
+
     public List<TransactionMetadata> newOrder(NewOrder newOrder, Wallet wallet, TransactionOption options, boolean sync)
             throws IOException, NoSuchAlgorithmException {
         wallet.ensureWalletIsReady(this);
@@ -189,6 +196,14 @@ public class BinanceDexApiRestClientImpl implements BinanceDexApiRestClient {
         TransactionRequestAssembler assembler = new TransactionRequestAssembler(wallet, options);
         RequestBody requestBody = assembler.buildTransfer(transfer);
         return broadcast(requestBody, sync, wallet);
+    }
+
+    public TransactionRequestAssemblerExtSign prepareTransfer(Transfer transfer, BinanceData binanceData, byte[] pubKey, TransactionOption options, boolean sync)
+            throws IOException, NoSuchAlgorithmException {
+        TransactionRequestAssemblerExtSign assembler = new TransactionRequestAssemblerExtSign(binanceData, pubKey, options);
+        return assembler;
+//        RequestBody requestBody = assembler.buildTransfer(transfer);
+//        return broadcast(requestBody, sync, wallet);
     }
 
     public List<TransactionMetadata> freeze(TokenFreeze freeze, Wallet wallet, TransactionOption options, boolean sync)
