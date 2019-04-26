@@ -17,7 +17,7 @@ public class Server {
         public static final String URL_COINMARKET = ServerURL.API_COINMARKETCAP;
 
         public static class Method {
-            static final String V1_TICKER_CONVERT = URL_COINMARKET + "v1/ticker/?convert=USD&lmit=10";
+            static final String V1_TICKER_CONVERT = URL_COINMARKET + "v1/ticker/?convert=USD&limit=10";
         }
     }
 
@@ -56,13 +56,21 @@ public class Server {
         }
     }
 
-//    public static class ApiBinance {
-//        public static final String URL_BINANCE = ServerURL.API_BINANCE;
-//
-//        public static class Method {
-//            static final String API_V1 = URL_BINANCE + "api/v1";
-//        }
-//    }
+    public static class ApiBinance {
+        public static final String URL_BINANCE = ServerURL.API_BINANCE;
+
+        public static class Method {
+            public static final String API_V1 = URL_BINANCE + "api/v1";
+        }
+    }
+
+    public static class ApiBinanceTestnet {
+        public static final String URL_BINANCE_TESTNET = ServerURL.API_BINANCE_TESTNET;
+
+        public static class Method {
+            public static final String API_V1 = URL_BINANCE_TESTNET + "api/v1";
+        }
+    }
 
     public static class ApiBlockcypher {
         public static final String URL_BLOCKCYPHER = ServerURL.API_BLOCKCYPHER;
