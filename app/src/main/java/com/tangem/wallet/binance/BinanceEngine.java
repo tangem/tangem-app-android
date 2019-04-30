@@ -1,6 +1,9 @@
 package com.tangem.wallet.binance;
 
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Build;
+import android.os.StrictMode;
 import android.text.InputFilter;
 import android.util.Log;
 
@@ -8,12 +11,14 @@ import androidx.annotation.NonNull;
 
 import com.ripple.crypto.ecdsa.ECDSASignature;
 import com.tangem.card_common.data.TangemCard;
+import com.tangem.card_common.reader.CardCrypto;
 import com.tangem.card_common.reader.CardProtocol;
 import com.tangem.card_common.tasks.SignTask;
 import com.tangem.card_common.util.Util;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.BinanceApi;
 import com.tangem.data.network.Server;
+import com.tangem.data.network.ServerApiBinance;
 import com.tangem.data.network.model.BinanceFees;
 import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
@@ -33,6 +38,7 @@ import com.tangem.wallet.binance.client.domain.broadcast.TransactionOption;
 import com.tangem.wallet.binance.client.domain.broadcast.Transfer;
 import com.tangem.wallet.binance.client.encoding.Bech32;
 import com.tangem.wallet.binance.client.encoding.Crypto;
+import com.tangem.wallet.binance.client.encoding.message.MessageType;
 import com.tangem.wallet.binance.client.encoding.message.TransactionRequestAssemblerExtSign;
 import com.tangem.wallet.binance.client.encoding.message.TransferMessage;
 
@@ -365,6 +371,13 @@ public class BinanceEngine extends CoinEngine {
             amount = amountValue.setScale(getDecimals(), RoundingMode.DOWN).toPlainString();
         }
 
+        byte[] pubKey = ctx.getCard().getWalletPublicKeyRar();
+        byte[] pubKeyPrefix = MessageType.PubKey.getTypePrefixBytes();
+        byte[] pubKeyForSign = new byte[pubKey.length + pubKeyPrefix.length + 1];
+        System.arraycopy(pubKeyPrefix, 0, pubKeyForSign, 0, pubKeyPrefix.length);
+        pubKeyForSign[pubKeyPrefix.length] = (byte) 33;
+        System.arraycopy(pubKey, 0, pubKeyForSign, pubKeyPrefix.length + 1, pubKey.length);
+
         Transfer transfer = new Transfer();
         transfer.setCoin("BNB");
         transfer.setFromAddress(ctx.getCoinData().getWallet());
@@ -373,11 +386,32 @@ public class BinanceEngine extends CoinEngine {
 
         TransactionOption options = TransactionOption.DEFAULT_INSTANCE;
 
-        TransactionRequestAssemblerExtSign txAssembler = client.prepareTransfer(transfer, coinData, ctx.getCard().getWalletPublicKeyRar(), options, true);
+        TransactionRequestAssemblerExtSign txAssembler = client.prepareTransfer(transfer, coinData, pubKeyForSign, options, true);
         // TransactionRequestAssembler.buildTransfer as reference
         TransferMessage msgBean = txAssembler.createTransferMessage(transfer);
         byte[] msg = txAssembler.encodeTransferMessage(msgBean);
         byte[] dataForSign = txAssembler.prepareForSign(msgBean);
+//        byte[] dataForSign = Util.fromHexString("7b226163636f756e745f6e756d626572223a2231222c22636861696e5f6964223a22626e62636861696e2d31303030222c226d656d6f223a22222c226d736773223a5b7b226964223a22423635363144434331303431333030353941374330384634384336343631304331463646393036342d3130222c226f7264657274797065223a322c227072696365223a3130303030303030302c227175616e74697479223a313230303030303030302c2273656e646572223a22626e63316b6574706d6e71736779637174786e7570723667636572707073306b6c797279687a36667a6c222c2273696465223a312c2273796d626f6c223a224254432d3543345f424e42222c2274696d65696e666f726365223a317d5d2c2273657175656e6365223a2239227d");
+//
+//        byte[] privateKey = Util.fromHexString("30c5e838578a29e3e9273edddd753d6c9b38aca2446dd84bdfe2e5988b0da0a1");
+//
+//        byte[] signFromCard = CardCrypto.Signature(privateKey, dataForSign);
+//
+//                int size = signFromCard.length / 2;
+//                BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, 0, size));
+//                BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, size, size * 2));
+//                s = CryptoUtil.toCanonicalised(s);
+////                ECKey.ECDSASignature sig = new ECKey.ECDSASignature(r, s);
+////                byte[] sigDer = sig.encodeToDER();
+////                if (!ECDSASignature.isStrictlyCanonical(sigDer)) {
+////                    throw new IllegalStateException("Signature is not strictly canonical");
+////                }
+//                byte[] resultSig = new byte[64];
+//                System.arraycopy(Utils.bigIntegerToBytes(r, 32), 0, resultSig, 0, 32);
+//                System.arraycopy(Utils.bigIntegerToBytes(s, 32), 0, resultSig, 32, 32);
+//
+//        String test = Util.byteArrayToHexString(resultSig);
+//        int x = 1;
 
         return new SignTask.TransactionToSign() {
 
@@ -389,7 +423,7 @@ public class BinanceEngine extends CoinEngine {
             @Override
             public byte[][] getHashesToSign() {
                 byte[][] hashForSign = new byte[1][];
-                hashForSign[1] = CryptoUtil.doubleSha256(dataForSign);
+                hashForSign[0] = CryptoUtil.doubleSha256(dataForSign);
                 return hashForSign;
             }
 
@@ -410,37 +444,47 @@ public class BinanceEngine extends CoinEngine {
 
             @Override
             public byte[] onSignCompleted(byte[] signFromCard) throws Exception {
-                int size = signFromCard.length / 2;
-                BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, 0, size));
-                BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, size, size * 2));
-                s = CryptoUtil.toCanonicalised(s);
-                ECKey.ECDSASignature sig = new ECKey.ECDSASignature(r, s);
-                byte[] sigDer = sig.encodeToDER();
-                if (!ECDSASignature.isStrictlyCanonical(sigDer)) {
-                    throw new IllegalStateException("Signature is not strictly canonical");
-                }
+//                int size = signFromCard.length / 2;
+//                BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, 0, size));
+//                BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, size, size * 2));
+////                s = CryptoUtil.toCanonicalised(s);
+////                ECKey.ECDSASignature sig = new ECKey.ECDSASignature(r, s);
+////                byte[] sigDer = sig.encodeToDER();
+////                if (!ECDSASignature.isStrictlyCanonical(sigDer)) {
+////                    throw new IllegalStateException("Signature is not strictly canonical");
+////                }
+//                byte[] resultSig = new byte[64];
+//                System.arraycopy(Utils.bigIntegerToBytes(r, 32), 0, resultSig, 0, 32);
+//                System.arraycopy(Utils.bigIntegerToBytes(s, 32), 0, resultSig, 32, 32);
 
                 // TransactionRequestAssembler.buildTransfer as reference
-                byte[] signature = txAssembler.encodeSignature(sigDer);
-                return txAssembler.encodeStdTx(msg, signature);
+                byte[] signature = txAssembler.encodeSignature(signFromCard);
+                byte[] txForSend = txAssembler.encodeStdTx(msg, signature);
+
+                notifyOnNeedSendTransaction(txForSend);
+                return txForSend;
             }
         };
     }
 
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
         try {
-            Account account = client.getAccount(ctx.getCoinData().getWallet());
+            ServerApiBinance serverApiBinance = new ServerApiBinance();
 
-            for (Balance balance : account.getBalances()) {
-                if (balance.getSymbol().equals("BNB")) {
-                    coinData.setBalanceReceived(true);
-                    coinData.setBalance(balance.getFree());
-                    break;
+            ServerApiBinance.ResponseListener responseListener = new ServerApiBinance.ResponseListener() {
+                @Override
+                public void onSuccess() {
+                    blockchainRequestsCallbacks.onComplete(true);
                 }
-            }
 
-            coinData.setAccountNumber(account.getAccountNumber());
-            coinData.setSequence(account.getSequence());
+                @Override
+                public void onFail() {
+                    blockchainRequestsCallbacks.onComplete(false);
+                }
+            };
+
+            serverApiBinance.setResponseListener(responseListener);
+            serverApiBinance.getBalance(ctx, client);
 
             if (ctx.getBlockchain() == Blockchain.Binance) {
                 coinData.setValidationNodeDescription(Server.ApiBinance.URL_BINANCE);
@@ -450,7 +494,6 @@ public class BinanceEngine extends CoinEngine {
                 throw new Exception("Invalid blockchain for BinanceEngine");
             }
 
-            blockchainRequestsCallbacks.onComplete(true);
         } catch (Exception e) {
             e.printStackTrace();
             Log.e(TAG, "FAIL Binance balance exception");
@@ -461,7 +504,7 @@ public class BinanceEngine extends CoinEngine {
 
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
         try {
-            String baseUrl = null;
+            String baseUrl;
 
             if (ctx.getBlockchain() == Blockchain.Binance) {
                 baseUrl = Server.ApiBinance.Method.API_V1;
@@ -477,16 +520,20 @@ public class BinanceEngine extends CoinEngine {
                     .build();
 
             BinanceApi binanceApi = retrofitBinance.create(BinanceApi.class);
-            Call<BinanceFees> call = binanceApi.binanceFees();
-            call.enqueue(new Callback<BinanceFees>() {
+            Call<List<BinanceFees>> call = binanceApi.binanceFees();
+            call.enqueue(new Callback<List<BinanceFees>>() {
                 @Override
-                public void onResponse(@NonNull Call<BinanceFees> call, @NonNull Response<BinanceFees> response) {
+                public void onResponse(@NonNull Call<List<BinanceFees>> call, @NonNull Response<List<BinanceFees>> response) {
                     if (response.code() == 200) {
-                        Long fee = response.body().getFixed_fee_params().getFee();
-                        Amount feeAmount = new Amount(BigDecimal.valueOf(fee).divide(BigDecimal.valueOf(100000000)).setScale(8, RoundingMode.DOWN), getFeeCurrency());
-                        coinData.minFee = coinData.normalFee = coinData.maxFee = feeAmount;
-                        Log.i(TAG, "requestFee onResponse " + response.code());
-                        blockchainRequestsCallbacks.onComplete(true);
+                        for (BinanceFees fee : response.body()) {
+                            if (fee.getFixed_fee_params() != null) {
+                                Long longFee = Long.valueOf(fee.getFixed_fee_params().getFee());
+                                Amount feeAmount = new Amount(BigDecimal.valueOf(longFee).divide(BigDecimal.valueOf(100000000)).setScale(8, RoundingMode.DOWN), getFeeCurrency());
+                                coinData.minFee = coinData.normalFee = coinData.maxFee = feeAmount;
+                                Log.i(TAG, "requestFee onResponse " + response.code());
+                                blockchainRequestsCallbacks.onComplete(true);
+                            }
+                        }
                     } else {
                         ctx.setError(response.code());
                         Log.e(TAG, "requestFee onResponse " + response.code());
@@ -495,7 +542,7 @@ public class BinanceEngine extends CoinEngine {
                 }
 
                 @Override
-                public void onFailure(@NonNull Call<BinanceFees> call, @NonNull Throwable t) {
+                public void onFailure(@NonNull Call<List<BinanceFees>> call, @NonNull Throwable t) {
                     ctx.setError(t.getMessage());
                     Log.e(TAG, "requestFee onFailure " + t.getMessage());
                     blockchainRequestsCallbacks.onComplete(false);
@@ -510,17 +557,27 @@ public class BinanceEngine extends CoinEngine {
     }
 
     public void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) {
-        RequestBody requestBody = TransactionRequestAssemblerExtSign.createRequestBody(txForSend);
+//        RequestBody requestBody = TransactionRequestAssemblerExtSign.createRequestBody(txForSend);
         try {
-            List<TransactionMetadata> metadatas = client.broadcastNoWallet(requestBody, true);
-            if (!metadatas.isEmpty() && metadatas.get(0).isOk()) {
-                ctx.setError(null);
-                blockchainRequestsCallbacks.onComplete(true);
-            } else {
-                Log.e(TAG, "Transaction send error");
-                ctx.setError("Transaction send error");
-                blockchainRequestsCallbacks.onComplete(false);
-            }
+            ServerApiBinance serverApiBinance = new ServerApiBinance();
+
+            ServerApiBinance.ResponseListener responseListener = new ServerApiBinance.ResponseListener() {
+                @Override
+                public void onSuccess() {
+                    ctx.setError(null);
+                    blockchainRequestsCallbacks.onComplete(true);
+                }
+
+                @Override
+                public void onFail() {
+                    ctx.setError("Transaction send error");
+                    blockchainRequestsCallbacks.onComplete(false);
+                }
+            };
+
+            serverApiBinance.setResponseListener(responseListener);
+            serverApiBinance.sendTransaction(txForSend, client);
+
         } catch (Exception e) {
             Log.e(TAG, "Transaction send error");
             ctx.setError("Transaction send error");
@@ -528,7 +585,7 @@ public class BinanceEngine extends CoinEngine {
         }
     }
 
-    public boolean allowSelectFeeInclusion() {
+    public boolean allowSelectFeeLevel() {
         return false;
     }
 }
