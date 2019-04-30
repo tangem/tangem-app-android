@@ -12,5 +12,5 @@ data class BinanceFixedFee(
         var msg_type: String? = null,
 
         @SerializedName("fee")
-        var fee: Long? = null
+        var fee: Int? = null
 )
