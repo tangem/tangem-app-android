@@ -32,7 +32,7 @@ public class BinanceData extends CoinData {
             if (balance != null) B.putString("Balance", balance);
             if (chainId != null) B.putString("ChainId", chainId);
             if (sequence != null) B.putLong("Sequence", sequence);
-            if (accountNumber != null) B.putLong("AccountNumber", accountNumber);
+            if (accountNumber != null) B.putInt("AccountNumber", accountNumber);
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());
         }
