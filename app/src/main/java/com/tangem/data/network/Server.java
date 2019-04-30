@@ -60,7 +60,7 @@ public class Server {
         public static final String URL_BINANCE = ServerURL.API_BINANCE;
 
         public static class Method {
-            public static final String API_V1 = URL_BINANCE + "api/v1";
+            public static final String API_V1 = URL_BINANCE + "api/v1/";
         }
     }
 
@@ -68,7 +68,7 @@ public class Server {
         public static final String URL_BINANCE_TESTNET = ServerURL.API_BINANCE_TESTNET;
 
         public static class Method {
-            public static final String API_V1 = URL_BINANCE_TESTNET + "api/v1";
+            public static final String API_V1 = URL_BINANCE_TESTNET + "api/v1/";
         }
     }
 
