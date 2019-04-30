@@ -19,7 +19,7 @@ import java.util.List;
 import okhttp3.RequestBody;
 
 /**
- * Assemble a transaction message body.
+ * Assemble a transaction message body with external signature
  * https://testnet-dex.binance.org/doc/encoding.html
  */
 public class TransactionRequestAssemblerExtSign {
@@ -29,12 +29,12 @@ public class TransactionRequestAssemblerExtSign {
 
     //private Wallet wallet;
     private BinanceData binanceData;
-    private byte[] pubKey;
+    private byte[] pubKeyForSign;
     private TransactionOption options;
 
-    public TransactionRequestAssemblerExtSign(BinanceData binanceData, byte[] pubKey, TransactionOption options) {
+    public TransactionRequestAssemblerExtSign(BinanceData binanceData, byte[] pubKeyForSign, TransactionOption options) {
         this.binanceData = binanceData;
-        this.pubKey = pubKey;
+        this.pubKeyForSign = pubKeyForSign;
         this.options = options;
     }
 
@@ -62,7 +62,7 @@ public class TransactionRequestAssemblerExtSign {
     }
 
     public byte[] encodeSignature(byte[] signatureBytes) throws IOException {
-        StdSignature stdSignature = StdSignature.newBuilder().setPubKey(ByteString.copyFrom(pubKey))
+        StdSignature stdSignature = StdSignature.newBuilder().setPubKey(ByteString.copyFrom(pubKeyForSign))
                 .setSignature(ByteString.copyFrom(signatureBytes))
                 .setAccountNumber(binanceData.getAccountNumber())
                 .setSequence(binanceData.getSequence())
