@@ -38,7 +38,7 @@ public class TransactionRequestAssemblerExtSign {
         this.options = options;
     }
 
-    public static long doubleToLong(String d) {
+    private static long doubleToLong(String d) {
         BigDecimal encodeValue = new BigDecimal(d).multiply(MULTIPLY_FACTOR);
         if (encodeValue.compareTo(MAX_NUMBER) > 0) {
             throw new IllegalArgumentException(d + " is too large.");
@@ -48,11 +48,11 @@ public class TransactionRequestAssemblerExtSign {
     }
 
     public byte[] prepareForSign(BinanceDexTransactionMessage msg)
-            throws JsonProcessingException, NoSuchAlgorithmException {
+            throws JsonProcessingException {
         SignData sd = new SignData();
         sd.setChainId(binanceData.getChainId());
         sd.setAccountNumber(String.valueOf(binanceData.getAccountNumber()));
-        sd.setSequence(String.valueOf(binanceData.getAccountNumber()));
+        sd.setSequence(String.valueOf(binanceData.getSequence()));
         sd.setMsgs(new BinanceDexTransactionMessage[]{msg});
 
         sd.setMemo(options.getMemo());
@@ -150,7 +150,7 @@ public class TransactionRequestAssemblerExtSign {
     }
 
     public byte[] buildTransfer(Transfer transfer)
-            throws IOException, NoSuchAlgorithmException {
+            throws IOException {
         TransferMessage msgBean = createTransferMessage(transfer);
         byte[] msg = encodeTransferMessage(msgBean);
         return prepareForSign(msgBean);

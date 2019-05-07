@@ -198,10 +198,8 @@ public class BinanceDexApiRestClientImpl implements BinanceDexApiRestClient {
         return broadcast(requestBody, sync, wallet);
     }
 
-    public TransactionRequestAssemblerExtSign prepareTransfer(Transfer transfer, BinanceData binanceData, byte[] pubKeyFroSign, TransactionOption options, boolean sync)
-            throws IOException, NoSuchAlgorithmException {
-        TransactionRequestAssemblerExtSign assembler = new TransactionRequestAssemblerExtSign(binanceData, pubKeyFroSign, options);
-        return assembler;
+    public TransactionRequestAssemblerExtSign prepareTransfer(Transfer transfer, BinanceData binanceData, byte[] pubKeyForSign, TransactionOption options, boolean sync) {
+        return new TransactionRequestAssemblerExtSign(binanceData, pubKeyForSign, options);
 //        RequestBody requestBody = assembler.buildTransfer(transfer);
 //        return broadcast(requestBody, sync, wallet);
     }
