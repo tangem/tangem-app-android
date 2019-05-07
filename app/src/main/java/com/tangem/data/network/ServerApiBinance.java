@@ -57,6 +57,11 @@ public class ServerApiBinance {
                     }
                 }
 
+                if (!binanceData.isBalanceReceived()) {
+                    binanceData.setBalanceReceived(true);
+                    binanceData.setBalance("0");
+                }
+
                 binanceData.setAccountNumber(account.getAccountNumber());
                 binanceData.setSequence(account.getSequence());
             }
