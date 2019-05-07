@@ -1,17 +1,12 @@
 package com.tangem.wallet.binance;
 
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.os.StrictMode;
 import android.text.InputFilter;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.ripple.crypto.ecdsa.ECDSASignature;
 import com.tangem.card_common.data.TangemCard;
-import com.tangem.card_common.reader.CardCrypto;
 import com.tangem.card_common.reader.CardProtocol;
 import com.tangem.card_common.tasks.SignTask;
 import com.tangem.card_common.util.Util;
@@ -28,12 +23,8 @@ import com.tangem.wallet.CoinEngine;
 import com.tangem.wallet.R;
 import com.tangem.wallet.TangemContext;
 import com.tangem.wallet.binance.client.BinanceDexApiClientFactory;
-import com.tangem.wallet.binance.client.BinanceDexApiClientGenerator;
 import com.tangem.wallet.binance.client.BinanceDexApiRestClient;
 import com.tangem.wallet.binance.client.BinanceDexEnvironment;
-import com.tangem.wallet.binance.client.domain.Account;
-import com.tangem.wallet.binance.client.domain.Balance;
-import com.tangem.wallet.binance.client.domain.TransactionMetadata;
 import com.tangem.wallet.binance.client.domain.broadcast.TransactionOption;
 import com.tangem.wallet.binance.client.domain.broadcast.Transfer;
 import com.tangem.wallet.binance.client.encoding.Bech32;
@@ -42,16 +33,16 @@ import com.tangem.wallet.binance.client.encoding.message.MessageType;
 import com.tangem.wallet.binance.client.encoding.message.TransactionRequestAssemblerExtSign;
 import com.tangem.wallet.binance.client.encoding.message.TransferMessage;
 
-import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Utils;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.List;
 
-import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -63,7 +54,7 @@ public class BinanceEngine extends CoinEngine {
     private static final String TAG = BinanceEngine.class.getSimpleName();
 
     public BinanceData coinData = null;
-    BinanceDexApiRestClient client = null;
+    private BinanceDexApiRestClient client = null;
 
     public BinanceEngine(TangemContext context) throws Exception {
         super(context);
@@ -198,7 +189,7 @@ public class BinanceEngine extends CoinEngine {
 
     public Uri getShareWalletUri() {
         return Uri.parse(ctx.getCoinData().getWallet());
-    } //TODO:check
+    }
 
     @Override
     public InputFilter[] getAmountInputFilters() {
@@ -208,10 +199,7 @@ public class BinanceEngine extends CoinEngine {
     @Override
     public boolean checkNewTransactionAmount(Amount amount) {
         if (coinData == null) return false;
-        if (amount.compareTo(coinData.getBalance()) > 0) {
-            return false;
-        }
-        return true;
+        return amount.compareTo(coinData.getBalance()) <= 0;
     }
 
     @Override
@@ -320,7 +308,6 @@ public class BinanceEngine extends CoinEngine {
 
     @Override
     public InternalAmount convertToInternalAmount(Amount amount) {
-        ;
         return new InternalAmount(amount, getBalanceCurrency());
     }
 
@@ -334,8 +321,7 @@ public class BinanceEngine extends CoinEngine {
 
     @Override
     public byte[] convertToByteArray(InternalAmount internalAmount) {
-        byte[] bytes = Util.longToByteArray(internalAmount.longValueExact());
-        return bytes;
+        return Util.longToByteArray(internalAmount.longValueExact());
     }
 
     @Override
@@ -391,27 +377,6 @@ public class BinanceEngine extends CoinEngine {
         TransferMessage msgBean = txAssembler.createTransferMessage(transfer);
         byte[] msg = txAssembler.encodeTransferMessage(msgBean);
         byte[] dataForSign = txAssembler.prepareForSign(msgBean);
-//        byte[] dataForSign = Util.fromHexString("7b226163636f756e745f6e756d626572223a2231222c22636861696e5f6964223a22626e62636861696e2d31303030222c226d656d6f223a22222c226d736773223a5b7b226964223a22423635363144434331303431333030353941374330384634384336343631304331463646393036342d3130222c226f7264657274797065223a322c227072696365223a3130303030303030302c227175616e74697479223a313230303030303030302c2273656e646572223a22626e63316b6574706d6e71736779637174786e7570723667636572707073306b6c797279687a36667a6c222c2273696465223a312c2273796d626f6c223a224254432d3543345f424e42222c2274696d65696e666f726365223a317d5d2c2273657175656e6365223a2239227d");
-//
-//        byte[] privateKey = Util.fromHexString("30c5e838578a29e3e9273edddd753d6c9b38aca2446dd84bdfe2e5988b0da0a1");
-//
-//        byte[] signFromCard = CardCrypto.Signature(privateKey, dataForSign);
-//
-//                int size = signFromCard.length / 2;
-//                BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, 0, size));
-//                BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, size, size * 2));
-//                s = CryptoUtil.toCanonicalised(s);
-////                ECKey.ECDSASignature sig = new ECKey.ECDSASignature(r, s);
-////                byte[] sigDer = sig.encodeToDER();
-////                if (!ECDSASignature.isStrictlyCanonical(sigDer)) {
-////                    throw new IllegalStateException("Signature is not strictly canonical");
-////                }
-//                byte[] resultSig = new byte[64];
-//                System.arraycopy(Utils.bigIntegerToBytes(r, 32), 0, resultSig, 0, 32);
-//                System.arraycopy(Utils.bigIntegerToBytes(s, 32), 0, resultSig, 32, 32);
-//
-//        String test = Util.byteArrayToHexString(resultSig);
-//        int x = 1;
 
         return new SignTask.TransactionToSign() {
 
@@ -421,9 +386,10 @@ public class BinanceEngine extends CoinEngine {
             }
 
             @Override
-            public byte[][] getHashesToSign() {
+            public byte[][] getHashesToSign() throws NoSuchAlgorithmException {
                 byte[][] hashForSign = new byte[1][];
-                hashForSign[0] = CryptoUtil.doubleSha256(dataForSign);
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                hashForSign[0] = digest.digest(dataForSign);
                 return hashForSign;
             }
 
@@ -434,7 +400,7 @@ public class BinanceEngine extends CoinEngine {
 
             @Override
             public String getHashAlgToSign() {
-                return "sha-256x2";
+                return "sha-256";
             }
 
             @Override
@@ -444,21 +410,17 @@ public class BinanceEngine extends CoinEngine {
 
             @Override
             public byte[] onSignCompleted(byte[] signFromCard) throws Exception {
-//                int size = signFromCard.length / 2;
-//                BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, 0, size));
-//                BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, size, size * 2));
-////                s = CryptoUtil.toCanonicalised(s);
-////                ECKey.ECDSASignature sig = new ECKey.ECDSASignature(r, s);
-////                byte[] sigDer = sig.encodeToDER();
-////                if (!ECDSASignature.isStrictlyCanonical(sigDer)) {
-////                    throw new IllegalStateException("Signature is not strictly canonical");
-////                }
-//                byte[] resultSig = new byte[64];
-//                System.arraycopy(Utils.bigIntegerToBytes(r, 32), 0, resultSig, 0, 32);
-//                System.arraycopy(Utils.bigIntegerToBytes(s, 32), 0, resultSig, 32, 32);
+                int size = signFromCard.length / 2;
+                BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, 0, size));
+                BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, size, size * 2));
+                s = CryptoUtil.toCanonicalised(s);
+
+                byte[] resultSig = new byte[64];
+                System.arraycopy(Utils.bigIntegerToBytes(r, 32), 0, resultSig, 0, 32);
+                System.arraycopy(Utils.bigIntegerToBytes(s, 32), 0, resultSig, 32, 32);
 
                 // TransactionRequestAssembler.buildTransfer as reference
-                byte[] signature = txAssembler.encodeSignature(signFromCard);
+                byte[] signature = txAssembler.encodeSignature(resultSig);
                 byte[] txForSend = txAssembler.encodeStdTx(msg, signature);
 
                 notifyOnNeedSendTransaction(txForSend);
@@ -570,7 +532,7 @@ public class BinanceEngine extends CoinEngine {
 
                 @Override
                 public void onFail() {
-                    ctx.setError("Transaction send error");
+                    ctx.setError("Broadcast error");
                     blockchainRequestsCallbacks.onComplete(false);
                 }
             };
@@ -579,10 +541,14 @@ public class BinanceEngine extends CoinEngine {
             serverApiBinance.sendTransaction(txForSend, client);
 
         } catch (Exception e) {
-            Log.e(TAG, "Transaction send error");
-            ctx.setError("Transaction send error");
+            Log.e(TAG, e.getMessage());
+            ctx.setError(e.getMessage());
             blockchainRequestsCallbacks.onComplete(false);
         }
+    }
+
+    public int pendingTransactionTimeoutInSeconds() {
+        return 9;
     }
 
     public boolean allowSelectFeeLevel() {
