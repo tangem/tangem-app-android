@@ -18,7 +18,7 @@ public enum Blockchain {
     Rootstock("RSK", "RBTC", 1.0, R.drawable.tangem2, "Rootstock"),
     RootstockToken("RskToken", "RBTC", 1.0, R.drawable.tangem2, "Rootstock"),
     Cardano("CARDANO", "ADA", 1000000.0, R.drawable.tangem2, "Cardano"),
-    Ripple ("XRP", "XRP", 1000000.0, R.drawable.tangem2, "Ripple"),
+    Ripple ("XRP", "XRP", 1000000.0, R.drawable.tangem2, "XRP"),
     Binance("BINANCE", "BNB", 100000000.0, R.drawable.tangem2, "Binance"),
     BinanceTestNet("BINANCE/test", "BNB", 100000000.0, R.drawable.tangem2, "Binance Testnet");
 
@@ -60,7 +60,7 @@ public enum Blockchain {
 
     public static Blockchain fromCurrency(String currency) {
         for (Blockchain blockchain : values()) {
-            if (blockchain.getCurrency() == currency) return blockchain;
+            if (blockchain.getCurrency().equals(currency)) return blockchain;
         }
         return null;
     }
