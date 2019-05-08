@@ -69,9 +69,14 @@ public class ServerApiBinance {
             @Override
             public void onError(Throwable e) {
                 Log.e(TAG, "getBalance onError" + e.getMessage());
-                e.printStackTrace();
-                ctx.setError(e.getMessage());
-                responseListener.onFail();
+                if (e.getMessage().contains("code=404")) {
+                    ((BinanceData)ctx.getCoinData()).setError404(true);
+                    responseListener.onFail();
+                } else {
+                    e.printStackTrace();
+                    ctx.setError(e.getMessage());
+                    responseListener.onFail();
+                }
             }
 
             @Override
