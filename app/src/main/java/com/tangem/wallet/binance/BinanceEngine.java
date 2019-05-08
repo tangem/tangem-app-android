@@ -230,10 +230,17 @@ public class BinanceEngine extends CoinEngine {
     public boolean validateBalance(BalanceValidator balanceValidator) {
         try {
             if (((ctx.getCard().getOfflineBalance() == null) && !ctx.getCoinData().isBalanceReceived()) || (!ctx.getCoinData().isBalanceReceived() && (ctx.getCard().getRemainingSignatures() != ctx.getCard().getMaxSignatures()))) {
-                balanceValidator.setScore(0);
-                balanceValidator.setFirstLine("Unknown balance");
-                balanceValidator.setSecondLine("Balance cannot be verified. Swipe down to refresh.");
-                return false;
+
+                if(coinData.isError404()) {
+                    balanceValidator.setScore(0);
+                    balanceValidator.setFirstLine("No account or network error");
+                    balanceValidator.setSecondLine("To create account send funds to this address");
+                } else {
+                    balanceValidator.setScore(0);
+                    balanceValidator.setFirstLine("Unknown balance");
+                    balanceValidator.setSecondLine("Balance cannot be verified. Swipe down to refresh.");
+                    return false;
+                }
             }
 
             if (coinData.isBalanceReceived()) {
