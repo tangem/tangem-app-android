@@ -10,6 +10,7 @@ public class BinanceData extends CoinData {
     private String balance, chainId;
     private Long sequence;
     private Integer accountNumber;
+    private boolean error404 = false;
 
     @Override
     public void loadFromBundle(Bundle B) {
@@ -23,6 +24,8 @@ public class BinanceData extends CoinData {
         else  sequence = null;
         if (B.containsKey("AccountNumber")) accountNumber = B.getInt("AccountNumber");
         else accountNumber = null;
+        if (B.containsKey("Error404")) error404 = B.getBoolean("Error404");
+        else error404 = false;
     }
 
     @Override
@@ -33,6 +36,7 @@ public class BinanceData extends CoinData {
             if (chainId != null) B.putString("ChainId", chainId);
             if (sequence != null) B.putLong("Sequence", sequence);
             if (accountNumber != null) B.putInt("AccountNumber", accountNumber);
+            if (error404) B.putBoolean("Error404", true);
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());
         }
@@ -45,6 +49,7 @@ public class BinanceData extends CoinData {
         chainId = null;
         sequence = null;
         accountNumber = null;
+        error404 = false;
     }
 
     public CoinEngine.Amount getBalance() {
@@ -81,5 +86,13 @@ public class BinanceData extends CoinData {
 
     public void setChainId(String chain_id) {
         this.chainId = chain_id;
+    }
+
+    public boolean isError404() {
+        return error404;
+    }
+
+    public void setError404(boolean error404) {
+        this.error404 = error404;
     }
 }
