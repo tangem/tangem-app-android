@@ -11,7 +11,7 @@ import com.tangem.Constant
 import com.tangem.di.Navigator
 import com.tangem.di.ToastHelper
 import com.tangem.wallet.TangemContext
-import com.tangem.ui.fragment.LoadedWallet
+import com.tangem.ui.fragment.LoadedWalletFragment
 import com.tangem.wallet.R
 import javax.inject.Inject
 
@@ -41,7 +41,7 @@ class LoadedWalletActivity : AppCompatActivity() {
         if (intent.extras!!.containsKey(NfcAdapter.EXTRA_TAG)) {
             val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
             if (tag != null) {
-                val fragment = supportFragmentManager.findFragmentById(R.id.loaded_wallet_fragment) as LoadedWallet
+                val fragment = supportFragmentManager.findFragmentById(R.id.loaded_wallet_fragment) as LoadedWalletFragment
                 fragment.onTagDiscovered(tag)
             }
         }
