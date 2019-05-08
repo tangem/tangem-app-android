@@ -36,6 +36,8 @@ class LoadedWalletViewModel : ViewModel() {
             Blockchain.RootstockToken -> "bitcoin"
             Blockchain.Cardano -> "cardano"
             Blockchain.Ripple -> "ripple"
+            Blockchain.Binance -> "binance-coin"
+            Blockchain.BinanceTestNet -> "binance-coin"
             else -> {
                 throw Exception("Can''t get rate for blockchain " + ctx.blockchainName)
             }
