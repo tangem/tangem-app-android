@@ -2,40 +2,49 @@ package com.tangem.ui
 
 import android.app.Activity
 import android.content.Intent
+import android.content.SharedPreferences
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Build
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import android.preference.PreferenceManager
 import android.text.Editable
 import android.text.Html
 import android.text.TextWatcher
 import android.view.KeyEvent
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import com.tangem.App
 import com.tangem.Constant
-import com.tangem.data.Blockchain
-import com.tangem.wallet.CoinEngine
-import com.tangem.wallet.CoinEngineFactory
-import com.tangem.wallet.TangemContext
-import com.tangem.ui.event.TransactionFinishWithError
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 import com.tangem.card_android.data.loadFromBundle
 import com.tangem.card_common.data.TangemCard
+import com.tangem.data.Blockchain
+import com.tangem.di.ToastHelper
+import com.tangem.ui.activity.PinRequestActivity
+import com.tangem.ui.activity.SignTransactionActivity
+import com.tangem.ui.event.TransactionFinishWithError
 import com.tangem.util.UtilHelper
+import com.tangem.wallet.CoinEngine
+import com.tangem.wallet.CoinEngineFactory
 import com.tangem.wallet.R
+import com.tangem.wallet.TangemContext
+import kotlinx.android.synthetic.tangemAccess.activity_confirm_transaction.*
 import org.greenrobot.eventbus.EventBus
 import java.io.IOException
 import java.util.*
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
-import com.tangem.ui.activity.PinRequestActivity
-import com.tangem.ui.activity.SignTransactionActivity
-import kotlinx.android.synthetic.tangemAccess.activity_confirm_transaction.*
+import javax.inject.Inject
 
 class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
+    @Inject
+    internal lateinit var toastHelper: ToastHelper
+
+    private lateinit var sp: SharedPreferences
     private lateinit var nfcManager: NfcManager
     private lateinit var ctx: TangemContext
     private lateinit var amount: CoinEngine.Amount
@@ -48,6 +57,10 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_confirm_transaction)
+
+        App.toastHelperComponent.inject(this)
+
+        sp = PreferenceManager.getDefaultSharedPreferences(this)
 
         nfcManager = NfcManager(this, this)
         lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
@@ -95,6 +108,8 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
             rgFee.visibility = View.INVISIBLE
         }
 
+        etFee.isEnabled = sp.getBoolean(getString(R.string.pref_manual_editing_fee), false)
+
         // set listeners
         rgFee.setOnCheckedChangeListener { _, checkedId -> doSetFee(checkedId) }
         etFee.addTextChangedListener(object : TextWatcher {
@@ -113,6 +128,9 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
                         tvFeeEquivalent.visibility = View.GONE
                     } else
                         tvFeeEquivalent.error = null
+
+                    if (sp.getBoolean(getString(R.string.pref_manual_editing_fee), false))
+                        toastHelper.showSingleToast(this@ConfirmTransactionActivity, getString(R.string.risk_delaying))
 
                 } catch (e: Exception) {
                     e.printStackTrace()
