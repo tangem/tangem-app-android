@@ -58,6 +58,8 @@
     <string name="cardano">Cardano</string>
 
     <!-- SettingsActivity -->
+    <string name="сommon">Common</string>
+    <string name="manual_editing_fee">Manual editing Fee</string>
     <string name="settings">Settings</string>
     <string name="encryption_modes">Encryption modes</string>
     <string-array name="encryption_modes_entries">
@@ -115,7 +117,7 @@
     <string name="new_app_version">There is a new application version: %1$s</string>
     <string name="update">Update</string>
 
-    <!-- LoadedWalletActivity, LoadedWallet -->
+    <!-- LoadedWalletActivity, LoadedWalletFragment -->
     <string name="wallet_empty">The wallet is empty</string>
     <string name="no_compatible_wallet">No compatible wallets installed</string>
     <string name="please_wait_while_previous">Please wait while previous transaction is confirmed in blockchain</string>
@@ -217,6 +219,7 @@
     <string name="pin_2_is_required_to_sign_the_transaction">PIN2 is required to sign the payment</string>
     <string name="not_enough_funds">Not enough funds</string>
     <string name="service_unavailable">Service unavailable</string>
+    <string name="risk_delaying">You have a risk of delaying transaction</string>
 
     <!-- EmptyWalletActivity -->
     <string name="wallet_has_not_been_yet_created">Wallet hasn\'t been yet created</string>
