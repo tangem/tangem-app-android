@@ -1,5 +1,6 @@
 package com.tangem.di
 
+import com.tangem.ui.ConfirmTransactionActivity
 import com.tangem.ui.PrepareTransactionActivity
 import com.tangem.ui.activity.EmptyWalletActivity
 import com.tangem.ui.activity.LoadedWalletActivity
@@ -14,6 +15,8 @@ interface ToastHelperComponent {
     fun inject(activity: MainActivity)
 
     fun inject(activity: LoadedWalletActivity)
+
+    fun inject(activity: ConfirmTransactionActivity)
 
     fun inject(activity: PrepareTransactionActivity)
 
