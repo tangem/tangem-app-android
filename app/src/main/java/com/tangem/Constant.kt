@@ -26,7 +26,7 @@ object Constant {
 
     const val INTENT_TYPE_TEXT_PLAIN = "text/plain"
 
-    // LoadedWallet, VerifyCard
+    // LoadedWalletFragment, VerifyCard
     const val REQUEST_CODE_SEND_TRANSACTION = 1
     const val REQUEST_CODE_PURGE = 2
     const val REQUEST_CODE_REQUEST_PIN2_FOR_PURGE = 3
