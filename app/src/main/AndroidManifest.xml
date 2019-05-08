@@ -29,12 +29,13 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <!--<provider-->
-            <!--android:name="com.tangem.data.LogFileProvider"-->
-            <!--android:authorities="@string/log_file_provider_authorities"-->
-            <!--android:enabled="true"-->
-            <!--android:exported="false"-->
-            <!--android:grantUriPermissions="true" />-->
+
+        <provider
+            android:name="com.tangem.data.LogFileProvider"
+            android:authorities="@string/log_file_provider_authorities"
+            android:enabled="true"
+            android:exported="false"
+            android:grantUriPermissions="true" />
 
         <activity
             android:name="com.tangem.ui.activity.LogoActivity"
