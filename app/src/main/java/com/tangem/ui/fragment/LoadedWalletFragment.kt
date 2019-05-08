@@ -13,6 +13,7 @@ import android.nfc.tech.IsoDep
 import android.os.Build
 import android.os.Bundle
 import android.text.Html
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -20,6 +21,8 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Blockchain
@@ -63,11 +66,12 @@ import java.io.InputStream
 import java.util.*
 import kotlin.concurrent.timerTask
 
-class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, SharedPreferences.OnSharedPreferenceChangeListener {
+class LoadedWalletFragment : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, SharedPreferences.OnSharedPreferenceChangeListener {
     companion object {
-        val TAG: String = LoadedWallet::class.java.simpleName
+        val TAG: String = LoadedWalletFragment::class.java.simpleName
     }
 
+    private lateinit var viewModel: LoadedWalletViewModel
     private lateinit var ctx: TangemContext
     private lateinit var nfcManager: NfcManager
     private lateinit var mpSecondScanSound: MediaPlayer
@@ -274,17 +278,21 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
         }
         serverApiTangem.setArtworkListener(artworkListener)
 
-        // request rate info listener
-        serverApiCommon.setRateInfoListener {
-            if (activity == null || !UtilHelper.isOnline(activity!!)) return@setRateInfoListener
-            val rate = it.priceUsd.toFloat()
-            ctx.coinData!!.rate = rate
-            ctx.coinData!!.rateAlter = rate
-        }
-
         refresh()
 
         startVerify(lastTag)
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        viewModel = ViewModelProviders.of(this).get(LoadedWalletViewModel::class.java)
+
+        // set rate info to CoinData
+        viewModel.getRateInfo().observe(this, Observer<Float> { rate ->
+            ctx.coinData.rate = rate
+            ctx.coinData.rateAlter = rate
+        })
+        viewModel.requestRateInfo(ctx)
     }
 
     override fun onPause() {
@@ -647,7 +655,8 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
 
         requestBalanceAndUnspentTransactions()
 
-        requestRateInfo()
+        if (::viewModel.isInitialized)
+            viewModel.requestRateInfo(ctx)
 
         if (requestCounter == 0) {
             // if no connection and no requests posted
@@ -703,37 +712,6 @@ class LoadedWallet : androidx.fragment.app.Fragment(), NfcAdapter.ReaderCallback
                 requestCounter++
                 serverApiTangem.cardVerifyAndGetInfo(ctx.card)
             }
-        } else {
-            ctx.error = getString(R.string.no_connection)
-            updateViews()
-        }
-    }
-
-    private fun requestRateInfo() {
-        if (UtilHelper.isOnline(context as Activity)) {
-            LOG.i(TAG, "requestRateInfo")
-
-            // TODO - move requestRateInfo to CoinEngine
-            val cryptoId: String = when (ctx.blockchain) {
-                Blockchain.Bitcoin -> "bitcoin"
-                Blockchain.BitcoinTestNet -> "bitcoin"
-                Blockchain.Ethereum -> "ethereum"
-                Blockchain.EthereumTestNet -> "ethereum"
-                Blockchain.Token -> "ethereum"
-                Blockchain.NftToken -> "ethereum"
-                Blockchain.BitcoinCash -> "bitcoin-cash"
-                Blockchain.Litecoin -> "litecoin"
-                Blockchain.Rootstock -> "bitcoin"
-                Blockchain.RootstockToken -> "bitcoin"
-                Blockchain.Cardano -> "cardano"
-                Blockchain.Ripple -> "ripple"
-                Blockchain.Binance -> "binance-coin"
-                Blockchain.BinanceTestNet -> "binance-coin"
-                else -> {
-                    throw Exception("Can''t get rate for blockchain " + ctx.blockchainName)
-                }
-            }
-            serverApiCommon.requestRateInfo(cryptoId)
         } else {
             ctx.error = getString(R.string.no_connection)
             updateViews()

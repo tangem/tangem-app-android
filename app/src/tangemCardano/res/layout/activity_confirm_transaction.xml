@@ -152,35 +152,36 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent">
 
             <EditText
                 android:id="@+id/etAmount"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:enabled="false"
+                android:digits="0123456789.,"
                 android:fontFamily="@font/maax"
-                android:hint="@string/payment_amount"
+                android:hint="@string/enter_amount"
+                android:imeOptions="actionDone"
                 android:inputType="numberDecimal"
                 android:padding="12dp"
-                android:textColor="@color/black"
-                android:textColorLink="@color/colorPrimary"
                 android:textSize="@dimen/text_size_1_large"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/tvCurrency"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintWidth_min="150dp"
+                tools:text="1.34343434343443434343434" />
 
             <TextView
                 android:id="@+id/tvCurrency"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="8dp"
+                android:layout_marginEnd="16dp"
                 android:fontFamily="@font/maax"
                 android:text="@string/m_btc"
+                android:textColor="@color/primary"
                 android:textSize="@dimen/text_size_1_large"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
