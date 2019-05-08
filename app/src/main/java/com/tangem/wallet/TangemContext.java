@@ -22,6 +22,7 @@ public class TangemContext {
     }
 
     public TangemContext(TangemCard card) {
+
         this.card = card;
     }
 
@@ -135,6 +136,21 @@ public class TangemContext {
         return tangemContext;
     }
 
+    public void saveToBundle(Bundle intent) {
+
+        if (card != null) {
+            intent.putString(TangemCardExtensionsKt.EXTRA_TANGEM_CARD_UID, card.getUID());
+            intent.putBundle(TangemCardExtensionsKt.EXTRA_TANGEM_CARD, TangemCardExtensionsKt.getAsBundle(card));
+        }
+
+        if (coinData != null) {
+            intent.putBundle(Constant.EXTRA_BLOCKCHAIN_DATA, coinData.asBundle());
+        }
+
+        intent.putString("Error", error);
+        intent.putString("Message", message);
+    }
+
     public void saveToIntent(Intent intent) {
 
         if (card != null) {
@@ -148,7 +164,6 @@ public class TangemContext {
 
         intent.putExtra("Error", error);
         intent.putExtra("Message", message);
-
     }
 
     public String getString(int stringId) {
