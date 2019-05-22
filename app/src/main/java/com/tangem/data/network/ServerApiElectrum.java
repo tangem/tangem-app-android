@@ -317,15 +317,16 @@ public class ServerApiElectrum {
             // install the all-trusting host verifier
             HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
 
-            SSLSocket sslSocket;
+            Socket sslSocket = new Socket();
 
             List<ElectrumRequest> result = new ArrayList<>();
             Collections.addAll(result, electrumRequest);
 
             try {
                 Log.i(TAG, host + " " + port);
-                sslSocket = (SSLSocket) sf.createSocket(host, port);
+                sslSocket.connect(new InetSocketAddress(host,port), 3000);
                 sslSocket.setSoTimeout(3000);
+                sslSocket = sf.createSocket(sslSocket, host, port, true);
                 try {
                     OutputStream os = sslSocket.getOutputStream();
                     OutputStreamWriter out = new OutputStreamWriter(os, "UTF-8");
