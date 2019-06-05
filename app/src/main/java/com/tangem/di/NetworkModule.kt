@@ -48,6 +48,18 @@ internal class NetworkModule {
 
     @Singleton
     @Provides
+    @Named(Server.ApiMaticTesnet.URL_MATIC_TESTNET)
+    fun provideRetrofitMaticTestnet(): Retrofit {
+        val builder = Retrofit.Builder()
+                .baseUrl(Server.ApiMaticTesnet.URL_MATIC_TESTNET)
+                .addConverterFactory(GsonConverterFactory.create())
+        if (BuildConfig.DEBUG)
+            builder.client(createOkHttpClient())
+        return builder.build()
+    }
+
+    @Singleton
+    @Provides
     @Named(Server.ApiEstimatefee.URL_ESTIMATEFEE)
     fun provideRetrofitEstimatefee(): Retrofit {
         val builder = Retrofit.Builder()
