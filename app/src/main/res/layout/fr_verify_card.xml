@@ -93,7 +93,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/maax"
-                        android:text="@string/smart_cash_ag"
+                        android:text="@string/tangem_ag"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_medium"
                         android:textStyle="normal|bold" />
@@ -317,7 +317,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/maax"
-                        android:text="@string/smart_cash_ag"
+                        android:text="@string/tangem_ag"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_medium"
                         android:textStyle="normal|bold" />
