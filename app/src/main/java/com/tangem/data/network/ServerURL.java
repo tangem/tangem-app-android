@@ -10,4 +10,5 @@ class ServerURL {
     static final String API_BLOCKCYPHER = "https://api.blockcypher.com/";
     static final String API_BINANCE = "https://dex.binance.org/";
     static final String API_BINANCE_TESTNET = "https://testnet-dex.binance.org/";
+    static final String API_MATIC_TESTNET = "https://testnet2.matic.network";
 }
