@@ -40,7 +40,7 @@
     <string name="amount">Amount</string>
     <string name="m_btc">BTC</string>
     <string name="scan_again_to_verify_the_card">Scan again to verify the card</string>
-    <string name="smart_cash_ag">Smart Cash AG</string>
+    <string name="tangem_ag">Tangem AG</string>
     <string name="wallet">Wallet</string>
     <string name="need_attach_card_again">Scan again to verify the card</string>
     <string name="reading">READING…</string>
