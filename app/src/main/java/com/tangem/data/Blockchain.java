@@ -20,7 +20,9 @@ public enum Blockchain {
     Cardano("CARDANO", "ADA", 1000000.0, R.drawable.tangem2, "Cardano"),
     Ripple ("XRP", "XRP", 1000000.0, R.drawable.tangem2, "XRP"),
     Binance("BINANCE", "BNB", 100000000.0, R.drawable.tangem2, "Binance"),
-    BinanceTestNet("BINANCE/test", "BNB", 100000000.0, R.drawable.tangem2, "Binance Testnet");
+    BinanceTestNet("BINANCE/test", "BNB", 100000000.0, R.drawable.tangem2, "Binance Testnet"),
+    Matic("MATIC", "MTX", 1.0, R.drawable.tangem2, "Matic"),
+    MaticTestNet("MATIC/test", "MTX", 1.0, R.drawable.tangem2, "Matic Testnet");
 
     Blockchain(String ID, String currency, double multiplier, int imageResource, String officialName) {
         mID = ID;
