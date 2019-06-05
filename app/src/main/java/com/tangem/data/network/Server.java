@@ -44,6 +44,17 @@ public class Server {
     }
 
     /**
+     * https://testnet2.matic.network
+     */
+    public static class ApiMaticTesnet {
+        public static final String URL_MATIC_TESTNET = ServerURL.API_MATIC_TESTNET ;
+
+        public static class Method {
+            static final String MAIN = URL_MATIC_TESTNET;
+        }
+    }
+
+    /**
      * https://estimatefee.com/
      */
     public static class ApiEstimatefee {
