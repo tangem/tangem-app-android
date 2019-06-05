@@ -82,7 +82,8 @@ public class EthTransaction {
         Kovan(42),
         Ethereum_Classic_mainnet(61),
         Ethereum_Classic_testnet(62),
-        Geth_private_chains(1337);
+        Geth_private_chains(1337),
+        Matic_Testnet(8995);
 
         private int value;
 
