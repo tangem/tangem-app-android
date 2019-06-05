@@ -58,7 +58,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:fontFamily="@font/maax"
-        android:text="@string/smart_cash_ag"
+        android:text="@string/tangem_ag"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         android:textSize="@dimen/text_size_small"
         app:layout_constraintBottom_toBottomOf="parent"
