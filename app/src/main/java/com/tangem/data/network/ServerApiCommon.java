@@ -92,7 +92,7 @@ public class ServerApiCommon {
     }
 
     public void requestRateInfo(String cryptoId) {
-        CoinmarketApi coinmarketApi = App.getNetworkComponent().getRetrofitCoinmarketcap().create(CoinmarketApi.class);
+        CoinmarketApi coinmarketApi = App.Companion.getNetworkComponent().getRetrofitCoinmarketcap().create(CoinmarketApi.class);
 
         Call<RateInfoResponse> call = coinmarketApi.getRateInfo(1, cryptoId);
 
@@ -100,17 +100,17 @@ public class ServerApiCommon {
             @Override
             public void onResponse(@NonNull Call<RateInfoResponse> call, @NonNull Response<RateInfoResponse> response) {
                 if (response.code() == 200) {
-                    rateInfoDataListener.onSuccess(response.body());
+                    rateInfoListener.onSuccess(response.body());
                     Log.i(TAG, "coinmarketcap onResponse " + response.code());
                 } else {
-                    rateInfoDataListener.onFail("Rate info error:" + String.valueOf(response.code()));
+                    rateInfoListener.onFail("Rate info error:" + String.valueOf(response.code()));
                     Log.e(TAG, "coinmarketcap onResponse " + response.code());
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<RateInfoResponse> call, @NonNull Throwable t) {
-                rateInfoDataListener.onFail(String.valueOf(t.getMessage()));
+                rateInfoListener.onFail(String.valueOf(t.getMessage()));
                 Log.e(TAG, "coinmarketcap onFailure " + t.getMessage());
             }
         });
