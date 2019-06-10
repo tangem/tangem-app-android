@@ -5,6 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.tangem.data.Blockchain
 import com.tangem.data.network.ServerApiCommon
+import com.tangem.data.network.ServerApiCommon.RateInfoListener
+import com.tangem.data.network.model.RateInfoResponse
 import com.tangem.wallet.TangemContext
 
 class LoadedWalletViewModel : ViewModel() {
@@ -23,34 +25,18 @@ class LoadedWalletViewModel : ViewModel() {
     fun requestRateInfo(ctx: TangemContext) {
         this.ctx = ctx
 // [REDACTED_TODO_COMMENT]
-        val cryptoId: String = when (ctx.blockchain) {
-            Blockchain.Bitcoin -> "bitcoin"
-            Blockchain.BitcoinTestNet -> "bitcoin"
-            Blockchain.Ethereum -> "ethereum"
-            Blockchain.EthereumTestNet -> "ethereum"
-            Blockchain.Token -> "ethereum"
-            Blockchain.NftToken -> "ethereum"
-            Blockchain.BitcoinCash -> "bitcoin-cash"
-            Blockchain.Litecoin -> "litecoin"
-            Blockchain.Rootstock -> "bitcoin"
-            Blockchain.RootstockToken -> "bitcoin"
-            Blockchain.Cardano -> "cardano"
-            Blockchain.Ripple -> "ripple"
-            Blockchain.Binance -> "binance-coin"
-            Blockchain.BinanceTestNet -> "binance-coin"
-            Blockchain.Matic -> "bitcoin"
-            Blockchain.MaticTestNet -> "bitcoin"
-            else -> {
-                throw Exception("Can''t get rate for blockchain " + ctx.blockchainName)
-            }
-        }
-        serverApiCommon.requestRateInfo(cryptoId)
+        serverApiCommon.requestRateInfo(ctx.blockchain.currency)
     }
 
     private fun loadRateInfo() {
-        serverApiCommon.setRateInfoListener {
-            val rate = it.priceUsd.toFloat()
-            this.rate.value = rate
-        }
+        serverApiCommon.setRateInfoListener(object: RateInfoListener{
+            override fun onSuccess(rateInfoResponse: RateInfoResponse?) {
+                rate.value = rateInfoResponse!!.data!!.quote!!.usd!!.price
+            }
+
+            override fun onFail(message: String?) {
+                ctx.error = message
+            }
+        })
     }
 }
