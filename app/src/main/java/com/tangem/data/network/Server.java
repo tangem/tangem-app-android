@@ -17,7 +17,7 @@ public class Server {
         public static final String URL_COINMARKET = ServerURL.API_COINMARKETCAP;
 
         public static class Method {
-            static final String V1_TICKER_CONVERT = URL_COINMARKET + "v1/ticker/?convert=USD&limit=10";
+            static final String PRICE_CONVERSION = URL_COINMARKET + "v1/tools/price-conversion";
         }
     }
 

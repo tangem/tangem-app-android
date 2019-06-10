@@ -62,7 +62,7 @@ public enum Blockchain {
 
     public static Blockchain fromCurrency(String currency) {
         for (Blockchain blockchain : values()) {
-            if (blockchain.getCurrency().equals(currency)) return blockchain;
+            if (blockchain.getCurrency() == currency) return blockchain;
         }
         return null;
     }
@@ -96,9 +96,6 @@ public enum Blockchain {
         switch (blockchainID) {
             case "BTC":
                 return R.drawable.ic_logo_bitcoin;
-
-            case "BCH":
-                return R.drawable.ic_logo_bitcoin_cash;
 
             case "Token":
                 if (symbolName.equals("SEED"))
