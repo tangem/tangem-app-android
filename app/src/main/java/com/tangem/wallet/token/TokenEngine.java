@@ -527,7 +527,7 @@ public class TokenEngine extends CoinEngine {
         };
     }
 
-    private SignTask.TransactionToSign constructTransactionToken(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
+    protected SignTask.TransactionToSign constructTransactionToken(Amount feeValue, Amount amountValue, boolean IncFee, String targetAddress) throws Exception {
         Log.e(TAG, "Construct TOKEN transaction " + amountValue.toString() + " with fee " + feeValue.toString() + (IncFee ? " including" : " excluding"));
 
         BigInteger nonceValue = coinData.getConfirmedTXCount();
