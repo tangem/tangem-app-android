@@ -3,6 +3,7 @@ package com.tangem.wallet.matic;
 import android.net.Uri;
 import android.util.Log;
 
+import com.tangem.card_common.tasks.SignTask;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiMatic;
 import com.tangem.data.network.model.InfuraResponse;
@@ -87,6 +88,11 @@ public class MaticTokenEngine extends TokenEngine {
     @Override
     public boolean checkNewTransactionAmountAndFee(Amount amount, Amount fee, Boolean isFeeIncluded) {
         return true;
+    }
+
+    @Override
+    public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
+            return constructTransactionToken(feeValue, amountValue, IncFee, targetAddress);
     }
 
     @Override
