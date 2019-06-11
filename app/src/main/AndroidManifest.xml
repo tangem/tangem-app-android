@@ -30,12 +30,12 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
 
-        <provider
-            android:name="com.tangem.data.LogFileProvider"
-            android:authorities="@string/log_file_provider_authorities"
-            android:enabled="true"
-            android:exported="false"
-            android:grantUriPermissions="true" />
+        <!--<provider-->
+            <!--android:name="com.tangem.data.LogFileProvider"-->
+            <!--android:authorities="@string/log_file_provider_authorities"-->
+            <!--android:enabled="true"-->
+            <!--android:exported="false"-->
+            <!--android:grantUriPermissions="true" />-->
 
         <activity
             android:name="com.tangem.ui.activity.LogoActivity"
@@ -59,6 +59,15 @@
                 <data
                     android:host="www.tangem.com"
                     android:scheme="http" />
+                <data
+                    android:host="www.tangem.com"
+                    android:scheme="https" />
+                <data
+                    android:host="tangem.com"
+                    android:scheme="http" />
+                <data
+                    android:host="tangem.com"
+                    android:scheme="https" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.nfc.action.TECH_DISCOVERED" />
