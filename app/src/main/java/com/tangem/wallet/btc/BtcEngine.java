@@ -581,7 +581,7 @@ public class BtcEngine extends CoinEngine {
 
         serverApiBlockcypher.setResponseListener(blockcypherListener);
 
-        serverApiBlockcypher.requestData(ServerApiBlockcypher.BLOCKCYPHER_ADDRESS, ctx.getCoinData().getWallet(), "");
+        serverApiBlockcypher.requestData(ctx.getBlockchain().getID(), ServerApiBlockcypher.BLOCKCYPHER_ADDRESS, ctx.getCoinData().getWallet(), "");
     }
 
 //    @Override
@@ -870,7 +870,7 @@ public class BtcEngine extends CoinEngine {
 
         serverApiBlockcypher.setResponseListener(blockcypherListener);
 
-        serverApiBlockcypher.requestData(ServerApiBlockcypher.BLOCKCYPHER_FEE, "", "");
+        serverApiBlockcypher.requestData(ctx.getBlockchain().getID(), ServerApiBlockcypher.BLOCKCYPHER_FEE, "", "");
     }
 
 //    @Override
@@ -1020,6 +1020,6 @@ public class BtcEngine extends CoinEngine {
         };
         serverApiBlockcypher.setResponseListener(blockcypherListener);
 
-        serverApiBlockcypher.requestData(ServerApiBlockcypher.BLOCKCYPHER_SEND, "", txStr);
+        serverApiBlockcypher.requestData(ctx.getBlockchain().getID(), ServerApiBlockcypher.BLOCKCYPHER_SEND, "", txStr);
     }
 }
