@@ -97,6 +97,12 @@ class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         viewModel.getVersionName().observe(this, Observer { text ->
             (activity as MainActivity).toastHelper.showSnackbarUpdateVersion(context!!, cl, text)
         })
+
+        val intent = activity?.intent
+        if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action || NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action)) {
+            val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
+            onTagDiscovered(tag)
+        }
     }
 
     override fun onResume() {
