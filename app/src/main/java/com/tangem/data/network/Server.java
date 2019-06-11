@@ -67,6 +67,10 @@ public class Server {
         }
     }
 
+    /**
+     * https://dex.binance.org/
+     */
+
     public static class ApiBinance {
         public static final String URL_BINANCE = ServerURL.API_BINANCE;
 
@@ -74,6 +78,10 @@ public class Server {
             public static final String API_V1 = URL_BINANCE + "api/v1/";
         }
     }
+
+    /**
+     * https://testnet-dex.binance.org/
+     */
 
     public static class ApiBinanceTestnet {
         public static final String URL_BINANCE_TESTNET = ServerURL.API_BINANCE_TESTNET;
@@ -83,12 +91,16 @@ public class Server {
         }
     }
 
+    /**
+     * https://api.blockcypher.com/
+     */
+
     public static class ApiBlockcypher {
         public static final String URL_BLOCKCYPHER = ServerURL.API_BLOCKCYPHER;
-        static final String V1_BTC_MAIN = "v1/btc/main";
+        static final String V1_MAIN = "v1/{blockchain}/main";
 
         public static class Method {
-            static final String MAIN = URL_BLOCKCYPHER + V1_BTC_MAIN;
+            static final String MAIN = URL_BLOCKCYPHER + V1_MAIN;
             static final String ADDRESS = MAIN + "/addrs/{address}?unspentOnly=true&includeScript=true";
             static final String PUSH = MAIN + "/txs/push";
         }
