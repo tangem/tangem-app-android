@@ -7,9 +7,9 @@ package com.tangem.card_common.data;
 public enum Manufacturer {
 
     Unknown("", "Unknown"),
-    SMARTCASH_AG("SMART CASH AG", "SMART CASH AG"),
-    DEVELOPERS_SMARTCASH_AG("DEVELOP CASH AG", "SMART CASH AG (DEVELOPERS)"),
-    SMARTCASH("SMART CASH", "SMART CASH");
+    SMARTCASH_AG("SMART CASH AG", "TANGEM AG"),
+    DEVELOPERS_SMARTCASH_AG("DEVELOP CASH AG", "TANGEM AG (DEVELOPERS)"),
+    SMARTCASH("SMART CASH", "TANGEM");
 
     private String ID;
     private String officialName;
