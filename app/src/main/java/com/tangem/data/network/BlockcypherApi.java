@@ -14,12 +14,12 @@ import retrofit2.http.Query;
 
 public interface BlockcypherApi {
     @GET(Server.ApiBlockcypher.Method.MAIN)
-    Call<BlockcypherFee> blockcypherMain();
+    Call<BlockcypherFee> blockcypherMain(@Path("blockchain") String blockchain);
 
     @GET(Server.ApiBlockcypher.Method.ADDRESS)
-    Call<BlockcypherResponse> blockcypherAddress(@Path("address") String address);
+    Call<BlockcypherResponse> blockcypherAddress(@Path("blockchain") String blockchain, @Path("address") String address);
 
     @Headers("Content-Type: application/json")
     @POST(Server.ApiBlockcypher.Method.PUSH)
-    Call<BlockcypherResponse> blockcypherPush(@Body BlockcypherBody blockcypherBody, @Query("token") String token);
+    Call<BlockcypherResponse> blockcypherPush(@Path("blockchain") String blockchain, @Body BlockcypherBody blockcypherBody, @Query("token") String token);
 }
