@@ -94,42 +94,39 @@ public class ServerApiCommon {
     public void requestRateInfo(String cryptoId) {
         CoinmarketApi coinmarketApi = App.Companion.getNetworkComponent().getRetrofitCoinmarketcap().create(CoinmarketApi.class);
 
-        Call<RateInfoResponse> call = coinmarketApi.getRateInfo(1, cryptoId);
-
-        call.enqueue(new Callback<RateInfoResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<RateInfoResponse> call, @NonNull Response<RateInfoResponse> response) {
-                if (response.code() == 200) {
-                    rateInfoListener.onSuccess(response.body());
-                    Log.i(TAG, "coinmarketcap onResponse " + response.code());
-                } else {
-                    rateInfoListener.onFail("Rate info error:" + String.valueOf(response.code()));
-                    Log.e(TAG, "coinmarketcap onResponse " + response.code());
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<RateInfoResponse> call, @NonNull Throwable t) {
-                rateInfoListener.onFail(String.valueOf(t.getMessage()));
-                Log.e(TAG, "coinmarketcap onFailure " + t.getMessage());
-            }
-        });
-//        coinmarketApi.getRateInfoList()
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(rateInfoModelList -> {
-//                            if (!rateInfoModelList.isEmpty()) {
-//                                for (RateInfoResponse rateInfoMode : rateInfoModelList) {
-//                                    if (rateInfoMode.getId().equals(cryptoId)) {
-//                                        rateInfoDataListener.onSuccess(rateInfoMode);
-//                                        Log.i(TAG, "rateInfoData        " + cryptoId + " onResponse " + "200");
-//                                    }
-//                                }
-//                            } else
-//                                Log.e(TAG, "rateInfoData        " + cryptoId + " onResponse " + "Empty");
-//                        },
-//                        // handle error
-//                        Throwable::printStackTrace);
+//        Call<RateInfoResponse> call = coinmarketApi.getRateInfo(1, cryptoId);
+//
+//        call.enqueue(new Callback<RateInfoResponse>() {
+//            @Override
+//            public void onResponse(@NonNull Call<RateInfoResponse> call, @NonNull Response<RateInfoResponse> response) {
+//                if (response.code() == 200) {
+//                    rateInfoListener.onSuccess(response.body());
+//                    Log.i(TAG, "coinmarketcap onResponse " + response.code());
+//                } else {
+//                    rateInfoListener.onFail("Rate info error:" + String.valueOf(response.code()));
+//                    Log.e(TAG, "coinmarketcap onResponse " + response.code());
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(@NonNull Call<RateInfoResponse> call, @NonNull Throwable t) {
+//                rateInfoListener.onFail(String.valueOf(t.getMessage()));
+//                Log.e(TAG, "coinmarketcap onFailure " + t.getMessage());
+//            }
+//        });
+        coinmarketApi.getRateInfo(1, cryptoId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(rateInfoResponse -> {
+                            if (rateInfoResponse.getData().getQuote().getUsd().getPrice() != null) {
+                                rateInfoListener.onSuccess(rateInfoResponse);
+                                Log.i(TAG, "coinmarketcap onResponse " + 200);
+                            } else {
+                                rateInfoListener.onFail("Rate info error: wrong response");
+                            }
+                        },
+                        // handle error
+                        Throwable::printStackTrace);
     }
 
     /**
