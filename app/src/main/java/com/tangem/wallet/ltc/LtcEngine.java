@@ -395,18 +395,15 @@ public class LtcEngine extends BtcEngine {
 
     @Override
     public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
-        final ArrayList<UnspentOutputInfo> unspentOutputs;
+        ArrayList<UnspentOutputInfo> unspentOutputs = new ArrayList<>();
         checkBlockchainDataExists();
 
         String myAddress = ctx.getCoinData().getWallet();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
 
-        // Build script for our address
-        List<BtcData.UnspentTransaction> rawTxList = coinData.getUnspentTransactions();
-        byte[] outputScriptWeAreAbleToSpend = Transaction.Script.buildOutput(myAddress).bytes;
-
-        // Collect unspent
-        unspentOutputs = BTCUtils.getOutputs(rawTxList, outputScriptWeAreAbleToSpend);
+        for (BtcData.UnspentTransaction utxo : coinData.getUnspentTransactions()) {
+            unspentOutputs.add(new UnspentOutputInfo(BTCUtils.fromHex(utxo.txID), new Transaction.Script(BTCUtils.fromHex(utxo.Raw)), utxo.Amount, utxo.Height, -1, utxo.txID, null));
+        }
 
         long fullAmount = 0;
         for (int i = 0; i < unspentOutputs.size(); ++i) {
@@ -495,66 +492,16 @@ public class LtcEngine extends BtcEngine {
         };
     }
 
-    private final static BigDecimal relayFee = new BigDecimal(0.00001);
+    private final static BigDecimal relayFee = new BigDecimal(0.00001).setScale(8, RoundingMode.DOWN);
 
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) throws Exception {
-        final int calcSize = calculateEstimatedTransactionSize(targetAddress, amount.toValueString());
-        Log.e(TAG, String.format("Estimated tx size %d", calcSize));
-        coinData.minFee=null;
-        coinData.maxFee=null;
-        coinData.normalFee=null;
+        coinData.minFee = coinData.normalFee = coinData.maxFee = new Amount(relayFee, "LTC");
+        blockchainRequestsCallbacks.onComplete(true);
+    }
 
-        final ServerApiElectrum serverApiElectrum = new ServerApiElectrum();
-
-        final ServerApiElectrum.ResponseListener electrumListener  = new ServerApiElectrum.ResponseListener() {
-            @Override
-            public void onSuccess(ElectrumRequest electrumRequest) {
-                BigDecimal fee;
-                if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetFee)) {
-                    try {
-                        fee = new BigDecimal(electrumRequest.getResultString()); //fee per KB
-
-                        if (fee.equals(BigDecimal.ZERO)) {
-                            serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
-                        }
-
-//                        if (calcSize != 0) {
-                        fee = fee.multiply(new BigDecimal(calcSize)).divide(new BigDecimal(1024)); // (per KB -> per byte)*size
-//                        } else {
-//                            serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
-//                        }
-
-                        //compare fee to usual relay fee
-                        if (fee.compareTo(relayFee) < 0) {
-                            fee = relayFee;
-                        }
-                        fee = fee.setScale(8, RoundingMode.DOWN);
-
-                        CoinEngine.Amount feeAmount = new CoinEngine.Amount(fee,  ctx.getBlockchain().getCurrency());
-                        coinData.minFee = feeAmount;
-                        coinData.normalFee = feeAmount;
-                        coinData.maxFee = feeAmount;
-//                        if (coinData.minFee != null && coinData.normalFee != null && coinData.maxFee != null) {
-                        blockchainRequestsCallbacks.onComplete(true);
-//                        } else {
-//                            blockchainRequestsCallbacks.onProgress();
-//                        }
-
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            @Override
-            public void onFail(ElectrumRequest electrumRequest) {
-                ctx.setError(electrumRequest.getError());
-                blockchainRequestsCallbacks.onComplete(false);
-            }
-        };
-        serverApiElectrum.setResponseListener(electrumListener);
-
-        serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
+    @Override
+    public boolean allowSelectFeeLevel() {
+        return false;
     }
 }
