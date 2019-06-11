@@ -42,13 +42,14 @@ public class ServerApiBlockcypher {
         responseListener = listener;
     }
 
-    public void requestData(String method, String wallet, String tx) {
+    public void requestData(String blockchainID, String method, String wallet, String tx) {
         requestsCount++;
+        String blockchain = blockchainID.toLowerCase();
         BlockcypherApi blockcypherApi = App.Companion.getNetworkComponent().getRetrofitBlockcypher().create(BlockcypherApi.class);
 
         switch (method) {
             case BLOCKCYPHER_ADDRESS:
-                Call<BlockcypherResponse> addressCall = blockcypherApi.blockcypherAddress(wallet);
+                Call<BlockcypherResponse> addressCall = blockcypherApi.blockcypherAddress(blockchain, wallet);
                 addressCall.enqueue(new Callback<BlockcypherResponse>() {
                     @Override
                     public void onResponse(@NonNull Call<BlockcypherResponse> call, @NonNull Response<BlockcypherResponse> response) {
@@ -71,7 +72,7 @@ public class ServerApiBlockcypher {
                 break;
 
             case BLOCKCYPHER_FEE:
-                Call<BlockcypherFee> feeCall = blockcypherApi.blockcypherMain();
+                Call<BlockcypherFee> feeCall = blockcypherApi.blockcypherMain(blockchain);
                 feeCall.enqueue(new Callback<BlockcypherFee>() {
                     @Override
                     public void onResponse(@NonNull Call<BlockcypherFee> call, @NonNull Response<BlockcypherFee> response) {
@@ -96,7 +97,7 @@ public class ServerApiBlockcypher {
             case BLOCKCYPHER_SEND:
                 BlockcypherToken blockcypherToken = BlockcypherToken.values()[new Random().nextInt(BlockcypherToken.values().length)];
 
-                Call<BlockcypherResponse> sendCall = blockcypherApi.blockcypherPush(new BlockcypherBody(tx), blockcypherToken.getToken());
+                Call<BlockcypherResponse> sendCall = blockcypherApi.blockcypherPush(blockchain, new BlockcypherBody(tx), blockcypherToken.getToken());
                 sendCall.enqueue(new Callback<BlockcypherResponse>() {
                     @Override
                     public void onResponse(@NonNull Call<BlockcypherResponse> call, @NonNull Response<BlockcypherResponse> response) {
