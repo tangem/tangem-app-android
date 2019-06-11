@@ -32,7 +32,7 @@ public final class Transaction {
         try {
             bais = new BitcoinInputStream(rawBytes);
             version = bais.readInt32();
-            if (version != 1 && version != 2 && version != 3) {
+            if (version != 1 && version != 2 && version != 3 && version != -1273714314) {
                 throw new BitcoinException(BitcoinException.ERR_UNSUPPORTED, "Unsupported TX version", version);
             }
 
