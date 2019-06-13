@@ -20,4 +20,12 @@
     <string name="_9">9</string>
     <string name="_0">0</string>
 
+    <string name="log_file_provider_authorities">com.tangem.data.LogFileProvider</string>
+    <string name="ex_cant_create_coinEngine">Can\'t create CoinEngine!</string>
+
+    <string name="pref_category_common">category_common</string>
+    <string name="pref_manual_editing_fee">manual_editing_fee</string>
+    <string name="pref_select_nodes">select_nodes</string>
+    <string name="pref_encryption_modes">encryption_modes</string>
+
 </resources>

@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    tools:context="com.tangem.presentation.activity.PinRequestActivity">
+    tools:context="com.tangem.ui.activity.PinRequestActivity">
 
     <TextView
         android:id="@+id/tvPin"
@@ -15,7 +15,7 @@
         android:paddingBottom="16dp"
         android:singleLine="false"
         android:textAlignment="center"
-        android:textSize="36sp"
+        android:textSize="36dp"
         tools:ignore="TextViewEdits"
         tools:text="1234" />
 
@@ -45,7 +45,7 @@
 
         <include layout="@layout/layout_pin_buttons" />
 
-        <android.support.v7.widget.AppCompatButton
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnContinue"
             style="@style/AppTheme.RoundedCornerMaterialButton"
             android:layout_width="match_parent"
