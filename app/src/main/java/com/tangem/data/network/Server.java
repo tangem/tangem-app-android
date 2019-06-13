@@ -17,7 +17,7 @@ public class Server {
         public static final String URL_COINMARKET = ServerURL.API_COINMARKETCAP;
 
         public static class Method {
-            static final String V1_TICKER_CONVERT = URL_COINMARKET + "v1/ticker/?convert=USD&lmit=10";
+            static final String PRICE_CONVERSION = URL_COINMARKET + "v1/tools/price-conversion";
         }
     }
 
@@ -28,7 +28,29 @@ public class Server {
         public static final String URL_INFURA = ServerURL.API_INFURA;
 
         public static class Method {
-            static final String MAIN = URL_INFURA + "613a0b14833145968b1f656240c7d245";
+            static final String MAIN = URL_INFURA + "v3/613a0b14833145968b1f656240c7d245";
+        }
+    }
+
+    /**
+     * https://public-node.rsk.co/
+     */
+    public static class ApiRootstock {
+        public static final String URL_ROOTSTOCK = ServerURL.API_ROOTSTOCK;
+
+        public static class Method {
+            static final String MAIN = URL_ROOTSTOCK;
+        }
+    }
+
+    /**
+     * https://testnet2.matic.network
+     */
+    public static class ApiMaticTesnet {
+        public static final String URL_MATIC_TESTNET = ServerURL.API_MATIC_TESTNET ;
+
+        public static class Method {
+            static final String MAIN = URL_MATIC_TESTNET;
         }
     }
 
@@ -45,4 +67,42 @@ public class Server {
         }
     }
 
+    /**
+     * https://dex.binance.org/
+     */
+
+    public static class ApiBinance {
+        public static final String URL_BINANCE = ServerURL.API_BINANCE;
+
+        public static class Method {
+            public static final String API_V1 = URL_BINANCE + "api/v1/";
+        }
+    }
+
+    /**
+     * https://testnet-dex.binance.org/
+     */
+
+    public static class ApiBinanceTestnet {
+        public static final String URL_BINANCE_TESTNET = ServerURL.API_BINANCE_TESTNET;
+
+        public static class Method {
+            public static final String API_V1 = URL_BINANCE_TESTNET + "api/v1/";
+        }
+    }
+
+    /**
+     * https://api.blockcypher.com/
+     */
+
+    public static class ApiBlockcypher {
+        public static final String URL_BLOCKCYPHER = ServerURL.API_BLOCKCYPHER;
+        static final String V1_MAIN = "v1/{blockchain}/main";
+
+        public static class Method {
+            static final String MAIN = URL_BLOCKCYPHER + V1_MAIN;
+            static final String ADDRESS = MAIN + "/addrs/{address}?unspentOnly=true&includeScript=true";
+            static final String PUSH = MAIN + "/txs/push";
+        }
+    }
 }
