@@ -8,7 +8,7 @@
         android:required="true" />
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+    <uses-permission android:name="android.permission.USE_BIOMETRICT" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -29,15 +29,16 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <provider
-            android:name="com.tangem.data.LogFileProvider"
-            android:authorities="@string/log_file_provider_authorities"
-            android:enabled="true"
-            android:exported="false"
-            android:grantUriPermissions="true" />
+
+        <!--<provider-->
+            <!--android:name="com.tangem.data.LogFileProvider"-->
+            <!--android:authorities="@string/log_file_provider_authorities"-->
+            <!--android:enabled="true"-->
+            <!--android:exported="false"-->
+            <!--android:grantUriPermissions="true" />-->
 
         <activity
-            android:name="com.tangem.presentation.activity.LogoActivity"
+            android:name="com.tangem.ui.activity.LogoActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -48,7 +49,7 @@
         </activity>
 
         <activity
-            android:name="com.tangem.presentation.activity.MainActivity"
+            android:name="com.tangem.ui.activity.MainActivity"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
@@ -58,6 +59,15 @@
                 <data
                     android:host="www.tangem.com"
                     android:scheme="http" />
+                <data
+                    android:host="www.tangem.com"
+                    android:scheme="https" />
+                <data
+                    android:host="tangem.com"
+                    android:scheme="http" />
+                <data
+                    android:host="tangem.com"
+                    android:scheme="https" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.nfc.action.TECH_DISCOVERED" />
@@ -69,82 +79,87 @@
         </activity>
 
         <activity
-            android:name="com.tangem.presentation.activity.PinRequestActivity"
+            android:name="com.tangem.ui.activity.SettingsActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.EmptyWalletActivity"
+            android:name="com.tangem.ui.activity.PinRequestActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.PinSaveActivity"
+            android:name="com.tangem.ui.activity.EmptyWalletActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.LoadedWalletActivity"
+            android:name="com.tangem.ui.activity.PinSaveActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.VerifyCardActivity"
+            android:name="com.tangem.ui.activity.LoadedWalletActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.CreateNewWalletActivity"
+            android:name="com.tangem.ui.activity.VerifyCardActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.PreparePaymentActivity"
+            android:name="com.tangem.ui.activity.CreateNewWalletActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.ConfirmPaymentActivity"
+            android:name="com.tangem.ui.PrepareTransactionActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.SignPaymentActivity"
+            android:name="com.tangem.ui.ConfirmTransactionActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.PurgeActivity"
+            android:name="com.tangem.ui.activity.SignTransactionActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.PinSwapActivity"
+            android:name="com.tangem.ui.activity.PurgeActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.QrScanActivity"
+            android:name="com.tangem.ui.activity.PinSwapActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.SendTransactionActivity"
+            android:name="com.tangem.ui.activity.QrScanActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.PrepareCryptonitWithdrawalActivity"
+            android:name="com.tangem.ui.activity.SendTransactionActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.PrepareCryptonitOtherApiWithdrawalActivity"
+            android:name="com.tangem.ui.activity.PrepareCryptonitWithdrawalActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name="com.tangem.presentation.activity.PrepareKrakenWithdrawalActivity"
+            android:name="com.tangem.ui.activity.PrepareCryptonitOtherApiWithdrawalActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
+
+        <activity
+            android:name="com.tangem.ui.activity.PrepareKrakenWithdrawalActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
 
