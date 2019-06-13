@@ -10,8 +10,8 @@ data class InfuraResponse(
         var id: Int? = null,
 
         @SerializedName("result")
-        var result: String = "",
+        var result: String? = null,
 
         @SerializedName("error")
-        var error: String = ""
+        var error: Object
 )

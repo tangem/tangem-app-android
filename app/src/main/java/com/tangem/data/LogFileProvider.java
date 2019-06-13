@@ -20,11 +20,7 @@ import java.util.Objects;
 
 public class LogFileProvider extends ContentProvider {
 
-    private static final String CLASS_NAME = "LogFileProvider";
-
-    // The authority is the symbolic name for the provider class
-//    public static final String AUTHORITY = "com.tangem.LogFileProvider";
-//    public static final String AUTHORITY = "com.tangem.LogFileProvider";
+    private static final String TAG = LogFileProvider.class.getSimpleName() + "-oF";
 
     // UriMatcher used to match against incoming requests
     private UriMatcher uriMatcher;
@@ -43,15 +39,11 @@ public class LogFileProvider extends ContentProvider {
     }
 
     @Override
-    public ParcelFileDescriptor openFile(Uri uri, String mode)
-            throws FileNotFoundException {
+    public ParcelFileDescriptor openFile(Uri uri, String mode) throws FileNotFoundException {
 
-        String LOG_TAG = CLASS_NAME + "-oF";
+        Log.v(TAG, "Called with uri: '" + uri + "'." + uri.getLastPathSegment());
 
-        Log.v(LOG_TAG,
-                "Called with uri: '" + uri + "'." + uri.getLastPathSegment());
-
-        // Check incoming Uri against the matcher
+        // check incoming Uri against the matcher
         switch (uriMatcher.match(uri)) {
 
             // If it returns 1 - then it matches the Uri defined in onCreate
@@ -60,7 +52,7 @@ public class LogFileProvider extends ContentProvider {
                 // The desired file name is specified by the last segment of the
                 // path
                 // E.g.
-                // 'content://it.my.app.LogFileProvider/Test.txt'
+                // 'content://it.my.app.LogFileProvider/Test1.txt'
                 // Take this and build the path to the file
                 String fileLocation = getContext().getCacheDir() + File.separator
                         + uri.getLastPathSegment();
@@ -73,9 +65,8 @@ public class LogFileProvider extends ContentProvider {
 
             // Otherwise unrecognised Uri
             default:
-                Log.v(LOG_TAG, "Unsupported uri: '" + uri + "'.");
-                throw new FileNotFoundException("Unsupported uri: "
-                        + uri.toString());
+                Log.v(TAG, "Unsupported uri: '" + uri + "'.");
+                throw new FileNotFoundException("Unsupported uri: " + uri.toString());
         }
     }
 
