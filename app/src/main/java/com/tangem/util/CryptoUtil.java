@@ -2,8 +2,8 @@ package com.tangem.util;
 
 import android.util.Log;
 
-import com.tangem.domain.wallet.ECDSASignatureETH;
-import com.tangem.tangemcard.util.Util;
+import com.tangem.wallet.ECDSASignatureETH;
+import com.tangem.card_common.util.Util;
 
 import org.spongycastle.asn1.ASN1EncodableVector;
 import org.spongycastle.asn1.ASN1Integer;
@@ -155,7 +155,7 @@ public class CryptoUtil {
         // See Bitcoin Core's IsCanonicalSignature, https://bitcointalk.org/index.php?topic=8392.msg127623#msg127623
         // A canonical signature exists of: <30> <total len> <02> <len R> <R> <02> <len S> <S> <hashtype>
         // Where R and S are not negative (their first byte has its highest bit not set), and not
-        // excessively padded (do not start with a 0 byte, unless an otherwise negative number follows,
+        // excessively padded (do not init with a 0 byte, unless an otherwise negative number follows,
         // in which case a single 0 byte is necessary and even required).
         if (signature.length < 9 || signature.length > 73)
             return false;
