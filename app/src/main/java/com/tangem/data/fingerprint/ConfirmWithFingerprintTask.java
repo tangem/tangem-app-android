@@ -3,7 +3,7 @@ package com.tangem.data.fingerprint;
 import android.os.AsyncTask;
 import android.widget.Toast;
 
-import com.tangem.presentation.activity.PinSaveActivity;
+import com.tangem.ui.activity.PinSaveActivity;
 import com.tangem.wallet.R;
 
 import java.lang.ref.WeakReference;

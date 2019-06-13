@@ -4,6 +4,7 @@ public class InfuraBody {
     private String method;
     private Object[] params;
     private int id;
+    private String jsonrpc = "2.0";
 
     public InfuraBody() {
     }
