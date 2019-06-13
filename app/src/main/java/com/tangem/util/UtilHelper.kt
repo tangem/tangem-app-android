@@ -1,11 +1,11 @@
 package com.tangem.util
 
-import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
+import android.os.Build
 import android.widget.Toast
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
@@ -37,7 +37,7 @@ object UtilHelper {
         return bmp
     }
 
-    fun isOnline(context: Activity): Boolean {
+    fun isOnline(context: Context): Boolean {
         return try {
             val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val netInfo: NetworkInfo?
@@ -49,19 +49,19 @@ object UtilHelper {
         }
     }
 
-    private var singleToast: Toast? = null
-    private var showTime: Date = Date()
-
-    fun showSingleToast(context: Context?, text: String) {
-        if (singleToast == null || !singleToast!!.view.isShown || showTime.time + 2000 < Date().time) {
-            if (singleToast != null)
-                singleToast!!.cancel()
-            if (context != null) {
-                singleToast = Toast.makeText(context, text, Toast.LENGTH_LONG)
-                singleToast!!.show()
-                showTime = Date()
-            }
-        }
+    fun getDeviceInfo(): String {
+        return "----------------------------------------\n" +
+                "MODEL: " + Build.MODEL + "\n" +
+                "ID: " + Build.ID + "\n" +
+                "Manufacturer: " + Build.MANUFACTURER + "\n" +
+                "Brand: " + Build.BRAND + "\n" +
+                "Hardware: " + Build.HARDWARE + "\n" +
+                "Version: " + Build.VERSION.RELEASE + ", " + Build.VERSION.INCREMENTAL + "\n" +
+                "OS: " + Build.VERSION.BASE_OS + "\n" +
+                "SDK: " + Build.VERSION.SDK_INT + "\n" +
+                "BOARD: " + Build.BOARD + "\n" +
+                "FINGERPRINT: " + Build.FINGERPRINT + "\n" +
+                "----------------------------------------\n"
     }
 
 }

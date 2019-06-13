@@ -17,12 +17,13 @@
     <dimen name="empty_wallet_left_col_width">140dp</dimen>
     <dimen name="empty_wallet_left_col_margin">16dp</dimen>
 
-    <dimen name="text_size_2_small">11sp</dimen>
-    <dimen name="text_size_small">13sp</dimen>
-    <dimen name="text_size_1_small">15sp</dimen>
-    <dimen name="text_size_medium">19sp</dimen>
-    <dimen name="text_size_large">26sp</dimen>
-    <dimen name="text_size_pin">34sp</dimen>
+    <dimen name="text_size_2_small">11dp</dimen>
+    <dimen name="text_size_small">13dp</dimen>
+    <dimen name="text_size_1_small">15dp</dimen>
+    <dimen name="text_size_medium">19dp</dimen>
+    <dimen name="text_size_1_large">23dp</dimen>
+    <dimen name="text_size_large">26dp</dimen>
+    <dimen name="text_size_pin">34dp</dimen>
 
     <dimen name="size_qr_image">180dp</dimen>
     <dimen name="size_explore_image">30dp</dimen>
