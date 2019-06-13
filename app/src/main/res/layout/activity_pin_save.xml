@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    tools:context="com.tangem.presentation.activity.PinSaveActivity">
+    tools:context="com.tangem.ui.activity.PinSaveActivity">
 
     <TextView
         android:id="@+id/tvPin"
@@ -15,7 +15,7 @@
         android:paddingBottom="8dp"
         android:singleLine="false"
         android:textAlignment="center"
-        android:textSize="36sp"
+        android:textSize="36dp"
         tools:ignore="TextViewEdits" />
 
     <TextView
