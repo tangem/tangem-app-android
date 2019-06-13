@@ -15,8 +15,8 @@
     <color name="text_normal">#FF505050</color>
     <color name="msg_send">@color/black</color>
     <color name="msg_rcv">#4a763d</color>
-    <color name="msg_okay">#BF7FF27F</color>
-    <color name="msg_err">#BFFF4444</color>
+    <color name="msg_okay">#F27FF27F</color>
+    <color name="msg_err">#F2FF4444</color>
     <color name="msg_start">#4a086e</color>
     <color name="msg_action">#0c15c1</color>
     <color name="btn_light">#e3e3e3</color>
@@ -37,5 +37,6 @@
     <color name="not_confirmed">#7c0a02</color>
     <color name="bg_err">#600600</color>
     <color name="bg_msg">#bff2af</color>
+    <color name="cardview_shadow_star">#37000000</color>
 
 </resources>
