@@ -22,9 +22,9 @@ public enum Blockchain {
     Binance("BINANCE", "BNB", 100000000.0, R.drawable.tangem2, "Binance"),
     BinanceTestNet("BINANCE/test", "BNB", 100000000.0, R.drawable.tangem2, "Binance Testnet"),
     Matic("MATIC", "MTX", 1.0, R.drawable.tangem2, "Matic"),
-    MaticTestNet("MATIC/test", "MTX", 1.0, R.drawable.tangem2, "Matic Testnet");
-    Stellar("XLM", "XLM", R.drawable.ic_logo_stellar, "Stellar"),
-    StellarTestNet("XLM/test", "XLM", R.drawable.ic_logo_stellar, "Stellar Testnet");
+    MaticTestNet("MATIC/test", "MTX", 1.0, R.drawable.tangem2, "Matic Testnet"),
+    Stellar("XLM", "XLM", 1000000.0, R.drawable.ic_logo_stellar, "Stellar"),
+    StellarTestNet("XLM/test", "XLM", 1000000.0, R.drawable.ic_logo_stellar, "Stellar Testnet");
 
     Blockchain(String ID, String currency, double multiplier, int imageResource, String officialName) {
         mID = ID;
