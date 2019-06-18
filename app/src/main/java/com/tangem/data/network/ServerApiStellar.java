@@ -2,9 +2,9 @@ package com.tangem.data.network;
 
 import com.tangem.App;
 import com.tangem.data.Blockchain;
-import com.tangem.domain.wallet.TangemContext;
 import com.tangem.util.LOG;
 import com.tangem.wallet.R;
+import com.tangem.wallet.TangemContext;
 
 import org.stellar.sdk.Network;
 import org.stellar.sdk.Server;
@@ -19,7 +19,7 @@ import io.reactivex.schedulers.Schedulers;
 
 /**
  * Created by dvol on 7.01.2019.
- *
+ * <p>
  * Request processor for Stellar Horizon Rest Api
  * Every request live cycle:
  * 1. In application create request and call {@link ServerApiStellar}.requestData(..)
@@ -141,10 +141,16 @@ public class ServerApiStellar {
     private void doStellarRequest(TangemContext ctx, StellarRequest.Base stellarRequest) throws IOException {
         stellarRequest.setError(null);
         try {
-            if (ctx.getBlockchain() == Blockchain.StellarTestNet) {
+            Server server;
+            if (ctx.getBlockchain() == Blockchain.Stellar) {
+                Network.usePublicNetwork();
+                server = new Server(ServerURL.API_STELLAR);
+            } else if (ctx.getBlockchain() == Blockchain.StellarTestNet) {
                 Network.useTestNetwork();
+                server = new Server(ServerURL.API_STELLAR_TESTNET);
+            } else {
+                throw new IOException("Wrong blockchain for ServerApiStellar");
             }
-            Server server = new Server(ServerURL.API_STELLAR);
             try {
                 LOG.e(TAG, "--- request " + stellarRequest.getClass().getSimpleName());
                 stellarRequest.process(server);
@@ -155,7 +161,7 @@ public class ServerApiStellar {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            stellarRequest.setError(App.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_communication_error));
+            stellarRequest.setError(App.Companion.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_communication_error));
             throw e;
         }
     }
