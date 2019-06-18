@@ -5,6 +5,7 @@ import org.stellar.sdk.Server;
 import org.stellar.sdk.Transaction;
 import org.stellar.sdk.requests.ErrorResponse;
 import org.stellar.sdk.responses.AccountResponse;
+import org.stellar.sdk.responses.LedgerResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import java.io.IOException;
@@ -68,5 +69,16 @@ public class StellarRequest {
         }
     }
 
+    public static class Ledgers extends Base {
+        public LedgerResponse ledgerResponse;
+
+        public Ledgers() {};
+
+        @Override
+        public void process(Server server) throws IOException {
+            int latestLedger = server.root().getCoreLatestLedger();
+            ledgerResponse = server.ledgers().ledger(latestLedger);
+        }
+    }
 
 }
