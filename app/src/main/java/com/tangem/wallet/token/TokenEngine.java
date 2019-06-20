@@ -97,7 +97,7 @@ public class TokenEngine extends CoinEngine {
     public String getBalanceHTML() {
         if (hasBalanceInfo()) {
             try {
-                return " " + convertToAmount(coinData.getBalanceInInternalUnits()).toDescriptionString(getTokenDecimals()) + " <br><small><small>  + " + convertToAmount(coinData.getBalanceAlterInInternalUnits()).toDescriptionString(getChainDecimals()) + " for fee</small></small>";
+                return " " + convertToAmount(coinData.getBalanceInInternalUnits()).toDescriptionString(getTokenDecimals()) + "<br><small><small>+ " + convertToAmount(coinData.getBalanceAlterInInternalUnits()).toDescriptionString(getChainDecimals()) + " for fee</small></small>";
             } catch (Exception e) {
                 e.printStackTrace();
                 return "";
