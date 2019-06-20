@@ -11,4 +11,6 @@ class ServerURL {
     static final String API_BINANCE = "https://dex.binance.org/";
     static final String API_BINANCE_TESTNET = "https://testnet-dex.binance.org/";
     static final String API_MATIC_TESTNET = "https://testnet2.matic.network";
+    static final String API_STELLAR = "https://horizon.stellar.org/";
+    static final String API_STELLAR_TESTNET = "https://horizon-testnet.stellar.org";
 }
