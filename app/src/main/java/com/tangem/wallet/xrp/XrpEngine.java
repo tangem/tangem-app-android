@@ -68,7 +68,7 @@ public class XrpEngine extends CoinEngine {
     public String getBalanceHTML() {
         Amount balance = getBalance();
         if (balance != null) {
-            return " " + balance.toDescriptionString(getDecimals()) + " <br><small><small>+ " + convertToAmount(coinData.getReserveInInternalUnits()).toDescriptionString(getDecimals()) + " reserve</small></small>";
+            return " " + balance.toDescriptionString(getDecimals()) + "<br><small><small>+ " + convertToAmount(coinData.getReserveInInternalUnits()).toDescriptionString(getDecimals()) + " reserve</small></small>";
         } else {
             return "";
         }
