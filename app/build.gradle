@@ -131,4 +131,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.9.8'
     implementation 'joda-time:joda-time:2.10.1'
     testImplementation 'junit:junit:4.12'
+
+    //dependencies for EOS
+    implementation 'io.jafka:jeos:0.9.15'
 }
