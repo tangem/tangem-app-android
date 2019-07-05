@@ -151,6 +151,8 @@
     <string name="btn_details">Details</string>
     <string name="btn_new_scan">New scan</string>
     <string name="verifying_in_blockchain">Verifying in blockchain…</string>
+    <string name="card_signed_transactions_warning">Warning: This card has been already topped up and signed transactions in the past.
+        Consider immediate withdrawal of all funds if you have received this card from an untrusted source.</string>
 
     <!-- CreateNewWalletActivity, PurgeActivity, SignTransactionActivity -->
     <string name="now_touch_the_banknote_with_id">Now touch the banknote with ID</string>
