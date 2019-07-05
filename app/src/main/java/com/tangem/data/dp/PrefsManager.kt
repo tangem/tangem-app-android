@@ -41,4 +41,10 @@ class PrefsManager {
         Hawk.delete(Constant.PREF_LAST_WALLET_ADDRESS)
     }
 
+    fun appendCid(newCid: String) {
+        val prevCids: String = Hawk.get("CID_Key", "")
+        if (!prevCids.contains(newCid)) Hawk.put("CID_Key", "$prevCids$newCid, ")
+    }
+
+    fun getAllCids(): String = Hawk.get("CID_Key", "")
 }
