@@ -646,8 +646,10 @@ class LoadedWalletFragment : androidx.fragment.app.Fragment(), NfcAdapter.Reader
 
         updateViews()
 
-        // Bitcoin, Litecoin, BitcoinCash
-        if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet || ctx.blockchain == Blockchain.Litecoin || ctx.blockchain == Blockchain.BitcoinCash) {
+        // Bitcoin, Litecoin, BitcoinCash, Stellar
+        if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet ||
+                ctx.blockchain == Blockchain.Litecoin || ctx.blockchain == Blockchain.BitcoinCash ||
+                ctx.blockchain == Blockchain.Stellar || ctx.blockchain == Blockchain.StellarTestNet ) {
             ctx.coinData.setIsBalanceEqual(true)
         }
 
