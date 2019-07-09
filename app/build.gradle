@@ -5,7 +5,7 @@ apply plugin: 'kotlin-kapt'
 
 static def generateVersionName() {
     def gitCommitsCount = "git rev-list HEAD --count".execute().text.trim()
-    def gitCurrentBranch = "git rev-parse --abbrev-ref HEAD".execute().text.trim()
+//    def gitCurrentBranch = "git rev-parse --abbrev-ref HEAD".execute().text.trim()
     return gitCommitsCount.toInteger() + 831// + "\\n" + gitCurrentBranch
 }
 
@@ -36,8 +36,8 @@ android {
     flavorDimensions ""
     productFlavors {
         tangemAccess {
-            versionCode 111
-            versionName "0.906.2." + generateVersionName()
+            versionCode 112
+            versionName "0.907.1." + generateVersionName()
             applicationId "com.tangem.wallet"
             signingConfig signingConfigs.debug
         }
