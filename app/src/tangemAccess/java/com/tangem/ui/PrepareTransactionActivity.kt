@@ -152,8 +152,20 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
                     if (code.contains("ethereum:")) {
                         val tmp = code.split("ethereum:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                         code = tmp[1]
-                    } else if (code.contains("blockchain:")) {
+                    } else if (code.contains("blockchain:")) { //TODO: is this needed?
                         val tmp = code.split("blockchain:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                        code = tmp[1]
+                    }
+                }
+                Blockchain.Litecoin -> {
+                    if (code.contains("litecoin:")) {
+                        val tmp = code.split("litecoin:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                        code = tmp[1]
+                    }
+                }
+                Blockchain.Ripple -> {
+                    if (code.contains("ripple:")) {
+                        val tmp = code.split("ripple:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                         code = tmp[1]
                     }
                 }
