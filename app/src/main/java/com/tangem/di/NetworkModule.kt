@@ -109,6 +109,18 @@ internal class NetworkModule {
         return builder.build()
     }
 
+    @Singleton
+    @Provides
+    @Named(Server.ApiSoChain.URL)
+    fun provideRetrofitSoChain(): Retrofit {
+        val builder = Retrofit.Builder()
+                .baseUrl(Server.ApiSoChain.URL)
+                .addConverterFactory(GsonConverterFactory.create())
+        if (BuildConfig.DEBUG)
+            builder.client(createOkHttpClient())
+        return builder.build()
+    }
+
     private fun createOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder().addInterceptor(createHttpLoggingInterceptor()).build()
     }
