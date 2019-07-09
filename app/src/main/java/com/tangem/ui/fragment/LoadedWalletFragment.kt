@@ -13,7 +13,6 @@ import android.nfc.tech.IsoDep
 import android.os.Build
 import android.os.Bundle
 import android.text.Html
-import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -25,12 +24,21 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.tangem.App
 import com.tangem.Constant
+import com.tangem.card_android.android.nfc.NfcLifecycleObserver
+import com.tangem.card_android.android.reader.NfcManager
+import com.tangem.card_android.android.reader.NfcReader
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
+import com.tangem.card_android.data.loadFromBundle
+import com.tangem.card_common.data.TangemCard
+import com.tangem.card_common.reader.CardProtocol
+import com.tangem.card_common.tasks.VerifyCardTask
+import com.tangem.card_common.util.Util
 import com.tangem.data.Blockchain
+import com.tangem.data.dp.PrefsManager
 import com.tangem.data.network.ServerApiCommon
-import com.tangem.wallet.BalanceValidator
-import com.tangem.wallet.CoinEngine
-import com.tangem.wallet.CoinEngineFactory
-import com.tangem.wallet.TangemContext
+import com.tangem.server_android.ServerApiTangem
+import com.tangem.server_android.model.CardVerifyAndGetInfo
 import com.tangem.ui.activity.LoadedWalletActivity
 import com.tangem.ui.activity.PinRequestActivity
 import com.tangem.ui.activity.PrepareCryptonitWithdrawalActivity
@@ -42,21 +50,9 @@ import com.tangem.ui.dialog.WaitSecurityDelayDialog
 import com.tangem.ui.event.DeletingWalletFinish
 import com.tangem.ui.event.TransactionFinishWithError
 import com.tangem.ui.event.TransactionFinishWithSuccess
-import com.tangem.card_android.android.nfc.NfcLifecycleObserver
-import com.tangem.card_android.android.reader.NfcManager
-import com.tangem.card_android.android.reader.NfcReader
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
-import com.tangem.card_android.data.loadFromBundle
-import com.tangem.card_common.data.TangemCard
-import com.tangem.card_common.reader.CardProtocol
-import com.tangem.card_common.tasks.VerifyCardTask
-import com.tangem.card_common.util.Util
-import com.tangem.server_android.ServerApiTangem
-import com.tangem.server_android.model.CardVerifyAndGetInfo
 import com.tangem.util.LOG
 import com.tangem.util.UtilHelper
-import com.tangem.wallet.R
+import com.tangem.wallet.*
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
 import kotlinx.android.synthetic.main.layout_btn_details.*
 import kotlinx.android.synthetic.main.layout_tangem_card.*
@@ -683,6 +679,8 @@ class LoadedWalletFragment : androidx.fragment.app.Fragment(), NfcAdapter.Reader
                                 LOG.e(TAG, "requestBalanceAndUnspentTransactions ctx.error: " + ctx.error)
                             }
                             updateViews()
+
+                            if (coinEngine.isBalanceNotZero) showWarningIfPendingTransactionIsPossible()
                         }
 
                         override fun onProgress() {
@@ -706,6 +704,20 @@ class LoadedWalletFragment : androidx.fragment.app.Fragment(), NfcAdapter.Reader
             updateViews()
         }
     }
+
+    private fun showWarningIfPendingTransactionIsPossible() {
+        if (ctx.card.signedHashes > 0 && isNewCid(ctx.card.cidDescription)) {
+            AlertDialog.Builder(context)
+                    .setTitle(R.string.warning)
+                    .setMessage(R.string.card_signed_transactions_warning)
+                    .setPositiveButton(R.string.ok) { _, _ -> }
+                    .create()
+                    .show()
+        }
+        PrefsManager.getInstance().appendCid(ctx.card.cidDescription)
+    }
+
+    private fun isNewCid(cid: String): Boolean = !PrefsManager.getInstance().getAllCids().contains(cid)
 
     private fun requestVerifyAndGetInfo() {
         if (UtilHelper.isOnline(context as Activity)) {
