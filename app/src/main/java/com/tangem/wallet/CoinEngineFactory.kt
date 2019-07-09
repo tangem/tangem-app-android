@@ -15,6 +15,7 @@ import com.tangem.wallet.matic.MaticTokenEngine
 import com.tangem.wallet.nftToken.NftTokenEngine
 import com.tangem.wallet.rsk.RskEngine
 import com.tangem.wallet.rsk.RskTokenEngine
+import com.tangem.wallet.xlm.XlmEngine
 import com.tangem.wallet.xrp.XrpEngine
 
 /**
@@ -43,6 +44,7 @@ object CoinEngineFactory {
             Blockchain.Ripple -> XrpEngine()
             Blockchain.Binance, Blockchain.BinanceTestNet -> BinanceEngine()
             Blockchain.Matic, Blockchain.MaticTestNet -> MaticTokenEngine()
+            Blockchain.StellarTestNet, Blockchain.Stellar -> XlmEngine()
             else -> null
         }
     }
@@ -73,9 +75,9 @@ object CoinEngineFactory {
             else if (Blockchain.Binance == context.blockchain || Blockchain.BinanceTestNet == context.blockchain)
                 BinanceEngine(context)
             else if (Blockchain.Matic == context.blockchain || Blockchain.MaticTestNet == context.blockchain)
-                MaticTokenEngine(context
-
-                )
+                MaticTokenEngine(context)
+            else if (Blockchain.Stellar == context.blockchain || Blockchain.StellarTestNet == context.blockchain)
+                XlmEngine(context)
             else
                 return null
         } catch (e: Exception) {
