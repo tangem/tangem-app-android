@@ -35,6 +35,9 @@ interface NetworkComponent {
     @get:Named(Server.ApiBlockcypher.URL_BLOCKCYPHER)
     val retrofitBlockcypher: Retrofit
 
+    @get:Named(Server.ApiSoChain.URL)
+    val retrofitSoChain: Retrofit
+
     @get:Named("socket")
     val socket: Socket
 
