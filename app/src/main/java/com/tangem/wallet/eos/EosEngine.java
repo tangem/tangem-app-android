@@ -1,20 +1,22 @@
-package com.tangem.wallet.EOS;
+package com.tangem.wallet.eos;
 
 import android.net.Uri;
 import android.text.InputFilter;
 import android.util.Log;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.primitives.Bytes;
+import com.google.gson.Gson;
 import com.tangem.Constant;
 import com.tangem.card_common.data.TangemCard;
 import com.tangem.card_common.reader.CardProtocol;
-import com.tangem.card_common.reader.TLV;
 import com.tangem.card_common.tasks.SignTask;
 import com.tangem.card_common.util.Util;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiEos;
 import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
+import com.tangem.util.DerEncodingUtil;
 import com.tangem.wallet.BTCUtils;
 import com.tangem.wallet.BalanceValidator;
 import com.tangem.wallet.BuildConfig;
@@ -22,20 +24,25 @@ import com.tangem.wallet.CoinData;
 import com.tangem.wallet.CoinEngine;
 import com.tangem.wallet.R;
 import com.tangem.wallet.TangemContext;
+import com.tangem.wallet.eos.utilities.EOSFormatter;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Sha256Hash;
-import org.joda.time.DateTime;
+import org.bitcoinj.core.Utils;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import io.jafka.jeos.EosApi;
 import io.jafka.jeos.EosApiFactory;
@@ -45,11 +52,9 @@ import io.jafka.jeos.core.common.SignArg;
 import io.jafka.jeos.core.common.transaction.TransactionAction;
 import io.jafka.jeos.core.common.transaction.TransactionAuthorization;
 import io.jafka.jeos.core.request.chain.json2bin.TransferArg;
-import io.jafka.jeos.core.request.chain.transaction.PushTransactionRequest;
 import io.jafka.jeos.core.response.chain.account.Account;
 import io.jafka.jeos.core.response.chain.transaction.PushedTransaction;
 import io.jafka.jeos.util.Base58;
-import io.jafka.jeos.util.KeyUtil;
 import io.jafka.jeos.util.Raw;
 import io.jafka.jeos.util.ecc.Ripemd160;
 import io.reactivex.Observer;
@@ -320,7 +325,7 @@ public class EosEngine extends CoinEngine {
     public String calculateAddress(byte[] pkCompressed) {
         String cid = Util.bytesToHex(ctx.getCard().getCID());
         String address = "testem" + cid.substring(2, 4) + cid.substring(11, 15);//TODO: change
-        address = address.replace("0", "o").replace("6","b").replace("7,","t").replace("8","s").replace("9","g");
+        address = address.replace("0", "o").replace("6", "b").replace("7,", "t").replace("8", "s").replace("9", "g");
         return address;
 
 //        byte[] csum = Ripemd160.from(pkCompressed).bytes();
@@ -331,6 +336,15 @@ public class EosEngine extends CoinEngine {
 //        return bf.toString() + " " + address;
     }
 
+    public String calculateEosPubKey(byte[] pkCompressed) {
+        byte[] csum = Ripemd160.from(pkCompressed).bytes();
+        csum = Raw.copy(csum, 0, 4);
+        byte[] addy = Raw.concat(pkCompressed, csum);
+        StringBuffer bf = new StringBuffer("EOS");
+        bf.append(Base58.encode(addy));
+        return bf.toString();
+    }
+
     // reference - https://gist.github.com/adyliu/492503b94d0306371298f24e15481da4
     @Override
     public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws JsonProcessingException {
@@ -339,6 +353,7 @@ public class EosEngine extends CoinEngine {
         EosApi eosApi = EosApiFactory.create("https://api.eosdetroit.io:443");
         SignArg arg = eosApi.getSignArg(120);
         System.out.println(eosApi.getObjectMapper().writeValueAsString(arg));
+
 
         // --- prepare transaction for sign as in LocalApiImpl
         String quantity = amountValue.setScale(4).toString();
@@ -357,14 +372,14 @@ public class EosEngine extends CoinEngine {
                 new TransactionAction("eosio.token", "transfer", authorizations, transferData)//
         );
 
-        String blockTime = arg.getHeadBlockTime().toString();
-        DateTime time = new DateTime(arg.getHeadBlockTime()).plusSeconds(arg.getExpiredSecond());
-        String changedTime = time.toString();
-        long epochSecond = time.getMillis() / 1000;
+        long expMillis = System.currentTimeMillis() + (arg.getExpiredSecond() * 1000);
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.5", Locale.US);
+        format.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String stringTime = format.format(new Date(expMillis));
 
         // ⑤ build the packed transaction
         EosPackedTransaction packedTransaction = new EosPackedTransaction();
-        packedTransaction.setExpirationSec(epochSecond);
+        packedTransaction.setExpiration(stringTime);
         packedTransaction.setRefBlockNum(arg.getLastIrreversibleBlockNum());
         packedTransaction.setRefBlockPrefix(arg.getRefBlockPrefix());
 
@@ -374,7 +389,7 @@ public class EosEngine extends CoinEngine {
         packedTransaction.setActions(actions);
 
         Raw raw = EosPacker.packPackedTransaction(arg.getChainId(), packedTransaction);
-        raw.pack(ByteBuffer.allocate(33).array());// TODO: what's this?
+        raw.pack(ByteBuffer.allocate(33).array()); //black magic
         Sha256Hash hashForSign = Sha256Hash.of(raw.bytes());
 
         return new SignTask.TransactionToSign() {
@@ -419,26 +434,49 @@ public class EosEngine extends CoinEngine {
 
                 ECKey.ECDSASignature ecdsaSig = new ECKey.ECDSASignature(r, s);
                 int v = BruteRecoveryID(ecdsaSig, hashForSign, ctx.getCard().getWalletPublicKeyRar());
+
                 v += 4; // compressed
                 v += 27; // compact // 24 or 27 :( forcing odd-y 2nd key candidate)
 
+                byte[] rbytes = Utils.bigIntegerToBytes(r, 32);
+                byte[] sbytes = Utils.bigIntegerToBytes(s, 32);
+
+                //TODO: not every signature works for EOS, if r.toByteArray length is 33, even if first 0x00 byte is cut,
+                //TODO: signature would be counted non canonical because first bit is not zero. Need to check it on card or there will be multiple security delays
+                if (r.toByteArray().length == 33) {
+                    Log.e(TAG, "33 bytes R: " + Util.bytesToHex(rbytes));
+                    throw new Exception("33 byte R");
+                }
+
                 byte[] pub_buf = new byte[65];
                 pub_buf[0] = (byte) v;
-                System.arraycopy(r.toByteArray(), 0, pub_buf, 1, r.toByteArray().length);
-                System.arraycopy(s.toByteArray(), 0, pub_buf, r.toByteArray().length + 1, s.toByteArray().length);
+
+                System.arraycopy(rbytes, 0, pub_buf, 1, rbytes.length);
+                System.arraycopy(sbytes, 0, pub_buf, rbytes.length + 1, sbytes.length);
 
                 byte[] checksum = Ripemd160.from(Raw.concat(pub_buf, "K1".getBytes())).bytes();
 
                 byte[] signatureBytes = Raw.concat(pub_buf, Raw.copy(checksum, 0, 4));
+                Log.e(TAG, "Signature hex " + Util.byteArrayToHexString(signatureBytes));
 
                 String signatureString = "SIG_K1_" + Base58.encode(signatureBytes);
+                Log.e(TAG, "1st sig" + signatureString);
+
+//                byte[] sigDer = DerEncodingUtil.DerEncoding(newR, s);
+//                String eosPubKey = calculateEosPubKey(ctx.getCard().getWalletPublicKeyRar());
+//                String pemPubKey = EOSFormatter.convertEOSPublicKeyToPEMFormat(eosPubKey);
+//                String convertedSignature = EOSFormatter.convertDERSignatureToEOSFormat(sigDer, raw.bytes(), pemPubKey);
+//                Log.e(TAG, "2nd sig" + convertedSignature);
+//                String convertedBase = convertedSignature.substring(7);
+//                byte[] convertedBytes = Base58.decode(convertedBase);
 
                 EosPushTransactionRequest req = new EosPushTransactionRequest();
                 req.setTransaction(packedTransaction);
                 req.setSignatures(Arrays.asList(signatureString));
 
                 //serialize
-                byte[] txForSend = SerializationUtils.serialize(req);
+                String reqString = new Gson().toJson(req);
+                byte[] txForSend = SerializationUtils.serialize(reqString);
 
                 notifyOnNeedSendTransaction(txForSend);
                 return txForSend;
@@ -455,8 +493,8 @@ public class EosEngine extends CoinEngine {
             if (k == null)
                 continue;
             byte[] recK = k.getPubKey();
-            Log.e("EOS_k " + String.valueOf(i), BTCUtils.toHex(recK));
-            if (k != null && Arrays.equals(recK, thisKey)) {
+            Log.e("EOS_k " + i, BTCUtils.toHex(recK));
+            if (Arrays.equals(recK, thisKey)) {
                 recId = i;
                 break;
             }
@@ -466,52 +504,82 @@ public class EosEngine extends CoinEngine {
 
     @Override
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
-            Observer<Account> accountObserver = new DefaultObserver<Account>() {
-                @Override
-                public void onNext(Account account) {
-                    String[] balanceStrings = account.getCoreLiquidBalance().split(" ");
-                    coinData.setBalanceReceived(true);
-                    coinData.setBalance(new Amount(balanceStrings[0], balanceStrings[1]));
-                }
+        Observer<Account> accountObserver = new DefaultObserver<Account>() {
+            @Override
+            public void onNext(Account account) {
+                String[] balanceStrings = account.getCoreLiquidBalance().split(" ");
+                coinData.setBalanceReceived(true);
+                coinData.setBalance(new Amount(balanceStrings[0], balanceStrings[1]));
+            }
 
-                @Override
-                public void onError(Throwable e) {
-                    Log.e(TAG, "requestBalanceAndUnspentTransactions error" + e.getMessage());
-                    ctx.setError(e.getMessage());
-                    blockchainRequestsCallbacks.onComplete(false);
-                }
+            @Override
+            public void onError(Throwable e) {
+                Log.e(TAG, "requestBalanceAndUnspentTransactions error" + e.getMessage());
+                ctx.setError(e.getMessage());
+                blockchainRequestsCallbacks.onComplete(false);
+            }
 
-                @Override
-                public void onComplete() {
-                    blockchainRequestsCallbacks.onComplete(true);
-                }
-            };
-            ServerApiEos.getBalance(coinData.getWallet(), accountObserver);
+            @Override
+            public void onComplete() {
+                blockchainRequestsCallbacks.onComplete(true);
+            }
+        };
+        ServerApiEos.getBalance(coinData.getWallet(), accountObserver);
     }
 
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
         // no fee in EOS
+        coinData.minFee = coinData.normalFee = coinData.maxFee = new Amount(0L, "EOS");
         blockchainRequestsCallbacks.onComplete(true);
     }
 
     @Override
     public void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) throws IOException, ClassNotFoundException {
         // deserialize
-        EosPushTransactionRequest req = SerializationUtils.deserialize(txForSend);
+        String reqString = SerializationUtils.deserialize(txForSend);
+        EosPushTransactionRequest req = new Gson().fromJson(reqString, EosPushTransactionRequest.class);
 
-        try {
-            EosApi eosApi = EosApiFactory.create("https://api.eosdetroit.io:443");
-            PushedTransaction pts = eosApi.pushTransaction(req);
+        Observer<PushedTransaction> sendObserver = new DefaultObserver<PushedTransaction>() {
+            @Override
+            public void onNext(PushedTransaction pushedTransaction) {
+                if (pushedTransaction.getProcessed().getReceipt().getStatus().equals("executed")) {
+                    ctx.setError(null);
+                } else {
+                    ctx.setError("Error sending transaction. Transaction rejected");
+                    try {
+                        LocalApi localApi = EosApiFactory.createLocalApi();
+                        Log.e(TAG, localApi.getObjectMapper().writeValueAsString(pushedTransaction));
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
 
-            LocalApi localApi = EosApiFactory.createLocalApi();
-            System.out.println(localApi.getObjectMapper().writeValueAsString(pts));
-            blockchainRequestsCallbacks.onComplete(true);
-        } catch (Exception e) {
-            Log.e(TAG, "requestSendTransaction error" + e.getMessage());
-            ctx.setError(e.getMessage());
-            blockchainRequestsCallbacks.onComplete(false);
-        }
+            @Override
+            public void onError(Throwable e) {
+                Log.e(TAG, "requestSendTransaction error" + e.getMessage());
+                ctx.setError(e.getMessage());
+                LocalApi localApi = EosApiFactory.createLocalApi();
+                try {
+                    Log.e(TAG, localApi.getObjectMapper().writeValueAsString(req));
+                } catch (JsonProcessingException e1) {
+                    e1.printStackTrace();
+                }
+                blockchainRequestsCallbacks.onComplete(false);
+            }
+
+            @Override
+            public void onComplete() {
+                if (!ctx.hasError()) {
+                    blockchainRequestsCallbacks.onComplete(true);
+                } else {
+                    blockchainRequestsCallbacks.onComplete(false);
+                }
+            }
+        };
+
+        ServerApiEos.sendTransaction(req, sendObserver);
     }
 
     public int pendingTransactionTimeoutInSeconds() {
@@ -522,4 +590,15 @@ public class EosEngine extends CoinEngine {
     public boolean needMultipleLinesForBalance() {
         return true;
     }
+
+    @Override
+    public boolean allowSelectFeeLevel() {
+        return false;
+    }
+
+    @Override
+    public boolean allowSelectFeeInclusion() {
+        return false;
+    }
+
 }
