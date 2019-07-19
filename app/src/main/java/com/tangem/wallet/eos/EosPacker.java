@@ -1,4 +1,10 @@
-package com.tangem.wallet.EOS;
+package com.tangem.wallet.eos;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import io.jafka.jeos.convert.Packer;
 import io.jafka.jeos.core.common.transaction.TransactionAction;
@@ -12,7 +18,14 @@ public class EosPacker extends Packer {
         //chain
         raw.pack(Hex.toBytes(chainId));
         //expiration
-        raw.packUint32(t.getExpirationSec());
+        try {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.5", Locale.US);
+            format.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Date date = format.parse(t.getExpiration());
+            raw.packUint32(date.getTime() / 1000);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         //ref_block_num
         raw.packUint16(t.getRefBlockNum().intValue());
         //ref_block_prefix
