@@ -7,8 +7,7 @@ import com.tangem.wallet.eth.EthEngine
 import com.tangem.wallet.token.TokenEngine
 import com.tangem.wallet.bch.BtcCashEngine
 import com.tangem.data.Blockchain
-import com.tangem.wallet.EOS.EosData
-import com.tangem.wallet.EOS.EosEngine
+import com.tangem.wallet.eos.EosEngine
 import com.tangem.wallet.binance.BinanceEngine
 import com.tangem.wallet.cardano.CardanoData
 import com.tangem.wallet.cardano.CardanoEngine
