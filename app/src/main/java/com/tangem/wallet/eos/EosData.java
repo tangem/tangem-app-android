@@ -1,14 +1,10 @@
-package com.tangem.wallet.EOS;
+package com.tangem.wallet.eos;
 
 import android.os.Bundle;
 import android.util.Log;
 
 import com.tangem.wallet.CoinData;
 import com.tangem.wallet.CoinEngine;
-
-import java.math.BigInteger;
-
-import io.jafka.jeos.core.request.chain.transaction.PushTransactionRequest;
 
 public class EosData extends CoinData {
     private CoinEngine.Amount balance = null;
@@ -45,7 +41,7 @@ public class EosData extends CoinData {
         try {
             if (balance != null) {
                 B.putString("BalanceCurrency", balance.getCurrency());
-                B.putString("BalanceDecimal", balance.toString());
+                B.putString("BalanceDecimal", balance.toValueString());
             }
 
         } catch (Exception e) {
