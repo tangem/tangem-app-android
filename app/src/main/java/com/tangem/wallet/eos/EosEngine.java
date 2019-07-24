@@ -65,6 +65,8 @@ public class EosEngine extends CoinEngine {
     private static final String TAG = EosEngine.class.getSimpleName();
     public EosData coinData = null;
 
+    private final int signRetries = 10;
+
     public EosEngine(TangemContext ctx) throws Exception {
         super(ctx);
         if (ctx.getCoinData() == null) {
@@ -323,10 +325,15 @@ public class EosEngine extends CoinEngine {
 
     @Override
     public String calculateAddress(byte[] pkCompressed) {
-        String cid = Util.bytesToHex(ctx.getCard().getCID());
-        String address = "testem" + cid.substring(2, 4) + cid.substring(11, 15);//TODO: change
+        String cid = Util.bytesToHex(ctx.getCard().getCID()).toLowerCase();
+        String address = cid.substring(0, 4) + cid.substring(8, 16);
         address = address.replace("0", "o").replace("6", "b").replace("7,", "t").replace("8", "s").replace("9", "g");
         return address;
+
+//        String cid = Util.bytesToHex(ctx.getCard().getCID());
+//        String address = "testem" + cid.substring(2, 4) + cid.substring(11, 15);
+//        address = address.replace("0", "o").replace("6", "b").replace("7,", "t").replace("8", "s").replace("9", "g");
+//        return address;
 
 //        byte[] csum = Ripemd160.from(pkCompressed).bytes();
 //        csum = Raw.copy(csum, 0, 4);
@@ -357,7 +364,7 @@ public class EosEngine extends CoinEngine {
 
         // --- prepare transaction for sign as in LocalApiImpl
         String quantity = amountValue.setScale(4).toString();
-        String memo = "test";
+        String memo = "";
 
         // ① pack transfer data
         TransferArg transferArg = new TransferArg(coinData.getWallet(), targetAddress, quantity, memo);
@@ -400,8 +407,10 @@ public class EosEngine extends CoinEngine {
 
             @Override
             public byte[][] getHashesToSign() throws NoSuchAlgorithmException {
-                byte[][] hashesForSign = new byte[1][];
-                hashesForSign[0] = hashForSign.getBytes();
+                byte[][] hashesForSign = new byte[signRetries][];
+                for (int i = 0; i < signRetries; i++) {
+                    hashesForSign[i] = hashForSign.getBytes();
+                }
                 return hashesForSign;
             }
 
@@ -422,9 +431,21 @@ public class EosEngine extends CoinEngine {
 
             @Override
             public byte[] onSignCompleted(byte[] signFromCard) throws Exception {
-                BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, 0, 32));
-                BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, 32, 64));
-                s = CryptoUtil.toCanonicalised(s);
+                BigInteger r = null, s = null;
+                for (int i = 0; i < signRetries; ++i) {
+                    r = new BigInteger(1, Arrays.copyOfRange(signFromCard, i * 64, 32 + i * 64));
+
+                    if (r.toByteArray().length == 33) {
+                        Log.e(TAG, "33 bytes R: " + Util.bytesToHex(r.toByteArray()));
+                    } else {
+                        s = new BigInteger(1, Arrays.copyOfRange(signFromCard, 32 + i * 64, 64 + i * 64));
+                        s = CryptoUtil.toCanonicalised(s);
+                        break;
+                    }
+                }
+                if (s == null) {
+                    throw new Exception("All signatures not canonical");
+                }
 
                 boolean f = ECKey.verify(Util.calculateSHA256(raw.bytes()), new ECKey.ECDSASignature(r, s), ctx.getCard().getWalletPublicKey());
 
@@ -443,10 +464,10 @@ public class EosEngine extends CoinEngine {
 
                 //TODO: not every signature works for EOS, if r.toByteArray length is 33, even if first 0x00 byte is cut,
                 //TODO: signature would be counted non canonical because first bit is not zero. Need to check it on card or there will be multiple security delays
-                if (r.toByteArray().length == 33) {
-                    Log.e(TAG, "33 bytes R: " + Util.bytesToHex(rbytes));
-                    throw new Exception("33 byte R");
-                }
+//                if (r.toByteArray().length == 33) {
+//                    Log.e(TAG, "33 bytes R: " + Util.bytesToHex(rbytes));
+//                    throw new Exception("33 byte R");
+//                }
 
                 byte[] pub_buf = new byte[65];
                 pub_buf[0] = (byte) v;
@@ -507,9 +528,14 @@ public class EosEngine extends CoinEngine {
         Observer<Account> accountObserver = new DefaultObserver<Account>() {
             @Override
             public void onNext(Account account) {
-                String[] balanceStrings = account.getCoreLiquidBalance().split(" ");
-                coinData.setBalanceReceived(true);
-                coinData.setBalance(new Amount(balanceStrings[0], balanceStrings[1]));
+                if (account.getCoreLiquidBalance() != null) {
+                    String[] balanceStrings = account.getCoreLiquidBalance().split(" ");
+                    coinData.setBalanceReceived(true);
+                    coinData.setBalance(new Amount(balanceStrings[0], balanceStrings[1]));
+                } else {
+                    coinData.setBalanceReceived(true);
+                    coinData.setBalance(new Amount(0L, getBalanceCurrency()));
+                }
             }
 
             @Override
