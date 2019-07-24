@@ -7,6 +7,7 @@ import com.tangem.wallet.eth.EthEngine
 import com.tangem.wallet.token.TokenEngine
 import com.tangem.wallet.bch.BtcCashEngine
 import com.tangem.data.Blockchain
+import com.tangem.wallet.eos.EosEngine
 import com.tangem.wallet.binance.BinanceEngine
 import com.tangem.wallet.cardano.CardanoData
 import com.tangem.wallet.cardano.CardanoEngine
@@ -45,6 +46,7 @@ object CoinEngineFactory {
             Blockchain.Binance, Blockchain.BinanceTestNet -> BinanceEngine()
             Blockchain.Matic, Blockchain.MaticTestNet -> MaticTokenEngine()
             Blockchain.StellarTestNet, Blockchain.Stellar -> XlmEngine()
+            Blockchain.Eos -> EosEngine()
             else -> null
         }
     }
@@ -78,6 +80,8 @@ object CoinEngineFactory {
                 MaticTokenEngine(context)
             else if (Blockchain.Stellar == context.blockchain || Blockchain.StellarTestNet == context.blockchain)
                 XlmEngine(context)
+            else if (Blockchain.Eos == context.blockchain)
+                EosEngine(context)
             else
                 return null
         } catch (e: Exception) {
