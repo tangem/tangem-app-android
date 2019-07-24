@@ -202,10 +202,16 @@ public class XlmEngine extends CoinEngine {
     public boolean validateBalance(BalanceValidator balanceValidator) {
         try {
             if (((ctx.getCard().getOfflineBalance() == null) && !ctx.getCoinData().isBalanceReceived()) || (!ctx.getCoinData().isBalanceReceived() && (ctx.getCard().getRemainingSignatures() != ctx.getCard().getMaxSignatures()))) {
-                balanceValidator.setScore(0);
-                balanceValidator.setFirstLine("Unknown balance");
-                balanceValidator.setSecondLine("Balance cannot be verified. Swipe down to refresh.");
-                return false;
+                if (coinData.isError404()) {
+                    balanceValidator.setScore(0);
+                    balanceValidator.setFirstLine("No account or network error");
+                    balanceValidator.setSecondLine("To create account send 1+ XLM to this address");
+                } else {
+                    balanceValidator.setScore(0);
+                    balanceValidator.setFirstLine("Unknown balance");
+                    balanceValidator.setSecondLine("Balance cannot be verified. Swipe down to refresh.");
+                    return false;
+                }
             }
 
             // Workaround before new back-end
@@ -441,9 +447,19 @@ public class XlmEngine extends CoinEngine {
             @Override
             public void onFail(StellarRequest.Base request) {
                 Log.i(TAG, "onFail: " + request.getClass().getSimpleName() + " " + request.getError());
-                ctx.setError(request.getError());
+
+                if (request.errorResponse.getCode() == 404) {
+                    coinData.setError404(true);
+                } else {
+                    ctx.setError(request.getError());
+                }
+
                 if (serverApi.isRequestsSequenceCompleted()) {
-                    blockchainRequestsCallbacks.onComplete(false);
+                    if (ctx.hasError()) {
+                        blockchainRequestsCallbacks.onComplete(false);
+                    } else {
+                        blockchainRequestsCallbacks.onComplete(true);
+                    }
                 } else {
                     blockchainRequestsCallbacks.onProgress();
                 }
