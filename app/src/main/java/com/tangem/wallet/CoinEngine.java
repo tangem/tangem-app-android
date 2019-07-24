@@ -165,6 +165,11 @@ public abstract class CoinEngine {
         public boolean isZero() {
             return compareTo(BigDecimal.ZERO) == 0;
         }
+
+        @Override
+        public Amount setScale(int newScale) {
+            return new Amount(super.setScale(newScale), currency);
+        }
     }
 
     protected TangemContext ctx;
