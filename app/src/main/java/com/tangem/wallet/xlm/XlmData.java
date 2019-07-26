@@ -6,7 +6,6 @@ import android.util.Log;
 import com.tangem.wallet.CoinData;
 import com.tangem.wallet.CoinEngine;
 
-import org.bitcoinj.core.Coin;
 import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.LedgerResponse;
@@ -31,11 +30,13 @@ public class XlmData extends CoinData {
     private Long sequenceNumber = 0L;
     private CoinEngine.Amount baseReserve = new CoinEngine.Amount("0.5", "XLM");
     private CoinEngine.Amount baseFee = new CoinEngine.Amount("0.00001", "XLM");
+    private boolean error404 = false;
 
     @Override
     public void clearInfo() {
         super.clearInfo();
         balance = null;
+        error404 = false;
     }
 
     CoinEngine.Amount getBalance() {
@@ -77,6 +78,14 @@ public class XlmData extends CoinData {
         sequenceNumber++;
     }
 
+    public boolean isError404() {
+        return error404;
+    }
+
+    public void setError404(boolean error404) {
+        this.error404 = error404;
+    }
+
     @Override
     public void loadFromBundle(Bundle B) {
         super.loadFromBundle(B);
@@ -104,6 +113,9 @@ public class XlmData extends CoinData {
         } else {
             baseFee = new CoinEngine.Amount("0.00001", "XLM");
         }
+
+        if (B.containsKey("Error404")) error404 = B.getBoolean("Error404");
+        else error404 = false;
     }
 
     @Override
@@ -128,6 +140,8 @@ public class XlmData extends CoinData {
                 B.putString("BaseFeeCurrency", baseFee.getCurrency());
                 B.putString("BaseFeeDecimal", baseFee.toValueString());
             }
+
+            if (error404) B.putBoolean("Error404", true);
 
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());
