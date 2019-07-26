@@ -87,46 +87,46 @@ public class DerEncodingUtil {
         return bos.toByteArray();
     }
 
-    public static byte[] DerEncoding(byte[] sign)
-    {
-        byte[] r = sign;
-        byte[] s = new byte[32];
-        for(int i =0; i < 32; ++i)
-        {
-            s[i] = sign[i+32];
-        }
-
-        byte[] newR = PackInteger(r);
-        byte[] newS = PackInteger(s);
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        baos.write((byte)(newR.length+newS.length+2));
-        baos.write((byte)newR.length);
-        baos.write(newR, 0, newR.length);
-        baos.write((byte)newS.length);
-        baos.write(newS, 0, newS.length);
-
-        return baos.toByteArray();
-    }
-
-    public static byte[] DerEncodingBI(BigInteger[] sign)
-    {
-        byte[] r = sign[0].toByteArray();
-        byte[] s = sign[1].toByteArray();
-
-        byte[] newR = PackInteger(r);
-        byte[] newS = PackInteger(s);
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-        baos.write((byte)(newR.length+newS.length+2));
-
-        baos.write((byte)newR.length);
-        baos.write(newR, 0, newR.length);
-
-        baos.write((byte)newS.length);
-        baos.write(newS, 0, newS.length);
-
-        return baos.toByteArray();
-    }
+//    public static byte[] DerEncoding(byte[] sign)
+//    {
+//        byte[] r = sign;
+//        byte[] s = new byte[32];
+//        for(int i =0; i < 32; ++i)
+//        {
+//            s[i] = sign[i+32];
+//        }
+//
+//        byte[] newR = PackInteger(r);
+//        byte[] newS = PackInteger(s);
+//
+//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//        baos.write((byte)(newR.length+newS.length+2));
+//        baos.write((byte)newR.length);
+//        baos.write(newR, 0, newR.length);
+//        baos.write((byte)newS.length);
+//        baos.write(newS, 0, newS.length);
+//
+//        return baos.toByteArray();
+//    }
+//
+//    public static byte[] DerEncodingBI(BigInteger[] sign)
+//    {
+//        byte[] r = sign[0].toByteArray();
+//        byte[] s = sign[1].toByteArray();
+//
+//        byte[] newR = PackInteger(r);
+//        byte[] newS = PackInteger(s);
+//
+//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//
+//        baos.write((byte)(newR.length+newS.length+2));
+//
+//        baos.write((byte)newR.length);
+//        baos.write(newR, 0, newR.length);
+//
+//        baos.write((byte)newS.length);
+//        baos.write(newS, 0, newS.length);
+//
+//        return baos.toByteArray();
+//    }
 }
