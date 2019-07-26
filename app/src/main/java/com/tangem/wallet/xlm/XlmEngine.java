@@ -18,7 +18,9 @@ import com.tangem.wallet.R;
 import com.tangem.wallet.TangemContext;
 
 import org.stellar.sdk.AssetTypeNative;
+import org.stellar.sdk.CreateAccountOperation;
 import org.stellar.sdk.KeyPair;
+import org.stellar.sdk.Operation;
 import org.stellar.sdk.PaymentOperation;
 import org.stellar.sdk.Transaction;
 import org.stellar.sdk.TransactionEx;
@@ -361,7 +363,14 @@ public class XlmEngine extends CoinEngine {
             amountValue = new Amount(amountValue.subtract(feeValue), amountValue.getCurrency());
         }
 
-        TransactionEx transaction = TransactionEx.buildEx(60, coinData.getAccountResponse(), new PaymentOperation.Builder(KeyPair.fromAccountId(targetAddress), new AssetTypeNative(), amountValue.toValueString()).build());
+        Operation operation;
+        if (isAccountCreated(targetAddress))
+            operation = new PaymentOperation.Builder(KeyPair.fromAccountId(targetAddress), new AssetTypeNative(), amountValue.toValueString()).build();
+        else
+            operation = new CreateAccountOperation.Builder(KeyPair.fromAccountId(targetAddress), amountValue.toValueString()).build();
+
+        TransactionEx transaction = TransactionEx.buildEx(60, coinData.getAccountResponse(), operation);
+
 
         if (transaction.getFee() != convertToInternalAmount(feeValue).intValueExact()) {
             throw new Exception("Invalid fee!");
@@ -406,6 +415,26 @@ public class XlmEngine extends CoinEngine {
                 return txForSend;
             }
         };
+    }
+
+
+    // network call inside, don't use on main thread
+    private boolean isAccountCreated(String address) {
+        final ServerApiStellar serverApi = new ServerApiStellar();
+
+        StellarRequest.Balance request = new StellarRequest.Balance(address);
+
+        try {
+            serverApi.doStellarRequest(ctx, request);
+        } catch (IOException e) {
+            Log.e(TAG, e.getMessage());
+            return true; // suppose account is created if anything goes wrong TODO:check
+        }
+
+        if (request.errorResponse != null && request.errorResponse.getCode() == 404)
+            return false;
+        else
+            return true;
     }
 
     @Override
@@ -539,6 +568,8 @@ public class XlmEngine extends CoinEngine {
         return false;
     }
 
-    public int pendingTransactionTimeoutInSeconds() { return 10; }
+    public int pendingTransactionTimeoutInSeconds() {
+        return 10;
+    }
 
 }
