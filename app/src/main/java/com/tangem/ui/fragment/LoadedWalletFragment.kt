@@ -81,6 +81,7 @@ class LoadedWalletFragment : androidx.fragment.app.Fragment(), NfcAdapter.Reader
     private var newPIN = ""
     private var newPIN2 = ""
     private var cardProtocol: CardProtocol? = null
+    private var refreshAction: Runnable? = null
     private val inactiveColor: ColorStateList by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
             resources.getColorStateList(R.color.btn_dark, activity?.theme)
@@ -305,6 +306,11 @@ class LoadedWalletFragment : androidx.fragment.app.Fragment(), NfcAdapter.Reader
             EventBus.getDefault().register(this)
     }
 
+    override fun onStop() {
+        srl?.removeCallbacks(refreshAction)
+        super.onStop()
+    }
+
     override fun onDestroy() {
         EventBus.getDefault().unregister(this)
         super.onDestroy()
@@ -316,7 +322,8 @@ class LoadedWalletFragment : androidx.fragment.app.Fragment(), NfcAdapter.Reader
         //ctx.coinData.clearInfo()
         updateViews()
         //srl?.isRefreshing = true
-        srl?.postDelayed({ refresh() }, 10000)
+        refreshAction = Runnable { refresh() }
+        srl?.postDelayed(refreshAction, 10000)
     }
 
     @Subscribe
@@ -645,7 +652,7 @@ class LoadedWalletFragment : androidx.fragment.app.Fragment(), NfcAdapter.Reader
         // Bitcoin, Litecoin, BitcoinCash, Stellar
         if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet ||
                 ctx.blockchain == Blockchain.Litecoin || ctx.blockchain == Blockchain.BitcoinCash ||
-                ctx.blockchain == Blockchain.Stellar || ctx.blockchain == Blockchain.StellarTestNet ) {
+                ctx.blockchain == Blockchain.Stellar || ctx.blockchain == Blockchain.StellarTestNet) {
             ctx.coinData.setIsBalanceEqual(true)
         }
 
