@@ -3,6 +3,7 @@ package com.tangem.data.network;
 import android.util.Log;
 
 import com.tangem.App;
+import com.tangem.data.Blockchain;
 import com.tangem.data.network.model.BlockcypherBody;
 import com.tangem.data.network.model.BlockcypherFee;
 import com.tangem.data.network.model.BlockcypherResponse;
@@ -47,9 +48,15 @@ public class ServerApiBlockcypher {
         String blockchain = blockchainID.toLowerCase();
         BlockcypherApi blockcypherApi = App.Companion.getNetworkComponent().getRetrofitBlockcypher().create(BlockcypherApi.class);
 
+        String network = "main";
+        if (blockchainID.equals(Blockchain.BitcoinTestNet.getID())) {
+            blockchain = "btc";
+            network = "test3";
+        }
+
         switch (method) {
             case BLOCKCYPHER_ADDRESS:
-                Call<BlockcypherResponse> addressCall = blockcypherApi.blockcypherAddress(blockchain, wallet);
+                Call<BlockcypherResponse> addressCall = blockcypherApi.blockcypherAddress(blockchain, network, wallet);
                 addressCall.enqueue(new Callback<BlockcypherResponse>() {
                     @Override
                     public void onResponse(@NonNull Call<BlockcypherResponse> call, @NonNull Response<BlockcypherResponse> response) {
@@ -72,7 +79,7 @@ public class ServerApiBlockcypher {
                 break;
 
             case BLOCKCYPHER_FEE:
-                Call<BlockcypherFee> feeCall = blockcypherApi.blockcypherMain(blockchain);
+                Call<BlockcypherFee> feeCall = blockcypherApi.blockcypherMain(blockchain, network);
                 feeCall.enqueue(new Callback<BlockcypherFee>() {
                     @Override
                     public void onResponse(@NonNull Call<BlockcypherFee> call, @NonNull Response<BlockcypherFee> response) {
@@ -97,7 +104,7 @@ public class ServerApiBlockcypher {
             case BLOCKCYPHER_SEND:
                 BlockcypherToken blockcypherToken = BlockcypherToken.values()[new Random().nextInt(BlockcypherToken.values().length)];
 
-                Call<BlockcypherResponse> sendCall = blockcypherApi.blockcypherPush(blockchain, new BlockcypherBody(tx), blockcypherToken.getToken());
+                Call<BlockcypherResponse> sendCall = blockcypherApi.blockcypherPush(blockchain, network, new BlockcypherBody(tx), blockcypherToken.getToken());
                 sendCall.enqueue(new Callback<BlockcypherResponse>() {
                     @Override
                     public void onResponse(@NonNull Call<BlockcypherResponse> call, @NonNull Response<BlockcypherResponse> response) {
