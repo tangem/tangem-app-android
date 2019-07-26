@@ -14,3 +14,9 @@
 .idea/runConfigurations.xml
 .idea/encodings.xml
 .idea/codeStyles/codeStyleConfig.xml
+
+# fastlane files
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots
+**/fastlane/test_output
