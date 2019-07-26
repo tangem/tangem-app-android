@@ -544,13 +544,15 @@ public class TokenEngine extends CoinEngine {
         BigInteger amount = amountDec.toBigInteger(); //new BigInteger(amountValue, 10);
 
 
-        //amount = amount.subtract(fee);
+        int gasLimitInt = 60000;
+        if (amountValue.getCurrency().equals("DGX")) {
+            gasLimitInt = 300000;
+        }
 
-        BigInteger gasPrice = weiFee.divide(BigInteger.valueOf(60000));
-        BigInteger gasLimit = BigInteger.valueOf(60000);
+        BigInteger gasPrice = weiFee.divide(BigInteger.valueOf(gasLimitInt));
+        BigInteger gasLimit = BigInteger.valueOf(gasLimitInt);
         Integer chainId = this.getChainIdNum();
         BigInteger amountZero = BigInteger.ZERO;
-
         String to = targetAddress;
 
         if (to.startsWith("0x") || to.startsWith("0X")) {
@@ -743,7 +745,11 @@ public class TokenEngine extends CoinEngine {
                 Log.i(TAG, "Infura gas price: " + gasPrice + " (" + l.toString() + ")");
                 BigInteger m;
                 if (!amount.getCurrency().equals(Blockchain.Ethereum.getCurrency()))
-                    m = BigInteger.valueOf(60000);
+                    if (amount.getCurrency().equals("DGX")) {
+                        m = BigInteger.valueOf(300000);
+                    } else {
+                        m = BigInteger.valueOf(60000);
+                    }
                 else m = BigInteger.valueOf(21000);
 
                 Log.i(TAG, "fee multiplier: " + m.toString());
