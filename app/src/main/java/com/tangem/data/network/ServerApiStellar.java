@@ -138,7 +138,7 @@ public class ServerApiStellar {
         });
     }
 
-    private void doStellarRequest(TangemContext ctx, StellarRequest.Base stellarRequest) throws IOException {
+    public void doStellarRequest(TangemContext ctx, StellarRequest.Base stellarRequest) throws IOException {
         stellarRequest.setError(null);
         try {
             Server server;
