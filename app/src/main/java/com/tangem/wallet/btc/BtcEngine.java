@@ -196,7 +196,7 @@ public class BtcEngine extends CoinEngine {
 
     @Override
     public Uri getWalletExplorerUri() {
-        return Uri.parse((ctx.getBlockchain() == Blockchain.Bitcoin ? "https://blockchain.info/address/" : "https://testnet.blockchain.info/address/") + ctx.getCoinData().getWallet());
+        return Uri.parse((ctx.getBlockchain() == Blockchain.Bitcoin ? "https://www.blockchain.com/btc/address/" : "https://live.blockcypher.com/btc-testnet/address/") + ctx.getCoinData().getWallet());
     }
 
     @Override
