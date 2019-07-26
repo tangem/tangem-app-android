@@ -109,7 +109,7 @@ public class Server {
 
     public static class ApiBlockcypher {
         public static final String URL_BLOCKCYPHER = ServerURL.API_BLOCKCYPHER;
-        static final String V1_MAIN = "v1/{blockchain}/main";
+        static final String V1_MAIN = "v1/{blockchain}/{network}";
 
         public static class Method {
             static final String MAIN = URL_BLOCKCYPHER + V1_MAIN;
