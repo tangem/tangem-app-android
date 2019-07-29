@@ -63,8 +63,10 @@ public class XrpData extends CoinData {
     public CoinEngine.InternalAmount getBalanceInInternalUnits() {
         if (balanceUnconfirmed != null)
             return new CoinEngine.InternalAmount(BigDecimal.valueOf(balanceUnconfirmed).subtract(BigDecimal.valueOf(reserve)), "Drops");
-        else
+        else if (balanceConfirmed != null)
             return new CoinEngine.InternalAmount(BigDecimal.valueOf(balanceConfirmed).subtract(BigDecimal.valueOf(reserve)), "Drops");
+        else
+            return null;
     }
 
 //    public Long getBalanceUnconfirmed() {
