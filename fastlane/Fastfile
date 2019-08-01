@@ -24,12 +24,18 @@ platform :android do
 	build_type: "Debug")
   end
 
-  desc "Build a release APK"
-  lane :release do
+  desc "Build a signed release APK"
+  lane :release do |options|
     gradle(
     task: "clean assemble",
     flavor: "tangemAccess",
-    build_type: "Release")
+    build_type: "Release",
+     properties: {
+        "android.injected.signing.store.file" => options[:keystore],
+        "android.injected.signing.store.password" => options[:store_password],
+        "android.injected.signing.key.alias" => options[:key_alias],
+        "android.injected.signing.key.password" => options[:key_password],
+      })
   end
 
    desc "Build a debug APK"
@@ -40,22 +46,15 @@ platform :android do
    end
 
   desc "Submit a new Beta Build to Crashlytics Beta"
-  lane :beta do
-    gradle(task: "clean assemble",
-         flavor: "tangemAccess",
-         build_type: "Debug")
-    crashlytics
-  
-    # sh "your_script.sh"
-    # You can also use other beta testing services here
+  lane :beta do |options|
+    crashlytics(
+     api_token: options[:api_token],
+     build_secret: options[:build_secret],
+     apk_path: options[:apk_path])
   end
 
   desc "Deploy a new version to the Google Play"
   lane :deploy do
-    gradle(
-        task: "clean assemble",
-        flavor: "tangemAccess",
-        build_type: "Release")
     upload_to_play_store
   end
 end
