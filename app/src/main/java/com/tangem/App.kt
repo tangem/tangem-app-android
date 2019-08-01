@@ -2,16 +2,18 @@ package com.tangem
 
 import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
+import com.crashlytics.android.Crashlytics
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.tangem.data.local.PendingTransactionsStorage
 import com.tangem.card_android.android.data.Firmwares
 import com.tangem.card_android.android.data.PINStorage
 import com.tangem.card_common.data.Issuer
 import com.tangem.data.dp.PrefsManager
+import com.tangem.data.local.PendingTransactionsStorage
 import com.tangem.di.*
 import com.tangem.server_android.data.LocalStorage
 import com.tangem.wallet.BuildConfig
+import io.fabric.sdk.android.Fabric
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 
@@ -58,6 +60,7 @@ class App : Application() {
         pendingTransactionsStorage = PendingTransactionsStorage(applicationContext)
 
         if (BuildConfig.DEBUG) {
+            Fabric.with(this, Crashlytics())
             com.tangem.card_common.util.Log.setLogger(
                     object : com.tangem.card_common.util.LoggerInterface {
                         override fun i(logTag: String, message: String) {
