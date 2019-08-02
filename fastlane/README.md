@@ -25,7 +25,12 @@ Runs all the tests
 ```
 fastlane android release
 ```
-Build a release APK
+Build a signed release APK
+### android build
+```
+fastlane android build
+```
+Build debug and release APKs
 ### android debug
 ```
 fastlane android debug
