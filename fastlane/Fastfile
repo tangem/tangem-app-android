@@ -40,10 +40,12 @@ platform :android do
 
    desc "Build debug and release APKs"
    lane :build do |options|
+
       gradle(
         	task: "clean assemble",
         	flavor: "tangemAccess",
-        	build_type: "Debug")
+        	build_type: "Debug_beta")
+
       gradle(
       task: "assemble",
       flavor: "tangemAccess",
@@ -60,7 +62,7 @@ platform :android do
    lane :debug do
      gradle(task: "clean assemble",
      flavor: "tangemAccess",
-     build_type: "Debug")
+     build_type: "Debug_beta")
    end
 
   desc "Submit a new Beta Build to Crashlytics Beta"
