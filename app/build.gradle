@@ -30,12 +30,20 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.debug
+            buildConfigField 'boolean', 'CRASHLYTICS', 'Boolean.parseBoolean("false")'
         }
         debug {
             debuggable true
             minifyEnabled false
             applicationIdSuffix ".debug"
             signingConfig signingConfigs.debug
+            buildConfigField 'boolean', 'CRASHLYTICS', 'Boolean.parseBoolean("false")'
+        }
+        debug_beta {
+            initWith debug
+            versionNameSuffix "-beta"
+            applicationIdSuffix ".debug_beta"
+            buildConfigField 'boolean', 'CRASHLYTICS', 'Boolean.parseBoolean("true")'
         }
     }
     flavorDimensions ""
