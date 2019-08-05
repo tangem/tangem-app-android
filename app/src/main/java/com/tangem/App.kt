@@ -60,7 +60,6 @@ class App : Application() {
         pendingTransactionsStorage = PendingTransactionsStorage(applicationContext)
 
         if (BuildConfig.DEBUG) {
-            Fabric.with(this, Crashlytics())
             com.tangem.card_common.util.Log.setLogger(
                     object : com.tangem.card_common.util.LoggerInterface {
                         override fun i(logTag: String, message: String) {
@@ -76,6 +75,7 @@ class App : Application() {
                         }
                     }
             )
+            if (BuildConfig.CRASHLYTICS) Fabric.with(this, Crashlytics())
         }
     }
 
