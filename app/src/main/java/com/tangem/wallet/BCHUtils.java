@@ -267,8 +267,8 @@ public final class BCHUtils {
         ArrayList<UnspentOutputInfo> unspentOutputs = new ArrayList<>();
 
         for (BtcData.UnspentTransaction current : rawTxList) {
-            byte[] rawTxByte = BCHUtils.fromHex(current.Raw);
-            if (rawTxByte == null || current.Raw.isEmpty()) {
+            byte[] rawTxByte = BCHUtils.fromHex(current.script);
+            if (rawTxByte == null || current.script.isEmpty()) {
                 continue;
             }
 
