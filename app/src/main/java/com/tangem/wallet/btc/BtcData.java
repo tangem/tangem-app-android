@@ -17,14 +17,16 @@ public class BtcData extends CoinData {
 
     private Long balanceConfirmed, balanceUnconfirmed;
 
+    private boolean useBlockcypher = false;
+
     public String getUnspentInputsDescription() {
         try {
             int gatheredUnspents = 0;
             if( unspentTransactions==null ) return "";
             for (int i = 0; i < unspentTransactions.size(); i++) {
-                if (unspentTransactions.get(i).Raw != null && unspentTransactions.get(i).Raw.length() > 1) gatheredUnspents++;
+                if (unspentTransactions.get(i).script != null && unspentTransactions.get(i).script.length() > 1) gatheredUnspents++;
             }
-            return String.valueOf(unspentTransactions.size()) + " unspents (" + String.valueOf(gatheredUnspents) + " received)";
+            return unspentTransactions.size() + " unspents (" + gatheredUnspents + " received)";
         }
         catch (Exception e)
         {
@@ -35,24 +37,24 @@ public class BtcData extends CoinData {
 
     public static class UnspentTransaction {
         public String txID;
-        public Long Amount;
-        public Integer Height;
-        public String Raw = "";
+        public Long amount;
+        public Integer outputN;
+        public String script = "";
 
         public Bundle getAsBundle() {
             Bundle B = new Bundle();
             B.putString("txID", txID);
-            B.putLong("Amount", Amount);
-            B.putInt("Height", Height);
-            B.putString("Raw", Raw);
+            B.putLong("Amount", amount);
+            B.putInt("OutputN", outputN);
+            B.putString("Script", script);
             return B;
         }
 
         public void loadFromBundle(Bundle B) {
             txID = B.getString("txID");
-            Amount = B.getLong("Amount");
-            Height = B.getInt("Height");
-            Raw = B.getString("Raw");
+            amount = B.getLong("Amount");
+            outputN = B.getInt("OutputN");
+            script = B.getString("Script");
         }
     }
 
@@ -83,6 +85,7 @@ public class BtcData extends CoinData {
                 i++;
             }
         }
+        if (B.containsKey("UseBlockcypher")) useBlockcypher = B.getBoolean("UseBlockcypher");
     }
 
     @Override
@@ -98,6 +101,7 @@ public class BtcData extends CoinData {
             }
             if (balanceConfirmed != null) B.putLong("BalanceConfirmed", balanceConfirmed);
             if (balanceUnconfirmed != null) B.putLong("BalanceUnconfirmed", balanceUnconfirmed);
+            if (useBlockcypher) B.putBoolean("UseBlockcypher", true);
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());
         }
@@ -131,4 +135,11 @@ public class BtcData extends CoinData {
         return balanceConfirmed != null || balanceUnconfirmed != null;
     }
 
+    public boolean isUseBlockcypher() {
+        return useBlockcypher;
+    }
+
+    public void setUseBlockcypher(boolean useBlockcypher) {
+        this.useBlockcypher = useBlockcypher;
+    }
 }
