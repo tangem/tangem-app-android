@@ -13,8 +13,6 @@ import retrofit2.Response;
 
 public class ServerApiSoChain {
 
-    public static String NETWORK_BTC = "BTC";
-
     private static String TAG = ServerApiSoChain.class.getSimpleName();
 
     private int requestsCount = 0;
@@ -86,9 +84,9 @@ public class ServerApiSoChain {
         call.enqueue(new Callback<SoChain.Response.AddressBalance>() {
             @Override
             public void onResponse(@NonNull Call<SoChain.Response.AddressBalance> call, @NonNull Response<SoChain.Response.AddressBalance> response) {
+                requestsCount--;
                 Log.i(TAG, "requestAddressBalance onResponse " + response.code());
                 if (response.code() == 200) {
-                    requestsCount--;
                     addressInfoListener.onSuccess(response.body());
                 } else {
                     addressInfoListener.onFail(String.valueOf(response.code()));
@@ -97,6 +95,7 @@ public class ServerApiSoChain {
 
             @Override
             public void onFailure(@NonNull Call<SoChain.Response.AddressBalance> call, @NonNull Throwable t) {
+                requestsCount--;
                 Log.e(TAG, "requestAddressBalance  onFailure " + t.getMessage());
                 addressInfoListener.onFail(String.valueOf(t.getMessage()));
             }
@@ -111,9 +110,9 @@ public class ServerApiSoChain {
         call.enqueue(new Callback<SoChain.Response.TxUnspent>() {
             @Override
             public void onResponse(@NonNull Call<SoChain.Response.TxUnspent> call, @NonNull Response<SoChain.Response.TxUnspent> response) {
+                requestsCount--;
                 Log.i(TAG, "requestAddressBalance onResponse " + response.code());
                 if (response.code() == 200) {
-                    requestsCount--;
                     addressInfoListener.onSuccess(response.body());
                 } else {
                     addressInfoListener.onFail(String.valueOf(response.code()));
@@ -122,6 +121,7 @@ public class ServerApiSoChain {
 
             @Override
             public void onFailure(@NonNull Call<SoChain.Response.TxUnspent> call, @NonNull Throwable t) {
+                requestsCount--;
                 Log.e(TAG, "requestAddressBalance  onFailure " + t.getMessage());
                 addressInfoListener.onFail(String.valueOf(t.getMessage()));
             }
@@ -138,9 +138,9 @@ public class ServerApiSoChain {
         call.enqueue(new Callback<SoChain.Response.SendTx>() {
             @Override
             public void onResponse(@NonNull Call<SoChain.Response.SendTx> call, @NonNull Response<SoChain.Response.SendTx> response) {
+                requestsCount--;
                 Log.i(TAG, "requestAddressBalance onResponse " + response.code());
                 if (response.code() == 200) {
-                    requestsCount--;
                     sendTxListener.onSuccess(response.body());
                 } else {
                     sendTxListener.onFail(String.valueOf(response.code()));
@@ -149,6 +149,7 @@ public class ServerApiSoChain {
 
             @Override
             public void onFailure(@NonNull Call<SoChain.Response.SendTx> call, @NonNull Throwable t) {
+                requestsCount--;
                 Log.e(TAG, "requestAddressBalance  onFailure " + t.getMessage());
                 sendTxListener.onFail(String.valueOf(t.getMessage()));
             }
