@@ -336,8 +336,8 @@ public class EosEngine extends CoinEngine {
 //        return address;
 
 //        byte[] csum = Ripemd160.from(pkCompressed).bytes();
-//        csum = Raw.copy(csum, 0, 4);
-//        byte[] addy = Raw.concat(pkCompressed, csum);
+//        csum = script.copy(csum, 0, 4);
+//        byte[] addy = script.concat(pkCompressed, csum);
 //        StringBuffer bf = new StringBuffer("EOS");
 //        bf.append(Base58.encode(addy));
 //        return bf.toString() + " " + address;
