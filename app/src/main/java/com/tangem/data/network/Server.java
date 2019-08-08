@@ -114,6 +114,7 @@ public class Server {
         public static class Method {
             static final String MAIN = URL_BLOCKCYPHER + V1_MAIN;
             static final String ADDRESS = MAIN + "/addrs/{address}?unspentOnly=true&includeScript=true";
+            static final String TXS = MAIN + "/txs/{txHash}?includeHex=true";
             static final String PUSH = MAIN + "/txs/push";
         }
     }
