@@ -88,13 +88,6 @@ public class XlmEngine extends CoinEngine {
     }
 
     @Override
-    public String getOfflineBalanceHTML() {
-        InternalAmount offlineInternalAmount = convertToInternalAmount(ctx.getCard().getOfflineBalance());
-        Amount offlineAmount = convertToAmount(offlineInternalAmount);
-        return offlineAmount.toDescriptionString(getDecimals());
-    }
-
-    @Override
     public boolean isBalanceNotZero() {
         if (coinData == null) return false;
         if (coinData.getBalance() == null) return false;
