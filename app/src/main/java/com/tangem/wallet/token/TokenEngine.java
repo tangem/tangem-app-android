@@ -138,11 +138,6 @@ public class TokenEngine extends CoinEngine {
         return this.getBlockchain().getCurrency();
     }
 
-    @Override
-    public String getOfflineBalanceHTML() {
-        return ctx.getString(R.string.not_implemented);
-    }
-
     protected static int getChainDecimals() {
         return 18;
     }
