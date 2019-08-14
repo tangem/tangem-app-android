@@ -83,11 +83,6 @@ public class NftTokenEngine extends CoinEngine {
         return new InputFilter[0];
     }
 
-    @Override
-    public String getOfflineBalanceHTML() {
-        return ctx.getString(R.string.not_implemented);
-    }
-
     protected String getContractAddress(TangemCard card) {
         return card.getContractAddress();
     }
