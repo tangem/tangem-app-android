@@ -584,8 +584,8 @@ public class BtcCashEngine extends CoinEngine {
                                 JSONObject jsUnspent = jsUnspentArray.getJSONObject(i);
                                 BtcData.UnspentTransaction trUnspent = new BtcData.UnspentTransaction();
                                 trUnspent.txID = jsUnspent.getString("tx_hash");
-                                trUnspent.Amount = jsUnspent.getLong("value");
-                                trUnspent.Height = jsUnspent.getInt("height");
+                                trUnspent.amount = jsUnspent.getLong("value");
+                                trUnspent.outputN = jsUnspent.getInt("height");
                                 coinData.getUnspentTransactions().add(trUnspent);
                             }
                         } catch (JSONException e) {
@@ -616,7 +616,7 @@ public class BtcCashEngine extends CoinEngine {
                         String raw = electrumRequest.getResultString();
                         for (BtcData.UnspentTransaction tx : coinData.getUnspentTransactions()) {
                             if (tx.txID.equals(txHash))
-                                tx.Raw = raw;
+                                tx.script = raw;
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
