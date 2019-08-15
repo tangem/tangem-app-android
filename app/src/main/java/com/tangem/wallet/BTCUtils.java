@@ -190,8 +190,8 @@ public final class BTCUtils {
         ArrayList<UnspentOutputInfo> unspentOutputs = new ArrayList<>();
 
         for (BtcData.UnspentTransaction current : rawTxList) {
-            byte[] rawTxByte = BTCUtils.fromHex(current.Raw);
-            if (rawTxByte == null || current.Raw.isEmpty()) {
+            byte[] rawTxByte = BTCUtils.fromHex(current.script);
+            if (rawTxByte == null || current.script.isEmpty()) {
                 continue;
             }
 
