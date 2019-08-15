@@ -7,6 +7,7 @@ import com.tangem.data.Blockchain;
 import com.tangem.data.network.model.BlockcypherBody;
 import com.tangem.data.network.model.BlockcypherFee;
 import com.tangem.data.network.model.BlockcypherResponse;
+import com.tangem.data.network.model.BlockcypherTx;
 
 import java.util.Random;
 
@@ -20,6 +21,7 @@ public class ServerApiBlockcypher {
 
     public static final String BLOCKCYPHER_ADDRESS = "blockcypher_address";
     public static final String BLOCKCYPHER_FEE = "blockcypher_fee";
+    public static final String BLOCKCYPHER_TXS = "blockcypher_txs";
     public static final String BLOCKCYPHER_SEND = "blockcypher_send";
 
     private int requestsCount = 0;
@@ -31,6 +33,8 @@ public class ServerApiBlockcypher {
 
     private ResponseListener responseListener;
 
+    private TxResponseListener txResponseListener;
+
     public interface ResponseListener {
         void onSuccess(String method, BlockcypherResponse blockcypherResponse);
 
@@ -39,8 +43,18 @@ public class ServerApiBlockcypher {
         void onFail(String method, String message);
     }
 
+    public interface TxResponseListener {
+        void onSuccess(BlockcypherTx blockcypherTx);
+
+        void onFail(String message);
+    }
+
     public void setResponseListener(ResponseListener listener) {
         responseListener = listener;
+    }
+
+    public void setTxResponseListener(TxResponseListener txListener) {
+        txResponseListener = txListener;
     }
 
     public void requestData(String blockchainID, String method, String wallet, String tx) {
@@ -60,8 +74,8 @@ public class ServerApiBlockcypher {
                 addressCall.enqueue(new Callback<BlockcypherResponse>() {
                     @Override
                     public void onResponse(@NonNull Call<BlockcypherResponse> call, @NonNull Response<BlockcypherResponse> response) {
+                        requestsCount--;
                         if (response.code() == 200) {
-                            requestsCount--;
                             responseListener.onSuccess(method, response.body());
                             Log.i(TAG, "requestData " + method + " onResponse " + response.code());
                         } else {
@@ -72,6 +86,7 @@ public class ServerApiBlockcypher {
 
                     @Override
                     public void onFailure(@NonNull Call<BlockcypherResponse> call, @NonNull Throwable t) {
+                        requestsCount--;
                         responseListener.onFail(method, String.valueOf(t.getMessage()));
                         Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
                     }
@@ -83,8 +98,8 @@ public class ServerApiBlockcypher {
                 feeCall.enqueue(new Callback<BlockcypherFee>() {
                     @Override
                     public void onResponse(@NonNull Call<BlockcypherFee> call, @NonNull Response<BlockcypherFee> response) {
+                        requestsCount--;
                         if (response.code() == 200) {
-                            requestsCount--;
                             responseListener.onSuccess(method, response.body());
                             Log.i(TAG, "requestData " + method + " onResponse " + response.code());
                         } else {
@@ -95,7 +110,32 @@ public class ServerApiBlockcypher {
 
                     @Override
                     public void onFailure(@NonNull Call<BlockcypherFee> call, @NonNull Throwable t) {
+                        requestsCount--;
                         responseListener.onFail(method, String.valueOf(t.getMessage()));
+                        Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
+                    }
+                });
+                break;
+
+            case BLOCKCYPHER_TXS:
+                Call<BlockcypherTx> txsCall = blockcypherApi.blockcypherTxs(blockchain, network, tx);
+                txsCall.enqueue(new Callback<BlockcypherTx>() {
+                    @Override
+                    public void onResponse(@NonNull Call<BlockcypherTx> call,@NonNull Response<BlockcypherTx> response) {
+                        requestsCount--;
+                        if (response.code() == 200) {
+                            txResponseListener.onSuccess(response.body());
+                            Log.i(TAG, "requestData " + method + " onResponse " + response.code());
+                        } else {
+                            txResponseListener.onFail(String.valueOf(response.code()));
+                            Log.e(TAG, "requestData " + method + " onResponse " + response.code());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<BlockcypherTx> call, @NonNull Throwable t) {
+                        requestsCount--;
+                        txResponseListener.onFail(String.valueOf(t.getMessage()));
                         Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
                     }
                 });
@@ -108,8 +148,8 @@ public class ServerApiBlockcypher {
                 sendCall.enqueue(new Callback<BlockcypherResponse>() {
                     @Override
                     public void onResponse(@NonNull Call<BlockcypherResponse> call, @NonNull Response<BlockcypherResponse> response) {
+                        requestsCount--;
                         if (response.code() == 201) {
-                            requestsCount--;
                             responseListener.onSuccess(method, response.body());
                             Log.i(TAG, "requestData " + method + " onResponse " + response.code());
                         } else {
@@ -120,6 +160,7 @@ public class ServerApiBlockcypher {
 
                     @Override
                     public void onFailure(@NonNull Call<BlockcypherResponse> call, @NonNull Throwable t) {
+                        requestsCount--;
                         responseListener.onFail(method, String.valueOf(t.getMessage()));
                         Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
                     }
@@ -127,6 +168,7 @@ public class ServerApiBlockcypher {
                 break;
 
             default:
+                requestsCount--;
                 responseListener.onFail(method, "undeclared method");
                 Log.e(TAG, "requestData " + method + " onFailure - undeclared method");
                 break;
