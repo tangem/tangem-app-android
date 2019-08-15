@@ -3,6 +3,7 @@ package com.tangem.data.network;
 import com.tangem.data.network.model.BlockcypherBody;
 import com.tangem.data.network.model.BlockcypherResponse;
 import com.tangem.data.network.model.BlockcypherFee;
+import com.tangem.data.network.model.BlockcypherTx;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -18,6 +19,9 @@ public interface BlockcypherApi {
 
     @GET(Server.ApiBlockcypher.Method.ADDRESS)
     Call<BlockcypherResponse> blockcypherAddress(@Path("blockchain") String blockchain, @Path("network") String network, @Path("address") String address);
+
+    @GET(Server.ApiBlockcypher.Method.TXS)
+    Call<BlockcypherTx> blockcypherTxs(@Path("blockchain") String blockchain, @Path("network") String network, @Path("txHash") String txHash);
 
     @Headers("Content-Type: application/json")
     @POST(Server.ApiBlockcypher.Method.PUSH)
