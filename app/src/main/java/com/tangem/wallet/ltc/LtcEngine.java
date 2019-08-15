@@ -2,15 +2,11 @@ package com.tangem.wallet.ltc;
 
 import android.net.Uri;
 import android.text.InputFilter;
-import android.util.Log;
 
-import com.tangem.data.network.ElectrumRequest;
-import com.tangem.data.network.ServerApiElectrum;
 import com.tangem.wallet.BTCUtils;
 import com.tangem.wallet.BalanceValidator;
 import com.tangem.wallet.Base58;
 import com.tangem.wallet.CoinData;
-import com.tangem.wallet.CoinEngine;
 import com.tangem.wallet.TangemContext;
 import com.tangem.wallet.Transaction;
 import com.tangem.wallet.UnspentOutputInfo;
@@ -25,8 +21,6 @@ import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.util.DerEncodingUtil;
 import com.tangem.wallet.R;
 
-import org.json.JSONException;
-
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -36,7 +30,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class LtcEngine extends BtcEngine {
     private static final String TAG = LtcEngine.class.getSimpleName();
@@ -395,7 +388,7 @@ public class LtcEngine extends BtcEngine {
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
 
         for (BtcData.UnspentTransaction utxo : coinData.getUnspentTransactions()) {
-            unspentOutputs.add(new UnspentOutputInfo(BTCUtils.fromHex(utxo.txID), new Transaction.Script(BTCUtils.fromHex(utxo.Raw)), utxo.Amount, utxo.Height, -1, utxo.txID, null));
+            unspentOutputs.add(new UnspentOutputInfo(BTCUtils.fromHex(utxo.txID), new Transaction.Script(BTCUtils.fromHex(utxo.script)), utxo.amount, utxo.outputN, -1, utxo.txID, null));
         }
 
         long fullAmount = 0;
