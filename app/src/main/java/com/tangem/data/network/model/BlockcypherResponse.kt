@@ -33,6 +33,11 @@ data class BlockcypherTxref(
         var script: String? = null
 )
 
+data class BlockcypherTx(
+        @SerializedName("hex")
+        var hex: String? = null
+)
+
 data class BlockcypherFee(
         @SerializedName("low_fee_per_kb")
         var low_fee_per_kb: Long? = null,
