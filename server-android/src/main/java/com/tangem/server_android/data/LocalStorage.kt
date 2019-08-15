@@ -49,7 +49,7 @@ class LocalStorage
             artworks = HashMap()
         }
 
-        if (artworks.count() < 23) {
+        if (artworks.count() < 28) {
 //          forceSave=true only on the last one
             putResourceArtworkToCatalog(R.drawable.card_default, false)
             putResourceArtworkToCatalog(R.drawable.card_default_nft, false)
@@ -73,6 +73,11 @@ class LocalStorage
             putResourceArtworkToCatalog(R.drawable.card_ru032, false)
             putResourceArtworkToCatalog(R.drawable.card_ru037, false)
             putResourceArtworkToCatalog(R.drawable.card_ru039, false)
+            putResourceArtworkToCatalog(R.drawable.card_ru040, false)
+            putResourceArtworkToCatalog(R.drawable.card_ru041, false)
+            putResourceArtworkToCatalog(R.drawable.card_ru042, false)
+            putResourceArtworkToCatalog(R.drawable.card_ru043, false)
+            putResourceArtworkToCatalog(R.drawable.card_tg044, false)
             putResourceArtworkToCatalog(R.drawable.card_ff32, true)
         }
         if (batchesFile.exists()) {
@@ -223,6 +228,10 @@ class LocalStorage
 
             hexCID in "CB05000010000000".."CB05000010009999" -> R.drawable.card_ru006
 
+            //LTC and DGX
+            hexCID in "CB25000000000000".."CB25000000099999" -> R.drawable.card_ru043
+            hexCID in "CB26000000000000".."CB26000000099999" -> R.drawable.card_tg044
+
             card.batch == "0004" -> R.drawable.card_ru006
             card.batch == "0006" -> R.drawable.card_ru006
             card.batch == "0010" -> R.drawable.card_ru006
@@ -247,7 +256,12 @@ class LocalStorage
             card.batch == "0021" -> R.drawable.card_ru031
             card.batch == "0022" -> R.drawable.card_ru032
             card.batch == "0025" -> R.drawable.card_ru037
+            card.batch == "0027" -> R.drawable.card_ru038
+            card.batch == "0030" -> R.drawable.card_ru038
             card.batch == "0026" -> R.drawable.card_ru039
+            card.batch == "0028" -> R.drawable.card_ru040
+            card.batch == "0029" -> R.drawable.card_ru041
+            card.batch == "0031" -> R.drawable.card_ru042
             card.batch == "FF32" -> R.drawable.card_ff32
 
             else -> null
