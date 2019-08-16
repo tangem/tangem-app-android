@@ -1,6 +1,7 @@
 package com.tangem.wallet.xlm;
 
 import android.net.Uri;
+import android.os.StrictMode;
 import android.text.InputFilter;
 import android.util.Log;
 
@@ -351,6 +352,9 @@ public class XlmEngine extends CoinEngine {
     @Override
     public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         checkBlockchainDataExists();
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+
+        StrictMode.setThreadPolicy(policy);
 
         if (IncFee) {
             amountValue = new Amount(amountValue.subtract(feeValue), amountValue.getCurrency());
