@@ -9,7 +9,8 @@ public enum Manufacturer {
     Unknown("", "Unknown"),
     SMARTCASH_AG("SMART CASH AG", "TANGEM AG"),
     DEVELOPERS_SMARTCASH_AG("DEVELOP CASH AG", "TANGEM AG (DEVELOPERS)"),
-    SMARTCASH("SMART CASH", "TANGEM");
+    SMARTCASH("SMART CASH", "TANGEM"),
+    TANGEM("TANGEM", "TANGEM");
 
     private String ID;
     private String officialName;
