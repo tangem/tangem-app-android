@@ -86,13 +86,6 @@ public class DucatusEngine extends BtcEngine {
     }
 
     @Override
-    public String getOfflineBalanceHTML() {
-        InternalAmount offlineInternalAmount = convertToInternalAmount(ctx.getCard().getOfflineBalance());
-        Amount offlineAmount = convertToAmount(offlineInternalAmount);
-        return offlineAmount.toDescriptionString(getDecimals());
-    }
-
-    @Override
     public boolean isBalanceNotZero() {
         if (coinData == null) return false;
         if (coinData.getBalanceInInternalUnits() == null) return false;
@@ -525,7 +518,7 @@ public class DucatusEngine extends BtcEngine {
                             String txHash =  new String(BTCUtils.reverse(CryptoUtil.doubleSha256(BTCUtils.fromHex(raw)))); //TODO: check
                             for (BtcData.UnspentTransaction tx : coinData.getUnspentTransactions()) {
                                 if (tx.txID.equals(txHash))
-                                    tx.Raw = raw;
+                                    tx.script = raw;
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -548,8 +541,8 @@ public class DucatusEngine extends BtcEngine {
                         for (InsightResponse utxo : utxoList) {
                             BtcData.UnspentTransaction trUnspent = new BtcData.UnspentTransaction();
                             trUnspent.txID = utxo.getTxid();
-                            trUnspent.Amount = utxo.getSatoshis();
-                            trUnspent.Height = utxo.getHeight();
+                            trUnspent.amount = utxo.getSatoshis();
+                            trUnspent.outputN = utxo.getHeight();
                             coinData.getUnspentTransactions().add(trUnspent);
                         }
 
