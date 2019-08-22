@@ -17,7 +17,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class ServerApiBlockcypher {
-    private static String TAG = ServerApiRipple.class.getSimpleName();
+    private static String TAG = ServerApiBlockcypher.class.getSimpleName();
 
     public static final String BLOCKCYPHER_ADDRESS = "blockcypher_address";
     public static final String BLOCKCYPHER_FEE = "blockcypher_fee";
