@@ -10,16 +10,16 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ProgressBar;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentActivity;
+
 import com.tangem.card_common.util.Log;
 import com.tangem.wallet.R;
 
 import java.util.Timer;
 import java.util.TimerTask;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.DialogFragment;
 
 /**
  * Created by dvol on 06.03.2018.
@@ -78,7 +78,7 @@ public class WaitSecurityDelayDialog extends DialogFragment {
         super.onCancel(dialog);
     }
 
-    public static void onReadBeforeRequest(final AppCompatActivity activity, final int timeout) {
+    public static void onReadBeforeRequest(final FragmentActivity activity, final int timeout) {
         activity.runOnUiThread(() -> {
             if (timerToShowDelayDialog != null || timeout < delayBeforeShowDialog + minRemainingDelayToShowDialog)
                 return;
@@ -104,7 +104,7 @@ public class WaitSecurityDelayDialog extends DialogFragment {
         });
     }
 
-    public static void onReadWait(final AppCompatActivity activity, final int msec) {
+    public static void onReadWait(final FragmentActivity activity, final int msec) {
         Log.e(TAG, "onReadWait callback(" + msec + ")");
         activity.runOnUiThread(() -> {
             Log.e(TAG, "onReadWait on ui thread(" + msec + ")");
