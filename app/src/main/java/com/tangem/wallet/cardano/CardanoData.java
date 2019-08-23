@@ -22,7 +22,7 @@ public class CardanoData extends CoinData {
 //            int gatheredUnspents = 0;
             if( unspentOutputs ==null ) return "";
 //            for (int i = 0; i < unspentOutputs.size(); i++) {
-//                if (unspentOutputs.get(i).Raw != null && unspentOutputs.get(i).Raw.length() > 1) gatheredUnspents++;
+//                if (unspentOutputs.get(i).script != null && unspentOutputs.get(i).script.length() > 1) gatheredUnspents++;
 //            }
             return String.valueOf(unspentOutputs.size()) + " unspents";// (" + String.valueOf(gatheredUnspents) + " received)";
         }
