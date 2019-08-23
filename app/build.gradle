@@ -49,8 +49,8 @@ android {
     flavorDimensions ""
     productFlavors {
         tangemAccess {
-            versionCode 112
-            versionName "0.907.1." + generateVersionName()
+            versionCode 114
+            versionName "0.908.1." + generateVersionName()
             applicationId "com.tangem.wallet"
             signingConfig signingConfigs.debug
         }
