@@ -209,8 +209,6 @@ public abstract class CoinEngine {
 
     public abstract InputFilter[] getAmountInputFilters();
 
-    public abstract String getOfflineBalanceHTML();
-
     public abstract String evaluateFeeEquivalent(String fee);
 
     public abstract String getFeeCurrency();
@@ -236,6 +234,16 @@ public abstract class CoinEngine {
     public abstract CoinData createCoinData();
 
     public abstract String getUnspentInputsDescription();
+
+    public String getOfflineBalanceHTML() {
+        return "";
+    }
+
+//    public String getOfflineBalanceHTML() {
+//        InternalAmount offlineInternalAmount = convertToInternalAmount(ctx.getCard().getOfflineBalance());
+//        Amount offlineAmount = convertToAmount(offlineInternalAmount);
+//        return offlineAmount.toDescriptionString(getDecimals());
+//    }
 
     public void defineWallet() throws CardProtocol.TangemException {
         try {
