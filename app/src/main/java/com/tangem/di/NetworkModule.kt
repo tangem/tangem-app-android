@@ -18,6 +18,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
 
 @Module
 internal class NetworkModule {
@@ -116,6 +117,20 @@ internal class NetworkModule {
         val builder = Retrofit.Builder()
                 .baseUrl(Server.ApiSoChain.URL)
                 .addConverterFactory(GsonConverterFactory.create())
+        if (BuildConfig.DEBUG)
+            builder.client(createOkHttpClient())
+        return builder.build()
+    }
+
+    @Singleton
+    @Provides
+    @Named(Server.ApiBlockchainInfo.URL_BLOCKCHAININFO)
+    fun provideRetrofitBlockchainInfo(): Retrofit {
+        val builder = Retrofit.Builder()
+                .baseUrl(Server.ApiBlockchainInfo.URL_BLOCKCHAININFO)
+                .addConverterFactory(GsonConverterFactory.create())
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
         if (BuildConfig.DEBUG)
             builder.client(createOkHttpClient())
         return builder.build()
