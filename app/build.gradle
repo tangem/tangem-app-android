@@ -19,7 +19,6 @@ android {
         minSdkVersion 21
         targetSdkVersion 28
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        manifestPlaceholders = [fabric_api_key: properties.getProperty('fabric_api_key')]
     }
     androidExtensions {
         experimental = true
@@ -31,6 +30,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.debug
             buildConfigField 'boolean', 'CRASHLYTICS', 'Boolean.parseBoolean("false")'
+            ext.enableCrashlytics = false
         }
         debug {
             debuggable true
@@ -38,12 +38,14 @@ android {
             applicationIdSuffix ".debug"
             signingConfig signingConfigs.debug
             buildConfigField 'boolean', 'CRASHLYTICS', 'Boolean.parseBoolean("false")'
+            ext.enableCrashlytics = false
         }
         debug_beta {
             initWith debug
             versionNameSuffix "-beta"
             applicationIdSuffix ".debug_beta"
             buildConfigField 'boolean', 'CRASHLYTICS', 'Boolean.parseBoolean("true")'
+            manifestPlaceholders = [fabric_api_key: properties.getProperty('fabric_api_key')]
         }
     }
     flavorDimensions ""
