@@ -31,21 +31,11 @@ Build a signed release APK
 fastlane android build
 ```
 Build debug and release APKs
-### android debug
-```
-fastlane android debug
-```
-Build a debug APK
 ### android beta
 ```
 fastlane android beta
 ```
 Submit a new Beta Build to Crashlytics Beta
-### android deploy
-```
-fastlane android deploy
-```
-Deploy a new version to the Google Play
 
 ----
 
