@@ -19,17 +19,19 @@ public class BtcData extends CoinData {
 
     private boolean useBlockcypher = false;
 
+    //for blockchain.info
+    private boolean hasUnconfirmed = false;
+
     public String getUnspentInputsDescription() {
         try {
             int gatheredUnspents = 0;
-            if( unspentTransactions==null ) return "";
+            if (unspentTransactions == null) return "";
             for (int i = 0; i < unspentTransactions.size(); i++) {
-                if (unspentTransactions.get(i).script != null && unspentTransactions.get(i).script.length() > 1) gatheredUnspents++;
+                if (unspentTransactions.get(i).script != null && unspentTransactions.get(i).script.length() > 1)
+                    gatheredUnspents++;
             }
             return unspentTransactions.size() + " unspents (" + gatheredUnspents + " received)";
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
             return "";
         }
@@ -86,6 +88,7 @@ public class BtcData extends CoinData {
             }
         }
         if (B.containsKey("UseBlockcypher")) useBlockcypher = B.getBoolean("UseBlockcypher");
+        if (B.containsKey("HasUnconfirmed")) useBlockcypher = B.getBoolean("HasUnconfirmed");
     }
 
     @Override
@@ -102,6 +105,7 @@ public class BtcData extends CoinData {
             if (balanceConfirmed != null) B.putLong("BalanceConfirmed", balanceConfirmed);
             if (balanceUnconfirmed != null) B.putLong("BalanceUnconfirmed", balanceUnconfirmed);
             if (useBlockcypher) B.putBoolean("UseBlockcypher", true);
+            if (hasUnconfirmed) B.putBoolean("HasUnconfirmed", true);
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());
         }
@@ -116,7 +120,11 @@ public class BtcData extends CoinData {
     }
 
     public CoinEngine.InternalAmount getBalanceInInternalUnits() {
-        return new CoinEngine.InternalAmount(BigDecimal.valueOf(balanceConfirmed).add(BigDecimal.valueOf(balanceUnconfirmed)),"Satoshi");
+        if (balanceConfirmed != null && balanceUnconfirmed != null) {
+            return new CoinEngine.InternalAmount(BigDecimal.valueOf(balanceConfirmed).add(BigDecimal.valueOf(balanceUnconfirmed)), "Satoshi");
+        } else {
+            return null;
+        }
     }
 
     public Long getBalanceUnconfirmed() {
@@ -141,5 +149,13 @@ public class BtcData extends CoinData {
 
     public void setUseBlockcypher(boolean useBlockcypher) {
         this.useBlockcypher = useBlockcypher;
+    }
+
+    public boolean isHasUnconfirmed() {
+        return hasUnconfirmed;
+    }
+
+    public void setHasUnconfirmed(boolean hasUnconfirmed) {
+        this.hasUnconfirmed = hasUnconfirmed;
     }
 }
