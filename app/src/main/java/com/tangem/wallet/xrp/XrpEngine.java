@@ -455,7 +455,7 @@ public class XrpEngine extends CoinEngine {
                             coinData.setBalanceReceived(true);
                             coinData.setBalanceUnconfirmed(Long.parseLong(rippleResponse.getResult().getAccount_data().getBalance()));
                             coinData.setSequence(rippleResponse.getResult().getAccount_data().getSequence());
-                            coinData.setValidationNodeDescription(ServerApiRipple.lastNode);
+                            coinData.setValidationNodeDescription(serverApiRipple.getCurrentURL());
 
 //                    //check pending
 //                    if (App.pendingTransactionsStorage.hasTransactions(ctx.getCard())) {
