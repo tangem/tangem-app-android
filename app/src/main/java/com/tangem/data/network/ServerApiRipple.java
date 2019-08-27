@@ -25,7 +25,14 @@ public class ServerApiRipple {
 
     private int requestsCount = 0;
 
-    public static String lastNode;
+    private final String rippleURL1 = "https://s1.ripple.com:51234"; //TODO: make random selection, add more?, move
+    private final String rippleURL2 = "https://s2.ripple.com:51234";
+
+    private String currentURL = rippleURL1;
+
+    public String getCurrentURL() {
+        return currentURL;
+    }
 
     public boolean isRequestsSequenceCompleted() {
         Log.i(TAG, String.format("isRequestsSequenceCompleted: %s (%d requests left)", String.valueOf(requestsCount <= 0), requestsCount));
@@ -46,11 +53,9 @@ public class ServerApiRipple {
 
     public void requestData(String method, String wallet, String tx) {
         requestsCount++;
-        String rippleURL = "https://s1.ripple.com:51234"; //TODO: make random selection
-        lastNode = rippleURL; //TODO: show node instead of URL
 
         Retrofit retrofitRipple = new Retrofit.Builder()
-                .baseUrl(rippleURL)
+                .baseUrl(currentURL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -92,6 +97,38 @@ public class ServerApiRipple {
             default:
                 rippleBody = new RippleBody();
         }
+
+        Call<RippleResponse> call = rippleApi.ripple(rippleBody);
+        call.enqueue(new Callback<RippleResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<RippleResponse> call, @NonNull Response<RippleResponse> response) {
+                if (response.code() == 200) {
+                    requestsCount--;
+                    responseListener.onSuccess(method, response.body());
+                    Log.i(TAG, "requestData " + method + " onResponse " + response.code());
+                } else {
+                    retryRequest(method, rippleBody);
+                    Log.e(TAG, "requestData " + method + " onResponse " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<RippleResponse> call, @NonNull Throwable t) {
+                retryRequest(method, rippleBody);
+                Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
+            }
+        });
+    }
+
+    private void retryRequest(String method, RippleBody rippleBody) {
+        currentURL = rippleURL2;
+
+        Retrofit retrofitRipple = new Retrofit.Builder()
+                .baseUrl(currentURL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        RippleApi rippleApi = retrofitRipple.create(RippleApi.class);
 
         Call<RippleResponse> call = rippleApi.ripple(rippleBody);
         call.enqueue(new Callback<RippleResponse>() {
