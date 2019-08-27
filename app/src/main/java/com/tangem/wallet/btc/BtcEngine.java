@@ -941,7 +941,7 @@ public class BtcEngine extends CoinEngine {
         final String txStr = BTCUtils.toHex(txForSend);
 
         //SoChain request can be found at LtcEngine
-        if (!coinData.isUseBlockcypher()) {
+        if (!coinData.isUseBlockcypher() && ctx.getBlockchain() != Blockchain.BitcoinTestNet) {
             final ServerApiBlockchainInfo serverApiBlockchainInfo = new ServerApiBlockchainInfo();
 
             SingleObserver<ResponseBody> responseObserver = new DisposableSingleObserver<ResponseBody>() {
