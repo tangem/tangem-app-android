@@ -2,12 +2,16 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'io.fabric'
 
 static def generateVersionName() {
     def gitCommitsCount = "git rev-list HEAD --count".execute().text.trim()
 //    def gitCurrentBranch = "git rev-parse --abbrev-ref HEAD".execute().text.trim()
     return gitCommitsCount.toInteger() + 831// + "\\n" + gitCurrentBranch
 }
+
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
 android {
     compileSdkVersion 28
@@ -25,12 +29,23 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.debug
+            buildConfigField 'boolean', 'CRASHLYTICS', 'Boolean.parseBoolean("false")'
+            ext.enableCrashlytics = false
         }
         debug {
             debuggable true
             minifyEnabled false
             applicationIdSuffix ".debug"
             signingConfig signingConfigs.debug
+            buildConfigField 'boolean', 'CRASHLYTICS', 'Boolean.parseBoolean("false")'
+            ext.enableCrashlytics = false
+        }
+        debug_beta {
+            initWith debug
+            versionNameSuffix "-beta"
+            applicationIdSuffix ".debug_beta"
+            buildConfigField 'boolean', 'CRASHLYTICS', 'Boolean.parseBoolean("true")'
+            manifestPlaceholders = [fabric_api_key: properties.getProperty('fabric_api_key')]
         }
     }
     flavorDimensions ""
@@ -65,6 +80,7 @@ android {
 
 repositories {
     maven { url "https://jitpack.io" }
+    maven { url 'https://maven.fabric.io/public' }
 }
 configurations {
     all*.exclude group: 'com.google.guava', module: 'listenablefuture'
@@ -118,6 +134,9 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxkotlin:2.3.0'
 //    implementation 'com.github.stellar:java-stellar-sdk:0.4.1'
     implementation 'net.i2p.crypto:eddsa:0.3.0'
+
+    implementation('com.crashlytics.sdk.android:crashlytics:2.9.9') { transitive = true }
+    implementation('io.fabric.sdk.android:fabric:1.4.0@aar') { transitive = true }
 
     implementation files('libs/ripple-core-0.0.1.jar')
     //4 dependencies for ripple-core TODO: move to module?
