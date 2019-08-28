@@ -14,6 +14,7 @@
 .idea/runConfigurations.xml
 .idea/encodings.xml
 .idea/codeStyles/codeStyleConfig.xml
+.idea/assetWizardSettings.xml
 
 # fastlane files
 **/fastlane/report.xml
