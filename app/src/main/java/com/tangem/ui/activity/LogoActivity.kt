@@ -8,9 +8,9 @@ import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.di.Navigator
-import com.tangem.wallet.TangemContext
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
+import com.tangem.wallet.TangemContext
 import kotlinx.android.synthetic.main.activity_logo.*
 import javax.inject.Inject
 
@@ -34,7 +34,7 @@ class LogoActivity : AppCompatActivity() {
 
         App.navigatorComponent.inject(this)
 
-        ivLogo.setOnClickListener { hide() }
+        clLogoContainer.setOnClickListener { hide() }
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
