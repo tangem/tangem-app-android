@@ -10,16 +10,16 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ProgressBar;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.DialogFragment;
+
 import com.tangem.card_common.util.Log;
 import com.tangem.wallet.R;
 
 import java.util.Timer;
 import java.util.TimerTask;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.DialogFragment;
 
 /**
  * Created by dvol on 06.03.2018.
@@ -67,7 +67,7 @@ public class WaitSecurityDelayDialog extends DialogFragment {
         }, 1000, 1000);
         return new AlertDialog.Builder(getActivity())
                 .setIcon(R.drawable.tangem_logo_small_new)
-                .setTitle(R.string.security_delay)
+                .setTitle(R.string.dialog_security_delay)
                 .setView(v)
                 .setCancelable(false)
                 .create();
