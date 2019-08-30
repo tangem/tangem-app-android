@@ -9,27 +9,27 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
-import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
-import com.tangem.ui.dialog.WaitSecurityDelayDialog
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.card_android.android.reader.NfcReader
-import com.tangem.card_android.data.*
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
+import com.tangem.card_android.data.asBundle
+import com.tangem.card_android.data.loadFromBundle
 import com.tangem.card_common.data.TangemCard
 import com.tangem.card_common.reader.CardProtocol
 import com.tangem.card_common.tasks.SwapPINTask
 import com.tangem.card_common.util.Util
-import com.tangem.util.LOG
+import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
+import com.tangem.ui.dialog.WaitSecurityDelayDialog
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_pin_swap.*
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 
 class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
     companion object {
@@ -152,7 +152,7 @@ class PinSwapActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProt
                             NoExtendedLengthSupportDialog().show(supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
                         }
                     } else {
-                        Toast.makeText(baseContext, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(baseContext, R.string.general_notification_scan_again, Toast.LENGTH_SHORT).show()
                     }
                     progressBar!!.progress = 100
                     progressBar!!.progressTintList = ColorStateList.valueOf(Color.RED)

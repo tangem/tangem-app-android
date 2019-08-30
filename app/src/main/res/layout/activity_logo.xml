@@ -23,7 +23,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/ivLogo"
-        tools:text="@string/cardano"
+        tools:text="@string/splash_cardano"
         tools:visibility="visible" />
 
     <ImageView
@@ -44,7 +44,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:fontFamily="@font/maax"
-        android:text="@string/beta"
+        android:text="@string/splash_version_name_release"
         android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         android:textColor="@android:color/holo_red_light"
@@ -58,7 +58,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:fontFamily="@font/maax"
-        android:text="@string/tangem_ag"
+        android:text="@string/general_tangem"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         android:textSize="@dimen/text_size_small"
         app:layout_constraintBottom_toBottomOf="parent"
