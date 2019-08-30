@@ -226,7 +226,7 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
         } catch (e: CardProtocol.TangemException_WrongAmount) {
             try {
                 val intent = Intent()
-                intent.putExtra(Constant.EXTRA_MESSAGE, getString(R.string.cannot_sign_transaction_wrong_amount))
+                intent.putExtra(Constant.EXTRA_MESSAGE, getString(R.string.send_transaction_error_wrong_amount))
                 intent.putExtra(EXTRA_TANGEM_CARD_UID, ctx.card.uid)
                 intent.putExtra(EXTRA_TANGEM_CARD, ctx.card.asBundle)
                 setResult(Activity.RESULT_CANCELED, intent)
@@ -277,7 +277,7 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                             progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
                             progressBar?.visibility = View.INVISIBLE
                             val intent = Intent()
-                            intent.putExtra(Constant.EXTRA_MESSAGE, getString(R.string.cannot_sign_transaction_make_sure_you_enter_correct_pin_2))
+                            intent.putExtra(Constant.EXTRA_MESSAGE, getString(R.string.send_transaction_error_cannot_sign))
                             intent.putExtra(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
                             intent.putExtra(EXTRA_TANGEM_CARD, cardProtocol.card.asBundle)
                             setResult(Constant.RESULT_INVALID_PIN_, intent)
@@ -290,7 +290,7 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                     if (cardProtocol.error is CardProtocol.TangemException_WrongAmount) {
                         try {
                             val intent = Intent()
-                            intent.putExtra(Constant.EXTRA_MESSAGE, getString(R.string.cannot_sign_transaction_wrong_amount))
+                            intent.putExtra(Constant.EXTRA_MESSAGE, getString(R.string.send_transaction_error_wrong_amount))
                             intent.putExtra(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
                             intent.putExtra(EXTRA_TANGEM_CARD, cardProtocol.card.asBundle)
                             setResult(Activity.RESULT_CANCELED, intent)
@@ -302,11 +302,11 @@ class SignTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                     progressBar?.post {
                         if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported) {
                             if (!NoExtendedLengthSupportDialog.allReadyShowed) {
-                                NoExtendedLengthSupportDialog.message = getText(R.string.the_nfc_adapter_length_apdu).toString() + "\n" + getText(R.string.the_nfc_adapter_length_apdu_advice).toString()
+                                NoExtendedLengthSupportDialog.message = getText(R.string.dialog_the_nfc_adapter_length_apdu).toString() + "\n" + getText(R.string.dialog_the_nfc_adapter_length_apdu_advice).toString()
                                 NoExtendedLengthSupportDialog().show(supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
                             }
                         } else {
-                            Toast.makeText(baseContext, R.string.try_to_scan_again, Toast.LENGTH_LONG).show()
+                            Toast.makeText(baseContext, R.string.general_notification_scan_again, Toast.LENGTH_LONG).show()
                         }
                         progressBar?.progress = 100
                         progressBar?.progressTintList = ColorStateList.valueOf(Color.RED)
