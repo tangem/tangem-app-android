@@ -33,7 +33,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:fontFamily="@font/maax"
-        android:text="@string/please_wait"
+        android:text="@string/send_transaction_notification_wait"
         android:textAlignment="center"
         android:textSize="@dimen/text_size_medium"
         app:layout_constraintBottom_toBottomOf="parent"
