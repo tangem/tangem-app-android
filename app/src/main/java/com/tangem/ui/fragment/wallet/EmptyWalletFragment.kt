@@ -142,7 +142,7 @@ class EmptyWalletFragment : BaseFragment(), NavigationResultListener,
             val isoDep = IsoDep.get(tag)
             val uid = tag.id
             val sUID = Util.byteArrayToHexString(uid)
-            if (ctx.card.uid != sUID) {
+            if (ctx.card.uid != sUID || cardProtocol != null) {
                 (activity as MainActivity).nfcManager.ignoreTag(isoDep.tag)
                 return
             }

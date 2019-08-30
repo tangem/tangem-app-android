@@ -26,7 +26,7 @@ class LogoFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        ivLogo.setOnClickListener { hide() }
+        clLogoContainer.setOnClickListener { hide() }
         // set beta version name
         if (BuildConfig.DEBUG)
             tvAppVersion.text = String.format(getString(R.string.version_name_debug), BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE)
