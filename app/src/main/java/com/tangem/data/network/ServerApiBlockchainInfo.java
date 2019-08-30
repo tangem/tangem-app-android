@@ -9,8 +9,6 @@ import com.tangem.data.network.model.BlockchainInfoUnspents;
 
 import java.util.ArrayList;
 
-import io.reactivex.Observable;
-import io.reactivex.Observer;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
