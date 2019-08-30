@@ -34,7 +34,7 @@ class LogoActivity : AppCompatActivity() {
 
         App.navigatorComponent.inject(this)
 
-        ivLogo.setOnClickListener { hide() }
+        clLogoContainer.setOnClickListener { hide() }
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
