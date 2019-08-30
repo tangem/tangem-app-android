@@ -21,7 +21,7 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun initToolbar() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
-        toolbar.setTitle(R.string.settings)
+        toolbar.setTitle(R.string.settings_title)
         toolbar.setNavigationIcon(android.R.drawable.ic_menu_close_clear_cancel)
         setSupportActionBar(toolbar)
         toolbar.setNavigationOnClickListener { finish() }

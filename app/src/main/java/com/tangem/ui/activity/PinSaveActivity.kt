@@ -14,16 +14,16 @@ import android.os.Bundle
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
-import androidx.core.app.ActivityCompat
-import androidx.appcompat.app.AppCompatActivity
 import android.text.TextUtils
 import android.view.View
 import android.widget.Button
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import com.tangem.Constant
+import com.tangem.card_android.android.data.PINStorage
 import com.tangem.data.fingerprint.ConfirmWithFingerprintTask
 import com.tangem.data.fingerprint.FingerprintHelper
-import com.tangem.card_android.android.data.PINStorage
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_pin_save.*
 import kotlinx.android.synthetic.main.layout_pin_buttons.*
@@ -70,9 +70,9 @@ class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
         usePIN2 = intent.getBooleanExtra(Constant.EXTRA_PIN2, false)
 
         if (usePIN2)
-            tvPinPrompt.text = getString(R.string.enter_pin2_and_use_fingerprint_to_save_it)
+            tvPinPrompt.text = getString(R.string.pin_save_title_enter_pin2_and_save)
         else
-            tvPinPrompt.text = getString(R.string.enter_pin_and_use_fingerprint_to_save_it)
+            tvPinPrompt.text = getString(R.string.pin_save_title_enter_pin_and_save)
 
         if (usePIN2) {
             cbUseFingerprint.isChecked = true
@@ -358,17 +358,17 @@ class PinSaveActivity : AppCompatActivity(), FingerprintHelper.FingerprintHelper
         fingerprintManager = getSystemService(Context.FINGERPRINT_SERVICE) as FingerprintManager
 
         if (!keyguardManager.isKeyguardSecure) {
-            Toast.makeText(baseContext, R.string.user_has_not_enabled_lock_screen, Toast.LENGTH_LONG).show()
+            Toast.makeText(baseContext, R.string.pin_save_toast_lock_screen_not_enabled, Toast.LENGTH_LONG).show()
             return false
         }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(baseContext, R.string.user_has_not_granted_permission_to_use_fingerprint, Toast.LENGTH_LONG).show()
+            Toast.makeText(baseContext, R.string.pin_save_toast_no_permission_to_use_fingerprint, Toast.LENGTH_LONG).show()
             return false
         }
 
         if (!fingerprintManager!!.hasEnrolledFingerprints()) {
-            Toast.makeText(baseContext, R.string.user_has_not_registered_any_fingerprints, Toast.LENGTH_LONG).show()
+            Toast.makeText(baseContext, R.string.pin_save_toast_no_fingerprints_registered, Toast.LENGTH_LONG).show()
             return false
         }
 
