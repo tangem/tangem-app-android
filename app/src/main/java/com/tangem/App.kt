@@ -10,7 +10,10 @@ import com.tangem.card_android.android.data.PINStorage
 import com.tangem.card_common.data.Issuer
 import com.tangem.data.dp.PrefsManager
 import com.tangem.data.local.PendingTransactionsStorage
-import com.tangem.di.*
+import com.tangem.di.DaggerNetworkComponent
+import com.tangem.di.DaggerToastHelperComponent
+import com.tangem.di.NetworkComponent
+import com.tangem.di.ToastHelperComponent
 import com.tangem.server_android.data.LocalStorage
 import com.tangem.wallet.BuildConfig
 import io.fabric.sdk.android.Fabric
@@ -28,7 +31,6 @@ class App : Application() {
         }
 
         lateinit var networkComponent: NetworkComponent
-        lateinit var navigatorComponent: NavigatorComponent
         lateinit var toastHelperComponent: ToastHelperComponent
 
         lateinit var firmwaresStorage: Firmwares
@@ -43,7 +45,6 @@ class App : Application() {
         instance = this
 
         networkComponent = DaggerNetworkComponent.create()
-        navigatorComponent = buildNavigatorComponent()
         toastHelperComponent = buildToastHelperComponent()
 
         PrefsManager.getInstance().init(this)
@@ -77,11 +78,6 @@ class App : Application() {
             )
             if (BuildConfig.CRASHLYTICS) Fabric.with(this, Crashlytics())
         }
-    }
-
-    private fun buildNavigatorComponent(): NavigatorComponent {
-        return DaggerNavigatorComponent.builder()
-                .build()
     }
 
     private fun buildToastHelperComponent(): ToastHelperComponent {

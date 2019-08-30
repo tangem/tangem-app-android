@@ -2,12 +2,13 @@ package com.tangem.data.network;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.tangem.data.network.model.RippleBody;
 import com.tangem.data.network.model.RippleResponse;
 
 import java.util.HashMap;
 
-import androidx.annotation.NonNull;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
