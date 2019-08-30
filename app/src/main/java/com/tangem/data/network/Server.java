@@ -118,4 +118,15 @@ public class Server {
             static final String PUSH = MAIN + "/txs/push";
         }
     }
+
+    public static class ApiBlockchainInfo {
+        public static final String URL_BLOCKCHAININFO = ServerURL.API_BLOCKCHAIN_INFO;
+
+        public static class Method {
+            static final String ADDRESS = URL_BLOCKCHAININFO + "rawaddr/{address}?limit=5";
+            static final String UTXO = URL_BLOCKCHAININFO + "unspent";
+//            static final String TX = URL_BLOCKCHAININFO + "rawtx/{txHash}";
+            static final String PUSH = URL_BLOCKCHAININFO + "pushtx";
+        }
+    }
 }
