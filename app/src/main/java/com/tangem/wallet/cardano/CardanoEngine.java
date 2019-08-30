@@ -7,24 +7,24 @@ import android.util.Log;
 
 import com.tangem.App;
 import com.tangem.Constant;
+import com.tangem.card_common.data.TangemCard;
+import com.tangem.card_common.tasks.SignTask;
+import com.tangem.card_common.util.Util;
 import com.tangem.data.local.PendingTransactionsStorage;
 import com.tangem.data.network.ServerApiAdalite;
 import com.tangem.data.network.model.AdaliteResponse;
 import com.tangem.data.network.model.AdaliteResponseUtxo;
 import com.tangem.data.network.model.AdaliteTxData;
 import com.tangem.data.network.model.AdaliteUtxoData;
+import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.wallet.BTCUtils;
 import com.tangem.wallet.BalanceValidator;
 import com.tangem.wallet.Base58;
+import com.tangem.wallet.BuildConfig;
 import com.tangem.wallet.CoinData;
 import com.tangem.wallet.CoinEngine;
-import com.tangem.wallet.TangemContext;
-import com.tangem.card_common.data.TangemCard;
-import com.tangem.card_common.tasks.SignTask;
-import com.tangem.card_common.util.Util;
-import com.tangem.util.DecimalDigitsInputFilter;
-import com.tangem.wallet.BuildConfig;
 import com.tangem.wallet.R;
+import com.tangem.wallet.TangemContext;
 
 import org.spongycastle.crypto.Digest;
 import org.spongycastle.crypto.util.DigestFactory;
@@ -119,13 +119,13 @@ public class CardanoEngine extends CoinEngine {
     @Override
     public boolean isExtractPossible() {
         if (!hasBalanceInfo()) {
-            ctx.setMessage(R.string.cannot_obtain_data_from_blockchain);
+            ctx.setMessage(R.string.loaded_wallet_error_obtaining_blockchain_data);
         } else if (!isBalanceNotZero()) {
-            ctx.setMessage(R.string.wallet_empty);
+            ctx.setMessage(R.string.general_wallet_empty);
         } else if (awaitingConfirmation()) {
-            ctx.setMessage(R.string.please_wait_while_previous);
+            ctx.setMessage(R.string.loaded_wallet_message_wait);
         } else if (coinData.getUnspentOutputs().size() == 0) {
-            ctx.setMessage(R.string.please_wait_for_confirmation);
+            ctx.setMessage(R.string.loaded_wallet_message_refresh);
         } else {
             return true;
         }
