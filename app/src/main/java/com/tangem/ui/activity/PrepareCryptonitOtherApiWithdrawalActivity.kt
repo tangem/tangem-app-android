@@ -7,18 +7,18 @@ import android.graphics.Color
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
+import com.tangem.card_android.android.nfc.NfcLifecycleObserver
+import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.data.Blockchain
 import com.tangem.data.network.CryptonitOtherApi
 import com.tangem.di.Navigator
 import com.tangem.wallet.CoinEngineFactory
-import com.tangem.wallet.TangemContext
-import com.tangem.card_android.android.nfc.NfcLifecycleObserver
-import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.wallet.R
+import com.tangem.wallet.TangemContext
 import kotlinx.android.synthetic.main.activity_prepare_cryptonit_other_api_withdrawal.*
 import java.io.IOException
 import javax.inject.Inject
@@ -77,7 +77,7 @@ class PrepareCryptonitOtherApiWithdrawalActivity : AppCompatActivity(), NfcAdapt
 
                 cryptonit!!.requestCryptoWithdrawal(ctx.blockchain.currency, dblAmount.toString(), ctx.coinData!!.wallet)
             } catch (e: Exception) {
-                etAmount.error = getString(R.string.unknown_amount_format)
+                etAmount.error = getString(R.string.prepare_transaction_error_unknown_amount_format)
             }
 
             //Toast.makeText(this, strAmount, Toast.LENGTH_LONG).show()
