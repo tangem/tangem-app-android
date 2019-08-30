@@ -20,6 +20,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+        debug_beta {
+            initWith debug
+            versionNameSuffix "-beta"
+        }
     }
     productFlavors {
     }
