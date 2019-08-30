@@ -5,6 +5,7 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="preferenceTheme">@style/AppPreferenceTheme</item>
     </style>
 
     <style name="spinner_item_actionbar" parent="Widget.AppCompat.Light.Spinner.DropDown.ActionBar">
@@ -78,4 +79,16 @@
         <item name="android:textAlignment">center</item>
     </style>
 
+    <!-- Custom Preference Theme -->
+    <style name="AppPreferenceTheme"
+        parent="@style/PreferenceThemeOverlay.v14.Material">
+        <item name="preferenceFragmentCompatStyle">
+            @style/AppPreferenceFragmentCompatStyle
+        </item>
+    </style>
+    <!-- Custom Style for PreferenceFragmentCompat -->
+    <style name="AppPreferenceFragmentCompatStyle"
+        parent="@style/PreferenceFragment.Material">
+        <item name="android:layout">@layout/fragment_settings</item>
+    </style>
 </resources>
