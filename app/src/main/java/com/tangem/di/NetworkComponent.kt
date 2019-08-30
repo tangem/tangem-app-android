@@ -1,14 +1,11 @@
 package com.tangem.di
 
 import com.tangem.data.network.Server
-
-import java.net.Socket
-
-import javax.inject.Named
-import javax.inject.Singleton
-
 import dagger.Component
 import retrofit2.Retrofit
+import java.net.Socket
+import javax.inject.Named
+import javax.inject.Singleton
 
 @Singleton
 @Component(modules = [NetworkModule::class])
@@ -37,6 +34,9 @@ interface NetworkComponent {
 
     @get:Named(Server.ApiSoChain.URL)
     val retrofitSoChain: Retrofit
+
+    @get:Named(Server.ApiBlockchainInfo.URL_BLOCKCHAININFO)
+    val retrofitBlockchainInfo: Retrofit
 
     @get:Named("socket")
     val socket: Socket
