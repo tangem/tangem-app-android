@@ -2,6 +2,8 @@ package com.tangem.data.network;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.tangem.App;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.model.BlockcypherBody;
@@ -11,13 +13,12 @@ import com.tangem.data.network.model.BlockcypherTx;
 
 import java.util.Random;
 
-import androidx.annotation.NonNull;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class ServerApiBlockcypher {
-    private static String TAG = ServerApiRipple.class.getSimpleName();
+    private static String TAG = ServerApiBlockcypher.class.getSimpleName();
 
     public static final String BLOCKCYPHER_ADDRESS = "blockcypher_address";
     public static final String BLOCKCYPHER_FEE = "blockcypher_fee";
