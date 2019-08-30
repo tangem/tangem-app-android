@@ -14,4 +14,5 @@ class ServerURL {
     static final String API_MATIC_TESTNET = "https://testnet2.matic.network";
     static final String API_STELLAR = "https://horizon.stellar.org/";
     static final String API_STELLAR_TESTNET = "https://horizon-testnet.stellar.org";
+    static final String API_BLOCKCHAIN_INFO = "https://blockchain.info/";
 }
