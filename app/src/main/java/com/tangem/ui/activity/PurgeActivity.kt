@@ -15,26 +15,26 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
-import com.tangem.wallet.TangemContext
-import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
-import com.tangem.ui.dialog.WaitSecurityDelayDialog
-import com.tangem.ui.dialog.WaitSecurityDelayDialogNew
-import com.tangem.ui.event.DeletingWalletFinish
 import com.tangem.card_android.android.nfc.NfcDeviceAntennaLocation
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.card_android.android.reader.NfcReader
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 import com.tangem.card_android.data.asBundle
 import com.tangem.card_common.reader.CardProtocol
 import com.tangem.card_common.tasks.PurgeTask
 import com.tangem.card_common.util.Util
+import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
+import com.tangem.ui.dialog.WaitSecurityDelayDialog
+import com.tangem.ui.dialog.WaitSecurityDelayDialogNew
+import com.tangem.ui.event.DeletingWalletFinish
 import com.tangem.wallet.R
+import com.tangem.wallet.TangemContext
 import kotlinx.android.synthetic.main.activity_purge.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
 import org.greenrobot.eventbus.EventBus
 import javax.inject.Inject
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 
 class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
     companion object {
@@ -175,7 +175,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
                             val intent = Intent()
                             intent.putExtra(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
                             intent.putExtra(EXTRA_TANGEM_CARD, cardProtocol.card.asBundle)
-                            intent.putExtra(Constant.EXTRA_MESSAGE, getString(R.string.cannot_erase_wallet))
+                            intent.putExtra(Constant.EXTRA_MESSAGE, getString(R.string.nfc_error_cannot_erase_wallet))
                             setResult(RESULT_INVALID_PIN, intent)
                             finish()
                         } catch (e: Exception) {
@@ -188,7 +188,7 @@ class PurgeActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtoc
                             if (!NoExtendedLengthSupportDialog.allReadyShowed)
                                 NoExtendedLengthSupportDialog().show(supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
                         } else
-                            Toast.makeText(baseContext, R.string.try_to_scan_again, Toast.LENGTH_LONG).show()
+                            Toast.makeText(baseContext, R.string.general_notification_scan_again_to_verify, Toast.LENGTH_LONG).show()
 
                         progressBar?.progress = 100
                         progressBar?.progressTintList = ColorStateList.valueOf(Color.RED)

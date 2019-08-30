@@ -78,9 +78,9 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         isIncludeFee = intent.getBooleanExtra(Constant.EXTRA_FEE_INCLUDED, true)
 
         if (isIncludeFee)
-            tvIncFee.setText(R.string.including_fee)
+            tvIncFee.setText(R.string.confirm_transaction_including_fee)
         else
-            tvIncFee.setText(R.string.not_including_fee)
+            tvIncFee.setText(R.string.confirm_transaction_not_including_fee)
 
         amount = CoinEngine.Amount(intent.getStringExtra(Constant.EXTRA_AMOUNT), intent.getStringExtra(Constant.EXTRA_AMOUNT_CURRENCY))
 
@@ -123,14 +123,14 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
                     tvFeeEquivalent.text = eqFee
 
                     if (!ctx.coinData!!.amountEquivalentDescriptionAvailable) {
-                        tvFeeEquivalent.error = getString(R.string.service_unavailable)
+                        tvFeeEquivalent.error = getString(R.string.confirm_transaction_error_service_unavailable)
                         tvCurrency2.visibility = View.GONE
                         tvFeeEquivalent.visibility = View.GONE
                     } else
                         tvFeeEquivalent.error = null
 
                     if (sp.getBoolean(getString(R.string.pref_manual_editing_fee), false))
-                        toastHelper.showSingleToast(this@ConfirmTransactionActivity, getString(R.string.risk_delaying))
+                        toastHelper.showSingleToast(this@ConfirmTransactionActivity, getString(R.string.confirm_transaction_warning_risk_delaying))
 
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -148,14 +148,14 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
                 calendar.add(Calendar.MINUTE, -1)
 
                 if (dtVerified == null || dtVerified!!.before(calendar.time)) {
-                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.the_obtained_data_is_outdated_try_again))
+                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.confirm_transaction_error_data_is_outdated))
                     return@setOnClickListener
                 }
 
                 val engineCoin = CoinEngineFactory.create(ctx)
 
                 if (engineCoin!!.isNeedCheckNode && !nodeCheck) {
-                    Toast.makeText(baseContext, getString(R.string.cannot_reach_current_active_blockchain_node_try_again), Toast.LENGTH_LONG).show()
+                    Toast.makeText(baseContext, getString(R.string.confirm_transaction_error_cannot_reach_node), Toast.LENGTH_LONG).show()
                     return@setOnClickListener
                 }
 
@@ -163,20 +163,20 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
                 val txAmount = engineCoin.convertToAmount(etAmount.text.toString(), tvCurrency.text.toString())
 
                 if (!engineCoin.hasBalanceInfo()) {
-                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.cannot_check_balance_no_connection_with_blockchain_nodes))
+                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.confirm_transaction_error_cannot_check_balance))
                     return@setOnClickListener
 
                 } else if (!engineCoin.isBalanceNotZero) {
-                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.the_wallet_is_empty))
+                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.general_wallet_empty))
                     return@setOnClickListener
 
                 } else if (!engineCoin.isExtractPossible) {
-                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.please_wait_for_confirmation_of_incoming_transaction))
+                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.confirm_transaction_error_incoming_transaction_unconfirmed))
                     return@setOnClickListener
                 }
 
                 if (!engineCoin.checkNewTransactionAmountAndFee(txAmount, txFee, isIncludeFee)) {
-                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.not_enough_funds_on_your_card))
+                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.prepare_transaction_error_not_enough_funds))
                     return@setOnClickListener
                 }
 
@@ -187,7 +187,7 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
                 intent.putExtra(Constant.EXTRA_FEE_INCLUDED, isIncludeFee)
                 startActivityForResult(intent, Constant.REQUEST_CODE_REQUEST_PIN2_)
             } else
-                Toast.makeText(this, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.general_error_no_connection), Toast.LENGTH_SHORT).show()
         }
 
         val coinEngine = CoinEngineFactory.create(ctx)
@@ -253,7 +253,7 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
                 intent.putExtra(Constant.EXTRA_FEE_INCLUDED, isIncludeFee)
                 startActivityForResult(intent, Constant.REQUEST_CODE_SIGN_TRANSACTION)
             } else
-                Toast.makeText(baseContext, R.string.pin_2_is_required_to_sign_the_transaction, Toast.LENGTH_LONG).show()
+                Toast.makeText(baseContext, R.string.confirm_transaction_error_pin_2_is_required, Toast.LENGTH_LONG).show()
         }
     }
 
