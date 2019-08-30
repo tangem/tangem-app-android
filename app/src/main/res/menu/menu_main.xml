@@ -4,21 +4,21 @@
     <item
         android:id="@+id/managePIN"
         android:enabled="false"
-        android:title="@string/manage_user_pin_1" />
+        android:title="@string/main_menu_manage_pin_1" />
     <item
         android:id="@+id/managePIN2"
         android:enabled="false"
-        android:title="@string/manage_user_pin_2" />
+        android:title="@string/main_menu_manage_pin_2" />
     <item
         android:id="@+id/sendLogs"
-        android:title="@string/send_logs"
+        android:title="@string/main_menu_debug_send_logs"
         android:visible="false" />
 
     <item
         android:id="@+id/settings"
-        android:title="@string/settings" />
+        android:title="@string/settings_title" />
 
     <item
         android:id="@+id/about"
-        android:title="@string/about" />
+        android:title="@string/main_menu_about" />
 </menu>
