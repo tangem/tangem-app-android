@@ -102,8 +102,8 @@
     <string name="erase_wallet">Erase wallet</string>
 
     <!-- LogoActivity -->
-    <string name="version_name_debug">BETA v.%1$s \n dev \n build %2$s</string>
-    <string name="version_name_release">BETA v.%1$s</string>
+    <string name="version_name_debug">ALPHA v.%1$s \n dev build %2$s</string>
+    <string name="version_name_release">v.%1$s</string>
 
     <string name="welcome_messages">Hello, %1$s! You have %2$d new messages.</string>
 
