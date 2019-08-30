@@ -66,8 +66,8 @@
     <string name="menu_loaded_wallet_erase_wallet">Erase wallet</string>
 
     <!-- Splash Screen -->
-    <string name="splash_version_name_debug">BETA v.%1$s \n dev \n build %2$s</string>
-    <string name="splash_version_name_release">BETA v.%1$s</string>
+    <string name="splash_version_name_debug">ALPHA v.%1$s \n dev \n build %2$s</string>
+    <string name="splash_version_name_release">v.%1$s</string>
     <string name="splash_cardano">Cardano</string>
 
 
