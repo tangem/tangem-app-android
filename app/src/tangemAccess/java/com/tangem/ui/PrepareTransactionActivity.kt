@@ -15,14 +15,14 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
-import com.tangem.data.Blockchain
-import com.tangem.di.Navigator
-import com.tangem.wallet.CoinEngineFactory
-import com.tangem.wallet.TangemContext
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager
+import com.tangem.data.Blockchain
+import com.tangem.di.Navigator
 import com.tangem.util.UtilHelper
+import com.tangem.wallet.CoinEngineFactory
 import com.tangem.wallet.R
+import com.tangem.wallet.TangemContext
 import kotlinx.android.synthetic.tangemAccess.activity_prepare_transaction.*
 import java.io.IOException
 import javax.inject.Inject
@@ -92,7 +92,7 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
 
         btnVerify.setOnClickListener {
             if (!UtilHelper.isOnline(this)) {
-                Toast.makeText(this, R.string.no_connection, Toast.LENGTH_LONG).show()
+                Toast.makeText(this, R.string.general_error_no_connection, Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
 
@@ -102,22 +102,22 @@ class PrepareTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
 
             try {
                 if (!engine.checkNewTransactionAmount(amount))
-                    etAmount.error = getString(R.string.not_enough_funds_on_your_card)
+                    etAmount.error = getString(R.string.prepare_transaction_error_not_enough_funds)
                 else
                     etAmount.error = null
             } catch (e: Exception) {
-                etAmount.error = getString(R.string.unknown_amount_format)
+                etAmount.error = getString(R.string.prepare_transaction_error_unknown_amount_format)
             }
 
             // check wallet address
             if (!engine1.validateAddress(etWallet.text.toString())) {
-                etWallet.error = getString(R.string.incorrect_destination_wallet_address)
+                etWallet.error = getString(R.string.prepare_transaction_error_incorrect_destination)
                 return@setOnClickListener
             } else
                 etWallet.error = null
 
             if (etWallet.text.toString() == ctx.coinData!!.wallet) {
-                etWallet.error = getString(R.string.destination_wallet_address_equal_source_address)
+                etWallet.error = getString(R.string.prepare_transaction_error_same_address)
                 return@setOnClickListener
             }
 
