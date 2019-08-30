@@ -8,9 +8,9 @@ import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.di.Navigator
-import com.tangem.wallet.TangemContext
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
+import com.tangem.wallet.TangemContext
 import kotlinx.android.synthetic.main.activity_logo.*
 import javax.inject.Inject
 
@@ -42,15 +42,15 @@ class LogoActivity : AppCompatActivity() {
 
         // set beta version name
         if (BuildConfig.DEBUG)
-            tvAppVersion.text = String.format(getString(R.string.version_name_debug), BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE)
+            tvAppVersion.text = String.format(getString(R.string.splash_version_name_debug), BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE)
         else
-            tvAppVersion.text = String.format(getString(R.string.version_name_release), BuildConfig.VERSION_NAME)
+            tvAppVersion.text = String.format(getString(R.string.splash_version_name_release), BuildConfig.VERSION_NAME)
 
         // set flavor app name
         when (BuildConfig.FLAVOR) {
             Constant.FLAVOR_TANGEM_CARDANO -> {
                 tvExtension.visibility = View.VISIBLE
-                tvExtension.text = getString(R.string.cardano)
+                tvExtension.text = getString(R.string.splash_cardano)
             }
             else -> {
                 tvExtension.visibility = View.GONE
