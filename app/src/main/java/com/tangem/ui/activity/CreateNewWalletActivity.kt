@@ -14,23 +14,23 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
-import com.tangem.wallet.TangemContext
-import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
-import com.tangem.ui.dialog.WaitSecurityDelayDialog
 import com.tangem.card_android.android.nfc.NfcDeviceAntennaLocation
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.card_android.android.reader.NfcReader
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 import com.tangem.card_android.data.asBundle
 import com.tangem.card_common.reader.CardProtocol
 import com.tangem.card_common.tasks.CreateNewWalletTask
 import com.tangem.card_common.util.Util
+import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
+import com.tangem.ui.dialog.WaitSecurityDelayDialog
 import com.tangem.wallet.R
+import com.tangem.wallet.TangemContext
 import kotlinx.android.synthetic.main.activity_create_new_wallet.*
 import kotlinx.android.synthetic.main.layout_progress_horizontal.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 
 class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
 
@@ -129,7 +129,7 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                             progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
                             progressBar?.visibility = View.INVISIBLE
                             val intent = Intent()
-                            intent.putExtra(Constant.EXTRA_MESSAGE, getString(R.string.cannot_create_wallet))
+                            intent.putExtra(Constant.EXTRA_MESSAGE, getString(R.string.nfc_error_cannot_create_wallet))
                             intent.putExtra(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
                             intent.putExtra(EXTRA_TANGEM_CARD, cardProtocol.card!!.asBundle)
                             setResult(Constant.RESULT_INVALID_PIN, intent)
@@ -145,7 +145,7 @@ class CreateNewWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, 
                                 NoExtendedLengthSupportDialog().show(supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
                             }
                         } else
-                            Toast.makeText(this, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, R.string.general_notification_scan_again, Toast.LENGTH_SHORT).show()
 
                         progressBar?.progress = 100
                         progressBar?.progressTintList = ColorStateList.valueOf(Color.RED)
