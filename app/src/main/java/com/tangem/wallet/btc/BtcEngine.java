@@ -15,7 +15,6 @@ import com.tangem.data.network.Server;
 import com.tangem.data.network.ServerApiBlockchainInfo;
 import com.tangem.data.network.ServerApiBlockcypher;
 import com.tangem.data.network.ServerApiCommon;
-import com.tangem.data.network.ServerApiSoChain;
 import com.tangem.data.network.model.BlockchainInfoAddress;
 import com.tangem.data.network.model.BlockchainInfoAddressAndUnspents;
 import com.tangem.data.network.model.BlockchainInfoTransaction;
@@ -25,7 +24,6 @@ import com.tangem.data.network.model.BlockcypherFee;
 import com.tangem.data.network.model.BlockcypherResponse;
 import com.tangem.data.network.model.BlockcypherTx;
 import com.tangem.data.network.model.BlockcypherTxref;
-import com.tangem.data.network.model.SoChain;
 import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.util.DerEncodingUtil;
@@ -51,9 +49,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import io.reactivex.Observer;
 import io.reactivex.SingleObserver;
-import io.reactivex.observers.DefaultObserver;
 import io.reactivex.observers.DisposableSingleObserver;
 import okhttp3.ResponseBody;
 
