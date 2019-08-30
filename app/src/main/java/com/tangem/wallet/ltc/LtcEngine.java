@@ -3,15 +3,6 @@ package com.tangem.wallet.ltc;
 import android.net.Uri;
 import android.text.InputFilter;
 
-import com.tangem.wallet.BTCUtils;
-import com.tangem.wallet.BalanceValidator;
-import com.tangem.wallet.Base58;
-import com.tangem.wallet.CoinData;
-import com.tangem.wallet.TangemContext;
-import com.tangem.wallet.Transaction;
-import com.tangem.wallet.UnspentOutputInfo;
-import com.tangem.wallet.btc.BtcData;
-import com.tangem.wallet.btc.BtcEngine;
 import com.tangem.card_common.data.TangemCard;
 import com.tangem.card_common.reader.CardProtocol;
 import com.tangem.card_common.tasks.SignTask;
@@ -19,7 +10,16 @@ import com.tangem.card_common.util.Util;
 import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.util.DerEncodingUtil;
+import com.tangem.wallet.BTCUtils;
+import com.tangem.wallet.BalanceValidator;
+import com.tangem.wallet.Base58;
+import com.tangem.wallet.CoinData;
 import com.tangem.wallet.R;
+import com.tangem.wallet.TangemContext;
+import com.tangem.wallet.Transaction;
+import com.tangem.wallet.UnspentOutputInfo;
+import com.tangem.wallet.btc.BtcData;
+import com.tangem.wallet.btc.BtcEngine;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
@@ -98,13 +98,13 @@ public class LtcEngine extends BtcEngine {
     @Override
     public boolean isExtractPossible() {
         if (!hasBalanceInfo()) {
-            ctx.setMessage(R.string.cannot_obtain_data_from_blockchain);
+            ctx.setMessage(R.string.loaded_wallet_error_obtaining_blockchain_data);
         } else if (!isBalanceNotZero()) {
-            ctx.setMessage(R.string.wallet_empty);
+            ctx.setMessage(R.string.general_wallet_empty);
         } else if (awaitingConfirmation()) {
-            ctx.setMessage(R.string.please_wait_while_previous);
+            ctx.setMessage(R.string.loaded_wallet_message_wait);
         } else if (coinData.getUnspentTransactions().size() == 0) {
-            ctx.setMessage(R.string.please_wait_for_confirmation);
+            ctx.setMessage(R.string.loaded_wallet_message_refresh);
         } else {
             return true;
         }
