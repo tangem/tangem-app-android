@@ -18,7 +18,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
 public class ServerApiEos {
-    private static String TAG = ServerApiBinance.class.getSimpleName();
+    private static String TAG = ServerApiEos.class.getSimpleName();
 
     public static void getBalance(String wallet, Observer<Account> accountObserver) {
         Log.i(TAG, "new getBalance request");
