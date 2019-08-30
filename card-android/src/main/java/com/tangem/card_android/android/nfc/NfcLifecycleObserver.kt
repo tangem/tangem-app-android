@@ -1,8 +1,7 @@
 package com.tangem.card_android.android.nfc
 
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.tangem.card_android.android.reader.NfcManager
 
 /**
@@ -10,15 +9,15 @@ import com.tangem.card_android.android.reader.NfcManager
  *
  * @see NfcManager
  */
-class NfcLifecycleObserver(private var nfcManager: NfcManager) : LifecycleObserver {
+class NfcLifecycleObserver(private var nfcManager: NfcManager) : DefaultLifecycleObserver {
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    fun onResume() {
+    override fun onResume(owner: LifecycleOwner) {
+        super.onResume(owner)
         nfcManager.onResume()
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    fun onPause() {
+    override fun onPause(owner: LifecycleOwner) {
+        super.onPause(owner)
         nfcManager.onPause()
         nfcManager.onStop()
     }
