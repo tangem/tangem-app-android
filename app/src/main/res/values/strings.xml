@@ -1,268 +1,229 @@
 <resources>
 
-    <string name="ok">OK</string>
-    <string name="cancel">Cancel</string>
-    <string name="yes">Yes</string>
-    <string name="no">No</string>
-    <string name="no_connection">No connection with blockchain nodes</string>
-    <string name="contin">Continue</string>
-    <string name="not_found">Not found</string>
-    <string name="msgCardMustBeLoaded">Card must be loaded first!</string>
-    <string name="tag_lost_err">Tag lost!</string>
-    <string name="cmd_suffix">command</string>
-    <string name="rsp_suffix">response</string>
-    <string name="section_format">Hello World from section: %1$d</string>
-    <string name="fingerprint_authenticate_success">Successfully authenticated!</string>
-    <string name="pin_save_success">Successfully saved!</string>
-    <string name="pin_save_fail">Saving pin failed</string>
+    <string name="general_cancel">Cancel</string>
+    <string name="general_yes">Yes</string>
+    <string name="general_no">No</string>
+    <string name="general_error">Error!</string>
+    <string name="general_error_no_connection">No connection with blockchain nodes</string>
+    <string name="general_continue">Continue</string>
     <string name="error_empty_pin">PIN is empty</string>
-    <string name="error_pin_confirmation_failed">Please enter the PIN for confirmation!</string>
-    <string name="enter_pin_and_use_fingerprint_to_save_it">Enter PIN and save it</string>
-    <string name="enter_pin2_and_use_fingerprint_to_save_it">Enter PIN2 and save it</string>
-    <string name="bcBitcoin">Bitcoin</string>
-    <string name="bcEtherium">Etherium</string>
-    <array name="blockchains">
-        <item>@string/bcBitcoin</item>
-        <item>@string/bcEtherium</item>
-    </array>
-    <string name="title_activity_settings_feature">Settings</string>
-    <string name="balance">Balance</string>
-    <string name="verified_offline">verified offline</string>
-    <string name="blockchain">Blockchain</string>
-    <string name="last_withdrawal">Last withdrawal</string>
-    <string name="try_to_scan_again">Try to scan again</string>
-    <string name="cannot_erase_wallet_with_non_zero_balance">Cannot erase wallet with non-zero balance</string>
-    <string name="send_transaction">Send payment</string>
-    <string name="from_banknote">From banknote</string>
-    <string name="on_banknote">on banknote</string>
-    <string name="with_balance">with balance</string>
-    <string name="send_to_wallet">Send to wallet</string>
-    <string name="amount">Amount</string>
-    <string name="m_btc">BTC</string>
-    <string name="scan_again_to_verify_the_card">Scan again to verify the card</string>
-    <string name="tangem_ag">Tangem AG</string>
-    <string name="wallet">Wallet</string>
-    <string name="need_attach_card_again">Scan again to verify the card</string>
-    <string name="reading">READING…</string>
-    <string name="verifying">VERIFYING…</string>
-    <string name="debug_settings">Дебаг</string>
-    <string name="select_loading_method">Select loading method</string>
-    <string name="via_cryptonit">via CRYPTONIT</string>
-    <string name="via_cryptonit2">via CRYPTONIT2</string>
-    <string name="via_kraken">via KRAKEN</string>
-    <string name="in_app">Another wallet app</string>
-    <string name="load_via_share_address">Share address</string>
-    <string name="load_via_qr">Show QR-code</string>
-    <string name="show_wallet_qr_code">LOAD</string>
-    <string name="beta">BETA</string>
-    <string name="cardano">Cardano</string>
+    <string name="general_blockchain">Blockchain</string>
+    <string name="general_notification_scan_again">Try to scan again</string>
+    <string name="general_error_cannot_erase_wallet_with_non_zero_balance">Cannot erase wallet with non-zero balance</string>
+    <string name="general_send_transaction">Send payment</string>
+    <string name="general_from_banknote">From banknote</string>
+    <string name="general_on_banknote">on banknote</string>
+    <string name="general_balance">with balance</string>
+    <string name="general_send_to_wallet">Send to wallet</string>
+    <string name="general_amount">Amount</string>
+    <string name="general_btc">BTC</string>
+    <string name="general_tangem" translatable="false">Tangem AG</string>
+    <string name="general_notification_scan_again_to_verify">Scan again to verify the card</string>
+    <string name="general_status_reading">READING…</string>
+    <string name="general_wallet_empty">The wallet is empty</string>
 
-    <!-- SettingsActivity -->
-    <string name="сommon">Common</string>
-    <string name="manual_editing_fee">Manual editing Fee</string>
-    <string name="settings">Settings</string>
-    <string name="encryption_modes">Encryption modes</string>
-    <string-array name="encryption_modes_entries">
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_category_сommon">Common</string>
+    <string name="settings_option_manual_editing_fee">Manual editing Fee</string>
+    <string name="settings_option_encryption_modes">Encryption modes</string>
+    <string-array name="settings_encryption_modes_entries">
         <item>None</item>
         <item>Fast</item>
         <item>Strong</item>
     </string-array>
-    <string-array name="encryption_mode_values">
+    <string-array name="settings_encryption_mode_values">
         <item>0</item>
         <item>1</item>
         <item>2</item>
     </string-array>
-    <string name="select_nodes">Select nodes</string>
+    <string name="settings_option_select_nodes">Select nodes</string>
 
     <!-- dialogs -->
-    <string name="device_is_rooted">Your Android device is rooted. Security at risk!</string>
-    <string name="got_it">Got it</string>
-    <string name="warning">Warning</string>
-    <string name="security_delay">Security delay</string>
-    <string name="the_nfc_adapter_length_apdu">Oops.. It seems your smartphone does not support such long NFC packets.</string>
-    <string name="the_nfc_adapter_length_apdu_advice">Try sending smaller amount or use a smartphone with full NFC support.</string>
-    <string name="your_money_is_at_risk">Your money is at risk!</string>
-    <string name="this_banknote_has_enforced_security_delay">This banknote has enforced security delay</string>
-    <string name="please_hold_banknote">Please hold the banknote firmly\n until the operation is completed…</string>
-    <string name="you_may_be_required_to_repeat">You may be required to repeat this operation a few times depending on the NFC performance of your smartphone.\n This is made for safety of your funds.</string>
+    <string name="dialog_device_is_rooted">Your Android device is rooted. Security at risk!</string>
+    <string name="dialog_btn_got_it">Got it</string>
+    <string name="dialog_warning">Warning</string>
+    <string name="dialog_security_delay">Security delay</string>
+    <string name="dialog_the_nfc_adapter_length_apdu">Oops.. It seems your smartphone does not support such long NFC packets.</string>
+    <string name="dialog_the_nfc_adapter_length_apdu_advice">Try sending smaller amount or use a smartphone with full NFC support.</string>
+    <string name="dialog_title_money_is_at_risk">Your money is at risk!</string>
+    <string name="dialog_this_banknote_has_enforced_security_delay">This banknote has enforced security delay</string>
+    <string name="dialog_hold_banknote">Please hold the banknote firmly\n until the operation is completed…</string>
+    <string name="dialog_you_may_be_required_to_repeat">You may be required to repeat this operation a few times depending on the NFC performance of your smartphone.\n This is made for safety of your funds.</string>
 
     <!-- menu main -->
-    <string name="clean_up">Clean up</string>
-    <string name="manage_user_pin_1">Manage user PIN1…</string>
-    <string name="manage_user_pin_2">Manage user PIN2…</string>
-    <string name="send_logs">Send logs…</string>
-    <string name="about">About…</string>
+    <string name="main_menu_manage_pin_1">Manage user PIN1…</string>
+    <string name="main_menu_manage_pin_2">Manage user PIN2…</string>
+    <string name="main_menu_debug_send_logs">Send logs…</string>
+    <string name="main_menu_about">About…</string>
 
     <!-- menu loaded wallet -->
-    <string name="set_pin_1">Set PIN1</string>
-    <string name="set_pin_2">Set PIN2</string>
-    <string name="reset_pin_1_to_default">Reset PIN1 to default</string>
-    <string name="reset_pin_2_to_default">Reset PIN2 to default</string>
-    <string name="reset_pins_to_default">Reset PINs to default</string>
-    <string name="erase_wallet">Erase wallet</string>
+    <string name="menu_loaded_wallet_set_pin_1">Set PIN1</string>
+    <string name="menu_loaded_wallet_set_pin_2">Set PIN2</string>
+    <string name="menu_loaded_wallet_reset_pin_1">Reset PIN1 to default</string>
+    <string name="menu_loaded_wallet_reset_pin_2">Reset PIN2 to default</string>
+    <string name="menu_loaded_wallet_reset_pins">Reset PINs to default</string>
+    <string name="menu_loaded_wallet_erase_wallet">Erase wallet</string>
 
-    <!-- LogoActivity -->
-    <string name="version_name_debug">BETA v.%1$s \n dev \n build %2$s</string>
-    <string name="version_name_release">BETA v.%1$s</string>
+    <!-- Splash Screen -->
+    <string name="splash_version_name_debug">BETA v.%1$s \n dev \n build %2$s</string>
+    <string name="splash_version_name_release">BETA v.%1$s</string>
+    <string name="splash_cardano">Cardano</string>
 
-    <string name="welcome_messages">Hello, %1$s! You have %2$d new messages.</string>
 
-    <!-- MainActivity -->
-    <string name="tap_tangem_card">Tap Tangem card with your smartphone</string>
-    <string name="scan_banknote">Scan a banknote with your \n %1$s \n as shown above</string>
-    <string name="phone">phone</string>
-    <string name="last_unspent">Last unspent</string>
-    <string name="erased_wallet">Wallet was erased</string>
-    <string name="not_personalized">Not personalized</string>
-    <string name="new_app_version">There is a new application version: %1$s</string>
-    <string name="update">Update</string>
+    <!-- Main -->
+    <string name="main_screen_tap_card">Tap Tangem card with your smartphone</string>
+    <string name="main_screen_scan_banknote">Scan a banknote with your \n %1$s \n as shown above</string>
+    <string name="main_screen_phone">phone</string>
+    <string name="main_screen_erased_wallet">Wallet was erased</string>
+    <string name="main_screen_not_personalized">Not personalized</string>
+    <string name="main_screen_new_version_toast">There is a new application version: %1$s</string>
+    <string name="main_screen_btn_update">Update</string>
 
-    <!-- LoadedWalletActivity, LoadedWalletFragment -->
-    <string name="wallet_empty">The wallet is empty</string>
-    <string name="no_compatible_wallet">No compatible wallets installed</string>
-    <string name="please_wait_while_previous">Please wait while previous transaction is confirmed in blockchain</string>
-    <string name="please_wait_for_confirmation">Could not obtain all inputs. Swipe down to refresh.</string>
-    <string name="card_has_no_remaining_signature">Card has no remaining signature!</string>
-    <string name="explore_in_blockchain">EXPLORE</string>
-    <string name="swipe_down_to_refresh_data">Swipe down to refresh data</string>
-    <string name="message">Message!</string>
-    <string name="error">Error!</string>
-    <string name="btn_send">Send</string>
-    <string name="if_you_forget">If you forget your new PIN you will lose your money forever!</string>
-    <string name="if_you_use_default">If you use default PIN someone can steal your money!</string>
-    <string name="cannot_obtain_data_from_blockchain">Cannot obtain data from blockchain</string>
-    <string name="cannot_obtain_data_from_blockchain_no_connection">Cannot obtain data from blockchain (connection refused)</string>
-    <string name="cannot_obtain_data_from_blockchain_no_answer">Cannot obtain data from blockchain (empty answer received)</string>
-    <string name="cannot_obtain_data_from_blockchain_communication_error">Cannot obtain data from blockchain (communication error)</string>
-    <string name="sending_cached_transaction">Sending cached transaction…</string>
-    <string name="not_implemented">NOT IMPLEMENTED</string>
-    <string name="this_banknote_protected_default_PIN1_code">This banknote is protected by default PIN1 code</string>
-    <string name="this_banknote_protected_user_PIN1_code">This banknote is protected by user\'s PIN1 code</string>
-    <string name="this_banknote_protected_default_PIN2_code">This banknote is protected by default PIN2 code</string>
-    <string name="this_banknote_protected_user_PIN2_code">This banknote is protected by user\'s PIN2 code</string>
-    <string name="unlocked_banknote_only_development_use">Unlocked banknote, only for development use</string>
-    <string name="this_banknote_will_enforce">This banknote will enforce %.0f seconds security delay for all operations requiring PIN2 code</string>
-    <string name="share_wallet_address_with">Share wallet address with:</string>
-    <string name="copied_clipboard">Copied to clipboard</string>
-    <string name="btn_extract">Extract</string>
-    <string name="btn_load">Load</string>
-    <string name="btn_explore">Explore</string>
-    <string name="btn_copy">Copy</string>
-    <string name="btn_details">Details</string>
-    <string name="btn_new_scan">New scan</string>
-    <string name="verifying_in_blockchain">Verifying in blockchain…</string>
-    <string name="card_signed_transactions_warning">Warning: This card has been already topped up and signed transactions in the past.
+    <!-- LoadedWallet -->
+    <string name="loaded_wallet_no_compatible_wallet">No compatible wallets installed</string>
+    <string name="loaded_wallet_message_wait">Please wait while previous transaction is confirmed in blockchain</string>
+    <string name="loaded_wallet_message_refresh">Could not obtain all inputs. Swipe down to refresh.</string>
+    <string name="loaded_wallet_warning_no_signature">Card has no remaining signature!</string>
+    <string name="loaded_wallet_warning_dont_forget_pin">If you forget your new PIN you will lose your money forever!</string>
+    <string name="loaded_wallet_warning_default_pin">If you use default PIN someone can steal your money!</string>
+    <string name="loaded_wallet_error_obtaining_blockchain_data">Cannot obtain data from blockchain</string>
+    <string name="loaded_wallet_error_blockchain_connection_refused">Cannot obtain data from blockchain (connection refused)</string>
+    <string name="loaded_wallet_error_blockchain_empty_answer">Cannot obtain data from blockchain (empty answer received)</string>
+    <string name="loaded_wallet_error_blockchain_communication_error">Cannot obtain data from blockchain (communication error)</string>
+    <string name="loaded_wallet_chooser_share">Share wallet address with:</string>
+    <string name="loaded_wallet_toast_copied">Copied to clipboard</string>
+    <string name="loaded_wallet_btn_extract">Extract</string>
+    <string name="loaded_wallet_btn_load">Load</string>
+    <string name="loaded_wallet_btn_explore">Explore</string>
+    <string name="loaded_wallet_btn_copy">Copy</string>
+    <string name="loaded_wallet_btn_details">Details</string>
+    <string name="loaded_wallet_btn_new_scan">New scan</string>
+    <string name="loaded_wallet_verifying_in_blockchain">Verifying in blockchain…</string>
+    <string name="loaded_wallet_warning_card_signed_transactions">Warning: This card has been already topped up and signed transactions in the past.
         Consider immediate withdrawal of all funds if you have received this card from an untrusted source.</string>
+    <string name="loaded_wallet_status_verifying">VERIFYING…</string>
+    <string name="loaded_wallet_load_via_cryptonit">via CRYPTONIT</string>
+    <string name="loaded_wallet_load_via_cryptonit2">via CRYPTONIT2</string>
+    <string name="loaded_wallet_load_via_kraken">via KRAKEN</string>
+    <string name="loaded_wallet_load_via_app">Another wallet app</string>
+    <string name="loaded_wallet_load_via_share_address">Share address</string>
+    <string name="loaded_wallet_load_via_qr">Show QR-code</string>
+    <string name="loaded_wallet_dialog_show_qr">LOAD</string>
 
-    <!-- CreateNewWalletActivity, PurgeActivity, SignTransactionActivity -->
+    <!-- CreateNewWallet, Purge, SignTransaction -->
     <string name="now_touch_the_banknote_with_id">Now touch the banknote with ID</string>
     <string name="to_create_the_wallet">to create the wallet</string>
     <string name="to_erase_the_wallet">to erase the wallet</string>
     <string name="to_sign_the_transaction">to sign the payment</string>
     <string name="to_change_pin_codes">to change PIN/PIN2 codes</string>
-    <string name="by_tapping_the_card">By tapping the card, you will permanently remove the blockchain wallet. Ensure there will be no further incoming transactions</string>
-    <string name="cannot_erase_wallet">Cannot erase wallet. Make sure you enter correct PIN2!</string>
-    <string name="cannot_create_wallet">Cannot create wallet. Make sure you enter correct PIN2!</string>
+    <string name="nfc_purge_warning">By tapping the card, you will permanently remove the blockchain wallet. Ensure there will be no further incoming transactions</string>
+    <string name="nfc_error_cannot_erase_wallet">Cannot erase wallet. Make sure you enter correct PIN2!</string>
+    <string name="nfc_error_cannot_create_wallet">Cannot create wallet. Make sure you enter correct PIN2!</string>
 
-    <!-- PrepareTransactionActivity -->
-    <string name="enter_wallet_address">enter wallet address</string>
-    <string name="enter_amount">enter amount</string>
-    <string name="verify">Verify</string>
-    <string name="wallet_address_empty">Wallet address is empty</string>
-    <string name="amount_empty">Amount is empty</string>
+    <!-- PinRequest -->
+    <string name="pin_request_enter_new_pin_or_use_fingerprint_scanner">Enter new PIN or use fingerprint scanner</string>
+    <string name="pin_request_enter_new_pin">Enter new PIN</string>
+    <string name="pin_request_enter_pin_or_use_fingerprint_scanner">Enter PIN or use fingerprint scanner</string>
+    <string name="pin_request_enter_pin_2_or_use_fingerprint_scanner">Enter PIN2 or use fingerprint scanner</string>
+    <string name="pin_request_confirm_new_pin">Confirm new PIN</string>
+    <string name="pin_request_confirm_new_pin_2">Confirm new PIN2</string>
+    <string name="pin_request_enter_pin">Enter PIN</string>
+    <string name="pin_request_prompt_enter_pin_2">Enter PIN2</string>
+    <string name="pin_request_prompt_new_pin_2_or_fingerprint">Enter new PIN2 or use fingerprint scanner</string>
+    <string name="pin_request_new_pin_2">Enter new PIN2</string>
+    <string name="pin_request_error_pin_confirmation_failed">Please enter the PIN for confirmation!</string>
 
-    <!-- PinRequestActivity -->
-    <string name="enter_new_pin_or_use_fingerprint_scanner">Enter new PIN or use fingerprint scanner</string>
-    <string name="enter_new_pin">Enter new PIN</string>
-    <string name="enter_pin_or_use_fingerprint_scanner">Enter PIN or use fingerprint scanner</string>
-    <string name="enter_pin_2_or_use_fingerprint_scanner">Enter PIN2 or use fingerprint scanner</string>
-    <string name="confirm_new_pin">Confirm new PIN</string>
-    <string name="confirm_new_pin_2">Confirm new PIN2</string>
-    <string name="enter_pin">Enter PIN</string>
-    <string name="enter_pin_2">Enter PIN2</string>
-    <string name="enter_new_pin_2_or_use_fingerprint_scanner">Enter new PIN2 or use fingerprint scanner</string>
-    <string name="enter_new_pin_2">Enter new PIN2</string>
 
-    <!-- SendTransactionActivity -->
-    <string name="please_wait">Please wait while the payment is sent…</string>
-    <string name="transaction_has_been_successfully_signed">Transaction has been successfully signed and sent to blockchain node. Wallet balance will be updated in a while</string>
-    <string name="try_again_failed_to_send_transaction">Try again. Failed to send transaction (%s)</string>
-    <string name="cannot_sign_transaction_make_sure_you_enter_correct_pin_2">Cannot sign transaction. Make sure you enter correct PIN2!</string>
-    <string name="cannot_sign_transaction_wrong_amount">Amount and fee exceed total wallet balance!</string>
+    <!-- SendTransaction-->
+    <string name="send_transaction_notification_wait">Please wait while the payment is sent…</string>
+    <string name="send_transaction_success">Transaction has been successfully signed and sent to blockchain node. Wallet balance will be updated in a while</string>
+    <string name="send_transaction_error_failed_to_send">Try again. Failed to send transaction (%s)</string>
+    <string name="send_transaction_error_cannot_sign">Cannot sign transaction. Make sure you enter correct PIN2!</string>
+    <string name="send_transaction_error_wrong_amount">Amount and fee exceed total wallet balance!</string>
 
-    <!-- PrepareTransactionActivity -->
-    <string name="not_enough_funds_on_your_card">Not enough funds</string>
-    <string name="unknown_amount_format">Unknown amount format</string>
-    <string name="incorrect_destination_wallet_address">Incorrect destination wallet address</string>
-    <string name="destination_wallet_address_equal_source_address">Destination wallet address equal source address</string>
+    <!-- PrepareTransaction -->
+    <string name="prepare_transaction_hint_enter_address">enter wallet address</string>
+    <string name="prepare_transaction_hint_enter_amount">enter amount</string>
+    <string name="prepare_transaction_btn_verify">Verify</string>
+    <string name="prepare_transaction_error_not_enough_funds">Not enough funds</string>
+    <string name="prepare_transaction_error_unknown_amount_format">Unknown amount format</string>
+    <string name="prepare_transaction_error_incorrect_destination">Incorrect destination wallet address</string>
+    <string name="prepare_transaction_error_same_address">Destination wallet address equal source address</string>
+    <string name="prepare_transaction_error_amount_empty">Amount is empty</string>
 
-    <!-- ConfirmTransactionActivity -->
-    <string name="target_wallet_address">target wallet address</string>
-    <string name="payment_amount">payment amount</string>
-    <string name="fee_amount">fee amount</string>
-    <string name="fee">Fee</string>
-    <string name="send_1">Send</string>
-    <string name="minimal">Minimal</string>
-    <string name="normal">Normal</string>
-    <string name="priority">Priority</string>
-    <string name="including_fee_">Including fee</string>
-    <string name="not_including_fee_">Not including fee</string>
-    <string name="including_fee">(including fee)</string>
-    <string name="not_including_fee">(not including fee)</string>
-    <string name="the_obtained_data_is_outdated_try_again">The obtained data is outdated! Try again</string>
-    <string name="cannot_reach_current_active_blockchain_node_try_again">Cannot reach current active blockchain node. Try again</string>
-    <string name="cannot_check_balance_no_connection_with_blockchain_nodes">Cannot check balance! No connection with blockchain nodes</string>
-    <string name="cannot_calculate_fee_tx_length_unknown">Cannot calculate fee! Tx length unknown</string>
-    <string name="cannot_calculate_fee_wrong_data_received_from_node">Cannot calculate fee! Wrong data received from the node</string>
-    <string name="the_wallet_is_empty">The wallet is empty</string>
-    <string name="please_wait_for_confirmation_of_incoming_transaction">Please wait for confirmation of incoming transaction</string>
-    <string name="not_enough_eth_for_fee">Not enough ETH funds for fee</string>
-    <string name="not_enough_rbtc_for_fee">Not enough RBTC funds for fee</string>
-    <string name="pin_2_is_required_to_sign_the_transaction">PIN2 is required to sign the payment</string>
-    <string name="not_enough_funds">Not enough funds</string>
-    <string name="service_unavailable">Service unavailable</string>
-    <string name="risk_delaying">You have a risk of delaying transaction</string>
+    <!-- ConfirmTransaction -->
+    <string name="confirm_transaction_hint_target_address">target wallet address</string>
+    <string name="confirm_transaction_hint_fee_amount">fee amount</string>
+    <string name="confirm_transaction_fee">Fee</string>
+    <string name="confirm_transaction_btn_send">Send</string>
+    <string name="confirm_transaction_btn_fee_minimal">Minimal</string>
+    <string name="confirm_transaction_btn_fee_normal">Normal</string>
+    <string name="confirm_transaction_btn_fee_priority">Priority</string>
+    <string name="confirm_transaction_btn_including_fee">Including fee</string>
+    <string name="confirm_transaction_btn_not_including_fee">Not including fee</string>
+    <string name="confirm_transaction_including_fee">(including fee)</string>
+    <string name="confirm_transaction_not_including_fee">(not including fee)</string>
+    <string name="confirm_transaction_error_data_is_outdated">The obtained data is outdated! Try again</string>
+    <string name="confirm_transaction_error_cannot_reach_node">Cannot reach current active blockchain node. Try again</string>
+    <string name="confirm_transaction_error_cannot_check_balance">Cannot check balance! No connection with blockchain nodes</string>
+    <string name="confirm_transaction_error_cannot_calculate_fee">Cannot calculate fee! Wrong data received from the node</string>
+    <string name="confirm_transaction_error_incoming_transaction_unconfirmed">Please wait for confirmation of incoming transaction</string>
+    <string name="confirm_transaction_error_not_enough_eth_for_fee">Not enough ETH funds for fee</string>
+    <string name="confirm_transaction_error_not_enough_rbtc_for_fee">Not enough RBTC funds for fee</string>
+    <string name="confirm_transaction_error_pin_2_is_required">PIN2 is required to sign the payment</string>
+    <string name="confirm_transaction_error_service_unavailable">Service unavailable</string>
+    <string name="confirm_transaction_warning_risk_delaying">You have a risk of delaying transaction</string>
 
-    <!-- EmptyWalletActivity -->
-    <string name="wallet_has_not_been_yet_created">Wallet hasn\'t been yet created</string>
-    <string name="create_wallet">Create Wallet</string>
+    <!-- EmptyWallet -->
+    <string name="empty_wallet_not_created">Wallet hasn\'t been yet created</string>
+    <string name="empty_wallet_btn_create">Create Wallet</string>
 
-    <!-- VerifyCardActivity -->
-    <string name="card_id">Card ID</string>
-    <string name="signing_method">Signing method</string>
-    <string name="this_card_is">This card is</string>
-    <string name="signed_transactions">Signed transactions</string>
-    <string name="remaining_signatures">Remaining signatures</string>
-    <string name="time_of_last_signing">Time of last signing</string>
-    <string name="features">Features</string>
-    <string name="manufacturer">Manufacturer</string>
-    <string name="card_identity">Card identity</string>
-    <string name="attested">Attested</string>
-    <string name="not_confirmed">Not confirmed</string>
-    <string name="reusable">Reusable</string>
-    <string name="none">None</string>
-    <string name="last_one">Last one!</string>
-    <string name="unlimited">Unlimited</string>
-    <string name="one_off_banknote">One-off banknote</string>
-    <string name="firmware">Firmware</string>
-    <string name="registration_date">Registration date</string>
-    <string name="possession_proved">Possession proved</string>
-    <string name="possession_not_proved">Possession NOT proved</string>
-    <string name="not_available">not available</string>
-    <string name="issuer">Issuer</string>
-    <string name="private_key">Private key</string>
-    <string name="validation_node">Validation node</string>
-    <string name="issuer_data">Issuer Data</string>
-    <string name="unspents">Unspents</string>
+    <!-- VerifyCard -->
+    <string name="details_title_card_id">Card ID</string>
+    <string name="details_signing_method">Signing method</string>
+    <string name="details_is_card_reusable">This card is</string>
+    <string name="details_signed_transactions">Signed transactions</string>
+    <string name="details_remaining_signatures">Remaining signatures</string>
+    <string name="details_time_of_last_signing">Time of last signing</string>
+    <string name="details_features">Features</string>
+    <string name="details_category_manufacturer">Manufacturer</string>
+    <string name="details_category_wallet">Wallet</string>
+    <string name="details_card_identity">Card identity</string>
+    <string name="details_attested">Attested</string>
+    <string name="details_not_confirmed">Not confirmed</string>
+    <string name="details_reusable">Reusable</string>
+    <string name="details_none">None</string>
+    <string name="details_last_one">Last one!</string>
+    <string name="details_unlimited">Unlimited</string>
+    <string name="details_one_off_banknote">One-off banknote</string>
+    <string name="details_firmware">Firmware</string>
+    <string name="details_registration_date">Registration date</string>
+    <string name="details_possession_proved">Possession proved</string>
+    <string name="details_possession_not_proved">Possession NOT proved</string>
+    <string name="details_not_available">not available</string>
+    <string name="details_category_issuer">Issuer</string>
+    <string name="details_private_key">Private key</string>
+    <string name="details_validation_node">Validation node</string>
+    <string name="details_unspents">Unspents</string>
+    <string name="details_protected_by_default_pin_1">This banknote is protected by default PIN1 code</string>
+    <string name="details_protected_by_user_pin_1">This banknote is protected by user\'s PIN1 code</string>
+    <string name="details_protected_by_default_pin_2">This banknote is protected by default PIN2 code</string>
+    <string name="details_protected_by_user_pin_2">This banknote is protected by user\'s PIN2 code</string>
+    <string name="details_unlocked_banknote">Unlocked banknote, only for development use</string>
+    <string name="details_security_delay">This banknote will enforce %.0f seconds security delay for all operations requiring PIN2 code</string>
 
-    <!-- PinSaveActivity -->
-    <string name="save">Save</string>
-    <string name="delete">Delete</string>
-    <string name="protect_with_fingerprint">Protect with fingerprint</string>
-    <string name="touch_fingerprint_scanner_to_confirm">Touch fingerprint scanner to confirm</string>
-    <string name="user_has_not_enabled_lock_screen">User hasn\'t enabled Lock Screen</string>
-    <string name="user_has_not_granted_permission_to_use_fingerprint">User hasn\'t granted permission to use Fingerprint</string>
-    <string name="user_has_not_registered_any_fingerprints">User hasn\'t registered any fingerprints</string>
+    <!-- PinSave -->
+    <string name="pin_save_btn_save">Save</string>
+    <string name="pin_save_btn_delete">Delete</string>
+    <string name="pin_save_checkbox_protect_with_fingerprint">Protect with fingerprint</string>
+    <string name="pin_save_dialog_touch_fingerprint_scanner">Touch fingerprint scanner to confirm</string>
+    <string name="pin_save_toast_lock_screen_not_enabled">User hasn\'t enabled Lock Screen</string>
+    <string name="pin_save_toast_no_permission_to_use_fingerprint">User hasn\'t granted permission to use Fingerprint</string>
+    <string name="pin_save_toast_no_fingerprints_registered">User hasn\'t registered any fingerprints</string>
+    <string name="pin_save_notification_failed">Saving pin failed</string>
+    <string name="pin_save_title_enter_pin_and_save">Enter PIN and save it</string>
+    <string name="pin_save_title_enter_pin2_and_save">Enter PIN2 and save it</string>
 
     <!-- PrepareCryptonitWithdrawal -->
     <string name="cryptonit_payment">CRYPTONIT payment</string>
@@ -287,7 +248,7 @@
     <string name="kraken_not_enough_account_data">Please enter account data</string>
     <string name="kraken_request_balance">Get balance</string>
     <string name="kraken_request_withdrawal">Withdrawal</string>
-    <string name="operation_canceled">Operation canceled!</string>
-    <string name="please_confirm_withdraw">Please confirm withdraw</string>
+    <string name="kraken_operation_canceled">Operation canceled!</string>
+    <string name="kraken_please_confirm_withdraw">Please confirm withdraw</string>
 
 </resources>
