@@ -4,21 +4,21 @@ import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.view.KeyEvent
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
-import com.tangem.wallet.CoinEngine
-import com.tangem.wallet.CoinEngineFactory
-import com.tangem.wallet.TangemContext
-import com.tangem.ui.event.TransactionFinishWithError
-import com.tangem.ui.event.TransactionFinishWithSuccess
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.card_common.util.Util
+import com.tangem.ui.event.TransactionFinishWithError
+import com.tangem.ui.event.TransactionFinishWithSuccess
 import com.tangem.util.UtilHelper
+import com.tangem.wallet.CoinEngine
+import com.tangem.wallet.CoinEngineFactory
 import com.tangem.wallet.R
+import com.tangem.wallet.TangemContext
 import org.greenrobot.eventbus.EventBus
 import java.io.IOException
 
@@ -65,7 +65,7 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         when (keyCode) {
             KeyEvent.KEYCODE_BACK -> {
-                Toast.makeText(this, R.string.please_wait, Toast.LENGTH_LONG).show()
+                Toast.makeText(this, R.string.send_transaction_notification_wait, Toast.LENGTH_LONG).show()
                 return true
             }
         }
@@ -82,22 +82,22 @@ class SendTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     private fun finishWithSuccess() {
         val transactionFinishWithSuccess = TransactionFinishWithSuccess()
-        transactionFinishWithSuccess.message = getString(R.string.transaction_has_been_successfully_signed)
+        transactionFinishWithSuccess.message = getString(R.string.send_transaction_success)
         EventBus.getDefault().post(transactionFinishWithSuccess)
 
         val intent = Intent()
-        intent.putExtra(Constant.EXTRA_MESSAGE, getString(R.string.transaction_has_been_successfully_signed))
+        intent.putExtra(Constant.EXTRA_MESSAGE, getString(R.string.send_transaction_success))
         setResult(RESULT_OK, intent)
         finish()
     }
 
     private fun finishWithError(message: String) {
         val transactionFinishWithError = TransactionFinishWithError()
-        transactionFinishWithError.message = String.format(getString(R.string.try_again_failed_to_send_transaction), message)
+        transactionFinishWithError.message = String.format(getString(R.string.send_transaction_error_failed_to_send), message)
         EventBus.getDefault().post(transactionFinishWithError)
 
         val intent = Intent()
-        intent.putExtra(Constant.EXTRA_MESSAGE, String.format(getString(R.string.try_again_failed_to_send_transaction), message))
+        intent.putExtra(Constant.EXTRA_MESSAGE, String.format(getString(R.string.send_transaction_error_failed_to_send), message))
         setResult(RESULT_CANCELED, intent)
         finish()
     }
