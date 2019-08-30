@@ -2,5 +2,6 @@
 <resources>
 
     <string name="app_name">DEBUG</string>
+    <string name="log_file_provider_authorities">com.tangem.debug.data.LogFileProvider</string>
 
 </resources>
