@@ -45,7 +45,8 @@ android {
             versionNameSuffix "-beta"
             applicationIdSuffix ".debug_beta"
             buildConfigField 'boolean', 'CRASHLYTICS', 'Boolean.parseBoolean("true")'
-            manifestPlaceholders = [fabric_api_key: properties.getProperty('fabric_api_key')]
+            manifestPlaceholders = [fabric_api_key: properties.hasProperty('fabric_api_key')
+                    ? project.property('fabric_api_key') : 000]
         }
     }
     flavorDimensions ""
