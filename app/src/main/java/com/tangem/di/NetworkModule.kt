@@ -3,21 +3,19 @@ package com.tangem.di
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import com.tangem.data.network.Server
 import com.tangem.wallet.BuildConfig
-
-import java.io.IOException
-import java.net.InetSocketAddress
-import java.net.Socket
-import java.net.SocketException
-
-import javax.inject.Named
-import javax.inject.Singleton
-
 import dagger.Module
 import dagger.Provides
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
+import java.io.IOException
+import java.net.InetSocketAddress
+import java.net.Socket
+import java.net.SocketException
+import javax.inject.Named
+import javax.inject.Singleton
 
 @Module
 internal class NetworkModule {
@@ -116,6 +114,20 @@ internal class NetworkModule {
         val builder = Retrofit.Builder()
                 .baseUrl(Server.ApiSoChain.URL)
                 .addConverterFactory(GsonConverterFactory.create())
+        if (BuildConfig.DEBUG)
+            builder.client(createOkHttpClient())
+        return builder.build()
+    }
+
+    @Singleton
+    @Provides
+    @Named(Server.ApiBlockchainInfo.URL_BLOCKCHAININFO)
+    fun provideRetrofitBlockchainInfo(): Retrofit {
+        val builder = Retrofit.Builder()
+                .baseUrl(Server.ApiBlockchainInfo.URL_BLOCKCHAININFO)
+                .addConverterFactory(GsonConverterFactory.create())
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
         if (BuildConfig.DEBUG)
             builder.client(createOkHttpClient())
         return builder.build()
