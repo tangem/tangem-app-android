@@ -25,22 +25,17 @@ Runs all the tests
 ```
 fastlane android release
 ```
-Build a release APK
-### android debug
+Build a signed release APK
+### android build
 ```
-fastlane android debug
+fastlane android build
 ```
-Build a debug APK
+Build debug and release APKs
 ### android beta
 ```
 fastlane android beta
 ```
 Submit a new Beta Build to Crashlytics Beta
-### android deploy
-```
-fastlane android deploy
-```
-Deploy a new version to the Google Play
 
 ----
 
