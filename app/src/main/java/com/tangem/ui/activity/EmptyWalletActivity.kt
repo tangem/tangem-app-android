@@ -10,33 +10,32 @@ import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Build
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.text.Html
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
-import com.tangem.di.Navigator
-import com.tangem.wallet.TangemContext
-import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
-import com.tangem.ui.dialog.WaitSecurityDelayDialog
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.card_android.android.reader.NfcReader
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD
+import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
 import com.tangem.card_android.data.asBundle
 import com.tangem.card_android.data.loadFromBundle
 import com.tangem.card_common.data.TangemCard
 import com.tangem.card_common.reader.CardProtocol
 import com.tangem.card_common.tasks.VerifyCardTask
 import com.tangem.card_common.util.Util
-import com.tangem.util.UtilHelper
+import com.tangem.di.Navigator
+import com.tangem.di.ToastHelper
+import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
+import com.tangem.ui.dialog.WaitSecurityDelayDialog
 import com.tangem.wallet.R
+import com.tangem.wallet.TangemContext
 import kotlinx.android.synthetic.main.activity_empty_wallet.*
 import kotlinx.android.synthetic.main.layout_tangem_card.*
 import javax.inject.Inject
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
-import com.tangem.di.ToastHelper
 
 class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, CardProtocol.Notifications {
     companion object {
@@ -102,7 +101,7 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
             if (cardProtocol != null)
                 navigator.showVerifyCard(this, ctx)
             else
-                toastHelper.showSingleToast(this, getString(R.string.need_attach_card_again))
+                toastHelper.showSingleToast(this, getString(R.string.general_notification_scan_again_to_verify))
         }
     }
 
@@ -191,7 +190,7 @@ class EmptyWalletActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Card
                         if (!NoExtendedLengthSupportDialog.allReadyShowed)
                             NoExtendedLengthSupportDialog().show(supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
                     } else
-                        Toast.makeText(this@EmptyWalletActivity, R.string.try_to_scan_again, Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@EmptyWalletActivity, R.string.general_notification_scan_again, Toast.LENGTH_LONG).show()
 
                     progressBar?.progress = 100
                     progressBar?.progressTintList = ColorStateList.valueOf(Color.RED)

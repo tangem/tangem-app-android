@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/maax"
             android:gravity="center_vertical"
-            android:text="@string/wallet_has_not_been_yet_created"
+            android:text="@string/empty_wallet_not_created"
             android:textAlignment="center"
             android:textSize="@dimen/text_size_1_small"
             app:layout_constraintBottom_toTopOf="@+id/btnNewWallet"
@@ -48,7 +48,7 @@
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:fontFamily="@font/saira_condensed_bold"
-            android:text="@string/create_wallet"
+            android:text="@string/empty_wallet_btn_create"
             android:textSize="@dimen/text_size_large"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -83,7 +83,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/empty_wallet_left_col_margin"
                 android:fontFamily="@font/maax"
-                android:text="@string/blockchain"
+                android:text="@string/general_blockchain"
                 android:textColor="@color/primary_dark"
                 android:textSize="@dimen/text_size_1_small" />
 
@@ -115,7 +115,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/empty_wallet_left_col_margin"
                 android:fontFamily="@font/maax"
-                android:text="@string/issuer"
+                android:text="@string/details_category_issuer"
                 android:textColor="@color/primary_dark"
                 android:textSize="@dimen/text_size_1_small" />
 
@@ -160,7 +160,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="@font/maax"
-            android:text="@string/scan_again_to_verify_the_card"
+            android:text="@string/general_notification_scan_again_to_verify"
             android:textAlignment="center"
             android:textColor="@android:color/darker_gray"
             android:textSize="@dimen/text_size_small" />

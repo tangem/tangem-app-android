@@ -1,7 +1,6 @@
 package com.tangem.wallet.matic;
 
 import android.net.Uri;
-import android.util.Log;
 
 import com.tangem.card_common.tasks.SignTask;
 import com.tangem.data.Blockchain;
@@ -74,11 +73,11 @@ public class MaticTokenEngine extends TokenEngine {
     @Override
     public boolean isExtractPossible() {
         if (!hasBalanceInfo()) {
-            ctx.setMessage(R.string.cannot_obtain_data_from_blockchain);
+            ctx.setMessage(R.string.loaded_wallet_error_obtaining_blockchain_data);
         } else if (!isBalanceNotZero()) {
-            ctx.setMessage(R.string.wallet_empty);
+            ctx.setMessage(R.string.general_wallet_empty);
         } else if (awaitingConfirmation()) {
-            ctx.setMessage(R.string.please_wait_while_previous);
+            ctx.setMessage(R.string.loaded_wallet_message_wait);
         } else {
             return true;
         }
