@@ -15,14 +15,14 @@ import com.tangem.card_common.tasks.SignTask;
 import com.tangem.card_common.util.Util;
 import com.tangem.data.network.ServerApiRipple;
 import com.tangem.data.network.model.RippleResponse;
+import com.tangem.util.CryptoUtil;
+import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.wallet.BTCUtils;
 import com.tangem.wallet.BalanceValidator;
 import com.tangem.wallet.CoinData;
 import com.tangem.wallet.CoinEngine;
-import com.tangem.wallet.TangemContext;
-import com.tangem.util.CryptoUtil;
-import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.wallet.R;
+import com.tangem.wallet.TangemContext;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
