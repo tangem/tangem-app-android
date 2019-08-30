@@ -13,31 +13,29 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.navigation.NavController
-import androidx.navigation.Navigation
+import androidx.lifecycle.ViewModelProviders
 import com.scottyab.rootbeer.RootBeer
 import com.tangem.App
 import com.tangem.Constant
+import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager
-import com.tangem.di.Navigator
 import com.tangem.di.ToastHelper
 import com.tangem.ui.dialog.RootFoundDialog
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import javax.inject.Inject
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     companion object {
         val TAG: String = MainActivity::class.java.simpleName
         fun callingIntent(context: Context) = Intent(context, MainActivity::class.java)
     }
 
-    lateinit var navController: NavController
-    @Inject
-    internal lateinit var navigator: Navigator
     @Inject
     internal lateinit var toastHelper: ToastHelper
+    lateinit var viewModel: GlobalViewModel
+    lateinit var nfcManager: NfcManager
 
 //    private var onNfcReaderCallback: NfcAdapter.ReaderCallback? = null
 
@@ -46,9 +44,7 @@ class MainActivity : AppCompatActivity() {
         if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action || NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action)) {
             val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
             if (tag != null) {
-                val activeFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
-                                ?.childFragmentManager?.primaryNavigationFragment
-                (activeFragment as? NfcAdapter.ReaderCallback)?.onTagDiscovered(tag)
+                onTagDiscovered(tag)
             }
         }
     }
@@ -57,14 +53,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        navController = Navigation.findNavController(this, R.id.nav_host_fragment)
+        viewModel = ViewModelProviders.of(this).get(GlobalViewModel::class.java)
 
-        App.navigatorComponent.inject(this)
         App.toastHelperComponent.inject(this)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         verifyPermissions()
+
+        nfcManager = NfcManager(this, this)
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
 //        // NFC
 //        val intent = intent
@@ -85,6 +83,16 @@ class MainActivity : AppCompatActivity() {
         NfcManager.verifyPermissions(this)
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), Constant.REQUEST_CODE_REQUEST_CAMERA_PERMISSIONS)
+        }
+    }
+
+    override fun onTagDiscovered(tag: Tag) {
+        val activeFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
+                ?.childFragmentManager?.primaryNavigationFragment
+        if (activeFragment is NfcAdapter.ReaderCallback) {
+            activeFragment.onTagDiscovered(tag)
+        } else {
+            nfcManager.ignoreTag(tag)
         }
     }
 
