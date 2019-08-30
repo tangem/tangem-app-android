@@ -10,21 +10,21 @@ import android.graphics.Color
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.tangem.App
 import com.tangem.Constant
-import com.tangem.data.network.Kraken
+import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.data.Blockchain
+import com.tangem.data.network.Kraken
 import com.tangem.di.Navigator
 import com.tangem.wallet.CoinEngineFactory
-import com.tangem.wallet.TangemContext
-import com.tangem.card_android.android.nfc.NfcLifecycleObserver
 import com.tangem.wallet.R
+import com.tangem.wallet.TangemContext
 import kotlinx.android.synthetic.main.activity_prepare_kraken_withdrawal.*
 import java.io.IOException
 import java.math.BigDecimal
@@ -95,7 +95,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
 
                 kraken!!.requestWithdrawInfo(ctx.blockchain.currency, dblAmount.toString(), ctx.coinData!!.wallet)
             } catch (e: Exception) {
-                etAmount.error = getString(R.string.unknown_amount_format)
+                etAmount.error = getString(R.string.prepare_transaction_error_unknown_amount_format)
             }
 
         }
@@ -170,7 +170,7 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
         val builder = AlertDialog.Builder(this)
 
         // Set a title for alert dialog
-        builder.setTitle(R.string.please_confirm_withdraw)
+        builder.setTitle(R.string.kraken_please_confirm_withdraw)
 
         // Set a message for alert dialog
         builder.setMessage(String.format("Continue with fee %s %s?", fee!!.toString().trimEnd('0'), ctx.blockchain.currency))
@@ -191,20 +191,20 @@ class PrepareKrakenWithdrawalActivity : AppCompatActivity(), NfcAdapter.ReaderCa
 
                         kraken!!.requestWithdraw(ctx.blockchain.currency, dblAmount.toString(), ctx.coinData!!.wallet)
                     } catch (e: Exception) {
-                        etAmount.error = getString(R.string.unknown_amount_format)
+                        etAmount.error = getString(R.string.prepare_transaction_error_unknown_amount_format)
                     }
                 }
                 DialogInterface.BUTTON_NEGATIVE -> {
-                    Toast.makeText(this, R.string.operation_canceled, Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, R.string.kraken_operation_canceled, Toast.LENGTH_LONG).show()
                 }
             }
         }
 
         // Set the alert dialog positive/yes button
-        builder.setPositiveButton(R.string.yes, dialogClickListener)
+        builder.setPositiveButton(R.string.general_yes, dialogClickListener)
 
         // Set the alert dialog negative/no button
-        builder.setNegativeButton(R.string.no, dialogClickListener)
+        builder.setNegativeButton(R.string.general_no, dialogClickListener)
 
 
         // Initialize the AlertDialog using builder object
