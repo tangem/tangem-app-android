@@ -5,6 +5,10 @@ import android.text.InputFilter;
 import android.util.Log;
 
 import com.tangem.App;
+import com.tangem.card_common.data.TangemCard;
+import com.tangem.card_common.reader.CardProtocol;
+import com.tangem.card_common.tasks.SignTask;
+import com.tangem.card_common.util.Util;
 import com.tangem.data.local.PendingTransactionsStorage;
 import com.tangem.data.network.Server;
 import com.tangem.data.network.ServerApiBlockcypher;
@@ -14,23 +18,19 @@ import com.tangem.data.network.model.BlockcypherResponse;
 import com.tangem.data.network.model.BlockcypherTx;
 import com.tangem.data.network.model.BlockcypherTxref;
 import com.tangem.data.network.model.SoChain;
+import com.tangem.util.CryptoUtil;
+import com.tangem.util.DecimalDigitsInputFilter;
+import com.tangem.util.DerEncodingUtil;
 import com.tangem.wallet.BTCUtils;
 import com.tangem.wallet.BalanceValidator;
 import com.tangem.wallet.Base58;
 import com.tangem.wallet.CoinData;
+import com.tangem.wallet.R;
 import com.tangem.wallet.TangemContext;
 import com.tangem.wallet.Transaction;
 import com.tangem.wallet.UnspentOutputInfo;
 import com.tangem.wallet.btc.BtcData;
 import com.tangem.wallet.btc.BtcEngine;
-import com.tangem.card_common.data.TangemCard;
-import com.tangem.card_common.reader.CardProtocol;
-import com.tangem.card_common.tasks.SignTask;
-import com.tangem.card_common.util.Util;
-import com.tangem.util.CryptoUtil;
-import com.tangem.util.DecimalDigitsInputFilter;
-import com.tangem.util.DerEncodingUtil;
-import com.tangem.wallet.R;
 
 import org.json.JSONException;
 
