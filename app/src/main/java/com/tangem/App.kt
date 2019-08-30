@@ -2,6 +2,7 @@ package com.tangem
 
 import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
+import com.crashlytics.android.Crashlytics
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.tangem.card_android.android.data.Firmwares
@@ -15,6 +16,7 @@ import com.tangem.di.NetworkComponent
 import com.tangem.di.ToastHelperComponent
 import com.tangem.server_android.data.LocalStorage
 import com.tangem.wallet.BuildConfig
+import io.fabric.sdk.android.Fabric
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 
@@ -74,6 +76,7 @@ class App : Application() {
                         }
                     }
             )
+            if (BuildConfig.CRASHLYTICS) Fabric.with(this, Crashlytics())
         }
     }
 
