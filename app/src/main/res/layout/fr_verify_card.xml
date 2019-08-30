@@ -47,7 +47,7 @@
                         android:layout_marginTop="8dp"
                         android:layout_marginBottom="24dp"
                         android:fontFamily="@font/maaxmedium"
-                        android:text="@string/card_id"
+                        android:text="@string/details_title_card_id"
                         android:textAlignment="center"
                         android:textSize="@dimen/text_size_medium" />
 
@@ -85,7 +85,7 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/maax"
-                        android:text="@string/issuer"
+                        android:text="@string/details_category_issuer"
                         android:textSize="@dimen/text_size_medium" />
 
                     <TextView
@@ -93,7 +93,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/maax"
-                        android:text="@string/tangem_ag"
+                        android:text="@string/general_tangem"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_medium"
                         android:textStyle="normal|bold" />
@@ -110,7 +110,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
                         android:fontFamily="@font/maax"
-                        android:text="@string/blockchain"
+                        android:text="@string/general_blockchain"
                         android:textSize="@dimen/text_size_1_small"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -121,7 +121,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/maax"
-                        android:text="@string/blockchain"
+                        android:text="@string/general_blockchain"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold"
@@ -150,7 +150,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
                         android:fontFamily="@font/maax"
-                        android:text="@string/signing_method"
+                        android:text="@string/details_signing_method"
                         android:textSize="@dimen/text_size_1_small" />
 
                     <TextView
@@ -175,7 +175,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
                         android:fontFamily="@font/maax"
-                        android:text="@string/this_card_is"
+                        android:text="@string/details_is_card_reusable"
                         android:textSize="@dimen/text_size_1_small" />
 
                     <TextView
@@ -200,7 +200,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
                         android:fontFamily="@font/maax"
-                        android:text="@string/signed_transactions"
+                        android:text="@string/details_signed_transactions"
                         android:textSize="@dimen/text_size_1_small" />
 
                     <TextView
@@ -225,7 +225,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
                         android:fontFamily="@font/maax"
-                        android:text="@string/remaining_signatures"
+                        android:text="@string/details_remaining_signatures"
                         android:textSize="@dimen/text_size_1_small" />
 
                     <TextView
@@ -250,7 +250,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
                         android:fontFamily="@font/maax"
-                        android:text="@string/time_of_last_signing"
+                        android:text="@string/details_time_of_last_signing"
                         android:textSize="@dimen/text_size_1_small" />
 
                     <TextView
@@ -276,7 +276,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
                         android:fontFamily="@font/maax"
-                        android:text="@string/features"
+                        android:text="@string/details_features"
                         android:textSize="@dimen/text_size_1_small" />
 
                     <TextView
@@ -309,7 +309,7 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/maax"
-                        android:text="@string/manufacturer"
+                        android:text="@string/details_category_manufacturer"
                         android:textSize="@dimen/text_size_medium" />
 
                     <TextView
@@ -317,7 +317,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/maax"
-                        android:text="@string/tangem_ag"
+                        android:text="@string/general_tangem"
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_medium"
                         android:textStyle="normal|bold" />
@@ -342,7 +342,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
                         android:fontFamily="@font/maax"
-                        android:text="@string/card_identity"
+                        android:text="@string/details_card_identity"
                         android:textSize="@dimen/text_size_1_small" />
 
                     <TextView
@@ -350,7 +350,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/maax"
-                        android:text="@string/attested"
+                        android:text="@string/details_attested"
                         android:textColor="@color/confirmed"
                         android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold" />
@@ -367,7 +367,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
                         android:fontFamily="@font/maax"
-                        android:text="@string/firmware"
+                        android:text="@string/details_firmware"
                         android:textSize="@dimen/text_size_1_small" />
 
                     <TextView
@@ -391,7 +391,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
                         android:fontFamily="@font/maax"
-                        android:text="@string/registration_date"
+                        android:text="@string/details_registration_date"
                         android:textSize="@dimen/text_size_1_small" />
 
                     <TextView
@@ -424,7 +424,7 @@
                         android:layout_width="@dimen/verify_card_left_col_width"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/maax"
-                        android:text="@string/wallet"
+                        android:text="@string/details_category_wallet"
                         android:textSize="@dimen/text_size_medium" />
 
                     <TextView
@@ -451,7 +451,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
                         android:fontFamily="@font/maax"
-                        android:text="@string/private_key"
+                        android:text="@string/details_private_key"
                         android:textSize="@dimen/text_size_1_small" />
 
                     <TextView
@@ -476,7 +476,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
                         android:fontFamily="@font/maax"
-                        android:text="@string/validation_node"
+                        android:text="@string/details_validation_node"
                         android:textSize="@dimen/text_size_1_small" />
 
                     <TextView
@@ -502,7 +502,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
                         android:fontFamily="@font/maax"
-                        android:text="@string/unspents"
+                        android:text="@string/details_unspents"
                         android:textSize="@dimen/text_size_1_small" />
 
                     <TextView
@@ -619,7 +619,7 @@
             android:layout_height="50dp"
             android:layout_margin="10dp"
             android:fontFamily="@font/saira_condensed_bold"
-            android:text="@string/ok"
+            android:text="@string/general_ok"
             android:textSize="@dimen/text_size_large" />
 
     </LinearLayout>

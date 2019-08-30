@@ -13,25 +13,25 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Build
 import android.os.Bundle
-import androidx.core.app.ActivityCompat
-import androidx.appcompat.app.AppCompatActivity
 import android.text.TextUtils
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import com.tangem.Constant
-import com.tangem.data.fingerprint.StartFingerprintReaderTask
-import com.tangem.card_android.android.reader.NfcManager
-import com.tangem.data.fingerprint.FingerprintHelper
-import com.tangem.wallet.TangemContext
 import com.tangem.card_android.android.data.PINStorage
 import com.tangem.card_android.android.nfc.NfcLifecycleObserver
-import com.tangem.card_android.data.loadFromBundle
+import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD
 import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
+import com.tangem.card_android.data.loadFromBundle
 import com.tangem.card_common.data.TangemCard
+import com.tangem.data.fingerprint.FingerprintHelper
+import com.tangem.data.fingerprint.StartFingerprintReaderTask
 import com.tangem.util.LOG
 import com.tangem.wallet.R
+import com.tangem.wallet.TangemContext
 import kotlinx.android.synthetic.main.activity_pin_request.*
 import kotlinx.android.synthetic.main.layout_pin_buttons.*
 import java.io.IOException
@@ -108,25 +108,25 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
         if (mode == Mode.RequestNewPIN)
             if (PINStorage.haveEncryptedPIN()) {
                 allowFingerprint = true
-                tvPinPrompt.setText(R.string.enter_new_pin_or_use_fingerprint_scanner)
+                tvPinPrompt.setText(R.string.pin_request_enter_new_pin_or_use_fingerprint_scanner)
             } else
-                tvPinPrompt.setText(R.string.enter_new_pin)
+                tvPinPrompt.setText(R.string.pin_request_enter_new_pin)
         else if (mode == Mode.ConfirmNewPIN)
-            tvPinPrompt.setText(R.string.confirm_new_pin)
+            tvPinPrompt.setText(R.string.pin_request_confirm_new_pin)
         else if (mode == Mode.RequestPIN)
             if (PINStorage.haveEncryptedPIN()) {
                 allowFingerprint = true
-                tvPinPrompt.setText(R.string.enter_pin_or_use_fingerprint_scanner)
+                tvPinPrompt.setText(R.string.pin_request_enter_pin_or_use_fingerprint_scanner)
             } else
-                tvPinPrompt.setText(R.string.enter_pin)
+                tvPinPrompt.setText(R.string.pin_request_enter_pin)
         else if (mode == Mode.RequestNewPIN2)
             if (PINStorage.haveEncryptedPIN2()) {
                 allowFingerprint = true
-                tvPinPrompt.setText(R.string.enter_new_pin_2_or_use_fingerprint_scanner)
+                tvPinPrompt.setText(R.string.pin_request_prompt_new_pin_2_or_fingerprint)
             } else
-                tvPinPrompt.setText(R.string.enter_new_pin_2)
+                tvPinPrompt.setText(R.string.pin_request_new_pin_2)
         else if (mode == Mode.ConfirmNewPIN2)
-            tvPinPrompt.setText(R.string.confirm_new_pin_2)
+            tvPinPrompt.setText(R.string.pin_request_confirm_new_pin_2)
         else if (mode == Mode.RequestPIN2) {
             val uid = intent.getStringExtra(EXTRA_TANGEM_CARD_UID)
             val card = TangemCard(uid)
@@ -142,9 +142,9 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
 
             if (PINStorage.haveEncryptedPIN2()) {
                 allowFingerprint = true
-                tvPinPrompt.setText(R.string.enter_pin_2_or_use_fingerprint_scanner)
+                tvPinPrompt.setText(R.string.pin_request_enter_pin_2_or_use_fingerprint_scanner)
             } else
-                tvPinPrompt.setText(R.string.enter_pin_2)
+                tvPinPrompt.setText(R.string.pin_request_prompt_enter_pin_2)
         }
 
         if (!allowFingerprint)
@@ -298,13 +298,13 @@ class PinRequestActivity : AppCompatActivity(), NfcAdapter.ReaderCallback, Finge
 
         if (mode == Mode.ConfirmNewPIN) {
             if (pin != intent.getStringExtra(Constant.EXTRA_NEW_PIN)) {
-                tvPin!!.error = getString(R.string.error_pin_confirmation_failed)
+                tvPin!!.error = getString(R.string.pin_request_error_pin_confirmation_failed)
                 focusView = tvPin
                 cancel = true
             }
         } else if (mode == Mode.ConfirmNewPIN2) {
             if (pin != intent.getStringExtra(Constant.EXTRA_NEW_PIN_2)) {
-                tvPin!!.error = getString(R.string.error_pin_confirmation_failed)
+                tvPin!!.error = getString(R.string.pin_request_error_pin_confirmation_failed)
                 focusView = tvPin
                 cancel = true
             }
