@@ -60,7 +60,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="20dp"
             android:fontFamily="@font/maax"
-            android:text="@string/by_tapping_the_card"
+            android:text="@string/nfc_purge_warning"
             android:textAlignment="center"
             android:textColor="@android:color/holo_red_light"
             android:textSize="@dimen/text_size_medium" />
