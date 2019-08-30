@@ -39,14 +39,15 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
 //    private var onNfcReaderCallback: NfcAdapter.ReaderCallback? = null
 
-//    override fun onNewIntent(intent: Intent?) {
-//        super.onNewIntent(intent)
-//        if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action || NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action)) {
-//            val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
-//            if (tag != null && onNfcReaderCallback != null)
-//                onNfcReaderCallback?.onTagDiscovered(tag)
-//        }
-//    }
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action || NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action)) {
+            val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
+            if (tag != null) {
+                onTagDiscovered(tag)
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
