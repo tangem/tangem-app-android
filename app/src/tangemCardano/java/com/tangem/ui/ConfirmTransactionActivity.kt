@@ -64,9 +64,9 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
         isIncludeFee = intent.getBooleanExtra(Constant.EXTRA_FEE_INCLUDED, true)
 
         if (isIncludeFee)
-            tvIncFee.setText(R.string.including_fee)
+            tvIncFee.setText(R.string.confirm_transaction_including_fee)
         else
-            tvIncFee.setText(R.string.not_including_fee)
+            tvIncFee.setText(R.string.confirm_transaction_not_including_fee)
 
         amount = CoinEngine.Amount(intent.getStringExtra(Constant.EXTRA_AMOUNT), intent.getStringExtra(Constant.EXTRA_AMOUNT_CURRENCY))
 
@@ -107,7 +107,7 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
                     tvFeeEquivalent.text = eqFee
 
                     if (!ctx.coinData!!.amountEquivalentDescriptionAvailable) {
-                        tvFeeEquivalent.error = getString(R.string.service_unavailable)
+                        tvFeeEquivalent.error = getString(R.string.confirm_transaction_error_service_unavailable)
                         tvCurrency2.visibility = View.GONE
                         tvFeeEquivalent.visibility = View.GONE
                     } else
@@ -129,14 +129,14 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
                 calendar.add(Calendar.MINUTE, -1)
 
                 if (dtVerified == null || dtVerified!!.before(calendar.time)) {
-                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.the_obtained_data_is_outdated_try_again))
+                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.confirm_transaction_error_data_is_outdated))
                     return@setOnClickListener
                 }
 
                 val engineCoin = CoinEngineFactory.createCardano(ctx)
 
                 if (engineCoin!!.isNeedCheckNode && !nodeCheck) {
-                    Toast.makeText(baseContext, getString(R.string.cannot_reach_current_active_blockchain_node_try_again), Toast.LENGTH_LONG).show()
+                    Toast.makeText(baseContext, getString(R.string.confirm_transaction_error_cannot_reach_node), Toast.LENGTH_LONG).show()
                     return@setOnClickListener
                 }
 
@@ -180,7 +180,7 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
                 startActivityForResult(intent, Constant.REQUEST_CODE_SIGN_TRANSACTION)
 
             } else
-                Toast.makeText(this, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.general_error_no_connection), Toast.LENGTH_SHORT).show()
         }
 
         progressBar.visibility = View.VISIBLE
@@ -244,7 +244,7 @@ class ConfirmTransactionActivity : AppCompatActivity(), NfcAdapter.ReaderCallbac
                 intent.putExtra(Constant.EXTRA_FEE_INCLUDED, isIncludeFee)
                 startActivityForResult(intent, Constant.REQUEST_CODE_SIGN_TRANSACTION)
             } else
-                Toast.makeText(baseContext, R.string.pin_2_is_required_to_sign_the_transaction, Toast.LENGTH_LONG).show()
+                Toast.makeText(baseContext, R.string.confirm_transaction_error_pin_2_is_required, Toast.LENGTH_LONG).show()
         }
     }
 
