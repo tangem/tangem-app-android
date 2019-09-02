@@ -8,6 +8,8 @@ import android.util.Log;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiInfura;
 import com.tangem.data.network.model.InfuraResponse;
+import com.tangem.tangem_card.data.TangemCard;
+import com.tangem.tangem_card.tasks.SignTask;
 import com.tangem.wallet.BTCUtils;
 import com.tangem.wallet.BalanceValidator;
 import com.tangem.wallet.CoinData;
@@ -16,9 +18,6 @@ import com.tangem.wallet.Keccak256;
 import com.tangem.wallet.TangemContext;
 import com.tangem.wallet.eth.EthData;
 import com.tangem.wallet.token.TokenData;
-import com.tangem.card_common.data.TangemCard;
-import com.tangem.card_common.tasks.SignTask;
-import com.tangem.wallet.R;
 
 import java.math.BigInteger;
 

@@ -1,26 +1,24 @@
 package com.tangem.server_android.data
 
-import android.content.Context
-import com.tangem.card_common.data.TangemCard
-
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.Bitmap
-import java.io.File
-import kotlin.collections.HashMap
 import android.graphics.BitmapFactory
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
-import com.tangem.server_android.model.CardVerifyAndGetInfo
 import com.tangem.server_android.R
-import com.tangem.card_common.data.external.CardDataSubstitutionProvider
-import com.tangem.card_common.reader.CardCrypto
-import com.tangem.card_common.util.Util
+import com.tangem.server_android.model.CardVerifyAndGetInfo
+import com.tangem.tangem_card.data.TangemCard
+import com.tangem.tangem_card.data.external.CardDataSubstitutionProvider
+import com.tangem.tangem_card.reader.CardCrypto
+import com.tangem.tangem_card.util.Util
+import java.io.File
 import java.io.InputStream
-import java.lang.Exception
 import java.nio.charset.StandardCharsets
 import java.util.*
+import kotlin.collections.HashMap
 
 class LocalStorage
 (
