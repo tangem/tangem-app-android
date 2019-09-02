@@ -1,7 +1,7 @@
 package com.tangem.wallet;
 
 import com.tangem.App;
-import com.tangem.card_common.data.TangemCard;
+import com.tangem.tangem_card.data.TangemCard;
 
 public class BalanceValidator {
     private String firstLine;
