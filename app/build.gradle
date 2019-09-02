@@ -88,8 +88,8 @@ configurations {
 }
 
 dependencies {
-    implementation project(':card-common')
-    implementation project(':card-android')
+    implementation project(':tangem-card')
+    implementation project(':tangem-sdk')
     implementation project(':server-android')
     //    implementation 'com.github.TangemCash:card-common:0.1.2'
     //    implementation 'com.github.TangemCash:card-android:0.1.3'
