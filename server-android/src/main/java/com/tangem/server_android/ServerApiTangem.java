@@ -1,11 +1,12 @@
 package com.tangem.server_android;
 
-import androidx.annotation.NonNull;
 import android.util.Log;
 
-import com.tangem.card_common.data.TangemCard;
+import androidx.annotation.NonNull;
+
 import com.tangem.server_android.model.CardVerifyAndGetInfo;
-import com.tangem.card_common.util.Util;
+import com.tangem.tangem_card.data.TangemCard;
+import com.tangem.tangem_card.util.Util;
 
 import java.io.InputStream;
 import java.util.ArrayList;
