@@ -16,11 +16,11 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.core.os.bundleOf
 import com.tangem.Constant
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
-import com.tangem.card_android.data.loadFromBundle
-import com.tangem.card_common.data.TangemCard
 import com.tangem.data.Blockchain
+import com.tangem.tangem_card.data.TangemCard
+import com.tangem.tangem_sdk.data.EXTRA_TANGEM_CARD
+import com.tangem.tangem_sdk.data.EXTRA_TANGEM_CARD_UID
+import com.tangem.tangem_sdk.data.loadFromBundle
 import com.tangem.ui.activity.MainActivity
 import com.tangem.ui.event.TransactionFinishWithError
 import com.tangem.ui.fragment.BaseFragment
