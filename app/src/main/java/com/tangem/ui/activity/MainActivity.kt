@@ -17,9 +17,9 @@ import androidx.lifecycle.ViewModelProviders
 import com.scottyab.rootbeer.RootBeer
 import com.tangem.App
 import com.tangem.Constant
-import com.tangem.card_android.android.nfc.NfcLifecycleObserver
-import com.tangem.card_android.android.reader.NfcManager
 import com.tangem.di.ToastHelper
+import com.tangem.tangem_sdk.android.nfc.NfcLifecycleObserver
+import com.tangem.tangem_sdk.android.reader.NfcManager
 import com.tangem.ui.dialog.RootFoundDialog
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
