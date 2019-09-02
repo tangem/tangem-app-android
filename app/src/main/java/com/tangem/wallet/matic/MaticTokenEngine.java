@@ -1,12 +1,11 @@
 package com.tangem.wallet.matic;
 
 import android.net.Uri;
-import android.util.Log;
 
-import com.tangem.card_common.tasks.SignTask;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiMatic;
 import com.tangem.data.network.model.InfuraResponse;
+import com.tangem.tangem_card.tasks.SignTask;
 import com.tangem.wallet.BTCUtils;
 import com.tangem.wallet.CoinEngine;
 import com.tangem.wallet.EthTransaction;
