@@ -9,6 +9,10 @@ import com.google.common.base.Strings;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiInfura;
 import com.tangem.data.network.model.InfuraResponse;
+import com.tangem.tangem_card.data.TangemCard;
+import com.tangem.tangem_card.tasks.SignTask;
+import com.tangem.util.CryptoUtil;
+import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.wallet.BTCUtils;
 import com.tangem.wallet.BalanceValidator;
 import com.tangem.wallet.CoinData;
@@ -16,13 +20,9 @@ import com.tangem.wallet.CoinEngine;
 import com.tangem.wallet.ECDSASignatureETH;
 import com.tangem.wallet.EthTransaction;
 import com.tangem.wallet.Keccak256;
+import com.tangem.wallet.R;
 import com.tangem.wallet.TangemContext;
 import com.tangem.wallet.eth.EthData;
-import com.tangem.card_common.data.TangemCard;
-import com.tangem.card_common.tasks.SignTask;
-import com.tangem.util.CryptoUtil;
-import com.tangem.util.DecimalDigitsInputFilter;
-import com.tangem.wallet.R;
 
 import org.bitcoinj.core.ECKey;
 
