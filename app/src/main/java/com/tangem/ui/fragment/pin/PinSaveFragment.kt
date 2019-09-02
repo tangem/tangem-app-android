@@ -19,9 +19,9 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import com.tangem.Constant
-import com.tangem.card_android.android.data.PINStorage
 import com.tangem.data.fingerprint.ConfirmWithFingerprintTask
 import com.tangem.data.fingerprint.FingerprintHelper
+import com.tangem.tangem_sdk.android.data.PINStorage
 import com.tangem.ui.fragment.BaseFragment
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_pin_save.*
