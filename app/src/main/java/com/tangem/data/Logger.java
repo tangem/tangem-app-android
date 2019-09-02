@@ -3,7 +3,7 @@ package com.tangem.data;
 import android.content.Context;
 import android.util.Log;
 
-import com.tangem.card_common.util.Util;
+import com.tangem.tangem_card.util.Util;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
