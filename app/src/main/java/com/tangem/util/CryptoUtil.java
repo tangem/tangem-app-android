@@ -2,8 +2,8 @@ package com.tangem.util;
 
 import android.util.Log;
 
+import com.tangem.tangem_card.util.Util;
 import com.tangem.wallet.ECDSASignatureETH;
-import com.tangem.card_common.util.Util;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Integer;
