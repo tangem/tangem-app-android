@@ -8,7 +8,7 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import com.tangem.App
 import com.tangem.Constant
-import com.tangem.card_common.util.Util
+import com.tangem.tangem_card.util.Util
 import com.tangem.ui.activity.MainActivity
 import com.tangem.ui.event.TransactionFinishWithError
 import com.tangem.ui.event.TransactionFinishWithSuccess
