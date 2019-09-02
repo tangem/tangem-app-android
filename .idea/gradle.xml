@@ -9,12 +9,13 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/card-android" />
-            <option value="$PROJECT_DIR$/card-common" />
             <option value="$PROJECT_DIR$/server-android" />
+            <option value="$PROJECT_DIR$/tangem-card" />
+            <option value="$PROJECT_DIR$/tangem-sdk" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
+        <option name="testRunner" value="PLATFORM" />
       </GradleProjectSettings>
     </option>
   </component>
