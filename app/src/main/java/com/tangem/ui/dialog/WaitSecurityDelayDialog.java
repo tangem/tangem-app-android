@@ -15,7 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentActivity;
 
-import com.tangem.card_common.util.Log;
+import com.tangem.tangem_card.util.Log;
 import com.tangem.wallet.R;
 
 import java.util.Timer;
