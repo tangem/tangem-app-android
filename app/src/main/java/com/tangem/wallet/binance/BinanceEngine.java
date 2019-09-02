@@ -6,15 +6,15 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.tangem.card_common.data.TangemCard;
-import com.tangem.card_common.reader.CardProtocol;
-import com.tangem.card_common.tasks.SignTask;
-import com.tangem.card_common.util.Util;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.BinanceApi;
 import com.tangem.data.network.Server;
 import com.tangem.data.network.ServerApiBinance;
 import com.tangem.data.network.model.BinanceFees;
+import com.tangem.tangem_card.data.TangemCard;
+import com.tangem.tangem_card.reader.CardProtocol;
+import com.tangem.tangem_card.tasks.SignTask;
+import com.tangem.tangem_card.util.Util;
 import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.wallet.BalanceValidator;
