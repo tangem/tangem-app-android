@@ -41,7 +41,6 @@ import com.tangem.ui.dialog.PINSwapWarningDialog
 import com.tangem.ui.dialog.ShowQRCodeDialog
 import com.tangem.ui.dialog.WaitSecurityDelayDialog
 import com.tangem.ui.event.DeletingWalletFinish
-import com.tangem.ui.event.TransactionFinishWithError
 import com.tangem.ui.event.TransactionFinishWithSuccess
 import com.tangem.ui.fragment.BaseFragment
 import com.tangem.ui.fragment.pin.PinRequestFragment
@@ -329,18 +328,8 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
 
     @Subscribe
     fun onTransactionFinishWithSuccess(transactionFinishWithSuccess: TransactionFinishWithSuccess) {
-        ctx.message = transactionFinishWithSuccess.message
-        //ctx.coinData.clearInfo()
-        updateViews()
-        //srl?.isRefreshing = true
         refreshAction = Runnable { refresh() }
         srl?.postDelayed(refreshAction, 10000)
-    }
-
-    @Subscribe
-    fun onTransactionFinishWithError(transactionFinishWithError: TransactionFinishWithError) {
-        ctx.error = transactionFinishWithError.message
-        updateViews()
     }
 
     @Subscribe
@@ -494,6 +483,10 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
                         ctx.card = updatedCard
                     }
                 }
+            }
+            else -> if (data != null && data.containsKey(Constant.EXTRA_MESSAGE)) {
+                ctx.error = data.getString(Constant.EXTRA_MESSAGE)
+                updateViews()
             }
         }
     }
