@@ -148,7 +148,6 @@ class PurgeFragment : BaseFragment(), NfcAdapter.ReaderCallback, CardProtocol.No
                     data.putString(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
                     data.putBundle(EXTRA_TANGEM_CARD, cardProtocol.card.asBundle)
 
-//                    EventBus.getDefault().post(DeletingWalletFinish())
                     navigateToDestination(R.id.action_purgeFragment_to_mainFragment)
                 }
             } else {
