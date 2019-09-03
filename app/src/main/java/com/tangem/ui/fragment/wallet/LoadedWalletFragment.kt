@@ -485,7 +485,10 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
                 }
             }
             else -> if (data != null && data.containsKey(Constant.EXTRA_MESSAGE)) {
-                ctx.error = data.getString(Constant.EXTRA_MESSAGE)
+                when (resultCode) {
+                    Activity.RESULT_CANCELED -> ctx.error = data.getString(Constant.EXTRA_MESSAGE)
+                    Activity.RESULT_OK -> ctx.message = data.getString(Constant.EXTRA_MESSAGE)
+                }
                 updateViews()
             }
         }
