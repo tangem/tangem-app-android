@@ -59,7 +59,7 @@ class ConfirmTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
 
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                navigateBackWithResult(Activity.RESULT_CANCELED)
+                navigateUp()
             }
         }
         requireActivity().onBackPressedDispatcher.addCallback(this, callback)
