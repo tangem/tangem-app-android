@@ -62,7 +62,7 @@ abstract class BaseFragment : Fragment() {
         return if (destination == DESTINATION_NOT_SET) {
             findNavController(this).popBackStack()
         } else {
-            findNavController(this).popBackStack(destination, true)
+            findNavController(this).popBackStack(destination, false)
         }
     }
 
