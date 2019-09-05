@@ -22,7 +22,6 @@ import com.tangem.tangem_sdk.data.EXTRA_TANGEM_CARD
 import com.tangem.tangem_sdk.data.EXTRA_TANGEM_CARD_UID
 import com.tangem.tangem_sdk.data.loadFromBundle
 import com.tangem.ui.activity.MainActivity
-import com.tangem.ui.event.TransactionFinishWithError
 import com.tangem.ui.fragment.BaseFragment
 import com.tangem.ui.fragment.pin.PinRequestFragment
 import com.tangem.ui.navigation.NavigationResultListener
@@ -32,7 +31,6 @@ import com.tangem.wallet.CoinEngineFactory
 import com.tangem.wallet.R
 import com.tangem.wallet.TangemContext
 import kotlinx.android.synthetic.tangemAccess.fragment_confirm_transaction.*
-import org.greenrobot.eventbus.EventBus
 import java.io.IOException
 import java.util.*
 
@@ -59,7 +57,7 @@ class ConfirmTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
 
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                navigateBackWithResult(Activity.RESULT_CANCELED)
+                navigateUp()
             }
         }
         requireActivity().onBackPressedDispatcher.addCallback(this, callback)
@@ -300,10 +298,9 @@ class ConfirmTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
     }
 
     private fun finishWithError(errorCode: Int, message: String) {
-        val transactionFinishWithError = TransactionFinishWithError()
-        transactionFinishWithError.message = message
-        EventBus.getDefault().post(transactionFinishWithError)
-
-        navigateBackWithResult(errorCode, bundleOf(Constant.EXTRA_MESSAGE to message))
+        navigateBackWithResult(
+                errorCode,
+                bundleOf(Constant.EXTRA_MESSAGE to message),
+                R.id.loadedWalletFragment)
     }
 }
