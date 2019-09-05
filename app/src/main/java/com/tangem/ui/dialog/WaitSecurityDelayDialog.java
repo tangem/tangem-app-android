@@ -90,7 +90,8 @@ public class WaitSecurityDelayDialog extends DialogFragment {
                     instance = new WaitSecurityDelayDialog();
                     instance.setup(timeout, delayBeforeShowDialog);
                     instance.setCancelable(false);
-                    instance.show(activity.getSupportFragmentManager(), TAG);
+                    activity.getSupportFragmentManager().beginTransaction()
+                            .add(instance, TAG).commitAllowingStateLoss();
                 }
             }, delayBeforeShowDialog);
         });
@@ -116,14 +117,14 @@ public class WaitSecurityDelayDialog extends DialogFragment {
             if (msec == 0) {
                 if (instance != null) {
                     if (instance.isAdded()) {
-                        instance.dismiss();
+                        instance.dismissAllowingStateLoss();
                         instance = null;
                     } else {
                         Log.e(TAG, "onReadWait(0) with not added dialog");
 //                        instance.progressBar.postDelayed(() -> {
 //                            Log.e(TAG, "onReadWait(0) dismiss delayed");
                         try {
-                            instance.dismiss();
+                            instance.dismissAllowingStateLoss();
                             instance = null;
                         }
                         catch (Exception e)
@@ -142,7 +143,8 @@ public class WaitSecurityDelayDialog extends DialogFragment {
                     // 1000ms - card delay notification interval
                     instance.setup(msec + 1000, 1000);
                     instance.setCancelable(false);
-                    instance.show(activity.getSupportFragmentManager(), TAG);
+                    activity.getSupportFragmentManager().beginTransaction()
+                            .add(instance, TAG).commitAllowingStateLoss();
                 }
             } else
                 instance.setRemainingTimeout(msec);
