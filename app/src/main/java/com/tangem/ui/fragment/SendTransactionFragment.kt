@@ -10,7 +10,6 @@ import com.tangem.App
 import com.tangem.Constant
 import com.tangem.tangem_card.util.Util
 import com.tangem.ui.activity.MainActivity
-import com.tangem.ui.event.TransactionFinishWithError
 import com.tangem.ui.event.TransactionFinishWithSuccess
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.CoinEngine
@@ -74,7 +73,6 @@ class SendTransactionFragment : BaseFragment(), NfcAdapter.ReaderCallback {
 
     private fun finishWithSuccess() {
         val transactionFinishWithSuccess = TransactionFinishWithSuccess()
-        transactionFinishWithSuccess.message = getString(R.string.transaction_has_been_successfully_signed)
         EventBus.getDefault().post(transactionFinishWithSuccess)
 
         val data = Bundle()
@@ -83,10 +81,6 @@ class SendTransactionFragment : BaseFragment(), NfcAdapter.ReaderCallback {
     }
 
     private fun finishWithError(message: String) {
-        val transactionFinishWithError = TransactionFinishWithError()
-        transactionFinishWithError.message = String.format(getString(R.string.try_again_failed_to_send_transaction), message)
-        EventBus.getDefault().post(transactionFinishWithError)
-
         val data = Bundle()
         data.putString(Constant.EXTRA_MESSAGE, String.format(getString(R.string.try_again_failed_to_send_transaction), message))
         navigateBackWithResult(Activity.RESULT_CANCELED, data, R.id.loadedWalletFragment)
