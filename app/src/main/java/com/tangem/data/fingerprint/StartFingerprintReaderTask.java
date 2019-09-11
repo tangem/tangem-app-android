@@ -9,8 +9,8 @@ import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 
 import com.tangem.Constant;
-import com.tangem.card_android.android.data.PINStorage;
-import com.tangem.ui.activity.PinRequestActivity;
+import com.tangem.tangem_sdk.android.data.PINStorage;
+import com.tangem.ui.fragment.pin.PinRequestFragment;
 import com.tangem.util.LOG;
 
 import java.io.IOException;
@@ -29,7 +29,7 @@ import javax.crypto.spec.IvParameterSpec;
 public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
     public static final String TAG = StartFingerprintReaderTask.class.getSimpleName();
 
-    private WeakReference<PinRequestActivity> reference;
+    private WeakReference<PinRequestFragment> reference;
 
     private KeyStore keyStore;
     private Cipher cipher;
@@ -39,13 +39,13 @@ public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
     FingerprintManager fingerprintManager;
     FingerprintHelper fingerprintHelper;
 
-    PinRequestActivity activity;
+    PinRequestFragment fragment;
 
-    public StartFingerprintReaderTask(PinRequestActivity activity, FingerprintManager fingerprintManager, FingerprintHelper fingerprintHelper) {
-        reference = new WeakReference<>(activity);
+    public StartFingerprintReaderTask(PinRequestFragment fragment, FingerprintManager fingerprintManager, FingerprintHelper fingerprintHelper) {
+        reference = new WeakReference<>(fragment);
         this.fingerprintManager = fingerprintManager;
         this.fingerprintHelper = fingerprintHelper;
-        this.activity = activity;
+        this.fragment = fragment;
     }
 
     @Override
@@ -80,9 +80,9 @@ public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
 
     @Override
     protected void onCancelled() {
-        PinRequestActivity pinRequestActivity = reference.get();
+        PinRequestFragment fragment = reference.get();
 
-        pinRequestActivity.setStartFingerprintReaderTask(null);
+        fragment.setStartFingerprintReaderTask(null);
     }
 
     private boolean getKeyStore() {
@@ -143,7 +143,7 @@ public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
 
     @TargetApi(Build.VERSION_CODES.M)
     private boolean initCipher(int mode) {
-        PinRequestActivity pinRequestActivity = reference.get();
+        PinRequestFragment fragment = reference.get();
 
         LOG.i(TAG, "Initializing cipher...");
         try {
@@ -154,9 +154,13 @@ public class StartFingerprintReaderTask extends AsyncTask<Void, Void, Boolean> {
                 cipher.init(mode, keyspec);
             } else {
                 byte[] iv = null;
-                if (pinRequestActivity.getMode() == PinRequestActivity.Mode.RequestPIN || activity.getMode() == PinRequestActivity.Mode.RequestNewPIN || activity.getMode() == PinRequestActivity.Mode.ConfirmNewPIN) {
+                if (fragment.getMode() == PinRequestFragment.Mode.RequestPIN ||
+                        fragment.getMode() == PinRequestFragment.Mode.RequestNewPIN ||
+                        fragment.getMode() == PinRequestFragment.Mode.ConfirmNewPIN) {
                     iv = PINStorage.loadEncryptedIV();
-                } else if (activity.getMode() == PinRequestActivity.Mode.RequestPIN2 || activity.getMode() == PinRequestActivity.Mode.RequestNewPIN2 || activity.getMode() == PinRequestActivity.Mode.ConfirmNewPIN2) {
+                } else if (fragment.getMode() == PinRequestFragment.Mode.RequestPIN2 ||
+                        fragment.getMode() == PinRequestFragment.Mode.RequestNewPIN2 ||
+                        fragment.getMode() == PinRequestFragment.Mode.ConfirmNewPIN2) {
                     iv = PINStorage.loadEncryptedIV2();
                 }
                 IvParameterSpec ivspec = new IvParameterSpec(iv);
