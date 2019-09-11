@@ -4,8 +4,8 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatDialogFragment
 import android.widget.ProgressBar
+import androidx.appcompat.app.AppCompatDialogFragment
 import com.tangem.ui.event.ReadAfterRequest
 import com.tangem.ui.event.ReadBeforeRequest
 import com.tangem.ui.event.ReadWait
@@ -54,7 +54,7 @@ class WaitSecurityDelayDialogNew : AppCompatDialogFragment() {
 
         return AlertDialog.Builder(activity)
                 .setIcon(R.drawable.tangem_logo_small_new)
-                .setTitle(R.string.security_delay)
+                .setTitle(R.string.dialog_security_delay)
                 .setView(v)
                 .setCancelable(false)
                 .create()
