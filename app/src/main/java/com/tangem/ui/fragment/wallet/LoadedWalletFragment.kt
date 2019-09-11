@@ -88,11 +88,16 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
             resources.getColorStateList(R.color.btn_dark)
     }
     private val activeColor: ColorStateList by lazy {
+        val color = if( (Util.bytesToHex(ctx.card?.cid)?.startsWith("10") == true)) {
+           R.color.start2coin_orange
+        } else {
+            R.color.colorAccent
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            resources.getColorStateList(R.color.colorAccent, activity?.theme)
+            resources.getColorStateList(color, activity?.theme)
         else
             @Suppress("DEPRECATION")
-            resources.getColorStateList(R.color.colorAccent)
+            resources.getColorStateList(color)
     }
     private var requestCounter: Int = 0
         set(value) {
@@ -143,6 +148,10 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         btnExplore.setOnClickListener { startActivity(Intent(Intent.ACTION_VIEW, engine.walletExplorerUri)) }
 
         btnCopy.setOnClickListener { doShareWallet(false) }
+
+        if (Util.bytesToHex(ctx.card?.cid)?.startsWith("10") == true) {
+            btnLoad?.visibility = View.GONE
+        }
 
         btnLoad.setOnClickListener {
             val items = arrayOf<CharSequence>(getString(R.string.in_app), getString(R.string.load_via_share_address), getString(R.string.load_via_qr))//, getString(R.string.via_cryptonit), getString(R.string.via_kraken))
