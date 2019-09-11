@@ -78,6 +78,8 @@ abstract class BaseFragment : Fragment() {
             findNavController(this).navigate(destination, data)
         } catch (e: IllegalArgumentException) {
             Log.w(this::class.java.simpleName, e.message)
+        } catch (e: IllegalStateException) {
+            Log.w(this::class.java.simpleName, e.message)
         }
     }
 
