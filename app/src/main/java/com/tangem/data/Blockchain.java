@@ -1,6 +1,6 @@
 package com.tangem.data;
 
-import com.tangem.card_android.R;
+import com.tangem.tangem_sdk.R;
 
 /**
  * Created by dvol on 06.08.2017.
