@@ -9,4 +9,4 @@
     android:layout_alignParentBottom="true"
     android:elevation="1dp"
     app:layout_constraintBottom_toBottomOf="parent"
-    tools:showIn="@layout/activity_pin_swap" />
+    tools:showIn="@layout/fragment_pin_swap" />
