@@ -74,9 +74,9 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
 
         // set phone name
         if (nfcDeviceAntenna.fullName != "")
-            tvNFCHint.text = String.format(getString(R.string.scan_banknote), nfcDeviceAntenna.fullName)
+            tvNFCHint.text = String.format(getString(R.string.main_screen_scan_banknote), nfcDeviceAntenna.fullName)
         else
-            tvNFCHint.text = String.format(getString(R.string.scan_banknote), getString(R.string.phone))
+            tvNFCHint.text = String.format(getString(R.string.main_screen_scan_banknote), getString(R.string.main_screen_phone))
 
         // set listeners
         fab.setOnClickListener { showMenu(it) }
@@ -185,8 +185,8 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                             val bundle = Bundle().apply { ctx.saveToBundle(this) }
                             navigateToDestination(R.id.action_main_to_emptyWalletFragment, bundle)
                         }
-                        card.status == TangemCard.Status.Purged -> Toast.makeText(context, R.string.erased_wallet, Toast.LENGTH_SHORT).show()
-                        card.status == TangemCard.Status.NotPersonalized -> Toast.makeText(context, R.string.not_personalized, Toast.LENGTH_SHORT).show()
+                        card.status == TangemCard.Status.Purged -> Toast.makeText(context, R.string.main_screen_erased_wallet, Toast.LENGTH_SHORT).show()
+                        card.status == TangemCard.Status.NotPersonalized -> Toast.makeText(context, R.string.main_screen_not_personalized, Toast.LENGTH_SHORT).show()
                         else -> {
 
 //                            val bundle = Bundle()
@@ -202,7 +202,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
             } else {
                 // remove last UIDs because of error and no card read
                 rlProgressBar.post {
-                    Toast.makeText(context, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, R.string.general_notification_scan_again, Toast.LENGTH_SHORT).show()
                     unsuccessReadCount++
 
                     if (cardProtocol.error is CardProtocol.TangemException_InvalidPIN) {
