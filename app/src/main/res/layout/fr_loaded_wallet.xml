@@ -169,7 +169,7 @@
                             android:fontFamily="@font/saira_condensed_bold"
                             android:paddingLeft="20dp"
                             android:paddingRight="20dp"
-                            android:text="@string/btn_explore"
+                            android:text="@string/loaded_wallet_btn_explore"
                             android:textColor="@color/primary_dark" />
 
                         <androidx.appcompat.widget.AppCompatButton
@@ -186,7 +186,7 @@
                             android:fontFamily="@font/saira_condensed_bold"
                             android:paddingLeft="20dp"
                             android:paddingRight="20dp"
-                            android:text="@string/btn_copy"
+                            android:text="@string/loaded_wallet_btn_copy"
                             android:textColor="@color/primary_dark" />
 
                     </LinearLayout>
@@ -255,7 +255,7 @@
             android:layout_marginBottom="10dp"
             android:layout_weight="1"
             android:fontFamily="@font/saira_condensed_bold"
-            android:text="@string/btn_load"
+            android:text="@string/loaded_wallet_btn_load"
             android:textSize="@dimen/text_size_large" />
 
         <androidx.appcompat.widget.AppCompatButton
@@ -268,7 +268,7 @@
             android:layout_weight="1"
             android:enabled="false"
             android:fontFamily="@font/saira_condensed_bold"
-            android:text="@string/btn_extract"
+            android:text="@string/loaded_wallet_btn_extract"
             android:textSize="@dimen/text_size_large" />
 
     </LinearLayout>
@@ -295,7 +295,7 @@
             android:fontFamily="@font/saira_condensed_bold"
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
-            android:text="@string/btn_new_scan"
+            android:text="@string/loaded_wallet_btn_new_scan"
             android:textColor="@color/primary_dark" />
 
     </LinearLayout>
