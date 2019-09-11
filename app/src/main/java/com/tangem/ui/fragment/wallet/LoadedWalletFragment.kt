@@ -154,30 +154,30 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         }
 
         btnLoad.setOnClickListener {
-            val items = arrayOf<CharSequence>(getString(R.string.in_app), getString(R.string.load_via_share_address), getString(R.string.load_via_qr))//, getString(R.string.via_cryptonit), getString(R.string.via_kraken))
+            val items = arrayOf<CharSequence>(getString(R.string.loaded_wallet_load_via_app), getString(R.string.loaded_wallet_load_via_share_address), getString(R.string.loaded_wallet_load_via_qr))//, getString(R.string.via_cryptonit), getString(R.string.via_kraken))
             val cw = android.view.ContextThemeWrapper(activity, R.style.AlertDialogTheme)
             val dialog = AlertDialog.Builder(cw).setItems(items
             ) { _, which ->
                 when (items[which]) {
-                    getString(R.string.in_app) -> {
+                    getString(R.string.loaded_wallet_load_via_app) -> {
                         try {
                             val intent = Intent(Intent.ACTION_VIEW, engine.shareWalletUri)
                             intent.addCategory(Intent.CATEGORY_DEFAULT)
                             startActivity(intent)
                         } catch (e: ActivityNotFoundException) {
-                            (activity as MainActivity).toastHelper.showSingleToast(context, getString(R.string.no_compatible_wallet))
+                            (activity as MainActivity).toastHelper.showSingleToast(context, getString(R.string.loaded_wallet_no_compatible_wallet))
                         }
                     }
 
-                    getString(R.string.load_via_share_address) -> {
+                    getString(R.string.loaded_wallet_load_via_share_address) -> {
                         doShareWallet(true)
                     }
 
-                    getString(R.string.load_via_qr) -> {
+                    getString(R.string.loaded_wallet_load_via_qr) -> {
                         ShowQRCodeDialog.show(activity as AppCompatActivity?, engine.shareWalletUri.toString())
                     }
 
-                    getString(R.string.via_cryptonit) -> {
+                    getString(R.string.loaded_wallet_load_via_cryptonit) -> {
                         navigateForResult(
                                 Constant.REQUEST_CODE_RECEIVE_TRANSACTION,
                                 R.id.action_loadedWalletFragment_to_prepareCryptonitWithdrawalFragment,
@@ -185,7 +185,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
                         )
                     }
 
-                    getString(R.string.via_kraken) -> {
+                    getString(R.string.loaded_wallet_load_via_kraken) -> {
                         navigateForResult(
                                 Constant.REQUEST_CODE_RECEIVE_TRANSACTION,
                                 R.id.action_loadedWalletFragment_to_prepareKrakenWithdrawalFragment,
@@ -207,14 +207,14 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
                 if (!engine.isExtractPossible) {
                     (activity as MainActivity).toastHelper.showSingleToast(context, ctx.message)
                 } else if (ctx.card!!.remainingSignatures == 0) {
-                    (activity as MainActivity).toastHelper.showSingleToast(context, getString(R.string.card_has_no_remaining_signature))
+                    (activity as MainActivity).toastHelper.showSingleToast(context, getString(R.string.loaded_wallet_warning_no_signature))
                 } else {
                     val bundle = Bundle().apply { ctx.saveToBundle(this) }
                     navigateForResult(Constant.REQUEST_CODE_SEND_TRANSACTION,
                             R.id.action_loadedWalletFragment_to_prepareTransactionFragment, bundle)
                 }
             else
-                Toast.makeText(activity, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, getString(R.string.general_error_no_connection), Toast.LENGTH_SHORT).show()
         }
 
         btnDetails.setOnClickListener {
@@ -224,7 +224,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
                         R.id.action_loadedWalletFragment_to_verifyCard, bundle)
             } else {
                 (activity as MainActivity).toastHelper
-                        .showSingleToast(context, getString(R.string.need_attach_card_again))
+                        .showSingleToast(context, getString(R.string.general_notification_scan_again_to_verify))
             }
         }
 
@@ -404,9 +404,9 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
                 }
                 val bundle = Bundle()
                 if (!CardProtocol.isDefaultPIN(newPIN) || !CardProtocol.isDefaultPIN2(newPIN2))
-                    bundle.putString(Constant.EXTRA_MESSAGE, getString(R.string.if_you_forget))
+                    bundle.putString(Constant.EXTRA_MESSAGE, getString(R.string.loaded_wallet_warning_dont_forget_pin))
                 else
-                    bundle.putString(Constant.EXTRA_MESSAGE, getString(R.string.if_you_use_default))
+                    bundle.putString(Constant.EXTRA_MESSAGE, getString(R.string.loaded_wallet_warning_default_pin))
                 pinSwapWarningDialog.arguments = bundle
                 activity?.supportFragmentManager?.let { pinSwapWarningDialog.show(it, PINSwapWarningDialog.TAG) }
             }
@@ -537,7 +537,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
                         if (!NoExtendedLengthSupportDialog.allReadyShowed)
                             activity?.supportFragmentManager?.let { NoExtendedLengthSupportDialog().show(it, NoExtendedLengthSupportDialog.TAG) }
                         else
-                            Toast.makeText(activity, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(activity, R.string.general_notification_scan_again, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -619,7 +619,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
 
         if (srl.isRefreshing) {
             tvBalanceLine1.setTextColor(resources.getColor(R.color.primary))
-            tvBalanceLine1.text = getString(R.string.verifying_in_blockchain)
+            tvBalanceLine1.text = getString(R.string.loaded_wallet_verifying_in_blockchain)
             tvBalanceLine2.text = ""
             tvBalance.text = ""
             tvBalanceEquivalent.text = ""
@@ -753,7 +753,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
                     }
             )
         } else {
-            ctx.error = getString(R.string.no_connection)
+            ctx.error = getString(R.string.general_error_no_connection)
             updateViews()
         }
     }
@@ -761,9 +761,9 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
     private fun showWarningIfPendingTransactionIsPossible() {
         if (ctx.card.signedHashes > 0 && isNewCid(ctx.card.cidDescription)) {
             AlertDialog.Builder(context)
-                    .setTitle(R.string.warning)
-                    .setMessage(R.string.card_signed_transactions_warning)
-                    .setPositiveButton(R.string.ok) { _, _ -> }
+                    .setTitle(R.string.dialog_warning)
+                    .setMessage(R.string.loaded_wallet_warning_card_signed_transactions)
+                    .setPositiveButton(R.string.general_ok) { _, _ -> }
                     .create()
                     .show()
         }
@@ -780,7 +780,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
                 serverApiTangem.cardVerifyAndGetInfo(ctx.card)
             }
         } else {
-            ctx.error = getString(R.string.no_connection)
+            ctx.error = getString(R.string.general_error_no_connection)
             updateViews()
         }
     }
@@ -823,7 +823,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
 
             if (isIntentSafe) {
                 // create intent to show chooser
-                val chooser = Intent.createChooser(intent, getString(R.string.share_wallet_address_with))
+                val chooser = Intent.createChooser(intent, getString(R.string.loaded_wallet_chooser_share))
 
                 // verify the intent will resolve to at least one activity
                 if (intent.resolveActivity(activity!!.packageManager) != null) {
@@ -832,13 +832,13 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
             } else {
                 val clipboard = activity?.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
                 clipboard.primaryClip = ClipData.newPlainText(txtShare, txtShare)
-                Toast.makeText(activity, R.string.copied_clipboard, Toast.LENGTH_LONG).show()
+                Toast.makeText(activity, R.string.loaded_wallet_toast_copied, Toast.LENGTH_LONG).show()
             }
         } else {
             val txtShare = ctx.coinData.wallet
             val clipboard = activity?.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
             clipboard.primaryClip = ClipData.newPlainText(txtShare, txtShare)
-            Toast.makeText(activity, R.string.copied_clipboard, Toast.LENGTH_LONG).show()
+            Toast.makeText(activity, R.string.loaded_wallet_toast_copied, Toast.LENGTH_LONG).show()
         }
     }
 
