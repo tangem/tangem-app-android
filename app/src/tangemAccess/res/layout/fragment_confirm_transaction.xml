@@ -15,7 +15,7 @@
         android:fontFamily="@font/maax"
         android:paddingTop="8dp"
         android:paddingBottom="4dp"
-        android:text="@string/send_transaction"
+        android:text="@string/general_send_transaction"
         android:textAlignment="center"
         android:textColor="@color/primary"
         android:textSize="@dimen/text_size_large"
@@ -42,7 +42,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/maax"
-            android:text="@string/from_banknote"
+            android:text="@string/general_from_banknote"
             android:textColor="@color/primary"
             android:textSize="@dimen/text_size_medium" />
 
@@ -63,7 +63,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:fontFamily="@font/maax"
-            android:text="@string/with_balance"
+            android:text="@string/general_balance"
             android:textColor="@color/primary"
             android:textSize="@dimen/text_size_medium" />
 
@@ -91,7 +91,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:fontFamily="@font/maax"
-                android:text="@string/send_to_wallet"
+                android:text="@string/general_send_to_wallet"
                 android:textColor="@color/primary"
                 android:textSize="@dimen/text_size_medium"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -106,7 +106,7 @@
             android:layout_height="wrap_content"
             android:enabled="false"
             android:fontFamily="@font/maax"
-            android:hint="@string/target_wallet_address"
+            android:hint="@string/confirm_transaction_hint_target_address"
             android:inputType="textMultiLine"
             android:maxLines="2"
             android:padding="12dp"
@@ -125,7 +125,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:fontFamily="@font/maax"
-                android:text="@string/amount"
+                android:text="@string/general_amount"
                 android:textColor="@color/primary"
                 android:textSize="@dimen/text_size_medium"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -157,7 +157,7 @@
                 android:layout_height="wrap_content"
                 android:digits="0123456789.,"
                 android:fontFamily="@font/maax"
-                android:hint="@string/enter_amount"
+                android:hint="@string/prepare_transaction_hint_enter_amount"
                 android:imeOptions="actionDone"
                 android:inputType="numberDecimal"
                 android:padding="12dp"
@@ -177,7 +177,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="16dp"
                 android:fontFamily="@font/maax"
-                android:text="@string/m_btc"
+                android:text="@string/general_btc"
                 android:textColor="@color/primary"
                 android:textSize="@dimen/text_size_1_large"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -209,7 +209,7 @@
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="4dp"
                 android:fontFamily="@font/maax"
-                android:text="@string/fee"
+                android:text="@string/confirm_transaction_fee"
                 android:textColor="@color/primary"
                 android:textSize="@dimen/text_size_medium"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -234,7 +234,7 @@
                     android:layout_width="100dp"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/saira_condensed_bold"
-                    android:text="@string/minimal"
+                    android:text="@string/confirm_transaction_btn_fee_minimal"
                     android:textSize="@dimen/text_size_medium" />
 
                 <RadioButton
@@ -243,7 +243,7 @@
                     android:layout_width="100dp"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/saira_condensed_bold"
-                    android:text="@string/normal"
+                    android:text="@string/confirm_transaction_btn_fee_normal"
                     android:textSize="@dimen/text_size_medium" />
 
                 <RadioButton
@@ -252,7 +252,7 @@
                     android:layout_width="100dp"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/saira_condensed_bold"
-                    android:text="@string/priority"
+                    android:text="@string/confirm_transaction_btn_fee_priority"
                     android:textSize="@dimen/text_size_medium" />
 
             </info.hoang8f.android.segmented.SegmentedGroup>
@@ -269,7 +269,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="4dp"
                 android:fontFamily="@font/maax"
-                android:hint="@string/fee_amount"
+                android:hint="@string/confirm_transaction_hint_fee_amount"
                 android:inputType="numberDecimal"
                 android:padding="12dp"
                 android:textColor="@color/black"
@@ -288,7 +288,7 @@
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="8dp"
                 android:fontFamily="@font/maax"
-                android:text="@string/m_btc"
+                android:text="@string/general_btc"
                 android:textSize="@dimen/text_size_medium"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toRightOf="@+id/etFee"
@@ -318,7 +318,7 @@
         android:layout_height="50dp"
         android:layout_marginBottom="16dp"
         android:fontFamily="@font/saira_condensed_bold"
-        android:text="@string/send_1"
+        android:text="@string/confirm_transaction_btn_send"
         android:textSize="@dimen/text_size_large"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
