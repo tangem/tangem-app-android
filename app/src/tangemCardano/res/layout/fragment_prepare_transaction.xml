@@ -14,7 +14,7 @@
         android:fontFamily="@font/maax"
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
-        android:text="@string/send_transaction"
+        android:text="@string/general_send_transaction"
         android:textAlignment="center"
         android:textColor="@color/primary"
         android:textSize="@dimen/text_size_large"
@@ -44,7 +44,7 @@
             android:layout_marginStart="7dp"
             android:layout_marginTop="8dp"
             android:fontFamily="@font/maax"
-            android:text="@string/from_banknote"
+            android:text="@string/general_from_banknote"
             android:textColor="@color/primary"
             android:textSize="@dimen/text_size_medium" />
 
@@ -66,7 +66,7 @@
             android:layout_marginStart="7dp"
             android:layout_marginTop="12dp"
             android:fontFamily="@font/maax"
-            android:text="@string/with_balance"
+            android:text="@string/general_balance"
             android:textColor="@color/primary"
             android:textSize="@dimen/text_size_medium" />
 
@@ -115,7 +115,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/maax"
-                android:text="@string/send_to_wallet"
+                android:text="@string/general_send_to_wallet"
                 android:textColor="@color/primary"
                 android:textSize="@dimen/text_size_medium"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -142,7 +142,7 @@
             android:layout_marginEnd="8dp"
             android:drawableEnd="@android:drawable/ic_menu_close_clear_cancel"
             android:fontFamily="@font/maax"
-            android:hint="@string/enter_wallet_address"
+            android:hint="@string/prepare_transaction_hint_enter_address"
             android:imeOptions="actionNext"
             android:inputType="text|textMultiLine|textNoSuggestions"
             android:padding="12dp"
@@ -166,7 +166,7 @@
                 android:layout_marginTop="24dp"
                 android:layout_marginBottom="8dp"
                 android:fontFamily="@font/maax"
-                android:text="@string/amount"
+                android:text="@string/general_amount"
                 android:textColor="@color/primary"
                 android:textSize="@dimen/text_size_medium"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -186,7 +186,7 @@
                 android:layout_height="wrap_content"
                 android:digits="0123456789.,"
                 android:fontFamily="@font/maax"
-                android:hint="@string/enter_amount"
+                android:hint="@string/prepare_transaction_hint_enter_amount"
                 android:imeOptions="actionDone"
                 android:inputType="numberDecimal"
                 android:padding="12dp"
@@ -206,7 +206,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="16dp"
                 android:fontFamily="@font/maax"
-                android:text="@string/m_btc"
+                android:text="@string/general_btc"
                 android:textColor="@color/primary"
                 android:textSize="@dimen/text_size_1_large"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -235,7 +235,7 @@
                 android:layout_width="150dp"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/saira_condensed_bold"
-                android:text="@string/including_fee_"
+                android:text="@string/confirm_transaction_btn_including_fee"
                 android:textSize="@dimen/text_size_medium" />
 
             <RadioButton
@@ -244,7 +244,7 @@
                 android:layout_width="150dp"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/saira_condensed_bold"
-                android:text="@string/not_including_fee_"
+                android:text="@string/confirm_transaction_btn_not_including_fee"
                 android:textSize="@dimen/text_size_medium" />
 
         </info.hoang8f.android.segmented.SegmentedGroup>
