@@ -79,6 +79,9 @@ public class WaitSecurityDelayDialog extends DialogFragment {
     }
 
     public static void onReadBeforeRequest(final FragmentActivity activity, final int timeout) {
+        if (activity == null) return;
+
+        Log.e(TAG, "onReadBeforeRequest callback(" + timeout + ")");
         activity.runOnUiThread(() -> {
             if (timerToShowDelayDialog != null || timeout < delayBeforeShowDialog + minRemainingDelayToShowDialog)
                 return;
@@ -98,44 +101,31 @@ public class WaitSecurityDelayDialog extends DialogFragment {
     }
 
     public static void onReadAfterRequest(final Activity activity) {
-        activity.runOnUiThread(() -> {
-            if (timerToShowDelayDialog == null) return;
-            timerToShowDelayDialog.cancel();
-            timerToShowDelayDialog = null;
-        });
+        if (timerToShowDelayDialog == null) return;
+        timerToShowDelayDialog.cancel();
+        timerToShowDelayDialog = null;
     }
 
     public static void onReadWait(final FragmentActivity activity, final int msec) {
         Log.e(TAG, "onReadWait callback(" + msec + ")");
+        if (timerToShowDelayDialog != null) {
+            timerToShowDelayDialog.cancel();
+            timerToShowDelayDialog = null;
+        }
+
+        if (msec == 0 && instance != null) {
+            try {
+                instance.dismissAllowingStateLoss();
+                instance = null;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (activity == null) return;
+
         activity.runOnUiThread(() -> {
             Log.e(TAG, "onReadWait on ui thread(" + msec + ")");
-            if (timerToShowDelayDialog != null) {
-                timerToShowDelayDialog.cancel();
-                timerToShowDelayDialog = null;
-            }
-
-            if (msec == 0) {
-                if (instance != null) {
-                    if (instance.isAdded()) {
-                        instance.dismissAllowingStateLoss();
-                        instance = null;
-                    } else {
-                        Log.e(TAG, "onReadWait(0) with not added dialog");
-//                        instance.progressBar.postDelayed(() -> {
-//                            Log.e(TAG, "onReadWait(0) dismiss delayed");
-                        try {
-                            instance.dismissAllowingStateLoss();
-                            instance = null;
-                        }
-                        catch (Exception e)
-                        {
-                            e.printStackTrace();
-                        }
-//                        }, 10000);
-                    }
-                }
-                return;
-            }
 
             if (instance == null) {
                 if (msec > delayBeforeShowDialog + minRemainingDelayToShowDialog) {
