@@ -1,7 +1,6 @@
 package com.tangem.ui.fragment
 
 import android.app.Activity
-import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
@@ -10,28 +9,27 @@ import android.view.*
 import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
+import androidx.core.os.bundleOf
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.tangem.App
 import com.tangem.Constant
-import com.tangem.card_android.android.nfc.NfcDeviceAntennaLocation
-import com.tangem.card_android.android.nfc.NfcLifecycleObserver
-import com.tangem.card_android.android.reader.NfcManager
-import com.tangem.card_android.android.reader.NfcReader
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
-import com.tangem.card_android.data.loadFromBundle
-import com.tangem.card_android.data.saveToBundle
-import com.tangem.card_common.data.TangemCard
-import com.tangem.card_common.reader.CardProtocol
-import com.tangem.card_common.tasks.CustomReadCardTask
-import com.tangem.card_common.tasks.ReadCardInfoTask
 import com.tangem.data.Logger
+import com.tangem.tangem_card.data.TangemCard
+import com.tangem.tangem_card.reader.CardProtocol
+import com.tangem.tangem_card.tasks.CustomReadCardTask
+import com.tangem.tangem_card.tasks.ReadCardInfoTask
+import com.tangem.tangem_sdk.android.nfc.NfcDeviceAntennaLocation
+import com.tangem.tangem_sdk.android.reader.NfcReader
+import com.tangem.tangem_sdk.data.EXTRA_TANGEM_CARD
+import com.tangem.tangem_sdk.data.EXTRA_TANGEM_CARD_UID
+import com.tangem.tangem_sdk.data.loadFromBundle
+import com.tangem.tangem_sdk.data.saveToBundle
 import com.tangem.ui.activity.MainActivity
-import com.tangem.ui.activity.PinRequestActivity
 import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
 import com.tangem.ui.dialog.WaitSecurityDelayDialog
+import com.tangem.ui.fragment.pin.PinRequestFragment
+import com.tangem.ui.navigation.NavigationResultListener
 import com.tangem.util.CommonUtil
 import com.tangem.util.LOG
 import com.tangem.util.UtilHelper
@@ -44,30 +42,26 @@ import kotlinx.android.synthetic.main.main_fragment.*
 import java.io.File
 import java.util.*
 
-class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notifications, androidx.appcompat.widget.PopupMenu.OnMenuItemClickListener, PopupMenu.OnMenuItemClickListener {
+class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.ReaderCallback,
+        CardProtocol.Notifications, androidx.appcompat.widget.PopupMenu.OnMenuItemClickListener,
+        PopupMenu.OnMenuItemClickListener {
 
     companion object {
         fun newInstance() = MainFragment()
         val TAG: String = MainFragment::class.java.simpleName
     }
 
+    override val layoutId = R.layout.main_fragment
     private lateinit var viewModel: MainViewModel
     private lateinit var nfcDeviceAntenna: NfcDeviceAntennaLocation
     private var unsuccessReadCount = 0
-    private lateinit var nfcManager: NfcManager
     private var task: CustomReadCardTask? = null
     private var lastTag: Tag? = null
     private var zipFile: File? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        nfcManager = NfcManager(activity!!, this)
-        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
-    }
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         setHasOptionsMenu(true)
-        return inflater.inflate(R.layout.main_fragment, container, false)
+        return super.onCreateView(inflater, container, savedInstanceState)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -94,7 +88,7 @@ class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
         // show snackbar about new version app
         viewModel.getVersionName().observe(this, Observer { text ->
-            (activity as MainActivity).toastHelper.showSnackbarUpdateVersion(context!!, cl, text)
+            (activity as MainActivity).toastHelper.showSnackbarUpdateVersion(requireContext(), cl, text)
         })
 
         val intent = activity?.intent
@@ -130,11 +124,12 @@ class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 
             lastTag = tag
 
-            task = ReadCardInfoTask(NfcReader(nfcManager, isoDep), App.localStorage, App.pinStorage, this)
+            task = ReadCardInfoTask(NfcReader((activity as MainActivity).nfcManager, isoDep),
+                    App.localStorage, App.pinStorage, this)
             task?.start()
         } catch (e: Exception) {
             e.printStackTrace()
-            nfcManager.notifyReadResult(false)
+            (activity as MainActivity).nfcManager.notifyReadResult(false)
         }
     }
 
@@ -150,7 +145,7 @@ class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
         task = null
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
-                nfcManager.notifyReadResult(true)
+                (activity as MainActivity).nfcManager.notifyReadResult(true)
                 rlProgressBar?.post {
                     rlProgressBar?.visibility = View.GONE
 // [REDACTED_TODO_COMMENT]
@@ -177,10 +172,18 @@ class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
 //                                ctx.saveToBundle(bundle)
 //                                (activity as MainActivity).navController.navigate(R.id.loadedWallet, bundle)
 
-                                (activity as MainActivity).navigator.showLoadedWallet(activity!!, it, ctx)
+                                val bundle = Bundle()
+                                bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
+                                ctx.saveToBundle(bundle)
+                                navigateForResult(Constant.REQUEST_CODE_SHOW_CARD_ACTIVITY,
+                                        R.id.action_main_to_loadedWalletFragment, bundle)
+
                             }
                         }
-                        card.status == TangemCard.Status.Empty -> (activity as MainActivity).navigator.showEmptyWallet(activity!!, ctx)
+                        card.status == TangemCard.Status.Empty -> {
+                            val bundle = Bundle().apply { ctx.saveToBundle(this) }
+                            navigateToDestination(R.id.action_main_to_emptyWalletFragment, bundle)
+                        }
                         card.status == TangemCard.Status.Purged -> Toast.makeText(context, R.string.main_screen_erased_wallet, Toast.LENGTH_SHORT).show()
                         card.status == TangemCard.Status.NotPersonalized -> Toast.makeText(context, R.string.main_screen_not_personalized, Toast.LENGTH_SHORT).show()
                         else -> {
@@ -201,43 +204,33 @@ class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     Toast.makeText(context, R.string.general_notification_scan_again, Toast.LENGTH_SHORT).show()
                     unsuccessReadCount++
 
-                    if (cardProtocol.error is CardProtocol.TangemException_InvalidPIN)
-                        (activity as MainActivity).navigator.showPinRequest(activity!!, PinRequestActivity.Mode.RequestPIN.toString())
-                    else {
+                    if (cardProtocol.error is CardProtocol.TangemException_InvalidPIN) {
+                        val data = Bundle().apply { putString(Constant.EXTRA_MODE, PinRequestFragment.Mode.RequestPIN.toString()) }
+                        navigateForResult(Constant.REQUEST_CODE_ENTER_PIN_ACTIVITY,
+                                R.id.action_main_to_pinRequestFragment, data)
+                    } else {
                         if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported)
                             if (!NoExtendedLengthSupportDialog.allReadyShowed)
                                 NoExtendedLengthSupportDialog().show(activity!!.supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
 
                         lastTag = null
                         ReadCardInfoTask.resetLastReadInfo()
-                        nfcManager.notifyReadResult(false)
+                        (activity as MainActivity).nfcManager.notifyReadResult(false)
                     }
                 }
             }
         }
 
-        rlProgressBar.postDelayed({
-            try {
-                rlProgressBar.visibility = View.GONE
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }, 500)
+        rlProgressBar?.postDelayed({ rlProgressBar?.visibility = View.GONE }, 500)
     }
 
     override fun onReadCancel() {
         task = null
         ReadCardInfoTask.resetLastReadInfo()
-        rlProgressBar.postDelayed({
-            try {
-                rlProgressBar.visibility = View.GONE
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }, 500)
+        rlProgressBar?.postDelayed({ rlProgressBar?.visibility = View.GONE }, 500)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    override fun onNavigationResult(requestCode: String, resultCode: Int, data: Bundle?) {
         when (requestCode) {
             Constant.REQUEST_CODE_SEND_EMAIL -> {
                 if (zipFile != null) {
@@ -252,7 +245,6 @@ class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                     ReadCardInfoTask.resetLastReadInfo()
             }
         }
-        super.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -284,26 +276,25 @@ class MainFragment : Fragment(), NfcAdapter.ReaderCallback, CardProtocol.Notific
                 return true
             }
             R.id.managePIN -> {
-                (activity as MainActivity).navigator.showPinSave(activity!!, false)
-//                (activity as MainActivity).navController.navigate(R.id.pinSaveActivity)
+                navigateToDestination(R.id.action_main_to_pinSaveFragment,
+                        bundleOf(Constant.EXTRA_PIN2 to false))
                 return true
             }
 
             R.id.managePIN2 -> {
-                (activity as MainActivity).navigator.showPinSave(activity!!, true)
-//                (activity as MainActivity).navController.navigate(R.id.pinSaveActivity)
+                navigateToDestination(R.id.action_main_to_pinSaveFragment,
+                        bundleOf(Constant.EXTRA_PIN2 to true))
                 return true
             }
 
             R.id.settings -> {
-                (activity as MainActivity).navigator.showSettings(activity!!)
-//                (activity as MainActivity).navController.navigate(R.id.settingsActivity)
+                navigateToDestination(R.id.action_main_to_settingsFragment)
                 return true
             }
 
             R.id.about -> {
-                (activity as MainActivity).navigator.showLogo(activity!!, false)
-//                (activity as MainActivity).navController.navigate(R.id.logoActivity)
+                val bundle = Bundle().apply { putBoolean(Constant.EXTRA_AUTO_HIDE, false) }
+                navigateToDestination(R.id.action_main_to_logoFragment, bundle)
                 return true
             }
         }
