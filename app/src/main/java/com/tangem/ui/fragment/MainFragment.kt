@@ -162,16 +162,12 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                     cardInfo.getBundle(EXTRA_TANGEM_CARD)?.let { card.loadFromBundle(it) }
 
                     val ctx = TangemContext(card)
+
                     when {
                         card.status == TangemCard.Status.Loaded -> lastTag?.let {
                             val engineCoin = CoinEngineFactory.create(ctx)
                             if (engineCoin != null) {
                                 engineCoin.defineWallet()
-
-//                                val bundle = Bundle()
-//                                bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
-//                                ctx.saveToBundle(bundle)
-//                                (activity as MainActivity).navController.navigate(R.id.loadedWallet, bundle)
 
                                 val bundle = Bundle()
                                 bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
@@ -202,7 +198,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
             } else {
                 // remove last UIDs because of error and no card read
                 rlProgressBar.post {
-                    Toast.makeText(context, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show()
+                    context?.let { Toast.makeText(it, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show() }
                     unsuccessReadCount++
 
                     if (cardProtocol.error is CardProtocol.TangemException_InvalidPIN) {
