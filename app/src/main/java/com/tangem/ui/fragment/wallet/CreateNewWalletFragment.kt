@@ -113,7 +113,7 @@ class CreateNewWalletFragment : BaseFragment(), NfcAdapter.ReaderCallback, CardP
                             progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
                             progressBar?.visibility = View.INVISIBLE
                             val data = Bundle()
-                            data.putString(Constant.EXTRA_MESSAGE, getString(R.string.cannot_create_wallet))
+                            data.putString(Constant.EXTRA_MESSAGE, getString(R.string.nfc_error_cannot_create_wallet))
                             data.putString(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
                             data.putBundle(EXTRA_TANGEM_CARD, cardProtocol.card!!.asBundle)
                             navigateBackWithResult(Constant.RESULT_INVALID_PIN, data)
@@ -129,7 +129,7 @@ class CreateNewWalletFragment : BaseFragment(), NfcAdapter.ReaderCallback, CardP
                                 NoExtendedLengthSupportDialog().show(activity!!.supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
                             }
                         } else
-                            Toast.makeText(context, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, R.string.general_notification_scan_again, Toast.LENGTH_SHORT).show()
 
                         progressBar?.progress = 100
                         progressBar?.progressTintList = ColorStateList.valueOf(Color.RED)
