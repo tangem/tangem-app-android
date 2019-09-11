@@ -43,7 +43,7 @@ public class ConfirmWithFingerprintTask extends AsyncTask<Void, Void, Boolean> {
         onCancelled();
 
         if (!success) {
-            Toast.makeText(pinSaveFragment.getContext(), R.string.pin_save_fail, Toast.LENGTH_LONG).show();
+            Toast.makeText(pinSaveFragment.getContext(), R.string.pin_save_notification_failed, Toast.LENGTH_LONG).show();
         } else {
             pinSaveFragment.getFingerprintHelper().startAuth(pinSaveFragment.getFingerprintManager(), pinSaveFragment.getCryptoObject());
         }

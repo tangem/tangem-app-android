@@ -58,7 +58,7 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 val data = prepareResultIntent()
-                data.putExtra(Constant.EXTRA_MODIFICATION, getString(R.string.update))
+                data.putExtra(Constant.EXTRA_MODIFICATION, getString(R.string.main_screen_btn_update))
                 navigateUp()
             }
         }
@@ -76,7 +76,7 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
 
         btnOk.setOnClickListener {
             val data = prepareResultIntent()
-            data.putExtra(Constant.EXTRA_MODIFICATION, getString(R.string.update))
+            data.putExtra(Constant.EXTRA_MODIFICATION, getString(R.string.main_screen_btn_update))
             navigateUp()
         }
     }
@@ -154,9 +154,9 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
                 }
                 val bundle = Bundle()
                 if (!CardProtocol.isDefaultPIN(newPIN) || !CardProtocol.isDefaultPIN2(newPIN2))
-                    bundle.putString(Constant.EXTRA_MESSAGE, getString(R.string.if_you_forget))
+                    bundle.putString(Constant.EXTRA_MESSAGE, getString(R.string.loaded_wallet_warning_dont_forget_pin))
                 else
-                    bundle.putString(Constant.EXTRA_MESSAGE, getString(R.string.if_you_use_default))
+                    bundle.putString(Constant.EXTRA_MESSAGE, getString(R.string.loaded_wallet_warning_default_pin))
                 pinSwapWarningDialog.arguments = bundle
                 activity?.supportFragmentManager?.let { pinSwapWarningDialog.show(it, PINSwapWarningDialog.TAG) }
             }
@@ -254,11 +254,11 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
             tvManufacturerInfo.text = ctx.card!!.manufacturer.officialName
 
             if (ctx.card!!.isManufacturerConfirmed && ctx.card!!.isCardPublicKeyValid) {
-                tvCardIdentity.setText(R.string.attested)
+                tvCardIdentity.setText(R.string.details_attested)
                 tvCardIdentity.setTextColor(ContextCompat.getColor(context!!, R.color.confirmed))
 
             } else {
-                tvCardIdentity.setText(R.string.not_confirmed)
+                tvCardIdentity.setText(R.string.details_not_confirmed)
                 tvCardIdentity.setTextColor(ContextCompat.getColor(context!!, R.color.not_confirmed))
             }
 
@@ -281,9 +281,9 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
             ivBlockchain.setImageResource(Blockchain.getLogoImageResource(ctx.card!!.blockchainID, ctx.card!!.tokenSymbol))
 
             if (ctx.card!!.isReusable!!)
-                tvReusable.setText(R.string.reusable)
+                tvReusable.setText(R.string.details_reusable)
             else
-                tvReusable.setText(R.string.one_off_banknote)
+                tvReusable.setText(R.string.details_one_off_banknote)
 
             var s = ""
             for (signingM in ctx.card!!.allowedSigningMethod) {
@@ -306,15 +306,15 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
                 when {
                     ctx.card!!.remainingSignatures == 0 -> {
                         tvRemainingSignatures.setTextColor(ContextCompat.getColor(context!!, R.color.not_confirmed))
-                        tvRemainingSignatures.setText(R.string.none)
+                        tvRemainingSignatures.setText(R.string.details_none)
                     }
                     ctx.card!!.remainingSignatures == 1 -> {
                         tvRemainingSignatures.setTextColor(ContextCompat.getColor(context!!, R.color.not_confirmed))
-                        tvRemainingSignatures.setText(R.string.last_one)
+                        tvRemainingSignatures.setText(R.string.details_last_one)
                     }
                     ctx.card!!.remainingSignatures > 1000 -> {
                         tvRemainingSignatures.setTextColor(ContextCompat.getColor(context!!, R.color.confirmed))
-                        tvRemainingSignatures.setText(R.string.unlimited)
+                        tvRemainingSignatures.setText(R.string.details_unlimited)
                     }
                     else -> {
                         tvRemainingSignatures.setTextColor(ContextCompat.getColor(context!!, R.color.confirmed))
@@ -365,41 +365,41 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
 
             if (ctx.card!!.useDefaultPIN1()) {
                 imgPIN.setImageResource(R.drawable.unlock_pin1)
-                imgPIN.setOnClickListener { Toast.makeText(context, R.string.this_banknote_protected_default_PIN1_code, Toast.LENGTH_LONG).show() }
+                imgPIN.setOnClickListener { Toast.makeText(context, R.string.details_protected_by_default_pin_1, Toast.LENGTH_LONG).show() }
             } else {
                 imgPIN.setImageResource(R.drawable.lock_pin1)
-                imgPIN.setOnClickListener { Toast.makeText(context, R.string.this_banknote_protected_user_PIN1_code, Toast.LENGTH_LONG).show() }
+                imgPIN.setOnClickListener { Toast.makeText(context, R.string.details_protected_by_user_pin_1, Toast.LENGTH_LONG).show() }
             }
 
             if (ctx.card!!.pauseBeforePIN2 > 0 && (ctx.card!!.useDefaultPIN2()!! || !ctx.card!!.useSmartSecurityDelay())) {
                 imgPIN2orSecurityDelay.setImageResource(R.drawable.timer)
-                imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, String.format(getString(R.string.this_banknote_will_enforce), ctx.card!!.pauseBeforePIN2 / 1000.0), Toast.LENGTH_LONG).show() }
+                imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, String.format(getString(R.string.details_security_delay), ctx.card!!.pauseBeforePIN2 / 1000.0), Toast.LENGTH_LONG).show() }
             } else if (ctx.card!!.useDefaultPIN2()!!) {
                 imgPIN2orSecurityDelay.setImageResource(R.drawable.unlock_pin2)
-                imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, R.string.this_banknote_protected_default_PIN2_code, Toast.LENGTH_LONG).show() }
+                imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, R.string.details_protected_by_default_pin_2, Toast.LENGTH_LONG).show() }
             } else {
                 imgPIN2orSecurityDelay.setImageResource(R.drawable.lock_pin2)
-                imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, R.string.this_banknote_protected_user_PIN2_code, Toast.LENGTH_LONG).show() }
+                imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, R.string.details_protected_by_user_pin_2, Toast.LENGTH_LONG).show() }
             }
 
             if (ctx.card!!.useDevelopersFirmware()!!) {
                 imgDeveloperVersion.setImageResource(R.drawable.ic_developer_version)
                 imgDeveloperVersion.visibility = View.VISIBLE
-                imgDeveloperVersion.setOnClickListener { Toast.makeText(context, R.string.unlocked_banknote_only_development_use, Toast.LENGTH_LONG).show() }
+                imgDeveloperVersion.setOnClickListener { Toast.makeText(context, R.string.details_unlocked_banknote, Toast.LENGTH_LONG).show() }
             } else
                 imgDeveloperVersion.visibility = View.INVISIBLE
 
             if (ctx.card!!.status == TangemCard.Status.Loaded) {
                 tvWallet.text = ctx.coinData!!.shortWalletString
                 if (ctx.card!!.isWalletPublicKeyValid) {
-                    tvWalletIdentity.setText(R.string.possession_proved)
+                    tvWalletIdentity.setText(R.string.details_possession_proved)
                     tvWalletIdentity.setTextColor(ContextCompat.getColor(context!!, R.color.confirmed))
                 } else {
-                    tvWalletIdentity.setText(R.string.possession_not_proved)
+                    tvWalletIdentity.setText(R.string.details_possession_not_proved)
                     tvWalletIdentity.setTextColor(ContextCompat.getColor(context!!, R.color.not_confirmed))
                 }
             } else {
-                tvWallet!!.setText(R.string.not_available)
+                tvWallet!!.setText(R.string.details_not_available)
                 tvWalletIdentity.setText(R.string.no_data_string)
             }
         } catch (e: Exception) {
@@ -466,7 +466,7 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
         if (!engine!!.hasBalanceInfo()) {
             return
         } else if (engine.isBalanceNotZero) {
-            Toast.makeText(context, R.string.cannot_erase_wallet_with_non_zero_balance, Toast.LENGTH_LONG).show()
+            Toast.makeText(context, R.string.general_error_cannot_erase_wallet_with_non_zero_balance, Toast.LENGTH_LONG).show()
             return
         }
 
