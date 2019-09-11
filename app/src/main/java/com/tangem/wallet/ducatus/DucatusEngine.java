@@ -102,13 +102,13 @@ public class DucatusEngine extends BtcEngine {
     @Override
     public boolean isExtractPossible() {
         if (!hasBalanceInfo()) {
-            ctx.setMessage(R.string.cannot_obtain_data_from_blockchain);
+            ctx.setMessage(R.string.loaded_wallet_error_obtaining_blockchain_data);
         } else if (!isBalanceNotZero()) {
-            ctx.setMessage(R.string.wallet_empty);
+            ctx.setMessage(R.string.general_wallet_empty);
         } else if (awaitingConfirmation()) {
-            ctx.setMessage(R.string.please_wait_while_previous);
+            ctx.setMessage(R.string.loaded_wallet_message_wait);
         } else if (coinData.getUnspentTransactions().size() == 0) {
-            ctx.setMessage(R.string.please_wait_for_confirmation);
+            ctx.setMessage(R.string.loaded_wallet_message_refresh);
         } else {
             return true;
         }

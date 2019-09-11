@@ -15,11 +15,11 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.core.os.bundleOf
 import com.tangem.Constant
-import com.tangem.card_android.android.data.PINStorage
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
-import com.tangem.card_android.data.loadFromBundle
-import com.tangem.card_common.data.TangemCard
+import com.tangem.tangem_sdk.android.data.PINStorage
+import com.tangem.tangem_sdk.data.EXTRA_TANGEM_CARD
+import com.tangem.tangem_sdk.data.EXTRA_TANGEM_CARD_UID
+import com.tangem.tangem_sdk.data.loadFromBundle
+import com.tangem.tangem_card.data.TangemCard
 import com.tangem.ui.activity.MainActivity
 import com.tangem.ui.event.TransactionFinishWithError
 import com.tangem.ui.fragment.BaseFragment
@@ -72,9 +72,9 @@ class ConfirmTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
         isIncludeFee = arguments?.getBoolean(Constant.EXTRA_FEE_INCLUDED, true) ?: true
 
         if (isIncludeFee)
-            tvIncFee.setText(R.string.including_fee)
+            tvIncFee.setText(R.string.confirm_transaction_including_fee)
         else
-            tvIncFee.setText(R.string.not_including_fee)
+            tvIncFee.setText(R.string.confirm_transaction_not_including_fee)
 
         amount = CoinEngine.Amount(arguments?.getString(Constant.EXTRA_AMOUNT) ?: "0",
                 arguments?.getString(Constant.EXTRA_AMOUNT_CURRENCY) ?: "")
@@ -116,7 +116,7 @@ class ConfirmTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
                     tvFeeEquivalent.text = eqFee
 
                     if (!ctx.coinData!!.amountEquivalentDescriptionAvailable) {
-                        tvFeeEquivalent.error = getString(R.string.service_unavailable)
+                        tvFeeEquivalent.error = getString(R.string.confirm_transaction_error_service_unavailable)
                         tvCurrency2.visibility = View.GONE
                         tvFeeEquivalent.visibility = View.GONE
                     } else
@@ -138,14 +138,14 @@ class ConfirmTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
                 calendar.add(Calendar.MINUTE, -1)
 
                 if (dtVerified == null || dtVerified!!.before(calendar.time)) {
-                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.the_obtained_data_is_outdated_try_again))
+                    finishWithError(Activity.RESULT_CANCELED, getString(R.string.confirm_transaction_error_data_is_outdated))
                     return@setOnClickListener
                 }
 
                 val engineCoin = CoinEngineFactory.createCardano(ctx)
 
                 if (engineCoin!!.isNeedCheckNode && !nodeCheck) {
-                    Toast.makeText(context, getString(R.string.cannot_reach_current_active_blockchain_node_try_again), Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, getString(R.string.confirm_transaction_error_cannot_reach_node), Toast.LENGTH_LONG).show()
                     return@setOnClickListener
                 }
 
@@ -191,7 +191,7 @@ class ConfirmTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
                         R.id.action_confirmTransactionFragment_to_signTransactionFragment,
                         data)
             } else
-                Toast.makeText(context, getString(R.string.no_connection), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, getString(R.string.general_error_no_connection), Toast.LENGTH_SHORT).show()
         }
 
         progressBar.visibility = View.VISIBLE
@@ -259,7 +259,7 @@ class ConfirmTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
                         R.id.action_confirmTransactionFragment_to_signTransactionFragment,
                         bundle)
             } else
-                Toast.makeText(context, R.string.pin_2_is_required_to_sign_the_transaction, Toast.LENGTH_LONG).show()
+                Toast.makeText(context, R.string.confirm_transaction_error_pin_2_is_required, Toast.LENGTH_LONG).show()
         }
     }
 
