@@ -7,15 +7,15 @@ import android.util.Log;
 
 import com.tangem.App;
 import com.tangem.Constant;
-import com.tangem.card_common.data.TangemCard;
-import com.tangem.card_common.tasks.SignTask;
-import com.tangem.card_common.util.Util;
 import com.tangem.data.local.PendingTransactionsStorage;
 import com.tangem.data.network.ServerApiAdalite;
 import com.tangem.data.network.model.AdaliteResponse;
 import com.tangem.data.network.model.AdaliteResponseUtxo;
 import com.tangem.data.network.model.AdaliteTxData;
 import com.tangem.data.network.model.AdaliteUtxoData;
+import com.tangem.tangem_card.data.TangemCard;
+import com.tangem.tangem_card.tasks.SignTask;
+import com.tangem.tangem_card.util.Util;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.wallet.BTCUtils;
 import com.tangem.wallet.BalanceValidator;

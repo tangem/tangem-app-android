@@ -5,11 +5,11 @@ import android.text.InputFilter;
 import android.util.Log;
 
 import com.tangem.Constant;
-import com.tangem.card_common.data.TangemCard;
-import com.tangem.card_common.tasks.SignTask;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiInfura;
 import com.tangem.data.network.model.InfuraResponse;
+import com.tangem.tangem_card.data.TangemCard;
+import com.tangem.tangem_card.tasks.SignTask;
 import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.wallet.BTCUtils;
