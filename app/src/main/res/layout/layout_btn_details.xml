@@ -13,6 +13,6 @@
     android:fontFamily="@font/saira_condensed_bold"
     android:paddingLeft="20dp"
     android:paddingRight="20dp"
-    android:text="@string/btn_details"
+    android:text="@string/loaded_wallet_btn_details"
     android:textColor="@color/primary_dark"
     tools:showIn="@layout/fr_loaded_wallet" />

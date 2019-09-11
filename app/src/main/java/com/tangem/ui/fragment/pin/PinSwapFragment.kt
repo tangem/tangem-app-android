@@ -148,7 +148,7 @@ class PinSwapFragment : BaseFragment(), NfcAdapter.ReaderCallback, CardProtocol.
                                     NoExtendedLengthSupportDialog.TAG)
                         }
                     } else {
-                        Toast.makeText(context, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, R.string.general_notification_scan_again, Toast.LENGTH_SHORT).show()
                     }
                     progressBar!!.progress = 100
                     progressBar!!.progressTintList = ColorStateList.valueOf(Color.RED)
