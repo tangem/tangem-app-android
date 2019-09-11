@@ -313,7 +313,7 @@
                         </option>
                         <option name="myPositions">
                           <map>
-                            <entry key="action_purgeFragment_to_loadedWalletFragment">
+                            <entry key="action_purgeFragment_to_mainFragment">
                               <value>
                                 <LayoutPositions />
                               </value>
