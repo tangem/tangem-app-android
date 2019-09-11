@@ -165,7 +165,7 @@ class PurgeFragment : BaseFragment(), NfcAdapter.ReaderCallback, CardProtocol.No
                             val data = bundleOf(
                                     EXTRA_TANGEM_CARD_UID to cardProtocol.card.uid,
                                     EXTRA_TANGEM_CARD to cardProtocol.card.asBundle,
-                                    Constant.EXTRA_MESSAGE to getString(R.string.cannot_erase_wallet)
+                                    Constant.EXTRA_MESSAGE to getString(R.string.nfc_error_cannot_erase_wallet)
                             )
                             navigateBackWithResult(RESULT_INVALID_PIN, data)
                             return@postDelayed
@@ -179,7 +179,7 @@ class PurgeFragment : BaseFragment(), NfcAdapter.ReaderCallback, CardProtocol.No
                             if (!NoExtendedLengthSupportDialog.allReadyShowed)
                                 NoExtendedLengthSupportDialog().show(activity!!.supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
                         } else
-                            Toast.makeText(context, R.string.try_to_scan_again, Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, R.string.general_notification_scan_again_to_verify, Toast.LENGTH_LONG).show()
 
                         progressBar?.progress = 100
                         progressBar?.progressTintList = ColorStateList.valueOf(Color.RED)
