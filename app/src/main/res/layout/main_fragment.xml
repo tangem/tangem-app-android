@@ -36,7 +36,7 @@
             android:paddingTop="20dp"
             android:paddingRight="20dp"
             android:paddingBottom="20dp"
-            android:text="@string/tap_tangem_card"
+            android:text="@string/main_screen_tap_card"
             android:textAlignment="center"
             android:textAllCaps="false"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
