@@ -29,15 +29,15 @@ class LogoFragment : BaseFragment() {
         clLogoContainer.setOnClickListener { hide() }
         // set beta version name
         if (BuildConfig.DEBUG)
-            tvAppVersion.text = String.format(getString(R.string.version_name_debug), BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE)
+            tvAppVersion.text = String.format(getString(R.string.splash_version_name_debug), BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE)
         else
-            tvAppVersion.text = String.format(getString(R.string.version_name_release), BuildConfig.VERSION_NAME)
+            tvAppVersion.text = String.format(getString(R.string.splash_version_name_release), BuildConfig.VERSION_NAME)
 
         // set flavor app name
         when (BuildConfig.FLAVOR) {
             Constant.FLAVOR_TANGEM_CARDANO -> {
                 tvExtension.visibility = View.VISIBLE
-                tvExtension.text = getString(R.string.cardano)
+                tvExtension.text = getString(R.string.splash_cardano)
             }
             else -> {
                 tvExtension.visibility = View.GONE
