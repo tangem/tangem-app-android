@@ -16,9 +16,9 @@ class RootFoundDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return AlertDialog.Builder(activity)
                 .setIcon(R.drawable.tangem_logo_small_new)
-                .setTitle(R.string.device_is_rooted)
+                .setTitle(R.string.dialog_device_is_rooted)
                 .setCancelable(false)
-                .setPositiveButton(R.string.got_it, null)
+                .setPositiveButton(R.string.dialog_btn_got_it, null)
                 .create()
     }
 
