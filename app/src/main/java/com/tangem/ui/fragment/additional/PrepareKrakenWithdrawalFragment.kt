@@ -78,7 +78,7 @@ class PrepareKrakenWithdrawalFragment : BaseFragment(), NavigationResultListener
 
                 kraken.requestWithdrawInfo(ctx.blockchain.currency, dblAmount.toString(), ctx.coinData!!.wallet)
             } catch (e: Exception) {
-                etAmount.error = getString(R.string.unknown_amount_format)
+                etAmount.error = getString(R.string.prepare_transaction_error_unknown_amount_format)
             }
 
         }
@@ -153,7 +153,7 @@ class PrepareKrakenWithdrawalFragment : BaseFragment(), NavigationResultListener
         val builder = AlertDialog.Builder(context)
 
         // Set a title for alert dialog
-        builder.setTitle(R.string.please_confirm_withdraw)
+        builder.setTitle(R.string.kraken_please_confirm_withdraw)
 
         // Set a message for alert dialog
         builder.setMessage(String.format("Continue with fee %s %s?", fee!!.toString().trimEnd('0'), ctx.blockchain.currency))
@@ -174,20 +174,20 @@ class PrepareKrakenWithdrawalFragment : BaseFragment(), NavigationResultListener
 
                         kraken.requestWithdraw(ctx.blockchain.currency, dblAmount.toString(), ctx.coinData!!.wallet)
                     } catch (e: Exception) {
-                        etAmount.error = getString(R.string.unknown_amount_format)
+                        etAmount.error = getString(R.string.prepare_transaction_error_unknown_amount_format)
                     }
                 }
                 DialogInterface.BUTTON_NEGATIVE -> {
-                    Toast.makeText(context, R.string.operation_canceled, Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, R.string.kraken_operation_canceled, Toast.LENGTH_LONG).show()
                 }
             }
         }
 
         // Set the alert dialog positive/yes button
-        builder.setPositiveButton(R.string.yes, dialogClickListener)
+        builder.setPositiveButton(R.string.general_yes, dialogClickListener)
 
         // Set the alert dialog negative/no button
-        builder.setNegativeButton(R.string.no, dialogClickListener)
+        builder.setNegativeButton(R.string.general_no, dialogClickListener)
 
 
         // Initialize the AlertDialog using builder object
