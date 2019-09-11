@@ -167,11 +167,6 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                             if (engineCoin != null) {
                                 engineCoin.defineWallet()
 
-//                                val bundle = Bundle()
-//                                bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
-//                                ctx.saveToBundle(bundle)
-//                                (activity as MainActivity).navController.navigate(R.id.loadedWallet, bundle)
-
                                 val bundle = Bundle()
                                 bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
                                 ctx.saveToBundle(bundle)
@@ -201,7 +196,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
             } else {
                 // remove last UIDs because of error and no card read
                 rlProgressBar.post {
-                    Toast.makeText(context, R.string.general_notification_scan_again, Toast.LENGTH_SHORT).show()
+                    context?.let { Toast.makeText(it, R.string.general_notification_scan_again, Toast.LENGTH_SHORT).show() }
                     unsuccessReadCount++
 
                     if (cardProtocol.error is CardProtocol.TangemException_InvalidPIN) {
