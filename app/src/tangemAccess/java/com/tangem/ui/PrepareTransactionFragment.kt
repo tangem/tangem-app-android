@@ -73,7 +73,7 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
 
         btnVerify.setOnClickListener {
             if (!UtilHelper.isOnline(context!!)) {
-                Toast.makeText(context, R.string.no_connection, Toast.LENGTH_LONG).show()
+                Toast.makeText(context, R.string.general_error_no_connection, Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
 
@@ -83,22 +83,22 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
 
             try {
                 if (!engine.checkNewTransactionAmount(amount))
-                    etAmount.error = getString(R.string.not_enough_funds_on_your_card)
+                    etAmount.error = getString(R.string.prepare_transaction_error_not_enough_funds)
                 else
                     etAmount.error = null
             } catch (e: Exception) {
-                etAmount.error = getString(R.string.unknown_amount_format)
+                etAmount.error = getString(R.string.prepare_transaction_error_unknown_amount_format)
             }
 
             // check wallet address
             if (!engine1.validateAddress(etWallet.text.toString())) {
-                etWallet.error = getString(R.string.incorrect_destination_wallet_address)
+                etWallet.error = getString(R.string.prepare_transaction_error_incorrect_destination)
                 return@setOnClickListener
             } else
                 etWallet.error = null
 
             if (etWallet.text.toString() == ctx.coinData!!.wallet) {
-                etWallet.error = getString(R.string.destination_wallet_address_equal_source_address)
+                etWallet.error = getString(R.string.prepare_transaction_error_same_address)
                 return@setOnClickListener
             }
 
