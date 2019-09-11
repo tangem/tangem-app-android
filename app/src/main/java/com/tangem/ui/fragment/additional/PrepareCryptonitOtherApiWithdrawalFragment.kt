@@ -58,7 +58,7 @@ class PrepareCryptonitOtherApiWithdrawalFragment : BaseFragment(), NavigationRes
 
                 cryptonit.requestCryptoWithdrawal(ctx.blockchain.currency, dblAmount.toString(), ctx.coinData!!.wallet)
             } catch (e: Exception) {
-                etAmount.error = getString(R.string.unknown_amount_format)
+                etAmount.error = getString(R.string.prepare_transaction_error_unknown_amount_format)
             }
 
             //Toast.makeText(this, strAmount, Toast.LENGTH_LONG).show()
