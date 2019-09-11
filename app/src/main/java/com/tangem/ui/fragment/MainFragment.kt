@@ -198,7 +198,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
             } else {
                 // remove last UIDs because of error and no card read
                 rlProgressBar.post {
-                    context?.let { Toast.makeText(it, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show() }
+                    context?.let { Toast.makeText(it, R.string.general_notification_scan_again, Toast.LENGTH_SHORT).show() }
                     unsuccessReadCount++
 
                     if (cardProtocol.error is CardProtocol.TangemException_InvalidPIN) {
