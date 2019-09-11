@@ -6,12 +6,12 @@ package com.tangem.wallet;
 
 import android.util.Log;
 
+import com.tangem.tangem_card.util.Util;
+import com.tangem.util.CryptoUtil;
+import com.tangem.util.FormatUtil;
 import com.tangem.wallet.btc.BitcoinException;
 import com.tangem.wallet.btc.BitcoinOutputStream;
 import com.tangem.wallet.btc.BtcData;
-import com.tangem.util.CryptoUtil;
-import com.tangem.util.FormatUtil;
-import com.tangem.card_common.util.Util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
