@@ -114,7 +114,7 @@ public class ServerApiStellar {
                 requestsCount--;
                 LOG.e(TAG, "requestData " + stellarRequest.getClass().getSimpleName() + " onError " + e.getMessage());
                 LOG.e(TAG, String.format("%d requests left in processing", requestsCount));
-                stellarRequest.setError(ctx.getString(R.string.cannot_obtain_data_from_blockchain));
+                stellarRequest.setError(ctx.getString(R.string.loaded_wallet_error_obtaining_blockchain_data));
                 //setErrorOccurred(e.getMessage());//;
                 listener.onFail(stellarRequest);
             }
@@ -161,7 +161,7 @@ public class ServerApiStellar {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            stellarRequest.setError(App.Companion.getInstance().getString(R.string.cannot_obtain_data_from_blockchain_communication_error));
+            stellarRequest.setError(App.Companion.getInstance().getString(R.string.loaded_wallet_error_blockchain_communication_error));
             throw e;
         }
     }
