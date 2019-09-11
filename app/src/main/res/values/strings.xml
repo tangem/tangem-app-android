@@ -16,7 +16,7 @@
     <string name="general_balance">with balance</string>
     <string name="general_send_to_wallet">Send to wallet</string>
     <string name="general_amount">Amount</string>
-    <string name="general_btc">BTC</string>
+    <string name="general_btc" translatable="false">BTC</string>
     <string name="general_tangem" translatable="false">Tangem AG</string>
     <string name="general_notification_scan_again_to_verify">Scan again to verify the card</string>
     <string name="general_status_reading">READING…</string>
