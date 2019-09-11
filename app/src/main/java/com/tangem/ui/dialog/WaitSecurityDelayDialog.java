@@ -12,10 +12,10 @@ import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentActivity;
 
-import com.tangem.card_common.util.Log;
+import com.tangem.tangem_card.util.Log;
 import com.tangem.wallet.R;
 
 import java.util.Timer;
@@ -78,7 +78,7 @@ public class WaitSecurityDelayDialog extends DialogFragment {
         super.onCancel(dialog);
     }
 
-    public static void onReadBeforeRequest(final AppCompatActivity activity, final int timeout) {
+    public static void onReadBeforeRequest(final FragmentActivity activity, final int timeout) {
         activity.runOnUiThread(() -> {
             if (timerToShowDelayDialog != null || timeout < delayBeforeShowDialog + minRemainingDelayToShowDialog)
                 return;
@@ -90,7 +90,8 @@ public class WaitSecurityDelayDialog extends DialogFragment {
                     instance = new WaitSecurityDelayDialog();
                     instance.setup(timeout, delayBeforeShowDialog);
                     instance.setCancelable(false);
-                    instance.show(activity.getSupportFragmentManager(), TAG);
+                    activity.getSupportFragmentManager().beginTransaction()
+                            .add(instance, TAG).commitAllowingStateLoss();
                 }
             }, delayBeforeShowDialog);
         });
@@ -104,7 +105,7 @@ public class WaitSecurityDelayDialog extends DialogFragment {
         });
     }
 
-    public static void onReadWait(final AppCompatActivity activity, final int msec) {
+    public static void onReadWait(final FragmentActivity activity, final int msec) {
         Log.e(TAG, "onReadWait callback(" + msec + ")");
         activity.runOnUiThread(() -> {
             Log.e(TAG, "onReadWait on ui thread(" + msec + ")");
@@ -116,14 +117,14 @@ public class WaitSecurityDelayDialog extends DialogFragment {
             if (msec == 0) {
                 if (instance != null) {
                     if (instance.isAdded()) {
-                        instance.dismiss();
+                        instance.dismissAllowingStateLoss();
                         instance = null;
                     } else {
                         Log.e(TAG, "onReadWait(0) with not added dialog");
 //                        instance.progressBar.postDelayed(() -> {
 //                            Log.e(TAG, "onReadWait(0) dismiss delayed");
                         try {
-                            instance.dismiss();
+                            instance.dismissAllowingStateLoss();
                             instance = null;
                         }
                         catch (Exception e)
@@ -142,7 +143,8 @@ public class WaitSecurityDelayDialog extends DialogFragment {
                     // 1000ms - card delay notification interval
                     instance.setup(msec + 1000, 1000);
                     instance.setCancelable(false);
-                    instance.show(activity.getSupportFragmentManager(), TAG);
+                    activity.getSupportFragmentManager().beginTransaction()
+                            .add(instance, TAG).commitAllowingStateLoss();
                 }
             } else
                 instance.setRemainingTimeout(msec);
