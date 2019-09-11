@@ -56,7 +56,7 @@ class SendTransactionFragment : BaseFragment(), NfcAdapter.ReaderCallback {
 
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                Toast.makeText(context, R.string.please_wait, Toast.LENGTH_LONG).show()
+                Toast.makeText(context, R.string.send_transaction_notification_wait, Toast.LENGTH_LONG).show()
             }
 
         }
@@ -76,13 +76,13 @@ class SendTransactionFragment : BaseFragment(), NfcAdapter.ReaderCallback {
         EventBus.getDefault().post(transactionFinishWithSuccess)
 
         val data = Bundle()
-        data.putString(Constant.EXTRA_MESSAGE, getString(R.string.transaction_has_been_successfully_signed))
+        data.putString(Constant.EXTRA_MESSAGE, getString(R.string.send_transaction_success))
         navigateBackWithResult(Activity.RESULT_OK, data, R.id.loadedWalletFragment)
     }
 
     private fun finishWithError(message: String) {
         val data = Bundle()
-        data.putString(Constant.EXTRA_MESSAGE, String.format(getString(R.string.try_again_failed_to_send_transaction), message))
+        data.putString(Constant.EXTRA_MESSAGE, String.format(getString(R.string.send_transaction_error_failed_to_send), message))
         navigateBackWithResult(Activity.RESULT_CANCELED, data, R.id.loadedWalletFragment)
     }
 
