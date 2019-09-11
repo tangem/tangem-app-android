@@ -101,25 +101,25 @@ class PinRequestFragment : BaseFragment(), NfcAdapter.ReaderCallback, Fingerprin
         if (mode == Mode.RequestNewPIN)
             if (PINStorage.haveEncryptedPIN()) {
                 allowFingerprint = true
-                tvPinPrompt.setText(R.string.enter_new_pin_or_use_fingerprint_scanner)
+                tvPinPrompt.setText(R.string.pin_request_enter_new_pin_or_use_fingerprint_scanner)
             } else
-                tvPinPrompt.setText(R.string.enter_new_pin)
+                tvPinPrompt.setText(R.string.pin_request_enter_new_pin)
         else if (mode == Mode.ConfirmNewPIN)
-            tvPinPrompt.setText(R.string.confirm_new_pin)
+            tvPinPrompt.setText(R.string.pin_request_confirm_new_pin)
         else if (mode == Mode.RequestPIN)
             if (PINStorage.haveEncryptedPIN()) {
                 allowFingerprint = true
-                tvPinPrompt.setText(R.string.enter_pin_or_use_fingerprint_scanner)
+                tvPinPrompt.setText(R.string.pin_request_enter_pin_or_use_fingerprint_scanner)
             } else
-                tvPinPrompt.setText(R.string.enter_pin)
+                tvPinPrompt.setText(R.string.pin_request_enter_pin)
         else if (mode == Mode.RequestNewPIN2)
             if (PINStorage.haveEncryptedPIN2()) {
                 allowFingerprint = true
-                tvPinPrompt.setText(R.string.enter_new_pin_2_or_use_fingerprint_scanner)
+                tvPinPrompt.setText(R.string.pin_request_prompt_new_pin_2_or_fingerprint)
             } else
-                tvPinPrompt.setText(R.string.enter_new_pin_2)
+                tvPinPrompt.setText(R.string.pin_request_new_pin_2)
         else if (mode == Mode.ConfirmNewPIN2)
-            tvPinPrompt.setText(R.string.confirm_new_pin_2)
+            tvPinPrompt.setText(R.string.pin_request_confirm_new_pin_2)
         else if (mode == Mode.RequestPIN2) {
             val uid = arguments?.getString(EXTRA_TANGEM_CARD_UID)
             val card = TangemCard(uid)
@@ -134,9 +134,9 @@ class PinRequestFragment : BaseFragment(), NfcAdapter.ReaderCallback, Fingerprin
 
             if (PINStorage.haveEncryptedPIN2()) {
                 allowFingerprint = true
-                tvPinPrompt.setText(R.string.enter_pin_2_or_use_fingerprint_scanner)
+                tvPinPrompt.setText(R.string.pin_request_enter_pin_2_or_use_fingerprint_scanner)
             } else
-                tvPinPrompt.setText(R.string.enter_pin_2)
+                tvPinPrompt.setText(R.string.pin_request_prompt_enter_pin_2)
         }
 
         if (!allowFingerprint)
@@ -287,13 +287,13 @@ class PinRequestFragment : BaseFragment(), NfcAdapter.ReaderCallback, Fingerprin
 
         if (mode == Mode.ConfirmNewPIN) {
             if (pin != arguments?.getString(Constant.EXTRA_NEW_PIN)) {
-                tvPin!!.error = getString(R.string.error_pin_confirmation_failed)
+                tvPin!!.error = getString(R.string.pin_request_error_pin_confirmation_failed)
                 focusView = tvPin
                 cancel = true
             }
         } else if (mode == Mode.ConfirmNewPIN2) {
             if (pin != arguments?.getString(Constant.EXTRA_NEW_PIN_2)) {
-                tvPin!!.error = getString(R.string.error_pin_confirmation_failed)
+                tvPin!!.error = getString(R.string.pin_request_error_pin_confirmation_failed)
                 focusView = tvPin
                 cancel = true
             }
