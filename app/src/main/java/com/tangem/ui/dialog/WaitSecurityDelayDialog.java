@@ -67,7 +67,7 @@ public class WaitSecurityDelayDialog extends DialogFragment {
         }, 1000, 1000);
         return new AlertDialog.Builder(getActivity())
                 .setIcon(R.drawable.tangem_logo_small_new)
-                .setTitle(R.string.security_delay)
+                .setTitle(R.string.dialog_security_delay)
                 .setView(v)
                 .setCancelable(false)
                 .create();
