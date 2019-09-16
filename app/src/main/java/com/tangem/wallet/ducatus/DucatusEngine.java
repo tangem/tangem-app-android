@@ -562,7 +562,7 @@ public class DucatusEngine extends BtcEngine {
 
             @Override
             public void onFail(String method, String message) {
-                if (!serverApiInsight.isRequestsSequenceCompleted()) {
+                if (!serverApiInsight.isRequestsSequenceCompleted()) { //TODO: rework request sequence
                     ctx.setError(message);
                     blockchainRequestsCallbacks.onComplete(false);
                 }

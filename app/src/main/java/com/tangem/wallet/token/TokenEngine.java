@@ -708,9 +708,12 @@ public class TokenEngine extends CoinEngine {
 
             @Override
             public void onFail(String method, String message) {
-                if (!serverApiInfura.isRequestsSequenceCompleted()) {
-                    ctx.setError(message);
+                Log.e(TAG, "onFail: " + method + " " + message);
+                ctx.setError(message);
+                if (serverApiInfura.isRequestsSequenceCompleted()) {
                     blockchainRequestsCallbacks.onComplete(false);
+                } else {
+                    blockchainRequestsCallbacks.onProgress();
                 }
             }
         };
