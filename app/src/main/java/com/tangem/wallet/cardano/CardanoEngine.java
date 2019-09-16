@@ -192,7 +192,7 @@ public class CardanoEngine extends CoinEngine {
 
     @Override
     public boolean checkNewTransactionAmount(Amount amount) {
-        if( BuildConfig.FLAVOR==Constant.FLAVOR_TANGEM_CARDANO ) {
+        if (BuildConfig.FLAVOR == Constant.FLAVOR_TANGEM_CARDANO) {
             return true;
         }
         if (coinData == null) return false;
@@ -586,7 +586,8 @@ public class CardanoEngine extends CoinEngine {
         Amount feeDummy = new Amount(new BigDecimal(0.2).setScale(getDecimals(), RoundingMode.DOWN), getFeeCurrency());
         try {
             OnNeedSendTransaction onNeedSendTransactionBackup = onNeedSendTransaction;
-            onNeedSendTransaction =(tx)->{}; // empty function to bypass exception
+            onNeedSendTransaction = (tx) -> {
+            }; // empty function to bypass exception
 
             SignTask.TransactionToSign ttsDummy = constructTransaction(amount, feeDummy, true, targetAddress);
             byte[] txForSendDummy = ttsDummy.onSignCompleted(new byte[64]);
@@ -632,8 +633,8 @@ public class CardanoEngine extends CoinEngine {
                     }
 
                 } catch (Exception e) {
-                    e.printStackTrace();
                     Log.e(TAG, "FAIL ADALITE_ADDRESS Exception");
+                    e.printStackTrace();
                 }
 
                 if (serverApiAdalite.isRequestsSequenceCompleted()) {
@@ -658,6 +659,7 @@ public class CardanoEngine extends CoinEngine {
                     }
 
                 } catch (Exception e) {
+                    Log.e(TAG, "FAIL ADALITE_UNSPENT_OUTPUTS Exception");
                     e.printStackTrace();
                 }
 
@@ -665,7 +667,6 @@ public class CardanoEngine extends CoinEngine {
                     blockchainRequestsCallbacks.onComplete(!ctx.hasError());
                 } else {
                     blockchainRequestsCallbacks.onProgress();
-                    Log.e(TAG, "FAIL ADALITE_UNSPENT_OUTPUTS Exception");
                 }
             }
 
@@ -678,9 +679,13 @@ public class CardanoEngine extends CoinEngine {
 
             @Override
             public void onFail(String method, String message) {
-                Log.i(TAG, "onFail: " + method + " " + message);
+                Log.e(TAG, "onFail: " + method + " " + message);
                 ctx.setError(message);
-                blockchainRequestsCallbacks.onComplete(false);
+                if (serverApiAdalite.isRequestsSequenceCompleted()) {
+                    blockchainRequestsCallbacks.onComplete(false);
+                } else {
+                    blockchainRequestsCallbacks.onProgress();
+                }
             }
         };
 
@@ -752,10 +757,10 @@ public class CardanoEngine extends CoinEngine {
 
             @Override
             public void onFail(String method, String message) {
-                if (!serverApiAdalite.isRequestsSequenceCompleted()) {
-                    ctx.setError(message);
-                    blockchainRequestsCallbacks.onComplete(false);
-                }
+                Log.e(TAG, "onFail: " + method + " " + message);
+                ctx.setError(message);
+                blockchainRequestsCallbacks.onComplete(false);
+
             }
         };
         serverApiAdalite.setResponseListener(responseListener);
@@ -769,7 +774,9 @@ public class CardanoEngine extends CoinEngine {
     }
 
     @Override
-    public int pendingTransactionTimeoutInSeconds() { return 60; }
+    public int pendingTransactionTimeoutInSeconds() {
+        return 60;
+    }
 
     private String CalculateTxHash(String tx) throws CborException {
         Array txArray = (Array) CborDecoder.decode(BTCUtils.fromHex(tx)).get(0);
