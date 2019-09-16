@@ -111,9 +111,12 @@ public class RskEngine extends EthEngine {
 
             @Override
             public void onFail(String method, String message) {
-                if (!serverApiRootstock.isRequestsSequenceCompleted()) {
-                    ctx.setError(message);
+                Log.e(TAG, "onFail: " + method + " " + message);
+                ctx.setError(message);
+                if (serverApiRootstock.isRequestsSequenceCompleted()) {
                     blockchainRequestsCallbacks.onComplete(false);
+                } else {
+                    blockchainRequestsCallbacks.onProgress();
                 }
             }
         };
