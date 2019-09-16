@@ -641,11 +641,7 @@ public class BtcEngine extends CoinEngine {
                         Log.e(TAG, "FAIL BLOCKCYPHER_ADDRESS Exception");
                     }
 
-                    if (serverApiBlockcypher.isRequestsSequenceCompleted()) {
-                        checkPending(blockchainRequestsCallbacks);
-                    } else {
-                        blockchainRequestsCallbacks.onProgress();
-                    }
+                    checkPending(blockchainRequestsCallbacks);
                 }
 
                 public void onSuccess(String method, BlockcypherFee blockcypherFee) {
