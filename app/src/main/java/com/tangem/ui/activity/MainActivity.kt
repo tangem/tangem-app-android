@@ -2,21 +2,16 @@
 
 package com.tangem.ui.activity
 
-import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
-import android.content.pm.PackageManager
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProviders
 import com.scottyab.rootbeer.RootBeer
 import com.tangem.App
-import com.tangem.Constant
 import com.tangem.di.ToastHelper
 import com.tangem.tangem_sdk.android.nfc.NfcLifecycleObserver
 import com.tangem.tangem_sdk.android.reader.NfcManager
@@ -59,8 +54,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
-        verifyPermissions()
-
         nfcManager = NfcManager(this, this)
         lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
@@ -77,13 +70,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         val rootBeer = RootBeer(this)
         if (rootBeer.isRootedWithoutBusyBoxCheck && !BuildConfig.DEBUG)
             RootFoundDialog().show(supportFragmentManager, RootFoundDialog.TAG)
-    }
-
-    private fun verifyPermissions() {
-        NfcManager.verifyPermissions(this)
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), Constant.REQUEST_CODE_REQUEST_CAMERA_PERMISSIONS)
-        }
     }
 
     override fun onTagDiscovered(tag: Tag) {
