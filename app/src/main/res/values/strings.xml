@@ -21,6 +21,8 @@
     <string name="general_notification_scan_again_to_verify">Scan again to verify the card</string>
     <string name="general_status_reading">READING…</string>
     <string name="general_wallet_empty">The wallet is empty</string>
+    <string name="general_toast_no_permission">User hasn\'t granted required permission</string>
+
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
