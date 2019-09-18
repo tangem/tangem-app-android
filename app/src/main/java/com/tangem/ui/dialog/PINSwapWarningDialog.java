@@ -38,11 +38,11 @@ public class PINSwapWarningDialog extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         return new AlertDialog.Builder(getActivity())
                 .setIcon(R.drawable.tangem_logo_small_new)
-                .setTitle(R.string.your_money_is_at_risk)
+                .setTitle(R.string.dialog_title_money_is_at_risk)
                 .setMessage(message)
                 .setCancelable(true)
-                .setNegativeButton(R.string.cancel, (dialog, which) -> dismiss())
-                .setPositiveButton(R.string.contin, (dialog, whichButton) -> mOnPositiveButton.onRefresh())
+                .setNegativeButton(R.string.general_cancel, (dialog, which) -> dismiss())
+                .setPositiveButton(R.string.general_continue, (dialog, whichButton) -> mOnPositiveButton.onRefresh())
                 .create();
     }
 
