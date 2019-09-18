@@ -38,5 +38,6 @@
     <color name="bg_err">#600600</color>
     <color name="bg_msg">#bff2af</color>
     <color name="cardview_shadow_star">#37000000</color>
+    <color name="start2coin_orange">#f9af25</color>
 
 </resources>
