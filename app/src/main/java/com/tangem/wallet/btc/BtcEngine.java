@@ -5,17 +5,12 @@ import android.text.InputFilter;
 import android.util.Log;
 
 import com.tangem.App;
-import com.tangem.card_common.data.TangemCard;
-import com.tangem.card_common.reader.CardProtocol;
-import com.tangem.card_common.tasks.SignTask;
-import com.tangem.card_common.util.Util;
 import com.tangem.data.Blockchain;
 import com.tangem.data.local.PendingTransactionsStorage;
 import com.tangem.data.network.Server;
 import com.tangem.data.network.ServerApiBlockchainInfo;
 import com.tangem.data.network.ServerApiBlockcypher;
 import com.tangem.data.network.ServerApiCommon;
-import com.tangem.data.network.ServerApiSoChain;
 import com.tangem.data.network.model.BlockchainInfoAddress;
 import com.tangem.data.network.model.BlockchainInfoAddressAndUnspents;
 import com.tangem.data.network.model.BlockchainInfoTransaction;
@@ -25,7 +20,10 @@ import com.tangem.data.network.model.BlockcypherFee;
 import com.tangem.data.network.model.BlockcypherResponse;
 import com.tangem.data.network.model.BlockcypherTx;
 import com.tangem.data.network.model.BlockcypherTxref;
-import com.tangem.data.network.model.SoChain;
+import com.tangem.tangem_card.data.TangemCard;
+import com.tangem.tangem_card.reader.CardProtocol;
+import com.tangem.tangem_card.tasks.SignTask;
+import com.tangem.tangem_card.util.Util;
 import com.tangem.util.CryptoUtil;
 import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.util.DerEncodingUtil;
@@ -51,9 +49,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import io.reactivex.Observer;
 import io.reactivex.SingleObserver;
-import io.reactivex.observers.DefaultObserver;
 import io.reactivex.observers.DisposableSingleObserver;
 import okhttp3.ResponseBody;
 
@@ -128,13 +124,13 @@ public class BtcEngine extends CoinEngine {
     @Override
     public boolean isExtractPossible() {
         if (!hasBalanceInfo()) {
-            ctx.setMessage(R.string.cannot_obtain_data_from_blockchain);
+            ctx.setMessage(R.string.loaded_wallet_error_obtaining_blockchain_data);
         } else if (!isBalanceNotZero()) {
-            ctx.setMessage(R.string.wallet_empty);
+            ctx.setMessage(R.string.general_wallet_empty);
         } else if (awaitingConfirmation()) {
-            ctx.setMessage(R.string.please_wait_while_previous);
+            ctx.setMessage(R.string.loaded_wallet_message_wait);
         } else if (coinData.getUnspentTransactions().size() == 0) {
-            ctx.setMessage(R.string.please_wait_for_confirmation);
+            ctx.setMessage(R.string.loaded_wallet_message_refresh);
         } else {
             return true;
         }
