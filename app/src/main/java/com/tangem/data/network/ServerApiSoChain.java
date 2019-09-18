@@ -164,9 +164,9 @@ public class ServerApiSoChain {
         call.enqueue(new Callback<SoChain.Response.GetTx>() {
             @Override
             public void onResponse(@NonNull Call<SoChain.Response.GetTx> call, @NonNull Response<SoChain.Response.GetTx> response) {
+                requestsCount--;
                 Log.i(TAG, "requestAddressBalance onResponse " + response.code());
                 if (response.code() == 200) {
-                    requestsCount--;
                     txInfoListener.onSuccess(response.body());
                 } else {
                     txInfoListener.onFail(String.valueOf(response.code()));
@@ -175,6 +175,7 @@ public class ServerApiSoChain {
 
             @Override
             public void onFailure(@NonNull Call<SoChain.Response.GetTx> call, @NonNull Throwable t) {
+                requestsCount--;
                 Log.e(TAG, "requestAddressBalance  onFailure " + t.getMessage());
                 txInfoListener.onFail(String.valueOf(t.getMessage()));
             }
