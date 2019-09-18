@@ -9,6 +9,10 @@ import com.google.common.base.Strings;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiInfura;
 import com.tangem.data.network.model.InfuraResponse;
+import com.tangem.tangem_card.data.TangemCard;
+import com.tangem.tangem_card.tasks.SignTask;
+import com.tangem.util.CryptoUtil;
+import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.wallet.BTCUtils;
 import com.tangem.wallet.BalanceValidator;
 import com.tangem.wallet.CoinData;
@@ -16,13 +20,9 @@ import com.tangem.wallet.CoinEngine;
 import com.tangem.wallet.ECDSASignatureETH;
 import com.tangem.wallet.EthTransaction;
 import com.tangem.wallet.Keccak256;
+import com.tangem.wallet.R;
 import com.tangem.wallet.TangemContext;
 import com.tangem.wallet.eth.EthData;
-import com.tangem.card_common.data.TangemCard;
-import com.tangem.card_common.tasks.SignTask;
-import com.tangem.util.CryptoUtil;
-import com.tangem.util.DecimalDigitsInputFilter;
-import com.tangem.wallet.R;
 
 import org.bitcoinj.core.ECKey;
 
@@ -308,13 +308,13 @@ public class TokenEngine extends CoinEngine {
     @Override
     public boolean isExtractPossible() {
         if (!hasBalanceInfo()) {
-            ctx.setMessage(R.string.cannot_obtain_data_from_blockchain);
+            ctx.setMessage(R.string.loaded_wallet_error_obtaining_blockchain_data);
         } else if (!isBalanceNotZero()) {
-            ctx.setMessage(R.string.wallet_empty);
+            ctx.setMessage(R.string.general_wallet_empty);
         } else if (awaitingConfirmation()) {
-            ctx.setMessage(R.string.please_wait_while_previous);
+            ctx.setMessage(R.string.loaded_wallet_message_wait);
         } else if (!isBalanceAlterNotZero()) {
-            ctx.setMessage(ctx.getString(R.string.not_enough_eth_for_fee));
+            ctx.setMessage(ctx.getString(R.string.confirm_transaction_error_not_enough_eth_for_fee));
         } else {
             return true;
         }
