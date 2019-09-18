@@ -8,20 +8,20 @@ import com.tangem.Constant;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiInfura;
 import com.tangem.data.network.model.InfuraResponse;
+import com.tangem.tangem_card.data.TangemCard;
+import com.tangem.tangem_card.tasks.SignTask;
+import com.tangem.util.CryptoUtil;
+import com.tangem.util.DecimalDigitsInputFilter;
 import com.tangem.wallet.BTCUtils;
 import com.tangem.wallet.BalanceValidator;
+import com.tangem.wallet.BuildConfig;
 import com.tangem.wallet.CoinData;
 import com.tangem.wallet.CoinEngine;
 import com.tangem.wallet.ECDSASignatureETH;
 import com.tangem.wallet.EthTransaction;
 import com.tangem.wallet.Keccak256;
-import com.tangem.wallet.TangemContext;
-import com.tangem.card_common.data.TangemCard;
-import com.tangem.card_common.tasks.SignTask;
-import com.tangem.util.CryptoUtil;
-import com.tangem.util.DecimalDigitsInputFilter;
-import com.tangem.wallet.BuildConfig;
 import com.tangem.wallet.R;
+import com.tangem.wallet.TangemContext;
 
 import org.bitcoinj.core.ECKey;
 
@@ -241,11 +241,11 @@ public class EthEngine extends CoinEngine {
     @Override
     public boolean isExtractPossible() {
         if (!hasBalanceInfo()) {
-            ctx.setMessage(R.string.cannot_obtain_data_from_blockchain);
+            ctx.setMessage(R.string.loaded_wallet_error_obtaining_blockchain_data);
         } else if (!isBalanceNotZero()) {
-            ctx.setMessage(R.string.wallet_empty);
+            ctx.setMessage(R.string.general_wallet_empty);
         } else if (awaitingConfirmation()) {
-            ctx.setMessage(R.string.please_wait_while_previous);
+            ctx.setMessage(R.string.loaded_wallet_message_wait);
         } else {
             return true;
         }
@@ -560,7 +560,7 @@ public class EthEngine extends CoinEngine {
 
             @Override
             public void onFail(String method, String message) {
-                ctx.setError(ctx.getContext().getString(R.string.cannot_calculate_fee_wrong_data_received_from_node));
+                ctx.setError(ctx.getContext().getString(R.string.confirm_transaction_error_cannot_calculate_fee));
                 blockchainRequestsCallbacks.onComplete(false);
             }
         };

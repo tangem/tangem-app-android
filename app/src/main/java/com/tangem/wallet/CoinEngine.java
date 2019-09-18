@@ -3,8 +3,8 @@ package com.tangem.wallet;
 import android.net.Uri;
 import android.text.InputFilter;
 
-import com.tangem.card_common.reader.CardProtocol;
-import com.tangem.card_common.tasks.SignTask;
+import com.tangem.tangem_card.reader.CardProtocol;
+import com.tangem.tangem_card.tasks.SignTask;
 
 import java.io.IOException;
 import java.math.BigDecimal;
