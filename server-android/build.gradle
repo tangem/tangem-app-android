@@ -30,7 +30,7 @@ android {
 }
 
 dependencies {
-    implementation project(':card-common')
+    implementation project(':tangem-card')
 //    implementation 'com.github.TangemCash.card_android-common:card_android-android:0.1.0'
 
     implementation 'androidx.appcompat:appcompat:1.1.0-alpha04'
