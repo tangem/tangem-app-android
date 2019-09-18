@@ -311,32 +311,32 @@ public class EthEngine extends CoinEngine {
     public boolean validateBalance(BalanceValidator balanceValidator) {
         if (getBalance() == null) {
             balanceValidator.setScore(0);
-            balanceValidator.setFirstLine("Unknown balance");
-            balanceValidator.setSecondLine("Balance cannot be verified. Swipe down to refresh.");
+            balanceValidator.setFirstLine(R.string.balance_validator_first_line_unknown_balance);
+            balanceValidator.setSecondLine(R.string.balance_validator_second_line_unverified_balance);
             return false;
         }
 
         if (!coinData.getUnconfirmedTXCount().equals(coinData.getConfirmedTXCount())) {
             balanceValidator.setScore(0);
-            balanceValidator.setFirstLine("Transaction in progress");
-            balanceValidator.setSecondLine("Wait for confirmation in blockchain");
+            balanceValidator.setFirstLine(R.string.balance_validator_first_line_transaction_in_progress);
+            balanceValidator.setSecondLine(R.string.balance_validator_second_line_wait_for_confirmation);
             return false;
         }
 
         if (coinData.isBalanceReceived()) {
             balanceValidator.setScore(100);
-            balanceValidator.setFirstLine("Verified balance");
-            balanceValidator.setSecondLine("Balance confirmed in blockchain");
+            balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_balance);
+            balanceValidator.setSecondLine(R.string.balance_validator_second_line_confirmed_in_blockchain);
             if (getBalance().isZero()) {
-                balanceValidator.setFirstLine("Empty wallet");
-                balanceValidator.setSecondLine("");
+                balanceValidator.setFirstLine(R.string.balance_validator_first_line_empty_wallet);
+                balanceValidator.setSecondLine(R.string.empty_string);
             }
         }
 
         if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && getBalance().notZero()) {
             balanceValidator.setScore(80);
-            balanceValidator.setFirstLine("Verified offline balance");
-            balanceValidator.setSecondLine("Restore internet connection to obtain trusted balance from blockchain");
+            balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_offline);
+            balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_verify_online);
         }
 
         return true;
