@@ -2,6 +2,8 @@ package com.tangem.data.network;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.tangem.App;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.model.BlockcypherBody;
@@ -11,7 +13,6 @@ import com.tangem.data.network.model.BlockcypherTx;
 
 import java.util.Random;
 
-import androidx.annotation.NonNull;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
