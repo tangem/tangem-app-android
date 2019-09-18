@@ -69,6 +69,7 @@
     <string name="splash_version_name_debug">ALPHA v.%1$s \n dev \n build %2$s</string>
     <string name="splash_version_name_release">v.%1$s</string>
     <string name="splash_cardano">Cardano</string>
+    <string name="alert_unknown_blockchain">This card is not supported</string>
 
     <!-- Main -->
     <string name="main_screen_tap_card">Tap Tangem card with your smartphone</string>
