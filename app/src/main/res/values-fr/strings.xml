@@ -51,6 +51,7 @@
     <string name="dialog_this_banknote_has_enforced_security_delay">Cette carte a imposé un délai de sécurité</string>
     <string name="dialog_hold_banknote">Veuillez tenir la carte fermement \ n jusqu\'à ce que l\'opération soit terminéev…</string>
     <string name="dialog_you_may_be_required_to_repeat">Vous devrez peut-être répéter cette opération plusieurs fois en fonction des performances NFC de votre smartphone. \ n Ceci est fait pour la sécurité de vos fonds.</string>
+    <string name="alert_unknown_blockchain">Cette carte n\'est pas supportée</string>
 
     <!-- menu main -->
     <string name="main_menu_manage_pin_1">Gérer le code PIN de l\'utilisateur…</string>
