@@ -7,11 +7,9 @@ import com.tangem.wallet.eos.EosPushTransactionRequest;
 
 import io.jafka.jeos.EosApi;
 import io.jafka.jeos.EosApiFactory;
-import io.jafka.jeos.core.request.chain.transaction.PushTransactionRequest;
 import io.jafka.jeos.core.response.chain.account.Account;
 import io.jafka.jeos.core.response.chain.transaction.PushedTransaction;
 import io.jafka.jeos.impl.EosApiServiceGenerator;
-import io.jafka.jeos.impl.EosChainApiService;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
