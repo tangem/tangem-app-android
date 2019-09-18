@@ -69,8 +69,9 @@ public class ServerApiAdalite {
                 addressCall.enqueue(new Callback<AdaliteResponse>() {
                     @Override
                     public void onResponse(@NonNull Call<AdaliteResponse> call, @NonNull Response<AdaliteResponse> response) {
+                        requestsCount--;
+
                         if (response.code() == 200) {
-                            requestsCount--;
                             responseListener.onSuccess(method, response.body());
                             Log.i(TAG, "requestData " + method + " onResponse " + response.code());
                         } else {
@@ -81,6 +82,7 @@ public class ServerApiAdalite {
 
                     @Override
                     public void onFailure(@NonNull Call<AdaliteResponse> call, @NonNull Throwable t) {
+                        requestsCount--;
                         responseListener.onFail(method, String.valueOf(t.getMessage()));
                         Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
                     }
@@ -92,8 +94,9 @@ public class ServerApiAdalite {
             outputsCall.enqueue(new Callback<AdaliteResponseUtxo>() {
                 @Override
                 public void onResponse(@NonNull Call<AdaliteResponseUtxo> call, @NonNull Response<AdaliteResponseUtxo> response) {
+                    requestsCount--;
+
                     if (response.code() == 200) {
-                        requestsCount--;
                         responseListener.onSuccess(method, response.body());
                         Log.i(TAG, "requestData " + method + " onResponse " + response.code());
                     } else {
@@ -104,6 +107,7 @@ public class ServerApiAdalite {
 
                 @Override
                 public void onFailure(@NonNull Call<AdaliteResponseUtxo> call, @NonNull Throwable t) {
+                    requestsCount--;
                     responseListener.onFail(method, String.valueOf(t.getMessage()));
                     Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
                 }
@@ -115,8 +119,9 @@ public class ServerApiAdalite {
                 sendCall.enqueue(new Callback<List>() {
                     @Override
                     public void onResponse(@NonNull Call<List> call, @NonNull Response<List> response) {
+                        requestsCount--;
+
                         if (response.code() == 200) {
-                            requestsCount--;
                             responseListener.onSuccess(method, response.body());
                             Log.i(TAG, "requestData " + method + " onResponse " + response.code());
                         } else {
@@ -127,6 +132,7 @@ public class ServerApiAdalite {
 
                     @Override
                     public void onFailure(@NonNull Call<List> call, @NonNull Throwable t) {
+                        requestsCount--;
                         responseListener.onFail(method, String.valueOf(t.getMessage()));
                         Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
                     }
@@ -134,6 +140,7 @@ public class ServerApiAdalite {
                 break;
 
                 default:
+                    requestsCount--;
                     responseListener.onFail(method, "undeclared method");
                     Log.e(TAG, "requestData " + method + " onFailure - undeclared method");
                     break;
