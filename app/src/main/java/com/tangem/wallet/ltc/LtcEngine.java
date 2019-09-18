@@ -418,8 +418,8 @@ public class LtcEngine extends BtcEngine {
             change = change - fees;
         }
 
-        final long amountFinal=amount;
-        final long changeFinal=change;
+        final long amountFinal = amount;
+        final long changeFinal = change;
 
         if (amount + fees > fullAmount) {
             throw new CardProtocol.TangemException_WrongAmount(String.format("Balance (%d) < change (%d) + amount (%d)", fullAmount, change, amount));
@@ -427,7 +427,7 @@ public class LtcEngine extends BtcEngine {
 
         final byte[][] txForSign = new byte[unspentOutputs.size()][];
         final byte[][] bodyDoubleHash = new byte[unspentOutputs.size()][];
-        final byte[][] bodyHash= new byte[unspentOutputs.size()][];
+        final byte[][] bodyHash = new byte[unspentOutputs.size()][];
 
         for (int i = 0; i < unspentOutputs.size(); ++i) {
             txForSign[i] = BTCUtils.buildTXForSign(myAddress, targetAddress, myAddress, unspentOutputs, i, amount, change);
@@ -439,13 +439,14 @@ public class LtcEngine extends BtcEngine {
 
             @Override
             public boolean isSigningMethodSupported(TangemCard.SigningMethod signingMethod) {
-                return signingMethod==TangemCard.SigningMethod.Sign_Hash || signingMethod==TangemCard.SigningMethod.Sign_Raw;
+                return signingMethod == TangemCard.SigningMethod.Sign_Hash || signingMethod == TangemCard.SigningMethod.Sign_Raw;
             }
 
             @Override
             public byte[][] getHashesToSign() throws Exception {
-                byte[][] dataForSign=new byte[unspentOutputs.size()][];
-                if (txForSign.length > 10) throw new Exception("To much hashes in one transaction!");
+                byte[][] dataForSign = new byte[unspentOutputs.size()][];
+                if (txForSign.length > 10)
+                    throw new Exception("To much hashes in one transaction!");
                 for (int i = 0; i < unspentOutputs.size(); ++i) {
                     dataForSign[i] = bodyDoubleHash[i];
                 }
@@ -484,7 +485,7 @@ public class LtcEngine extends BtcEngine {
                     unspentOutputs.get(i).scriptForBuild = DerEncodingUtil.packSignDer(r, s, pbKey);
                 }
 
-                byte[] txForSend=BTCUtils.buildTXForSend(targetAddress, myAddress, unspentOutputs, amountFinal, changeFinal);
+                byte[] txForSend = BTCUtils.buildTXForSend(targetAddress, myAddress, unspentOutputs, amountFinal, changeFinal);
                 notifyOnNeedSendTransaction(txForSend);
                 return txForSend;
             }
@@ -641,15 +642,13 @@ public class LtcEngine extends BtcEngine {
                             }
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
                         Log.e(TAG, "FAIL BLOCKCYPHER_ADDRESS Exception");
+                        e.printStackTrace();
+                        ctx.setError(e.getMessage());
+                        blockchainRequestsCallbacks.onComplete(false);
                     }
 
-                    if (serverApiBlockcypher.isRequestsSequenceCompleted()) {
-                        checkPending(blockchainRequestsCallbacks);
-                    } else {
-                        blockchainRequestsCallbacks.onProgress();
-                    }
+                    checkPending(blockchainRequestsCallbacks);
                 }
 
                 public void onSuccess(String method, BlockcypherFee blockcypherFee) {
