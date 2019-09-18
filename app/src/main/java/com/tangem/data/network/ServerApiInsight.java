@@ -64,8 +64,9 @@ public class ServerApiInsight {
             call.enqueue(new Callback<List<InsightResponse>>() {
                 @Override
                 public void onResponse(@NonNull Call<List<InsightResponse>> call, @NonNull Response<List<InsightResponse>> response) {
+                    requestsCount--;
+
                     if (response.code() == 200) {
-                        requestsCount--;
                         responseListener.onSuccess(method, response.body());
                         Log.i(TAG, "requestData " + method + " onResponse " + response.code());
                     } else {
@@ -76,6 +77,7 @@ public class ServerApiInsight {
 
                 @Override
                 public void onFailure(@NonNull Call<List<InsightResponse>> call, @NonNull Throwable t) {
+                    requestsCount--;
                     responseListener.onFail(method, String.valueOf(t.getMessage()));
                     Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
                 }
@@ -108,8 +110,9 @@ public class ServerApiInsight {
             call.enqueue(new Callback<InsightResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<InsightResponse> call, @NonNull Response<InsightResponse> response) {
+                    requestsCount--;
+
                     if (response.code() == 200) {
-                        requestsCount--;
                         responseListener.onSuccess(method, response.body());
                         Log.i(TAG, "requestData " + method + " onResponse " + response.code());
                     } else {
@@ -120,6 +123,7 @@ public class ServerApiInsight {
 
                 @Override
                 public void onFailure(@NonNull Call<InsightResponse> call, @NonNull Throwable t) {
+                    requestsCount--;
                     responseListener.onFail(method, String.valueOf(t.getMessage()));
                     Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
                 }
