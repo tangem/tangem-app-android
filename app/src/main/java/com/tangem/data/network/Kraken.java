@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
-import com.tangem.card_common.util.Util;
+import com.tangem.tangem_card.util.Util;
 import com.tangem.wallet.R;
 
 import org.spongycastle.util.encoders.Base64;
@@ -28,13 +28,14 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-//import okhttp3.logging.HttpLoggingInterceptor;
 import okio.Buffer;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.POST;
+
+//import okhttp3.logging.HttpLoggingInterceptor;
 
 /**
  * HTTP
