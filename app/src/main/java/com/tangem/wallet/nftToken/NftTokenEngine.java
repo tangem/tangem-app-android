@@ -15,6 +15,7 @@ import com.tangem.wallet.BalanceValidator;
 import com.tangem.wallet.CoinData;
 import com.tangem.wallet.CoinEngine;
 import com.tangem.wallet.Keccak256;
+import com.tangem.wallet.R;
 import com.tangem.wallet.TangemContext;
 import com.tangem.wallet.eth.EthData;
 import com.tangem.wallet.token.TokenData;
@@ -210,20 +211,20 @@ public class NftTokenEngine extends CoinEngine {
     public boolean validateBalance(BalanceValidator balanceValidator) {
         if (coinData.getBalanceInInternalUnits() == null) {
             balanceValidator.setScore(0);
-            balanceValidator.setFirstLine("No connection");
-            balanceValidator.setSecondLine("Authenticity cannot be verified. Swipe down to refresh.");
+            balanceValidator.setFirstLine(R.string.balance_validator_first_line_no_connection);
+            balanceValidator.setSecondLine(R.string.balance_validator_second_line_authenticity_not_verified);
             return false;
         }
 
         if (coinData.isBalanceReceived()) {
             if (isBalanceNotZero()) {
                 balanceValidator.setScore(100);
-                balanceValidator.setFirstLine("Verified in blockchain");
-                balanceValidator.setSecondLine("");
+                balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_in_blockchain);
+                balanceValidator.setSecondLine(R.string.empty_string);
             } else {
                 balanceValidator.setScore(0);
-                balanceValidator.setFirstLine("Authenticity was not verified");
-                balanceValidator.setSecondLine("");
+                balanceValidator.setFirstLine(R.string.balance_validator_first_line_authenticity);
+                balanceValidator.setSecondLine(R.string.empty_string);
             }
         }
 
