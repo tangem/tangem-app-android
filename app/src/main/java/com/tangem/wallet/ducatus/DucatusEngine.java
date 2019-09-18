@@ -226,8 +226,8 @@ public class DucatusEngine extends BtcEngine {
     public boolean validateBalance(BalanceValidator balanceValidator) {
         if (((ctx.getCard().getOfflineBalance() == null) && !ctx.getCoinData().isBalanceReceived()) || (!ctx.getCoinData().isBalanceReceived() && (ctx.getCard().getRemainingSignatures() != ctx.getCard().getMaxSignatures()))) {
             balanceValidator.setScore(0);
-            balanceValidator.setFirstLine("Unknown balance");
-            balanceValidator.setSecondLine("Balance cannot be verified. Swipe down to refresh.");
+            balanceValidator.setFirstLine(R.string.balance_validator_first_line_unknown_balance);
+            balanceValidator.setSecondLine(R.string.balance_validator_second_line_unverified_balance);
             return false;
         }
 
@@ -241,18 +241,18 @@ public class DucatusEngine extends BtcEngine {
 
         if (coinData.getBalanceUnconfirmed() != 0) {
             balanceValidator.setScore(0);
-            balanceValidator.setFirstLine("Transaction in progress");
-            balanceValidator.setSecondLine("Wait for confirmation in blockchain");
+            balanceValidator.setFirstLine(R.string.balance_validator_first_line_transaction_in_progress);
+            balanceValidator.setSecondLine(R.string.balance_validator_second_line_wait_for_confirmation);
             return false;
         }
 
         if (coinData.isBalanceReceived()) {// && coinData.isBalanceEqual()) { TODO:check
             balanceValidator.setScore(100);
-            balanceValidator.setFirstLine("Verified balance");
-            balanceValidator.setSecondLine("Balance confirmed in blockchain");
+            balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_balance);
+            balanceValidator.setSecondLine(R.string.balance_validator_second_line_confirmed_in_blockchain);
             if (coinData.getBalanceInInternalUnits().isZero()) {
-                balanceValidator.setFirstLine("Empty wallet");
-                balanceValidator.setSecondLine("");
+                balanceValidator.setFirstLine(R.string.balance_validator_first_line_empty_wallet);
+                balanceValidator.setSecondLine(R.string.empty_string);
             }
         }
 
@@ -267,8 +267,8 @@ public class DucatusEngine extends BtcEngine {
 
         if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && coinData.getBalanceInInternalUnits().notZero()) {
             balanceValidator.setScore(80);
-            balanceValidator.setFirstLine("Verified offline balance");
-            balanceValidator.setSecondLine("Can't obtain balance from blockchain. Restore internet connection to be more confident. ");
+            balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_offline);
+            balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_get_balance);
         }
 
 //            if(card.getFailedBalanceRequestCounter()!=0) {
@@ -562,7 +562,7 @@ public class DucatusEngine extends BtcEngine {
 
             @Override
             public void onFail(String method, String message) {
-                if (!serverApiInsight.isRequestsSequenceCompleted()) {
+                if (!serverApiInsight.isRequestsSequenceCompleted()) { //TODO: rework request sequence
                     ctx.setError(message);
                     blockchainRequestsCallbacks.onComplete(false);
                 }
