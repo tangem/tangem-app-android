@@ -277,10 +277,9 @@ public class NftTokenEngine extends CoinEngine {
 
             @Override
             public void onFail(String method, String message) {
-                if (!serverApiInfura.isRequestsSequenceCompleted()) {
-                    ctx.setError(message);
-                    blockchainRequestsCallbacks.onComplete(false);
-                }
+                Log.e(TAG, "onFail: " + method + " " + message);
+                ctx.setError(message);
+                blockchainRequestsCallbacks.onComplete(false);
             }
         };
         serverApiInfura.setResponseListener(responseListener);
