@@ -618,7 +618,7 @@ public class CardanoEngine extends CoinEngine {
                     }
                     coinData.setBalanceReceived(true);
                     coinData.setBalance(adaliteResponse.getRight().getCaBalance().getGetCoin());
-                    coinData.setValidationNodeDescription(ServerApiAdalite.lastNode);
+                    coinData.setValidationNodeDescription(serverApiAdalite.getCurrentURL());
 
                     //check pending
                     if (App.pendingTransactionsStorage.hasTransactions(ctx.getCard())) {
