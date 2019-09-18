@@ -84,8 +84,9 @@ public class ServerApiInfura {
         call.enqueue(new Callback<InfuraResponse>() {
             @Override
             public void onResponse(@NonNull Call<InfuraResponse> call, @NonNull Response<InfuraResponse> response) {
+                requestsCount--;
+
                 if (response.code() == 200) {
-                    requestsCount--;
                     responseListener.onSuccess(method, response.body());
                     Log.i(TAG, "requestData " + method + " onResponse " + response.code());
                 } else {
@@ -96,6 +97,7 @@ public class ServerApiInfura {
 
             @Override
             public void onFailure(@NonNull Call<InfuraResponse> call, @NonNull Throwable t) {
+                requestsCount--;
                 responseListener.onFail(method, String.valueOf(t.getMessage()));
                 Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
             }
