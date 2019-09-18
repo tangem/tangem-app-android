@@ -1,6 +1,7 @@
 package com.tangem.ui.fragment
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
@@ -58,6 +59,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
     private var task: CustomReadCardTask? = null
     private var lastTag: Tag? = null
     private var zipFile: File? = null
+    private var unknownBlockchain = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         setHasOptionsMenu(true)
@@ -114,6 +116,11 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
     }
 
     override fun onTagDiscovered(tag: Tag) {
+        if (unknownBlockchain) {
+            (activity as MainActivity).nfcManager.ignoreTag(tag)
+            return
+        }
+
         try {
             // get IsoDep handle and run cardReader thread
             val isoDep = IsoDep.get(tag)
@@ -174,7 +181,8 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                                 ctx.saveToBundle(bundle)
                                 navigateForResult(Constant.REQUEST_CODE_SHOW_CARD_ACTIVITY,
                                         R.id.action_main_to_loadedWalletFragment, bundle)
-
+                            } else {
+                                showUnkownBlockchainWarning()
                             }
                         }
                         card.status == TangemCard.Status.Empty -> {
@@ -219,6 +227,17 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
         }
 
         rlProgressBar?.postDelayed({ rlProgressBar?.visibility = View.GONE }, 500)
+    }
+
+    private fun showUnkownBlockchainWarning() {
+        unknownBlockchain = true
+        AlertDialog.Builder(context)
+                .setTitle(R.string.dialog_warning)
+                .setMessage(R.string.alert_unknown_blockchain)
+                .setPositiveButton(R.string.general_ok) { _, _ -> }
+                .setOnDismissListener { unknownBlockchain = false }
+                .create()
+                .show()
     }
 
     override fun onReadCancel() {
