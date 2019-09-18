@@ -162,6 +162,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                     cardInfo.getBundle(EXTRA_TANGEM_CARD)?.let { card.loadFromBundle(it) }
 
                     val ctx = TangemContext(card)
+
                     when {
                         card.status == TangemCard.Status.Loaded -> lastTag?.let {
                             val engineCoin = CoinEngineFactory.create(ctx)
