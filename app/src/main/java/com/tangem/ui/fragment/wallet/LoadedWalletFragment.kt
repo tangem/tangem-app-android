@@ -627,9 +627,9 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
             val validator = BalanceValidator()
 // [REDACTED_TODO_COMMENT]
             validator.check(ctx, false)
-            context?.let { ContextCompat.getColor(it, validator.color) }?.let { tvBalanceLine1.setTextColor(it) }
-            tvBalanceLine1.text = validator.firstLine
-            tvBalanceLine2.text = validator.getSecondLine(false)
+            context?.let { ContextCompat.getColor(it, validator.color) }?.let { tvBalanceLine1?.setTextColor(it) }
+            tvBalanceLine1?.text = getString(validator.firstLine)
+            tvBalanceLine2?.text = getString(validator.getSecondLine(false))
         }
 
         val engine = CoinEngineFactory.create(ctx)
