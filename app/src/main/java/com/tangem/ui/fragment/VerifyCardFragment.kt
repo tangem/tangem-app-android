@@ -354,8 +354,10 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
             if (ctx.card!!.supportBlock()!!)
                 features += "Blockable\n"
 
+            if (ctx.card!!.supportLinkingTerminal())
+                features += "Linking terminal is supported"
 
-            if (ctx.card!!.supportOnlyOneCommandAtTime()!!)
+            if (ctx.card!!.supportOnlyOneCommandAtTime())
                 features += "Atomic command mode"
 
             if (features.endsWith("\n"))
