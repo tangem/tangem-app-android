@@ -46,7 +46,7 @@ android {
             applicationIdSuffix ".debug_beta"
             buildConfigField 'boolean', 'CRASHLYTICS', 'Boolean.parseBoolean("true")'
             manifestPlaceholders = [fabric_api_key: properties.hasProperty('fabric_api_key')
-                    ? project.property('fabric_api_key') : 000]
+                    ? project.property('fabric_api_key') : '000']
         }
     }
     flavorDimensions ""
@@ -91,23 +91,22 @@ dependencies {
     implementation project(':tangem-card')
     implementation project(':tangem-sdk')
     implementation project(':server-android')
-    //    implementation 'com.github.TangemCash:card-common:0.1.2'
-    //    implementation 'com.github.TangemCash:card-android:0.1.3'
-    //    implementation 'com.github.TangemCash:server-android:0.1.4'
-    implementation 'android.arch.navigation:navigation-fragment:1.0.0'
-    implementation 'android.arch.navigation:navigation-ui-ktx:1.0.0'
+
+    implementation 'androidx.navigation:navigation-fragment:2.1.0'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.1.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.0.0'
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0'
-    implementation "androidx.lifecycle:lifecycle-runtime:2.0.0"
-    implementation "androidx.lifecycle:lifecycle-common-java8:2.0.0"
-    implementation 'androidx.appcompat:appcompat:1.1.0-rc01'
-    implementation 'androidx.fragment:fragment:1.1.0-rc04'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.1.0'
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0'
+    implementation "androidx.lifecycle:lifecycle-runtime:2.1.0"
+    implementation "androidx.lifecycle:lifecycle-common-java8:2.1.0"
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.fragment:fragment:1.1.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation "androidx.preference:preference:1.1.0-rc01"
-    implementation 'androidx.biometric:biometric:1.0.0-alpha04'
-    implementation 'com.google.android.material:material:1.1.0-alpha09'
-    implementation 'androidx.core:core-ktx:1.0.2'
+    implementation "androidx.preference:preference:1.1.0"
+    implementation 'androidx.biometric:biometric:1.0.0-beta01'
+    implementation 'androidx.core:core-ktx:1.1.0'
+    implementation 'com.google.android.material:material:1.1.0-alpha10'
+
     implementation 'com.google.dagger:dagger:2.21'
     kapt 'com.google.dagger:dagger-compiler:2.21'
     annotationProcessor 'com.google.dagger:dagger-compiler:2.21'
