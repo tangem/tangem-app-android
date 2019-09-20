@@ -88,7 +88,7 @@ class PrepareCryptonitWithdrawalFragment : BaseFragment(), NfcAdapter.ReaderCall
 
                 cryptonit.requestWithdrawCoins(ctx.blockchain.currency, dblAmount, ctx.coinData!!.wallet)
             } catch (e: Exception) {
-                etAmount.error = getString(R.string.unknown_amount_format)
+                etAmount.error = getString(R.string.prepare_transaction_error_unknown_amount_format)
             }
         }
 
