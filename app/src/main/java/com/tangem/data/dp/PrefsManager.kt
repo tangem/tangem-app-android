@@ -3,9 +3,9 @@ package com.tangem.data.dp
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
-
 import com.orhanobut.hawk.Hawk
 import com.tangem.Constant
+import com.tangem.tangem_card.reader.CardCrypto
 
 class PrefsManager {
     companion object {
@@ -47,4 +47,18 @@ class PrefsManager {
     }
 
     fun getAllCids(): String = Hawk.get("CID_Key", "")
+
+    val terminalKeys: Map<String, ByteArray>
+        get() {
+            val privateKey = Hawk.get<ByteArray>(Constant.TERMINAL_PRIVATE_KEY) ?: byteArrayOf()
+            val publicKey = Hawk.get<ByteArray>(Constant.TERMINAL_PUBLIC_KEY) ?: byteArrayOf()
+            return if (privateKey.isNotEmpty() && publicKey.isNotEmpty()) {
+                mapOf(Constant.TERMINAL_PRIVATE_KEY to privateKey, Constant.TERMINAL_PUBLIC_KEY to publicKey)
+            } else {
+                val keys = CardCrypto.generateTerminalKeys()
+                Hawk.put(Constant.TERMINAL_PRIVATE_KEY, keys[Constant.TERMINAL_PRIVATE_KEY])
+                Hawk.put(Constant.TERMINAL_PUBLIC_KEY, keys[Constant.TERMINAL_PUBLIC_KEY])
+                keys
+            }
+        }
 }
