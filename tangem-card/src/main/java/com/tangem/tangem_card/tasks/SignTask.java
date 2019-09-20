@@ -47,7 +47,7 @@ public class SignTask extends CustomReadCardTask {
         mNotifications.onReadProgress(protocol, 30);
         if (isCancelled) return;
 
-        if (mCard.getPauseBeforePIN2() > 0) {
+        if (mCard.getPauseBeforePIN2() > 0 && !mCard.getTerminalIsLinked()) {
             mNotifications.onReadWait(mCard.getPauseBeforePIN2());
         }
 
