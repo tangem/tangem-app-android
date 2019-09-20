@@ -27,4 +27,7 @@ public interface PINsProvider {
      */
     void setLastUsedPIN(String pin);
 
+    byte[] getTerminalPublicKey();
+    byte[] getTerminalPrivateKey();
+
 }
