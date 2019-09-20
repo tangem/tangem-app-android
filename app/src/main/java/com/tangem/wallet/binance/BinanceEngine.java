@@ -124,11 +124,11 @@ public class BinanceEngine extends CoinEngine {
 
     public boolean isExtractPossible() {
         if (!hasBalanceInfo()) {
-            ctx.setMessage(R.string.cannot_obtain_data_from_blockchain);
+            ctx.setMessage(R.string.loaded_wallet_error_obtaining_blockchain_data);
         } else if (!isBalanceNotZero()) {
-            ctx.setMessage(R.string.wallet_empty);
+            ctx.setMessage(R.string.general_wallet_empty);
         } else if (awaitingConfirmation()) {
-            ctx.setMessage(R.string.please_wait_while_previous);
+            ctx.setMessage(R.string.loaded_wallet_message_wait);
         } else {
             return true;
         }
@@ -226,30 +226,30 @@ public class BinanceEngine extends CoinEngine {
 
                 if(coinData.isError404()) {
                     balanceValidator.setScore(0);
-                    balanceValidator.setFirstLine("No account or network error");
-                    balanceValidator.setSecondLine("To create account send funds to this address");
+                    balanceValidator.setFirstLine(R.string.balance_validator_first_line_no_account);
+                    balanceValidator.setSecondLine(R.string.balance_validator_second_line_create_account);
                 } else {
                     balanceValidator.setScore(0);
-                    balanceValidator.setFirstLine("Unknown balance");
-                    balanceValidator.setSecondLine("Balance cannot be verified. Swipe down to refresh.");
+                    balanceValidator.setFirstLine(R.string.balance_validator_first_line_unknown_balance);
+                    balanceValidator.setSecondLine(R.string.balance_validator_second_line_unverified_balance);
                     return false;
                 }
             }
 
             if (coinData.isBalanceReceived()) {
                 balanceValidator.setScore(100);
-                balanceValidator.setFirstLine("Verified balance");
-                balanceValidator.setSecondLine("Balance confirmed in blockchain");
+                balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_balance);
+                balanceValidator.setSecondLine(R.string.balance_validator_second_line_confirmed_in_blockchain);
                 if (coinData.getBalance().isZero()) {
-                    balanceValidator.setFirstLine("Empty wallet");
-                    balanceValidator.setSecondLine("");
+                    balanceValidator.setFirstLine(R.string.balance_validator_first_line_empty_wallet);
+                    balanceValidator.setSecondLine(R.string.empty_string);
                 }
             }
 
             if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && coinData.getBalance().notZero()) {
                 balanceValidator.setScore(80);
-                balanceValidator.setFirstLine("Verified offline balance");
-                balanceValidator.setSecondLine("Can't obtain balance from blockchain. Restore internet connection to be more confident. ");
+                balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_offline);
+                balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_get_balance);
             }
 
             return true;
