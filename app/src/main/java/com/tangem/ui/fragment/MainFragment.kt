@@ -1,6 +1,7 @@
 package com.tangem.ui.fragment
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
@@ -17,6 +18,7 @@ import com.tangem.tangem_card.data.TangemCard
 import com.tangem.tangem_card.reader.CardProtocol
 import com.tangem.tangem_card.tasks.CustomReadCardTask
 import com.tangem.tangem_card.tasks.ReadCardInfoTask
+import com.tangem.tangem_sdk.android.data.PINStorage
 import com.tangem.tangem_sdk.android.nfc.NfcDeviceAntennaLocation
 import com.tangem.tangem_sdk.android.reader.NfcReader
 import com.tangem.tangem_sdk.data.EXTRA_TANGEM_CARD
@@ -56,6 +58,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
     private var task: CustomReadCardTask? = null
     private var lastTag: Tag? = null
     private var zipFile: File? = null
+    private var unknownBlockchain = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         setHasOptionsMenu(true)
@@ -112,6 +115,11 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
     }
 
     override fun onTagDiscovered(tag: Tag) {
+        if (unknownBlockchain) {
+            (activity as MainActivity).nfcManager.ignoreTag(tag)
+            return
+        }
+
         try {
             // get IsoDep handle and run cardReader thread
             val isoDep = IsoDep.get(tag)
@@ -121,6 +129,10 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                 isoDep.timeout = 90000
 
             lastTag = tag
+
+            val terminalKeys = viewModel.getTerminalKeys()
+            PINStorage.setTerminalPrivateKey(terminalKeys[Constant.TERMINAL_PRIVATE_KEY])
+            PINStorage.setTerminalPublicKey(terminalKeys[Constant.TERMINAL_PUBLIC_KEY])
 
             task = ReadCardInfoTask(NfcReader((activity as MainActivity).nfcManager, isoDep),
                     App.localStorage, App.pinStorage, this)
@@ -158,6 +170,10 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                     val card = TangemCard(uid)
                     cardInfo.getBundle(EXTRA_TANGEM_CARD)?.let { card.loadFromBundle(it) }
 
+                    val terminalKeys = viewModel.getTerminalKeys()
+                    card.terminalPrivateKey = terminalKeys[Constant.TERMINAL_PRIVATE_KEY]
+                    card.terminalPublicKey = terminalKeys[Constant.TERMINAL_PUBLIC_KEY]
+
                     val ctx = TangemContext(card)
 
                     when {
@@ -171,7 +187,8 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                                 ctx.saveToBundle(bundle)
                                 navigateForResult(Constant.REQUEST_CODE_SHOW_CARD_ACTIVITY,
                                         R.id.action_main_to_loadedWalletFragment, bundle)
-
+                            } else {
+                                showUnkownBlockchainWarning()
                             }
                         }
                         card.status == TangemCard.Status.Empty -> {
@@ -216,6 +233,17 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
         }
 
         rlProgressBar?.postDelayed({ rlProgressBar?.visibility = View.GONE }, 500)
+    }
+
+    private fun showUnkownBlockchainWarning() {
+        unknownBlockchain = true
+        AlertDialog.Builder(context)
+                .setTitle(R.string.dialog_warning)
+                .setMessage(R.string.alert_unknown_blockchain)
+                .setPositiveButton(R.string.general_ok) { _, _ -> }
+                .setOnDismissListener { unknownBlockchain = false }
+                .create()
+                .show()
     }
 
     override fun onReadCancel() {
