@@ -253,7 +253,7 @@
     <string name="details_ndef">NDEF\n</string>
     <string name="details_blockable">Blockable\n</string>
     <string name="details_atomic_commmands">Atomic command mode\n</string>
-    <string name="details_linking_card_supported">Linking terminal is supported\n</string>
+    <string name="details_linking_card_supported">Linking to the terminal is supported\n</string>
     <string name="details_linked_card_title">The card is linked</string>
     <string name="details_linked_card_to_phone">To this phone</string>
 
