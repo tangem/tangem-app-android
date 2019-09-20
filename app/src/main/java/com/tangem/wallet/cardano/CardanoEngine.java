@@ -192,7 +192,7 @@ public class CardanoEngine extends CoinEngine {
 
     @Override
     public boolean checkNewTransactionAmount(Amount amount) {
-        if( BuildConfig.FLAVOR==Constant.FLAVOR_TANGEM_CARDANO ) {
+        if (BuildConfig.FLAVOR == Constant.FLAVOR_TANGEM_CARDANO) {
             return true;
         }
         if (coinData == null) return false;
@@ -236,25 +236,25 @@ public class CardanoEngine extends CoinEngine {
         try {
             if (((ctx.getCard().getOfflineBalance() == null) && !ctx.getCoinData().isBalanceReceived()) || (!ctx.getCoinData().isBalanceReceived() && (ctx.getCard().getRemainingSignatures() != ctx.getCard().getMaxSignatures()))) {
                 balanceValidator.setScore(0);
-                balanceValidator.setFirstLine("Unknown balance");
-                balanceValidator.setSecondLine("Balance cannot be verified. Swipe down to refresh.");
+                balanceValidator.setFirstLine(R.string.balance_validator_first_line_unknown_balance);
+                balanceValidator.setSecondLine(R.string.balance_validator_second_line_unverified_balance);
                 return false;
             }
 
             if (coinData.isBalanceReceived()) {// && coinData.isBalanceEqual()) { TODO:check
                 balanceValidator.setScore(100);
-                balanceValidator.setFirstLine("Verified balance");
-                balanceValidator.setSecondLine("Balance confirmed in blockchain");
+                balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_balance);
+                balanceValidator.setSecondLine(R.string.balance_validator_second_line_confirmed_in_blockchain);
                 if (coinData.getBalanceInInternalUnits().isZero()) {
-                    balanceValidator.setFirstLine("Empty wallet");
-                    balanceValidator.setSecondLine("");
+                    balanceValidator.setFirstLine(R.string.balance_validator_first_line_empty_wallet);
+                    balanceValidator.setSecondLine(R.string.empty_string);
                 }
             }
 
             if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && coinData.getBalanceInInternalUnits().notZero()) {
                 balanceValidator.setScore(80);
-                balanceValidator.setFirstLine("Verified offline balance");
-                balanceValidator.setSecondLine("Can't obtain balance from blockchain. Restore internet connection to be more confident. ");
+                balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_offline);
+                balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_get_balance);
             }
 
             return true;
@@ -586,7 +586,8 @@ public class CardanoEngine extends CoinEngine {
         Amount feeDummy = new Amount(new BigDecimal(0.2).setScale(getDecimals(), RoundingMode.DOWN), getFeeCurrency());
         try {
             OnNeedSendTransaction onNeedSendTransactionBackup = onNeedSendTransaction;
-            onNeedSendTransaction =(tx)->{}; // empty function to bypass exception
+            onNeedSendTransaction = (tx) -> {
+            }; // empty function to bypass exception
 
             SignTask.TransactionToSign ttsDummy = constructTransaction(amount, feeDummy, true, targetAddress);
             byte[] txForSendDummy = ttsDummy.onSignCompleted(new byte[64]);
@@ -617,7 +618,7 @@ public class CardanoEngine extends CoinEngine {
                     }
                     coinData.setBalanceReceived(true);
                     coinData.setBalance(adaliteResponse.getRight().getCaBalance().getGetCoin());
-                    coinData.setValidationNodeDescription(ServerApiAdalite.lastNode);
+                    coinData.setValidationNodeDescription(serverApiAdalite.getCurrentURL());
 
                     //check pending
                     if (App.pendingTransactionsStorage.hasTransactions(ctx.getCard())) {
@@ -632,8 +633,8 @@ public class CardanoEngine extends CoinEngine {
                     }
 
                 } catch (Exception e) {
-                    e.printStackTrace();
                     Log.e(TAG, "FAIL ADALITE_ADDRESS Exception");
+                    e.printStackTrace();
                 }
 
                 if (serverApiAdalite.isRequestsSequenceCompleted()) {
@@ -658,6 +659,7 @@ public class CardanoEngine extends CoinEngine {
                     }
 
                 } catch (Exception e) {
+                    Log.e(TAG, "FAIL ADALITE_UNSPENT_OUTPUTS Exception");
                     e.printStackTrace();
                 }
 
@@ -665,7 +667,6 @@ public class CardanoEngine extends CoinEngine {
                     blockchainRequestsCallbacks.onComplete(!ctx.hasError());
                 } else {
                     blockchainRequestsCallbacks.onProgress();
-                    Log.e(TAG, "FAIL ADALITE_UNSPENT_OUTPUTS Exception");
                 }
             }
 
@@ -678,9 +679,13 @@ public class CardanoEngine extends CoinEngine {
 
             @Override
             public void onFail(String method, String message) {
-                Log.i(TAG, "onFail: " + method + " " + message);
+                Log.e(TAG, "onFail: " + method + " " + message);
                 ctx.setError(message);
-                blockchainRequestsCallbacks.onComplete(false);
+                if (serverApiAdalite.isRequestsSequenceCompleted()) {
+                    blockchainRequestsCallbacks.onComplete(false);
+                } else {
+                    blockchainRequestsCallbacks.onProgress();
+                }
             }
         };
 
@@ -752,10 +757,10 @@ public class CardanoEngine extends CoinEngine {
 
             @Override
             public void onFail(String method, String message) {
-                if (!serverApiAdalite.isRequestsSequenceCompleted()) {
-                    ctx.setError(message);
-                    blockchainRequestsCallbacks.onComplete(false);
-                }
+                Log.e(TAG, "onFail: " + method + " " + message);
+                ctx.setError(message);
+                blockchainRequestsCallbacks.onComplete(false);
+
             }
         };
         serverApiAdalite.setResponseListener(responseListener);
@@ -769,7 +774,9 @@ public class CardanoEngine extends CoinEngine {
     }
 
     @Override
-    public int pendingTransactionTimeoutInSeconds() { return 60; }
+    public int pendingTransactionTimeoutInSeconds() {
+        return 60;
+    }
 
     private String CalculateTxHash(String tx) throws CborException {
         Array txArray = (Array) CborDecoder.decode(BTCUtils.fromHex(tx)).get(0);
