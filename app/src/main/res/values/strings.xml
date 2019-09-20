@@ -244,16 +244,18 @@
     <string name="details_protected_by_user_pin_2">This banknote is protected by user\'s PIN2 code</string>
     <string name="details_unlocked_banknote">Unlocked banknote, only for development use</string>
     <string name="details_security_delay">This banknote will enforce %.0f seconds security delay for all operations requiring PIN2 code</string>
-    <string name="details_both_pins_can_be_changed">Allows to change PIN1 and PIN2/n</string>
-    <string name="details_pin1_can_be_changed">Allows to change PIN1/n</string>
-    <string name="details_pin2_can_be_changed">Allows to change PIN2/n</string>
-    <string name="details_both_pins_fixed">Fixed PIN1 and PIN2/n</string>
-    <string name="details_required_cvc">Requires CVC/n</string>
-    <string name="details_dynamic_ndef">Dynamic NDEF for iOS/n</string>
-    <string name="details_ndef">NDEF/n</string>
-    <string name="details_blockable">Blockable/n</string>
-    <string name="details_atomic_commmands">Atomic command mode</string>
-    <string name="details_linking_card_supported">Linking terminal is supported</string>
+    <string name="details_both_pins_can_be_changed">Allows to change PIN1 and PIN2\n</string>
+    <string name="details_pin1_can_be_changed">Allows to change PIN1\n</string>
+    <string name="details_pin2_can_be_changed">Allows to change PIN2\n</string>
+    <string name="details_both_pins_fixed">Fixed PIN1 and PIN2\n</string>
+    <string name="details_required_cvc">Requires CVC\n</string>
+    <string name="details_dynamic_ndef">Dynamic NDEF for iOS\n</string>
+    <string name="details_ndef">NDEF\n</string>
+    <string name="details_blockable">Blockable\n</string>
+    <string name="details_atomic_commmands">Atomic command mode\n</string>
+    <string name="details_linking_card_supported">Linking terminal is supported\n</string>
+    <string name="details_linked_card_title">The card is linked</string>
+    <string name="details_linked_card_to_phone">To this phone</string>
 
     <!-- PinSave -->
     <string name="pin_save_btn_save">Save</string>
