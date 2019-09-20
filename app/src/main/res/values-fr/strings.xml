@@ -253,7 +253,10 @@
     <string name="details_dynamic_ndef">NDEF dynamique pour iOS\n</string>
     <string name="details_ndef">NDEF\n</string>
     <string name="details_blockable">Bloquable\n</string>
-    <string name="details_atomic_commmands">Mode de commande atomique</string>
+    <string name="details_atomic_commmands">Mode de commande atomique\n</string>
+    <string name="details_linking_card_supported">La liaison au terminal est prise en charge\n</string>
+    <string name="details_linked_card_title">La carte est liée</string>
+    <string name="details_linked_card_to_phone">à ce téléphone</string>
 
     <!-- PinSave -->
     <string name="pin_save_btn_save">Enregistrer</string>
