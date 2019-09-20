@@ -11,8 +11,6 @@ import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Logger
@@ -86,12 +84,12 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
-
-        // show snackbar about new version app
-        viewModel.getVersionName().observe(this, Observer { text ->
-            (activity as MainActivity).toastHelper.showSnackbarUpdateVersion(requireContext(), cl, text)
-        })
+//        viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+//
+//        // show snackbar about new version app
+//        viewModel.getVersionName().observe(this, Observer { text ->
+//            (activity as MainActivity).toastHelper.showSnackbarUpdateVersion(requireContext(), cl, text)
+//        })
 
         val intent = activity?.intent
         if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action || NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action)) {
