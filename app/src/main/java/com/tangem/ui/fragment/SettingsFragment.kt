@@ -32,7 +32,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun initToolbar() {
-        toolbar?.setTitle(R.string.settings)
+        toolbar?.setTitle(R.string.settings_title)
         toolbar?.setNavigationIcon(android.R.drawable.ic_menu_close_clear_cancel)
         (activity as AppCompatActivity).setSupportActionBar(toolbar)
         toolbar?.setNavigationOnClickListener {

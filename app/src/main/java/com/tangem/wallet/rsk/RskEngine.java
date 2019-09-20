@@ -9,9 +9,9 @@ import com.tangem.data.network.model.InfuraResponse;
 import com.tangem.wallet.BTCUtils;
 import com.tangem.wallet.CoinEngine;
 import com.tangem.wallet.EthTransaction;
+import com.tangem.wallet.R;
 import com.tangem.wallet.TangemContext;
 import com.tangem.wallet.eth.EthEngine;
-import com.tangem.wallet.R;
 
 import java.math.BigInteger;
 
@@ -111,9 +111,12 @@ public class RskEngine extends EthEngine {
 
             @Override
             public void onFail(String method, String message) {
-                if (!serverApiRootstock.isRequestsSequenceCompleted()) {
-                    ctx.setError(message);
+                Log.e(TAG, "onFail: " + method + " " + message);
+                ctx.setError(message);
+                if (serverApiRootstock.isRequestsSequenceCompleted()) {
                     blockchainRequestsCallbacks.onComplete(false);
+                } else {
+                    blockchainRequestsCallbacks.onProgress();
                 }
             }
         };
@@ -162,7 +165,7 @@ public class RskEngine extends EthEngine {
 
             @Override
             public void onFail(String method, String message) {
-                ctx.setError(ctx.getContext().getString(R.string.cannot_calculate_fee_wrong_data_received_from_node));
+                ctx.setError(ctx.getContext().getString(R.string.confirm_transaction_error_cannot_calculate_fee));
                 blockchainRequestsCallbacks.onComplete(false);
             }
         };

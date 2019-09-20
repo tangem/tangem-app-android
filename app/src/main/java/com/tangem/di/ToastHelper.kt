@@ -13,8 +13,8 @@ import java.util.*
 
 class ToastHelper {
     fun showSnackbarUpdateVersion(context: Context, vg: ViewGroup, versionName: String) {
-        Snackbar.make(vg, String.format(context.getString(R.string.new_app_version), versionName), Snackbar.LENGTH_INDEFINITE)
-                .setAction(R.string.update) {
+        Snackbar.make(vg, String.format(context.getString(R.string.main_screen_new_version_toast), versionName), Snackbar.LENGTH_INDEFINITE)
+                .setAction(R.string.main_screen_btn_update) {
                     try {
                         val intent = Intent(Intent.ACTION_VIEW)
                         intent.data = Uri.parse(Constant.URL_TANGEM)
@@ -29,7 +29,7 @@ class ToastHelper {
         val snackbar = Snackbar.make(vg, message, Snackbar.LENGTH_INDEFINITE)
         val snackView = snackbar.view
         snackView.setBackgroundColor(context.resources.getColor(R.color.msg_okay))
-        snackbar.setAction(R.string.ok) {
+        snackbar.setAction(R.string.general_ok) {
             snackbar.dismiss()
         }
         snackbar.show()
@@ -39,7 +39,7 @@ class ToastHelper {
         val snackbar = Snackbar.make(vg, message, Snackbar.LENGTH_INDEFINITE)
         val snackView = snackbar.view
         snackView.setBackgroundColor(context.resources.getColor(R.color.msg_err))
-        snackbar.setAction(R.string.ok) {
+        snackbar.setAction(R.string.general_ok) {
             snackbar.dismiss()
         }
         snackbar.show()
