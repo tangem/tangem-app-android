@@ -1,6 +1,7 @@
 package com.tangem.ui.fragment
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
@@ -59,6 +60,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
     private var task: CustomReadCardTask? = null
     private var lastTag: Tag? = null
     private var zipFile: File? = null
+    private var unknownBlockchain = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         setHasOptionsMenu(true)
@@ -75,9 +77,9 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
 
         // set phone name
         if (nfcDeviceAntenna.fullName != "")
-            tvNFCHint.text = String.format(getString(R.string.scan_banknote), nfcDeviceAntenna.fullName)
+            tvNFCHint.text = String.format(getString(R.string.main_screen_scan_banknote), nfcDeviceAntenna.fullName)
         else
-            tvNFCHint.text = String.format(getString(R.string.scan_banknote), getString(R.string.phone))
+            tvNFCHint.text = String.format(getString(R.string.main_screen_scan_banknote), getString(R.string.main_screen_phone))
 
         // set listeners
         fab.setOnClickListener { showMenu(it) }
@@ -115,6 +117,11 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
     }
 
     override fun onTagDiscovered(tag: Tag) {
+        if (unknownBlockchain) {
+            (activity as MainActivity).nfcManager.ignoreTag(tag)
+            return
+        }
+
         try {
             // get IsoDep handle and run cardReader thread
             val isoDep = IsoDep.get(tag)
@@ -170,31 +177,28 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                     card.terminalPublicKey = terminalKeys[Constant.TERMINAL_PUBLIC_KEY]
 
                     val ctx = TangemContext(card)
+
                     when {
                         card.status == TangemCard.Status.Loaded -> lastTag?.let {
                             val engineCoin = CoinEngineFactory.create(ctx)
                             if (engineCoin != null) {
                                 engineCoin.defineWallet()
 
-//                                val bundle = Bundle()
-//                                bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
-//                                ctx.saveToBundle(bundle)
-//                                (activity as MainActivity).navController.navigate(R.id.loadedWallet, bundle)
-
                                 val bundle = Bundle()
                                 bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
                                 ctx.saveToBundle(bundle)
                                 navigateForResult(Constant.REQUEST_CODE_SHOW_CARD_ACTIVITY,
                                         R.id.action_main_to_loadedWalletFragment, bundle)
-
+                            } else {
+                                showUnkownBlockchainWarning()
                             }
                         }
                         card.status == TangemCard.Status.Empty -> {
                             val bundle = Bundle().apply { ctx.saveToBundle(this) }
                             navigateToDestination(R.id.action_main_to_emptyWalletFragment, bundle)
                         }
-                        card.status == TangemCard.Status.Purged -> Toast.makeText(context, R.string.erased_wallet, Toast.LENGTH_SHORT).show()
-                        card.status == TangemCard.Status.NotPersonalized -> Toast.makeText(context, R.string.not_personalized, Toast.LENGTH_SHORT).show()
+                        card.status == TangemCard.Status.Purged -> Toast.makeText(context, R.string.main_screen_erased_wallet, Toast.LENGTH_SHORT).show()
+                        card.status == TangemCard.Status.NotPersonalized -> Toast.makeText(context, R.string.main_screen_not_personalized, Toast.LENGTH_SHORT).show()
                         else -> {
 
 //                            val bundle = Bundle()
@@ -210,7 +214,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
             } else {
                 // remove last UIDs because of error and no card read
                 rlProgressBar.post {
-                    Toast.makeText(context, R.string.try_to_scan_again, Toast.LENGTH_SHORT).show()
+                    context?.let { Toast.makeText(it, R.string.general_notification_scan_again, Toast.LENGTH_SHORT).show() }
                     unsuccessReadCount++
 
                     if (cardProtocol.error is CardProtocol.TangemException_InvalidPIN) {
@@ -231,6 +235,17 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
         }
 
         rlProgressBar?.postDelayed({ rlProgressBar?.visibility = View.GONE }, 500)
+    }
+
+    private fun showUnkownBlockchainWarning() {
+        unknownBlockchain = true
+        AlertDialog.Builder(context)
+                .setTitle(R.string.dialog_warning)
+                .setMessage(R.string.alert_unknown_blockchain)
+                .setPositiveButton(R.string.general_ok) { _, _ -> }
+                .setOnDismissListener { unknownBlockchain = false }
+                .create()
+                .show()
     }
 
     override fun onReadCancel() {
