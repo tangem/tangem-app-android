@@ -235,6 +235,9 @@ public class CustomReadCardTask extends Thread {
                     Log.e(TAG, "Can't get max signatures");
                 }
 
+                TLV terminalIsLinked = protocol.getReadResult().getTLV(TLV.Tag.TAG_Terminal_IsLinked);
+                mCard.setTerminalIsLinked(terminalIsLinked != null);
+
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new CardProtocol.TangemException("Can't parse card data");
@@ -299,6 +302,9 @@ public class CustomReadCardTask extends Thread {
         if (isCancelled) return;
 
         protocol.setPIN(CardProtocol.DefaultPIN);
+        if (pinsProvider != null) {
+            protocol.setTerminalPublicKey(pinsProvider.getTerminalPublicKey());
+        }
         protocol.clearReadResult();
 
         if (lastRead_Encryption == null) {
