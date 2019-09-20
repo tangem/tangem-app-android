@@ -22,6 +22,7 @@
     <string name="general_notification_scan_again_to_verify">Scanner à nouveau pour vérifier la carte</string>
     <string name="general_status_reading">READING…</string>
     <string name="general_wallet_empty">Le porte-monnaie est vide</string>
+    <string name="general_toast_no_permission">L\'utilisateur n\'a pas obtenu l\'autorisation d\'utiliser la caméra</string>
 
     <!-- Paramètres -->
     <string name="settings_title">Paramètres</string>
