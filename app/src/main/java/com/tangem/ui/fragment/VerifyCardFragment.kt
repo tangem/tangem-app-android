@@ -333,35 +333,47 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
             var features = ""
 
             features += if (ctx.card!!.allowSwapPIN()!! && ctx.card!!.allowSwapPIN2()!!) {
-                "Allows change PIN1 and PIN2\n"
+                getString(R.string.details_both_pins_can_be_changed)
             } else if (ctx.card!!.allowSwapPIN()!!) {
-                "Allows change PIN1\n"
+               getString(R.string.details_pin1_can_be_changed)
             } else if (ctx.card!!.allowSwapPIN2()!!) {
-                "Allows change PIN2\n"
+                getString(R.string.details_pin2_can_be_changed)
             } else {
-                "Fixed PIN1 and PIN2\n"
+                getString(R.string.details_both_pins_fixed)
             }
 
             if (ctx.card!!.needCVC()!!)
-                features += "Requires CVC\n"
+                features += getString(R.string.details_required_cvc)
 
 
             if (ctx.card!!.supportDynamicNDEF()!!) {
-                features += "Dynamic NDEF for iOS\n"
+                features += getString(R.string.details_dynamic_ndef)
             } else if (ctx.card!!.supportNDEF()!!)
-                features += "NDEF\n"
+                features += getString(R.string.details_ndef)
 
             if (ctx.card!!.supportBlock()!!)
-                features += "Blockable\n"
+                features += getString(R.string.details_blockable)
+
+            if (ctx.card!!.supportLinkingTerminal()) {
+                features += getString(R.string.details_linking_card_supported)
+                llLinkedCard.visibility = View.VISIBLE
+            }
 
 
-            if (ctx.card!!.supportOnlyOneCommandAtTime()!!)
-                features += "Atomic command mode"
+            if (ctx.card!!.supportOnlyOneCommandAtTime())
+                features += getString(R.string.details_atomic_commmands)
 
             if (features.endsWith("\n"))
                 features = features.substring(0, features.length - 1)
 
             tvFeatures.text = features
+
+            val textIsLinked = if (ctx.card.terminalIsLinked) {
+                getString(R.string.details_linked_card_to_phone)
+            } else {
+                getString(R.string.general_no)
+            }
+            tvIsLinked.text = textIsLinked
 
             if (ctx.card!!.useDefaultPIN1()) {
                 imgPIN.setImageResource(R.drawable.unlock_pin1)

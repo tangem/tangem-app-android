@@ -97,4 +97,6 @@ object Constant {
     const val REQUEST_CODE_SCAN_QR_SECRET = "REQUEST_CODE_SCAN_QR_SECRET"
     const val REQUEST_CODE_SCAN_QR_USER_ID = "REQUEST_CODE_SCAN_QR_USER_ID"
 
+    const val TERMINAL_PRIVATE_KEY = "terminalPrivateKey"
+    const val TERMINAL_PUBLIC_KEY = "terminalPublicKey"
 }
