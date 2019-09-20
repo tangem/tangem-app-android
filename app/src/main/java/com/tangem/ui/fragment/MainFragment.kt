@@ -11,6 +11,7 @@ import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
+import androidx.lifecycle.ViewModelProviders
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Logger
@@ -85,7 +86,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-//        viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+        viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
 //
 //        // show snackbar about new version app
 //        viewModel.getVersionName().observe(this, Observer { text ->
