@@ -189,6 +189,35 @@
 
                 </LinearLayout>
 
+
+                <LinearLayout
+                    android:id="@+id/llLinkedCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="@dimen/verify_card_left_col_width"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:fontFamily="@font/maax"
+                        android:text="The card is linked"
+                        android:textSize="@dimen/text_size_1_small" />
+
+                    <TextView
+                        android:id="@+id/tvIsLinked"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/maax"
+                        android:textColor="@color/primary_dark"
+                        android:textSize="@dimen/text_size_1_small"
+                        android:textStyle="normal|bold"
+                        tools:text="To this phone" />
+
+                </LinearLayout>
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

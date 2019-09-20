@@ -15,6 +15,7 @@ import com.tangem.Constant
 import com.tangem.data.Blockchain
 import com.tangem.ui.activity.MainActivity
 import com.tangem.ui.fragment.BaseFragment
+import com.tangem.ui.fragment.qr.CameraPermissionManager
 import com.tangem.ui.navigation.NavigationResultListener
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.CoinEngineFactory
@@ -31,6 +32,7 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
     override val layoutId = R.layout.fragment_prepare_transaction
 
     private val ctx: TangemContext by lazy { TangemContext.loadFromBundle(context, arguments) }
+    private val cameraPermissionManager: CameraPermissionManager by lazy { CameraPermissionManager(this) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -119,6 +121,17 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
         }
 
         ivCamera.setOnClickListener {
+            if (cameraPermissionManager.isPermissionGranted()) {
+                navigateForResult(Constant.REQUEST_CODE_SCAN_QR, R.id.action_prepareTransactionFragment_to_qrScanFragment)
+            } else {
+                cameraPermissionManager.requirePermission()
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        cameraPermissionManager.handleRequestPermissionResult(requestCode, grantResults) {
             navigateForResult(Constant.REQUEST_CODE_SCAN_QR, R.id.action_prepareTransactionFragment_to_qrScanFragment)
         }
     }
@@ -170,5 +183,4 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
             e.printStackTrace()
         }
     }
-
 }
