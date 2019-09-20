@@ -26,6 +26,9 @@ public class TangemCard {
     private byte[] pbCardKey = null;
     private byte[] pbWalletKeyRar = null;
     private Date dtPersonalization = null;
+    private byte[] terminalPrivateKey;
+    private byte[] terminalPublicKey;
+    private boolean terminalIsLinked = false;
 
     public String getBlockchainID() {
         return blockchainID;
@@ -154,6 +157,30 @@ public class TangemCard {
 
     public void setPersonalizationDateTime(Date dtPersonalization) {
         this.dtPersonalization = dtPersonalization;
+    }
+
+    public byte[] getTerminalPrivateKey() {
+        return terminalPrivateKey;
+    }
+
+    public void setTerminalPrivateKey(byte[] terminalPrivateKey) {
+        this.terminalPrivateKey = terminalPrivateKey;
+    }
+
+    public byte[] getTerminalPublicKey() {
+        return terminalPublicKey;
+    }
+
+    public void setTerminalPublicKey(byte[] terminalPublicKey) {
+        this.terminalPublicKey = terminalPublicKey;
+    }
+
+    public boolean getTerminalIsLinked() {
+        return terminalIsLinked;
+    }
+
+    public void setTerminalIsLinked(boolean terminalIsLinked) {
+        this.terminalIsLinked = terminalIsLinked;
     }
 
     private int health = 0;
@@ -348,6 +375,11 @@ public class TangemCard {
     public Boolean supportBlock() {
         if (settingsMask == null) return null;
         return (settingsMask & SettingsMask.UseBlock) != 0;
+    }
+
+    public Boolean supportLinkingTerminal() {
+        if (settingsMask == null) return null;
+        return (settingsMask & SettingsMask.SkipSecurityDelayIfValidatedByLinkedTerminal) != 0;
     }
 
     public int getMaxSignatures() {
