@@ -1,6 +1,7 @@
 package com.tangem.wallet.matic;
 
 import android.net.Uri;
+import android.util.Log;
 
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiMatic;
@@ -73,11 +74,11 @@ public class MaticTokenEngine extends TokenEngine {
     @Override
     public boolean isExtractPossible() {
         if (!hasBalanceInfo()) {
-            ctx.setMessage(R.string.cannot_obtain_data_from_blockchain);
+            ctx.setMessage(R.string.loaded_wallet_error_obtaining_blockchain_data);
         } else if (!isBalanceNotZero()) {
-            ctx.setMessage(R.string.wallet_empty);
+            ctx.setMessage(R.string.general_wallet_empty);
         } else if (awaitingConfirmation()) {
-            ctx.setMessage(R.string.please_wait_while_previous);
+            ctx.setMessage(R.string.loaded_wallet_message_wait);
         } else {
             return true;
         }
@@ -168,9 +169,12 @@ public class MaticTokenEngine extends TokenEngine {
 
             @Override
             public void onFail(String method, String message) {
-                if (!serverApiMatic.isRequestsSequenceCompleted()) {
-                    ctx.setError(message);
+                Log.e(TAG, "onFail: " + method + " " + message);
+                ctx.setError(message);
+                if (serverApiMatic.isRequestsSequenceCompleted()) {
                     blockchainRequestsCallbacks.onComplete(false);
+                } else {
+                    blockchainRequestsCallbacks.onProgress();
                 }
             }
         };
