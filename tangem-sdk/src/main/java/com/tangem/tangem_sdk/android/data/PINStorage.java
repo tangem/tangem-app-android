@@ -20,6 +20,7 @@ import javax.crypto.Cipher;
 
 public class PINStorage implements PINsProvider {
     private static String mSavedPIN, mUserPIN, mLastUsedPIN, mEncryptedPIN, mPIN2;
+    private static byte[] terminalPubicKey, terminalPrivateKey;
     private static SharedPreferences sharedPreferences = null;
 
     public static void init(Context context) {
@@ -194,4 +195,19 @@ public class PINStorage implements PINsProvider {
         return sharedPreferences == null;
     }
 
+    public byte[] getTerminalPublicKey() {
+        return terminalPubicKey;
+    }
+
+    public static void setTerminalPublicKey(byte[] terminalPubicKey) {
+        PINStorage.terminalPubicKey = terminalPubicKey;
+    }
+
+    public byte[] getTerminalPrivateKey() {
+        return terminalPrivateKey;
+    }
+
+    public static void setTerminalPrivateKey(byte[] terminalPrivateKey) {
+        PINStorage.terminalPrivateKey = terminalPrivateKey;
+    }
 }
