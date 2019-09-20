@@ -81,6 +81,10 @@ fun TangemCard.loadFromBundle(B: Bundle) {
     if (B.containsKey("onlineValidated"))
         isOnlineValidated = B.getBoolean("onlineValidated")
 
+    if (B.containsKey("terminalPrivateKey")) terminalPrivateKey = B.getByteArray("terminalPrivateKey")
+    if (B.containsKey("terminalPublicKey")) terminalPublicKey = B.getByteArray("terminalPublicKey")
+    terminalIsLinked = B.getBoolean("terminalIsLinked")
+
 }
 
 val TangemCard.asBundle: Bundle
@@ -152,6 +156,13 @@ fun TangemCard.saveToBundle(B: Bundle) {
 
         if (isOnlineValidated != null)
             B.putBoolean("onlineValidated", isOnlineValidated)
+
+        if (terminalPrivateKey != null)
+            B.putByteArray("terminalPrivateKey", terminalPrivateKey)
+        if (terminalPublicKey != null)
+            B.putByteArray("terminalPublicKey", terminalPublicKey)
+        B.putBoolean("terminalIsLinked", terminalIsLinked)
+
     } catch (e: Exception) {
         Log.e("Can't save to bundle ", e.message)
     }
