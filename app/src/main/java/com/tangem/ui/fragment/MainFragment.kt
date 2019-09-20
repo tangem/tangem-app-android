@@ -18,6 +18,7 @@ import com.tangem.tangem_card.data.TangemCard
 import com.tangem.tangem_card.reader.CardProtocol
 import com.tangem.tangem_card.tasks.CustomReadCardTask
 import com.tangem.tangem_card.tasks.ReadCardInfoTask
+import com.tangem.tangem_sdk.android.data.PINStorage
 import com.tangem.tangem_sdk.android.nfc.NfcDeviceAntennaLocation
 import com.tangem.tangem_sdk.android.reader.NfcReader
 import com.tangem.tangem_sdk.data.EXTRA_TANGEM_CARD
@@ -129,6 +130,10 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
 
             lastTag = tag
 
+            val terminalKeys = viewModel.getTerminalKeys()
+            PINStorage.setTerminalPrivateKey(terminalKeys[Constant.TERMINAL_PRIVATE_KEY])
+            PINStorage.setTerminalPublicKey(terminalKeys[Constant.TERMINAL_PUBLIC_KEY])
+
             task = ReadCardInfoTask(NfcReader((activity as MainActivity).nfcManager, isoDep),
                     App.localStorage, App.pinStorage, this)
             task?.start()
@@ -164,6 +169,10 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                     val uid = cardInfo.getString(EXTRA_TANGEM_CARD_UID)
                     val card = TangemCard(uid)
                     cardInfo.getBundle(EXTRA_TANGEM_CARD)?.let { card.loadFromBundle(it) }
+
+                    val terminalKeys = viewModel.getTerminalKeys()
+                    card.terminalPrivateKey = terminalKeys[Constant.TERMINAL_PRIVATE_KEY]
+                    card.terminalPublicKey = terminalKeys[Constant.TERMINAL_PUBLIC_KEY]
 
                     val ctx = TangemContext(card)
 
