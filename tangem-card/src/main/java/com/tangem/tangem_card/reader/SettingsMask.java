@@ -29,6 +29,8 @@ public class SettingsMask {
 
     public static final int DisablePrecomputedNDEF = 0x00010000;
 
+    public static final int SkipSecurityDelayIfValidatedByLinkedTerminal = 0x00080000;
+
     public static String getDescription(int iValue) {
         StringBuilder sb=new StringBuilder();
         sb.append("[");
@@ -58,6 +60,8 @@ public class SettingsMask {
         if ((iValue & SettingsMask.ForbidPurgeWallet) != 0) sb.append("ForbidPurgeWallet, ");
         if ((iValue & SettingsMask.AllowSelectBlockchain) != 0) sb.append("AllowSelectBlockchain, ");
         if ((iValue & SettingsMask.DisablePrecomputedNDEF) != 0) sb.append("DisablePrecomputedNDEF, ");
+        if ((iValue & SettingsMask.SkipSecurityDelayIfValidatedByLinkedTerminal) != 0)
+            sb.append("SkipSecurityDelayIfValidatedByLinkedTerminal, ");
 
         if (sb.length() > 1) sb.delete(sb.length() - 2, sb.length());
         sb.append("]");
