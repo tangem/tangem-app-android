@@ -1,7 +1,8 @@
 package com.tangem.data.network;
 
-import androidx.annotation.NonNull;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import com.tangem.App;
 import com.tangem.data.network.model.InfuraBody;
@@ -84,8 +85,9 @@ public class ServerApiRootstock {
         call.enqueue(new Callback<InfuraResponse>() {
             @Override
             public void onResponse(@NonNull Call<InfuraResponse> call, @NonNull Response<InfuraResponse> response) {
+                requestsCount--;
+
                 if (response.code() == 200) {
-                    requestsCount--;
                     responseListener.onSuccess(method, response.body());
                     Log.i(TAG, "requestData " + method + " onResponse " + response.code());
                 } else {
@@ -96,6 +98,7 @@ public class ServerApiRootstock {
 
             @Override
             public void onFailure(@NonNull Call<InfuraResponse> call, @NonNull Throwable t) {
+                requestsCount--;
                 responseListener.onFail(method, String.valueOf(t.getMessage()));
                 Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
             }
