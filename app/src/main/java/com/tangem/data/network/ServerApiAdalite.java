@@ -2,13 +2,14 @@ package com.tangem.data.network;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.tangem.data.network.model.AdaliteBody;
 import com.tangem.data.network.model.AdaliteResponse;
 import com.tangem.data.network.model.AdaliteResponseUtxo;
 
 import java.util.List;
 
-import androidx.annotation.NonNull;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -26,7 +27,14 @@ public class ServerApiAdalite {
 
     private int requestsCount = 0;
 
-    public static String lastNode;
+    private final String adaliteURL1 = "https://explorer2.adalite.io"; //TODO: make random selection, add more?, move
+    private final String adaliteURL2 = "https://nodes.southeastasia.cloudapp.azure.com";
+
+    private String currentURL = adaliteURL1;
+
+    public String getCurrentURL() {
+        return currentURL;
+    }
 
     public boolean isRequestsSequenceCompleted() {
         Log.i(TAG, String.format("isRequestsSequenceCompleted: %s (%d requests left)", String.valueOf(requestsCount <= 0), requestsCount));
@@ -50,12 +58,14 @@ public class ServerApiAdalite {
     }
 
     public void requestData(String method, String wallet, String tx) {
+        requestData(method, wallet, tx, false);
+    }
+
+    public void requestData(String method, String wallet, String tx, boolean isRetry) {
         requestsCount++;
-        String adaliteURL = "https://explorer2.adalite.io"; //TODO: make random selection
-        this.lastNode = adaliteURL; //TODO: show node instead of URL
 
         Retrofit retrofitAdalite = new Retrofit.Builder()
-                .baseUrl(adaliteURL)
+                .baseUrl(currentURL)
                 .addConverterFactory(ScalarsConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
@@ -69,20 +79,32 @@ public class ServerApiAdalite {
                 addressCall.enqueue(new Callback<AdaliteResponse>() {
                     @Override
                     public void onResponse(@NonNull Call<AdaliteResponse> call, @NonNull Response<AdaliteResponse> response) {
+                        requestsCount--;
+
                         if (response.code() == 200) {
-                            requestsCount--;
                             responseListener.onSuccess(method, response.body());
                             Log.i(TAG, "requestData " + method + " onResponse " + response.code());
                         } else {
-                            responseListener.onFail(method, String.valueOf(response.code()));
                             Log.e(TAG, "requestData " + method + " onResponse " + response.code());
+
+                            if (!isRetry) {
+                                retryRequest(method, wallet, tx);
+                            } else {
+                                responseListener.onFail(method, String.valueOf(response.code()));
+                            }
                         }
                     }
 
                     @Override
                     public void onFailure(@NonNull Call<AdaliteResponse> call, @NonNull Throwable t) {
-                        responseListener.onFail(method, String.valueOf(t.getMessage()));
                         Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
+                        requestsCount--;
+
+                        if (!isRetry) {
+                            retryRequest(method, wallet, tx);
+                        } else {
+                            responseListener.onFail(method, String.valueOf(t.getMessage()));
+                        }
                     }
                 });
                 break;
@@ -92,20 +114,32 @@ public class ServerApiAdalite {
             outputsCall.enqueue(new Callback<AdaliteResponseUtxo>() {
                 @Override
                 public void onResponse(@NonNull Call<AdaliteResponseUtxo> call, @NonNull Response<AdaliteResponseUtxo> response) {
+                    requestsCount--;
+
                     if (response.code() == 200) {
-                        requestsCount--;
                         responseListener.onSuccess(method, response.body());
                         Log.i(TAG, "requestData " + method + " onResponse " + response.code());
                     } else {
-                        responseListener.onFail(method, String.valueOf(response.code()));
                         Log.e(TAG, "requestData " + method + " onResponse " + response.code());
+
+                        if (!isRetry) {
+                            retryRequest(method, wallet, tx);
+                        } else {
+                            responseListener.onFail(method, String.valueOf(response.code()));
+                        }
                     }
                 }
 
                 @Override
                 public void onFailure(@NonNull Call<AdaliteResponseUtxo> call, @NonNull Throwable t) {
-                    responseListener.onFail(method, String.valueOf(t.getMessage()));
                     Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
+                    requestsCount--;
+
+                    if (!isRetry) {
+                        retryRequest(method, wallet, tx);
+                    } else {
+                        responseListener.onFail(method, String.valueOf(t.getMessage()));
+                    }
                 }
             });
             break;
@@ -115,30 +149,48 @@ public class ServerApiAdalite {
                 sendCall.enqueue(new Callback<List>() {
                     @Override
                     public void onResponse(@NonNull Call<List> call, @NonNull Response<List> response) {
+                        requestsCount--;
+
                         if (response.code() == 200) {
-                            requestsCount--;
                             responseListener.onSuccess(method, response.body());
                             Log.i(TAG, "requestData " + method + " onResponse " + response.code());
                         } else {
-                            responseListener.onFail(method, String.valueOf(response.code()));
                             Log.e(TAG, "requestData " + method + " onResponse " + response.code());
+
+                            if (!isRetry) {
+                                retryRequest(method, wallet, tx);
+                            } else {
+                                responseListener.onFail(method, String.valueOf(response.code()));
+                            }
                         }
                     }
 
                     @Override
                     public void onFailure(@NonNull Call<List> call, @NonNull Throwable t) {
-                        responseListener.onFail(method, String.valueOf(t.getMessage()));
                         Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
+                        requestsCount--;
+
+                        if (!isRetry) {
+                            retryRequest(method, wallet, tx);
+                        } else {
+                            responseListener.onFail(method, String.valueOf(t.getMessage()));
+                        }
                     }
                 });
                 break;
 
                 default:
+                    requestsCount--;
                     responseListener.onFail(method, "undeclared method");
                     Log.e(TAG, "requestData " + method + " onFailure - undeclared method");
                     break;
             }
 
+    }
+
+    private void retryRequest(String method, String wallet, String tx) {
+        currentURL = adaliteURL2;
+        requestData(method, wallet, tx, true);
     }
 }
 
