@@ -1,36 +1,40 @@
 package com.tangem.wallet;
 
+import androidx.annotation.StringRes;
+
 import com.tangem.App;
 import com.tangem.tangem_card.data.TangemCard;
 
 public class BalanceValidator {
-    private String firstLine;
-    private String secondLine;
+    private @StringRes int firstLine;
+    private @StringRes int secondLine;
     private int score;
     private boolean hasPending;
 
-    public String getFirstLine() {
+    public @StringRes int getFirstLine() {
         return firstLine;
     }
 
-    public void setFirstLine(String value) {
+    public void setFirstLine(@StringRes int value) {
         firstLine = value;
     }
 
-    public String getSecondLine(Boolean recommend) {
-        if (!recommend) return secondLine;
-        if (score > 89) {
-            return "Safe to accept. " + secondLine;
-        } else if (score > 74) {
-            return "Not fully safe to accept. " + secondLine;
-        } else if (score > 30) {
-            return "Not safe to accept. " + secondLine;
-        } else {
-            return "Do not accept! " + secondLine;
-        }
+    public @StringRes int getSecondLine(Boolean recommend) {
+//        if (!recommend)
+            return secondLine;
+
+//        if (score > 89) {
+//            return "Safe to accept. " + secondLine;
+//        } else if (score > 74) {
+//            return "Not fully safe to accept. " + secondLine;
+//        } else if (score > 30) {
+//            return "Not safe to accept. " + secondLine;
+//        } else {
+//            return "Do not accept! " + secondLine;
+//        }
     }
 
-    public void setSecondLine(String value) {
+    public void setSecondLine(@StringRes int value) {
         secondLine = value;
     }
 
@@ -55,8 +59,8 @@ public class BalanceValidator {
     }
 
     public void check(TangemContext ctx, Boolean attest) {
-        firstLine = "Verification failed";
-        secondLine = "";
+        firstLine = R.string.balance_validator_first_line_verification_failed;
+        secondLine = R.string.empty_string;
         TangemCard card = ctx.getCard();
         CoinEngine engine = CoinEngineFactory.INSTANCE.create(ctx);
 
@@ -66,8 +70,8 @@ public class BalanceValidator {
 
         if( hasPending )
         {
-            firstLine = "Pending transaction...";
-            secondLine = "Swipe down to refresh";
+            firstLine = R.string.balance_validator_first_line_pending_transaction;
+            secondLine = R.string.balance_validator_second_line_swipe_to_refresh;
             return;
         }
 
@@ -76,38 +80,38 @@ public class BalanceValidator {
 
             if (!card.isWalletPublicKeyValid()) {
                 score = 0;
-                firstLine = "Verification failed";
-                secondLine = "Wallet verification failed. Tap again.";
+                firstLine = R.string.balance_validator_first_line_verification_failed;
+                secondLine = R.string.balance_validator_second_line_verification_failed;
                 return;
             }
 
             if (card.isOnlineVerified() != null && !card.isOnlineVerified()) {
                 score = 0;
-                firstLine = "Not genuine banknote";
-                secondLine = "Tangem Attestation service says the banknote is not genuine.";
+                firstLine = R.string.balance_validator_first_line_not_genuine;
+                secondLine = R.string.balance_validator_second_line_failed_attestation;
                 return;
             }
 
             if (card.isCodeConfirmed() != null && !card.isCodeConfirmed()) {
                 score = 0;
-                firstLine = "Not genuine banknote";
-                secondLine = "Firmware binary code verification failed";
+                firstLine = R.string.balance_validator_first_line_not_genuine;
+                secondLine = R.string.balance_validator_second_line_failed_binary_code_verification;
                 return;
             }
 
             if (card.PIN2 == TangemCard.PIN2_Mode.CustomPIN2) {
                 score = 0;
-                firstLine = "Locked with PIN2";
-                secondLine = "Ask the holder to disable PIN2 before accepting";
+                firstLine = R.string.balance_validator_first_line_locked_pin2;
+                secondLine = R.string.balance_validator_second_line_disable_pin_2;
                 return;
             }
 
             // rule 2.b
             if (card.isOnlineVerified()) {
-                secondLine += "Verified note identity. ";
+                secondLine += R.string.balance_validator_first_line_verify_identity;
             } else {
                 score = 80;
-                secondLine += "Card identity was not verified. Cannot reach Tangem attestation service. ";
+                secondLine += R.string.balance_validator_second_line_identity_not_verified;
             }
         }
     }
