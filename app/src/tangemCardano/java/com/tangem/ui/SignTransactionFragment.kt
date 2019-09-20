@@ -17,19 +17,19 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import com.tangem.App
 import com.tangem.Constant
-import com.tangem.card_android.android.nfc.NfcDeviceAntennaLocation
-import com.tangem.card_android.android.reader.NfcManager
-import com.tangem.card_android.android.reader.NfcReader
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD
-import com.tangem.card_android.data.EXTRA_TANGEM_CARD_UID
-import com.tangem.card_android.data.asBundle
-import com.tangem.card_common.data.TangemCard
-import com.tangem.card_common.reader.CardCrypto
-import com.tangem.card_common.reader.CardProtocol
-import com.tangem.card_common.tasks.CustomReadCardTask
-import com.tangem.card_common.tasks.OneTouchSignTask
-import com.tangem.card_common.tasks.SignTask
-import com.tangem.card_common.util.Log
+import com.tangem.tangem_sdk.android.nfc.NfcDeviceAntennaLocation
+import com.tangem.tangem_sdk.android.reader.NfcManager
+import com.tangem.tangem_sdk.android.reader.NfcReader
+import com.tangem.tangem_sdk.data.EXTRA_TANGEM_CARD
+import com.tangem.tangem_sdk.data.EXTRA_TANGEM_CARD_UID
+import com.tangem.tangem_sdk.data.asBundle
+import com.tangem.tangem_card.data.TangemCard
+import com.tangem.tangem_card.reader.CardCrypto
+import com.tangem.tangem_card.reader.CardProtocol
+import com.tangem.tangem_card.tasks.CustomReadCardTask
+import com.tangem.tangem_card.tasks.OneTouchSignTask
+import com.tangem.tangem_card.tasks.SignTask
+import com.tangem.tangem_card.util.Log
 import com.tangem.wallet.CoinEngine
 import com.tangem.wallet.CoinEngineFactory
 import com.tangem.wallet.TangemContext
@@ -225,7 +225,7 @@ class SignTransactionFragment : BaseFragment(), NavigationResultListener,
         } catch (e: CardProtocol.TangemException_WrongAmount) {
             try {
                 val data = Bundle()
-                data.putString(Constant.EXTRA_MESSAGE, getString(R.string.cannot_sign_transaction_wrong_amount))
+                data.putString(Constant.EXTRA_MESSAGE, getString(R.string.send_transaction_error_wrong_amount))
                 data.putString(EXTRA_TANGEM_CARD_UID, ctx.card.uid)
                 data.putBundle(EXTRA_TANGEM_CARD, ctx.card.asBundle)
                 navigateBackWithResult(Activity.RESULT_CANCELED, data)
@@ -275,7 +275,7 @@ class SignTransactionFragment : BaseFragment(), NavigationResultListener,
                             progressBar?.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
                             progressBar?.visibility = View.INVISIBLE
                             val data = Bundle()
-                            data.putString(Constant.EXTRA_MESSAGE, getString(R.string.cannot_sign_transaction_make_sure_you_enter_correct_pin_2))
+                            data.putString(Constant.EXTRA_MESSAGE, getString(R.string.send_transaction_error_cannot_sign))
                             data.putString(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
                             data.putBundle(EXTRA_TANGEM_CARD, cardProtocol.card.asBundle)
                             navigateBackWithResult(Constant.RESULT_INVALID_PIN_, data)
@@ -287,7 +287,7 @@ class SignTransactionFragment : BaseFragment(), NavigationResultListener,
                     if (cardProtocol.error is CardProtocol.TangemException_WrongAmount) {
                         try {
                             val data = Bundle()
-                            data.putString(Constant.EXTRA_MESSAGE, getString(R.string.cannot_sign_transaction_wrong_amount))
+                            data.putString(Constant.EXTRA_MESSAGE, getString(R.string.send_transaction_error_wrong_amount))
                             data.putString(EXTRA_TANGEM_CARD_UID, cardProtocol.card.uid)
                             data.putBundle(EXTRA_TANGEM_CARD, cardProtocol.card.asBundle)
                             navigateBackWithResult(Activity.RESULT_CANCELED, data)
@@ -298,11 +298,11 @@ class SignTransactionFragment : BaseFragment(), NavigationResultListener,
                     progressBar?.post {
                         if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported) {
                             if (!NoExtendedLengthSupportDialog.allReadyShowed) {
-                                NoExtendedLengthSupportDialog.message = getText(R.string.the_nfc_adapter_length_apdu).toString() + "\n" + getText(R.string.the_nfc_adapter_length_apdu_advice).toString()
+                                NoExtendedLengthSupportDialog.message = getText(R.string.dialog_the_nfc_adapter_length_apdu).toString() + "\n" + getText(R.string.dialog_the_nfc_adapter_length_apdu_advice).toString()
                                 NoExtendedLengthSupportDialog().show(requireFragmentManager(), NoExtendedLengthSupportDialog.TAG)
                             }
                         } else {
-                            Toast.makeText(context, R.string.try_to_scan_again, Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, R.string.general_notification_scan_again, Toast.LENGTH_LONG).show()
                         }
                         progressBar?.progress = 100
                         progressBar?.progressTintList = ColorStateList.valueOf(Color.RED)
