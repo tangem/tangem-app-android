@@ -11,11 +11,11 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.tangem.util.UtilHelper;
-import com.tangem.wallet.R;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
+
+import com.tangem.util.UtilHelper;
+import com.tangem.wallet.R;
 
 /**
  * Created by dvol on 06.03.2018.
@@ -49,9 +49,9 @@ public class ShowQRCodeDialog extends DialogFragment {
 
         return new AlertDialog.Builder(getActivity())
                 .setIcon(R.drawable.tangem_logo_small_new)
-                .setTitle(R.string.show_wallet_qr_code)
+                .setTitle(R.string.loaded_wallet_dialog_show_qr)
                 .setView(v)
-                .setPositiveButton(R.string.ok, (dialog,which)->dismiss() )
+                .setPositiveButton(R.string.general_ok, (dialog, which)->dismiss() )
                 .create();
     }
 

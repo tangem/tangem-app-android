@@ -73,19 +73,19 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
 
         btnVerify.setOnClickListener {
             if (!UtilHelper.isOnline(requireContext())) {
-                Toast.makeText(context, R.string.no_connection, Toast.LENGTH_LONG).show()
+                Toast.makeText(context, R.string.general_error_no_connection, Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
 
             // check on empty wallet address
             if (etWallet.text.toString() == "") {
-                etWallet.error = getString(R.string.wallet_address_empty)
+                etWallet.error = getString(R.string.general_wallet_empty)
                 return@setOnClickListener
             }
 
             // check on empty amount
             if (etAmount.text.toString() == "") {
-                etAmount.error = getString(R.string.amount_empty)
+                etAmount.error = getString(R.string.prepare_transaction_error_amount_empty)
                 return@setOnClickListener
             }
 
@@ -95,16 +95,16 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
             // check amount
             try {
                 if (!engine.checkNewTransactionAmount(amount))
-                    etAmount.error = getString(R.string.not_enough_funds_on_your_card)
+                    etAmount.error = getString(R.string.prepare_transaction_error_not_enough_funds)
                 else
                     etAmount.error = null
             } catch (e: Exception) {
-                etAmount.error = getString(R.string.unknown_amount_format)
+                etAmount.error = getString(R.string.prepare_transaction_error_unknown_amount_format)
             }
 
             // check wallet address
             if (!engine.validateAddress(etWallet.text.toString())) {
-                etWallet.error = getString(R.string.incorrect_destination_wallet_address)
+                etWallet.error = getString(R.string.prepare_transaction_error_incorrect_destination)
                 return@setOnClickListener
             } else
                 etWallet.error = null

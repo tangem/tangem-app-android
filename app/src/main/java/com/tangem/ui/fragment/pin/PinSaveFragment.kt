@@ -64,9 +64,9 @@ class PinSaveFragment : BaseFragment(), FingerprintHelper.FingerprintHelperListe
         usePIN2 = arguments?.getBoolean(Constant.EXTRA_PIN2, false) ?: false
 
         if (usePIN2)
-            tvPinPrompt.text = getString(R.string.enter_pin2_and_use_fingerprint_to_save_it)
+            tvPinPrompt.text = getString(R.string.pin_save_title_enter_pin2_and_save)
         else
-            tvPinPrompt.text = getString(R.string.enter_pin_and_use_fingerprint_to_save_it)
+            tvPinPrompt.text = getString(R.string.pin_save_title_enter_pin_and_save)
 
         if (usePIN2) {
             cbUseFingerprint.isChecked = true
@@ -352,17 +352,17 @@ class PinSaveFragment : BaseFragment(), FingerprintHelper.FingerprintHelperListe
         fingerprintManager = activity?.getSystemService(Context.FINGERPRINT_SERVICE) as FingerprintManager
 
         if (!keyguardManager.isKeyguardSecure) {
-            Toast.makeText(context, R.string.user_has_not_enabled_lock_screen, Toast.LENGTH_LONG).show()
+            Toast.makeText(context, R.string.pin_save_toast_lock_screen_not_enabled, Toast.LENGTH_LONG).show()
             return false
         }
 
-        if (ActivityCompat.checkSelfPermission(context!!, Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(context, R.string.user_has_not_granted_permission_to_use_fingerprint, Toast.LENGTH_LONG).show()
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(context, R.string.pin_save_toast_no_permission_to_use_fingerprint, Toast.LENGTH_LONG).show()
             return false
         }
 
         if (!fingerprintManager!!.hasEnrolledFingerprints()) {
-            Toast.makeText(context, R.string.user_has_not_registered_any_fingerprints, Toast.LENGTH_LONG).show()
+            Toast.makeText(context, R.string.pin_save_toast_no_fingerprints_registered, Toast.LENGTH_LONG).show()
             return false
         }
 
