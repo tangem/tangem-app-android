@@ -354,14 +354,26 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
             if (ctx.card!!.supportBlock()!!)
                 features += getString(R.string.details_blockable)
 
+            if (ctx.card!!.supportLinkingTerminal()) {
+                features += getString(R.string.details_linking_card_supported)
+                llLinkedCard.visibility = View.VISIBLE
+            }
 
-            if (ctx.card!!.supportOnlyOneCommandAtTime()!!)
+
+            if (ctx.card!!.supportOnlyOneCommandAtTime())
                 features += getString(R.string.details_atomic_commmands)
 
             if (features.endsWith("\n"))
                 features = features.substring(0, features.length - 1)
 
             tvFeatures.text = features
+
+            val textIsLinked = if (ctx.card.terminalIsLinked) {
+                getString(R.string.details_linked_card_to_phone)
+            } else {
+                getString(R.string.general_no)
+            }
+            tvIsLinked.text = textIsLinked
 
             if (ctx.card!!.useDefaultPIN1()) {
                 imgPIN.setImageResource(R.drawable.unlock_pin1)
