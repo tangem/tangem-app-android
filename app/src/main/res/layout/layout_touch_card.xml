@@ -90,7 +90,7 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:alpha="1"
-            android:text="@string/reading"
+            android:text="@string/general_status_reading"
             android:textColor="@color/colorPrimary"
             android:textSize="12dp"
             android:textStyle="bold" />

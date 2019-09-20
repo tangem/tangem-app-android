@@ -93,7 +93,7 @@ class EmptyWalletFragment : BaseFragment(), NavigationResultListener,
                         R.id.action_emptyWalletFragment_to_verifyCard, data)
             } else {
                 (activity as MainActivity).toastHelper
-                        .showSingleToast(context, getString(R.string.need_attach_card_again))
+                        .showSingleToast(context, getString(R.string.general_notification_scan_again_to_verify))
             }
         }
     }
@@ -188,7 +188,7 @@ class EmptyWalletFragment : BaseFragment(), NavigationResultListener,
                         if (!NoExtendedLengthSupportDialog.allReadyShowed)
                             NoExtendedLengthSupportDialog().show(activity!!.supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
                     } else
-                        Toast.makeText(context, R.string.try_to_scan_again, Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, R.string.general_notification_scan_again, Toast.LENGTH_LONG).show()
 
                     progressBar?.progress = 100
                     progressBar?.progressTintList = ColorStateList.valueOf(Color.RED)

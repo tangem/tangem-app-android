@@ -40,7 +40,7 @@
             android:layout_centerInParent="true"
             android:alpha="1"
             android:fontFamily="@font/maaxmedium"
-            android:text="@string/verifying"
+            android:text="@string/loaded_wallet_status_verifying"
             android:textColor="@color/colorPrimary"
             android:textSize="12dp"
             android:textStyle="bold" />

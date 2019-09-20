@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Cardano</string>
+    <string name="app_name" translatable="false">Cardano</string>
 
     <string name="verify">Confirm</string>
     <string name="send_1">Checkout</string>
