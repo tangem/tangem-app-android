@@ -2,23 +2,23 @@
 
     <PreferenceCategory
         android:key="@string/pref_category_common"
-        android:title="@string/сommon">
+        android:title="@string/settings_category_сommon">
 
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="@string/pref_manual_editing_fee"
-            android:title="@string/manual_editing_fee" />
+            android:title="@string/settings_option_manual_editing_fee" />
 
         <Preference
             android:key="@string/pref_select_nodes"
-            android:title="@string/select_nodes" />
+            android:title="@string/settings_option_select_nodes" />
 
         <ListPreference
             android:defaultValue="0"
-            android:entries="@array/encryption_modes_entries"
-            android:entryValues="@array/encryption_mode_values"
+            android:entries="@array/settings_encryption_modes_entries"
+            android:entryValues="@array/settings_encryption_mode_values"
             android:key="@string/pref_encryption_modes"
-            android:title="@string/encryption_modes" />
+            android:title="@string/settings_option_encryption_modes" />
 
     </PreferenceCategory>
 
