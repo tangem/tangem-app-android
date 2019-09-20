@@ -604,14 +604,14 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
 
         if (tvError?.visibility == View.VISIBLE || tvMessage?.visibility == View.VISIBLE) {
             timerHideErrorAndMessage = Timer()
-            timerHideErrorAndMessage!!.schedule(
+            timerHideErrorAndMessage?.schedule(
                     timerTask {
                         activity?.runOnUiThread {
                             tvMessage?.visibility = View.GONE
                             tvError?.visibility = View.GONE
                             // clear only already viewed messages
-                            if (tvMessage.text == ctx.message) ctx.message = null
-                            if (tvError.text == ctx.error) ctx.error = null
+                            if (tvMessage?.text == ctx.message) ctx.message = null
+                            if (tvError?.text == ctx.error) ctx.error = null
                         }
                     },
                     5000)
