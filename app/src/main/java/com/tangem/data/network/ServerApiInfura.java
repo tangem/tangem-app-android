@@ -1,7 +1,8 @@
 package com.tangem.data.network;
 
-import androidx.annotation.NonNull;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import com.tangem.App;
 import com.tangem.data.network.model.InfuraBody;

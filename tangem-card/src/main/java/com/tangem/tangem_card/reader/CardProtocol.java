@@ -120,6 +120,11 @@ public class CardProtocol {
         return (DefaultPIN2.equals(pin2));
     }
 
+    private byte[] terminalPublicKey;
+
+    public void setTerminalPublicKey(byte[] terminalPubKey) {
+        this.terminalPublicKey = terminalPubKey;
+    }
 
     private TangemCard mCard;
     private Exception mError;
@@ -488,10 +493,20 @@ public class CardProtocol {
         CommandApdu Apdu = new CommandApdu(ins);
         byte[] baPIN = Util.calculateSHA256(mPIN);
         Apdu.addTLV(TLV.Tag.TAG_PIN, baPIN);
-        if (ins != INS.Read) {
+        if (ins == INS.Read) {
+            addTerminalPublicKeyToApdu(Apdu);
+        } else {
             Apdu.addTLV(TLV.Tag.TAG_CardID, mCard.getCID());
         }
         return Apdu;
+    }
+
+    private void addTerminalPublicKeyToApdu(CommandApdu apdu) {
+        if (terminalPublicKey != null) {
+            apdu.addTLV(TLV.Tag.TAG_Terminal_PublicKey, terminalPublicKey);
+        } else if (mCard.getTerminalPublicKey() != null) {
+            apdu.addTLV(TLV.Tag.TAG_Terminal_PublicKey, mCard.getTerminalPublicKey());
+        }
     }
 
 //    /**
@@ -633,7 +648,8 @@ public class CardProtocol {
      * @throws Exception - if something went wrong
      */
     public void run_CreateWallet(String PIN2) throws Exception {
-        if (readResult == null) throw new TangemException("Before run_VerifyCard execute run_Read card first!");
+        if (readResult == null)
+            throw new TangemException("Before run_VerifyCard execute run_Read card first!");
         CommandApdu rqApdu = StartPrepareCommand(INS.CreateWallet);
         rqApdu.addTLV(TLV.Tag.TAG_PIN2, Util.calculateSHA256(PIN2));
         Log.i(logTag, String.format("[%s]\n%s", rqApdu.getCommandName(), rqApdu.getTLVs().getParsedTLVs("  ")));
@@ -835,7 +851,8 @@ public class CardProtocol {
         CommandApdu rqApdu = StartPrepareCommand(INS.Sign);
         rqApdu.addTLV(TLV.Tag.TAG_PIN2, Util.calculateSHA256(PIN2));
         rqApdu.addTLV_U8(TLV.Tag.TAG_TrOut_HashSize, hashes[0].length);
-        rqApdu.addTLV(TLV.Tag.TAG_TrOut_Hash, bs.toByteArray());
+        byte[] hashesConcatenated = bs.toByteArray();
+        rqApdu.addTLV(TLV.Tag.TAG_TrOut_Hash, hashesConcatenated);
         if (issuerData != null) {
             if (!mCard.allowedSigningMethod.contains(TangemCard.SigningMethod.Sign_Hash_Validated_By_Issuer_And_WriteIssuerData))
                 throw new TangemException("Card don't support simultaneous sign with write issuer data!");
@@ -852,6 +869,8 @@ public class CardProtocol {
         } else if (!mCard.allowedSigningMethod.contains(TangemCard.SigningMethod.Sign_Hash)) {
             throw new TangemException("Card require issuer validation before sign the transaction!");
         }
+
+        prepareDataForLinkingTerminal(rqApdu, hashesConcatenated);
 
         Log.i(logTag, String.format("[%s]\n%s", rqApdu.getCommandName(), rqApdu.getTLVs().getParsedTLVs("  ")));
 
@@ -915,6 +934,8 @@ public class CardProtocol {
             throw new TangemException("Card require issuer validation before sign the transaction!");
         }
 
+        prepareDataForLinkingTerminal(rqApdu, bTxOutData);
+
         ResponseApdu rspApdu = SendAndReceive(rqApdu, false);
 
         if (rspApdu.isStatus(SW.PROCESS_COMPLETED)) {
@@ -935,6 +956,12 @@ public class CardProtocol {
         }
     }
 
+    private void prepareDataForLinkingTerminal(CommandApdu apdu, byte[] data) throws Exception {
+        byte[] transactionSignature = CardCrypto.Signature(mCard.getTerminalPrivateKey(), data);
+        apdu.addTLV(TLV.Tag.TAG_Terminal_TransactionSignature, transactionSignature);
+        addTerminalPublicKeyToApdu(apdu);
+    }
+
     /**
      * VERIFY_CODE command
      * See [1] 8.8
@@ -952,7 +979,8 @@ public class CardProtocol {
      * @throws Exception - if something went wrong
      */
     public byte[] run_VerifyCode(String hashAlgID, int codePageAddress, int codePageCount, byte[] challenge) throws Exception {
-        if (readResult == null) throw new TangemException("Before run_VerifyCard execute run_Read card first!");
+        if (readResult == null)
+            throw new TangemException("Before run_VerifyCard execute run_Read card first!");
         CommandApdu rqApdu = StartPrepareCommand(INS.VerifyCode);
         rqApdu.addTLV(TLV.Tag.TAG_HashAlgID, hashAlgID.getBytes("US-ASCII"));
         rqApdu.addTLV_U32(TLV.Tag.TAG_CodePageAddress, codePageAddress);
@@ -988,7 +1016,8 @@ public class CardProtocol {
      * @throws Exception - if something went wrong
      */
     private void run_ValidateCard(String PIN2) throws Exception {
-        if (readResult == null) throw new TangemException("Before run_VerifyCard execute run_Read card first!");
+        if (readResult == null)
+            throw new TangemException("Before run_VerifyCard execute run_Read card first!");
         CommandApdu rqApdu = StartPrepareCommand(INS.ValidateCard);
         rqApdu.addTLV(TLV.Tag.TAG_PIN2, Util.calculateSHA256(PIN2));
 
@@ -1022,7 +1051,8 @@ public class CardProtocol {
      * @throws Exception - if something went wrong
      */
     public void run_WriteIssuerData(byte[] issuerData, byte[] issuerSignature) throws Exception {
-        if (readResult == null) throw new TangemException("Before run_VerifyCard execute run_Read card first!");
+        if (readResult == null)
+            throw new TangemException("Before run_VerifyCard execute run_Read card first!");
 
         CommandApdu rqApdu = StartPrepareCommand(INS.WriteIssuerData);
         rqApdu.addTLV(TLV.Tag.TAG_Issuer_Data, issuerData);
