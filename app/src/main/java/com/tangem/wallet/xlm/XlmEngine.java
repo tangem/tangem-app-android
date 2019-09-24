@@ -447,6 +447,7 @@ public class XlmEngine extends CoinEngine {
                     StellarRequest.Balance balanceRequest = (StellarRequest.Balance) request;
 
                     coinData.setAccountResponse(balanceRequest.accountResponse);
+                    coinData.setValidationNodeDescription(serverApi.getCurrentURL());
 
                     if (serverApi.isRequestsSequenceCompleted()) {
                         blockchainRequestsCallbacks.onComplete(!ctx.hasError());
