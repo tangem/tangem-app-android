@@ -159,8 +159,13 @@ public class CommandApdu {
     public static String toString(byte[] cmdApdu, int Lc) {
         String cmd = Util.bytesToHex(cmdApdu);
         if (Lc == 0) return cmd;
-        return cmd.substring(0, 8) + " " + cmd.substring(8, 10) + " " +
-                cmd.substring(10, 10 + Lc * 2) + " " + cmd.substring(10 + Lc * 2, cmd.length());
+        if (cmd.substring(8, 10).equals("00")) {
+            return cmd.substring(0, 8) + " " + cmd.substring(8, 14) + " " +
+                    cmd.substring(14, 14 + Lc * 2) + " " + cmd.substring(14 + Lc * 2, cmd.length());
+        } else {
+            return cmd.substring(0, 8) + " " + cmd.substring(8, 10) + " " +
+                    cmd.substring(10, 10 + Lc * 2) + " " + cmd.substring(10 + Lc * 2, cmd.length());
+        }
     }
 
 
@@ -196,6 +201,10 @@ public class CommandApdu {
     }
 
     public byte[] toBytes() {
+        return toBytes(true);
+    }
+
+    public byte[] toBytes(boolean forceExtendedLength) {
         int length = 4; // CLA, INS, P1, P2
 
         if (tlvList.size() != 0) {
@@ -205,14 +214,14 @@ public class CommandApdu {
 
         if (mData.length != 0) {
             length += 1; // LC
-            if (mLc >= 256)
-            length += 2;
+            if (forceExtendedLength || mLc >= 256)
+                length += 2;
             length += mData.length; // DATA
         }
         if (mLeUsed) {
             length += 1; // LE
-            if (mLc >= 256)
-            length += 2;
+            if (forceExtendedLength || mLc >= 256)
+                length += 2;
         }
 
         byte[] apdu = new byte[length];
@@ -227,15 +236,15 @@ public class CommandApdu {
         apdu[index] = (byte) mP2;
         index++;
         if (mLc != 0) {
-            if (mLc < 256) {
-                apdu[index] = (byte) mLc;
-                index++;
-            } else {
+            if (forceExtendedLength || mLc >= 256) {
                 apdu[index] = 0;
                 index++;
                 apdu[index] = (byte) (mLc >> 8);
                 index++;
                 apdu[index] = (byte) (mLc & 0xFF);
+                index++;
+            } else {
+                apdu[index] = (byte) mLc;
                 index++;
             }
 
@@ -243,15 +252,15 @@ public class CommandApdu {
             index += mData.length;
         }
         if (mLeUsed) {
-            if (mLc < 256) {
-                apdu[index] += (byte) mLe; // LE
-            } else {
+            if (forceExtendedLength || mLc >= 256) {
                 apdu[index] = 0;
                 index++;
                 apdu[index] = (byte) (mLe >> 8);
                 index++;
                 apdu[index] = (byte) (mLe & 0xFF);
                 index++;
+            } else {
+                apdu[index] += (byte) mLe; // LE
             }
         }
 
