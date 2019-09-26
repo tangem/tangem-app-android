@@ -698,7 +698,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         // Bitcoin, Litecoin, BitcoinCash, Stellar
         if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet ||
                 ctx.blockchain == Blockchain.Litecoin || ctx.blockchain == Blockchain.BitcoinCash ||
-                ctx.blockchain == Blockchain.Stellar || ctx.blockchain == Blockchain.StellarTestNet) {
+                ctx.blockchain == Blockchain.Stellar || ctx.blockchain == Blockchain.StellarTestNet || ctx.blockchain == Blockchain.StellarAsset) {
             ctx.coinData.setIsBalanceEqual(true)
         }
 
