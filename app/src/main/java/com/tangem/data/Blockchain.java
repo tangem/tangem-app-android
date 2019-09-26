@@ -25,6 +25,7 @@ public enum Blockchain {
     MaticTestNet("MATIC/test", "MTX", 1.0, R.drawable.tangem2, "Matic Testnet"),
     Stellar("XLM", "XLM", 1000000.0, R.drawable.ic_logo_stellar, "Stellar"),
     StellarTestNet("XLM/test", "XLM", 1000000.0, R.drawable.ic_logo_stellar, "Stellar Testnet"),
+    StellarAsset("Asset", "XLM", 10000000.0, R.drawable.ic_logo_stellar, "Stellar"),
     Eos("EOS", "EOS", 10000.0, R.drawable.tangem2, "EOS");
 
     Blockchain(String ID, String currency, double multiplier, int imageResource, String officialName) {
