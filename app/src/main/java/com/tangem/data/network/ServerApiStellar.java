@@ -31,6 +31,15 @@ import io.reactivex.schedulers.Schedulers;
  * {@link Listener}.onSuccess(...) callback
  */
 public class ServerApiStellar {
+
+    public ServerApiStellar(Blockchain blockchain) {
+        if (blockchain == Blockchain.Stellar || blockchain == Blockchain.StellarAsset) {
+            currentURL = ServerURL.API_STELLAR;
+        } else {
+            currentURL = ServerURL.API_STELLAR_TESTNET;
+        }
+    }
+
     private static String TAG = ServerApiStellar.class.getSimpleName();
 
     /**
@@ -96,14 +105,6 @@ public class ServerApiStellar {
     public void requestData(TangemContext ctx, StellarRequest.Base stellarRequest, boolean isRetry) {
         requestsCount++;
         LOG.i(TAG, String.format("New request[%d]: %s", requestsCount, stellarRequest.getClass().getSimpleName()));
-
-        if (currentURL == null) {
-            if (ctx.getBlockchain() == Blockchain.Stellar) {
-                currentURL = ServerURL.API_STELLAR;
-            } else if (ctx.getBlockchain() == Blockchain.StellarTestNet) {
-                currentURL = ServerURL.API_STELLAR_TESTNET;
-            }
-        }
 
         Observable<StellarRequest.Base> stellarObserver = Observable.just(stellarRequest)
                 .doOnEach(stellarRequest1 -> doStellarRequest(ctx, stellarRequest))
@@ -172,7 +173,7 @@ public class ServerApiStellar {
         stellarRequest.setError(null);
         try {
             Server server;
-            if (ctx.getBlockchain() == Blockchain.Stellar) {
+            if (ctx.getBlockchain() == Blockchain.Stellar || ctx.getBlockchain() == Blockchain.StellarAsset) {
                 Network.usePublicNetwork();
                 server = new Server(currentURL);
             } else if (ctx.getBlockchain() == Blockchain.StellarTestNet) {
