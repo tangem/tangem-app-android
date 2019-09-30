@@ -16,6 +16,7 @@ import com.tangem.wallet.matic.MaticTokenEngine
 import com.tangem.wallet.nftToken.NftTokenEngine
 import com.tangem.wallet.rsk.RskEngine
 import com.tangem.wallet.rsk.RskTokenEngine
+import com.tangem.wallet.xlm.XlmAssetEngine
 import com.tangem.wallet.xlm.XlmEngine
 import com.tangem.wallet.xrp.XrpEngine
 
@@ -46,6 +47,7 @@ object CoinEngineFactory {
             Blockchain.Binance, Blockchain.BinanceTestNet -> BinanceEngine()
             Blockchain.Matic, Blockchain.MaticTestNet -> MaticTokenEngine()
             Blockchain.StellarTestNet, Blockchain.Stellar -> XlmEngine()
+            Blockchain.StellarAsset -> XlmAssetEngine()
             Blockchain.Eos -> EosEngine()
             else -> null
         }
@@ -80,6 +82,8 @@ object CoinEngineFactory {
                 MaticTokenEngine(context)
             else if (Blockchain.Stellar == context.blockchain || Blockchain.StellarTestNet == context.blockchain)
                 XlmEngine(context)
+            else if (Blockchain.StellarAsset == context.blockchain)
+                XlmAssetEngine(context)
             else if (Blockchain.Eos == context.blockchain)
                 EosEngine(context)
             else
