@@ -139,14 +139,14 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
 
     override fun onNavigationResult(requestCode: String, resultCode: Int, data: Bundle?) {
         if (requestCode == Constant.REQUEST_CODE_SCAN_QR && resultCode == Activity.RESULT_OK && data != null && data.containsKey("QRCode")) {
-            var code = data.getString("QRCode")
-            val schemeSplit = code.split(":")
+            val code = data.getString("QRCode")
+            val schemeSplit = code!!.split(":")
             when (schemeSplit.size) {
                 2 -> {
                     if (ctx.blockchain.officialName.toLowerCase(Locale.ROOT).replace("\\s","") == schemeSplit[0]) {
                         val uri = Uri.parse(schemeSplit[1])
                         etWallet?.setText(uri.path)
-//                        val amount = uri.getQueryParameter("amount")
+//                        val amount = uri.getQueryParameter("amount") //TODO: enable after redesign
 //                        if (amount != null) {
 //                            etAmount?.setText(amount)
 //                            rgIncFee.check(R.id.rbFeeOut)
