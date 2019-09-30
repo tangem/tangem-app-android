@@ -417,7 +417,7 @@ public class XlmEngine extends CoinEngine {
 
     // network call inside, don't use on main thread
     private boolean isAccountCreated(String address) {
-        final ServerApiStellar serverApi = new ServerApiStellar();
+        final ServerApiStellar serverApi = new ServerApiStellar(ctx.getBlockchain());
 
         StellarRequest.Balance request = new StellarRequest.Balance(address);
 
@@ -436,7 +436,7 @@ public class XlmEngine extends CoinEngine {
 
     @Override
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
-        final ServerApiStellar serverApi = new ServerApiStellar();
+        final ServerApiStellar serverApi = new ServerApiStellar(ctx.getBlockchain());
 
         ServerApiStellar.Listener listener = new ServerApiStellar.Listener() {
             @Override
@@ -508,7 +508,7 @@ public class XlmEngine extends CoinEngine {
 
     @Override
     public void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) throws IOException {
-        final ServerApiStellar serverApi = new ServerApiStellar();
+        final ServerApiStellar serverApi = new ServerApiStellar(ctx.getBlockchain());
 
         ServerApiStellar.Listener listener = new ServerApiStellar.Listener() {
             @Override
