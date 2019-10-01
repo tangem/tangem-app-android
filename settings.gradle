@@ -1,1 +1,1 @@
-include ':app', ':tangem-sdk', ':server-android', ':tangem-card', ':tangem-card-new'
+include ':app', ':tangem-sdk', ':server-android', ':tangem-card', ':tangem-card-new', ':tangem-sdk-new', ':tangemtest'
