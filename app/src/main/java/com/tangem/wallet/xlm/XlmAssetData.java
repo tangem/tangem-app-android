@@ -16,7 +16,7 @@ import java.math.BigDecimal;
  * Created by dvol on 7.01.2019.
  */
 
-public class XlmData extends CoinData {
+public class XlmAssetData extends CoinData {
 
 
     public static class AccountResponseEx extends AccountResponse {
@@ -25,31 +25,35 @@ public class XlmData extends CoinData {
         }
     }
 
-    private CoinEngine.Amount balance = null;
+    private CoinEngine.Amount xlmBalance, assetBalance = null;
 
     private Long sequenceNumber = 0L;
     private CoinEngine.Amount baseReserve = new CoinEngine.Amount("0.5", "XLM");
     private CoinEngine.Amount baseFee = new CoinEngine.Amount("0.00001", "XLM");
-    private boolean error404, targetAccountCreated = false;
+    private boolean error404 = false;
 
     @Override
     public void clearInfo() {
         super.clearInfo();
-        balance = null;
+        xlmBalance = null;
+        assetBalance = null;
         error404 = false;
-        targetAccountCreated = false;
     }
 
-    CoinEngine.Amount getBalance() {
-        if (balance != null) {
-            return new CoinEngine.Amount(balance.subtract(getReserve()), "XLM");
+    CoinEngine.Amount getXlmBalance() {
+        if (xlmBalance != null) {
+            return new CoinEngine.Amount(xlmBalance.subtract(getReserve()), "XLM");
         } else {
             return null;
         }
     }
 
+    CoinEngine.Amount getAssetBalance() {
+        return assetBalance;
+    }
+
     CoinEngine.Amount getReserve() {
-        return new CoinEngine.Amount(baseReserve.multiply(BigDecimal.valueOf(2)), "XLM");
+        return new CoinEngine.Amount(baseReserve.multiply(BigDecimal.valueOf(3)), "XLM");
     }
 
     CoinEngine.Amount getBaseFee() {
@@ -61,9 +65,12 @@ public class XlmData extends CoinData {
     }
 
     void setAccountResponse(AccountResponse accountResponse) {
-        if (accountResponse.getBalances().length > 0) {
-            AccountResponse.Balance balanceResponse = accountResponse.getBalances()[0];
-            balance = new CoinEngine.Amount(balanceResponse.getBalance(), "XLM");
+        for (AccountResponse.Balance responseBalance : accountResponse.getBalances()) {
+            if (responseBalance.getAssetType().equals("native")) {
+                xlmBalance = new CoinEngine.Amount(responseBalance.getBalance(), "XLM");
+            } else {
+                assetBalance = new CoinEngine.Amount(responseBalance.getBalance(), responseBalance.getAssetCode());
+            }
         }
         sequenceNumber = accountResponse.getSequenceNumber();
         setBalanceReceived(true);
@@ -87,12 +94,11 @@ public class XlmData extends CoinData {
         this.error404 = error404;
     }
 
-    public boolean isTargetAccountCreated() {
-        return targetAccountCreated;
-    }
-
-    public void setTargetAccountCreated(boolean targetAccountCreated) {
-        this.targetAccountCreated = targetAccountCreated;
+    public boolean isAssetBalanceZero() {
+        if (assetBalance != null && assetBalance.notZero())
+            return false;
+        else
+            return true;
     }
 
     @Override
@@ -100,9 +106,15 @@ public class XlmData extends CoinData {
         super.loadFromBundle(B);
 
         if (B.containsKey("BalanceCurrency") && B.containsKey("BalanceDecimal")) {
-            balance = new CoinEngine.Amount(B.getString("BalanceDecimal"), B.getString("BalanceCurrency"));
+            xlmBalance = new CoinEngine.Amount(B.getString("BalanceDecimal"), B.getString("BalanceCurrency"));
         } else {
-            balance = null;
+            xlmBalance = null;
+        }
+
+        if (B.containsKey("AssetBalanceCurrency") && B.containsKey("AssetBalanceDecimal")) {
+            assetBalance = new CoinEngine.Amount(B.getString("AssetBalanceDecimal"), B.getString("AssetBalanceCurrency"));
+        } else {
+            assetBalance = null;
         }
 
         if (B.containsKey("sequenceNumber")) {
@@ -125,18 +137,20 @@ public class XlmData extends CoinData {
 
         if (B.containsKey("Error404")) error404 = B.getBoolean("Error404");
         else error404 = false;
-
-        if (B.containsKey("TargetAccountCreated")) targetAccountCreated = B.getBoolean("TargetAccountCreated");
-        else targetAccountCreated = false;
     }
 
     @Override
     public void saveToBundle(Bundle B) {
         super.saveToBundle(B);
         try {
-            if (balance != null) {
-                B.putString("BalanceCurrency", balance.getCurrency());
-                B.putString("BalanceDecimal", balance.toValueString());
+            if (xlmBalance != null) {
+                B.putString("BalanceCurrency", xlmBalance.getCurrency());
+                B.putString("BalanceDecimal", xlmBalance.toValueString());
+            }
+
+            if (assetBalance != null) {
+                B.putString("AssetBalanceCurrency", assetBalance.getCurrency());
+                B.putString("AssetBalanceDecimal", assetBalance.toValueString());
             }
 
             if (sequenceNumber != null) {
@@ -154,8 +168,6 @@ public class XlmData extends CoinData {
             }
 
             if (error404) B.putBoolean("Error404", true);
-
-            if (targetAccountCreated) B.putBoolean("TargetAccountCreated", true);
 
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());

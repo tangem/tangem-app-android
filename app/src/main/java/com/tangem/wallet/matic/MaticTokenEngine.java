@@ -1,6 +1,7 @@
 package com.tangem.wallet.matic;
 
 import android.net.Uri;
+import android.util.Log;
 
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiMatic;
@@ -168,9 +169,12 @@ public class MaticTokenEngine extends TokenEngine {
 
             @Override
             public void onFail(String method, String message) {
-                if (!serverApiMatic.isRequestsSequenceCompleted()) {
-                    ctx.setError(message);
+                Log.e(TAG, "onFail: " + method + " " + message);
+                ctx.setError(message);
+                if (serverApiMatic.isRequestsSequenceCompleted()) {
                     blockchainRequestsCallbacks.onComplete(false);
+                } else {
+                    blockchainRequestsCallbacks.onProgress();
                 }
             }
         };
