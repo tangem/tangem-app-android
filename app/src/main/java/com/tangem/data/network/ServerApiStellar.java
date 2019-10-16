@@ -31,6 +31,15 @@ import io.reactivex.schedulers.Schedulers;
  * {@link Listener}.onSuccess(...) callback
  */
 public class ServerApiStellar {
+
+    public ServerApiStellar(Blockchain blockchain) {
+        if (blockchain == Blockchain.Stellar || blockchain == Blockchain.StellarAsset) {
+            currentURL = ServerURL.API_STELLAR;
+        } else {
+            currentURL = ServerURL.API_STELLAR_TESTNET;
+        }
+    }
+
     private static String TAG = ServerApiStellar.class.getSimpleName();
 
     /**
@@ -40,6 +49,12 @@ public class ServerApiStellar {
     private Listener listener;
 
     private int requestsCount = 0;
+
+    private String currentURL;
+
+    public String getCurrentURL() {
+        return currentURL;
+    }
 
     public boolean isRequestsSequenceCompleted() {
         LOG.i(TAG, String.format("isRequestsSequenceCompleted: %s (%d requests left)", String.valueOf(requestsCount <= 0), requestsCount));
@@ -82,9 +97,15 @@ public class ServerApiStellar {
      * @param ctx
      * @param stellarRequest
      */
+
     public void requestData(TangemContext ctx, StellarRequest.Base stellarRequest) {
+        requestData(ctx, stellarRequest, false);
+    }
+
+    public void requestData(TangemContext ctx, StellarRequest.Base stellarRequest, boolean isRetry) {
         requestsCount++;
         LOG.i(TAG, String.format("New request[%d]: %s", requestsCount, stellarRequest.getClass().getSimpleName()));
+
         Observable<StellarRequest.Base> stellarObserver = Observable.just(stellarRequest)
                 .doOnEach(stellarRequest1 -> doStellarRequest(ctx, stellarRequest))
 
@@ -96,9 +117,9 @@ public class ServerApiStellar {
                                 return Observable.just(stellarRequest1);
                         }
                 )
-                .retryWhen(errors -> errors
-                        .filter(throwable -> (throwable instanceof IOException) || (throwable instanceof ErrorResponse))
-                        .zipWith(Observable.range(1, 4), (n, i) -> i))
+//                .retryWhen(errors -> errors
+//                        .filter(throwable -> (throwable instanceof IOException) || (throwable instanceof ErrorResponse))
+//                        .zipWith(Observable.range(1, 4), (n, i) -> i))
 
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
@@ -114,9 +135,14 @@ public class ServerApiStellar {
                 requestsCount--;
                 LOG.e(TAG, "requestData " + stellarRequest.getClass().getSimpleName() + " onError " + e.getMessage());
                 LOG.e(TAG, String.format("%d requests left in processing", requestsCount));
-                stellarRequest.setError(ctx.getString(R.string.loaded_wallet_error_obtaining_blockchain_data));
-                //setErrorOccurred(e.getMessage());//;
-                listener.onFail(stellarRequest);
+
+                if (isRetry || stellarRequest.errorResponse.getCode() == 404) {
+                    stellarRequest.setError(e.getMessage());
+                    //setErrorOccurred(e.getMessage());//;
+                    listener.onFail(stellarRequest);
+                } else {
+                    retryRequest(ctx, stellarRequest);
+                }
             }
 
             /**
@@ -128,7 +154,12 @@ public class ServerApiStellar {
                 LOG.e(TAG, String.format("%d requests left in processing", requestsCount));
                 if (stellarRequest.getError() != null) {
                     LOG.i(TAG, "requestData " + stellarRequest.getClass().getSimpleName() + " onComplete, error!=null");
-                    listener.onFail(stellarRequest);
+
+                    if (isRetry || stellarRequest.errorResponse.getCode() == 404) {
+                        listener.onFail(stellarRequest);
+                    } else {
+                        retryRequest(ctx, stellarRequest);
+                    }
                 } else {
                     LOG.e(TAG, "requestData " + stellarRequest.getClass().getSimpleName() + " onComplete, error==null");
                     listener.onSuccess(stellarRequest);
@@ -142,12 +173,12 @@ public class ServerApiStellar {
         stellarRequest.setError(null);
         try {
             Server server;
-            if (ctx.getBlockchain() == Blockchain.Stellar) {
+            if (ctx.getBlockchain() == Blockchain.Stellar || ctx.getBlockchain() == Blockchain.StellarAsset) {
                 Network.usePublicNetwork();
-                server = new Server(ServerURL.API_STELLAR);
+                server = new Server(currentURL);
             } else if (ctx.getBlockchain() == Blockchain.StellarTestNet) {
                 Network.useTestNetwork();
-                server = new Server(ServerURL.API_STELLAR_TESTNET);
+                server = new Server(currentURL);
             } else {
                 throw new IOException("Wrong blockchain for ServerApiStellar");
             }
@@ -164,6 +195,11 @@ public class ServerApiStellar {
             stellarRequest.setError(App.Companion.getInstance().getString(R.string.loaded_wallet_error_blockchain_communication_error));
             throw e;
         }
+    }
+
+    public void retryRequest (TangemContext ctx, StellarRequest.Base stellarRequest) {
+        currentURL = ServerURL.API_STELLAR_RESERVE;
+        requestData(ctx, stellarRequest, true);
     }
 
 }

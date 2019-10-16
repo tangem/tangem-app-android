@@ -2,6 +2,7 @@ package com.tangem.ui
 
 import android.app.Activity
 import android.content.Context
+import android.net.Uri
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Build
@@ -12,9 +13,9 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import com.tangem.Constant
-import com.tangem.data.Blockchain
 import com.tangem.ui.activity.MainActivity
 import com.tangem.ui.fragment.BaseFragment
+import com.tangem.ui.fragment.qr.CameraPermissionManager
 import com.tangem.ui.navigation.NavigationResultListener
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.CoinEngineFactory
@@ -22,6 +23,7 @@ import com.tangem.wallet.R
 import com.tangem.wallet.TangemContext
 import kotlinx.android.synthetic.tangemAccess.fragment_prepare_transaction.*
 import java.io.IOException
+import java.util.*
 
 class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, NfcAdapter.ReaderCallback {
     companion object {
@@ -31,6 +33,7 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
     override val layoutId = R.layout.fragment_prepare_transaction
 
     private val ctx: TangemContext by lazy { TangemContext.loadFromBundle(context, arguments) }
+    private val cameraPermissionManager: CameraPermissionManager by lazy { CameraPermissionManager(this) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -119,45 +122,43 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
         }
 
         ivCamera.setOnClickListener {
+            if (cameraPermissionManager.isPermissionGranted()) {
+                navigateForResult(Constant.REQUEST_CODE_SCAN_QR, R.id.action_prepareTransactionFragment_to_qrScanFragment)
+            } else {
+                cameraPermissionManager.requirePermission()
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        cameraPermissionManager.handleRequestPermissionResult(requestCode, grantResults) {
             navigateForResult(Constant.REQUEST_CODE_SCAN_QR, R.id.action_prepareTransactionFragment_to_qrScanFragment)
         }
     }
 
     override fun onNavigationResult(requestCode: String, resultCode: Int, data: Bundle?) {
         if (requestCode == Constant.REQUEST_CODE_SCAN_QR && resultCode == Activity.RESULT_OK && data != null && data.containsKey("QRCode")) {
-            var code = data.getString("QRCode")
-            when (ctx.blockchain) {
-                Blockchain.Bitcoin -> {
-                    if (code.contains("bitcoin:")) {
-                        val tmp = code.split("bitcoin:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                        code = tmp[1]
-                    }
-                }
-                Blockchain.Ethereum, Blockchain.Token -> {
-                    if (code.contains("ethereum:")) {
-                        val tmp = code.split("ethereum:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                        code = tmp[1]
-                    } else if (code.contains("blockchain:")) { //TODO: is this needed?
-                        val tmp = code.split("blockchain:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                        code = tmp[1]
-                    }
-                }
-                Blockchain.Litecoin -> {
-                    if (code.contains("litecoin:")) {
-                        val tmp = code.split("litecoin:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                        code = tmp[1]
-                    }
-                }
-                Blockchain.Ripple -> {
-                    if (code.contains("ripple:")) {
-                        val tmp = code.split("ripple:".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                        code = tmp[1]
+            val code = data.getString("QRCode")
+            val schemeSplit = code!!.split(":")
+            when (schemeSplit.size) {
+                2 -> {
+                    if (ctx.blockchain.officialName.toLowerCase(Locale.ROOT).replace("\\s","") == schemeSplit[0]) {
+                        val uri = Uri.parse(schemeSplit[1])
+                        etWallet?.setText(uri.path)
+//                        val amount = uri.getQueryParameter("amount") //TODO: enable after redesign
+//                        if (amount != null) {
+//                            etAmount?.setText(amount)
+//                            rgIncFee.check(R.id.rbFeeOut)
+//                        }
+                    } else {
+                        etWallet?.setText(code)
                     }
                 }
                 else -> {
+                    etWallet?.setText(code)
                 }
             }
-            etWallet?.setText(code)
         } else if (requestCode == Constant.REQUEST_CODE_SEND_TRANSACTION__) {
             navigateBackWithResult(resultCode, data)
         }
@@ -170,5 +171,4 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
             e.printStackTrace()
         }
     }
-
 }
