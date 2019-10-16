@@ -85,8 +85,11 @@ public class TLV {
         TAG_Denomination(0xC0),
         TAG_ValidatedBalance(0xC1),
         TAG_LastSign_Date(0xC2),
-        TAG_DenominationText(0xC3);
+        TAG_DenominationText(0xC3),
 
+        TAG_Terminal_IsLinked(0x58),
+        TAG_Terminal_PublicKey(0x5C),
+        TAG_Terminal_TransactionSignature(0x57);
 
         Tag(int Code) {
             this.Code = Code;
