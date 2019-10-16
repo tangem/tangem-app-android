@@ -11,6 +11,7 @@ import androidx.navigation.fragment.NavHostFragment.findNavController
 import com.tangem.ui.activity.MainActivity
 import com.tangem.ui.navigation.NavigationResult
 import com.tangem.ui.navigation.NavigationResultListener
+import com.tangem.util.navigateSafely
 
 abstract class BaseFragment : Fragment() {
 
@@ -74,13 +75,7 @@ abstract class BaseFragment : Fragment() {
     }
 
     protected fun navigateToDestination(@IdRes destination: Int, data: Bundle? = null) {
-        try {
-            findNavController(this).navigate(destination, data)
-        } catch (e: IllegalArgumentException) {
-            Log.w(this::class.java.simpleName, e.message)
-        } catch (e: IllegalStateException) {
-            Log.w(this::class.java.simpleName, e.message)
-        }
+        findNavController(this).navigateSafely(destination, data)
     }
 
     protected fun navigateBackWithResult(resultCode: Int, data: Bundle? = null,
