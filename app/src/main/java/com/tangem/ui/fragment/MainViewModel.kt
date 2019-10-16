@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.tangem.Constant
+import com.tangem.data.dp.PrefsManager
 import com.tangem.data.network.ServerApiCommon
 import com.tangem.wallet.BuildConfig
 
@@ -35,4 +36,9 @@ class MainViewModel : ViewModel() {
         }
         serverApiCommon.requestLastVersion()
     }
+
+    fun getTerminalKeys(): Map<String, ByteArray> {
+        return PrefsManager.getInstance().terminalKeys
+    }
+
 }
