@@ -595,23 +595,23 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         }
 
         if (ctx.message == null || ctx.message.isEmpty()) {
-            tvMessage.text = ""
-            tvMessage.visibility = View.GONE
+            tvMessage?.text = ""
+            tvMessage?.visibility = View.GONE
         } else {
-            tvMessage.text = ctx.message
-            tvMessage.visibility = View.VISIBLE
+            tvMessage?.text = ctx.message
+            tvMessage?.visibility = View.VISIBLE
         }
 
-        if (tvError.visibility == View.VISIBLE || tvMessage.visibility == View.VISIBLE) {
+        if (tvError?.visibility == View.VISIBLE || tvMessage?.visibility == View.VISIBLE) {
             timerHideErrorAndMessage = Timer()
-            timerHideErrorAndMessage!!.schedule(
+            timerHideErrorAndMessage?.schedule(
                     timerTask {
                         activity?.runOnUiThread {
                             tvMessage?.visibility = View.GONE
                             tvError?.visibility = View.GONE
                             // clear only already viewed messages
-                            if (tvMessage.text == ctx.message) ctx.message = null
-                            if (tvError.text == ctx.error) ctx.error = null
+                            if (tvMessage?.text == ctx.message) ctx.message = null
+                            if (tvError?.text == ctx.error) ctx.error = null
                         }
                     },
                     5000)
@@ -627,9 +627,9 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
             val validator = BalanceValidator()
             // TODO why attest=false?
             validator.check(ctx, false)
-            context?.let { ContextCompat.getColor(it, validator.color) }?.let { tvBalanceLine1.setTextColor(it) }
-            tvBalanceLine1.text = validator.firstLine
-            tvBalanceLine2.text = validator.getSecondLine(false)
+            context?.let { ContextCompat.getColor(it, validator.color) }?.let { tvBalanceLine1?.setTextColor(it) }
+            tvBalanceLine1?.text = getString(validator.firstLine)
+            tvBalanceLine2?.text = getString(validator.getSecondLine(false))
         }
 
         val engine = CoinEngineFactory.create(ctx)
@@ -698,7 +698,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         // Bitcoin, Litecoin, BitcoinCash, Stellar
         if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet ||
                 ctx.blockchain == Blockchain.Litecoin || ctx.blockchain == Blockchain.BitcoinCash ||
-                ctx.blockchain == Blockchain.Stellar || ctx.blockchain == Blockchain.StellarTestNet) {
+                ctx.blockchain == Blockchain.Stellar || ctx.blockchain == Blockchain.StellarTestNet || ctx.blockchain == Blockchain.StellarAsset) {
             ctx.coinData.setIsBalanceEqual(true)
         }
 

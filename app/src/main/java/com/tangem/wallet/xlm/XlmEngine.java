@@ -200,12 +200,12 @@ public class XlmEngine extends CoinEngine {
             if (((ctx.getCard().getOfflineBalance() == null) && !ctx.getCoinData().isBalanceReceived()) || (!ctx.getCoinData().isBalanceReceived() && (ctx.getCard().getRemainingSignatures() != ctx.getCard().getMaxSignatures()))) {
                 if (coinData.isError404()) {
                     balanceValidator.setScore(0);
-                    balanceValidator.setFirstLine("No account or network error");
-                    balanceValidator.setSecondLine("To create account send 1+ XLM to this address");
+                    balanceValidator.setFirstLine(R.string.balance_validator_first_line_no_account);
+                    balanceValidator.setSecondLine(R.string.balance_validator_second_line_create_account_instruction);
                 } else {
                     balanceValidator.setScore(0);
-                    balanceValidator.setFirstLine("Unknown balance");
-                    balanceValidator.setSecondLine("Balance cannot be verified. Swipe down to refresh.");
+                    balanceValidator.setFirstLine(R.string.balance_validator_first_line_unknown_balance);
+                    balanceValidator.setSecondLine(R.string.balance_validator_second_line_unverified_balance);
                     return false;
                 }
             }
@@ -227,11 +227,11 @@ public class XlmEngine extends CoinEngine {
 
             if (coinData.isBalanceReceived() && coinData.isBalanceEqual()) {
                 balanceValidator.setScore(100);
-                balanceValidator.setFirstLine("Verified balance");
-                balanceValidator.setSecondLine("Balance confirmed in blockchain");
+                balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_balance);
+                balanceValidator.setSecondLine(R.string.balance_validator_second_line_confirmed_in_blockchain);
                 if (coinData.getBalance().isZero()) {
-                    balanceValidator.setFirstLine("Empty wallet");
-                    balanceValidator.setSecondLine("");
+                    balanceValidator.setFirstLine(R.string.balance_validator_first_line_empty_wallet);
+                    balanceValidator.setSecondLine(R.string.empty_string);
                 }
             }
 
@@ -246,8 +246,8 @@ public class XlmEngine extends CoinEngine {
 
             if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && coinData.getBalance().notZero()) {
                 balanceValidator.setScore(80);
-                balanceValidator.setFirstLine("Verified offline balance");
-                balanceValidator.setSecondLine("Can't obtain balance from blockchain. Restore internet connection to be more confident. ");
+                balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_offline);
+                balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_get_balance);
             }
 
 //            if(card.getFailedBalanceRequestCounter()!=0) {
@@ -361,7 +361,7 @@ public class XlmEngine extends CoinEngine {
         }
 
         Operation operation;
-        if (isAccountCreated(targetAddress))
+        if (coinData.isTargetAccountCreated())
             operation = new PaymentOperation.Builder(KeyPair.fromAccountId(targetAddress), new AssetTypeNative(), amountValue.toValueString()).build();
         else
             operation = new CreateAccountOperation.Builder(KeyPair.fromAccountId(targetAddress), amountValue.toValueString()).build();
@@ -414,29 +414,46 @@ public class XlmEngine extends CoinEngine {
         };
     }
 
+    private void checkTargetAccountCreated(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
+        final ServerApiStellar serverApi = new ServerApiStellar(ctx.getBlockchain());
 
-    // network call inside, don't use on main thread
-    private boolean isAccountCreated(String address) {
-        final ServerApiStellar serverApi = new ServerApiStellar();
+        ServerApiStellar.Listener listener = new ServerApiStellar.Listener() {
+            @Override
+            public void onSuccess(StellarRequest.Base request) {
+                coinData.setTargetAccountCreated(true);
+                blockchainRequestsCallbacks.onComplete(true);
+            }
 
-        StellarRequest.Balance request = new StellarRequest.Balance(address);
 
-        try {
-            serverApi.doStellarRequest(ctx, request);
-        } catch (IOException e) {
-            Log.e(TAG, e.getMessage());
-            return true; // suppose account is created if anything goes wrong TODO:check
-        }
+            @Override
+            public void onFail(StellarRequest.Base request) {
+                Log.i(TAG, "onFail: " + request.getClass().getSimpleName() + " " + request.getError());
 
-        if (request.errorResponse != null && request.errorResponse.getCode() == 404)
-            return false;
-        else
-            return true;
+                if (request.errorResponse.getCode() == 404) {
+                    coinData.setTargetAccountCreated(false);
+
+                    if (amount.compareTo(coinData.getReserve()) >= 0) { //TODO: take fee inclusion in account, now 1 XLM with fee included will fail after transaction is sent
+                        blockchainRequestsCallbacks.onComplete(true);
+                    } else {
+                        ctx.setError(R.string.confirm_transaction_error_not_enough_xlm_for_create);
+                        blockchainRequestsCallbacks.onComplete(false);
+                    }
+                } else { // suppose account is created if anything goes wrong
+                    coinData.setTargetAccountCreated(true);
+                    blockchainRequestsCallbacks.onComplete(true);
+                }
+            }
+        };
+
+        serverApi.setListener(listener);
+
+        serverApi.requestData(ctx, new StellarRequest.Balance(targetAddress));
+
     }
 
     @Override
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
-        final ServerApiStellar serverApi = new ServerApiStellar();
+        final ServerApiStellar serverApi = new ServerApiStellar(ctx.getBlockchain());
 
         ServerApiStellar.Listener listener = new ServerApiStellar.Listener() {
             @Override
@@ -447,6 +464,7 @@ public class XlmEngine extends CoinEngine {
                     StellarRequest.Balance balanceRequest = (StellarRequest.Balance) request;
 
                     coinData.setAccountResponse(balanceRequest.accountResponse);
+                    coinData.setValidationNodeDescription(serverApi.getCurrentURL());
 
                     if (serverApi.isRequestsSequenceCompleted()) {
                         blockchainRequestsCallbacks.onComplete(!ctx.hasError());
@@ -500,14 +518,13 @@ public class XlmEngine extends CoinEngine {
 
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) throws Exception {
-        // TODO: get fee stats?
         coinData.minFee = coinData.normalFee = coinData.maxFee = coinData.getBaseFee();
-        blockchainRequestsCallbacks.onComplete(true);
+        checkTargetAccountCreated(blockchainRequestsCallbacks, targetAddress, amount); //TODO: move?
     }
 
     @Override
     public void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) throws IOException {
-        final ServerApiStellar serverApi = new ServerApiStellar();
+        final ServerApiStellar serverApi = new ServerApiStellar(ctx.getBlockchain());
 
         ServerApiStellar.Listener listener = new ServerApiStellar.Listener() {
             @Override
