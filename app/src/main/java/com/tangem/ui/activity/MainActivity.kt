@@ -1,5 +1,3 @@
-@file:Suppress("ObsoleteExperimentalCoroutines")
-
 package com.tangem.ui.activity
 
 import android.content.Context
@@ -10,12 +8,14 @@ import android.nfc.Tag
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.findNavController
 import com.scottyab.rootbeer.RootBeer
 import com.tangem.App
 import com.tangem.di.ToastHelper
 import com.tangem.tangem_sdk.android.nfc.NfcLifecycleObserver
 import com.tangem.tangem_sdk.android.reader.NfcManager
 import com.tangem.ui.dialog.RootFoundDialog
+import com.tangem.util.navigateSafely
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import javax.inject.Inject
@@ -39,6 +39,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action || NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action)) {
             val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
             if (tag != null) {
+                findNavController(R.id.nav_host_fragment).navigateSafely(R.id.main)
                 onTagDiscovered(tag)
             }
         }
