@@ -11,6 +11,7 @@ import com.tangem.data.Blockchain
 import com.tangem.data.network.CryptonitOtherApi
 import com.tangem.ui.activity.MainActivity
 import com.tangem.ui.fragment.BaseFragment
+import com.tangem.ui.fragment.qr.CameraPermissionManager
 import com.tangem.ui.navigation.NavigationResultListener
 import com.tangem.wallet.CoinEngineFactory
 import com.tangem.wallet.R
@@ -27,6 +28,7 @@ class PrepareCryptonitOtherApiWithdrawalFragment : BaseFragment(), NavigationRes
 
     override val layoutId = R.layout.fragment_prepare_cryptonit_other_api_withdrawal
 
+    private val cameraPermissionManager: CameraPermissionManager by lazy { CameraPermissionManager(this) }
     private val ctx: TangemContext by lazy { TangemContext.loadFromBundle(context, arguments) }
     private val cryptonit: CryptonitOtherApi by lazy { CryptonitOtherApi(context) }
 
@@ -69,23 +71,11 @@ class PrepareCryptonitOtherApiWithdrawalFragment : BaseFragment(), NavigationRes
 //            }
 
         }
-        ivCameraKey.setOnClickListener {
-            navigateForResult(
-                    Constant.REQUEST_CODE_SCAN_QR_KEY,
-                    R.id.action_prepareCryptonitOtherApiWithdrawalFragment_to_qrScanFragment)
-        }
+        ivCameraKey.setOnClickListener { checkPermissionsAndRunCamera() }
 
-        ivCameraSecret.setOnClickListener {
-            navigateForResult(
-                    Constant.REQUEST_CODE_SCAN_QR_SECRET,
-                    R.id.action_prepareCryptonitOtherApiWithdrawalFragment_to_qrScanFragment)
-        }
+        ivCameraSecret.setOnClickListener { checkPermissionsAndRunCamera() }
 
-        ivCameraUserId.setOnClickListener {
-            navigateForResult(
-                    Constant.REQUEST_CODE_SCAN_QR_USER_ID,
-                    R.id.action_prepareCryptonitOtherApiWithdrawalFragment_to_qrScanFragment)
-        }
+        ivCameraUserId.setOnClickListener { checkPermissionsAndRunCamera() }
 
         ivRefreshBalance.setOnClickListener { doRequestBalance() }
 
@@ -123,6 +113,14 @@ class PrepareCryptonitOtherApiWithdrawalFragment : BaseFragment(), NavigationRes
         }
         btnLoad.isActivated = false
         doRequestBalance()
+    }
+
+    private fun checkPermissionsAndRunCamera() {
+        if (cameraPermissionManager.isPermissionGranted()) {
+            navigateForResult(Constant.REQUEST_CODE_SCAN_QR, R.id.action_prepareCryptonitOtherApiWithdrawalFragment_to_qrScanFragment)
+        } else {
+            cameraPermissionManager.requirePermission()
+        }
     }
 
     override fun onNavigationResult(requestCode: String, resultCode: Int, data: Bundle?) {
@@ -163,6 +161,13 @@ class PrepareCryptonitOtherApiWithdrawalFragment : BaseFragment(), NavigationRes
         } else {
             tvError.visibility = View.VISIBLE
             tvError.text = getString(R.string.cryptonit_not_enough_account_data)
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        cameraPermissionManager.handleRequestPermissionResult(requestCode, grantResults) {
+            navigateForResult(Constant.REQUEST_CODE_SCAN_QR, R.id.action_prepareCryptonitOtherApiWithdrawalFragment_to_qrScanFragment)
         }
     }
 
