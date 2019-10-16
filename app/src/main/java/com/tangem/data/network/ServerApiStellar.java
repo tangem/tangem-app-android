@@ -117,9 +117,9 @@ public class ServerApiStellar {
                                 return Observable.just(stellarRequest1);
                         }
                 )
-                .retryWhen(errors -> errors
-                        .filter(throwable -> (throwable instanceof IOException) || (throwable instanceof ErrorResponse))
-                        .zipWith(Observable.range(1, 4), (n, i) -> i))
+//                .retryWhen(errors -> errors
+//                        .filter(throwable -> (throwable instanceof IOException) || (throwable instanceof ErrorResponse))
+//                        .zipWith(Observable.range(1, 4), (n, i) -> i))
 
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
@@ -136,8 +136,8 @@ public class ServerApiStellar {
                 LOG.e(TAG, "requestData " + stellarRequest.getClass().getSimpleName() + " onError " + e.getMessage());
                 LOG.e(TAG, String.format("%d requests left in processing", requestsCount));
 
-                if (isRetry) {
-                    stellarRequest.setError(ctx.getString(R.string.loaded_wallet_error_obtaining_blockchain_data));
+                if (isRetry || stellarRequest.errorResponse.getCode() == 404) {
+                    stellarRequest.setError(e.getMessage());
                     //setErrorOccurred(e.getMessage());//;
                     listener.onFail(stellarRequest);
                 } else {
