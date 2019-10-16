@@ -135,8 +135,9 @@ public class ServerApiRipple {
         call.enqueue(new Callback<RippleResponse>() {
             @Override
             public void onResponse(@NonNull Call<RippleResponse> call, @NonNull Response<RippleResponse> response) {
+                requestsCount--;
+
                 if (response.code() == 200) {
-                    requestsCount--;
                     responseListener.onSuccess(method, response.body());
                     Log.i(TAG, "requestData " + method + " onResponse " + response.code());
                 } else {
@@ -147,6 +148,7 @@ public class ServerApiRipple {
 
             @Override
             public void onFailure(@NonNull Call<RippleResponse> call, @NonNull Throwable t) {
+                requestsCount--;
                 responseListener.onFail(method, String.valueOf(t.getMessage()));
                 Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
             }
