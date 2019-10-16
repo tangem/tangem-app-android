@@ -16,11 +16,13 @@
     <string name="general_balance">with balance</string>
     <string name="general_send_to_wallet">Send to wallet</string>
     <string name="general_amount">Amount</string>
-    <string name="general_btc">BTC</string>
+    <string name="general_btc" translatable="false">BTC</string>
     <string name="general_tangem" translatable="false">Tangem AG</string>
     <string name="general_notification_scan_again_to_verify">Scan again to verify the card</string>
     <string name="general_status_reading">READING…</string>
     <string name="general_wallet_empty">The wallet is empty</string>
+    <string name="general_toast_no_permission">User hasn\'t granted permission to use camera</string>
+
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
@@ -69,7 +71,7 @@
     <string name="splash_version_name_debug">ALPHA v.%1$s \n dev \n build %2$s</string>
     <string name="splash_version_name_release">v.%1$s</string>
     <string name="splash_cardano">Cardano</string>
-
+    <string name="alert_unknown_blockchain">This card is not supported</string>
 
     <!-- Main -->
     <string name="main_screen_tap_card">Tap Tangem card with your smartphone</string>
@@ -111,6 +113,39 @@
     <string name="loaded_wallet_load_via_qr">Show QR-code</string>
     <string name="loaded_wallet_dialog_show_qr">LOAD</string>
 
+    <!-- LoadedWallet Blockchain Engines -->
+    <string name="balance_validator_first_line_verified_balance">Verified balance</string>
+    <string name="balance_validator_first_line_unknown_balance">Unknown balance</string>
+    <string name="balance_validator_first_line_transaction_in_progress">Transaction in progress</string>
+    <string name="balance_validator_first_line_verified_offline">Verified offline balance</string>
+    <string name="balance_validator_first_line_empty_wallet">Empty wallet</string>
+    <string name="balance_validator_first_line_verification_failed">Verification failed</string>
+    <string name="balance_validator_first_line_pending_transaction">Pending transaction…</string>
+    <string name="balance_validator_first_line_not_genuine">Not genuine banknote</string>
+    <string name="balance_validator_first_line_locked_pin2">Locked with PIN2</string>
+    <string name="balance_validator_first_line_verify_identity">Verified note identity.</string>
+    <string name="balance_validator_first_line_no_account">No account or network error</string>
+    <string name="balance_validator_first_line_account_not_found">Account not found</string>
+    <string name="balance_validator_first_line_no_connection">No connection</string>
+    <string name="balance_validator_first_line_verified_in_blockchain">Verified in blockchain</string>
+    <string name="balance_validator_first_line_authenticity">Authenticity was not verified</string>
+
+    <string name="balance_validator_second_line_confirmed_in_blockchain">Balance confirmed in blockchain</string>
+    <string name="balance_validator_second_line_unverified_balance">Balance cannot be verified. Swipe down to refresh.</string>
+    <string name="balance_validator_second_line_wait_for_confirmation">Wait for confirmation in blockchain</string>
+    <string name="balance_validator_second_line_internet_to_verify_online">Restore internet connection to obtain trusted balance from blockchain</string>
+    <string name="balance_validator_second_line_internet_to_get_balance">Can\'t obtain balance from blockchain. Restore internet connection to be more confident.</string>
+    <string name="balance_validator_second_line_swipe_to_refresh">Swipe down to refresh</string>
+    <string name="balance_validator_second_line_verification_failed">Wallet verification failed. Tap again.</string>
+    <string name="balance_validator_second_line_failed_attestation">Tangem Attestation service says the banknote is not genuine.</string>
+    <string name="balance_validator_second_line_failed_binary_code_verification">Firmware binary code verification failed</string>
+    <string name="balance_validator_second_line_disable_pin_2">Ask the holder to disable PIN2 before accepting</string>
+    <string name="balance_validator_second_line_identity_not_verified">Card identity was not verified. Cannot reach Tangem attestation service.</string>
+    <string name="balance_validator_second_line_create_account">To create account send funds to this address</string>
+    <string name="balance_validator_second_line_create_account_instruction">To create account send 1+ XLM to this address</string>
+    <string name="balance_validator_second_line_create_account_xrp">Load 20+ XRP to create account</string>
+    <string name="balance_validator_second_line_authenticity_not_verified">Authenticity cannot be verified. Swipe down to refresh.</string>
+
     <!-- CreateNewWallet, Purge, SignTransaction -->
     <string name="now_touch_the_banknote_with_id">Now touch the banknote with ID</string>
     <string name="to_create_the_wallet">to create the wallet</string>
@@ -133,7 +168,6 @@
     <string name="pin_request_prompt_new_pin_2_or_fingerprint">Enter new PIN2 or use fingerprint scanner</string>
     <string name="pin_request_new_pin_2">Enter new PIN2</string>
     <string name="pin_request_error_pin_confirmation_failed">Please enter the PIN for confirmation!</string>
-
 
     <!-- SendTransaction-->
     <string name="send_transaction_notification_wait">Please wait while the payment is sent…</string>
@@ -171,9 +205,11 @@
     <string name="confirm_transaction_error_incoming_transaction_unconfirmed">Please wait for confirmation of incoming transaction</string>
     <string name="confirm_transaction_error_not_enough_eth_for_fee">Not enough ETH funds for fee</string>
     <string name="confirm_transaction_error_not_enough_rbtc_for_fee">Not enough RBTC funds for fee</string>
+    <string name="confirm_transaction_error_not_enough_xlm_for_create">Target account is not created! Send 1+ XLM to create it</string>
     <string name="confirm_transaction_error_pin_2_is_required">PIN2 is required to sign the payment</string>
     <string name="confirm_transaction_error_service_unavailable">Service unavailable</string>
     <string name="confirm_transaction_warning_risk_delaying">You have a risk of delaying transaction</string>
+
 
     <!-- EmptyWallet -->
     <string name="empty_wallet_not_created">Wallet hasn\'t been yet created</string>
@@ -212,6 +248,18 @@
     <string name="details_protected_by_user_pin_2">This banknote is protected by user\'s PIN2 code</string>
     <string name="details_unlocked_banknote">Unlocked banknote, only for development use</string>
     <string name="details_security_delay">This banknote will enforce %.0f seconds security delay for all operations requiring PIN2 code</string>
+    <string name="details_both_pins_can_be_changed">Allows to change PIN1 and PIN2\n</string>
+    <string name="details_pin1_can_be_changed">Allows to change PIN1\n</string>
+    <string name="details_pin2_can_be_changed">Allows to change PIN2\n</string>
+    <string name="details_both_pins_fixed">Fixed PIN1 and PIN2\n</string>
+    <string name="details_required_cvc">Requires CVC\n</string>
+    <string name="details_dynamic_ndef">Dynamic NDEF for iOS\n</string>
+    <string name="details_ndef">NDEF\n</string>
+    <string name="details_blockable">Blockable\n</string>
+    <string name="details_atomic_commmands">Atomic command mode\n</string>
+    <string name="details_linking_card_supported">Linking to the terminal is supported\n</string>
+    <string name="details_linked_card_title">The card is linked</string>
+    <string name="details_linked_card_to_phone">To this phone</string>
 
     <!-- PinSave -->
     <string name="pin_save_btn_save">Save</string>
