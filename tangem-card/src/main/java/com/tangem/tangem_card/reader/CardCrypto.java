@@ -34,6 +34,8 @@ import java.security.PublicKey;
 import java.security.Security;
 import java.security.Signature;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -150,7 +152,8 @@ public class CardCrypto {
                 int rLength = enc[3];
 
                 if (enc[4 + rLength] != 0x02) throw new Exception("bad encoding 3");
-                if ((enc[5 + rLength] & 0x80) != 0) throw new Exception("unsupported length encoding 3");
+                if ((enc[5 + rLength] & 0x80) != 0)
+                    throw new Exception("unsupported length encoding 3");
                 int sLength = enc[5 + rLength];
 
 
@@ -286,4 +289,15 @@ public class CardCrypto {
             return decryptedData;
         }
     }
+
+    public static Map<String, byte[]> generateTerminalKeys() throws Exception {
+        byte[] privateKey = Util.generateRandomBytes(32);
+        byte[] publicKey = GeneratePublicKey(privateKey);
+
+        Map<String, byte[]> keys = new HashMap<>();
+        keys.put("terminalPrivateKey", privateKey);
+        keys.put("terminalPublicKey", publicKey);
+        return keys;
+    }
+
 }
