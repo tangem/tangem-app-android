@@ -6,7 +6,7 @@ enum class Status (val code: Int, val description: String){
     InvalidParams(0x6A86, "SW_INVALID_PARAMS"),
     ErrorProcessingCommand(0x6286, "SW_ERROR_PROCESSING_COMMAND"),
     InvalidState(0x6985, "SW_INVALID_STATE"),
-//    PinsNotChanged(ProcessCompleted.code, ProcessCompleted.description),
+    //    PinsNotChanged(ProcessCompleted.code, ProcessCompleted.description),
     Pin1Changed(ProcessCompleted.code + 0x0001, "SW_PIN1_CHANGED"),
     Pin2Changed(ProcessCompleted.code + 0x0002, "SW_PIN2_CHANGED"),
     PinsChanged(ProcessCompleted.code + 0x0003, "SW_PINS_CHANGED"),
