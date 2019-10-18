@@ -13,6 +13,8 @@
             <option value="$PROJECT_DIR$/tangem-card" />
             <option value="$PROJECT_DIR$/tangem-card-new" />
             <option value="$PROJECT_DIR$/tangem-sdk" />
+            <option value="$PROJECT_DIR$/tangem-sdk-new" />
+            <option value="$PROJECT_DIR$/tangemtest" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
