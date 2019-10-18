@@ -1,12 +1,12 @@
-package com.tangem.enums
+package com.tangem.common.tlv
 
 enum class TlvTag(val code: Int) {
     Unknown(0x00),
-    CardID(0x01),
+    CardId(0x01),
     Status(0x02),
     CardPublicKey(0x03),
     CardSignature(0x04),
-    CurveID(0x05),
+    CurveId(0x05),
     HashAlgID(0x06),
     SigningMethod(0x07),
     MaxSignatures(0x08),
@@ -49,9 +49,9 @@ enum class TlvTag(val code: Int) {
     CodePageCount(0x41),
     CodeHash(0x42),
 
-    TrOutHash(0x50),
-    TrOutHashSize(0x51),
-    TrOutRaw(0x52),
+    TransactionOutHash(0x50),
+    TransactionOutHashSize(0x51),
+    TransactionOutRaw(0x52),
 
     WalletPublicKey(0x60),
     Signature(0x61),
@@ -66,6 +66,11 @@ enum class TlvTag(val code: Int) {
     ManufacturerPublicKey(0x85),
     CardIdManufacturerSignature(0x86),
 
+    ProductMask(0x8A),
+    PaymentFlowVersion(0x54),
+    UserCounter(0x2C),
+
+
     TokenSymbol(0xA0),
     TokenContractAddress(0xA1),
     TokenDecimal(0xA2),
@@ -78,7 +83,34 @@ enum class TlvTag(val code: Int) {
     TerminalPublicKey(0x5C),
     TerminalTransactionSignature(0x57);
 
+    fun hasNestedTlv(): Boolean {
+        return when (this) {
+            TlvTag.CardData -> true
+            else -> false
+        }
+    }
+
+    fun valueType(): TlvValueType {
+        return when (this) {
+            CardId, Pin, Batch -> TlvValueType.HexString
+            ManufactureId, Firmware, IssuerId, BlockchainId, TokenSymbol, TokenContractAddress ->
+                TlvValueType.Utf8String
+            CurveId -> TlvValueType.EllipticCurve
+            MaxSignatures, PauseBeforePin2, RemainingSignatures,
+            SignedHashes, Health, TokenDecimal, UserCounter -> TlvValueType.IntValue
+            IsActivated, TerminalIsLinked -> TlvValueType.BoolValue
+            ManufactureDateTime -> TlvValueType.DateTime
+            ProductMask -> TlvValueType.ProductMask
+            SettingsMask -> TlvValueType.SettingsMask
+            Status -> TlvValueType.CardStatus
+            SigningMethod -> TlvValueType.SigningMethod
+            else -> TlvValueType.ByteArray
+        }
+    }
+
+
     companion object {
         fun byCode(code: Int): TlvTag = values().find { it.code == code } ?: Unknown
     }
 }
+
