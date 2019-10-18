@@ -14,3 +14,9 @@ data class CardEnvironment(
         const val DEFAULT_PIN2 = "000"
     }
 }
+
+enum class EncryptionMode(val code: Byte) {
+    NONE(0x0),
+    FAST(0x1),
+    STRONG(0x2)
+}
