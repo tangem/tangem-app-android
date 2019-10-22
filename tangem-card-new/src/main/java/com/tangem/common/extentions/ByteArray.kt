@@ -8,6 +8,12 @@ import kotlin.experimental.and
 
 fun ByteArray.toHexString() = joinToString("") { "%02x".format(it) }
 
+fun ByteArray.toUtf8(): String {
+    val string = String(this)
+    if (this.isNotEmpty() && this.last() == 0.toByte()) return string.dropLast(1)
+    return string
+}
+
 
 fun ByteArray.toInt(): Int {
     return when (this.size) {
