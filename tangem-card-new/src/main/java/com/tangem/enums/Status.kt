@@ -11,7 +11,7 @@ enum class Status (val code: Int, val description: String){
     Pin2Changed(ProcessCompleted.code + 0x0002, "SW_PIN2_CHANGED"),
     PinsChanged(ProcessCompleted.code + 0x0003, "SW_PINS_CHANGED"),
     InsNotSupported(0x6D00, "SW_INS_NOT_SUPPORTED"),
-    NeedEnctryption(0x6982, "SW_NEED_ENCRYPTION"),
+    NeedEncryption(0x6982, "SW_NEED_ENCRYPTION"),
     NeedPause(0x9789, "SW_NEED_PAUSE");
 
     companion object {
