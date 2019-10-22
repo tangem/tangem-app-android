@@ -9,6 +9,8 @@ import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
 import com.tangem.data.SettingsMask
 import com.tangem.enums.Instruction
+import com.tangem.tasks.TaskError
+import java.util.*
 
 enum class SigningMethod(val code: Int) {
     SignHash(0),
@@ -60,9 +62,9 @@ class ReadCardResponse(
         val status: CardStatus,
 
         val firmwareVersion: String?,
-        val cardPublicKey: String?,
+        val cardPublicKey: ByteArray?,
         val settingsMask: SettingsMask?,
-        val issuerPublicKey: String?,
+        val issuerPublicKey: ByteArray?,
         val curve: EllipticCurve?,
         val maxSignatures: Int?,
         val signingMethpod: SigningMethod?,
@@ -71,14 +73,15 @@ class ReadCardResponse(
         val walletRemainingSignatures: Int?,
         val walletSignedHashes: Int?,
         val health: Int?,
-        val isActivated: Boolean?,
+        val isActivated: Boolean,
         val activationSeed: ByteArray?,
         val paymentFlowVersion: ByteArray?,
         val userCounter: Int?,
+        val terminalIsLinked: Boolean,
 
         //Card Data
-        val batchId: Int?,
-        val manufactureDateTime: String?,
+        val batchId: String?,
+        val manufactureDateTime: Date?,
         val issuerName: String?,
         val blockchainName: String?,
         val manufacturerSignature: ByteArray?,
@@ -127,10 +130,11 @@ class ReadCardCommand(private val pin1: String) : CommandSerializer<ReadCardResp
                     tlvMapper.mapOptional(TlvTag.RemainingSignatures),
                     tlvMapper.mapOptional(TlvTag.SignedHashes),
                     tlvMapper.mapOptional(TlvTag.Health),
-                    tlvMapper.mapOptional(TlvTag.IsActivated),
+                    tlvMapper.map(TlvTag.IsActivated),
                     tlvMapper.mapOptional(TlvTag.ActivationSeed),
                     tlvMapper.mapOptional(TlvTag.PaymentFlowVersion),
                     tlvMapper.mapOptional(TlvTag.UserCounter),
+                    tlvMapper.map(TlvTag.TerminalIsLinked),
 
                     tlvMapper.mapOptional(TlvTag.Batch),
                     tlvMapper.mapOptional(TlvTag.ManufactureDateTime),
@@ -144,7 +148,7 @@ class ReadCardCommand(private val pin1: String) : CommandSerializer<ReadCardResp
                     tlvMapper.mapOptional(TlvTag.TokenDecimal)
             )
         } catch (exception: Exception) {
-            null
+            throw TaskError.SerializeCommandError()
         }
     }
 
