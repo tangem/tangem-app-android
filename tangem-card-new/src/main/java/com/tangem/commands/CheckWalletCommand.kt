@@ -9,6 +9,7 @@ import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
 import com.tangem.enums.Instruction
+import com.tangem.tasks.TaskError
 
 class CheckWalletResponse(
         val cardId: String,
@@ -45,7 +46,7 @@ class CheckWalletCommand(
                     mapper.map(TlvTag.Signature)
             )
         } catch (exception: Exception) {
-            null
+            throw TaskError.SerializeCommandError()
         }
     }
 
