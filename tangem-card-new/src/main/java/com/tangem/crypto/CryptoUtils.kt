@@ -1,7 +1,9 @@
 package com.tangem.crypto
 
 import com.tangem.commands.EllipticCurve
+import net.i2p.crypto.eddsa.EdDSASecurityProvider
 import java.security.SecureRandom
+import java.security.Security
 
 fun generateRandomBytes(length: Int): ByteArray {
     val bytes = ByteArray(length)
@@ -16,6 +18,13 @@ fun verify(publicKey: ByteArray, message: ByteArray, signature: ByteArray,
         EllipticCurve.Ed25519 -> verifyEd25519(publicKey, message, signature)
     }
 }
+
+
+fun initCrypto() {
+    Security.insertProviderAt(org.spongycastle.jce.provider.BouncyCastleProvider(), 1)
+    Security.addProvider(EdDSASecurityProvider())
+}
+
 
 
 
