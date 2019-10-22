@@ -7,6 +7,7 @@ import com.tangem.commands.SigningMethod
 import com.tangem.common.extentions.toDate
 import com.tangem.common.extentions.toHexString
 import com.tangem.common.extentions.toInt
+import com.tangem.common.extentions.toUtf8
 import com.tangem.data.SettingsMask
 import java.util.*
 
@@ -28,18 +29,22 @@ class TlvMapper(val tlvList: List<Tlv>) {
 
     inline fun <reified T> map(tag: TlvTag): T {
         val tlvValue: ByteArray = tlvList.find { it.tag == tag }?.value
-                ?: throw MissingTagException()
+                ?: if (tag.valueType() == TlvValueType.BoolValue && T::class == Boolean::class) {
+                    return false as T
+                } else {
+                    throw MissingTagException("Tag $tag not found")
+                }
 
         return when (tag.valueType()) {
             TlvValueType.HexString -> {
                 if (T::class != String::class)
                     throw WrongTypeException("Mapping error. Type for tag: $tag must be ${tag.valueType()}. It is ${T::class}")
-               tlvValue.toHexString() as T
+                tlvValue.toHexString() as T
             }
             TlvValueType.Utf8String -> {
                 if (T::class != String::class)
                     throw WrongTypeException("Mapping error. Type for tag: $tag must be ${tag.valueType()}. It is ${T::class}")
-                String(tlvValue) as T
+                tlvValue.toUtf8() as T
             }
             TlvValueType.IntValue -> {
                 if (T::class != Integer::class)
@@ -59,7 +64,7 @@ class TlvMapper(val tlvList: List<Tlv>) {
             TlvValueType.EllipticCurve -> {
                 if (T::class != EllipticCurve::class)
                     throw WrongTypeException("Mapping error. Type for tag: $tag must be ${tag.valueType()}. It is ${T::class}")
-                EllipticCurve.byName(String(tlvValue)) as T
+                EllipticCurve.byName(tlvValue.toUtf8()) as T
             }
             TlvValueType.DateTime -> {
                 if (T::class != Date::class)
@@ -89,8 +94,6 @@ class TlvMapper(val tlvList: List<Tlv>) {
                 SigningMethod.byCode(tlvValue.toInt()) as T
             }
         }
-
-
     }
 
 }

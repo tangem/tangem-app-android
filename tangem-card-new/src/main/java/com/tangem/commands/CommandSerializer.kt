@@ -4,6 +4,7 @@ import com.tangem.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.enums.Instruction
+import com.tangem.tasks.TaskError
 
 //interface TlvMappable {
 //    fun responseFromTlv(tlvList: List<Tlv>): CommandResponse?
@@ -26,7 +27,7 @@ abstract class CommandSerializer<T : CommandResponse>() {
 
 sealed class CommandEvent {
     class Success(val response: Any) : CommandEvent()
-    class Failure() : CommandEvent()
+    class Failure(val taskError: TaskError) : CommandEvent()
     class UserCancellation : CommandEvent()
 }
 
