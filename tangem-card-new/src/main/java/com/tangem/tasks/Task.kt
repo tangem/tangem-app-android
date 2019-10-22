@@ -21,8 +21,8 @@ abstract class Task<T>(protected val delegate: CardManagerDelegate? = null, priv
     abstract fun onRun(cardEnvironment: CardEnvironment,
                        callback: (result: T, cardEnvironment: CardEnvironment) -> Unit)
 
-    protected fun <T: CommandResponse>sendCommand(commandSerializer: CommandSerializer<T>, cardEnvironment: CardEnvironment,
-                              callback: (result: CommandEvent) -> Unit) {
+    protected fun <T : CommandResponse> sendCommand(commandSerializer: CommandSerializer<T>, cardEnvironment: CardEnvironment,
+                                                    callback: (result: CommandEvent) -> Unit) {
 
         reader.sendApdu(
                 commandSerializer.serialize(cardEnvironment).toBytes()) { responseApdu ->
@@ -30,34 +30,21 @@ abstract class Task<T>(protected val delegate: CardManagerDelegate? = null, priv
             when (responseApdu.status) {
                 Status.ProcessCompleted, Status.Pin1Changed, Status.Pin2Changed, Status.PinsChanged
                 -> {
-                    val responseData = commandSerializer.deserialize(cardEnvironment, responseApdu)
-
-                    if (responseData == null) {
-
-                    } else {
-                        callback(
-                                CommandEvent.Success(responseData)
-                        )
+                    try {
+                        val responseData = commandSerializer.deserialize(cardEnvironment, responseApdu)
+                        callback(CommandEvent.Success(responseData as T))
+                    } catch (error: TaskError) {
+                        callback(CommandEvent.Failure(error))
                     }
-
                 }
-                Status.InvalidParams -> TODO()
-                Status.ErrorProcessingCommand -> TODO()
-                Status.InvalidState -> TODO()
+                Status.InvalidParams -> callback(CommandEvent.Failure(TaskError.InvalidParams()))
+                Status.ErrorProcessingCommand -> callback(CommandEvent.Failure(TaskError.ErrorProcessingCommand()))
+                Status.InvalidState -> callback(CommandEvent.Failure(TaskError.InvalidState()))
 
-                Status.InsNotSupported -> TODO()
-                Status.NeedEnctryption -> TODO()
-                Status.NeedPause -> TODO()
+                Status.InsNotSupported -> callback(CommandEvent.Failure(TaskError.InsNotSupported()))
+                Status.NeedEncryption -> callback(CommandEvent.Failure(TaskError.NeedEncryption()))
+                Status.NeedPause -> callback(CommandEvent.Failure(TaskError.NeedPause()))
             }
-
-//            val parsedApdu = responseApdu.getTlvData()
-//            if (parsedApdu == null) callback.invoke(TaskResult.Error(CardError()))
-//            else if (!parsedApdu.statusCompleted()) {
-//                callback.invoke(TaskResult.Error(CardError(parsedApdu.status.code)))
-//            } else {
-//                val response = commandSerializer.deserialize(parsedApdu)
-//                callback.invoke(response)
-//            }
         }
     }
 }
@@ -65,12 +52,18 @@ abstract class Task<T>(protected val delegate: CardManagerDelegate? = null, priv
 sealed class TaskError : Exception() {
     class UnknownStatus(sw: Int) : TaskError()
     class MappingError : TaskError()
+
     class ErrorProcessingCommand : TaskError()
     class InvalidState : TaskError()
     class InsNotSupported : TaskError()
+    class InvalidParams : TaskError()
+    class NeedEncryption : TaskError()
+    class NeedPause : TaskError()
+
     class VefificationFailed : TaskError()
     class CardError : TaskError()
     class ReaderError() : TaskError()
+    class SerializeCommandError() : TaskError()
 }
 
 sealed class TaskResult {
@@ -80,23 +73,22 @@ sealed class TaskResult {
 }
 
 
-
-class BasicTask<T: CommandResponse>(
-        private val commandSerializer: CommandSerializer<CommandResponse>,
-        delegate: CardManagerDelegate? = null,
-        reader: CardReader) : Task(delegate, reader) {
-
-    override fun onRun(cardEnvironment: CardEnvironment,
-                     callback: (result: TaskResult, cardEnvironment: CardEnvironment) -> Unit) {
-        sendCommand(commandSerializer, cardEnvironment) {
-            callback.invoke(it, updateEnvironment())
-        }
-    }
-
-    private fun updateEnvironment(): CardEnvironment {
-        //TODO: set logic of changing CardEnvironment when needed
-        return CardEnvironment()
-    }
-}
+//class BasicTask<T: CommandResponse>(
+//        private val commandSerializer: CommandSerializer<CommandResponse>,
+//        delegate: CardManagerDelegate? = null,
+//        reader: CardReader) : Task(delegate, reader) {
+//
+//    override fun onRun(cardEnvironment: CardEnvironment,
+//                     callback: (result: TaskResult, cardEnvironment: CardEnvironment) -> Unit) {
+//        sendCommand(commandSerializer, cardEnvironment) {
+//            callback.invoke(it, updateEnvironment())
+//        }
+//    }
+//
+//    private fun updateEnvironment(): CardEnvironment {
+//        //TODO: set logic of changing CardEnvironment when needed
+//        return CardEnvironment()
+//    }
+//}
 
 
