@@ -37,9 +37,8 @@ class NfcManager(private val reader: NfcReader) : NfcAdapter.ReaderCallback {
     }
 
     override fun onTagDiscovered(tag: Tag?) {
-        reader.isoDep = IsoDep.get(tag)
-        reader.onTagDiscovered(tag)
-        if (!reader.readingActive) ignoreTag(tag)
+//        reader.isoDep = IsoDep.get(tag)
+        if (reader.readingActive) reader.onTagDiscovered(tag) else ignoreTag(tag)
     }
 
 
