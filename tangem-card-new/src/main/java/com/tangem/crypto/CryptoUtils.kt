@@ -26,4 +26,14 @@ fun initCrypto() {
 }
 
 
+fun ByteArray.sign(privateKeyArray: ByteArray, curve: EllipticCurve = EllipticCurve.Secp256k1): ByteArray {
+
+    return when (curve) {
+        EllipticCurve.Secp256k1 -> signSecp256k1(this,privateKeyArray)
+        EllipticCurve.Ed25519 -> signEd25519(this, privateKeyArray)
+    }
+
+
+}
+
 
