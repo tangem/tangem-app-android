@@ -2,44 +2,64 @@ package com.tangem
 
 import com.tangem.commands.CommandResponse
 import com.tangem.commands.CommandSerializer
-import com.tangem.commands.SignCommandData
+import com.tangem.commands.SignCommand
+import com.tangem.commands.SignResponse
 import com.tangem.crypto.initCrypto
-import com.tangem.tasks.ScanEvent
-import com.tangem.tasks.ScanTask
-import com.tangem.tasks.Task
-import com.tangem.tasks.TaskResult
+import com.tangem.tasks.*
 
 class CardManager(
         private val reader: CardReader,
         private val cardManagerDelegate: CardManagerDelegate? = null,
         dataStorage: DataStorage? = null) {
 
-    private val cardEnvironmentRepository = CardEnvironmentRepository(dataStorage)
+    var isBusy = false
+        private set
+
+    private val cardEnvironmentRepository = mutableMapOf<String, CardEnvironment>()
 
     init {
         initCrypto()
     }
 
-    fun scanCard(callback: (result: ScanEvent, cardEnvironment: CardEnvironment) -> Unit) {
+    fun scanCard(callback: (result: TaskEvent<ScanEvent>) -> Unit) {
         val task = ScanTask(cardManagerDelegate, reader)
-        runTask(task, cardEnvironmentRepository.cardEnvironment, callback)
+        runTask(task, callback = callback)
     }
 
-    fun sign(signCommandData: SignCommandData,
-             callback: (result: TaskResult) -> Unit) {
-//        val task = SignTask<SignEvent>(signCommandData, cardManagerDelegate, reader)
-//        runTask(task, cardEnvironmentRepository.cardEnvironment, callback)
+    fun sign(hashes: Array<ByteArray>, cardId: String,
+             callback: (result: TaskEvent<SignResponse>) -> Unit) {
+        var signCommand: SignCommand
+        try {
+            signCommand = SignCommand(hashes, cardId)
+        } catch (error: Exception) {
+            if (error is TaskError) {
+                callback(TaskEvent.Completion(error))
+            } else {
+                callback(TaskEvent.Completion(TaskError.GenericError(error.message)))
+            }
+            return
+        }
+        val task = SingleCommandTask(signCommand, cardManagerDelegate, reader)
+        runTask(task, cardId, callback)
     }
 
-    fun <TaskEvent>runTask(task: Task<TaskEvent>, environment: CardEnvironment? = null,
-                            callback: (result: TaskEvent, cardEnvironment: CardEnvironment) -> Unit) {
-        task.run(environment ?: cardEnvironmentRepository.cardEnvironment, callback)
+    fun <T> runTask(task: Task<T>, cardId: String? = null,
+                    callback: (result: TaskEvent<T>) -> Unit) {
+//        AppExecutors.diskIO().execute {
+        val environment = fetchCardEnvironment(cardId)
+        isBusy = true
+        task.run(environment, callback)
+//        }
     }
 
-    fun runCommand(commandSerializer: CommandSerializer<CommandResponse>,
-                   environment: CardEnvironment? = null,
-                   callback: (result: TaskResult) -> Unit) {
-//        val task = BasicTask<CommandResponse>(commandSerializer, cardManagerDelegate, reader)
-//        runTask(task, environment, callback)
+    private fun fetchCardEnvironment(cardId: String?): CardEnvironment {
+        return cardEnvironmentRepository[cardId] ?: CardEnvironment()
+    }
+
+    fun <T : CommandResponse> runCommand(commandSerializer: CommandSerializer<T>,
+                                         cardId: String? = null,
+                                         callback: (result: TaskEvent<T>) -> Unit) {
+        val task = SingleCommandTask(commandSerializer, cardManagerDelegate, reader)
+        runTask(task, cardId, callback)
     }
 }
