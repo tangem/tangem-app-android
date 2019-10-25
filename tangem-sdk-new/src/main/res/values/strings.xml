@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Tangem Sdk</string>
+    <string name="general_status_reading">READING…</string>
 </resources>
