@@ -93,16 +93,21 @@ class ReadCardResponse(
 ) : CommandResponse
 
 
-class ReadCardCommand(private val pin1: String) : CommandSerializer<ReadCardResponse>() {
+class ReadCardCommand : CommandSerializer<ReadCardResponse>() {
 
     override val instruction = Instruction.Read
     override val instructionCode = instruction.code
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
 
-        val tlvData = listOf(
-            Tlv(TlvTag.Pin, TlvTag.Pin.code, pin1.calculateSha256())
+        val tlvData = mutableListOf(
+                Tlv(TlvTag.Pin, TlvTag.Pin.code, cardEnvironment.pin1.calculateSha256())
         )
+
+        cardEnvironment.terminalKeys?.let {
+            Tlv(TlvTag.TerminalPublicKey,
+                    TlvTag.TerminalPublicKey.code, it.publicKey)
+        }
 
         return CommandApdu(instructionCode, tlvData)
     }
