@@ -1,0 +1,11 @@
+package com.tangem.tangem_sdk_new
+
+import android.os.Handler
+import android.os.Looper
+
+
+val uiHandler = Handler(Looper.getMainLooper())
+
+fun postUI(msTime: Long = 0, func: () -> Unit) {
+    if (msTime > 0) uiHandler.postDelayed({ func() }, msTime) else uiHandler.post(func)
+}
