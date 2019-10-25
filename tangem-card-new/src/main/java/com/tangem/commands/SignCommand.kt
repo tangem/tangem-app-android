@@ -3,49 +3,75 @@ package com.tangem.commands
 import com.tangem.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.ResponseApdu
+import com.tangem.common.extentions.calculateSha256
+import com.tangem.common.extentions.hexToBytes
+import com.tangem.common.tlv.Tlv
+import com.tangem.common.tlv.TlvMapper
+import com.tangem.common.tlv.TlvTag
+import com.tangem.crypto.sign
 import com.tangem.enums.Instruction
+import com.tangem.tasks.TaskError
 
-class SignCommand(val signCommandData: SignCommandData) : CommandSerializer<SignCommandResponse>() {
+class SignCommand(private val hashes: Array<ByteArray>, private val cardId: String)
+    : CommandSerializer<SignResponse>() {
 
     override val instruction = Instruction.Sign
     override val instructionCode = instruction.code
 
+    private val hashSizes = if (hashes.isNotEmpty()) hashes.first().size else 0
+    private val dataToSign = flattenHashes()
+
+    private fun flattenHashes(): ByteArray {
+        checkForErrors()
+        return hashes.reduce { arr1, arr2 -> arr1 + arr2 }
+    }
+
+    private fun checkForErrors() {
+        if (hashes.isEmpty()) throw TaskError.EmptyHashes()
+        if (hashes.size > 10) throw  TaskError.TooMuchHashes()
+        if (hashes.any { it.size != hashSizes }) throw TaskError.HashSizeMustBeEqual()
+    }
+
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val tlvData = mutableListOf(
+                Tlv(TlvTag.Pin, TlvTag.Pin.code, cardEnvironment.pin1.calculateSha256()),
+                Tlv(TlvTag.Pin2, TlvTag.Pin2.code, cardEnvironment.pin2.calculateSha256()),
+                Tlv(TlvTag.CardId, TlvTag.CardId.code, cardId.hexToBytes()),
+                Tlv(TlvTag.TransactionOutHashSize,
+                        TlvTag.TransactionOutHashSize.code, byteArrayOf(hashSizes.toByte())),
+                Tlv(TlvTag.TransactionOutHash, TlvTag.TransactionOutHash.code, dataToSign)
+        )
+
+        addTerminalSignature(cardEnvironment, tlvData)
+
+        return CommandApdu(instructionCode, tlvData)
     }
 
-    override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): SignCommandResponse? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    private fun addTerminalSignature(cardEnvironment: CardEnvironment, tlvData: MutableList<Tlv>) {
+        cardEnvironment.terminalKeys?.let {
+            val signedData = dataToSign.sign(it.privateKey)
+            tlvData.add(Tlv(TlvTag.TerminalTransactionSignature,
+                    TlvTag.TerminalTransactionSignature.code, signedData))
+            tlvData.add(Tlv(TlvTag.TerminalPublicKey, TlvTag.TerminalPublicKey.code, it.publicKey))
+        }
     }
 
+    override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): SignResponse? {
+        val tlvData = responseApdu.getTlvData() ?: return null
+
+        val tlvMapper = TlvMapper(tlvData)
+        return SignResponse(
+                tlvMapper.map(TlvTag.CardId),
+                tlvMapper.map(TlvTag.Signature),
+                tlvMapper.map(TlvTag.RemainingSignatures),
+                tlvMapper.map(TlvTag.SignedHashes)
+        )
+    }
 }
 
-class SignCommandResponse(
-
+class SignResponse(
+        val cardId: String,
+        val signature: ByteArray,
+        val remainingSignatures: Int,
+        val signedHashes: Int
 ) : CommandResponse
-
-
-data class SignCommandData(
-        val cid: String,
-        val pin1: String,
-        val pin2: String,
-        val cvc: String,
-        val transactionHash: TransactionHash,
-        val issuerData: IssuerData,
-        val terminalPublicKey: ByteArray? = null,
-        val terminalTransactionSignature: ByteArray? = null
-
-)
-
-data class TransactionHash(
-        val transactionHash: ByteArray,
-        val transactionRaw: ByteArray,
-        val hashName: String
-)
-
-data class IssuerData(
-        val issuerData: ByteArray,
-        val issuerDataCounter: Int,
-        val issuerTransactionSignature: ByteArray,
-        val issuerDataSignature: ByteArray
-)
