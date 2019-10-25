@@ -1,36 +1,65 @@
 package com.tangem.tangem_sdk_new
 
-import android.app.AlertDialog
 import androidx.fragment.app.FragmentActivity
-import com.tangem.CardError
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.CardManagerDelegate
+import com.tangem.Log
+import com.tangem.tasks.TaskError
+import kotlinx.android.synthetic.main.layout_touch_card.*
 
-class BasicCardManagerDelegate(val activity: FragmentActivity) : CardManagerDelegate {
 
-    private var dialog: AlertDialog? = null
+class BasicCardManagerDelegate(private val activity: FragmentActivity, private val reader: NfcReader) : CardManagerDelegate {
 
-    override fun showSecurityDelay(seconds: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    private var dialog: BottomSheetDialog? = null
+
+    override fun showSecurityDelay(ms: Int) {
+//        activity.runOnUiThread{
+//            activity.tv_security_delay?.text = "Security delay. $ms left."
+//        }
     }
 
     override fun hideSecurityDelay() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun requestPin(success: () -> String, error: (cardError: CardError) -> CardError) {
+    override fun requestPin(success: () -> String, error: (cardError: TaskError.CardError) -> TaskError.CardError) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     override fun openNfcPopup() {
 
-        dialog = AlertDialog.Builder(activity)
-                .setTitle("NFC reader mode")
-                .create()
-        dialog?.show()
 
+        activity.runOnUiThread {
+            val dialogView = activity.getLayoutInflater().inflate(R.layout.nfc_bottom_sheet, null)
+
+            dialog = BottomSheetDialog(activity)
+            dialog?.setContentView(dialogView)
+            dialog?.dismissWithAnimation
+            dialog?.create()
+//                .setTitle("NFC reader mode")
+            dialog?.setOnShowListener {
+                    dialog!!.rippleBackgroundNfc?.startRippleAnimation()
+
+                    // init NFC Antenna
+                    val nfcDeviceAntenna = TouchCardAnimation(
+                            activity, dialog!!.ivHandCardHorizontal,
+                            dialog!!.ivHandCardVertical, dialog!!.llHand, dialog!!.llNfc)
+                    nfcDeviceAntenna.init()
+            }
+            dialog?.setOnDismissListener {
+                reader.readingCancelled = false
+                Log.i(this::class.simpleName!!, "readingCancelled is set to true")
+            }
+            dialog?.show()
+        }
+        Log.i(this::class.simpleName!!, "Nfc PopUp is opened")
     }
 
     override fun closeNfcPopup() {
-        dialog?.dismiss()
+        activity.runOnUiThread {
+            dialog?.dismiss()
+        }
+        Log.i(this::class.simpleName!!, "Nfc PopUp is closed")
+
     }
 }
