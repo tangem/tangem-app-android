@@ -3,19 +3,20 @@ package com.tangem.tasks
 import com.tangem.CardEnvironment
 import com.tangem.CardManagerDelegate
 import com.tangem.CardReader
-import com.tangem.commands.*
+import com.tangem.commands.CheckWalletCommand
+import com.tangem.commands.EllipticCurve
+import com.tangem.commands.ReadCardCommand
+import com.tangem.commands.ReadCardResponse
 import com.tangem.crypto.generateRandomBytes
 import com.tangem.crypto.verify
 
 sealed class ScanEvent {
     data class OnReadEvent(val result: ReadCardResponse) : ScanEvent()
     data class OnVerifyEvent(val verified: Boolean) : ScanEvent()
-    object OnUserCancelledEvent : ScanEvent()
-    data class Failure(val error: TaskError) : ScanEvent()
 }
 
 
-class ScanTask(delegate: CardManagerDelegate? = null, reader: CardReader) : Task<ScanEvent>(delegate, reader) {
+internal class ScanTask(delegate: CardManagerDelegate? = null, reader: CardReader) : Task<ScanEvent>(delegate, reader) {
 
     private lateinit var readCardData: ReadCardResponse
     private lateinit var challenge: ByteArray
@@ -23,23 +24,23 @@ class ScanTask(delegate: CardManagerDelegate? = null, reader: CardReader) : Task
     private lateinit var walletPublickKey: ByteArray
 
     override fun onRun(cardEnvironment: CardEnvironment,
-                       callback: (result: ScanEvent, cardEnvironment: CardEnvironment) -> Unit) {
+                       callback: (result: TaskEvent<ScanEvent>) -> Unit) {
 
-        val readCommand = ReadCardCommand(cardEnvironment.pin1)
-        sendCommand(readCommand, cardEnvironment) { readCommandEvent ->
+        val readCommand = ReadCardCommand()
+        sendCommand(readCommand, cardEnvironment) { readEvent ->
 
-            when (readCommandEvent) {
-                is CommandEvent.Success -> {
-                    readCardData = readCommandEvent.response as ReadCardResponse
+            when (readEvent) {
+                is TaskEvent.Event -> {
+                    readCardData = readEvent.data
 
-                    callback(ScanEvent.OnReadEvent(readCardData), cardEnvironment)
+                    callback(TaskEvent.Event(ScanEvent.OnReadEvent(readCardData)))
 
                     if (readCardData.curve != null && readCardData.walletPublicKey != null) {
                         curve = readCardData.curve!!
                         walletPublickKey = readCardData.walletPublicKey!!
                     } else {
                         delegate?.closeNfcPopup()
-                        callback(ScanEvent.Failure(TaskError.CardError()), cardEnvironment)
+                        callback(TaskEvent.Completion(TaskError.CardError()))
                     }
 
                     val checkWalletCommand = prepareCheckWalletCommand(cardEnvironment)
@@ -48,37 +49,30 @@ class ScanTask(delegate: CardManagerDelegate? = null, reader: CardReader) : Task
                         delegate?.closeNfcPopup()
 
                         when (checkWalletEvent) {
-                            is CommandEvent.Success -> {
-                                val checkWalletResponse = checkWalletEvent.response as CheckWalletResponse
+                            is TaskEvent.Event -> {
+                                val checkWalletResponse = checkWalletEvent.data
                                 val verified = verify(walletPublickKey,
                                         challenge + checkWalletResponse.salt,
                                         checkWalletResponse.walletSignature,
                                         curve)
                                 if (verified) {
-                                    callback(ScanEvent.OnVerifyEvent(true), cardEnvironment)
+                                    callback(TaskEvent.Event(ScanEvent.OnVerifyEvent(true)))
+                                    callback(TaskEvent.Completion())
                                 } else {
-                                    callback(ScanEvent.Failure(TaskError.VefificationFailed()), cardEnvironment)
+                                    callback(TaskEvent.Completion(TaskError.VefificationFailed()))
                                 }
                             }
-                            is CommandEvent.Failure ->
-                                callback(ScanEvent.Failure(checkWalletEvent.taskError), cardEnvironment)
-                            is CommandEvent.UserCancellation ->
-                                callback(ScanEvent.OnUserCancelledEvent, cardEnvironment)
+                            is TaskEvent.Completion ->
+                                if (checkWalletEvent.error != null)
+                                    callback(TaskEvent.Completion(checkWalletEvent.error))
                         }
 
                     }
                 }
-                is CommandEvent.Failure ->
-                    callback(ScanEvent.Failure(readCommandEvent.taskError), cardEnvironment)
-                is CommandEvent.UserCancellation ->
-                    callback(ScanEvent.OnUserCancelledEvent, cardEnvironment)
+                is TaskEvent.Completion ->
+                    if (readEvent.error != null) callback(TaskEvent.Completion(readEvent.error))
             }
         }
-    }
-
-    private fun updateEnvironment(): CardEnvironment {
-// [REDACTED_TODO_COMMENT]
-        return CardEnvironment()
     }
 
     private fun prepareCheckWalletCommand(cardEnvironment: CardEnvironment): CheckWalletCommand {

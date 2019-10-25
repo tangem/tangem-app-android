@@ -3,55 +3,88 @@ package com.tangem.tasks
 import com.tangem.CardEnvironment
 import com.tangem.CardManagerDelegate
 import com.tangem.CardReader
-import com.tangem.commands.CommandEvent
+import com.tangem.Log
 import com.tangem.commands.CommandResponse
 import com.tangem.commands.CommandSerializer
+import com.tangem.common.CompletionResult
+import com.tangem.common.extentions.toInt
+import com.tangem.common.tlv.TlvTag
 import com.tangem.enums.Status
 
-abstract class Task<T>(protected val delegate: CardManagerDelegate? = null, private val reader: CardReader) {
+abstract class Task<T>(protected val delegate: CardManagerDelegate? = null, protected val reader: CardReader) {
 
     fun run(cardEnvironment: CardEnvironment,
-            callback: (result: T, cardEnvironment: CardEnvironment) -> Unit) {
+            callback: (result: TaskEvent<T>) -> Unit) {
 
         delegate?.openNfcPopup()
+        reader.setStartSession()
+        Log.i(this::class.simpleName!!, "Nfc task is started")
         onRun(cardEnvironment, callback)
 
     }
 
     abstract fun onRun(cardEnvironment: CardEnvironment,
-                       callback: (result: T, cardEnvironment: CardEnvironment) -> Unit)
+                       callback: (result: TaskEvent<T>) -> Unit)
 
-    protected fun <T : CommandResponse> sendCommand(commandSerializer: CommandSerializer<T>, cardEnvironment: CardEnvironment,
-                                                    callback: (result: CommandEvent) -> Unit) {
+    protected fun <T : CommandResponse> sendCommand(
+            commandSerializer: CommandSerializer<T>,
+            cardEnvironment: CardEnvironment,
+            callback: (result: TaskEvent<T>) -> Unit) {
+
+        Log.i(this::class.simpleName!!, "Nfc command ${commandSerializer::class.simpleName!!} is initiated")
+
 
         reader.sendApdu(
-                commandSerializer.serialize(cardEnvironment).toBytes()) { responseApdu ->
+                commandSerializer.serialize(cardEnvironment).toBytes()) { result ->
 
-            when (responseApdu.status) {
-                Status.ProcessCompleted, Status.Pin1Changed, Status.Pin2Changed, Status.PinsChanged
-                -> {
-                    try {
-                        val responseData = commandSerializer.deserialize(cardEnvironment, responseApdu)
-                        callback(CommandEvent.Success(responseData as T))
-                    } catch (error: TaskError) {
-                        callback(CommandEvent.Failure(error))
+            when (result) {
+                is CompletionResult.Success -> {
+                    val responseApdu = result.data
+                    when (responseApdu.status) {
+                        Status.ProcessCompleted, Status.Pin1Changed, Status.Pin2Changed, Status.PinsChanged
+                        -> {
+//                            reader.readingActive = false
+//                            reader.setStartSession()
+                            try {
+                                val responseData = commandSerializer.deserialize(cardEnvironment, responseApdu)
+                                Log.i(this::class.simpleName!!, "Nfc command ${commandSerializer::class.simpleName!!} is completed")
+                                callback(TaskEvent.Event(responseData as T))
+                                callback(TaskEvent.Completion())
+                            } catch (error: TaskError) {
+                                callback(TaskEvent.Completion(error))
+                            }
+                        }
+                        Status.InvalidParams -> callback(TaskEvent.Completion(TaskError.InvalidParams()))
+                        Status.ErrorProcessingCommand -> callback(TaskEvent.Completion(TaskError.ErrorProcessingCommand()))
+                        Status.InvalidState -> callback(TaskEvent.Completion(TaskError.InvalidState()))
+
+                        Status.InsNotSupported -> callback(TaskEvent.Completion(TaskError.InsNotSupported()))
+                        Status.NeedEncryption -> callback(TaskEvent.Completion(TaskError.NeedEncryption()))
+                        Status.NeedPause -> {
+                            val tlv = responseApdu.getTlvData(cardEnvironment.encryptionKey)
+                            val ms = tlv?.find { it.tag == TlvTag.Pause }?.value?.toInt()
+                            if (ms != null) delegate?.showSecurityDelay(ms)
+                            Log.i(this::class.simpleName!!, "Nfc command ${commandSerializer::class.simpleName!!} triggered security delay of $ms milliseconds")
+                            sendCommand(commandSerializer, cardEnvironment, callback)
+                        }
                     }
                 }
-                Status.InvalidParams -> callback(CommandEvent.Failure(TaskError.InvalidParams()))
-                Status.ErrorProcessingCommand -> callback(CommandEvent.Failure(TaskError.ErrorProcessingCommand()))
-                Status.InvalidState -> callback(CommandEvent.Failure(TaskError.InvalidState()))
+                is CompletionResult.Failure ->
+                    if (result.error is TaskError.UserCancelledError) {
+                        callback(TaskEvent.Completion(TaskError.UserCancelledError()))
+                        reader.readingActive = false
+                    }
 
-                Status.InsNotSupported -> callback(CommandEvent.Failure(TaskError.InsNotSupported()))
-                Status.NeedEncryption -> callback(CommandEvent.Failure(TaskError.NeedEncryption()))
-                Status.NeedPause -> callback(CommandEvent.Failure(TaskError.NeedPause()))
             }
         }
     }
 }
 
-sealed class TaskError : Exception() {
+sealed class TaskError(description: String? = null) : Exception(description) {
     class UnknownStatus(sw: Int) : TaskError()
     class MappingError : TaskError()
+    class GenericError(description: String? = null) : TaskError(description)
+    class UserCancelledError() : TaskError()
 
     class ErrorProcessingCommand : TaskError()
     class InvalidState : TaskError()
@@ -64,6 +97,11 @@ sealed class TaskError : Exception() {
     class CardError : TaskError()
     class ReaderError() : TaskError()
     class SerializeCommandError() : TaskError()
+
+    class CardIsMissing() : TaskError()
+    class EmptyHashes() : TaskError()
+    class TooMuchHashes() : TaskError()
+    class HashSizeMustBeEqual() : TaskError()
 }
 
 sealed class TaskResult {
@@ -72,24 +110,10 @@ sealed class TaskResult {
     data class Error(val error: TaskError) : TaskResult()
 }
 
-
-//class BasicTask<T: CommandResponse>(
-//        private val commandSerializer: CommandSerializer<CommandResponse>,
-//        delegate: CardManagerDelegate? = null,
-//        reader: CardReader) : Task(delegate, reader) {
-//
-//    override fun onRun(cardEnvironment: CardEnvironment,
-//                     callback: (result: TaskResult, cardEnvironment: CardEnvironment) -> Unit) {
-//        sendCommand(commandSerializer, cardEnvironment) {
-//            callback.invoke(it, updateEnvironment())
-//        }
-//    }
-//
-//    private fun updateEnvironment(): CardEnvironment {
-//        //TODO: set logic of changing CardEnvironment when needed
-//        return CardEnvironment()
-//    }
-//}
+sealed class TaskEvent<T> {
+    class Event<T>(val data: T) : TaskEvent<T>()
+    class Completion<T>(val error: TaskError? = null) : TaskEvent<T>()
+}
 
 
 
