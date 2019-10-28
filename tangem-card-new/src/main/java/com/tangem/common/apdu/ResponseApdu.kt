@@ -5,8 +5,8 @@ import com.tangem.enums.Status
 
 class ResponseApdu(val data: ByteArray) {
 
-    val sw1: Int = 0x00FF and data[data.size - 2].toInt()
-    val sw2: Int = 0x00FF and data[data.size - 1].toInt()
+    private val sw1: Int = 0x00FF and data[data.size - 2].toInt()
+    private val sw2: Int = 0x00FF and data[data.size - 1].toInt()
 
     val sw: Int = sw1 shl 8 or sw2
 

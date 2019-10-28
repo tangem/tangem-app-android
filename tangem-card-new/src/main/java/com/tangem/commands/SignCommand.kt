@@ -12,6 +12,14 @@ import com.tangem.crypto.sign
 import com.tangem.enums.Instruction
 import com.tangem.tasks.TaskError
 
+class SignResponse(
+        val cardId: String,
+        val signature: ByteArray,
+        val remainingSignatures: Int,
+        val signedHashes: Int
+) : CommandResponse
+
+
 class SignCommand(private val hashes: Array<ByteArray>, private val cardId: String)
     : CommandSerializer<SignResponse>() {
 
@@ -34,12 +42,11 @@ class SignCommand(private val hashes: Array<ByteArray>, private val cardId: Stri
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
         val tlvData = mutableListOf(
-                Tlv(TlvTag.Pin, TlvTag.Pin.code, cardEnvironment.pin1.calculateSha256()),
-                Tlv(TlvTag.Pin2, TlvTag.Pin2.code, cardEnvironment.pin2.calculateSha256()),
-                Tlv(TlvTag.CardId, TlvTag.CardId.code, cardId.hexToBytes()),
-                Tlv(TlvTag.TransactionOutHashSize,
-                        TlvTag.TransactionOutHashSize.code, byteArrayOf(hashSizes.toByte())),
-                Tlv(TlvTag.TransactionOutHash, TlvTag.TransactionOutHash.code, dataToSign)
+                Tlv(TlvTag.Pin, cardEnvironment.pin1.calculateSha256()),
+                Tlv(TlvTag.Pin2, cardEnvironment.pin2.calculateSha256()),
+                Tlv(TlvTag.CardId, cardId.hexToBytes()),
+                Tlv(TlvTag.TransactionOutHashSize,byteArrayOf(hashSizes.toByte())),
+                Tlv(TlvTag.TransactionOutHash, dataToSign)
         )
 
         addTerminalSignature(cardEnvironment, tlvData)
@@ -50,9 +57,8 @@ class SignCommand(private val hashes: Array<ByteArray>, private val cardId: Stri
     private fun addTerminalSignature(cardEnvironment: CardEnvironment, tlvData: MutableList<Tlv>) {
         cardEnvironment.terminalKeys?.let {
             val signedData = dataToSign.sign(it.privateKey)
-            tlvData.add(Tlv(TlvTag.TerminalTransactionSignature,
-                    TlvTag.TerminalTransactionSignature.code, signedData))
-            tlvData.add(Tlv(TlvTag.TerminalPublicKey, TlvTag.TerminalPublicKey.code, it.publicKey))
+            tlvData.add(Tlv(TlvTag.TerminalTransactionSignature, signedData))
+            tlvData.add(Tlv(TlvTag.TerminalPublicKey, it.publicKey))
         }
     }
 
@@ -68,10 +74,3 @@ class SignCommand(private val hashes: Array<ByteArray>, private val cardId: Stri
         )
     }
 }
-
-class SignResponse(
-        val cardId: String,
-        val signature: ByteArray,
-        val remainingSignatures: Int,
-        val signedHashes: Int
-) : CommandResponse
