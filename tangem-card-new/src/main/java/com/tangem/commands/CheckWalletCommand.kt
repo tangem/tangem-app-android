@@ -27,9 +27,9 @@ class CheckWalletCommand(
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
         val tlvData = listOf(
-                Tlv(TlvTag.Pin, TlvTag.Pin.code, cardEnvironment.pin1.calculateSha256()),
-                Tlv(TlvTag.CardId, TlvTag.CardId.code, cid.hexToBytes()),
-                Tlv(TlvTag.Challenge, TlvTag.Challenge.code, challenge)
+                Tlv(TlvTag.Pin, cardEnvironment.pin1.calculateSha256()),
+                Tlv(TlvTag.CardId, cid.hexToBytes()),
+                Tlv(TlvTag.Challenge, challenge)
         )
 
         return CommandApdu(instructionCode, tlvData)
