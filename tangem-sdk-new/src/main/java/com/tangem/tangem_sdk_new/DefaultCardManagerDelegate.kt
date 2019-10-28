@@ -4,22 +4,21 @@ import androidx.fragment.app.FragmentActivity
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.CardManagerDelegate
 import com.tangem.Log
+import com.tangem.tasks.Task
 import com.tangem.tasks.TaskError
 import kotlinx.android.synthetic.main.layout_touch_card.*
 
 
-class BasicCardManagerDelegate(private val activity: FragmentActivity, private val reader: NfcReader) : CardManagerDelegate {
+class DefaultCardManagerDelegate(private val activity: FragmentActivity, private val reader: NfcReader) : CardManagerDelegate {
 
     private var dialog: BottomSheetDialog? = null
+
+    private var task: Task<*>? = null
 
     override fun showSecurityDelay(ms: Int) {
 //        activity.runOnUiThread{
 //            activity.tv_security_delay?.text = "Security delay. $ms left."
 //        }
-    }
-
-    override fun hideSecurityDelay() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     override fun requestPin(success: () -> String, error: (cardError: TaskError.CardError) -> TaskError.CardError) {
@@ -48,6 +47,7 @@ class BasicCardManagerDelegate(private val activity: FragmentActivity, private v
             }
             dialog?.setOnDismissListener {
                 reader.readingCancelled = false
+                task = null
                 Log.i(this::class.simpleName!!, "readingCancelled is set to true")
             }
             dialog?.show()
@@ -56,6 +56,7 @@ class BasicCardManagerDelegate(private val activity: FragmentActivity, private v
     }
 
     override fun closeNfcPopup() {
+        task = null
         activity.runOnUiThread {
             dialog?.dismiss()
         }

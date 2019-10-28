@@ -1,8 +1,6 @@
 package com.tangem.tasks
 
 import com.tangem.CardEnvironment
-import com.tangem.CardManagerDelegate
-import com.tangem.CardReader
 import com.tangem.commands.CheckWalletCommand
 import com.tangem.commands.EllipticCurve
 import com.tangem.commands.ReadCardCommand
@@ -16,7 +14,7 @@ sealed class ScanEvent {
 }
 
 
-internal class ScanTask(delegate: CardManagerDelegate? = null, reader: CardReader) : Task<ScanEvent>(delegate, reader) {
+internal class ScanTask : Task<ScanEvent>() {
 
     private lateinit var readCardData: ReadCardResponse
     private lateinit var challenge: ByteArray
