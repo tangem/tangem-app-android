@@ -100,13 +100,10 @@ class ReadCardCommand : CommandSerializer<ReadCardResponse>() {
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
 
-        val tlvData = mutableListOf(
-                Tlv(TlvTag.Pin, TlvTag.Pin.code, cardEnvironment.pin1.calculateSha256())
-        )
+        val tlvData = mutableListOf(Tlv(TlvTag.Pin, cardEnvironment.pin1.calculateSha256()))
 
         cardEnvironment.terminalKeys?.let {
-            Tlv(TlvTag.TerminalPublicKey,
-                    TlvTag.TerminalPublicKey.code, it.publicKey)
+            Tlv(TlvTag.TerminalPublicKey, it.publicKey)
         }
 
         return CommandApdu(instructionCode, tlvData)
