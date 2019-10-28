@@ -19,10 +19,14 @@ class CommandApdu(
         private val encryptionMode: EncryptionMode = EncryptionMode.NONE,
         private val encryptionKey: ByteArray? = null) {
 
+    val apduData: ByteArray
 
-    fun toBytes(): ByteArray {
+    init {
+        apduData = toBytes()
+    }
 
-//        var length = 4 // CLA, INS, P1, P2
+
+    private fun toBytes(): ByteArray {
 
         val data = if (tlvList.isNotEmpty()) {
             tlvList.toBytes()
@@ -31,13 +35,6 @@ class CommandApdu(
         }
 
         val lc = data.size
-//
-//        if (data.isNotEmpty()) {
-//            length += 1 // LC
-//            if (lc >= 256)
-//                length += 2
-//            length += data.size // DATA
-//        }
 
 
         val byteStream = ByteArrayOutputStream()
@@ -50,45 +47,13 @@ class CommandApdu(
             byteStream.write(data)
         }
         return byteStream.toByteArray()
-
-//        val apdu = ByteArray(length)
-//
-//        var index = 0
-//        apdu[index] = cla
-//        index++
-//        apdu[index] = instruction
-//        index++
-//        apdu[index] = p1
-//        index++
-//        apdu[index] = p2
-//        index++
-//        if (lc != 0) {
-//            if (lc < 256) {
-//                apdu[index] = lc.toByte()
-//                index++
-//            } else {
-//                apdu[index] = 0
-//                index++
-//                apdu[index] = (lc shr 8).toByte()
-//                index++
-//                apdu[index] = (lc and 0xFF).toByte()
-//                index++
-//            }
-//
-//            System.arraycopy(data, 0, apdu, index, data.size)
-//            index += data.size
-//        }
-//        return apdu
     }
 
     private fun writeLength(stream: ByteArrayOutputStream, lc: Int) {
-//        if (lc < 256) {
-//            stream.write(lc)
-//        } else {
-            stream.write(0)
-            stream.write(lc shr 8)
-            stream.write(lc and 0xFF)
-//        }
+
+        stream.write(0)
+        stream.write(lc shr 8)
+        stream.write(lc and 0xFF)
     }
 
 
