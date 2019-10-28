@@ -5,6 +5,7 @@ import android.nfc.tech.IsoDep
 import com.tangem.CardReader
 import com.tangem.Log
 import com.tangem.common.CompletionResult
+import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.tasks.TaskError
 
@@ -18,7 +19,6 @@ class NfcReader : CardReader {
             }
         }
     override var readingActive = false
-    var startSession = false
     var readingCancelled = false
     set(value) {
         if (value) readingActive = false
@@ -33,9 +33,8 @@ class NfcReader : CardReader {
         readingCancelled = false
     }
 
-    override fun sendApdu(apduSerialized: ByteArray, callback: (response: CompletionResult<ResponseApdu>) -> Unit) {
-        data = apduSerialized
-//        readingActive = true
+    override fun transceiveApdu(apdu: CommandApdu, callback: (response: CompletionResult<ResponseApdu>) -> Unit) {
+        data = apdu.apduData
         this.callback = callback
         if (isoDep != null) {
             try {
@@ -61,18 +60,12 @@ class NfcReader : CardReader {
     }
 
     fun onTagDiscovered(tag: Tag?) {
-//        if (readingActive) {
-//            if (startSession) {
-//                connect()
-//                startSession = false
-//            }
         isoDep = IsoDep.get(tag)
         transceiveData()
     }
 
 
     private fun connect() {
-//        val timeout = isoDep?.timeout
         isoDep?.connect()
         isoDep?.close()
         isoDep?.connect()
