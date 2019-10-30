@@ -21,7 +21,7 @@ public class Logger {
             if (f.createNewFile()) {
                 f.setReadable(true);
                 FileWriter fileWriter = new FileWriter(f, true);
-                Process process = Runtime.getRuntime().exec("logcat -d -b main -v time");
+                Process process = Runtime.getRuntime().exec("logcat -d -v time");
                 try {
                     InputStream is = process.getInputStream();
                     InputStreamReader isr = new InputStreamReader(is);
