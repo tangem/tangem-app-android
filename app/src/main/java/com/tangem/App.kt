@@ -61,6 +61,7 @@ class App : Application() {
         pendingTransactionsStorage = PendingTransactionsStorage(applicationContext)
 
         if (BuildConfig.DEBUG) {
+            Runtime.getRuntime().exec("logcat -G 16M")
             com.tangem.tangem_card.util.Log.setLogger(
                     object : com.tangem.tangem_card.util.LoggerInterface {
                         override fun i(logTag: String, message: String) {
