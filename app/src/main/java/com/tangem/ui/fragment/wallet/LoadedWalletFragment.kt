@@ -579,7 +579,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
     }
 
     fun updateViews() {
-        if (activity == null) return
+        if (activity == null || this.view == null) return
 
         if (timerHideErrorAndMessage != null) {
             timerHideErrorAndMessage!!.cancel()
