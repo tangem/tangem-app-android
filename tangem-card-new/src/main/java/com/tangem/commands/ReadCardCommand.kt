@@ -56,7 +56,7 @@ enum class ProductMask(val code: Byte) {
     }
 }
 
-class ReadCardResponse(
+class Card(
         val cardId: String,
         val manufacturerName: String,
         val status: CardStatus,
@@ -93,7 +93,7 @@ class ReadCardResponse(
 ) : CommandResponse
 
 
-class ReadCardCommand : CommandSerializer<ReadCardResponse>() {
+class ReadCardCommand : CommandSerializer<Card>() {
 
     override val instruction = Instruction.Read
     override val instructionCode = instruction.code
@@ -109,13 +109,13 @@ class ReadCardCommand : CommandSerializer<ReadCardResponse>() {
         return CommandApdu(instructionCode, tlvData)
     }
 
-    override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): ReadCardResponse? {
+    override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): Card? {
         val tlvData = responseApdu.getTlvData() ?: return null
 
         return try {
             val tlvMapper = TlvMapper(tlvData)
 
-            ReadCardResponse(
+            Card(
                     cardId = tlvMapper.map(TlvTag.CardId),
                     manufacturerName = tlvMapper.map(TlvTag.ManufactureId),
                     status = tlvMapper.map(TlvTag.Status),
