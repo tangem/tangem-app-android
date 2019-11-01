@@ -7,7 +7,7 @@ import com.tangem.Log
 import com.tangem.commands.CommandResponse
 import com.tangem.commands.CommandSerializer
 import com.tangem.common.CompletionResult
-import com.tangem.enums.Status
+import com.tangem.enums.StatusWord
 
 abstract class Task<T> {
 
@@ -16,12 +16,10 @@ abstract class Task<T> {
 
     fun run(cardEnvironment: CardEnvironment,
             callback: (result: TaskEvent<T>) -> Unit) {
-
-        delegate?.openNfcPopup()
+        delegate?.onTaskStarted()
         reader?.setStartSession()
         Log.i(this::class.simpleName!!, "Nfc task is started")
         onRun(cardEnvironment, callback)
-
     }
 
     abstract fun onRun(cardEnvironment: CardEnvironment,
@@ -30,7 +28,7 @@ abstract class Task<T> {
     protected fun <T : CommandResponse> sendCommand(
             commandSerializer: CommandSerializer<T>,
             cardEnvironment: CardEnvironment,
-            callback: (result: TaskEvent<T>) -> Unit) {
+            callback: (result: CompletionResult<T>) -> Unit) {
 
         Log.i(this::class.simpleName!!, "Nfc command ${commandSerializer::class.simpleName!!} is initiated")
 
@@ -41,27 +39,24 @@ abstract class Task<T> {
             when (result) {
                 is CompletionResult.Success -> {
                     val responseApdu = result.data
-                    when (responseApdu.status) {
-                        Status.ProcessCompleted, Status.Pin1Changed, Status.Pin2Changed, Status.PinsChanged
+                    when (responseApdu.statusWord) {
+                        StatusWord.ProcessCompleted, StatusWord.Pin1Changed, StatusWord.Pin2Changed, StatusWord.PinsChanged
                         -> {
-//                            reader.readingActive = false
-//                            reader.setStartSession()
                             try {
                                 val responseData = commandSerializer.deserialize(cardEnvironment, responseApdu)
                                 Log.i(this::class.simpleName!!, "Nfc command ${commandSerializer::class.simpleName!!} is completed")
-                                callback(TaskEvent.Event(responseData as T))
-                                callback(TaskEvent.Completion())
+                                callback(CompletionResult.Success(responseData as T))
                             } catch (error: TaskError) {
-                                callback(TaskEvent.Completion(error))
+                                callback(CompletionResult.Failure(error))
                             }
                         }
-                        Status.InvalidParams -> callback(TaskEvent.Completion(TaskError.InvalidParams()))
-                        Status.ErrorProcessingCommand -> callback(TaskEvent.Completion(TaskError.ErrorProcessingCommand()))
-                        Status.InvalidState -> callback(TaskEvent.Completion(TaskError.InvalidState()))
+                        StatusWord.InvalidParams -> callback(CompletionResult.Failure(TaskError.InvalidParams()))
+                        StatusWord.ErrorProcessingCommand -> callback(CompletionResult.Failure(TaskError.ErrorProcessingCommand()))
+                        StatusWord.InvalidState -> callback(CompletionResult.Failure(TaskError.InvalidState()))
 
-                        Status.InsNotSupported -> callback(TaskEvent.Completion(TaskError.InsNotSupported()))
-                        Status.NeedEncryption -> callback(TaskEvent.Completion(TaskError.NeedEncryption()))
-                        Status.NeedPause -> {
+                        StatusWord.InsNotSupported -> callback(CompletionResult.Failure(TaskError.InsNotSupported()))
+                        StatusWord.NeedEncryption -> callback(CompletionResult.Failure(TaskError.NeedEncryption()))
+                        StatusWord.NeedPause -> {
                             val remainingTime = commandSerializer.deserializeSecurityDelay(responseApdu, cardEnvironment)
                             if (remainingTime != null) delegate?.showSecurityDelay(remainingTime)
                             Log.i(this::class.simpleName!!, "Nfc command ${commandSerializer::class.simpleName!!} triggered security delay of $remainingTime milliseconds")
@@ -71,7 +66,7 @@ abstract class Task<T> {
                 }
                 is CompletionResult.Failure ->
                     if (result.error is TaskError.UserCancelledError) {
-                        callback(TaskEvent.Completion(TaskError.UserCancelledError()))
+                        callback(CompletionResult.Failure(TaskError.UserCancelledError()))
                         reader?.readingActive = false
                     }
 
@@ -85,7 +80,7 @@ sealed class TaskError(description: String? = null) : Exception(description) {
     class MappingError : TaskError()
     class GenericError(description: String? = null) : TaskError(description)
     class UserCancelledError() : TaskError()
-    class Busy(): TaskError()
+    class Busy() : TaskError()
 
     class ErrorProcessingCommand : TaskError()
     class InvalidState : TaskError()
