@@ -1,4 +1,4 @@
-package com.tangem.tangem_sdk_new
+package com.tangem.tangem_sdk_new.nfc
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -10,20 +10,17 @@ import android.nfc.tech.IsoDep
 import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
+import com.tangem.Log
 
-class NfcManager(private val reader: NfcReader) : NfcAdapter.ReaderCallback {
+class NfcManager : NfcAdapter.ReaderCallback {
 
-
+    val reader = NfcReader()
     private var activity: FragmentActivity? = null
     private var nfcAdapter: NfcAdapter? = null
-    private var readerCallback: NfcAdapter.ReaderCallback? = null
-//    private var nfcEnableDialog: NfcEnableDialog? = null
 
-
-    fun setCurrentActivity(activity: FragmentActivity, readerCallback: NfcAdapter.ReaderCallback) {
+    fun setCurrentActivity(activity: FragmentActivity) {
         this.activity = activity
         nfcAdapter = NfcAdapter.getDefaultAdapter(activity)
-        this.readerCallback = readerCallback
     }
 
     private val mBroadcastReceiver = object : BroadcastReceiver() {
@@ -37,7 +34,7 @@ class NfcManager(private val reader: NfcReader) : NfcAdapter.ReaderCallback {
     }
 
     override fun onTagDiscovered(tag: Tag?) {
-//        reader.isoDep = IsoDep.get(tag)
+        Log.i(this::class.simpleName!!, "Nfc tag is discovered")
         if (reader.readingActive) reader.onTagDiscovered(tag) else ignoreTag(tag)
     }
 
@@ -46,10 +43,12 @@ class NfcManager(private val reader: NfcReader) : NfcAdapter.ReaderCallback {
         val filter = IntentFilter(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED)
         activity?.registerReceiver(mBroadcastReceiver, filter)
 
-        if (nfcAdapter == null || nfcAdapter?.isEnabled != true)
-//            showNFCEnableDialog()
-        else
+        if ((nfcAdapter == null || nfcAdapter?.isEnabled != true)) {
+            reader.nfcEnabled = false
+        } else {
+            reader.nfcEnabled = true
             enableReaderMode()
+        }
     }
 
     fun onPause() {
@@ -57,31 +56,22 @@ class NfcManager(private val reader: NfcReader) : NfcAdapter.ReaderCallback {
         disableReaderMode()
     }
 
-    fun onStop() {
-//        nfcEnableDialog?.dismiss()
-    }
-
     fun onDestroy() {
         activity = null
         nfcAdapter = null
-        readerCallback = null
     }
-
-//    private fun showNFCEnableDialog() {
-//        nfcEnableDialog = NfcEnableDialog()
-//        activity?.supportFragmentManager?.let { nfcEnableDialog?.show(it, NfcEnableDialog.TAG) }
-//    }
 
     private fun enableReaderMode() {
         val options = Bundle()
-        nfcAdapter?.enableReaderMode(activity, readerCallback, READER_FLAGS, options)
+        nfcAdapter?.enableReaderMode(activity, activity as NfcAdapter.ReaderCallback, READER_FLAGS, options)
     }
 
     private fun disableReaderMode() {
         nfcAdapter?.disableReaderMode(activity)
     }
 
-    fun ignoreTag(tag: Tag?) {
+    private fun ignoreTag(tag: Tag?) {
+        Log.i(this::class.simpleName!!, "Nfc tag is ignored")
         if (Build.VERSION.SDK_INT >= 24) {
             nfcAdapter?.ignore(tag, 1500, null, null)
         }
