@@ -1,7 +1,7 @@
 package com.tangem.common.apdu
 
 import com.tangem.common.tlv.Tlv
-import com.tangem.enums.Status
+import com.tangem.enums.StatusWord
 
 class ResponseApdu(val data: ByteArray) {
 
@@ -10,7 +10,7 @@ class ResponseApdu(val data: ByteArray) {
 
     val sw: Int = sw1 shl 8 or sw2
 
-    val status: Status = Status.byCode(sw)
+    val statusWord: StatusWord = StatusWord.byCode(sw)
 
     fun getTlvData(encryptionKey: ByteArray? = null): List<Tlv>? {
         val tlvs = when {
