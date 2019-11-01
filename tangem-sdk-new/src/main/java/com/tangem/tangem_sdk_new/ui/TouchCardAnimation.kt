@@ -1,4 +1,4 @@
-package com.tangem.tangem_sdk_new
+package com.tangem.tangem_sdk_new.ui
 
 import android.content.Context
 import android.os.Build
@@ -39,7 +39,7 @@ class TouchCardAnimation(private var context: Context,
         val lp = llHand.layoutParams as RelativeLayout.LayoutParams
         val lp2 = llNfc.layoutParams as RelativeLayout.LayoutParams
         val dp = context.resources.displayMetrics.density
-        val lm = dp * (69 + x * 75)
+        val lm = dp * (47 + x * 75)
         lp.topMargin = (dp * (-100 + y * 250)).toInt()
         lp2.topMargin = (dp * (-125 + y * 250)).toInt()
         llNfc.layoutParams = lp2
@@ -91,8 +91,8 @@ class TouchCardAnimation(private var context: Context,
 
         // set card z position
         when (z) {
-            TouchCardAnimation.CARD_ON_BACK -> llHand.elevation = 0.0f
-            TouchCardAnimation.CARD_ON_FRONT -> llHand.elevation = 30.0f
+            CARD_ON_BACK -> llHand.elevation = 0.0f
+            CARD_ON_FRONT -> llHand.elevation = 30.0f
         }
     }
 
