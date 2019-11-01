@@ -41,9 +41,9 @@ class CheckWalletCommand(
         return try {
             val mapper = TlvMapper(tlvData)
             CheckWalletResponse(
-                    mapper.map(TlvTag.CardId),
-                    mapper.map(TlvTag.Salt),
-                    mapper.map(TlvTag.Signature)
+                    cardId = mapper.map(TlvTag.CardId),
+                    salt = mapper.map(TlvTag.Salt),
+                    walletSignature = mapper.map(TlvTag.Signature)
             )
         } catch (exception: Exception) {
             throw TaskError.SerializeCommandError()
