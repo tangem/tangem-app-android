@@ -32,7 +32,7 @@ android {
 }
 
 dependencies {
-    implementation project(':tangem-card')
+    implementation project(':tangem-core')
     implementation project(':tangem-sdk')
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
