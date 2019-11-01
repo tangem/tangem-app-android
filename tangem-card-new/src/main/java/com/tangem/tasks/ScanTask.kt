@@ -1,23 +1,23 @@
 package com.tangem.tasks
 
 import com.tangem.CardEnvironment
+import com.tangem.commands.Card
 import com.tangem.commands.CheckWalletCommand
 import com.tangem.commands.EllipticCurve
 import com.tangem.commands.ReadCardCommand
-import com.tangem.commands.ReadCardResponse
 import com.tangem.common.CompletionResult
 import com.tangem.crypto.generateRandomBytes
 import com.tangem.crypto.verify
 
 sealed class ScanEvent {
-    data class OnReadEvent(val result: ReadCardResponse) : ScanEvent()
-    data class OnVerifyEvent(val verified: Boolean) : ScanEvent()
+    data class OnReadEvent(val card: Card) : ScanEvent()
+    data class OnVerifyEvent(val isGenuine: Boolean) : ScanEvent()
 }
 
 
 internal class ScanTask : Task<ScanEvent>() {
 
-    private lateinit var readCardData: ReadCardResponse
+    private lateinit var cardData: Card
     private lateinit var challenge: ByteArray
     private lateinit var curve: EllipticCurve
     private lateinit var walletPublickKey: ByteArray
@@ -30,13 +30,13 @@ internal class ScanTask : Task<ScanEvent>() {
 
             when (readEvent) {
                 is CompletionResult.Success -> {
-                    readCardData = readEvent.data
+                    cardData = readEvent.data
 
-                    callback(TaskEvent.Event(ScanEvent.OnReadEvent(readCardData)))
+                    callback(TaskEvent.Event(ScanEvent.OnReadEvent(cardData)))
 
-                    if (readCardData.curve != null && readCardData.walletPublicKey != null) {
-                        curve = readCardData.curve!!
-                        walletPublickKey = readCardData.walletPublicKey!!
+                    if (cardData.curve != null && cardData.walletPublicKey != null) {
+                        curve = cardData.curve!!
+                        walletPublickKey = cardData.walletPublicKey!!
                     } else {
                         delegate?.onTaskError()
                         callback(TaskEvent.Completion(TaskError.CardError()))
@@ -81,7 +81,7 @@ internal class ScanTask : Task<ScanEvent>() {
         challenge = generateRandomBytes(16)
         return CheckWalletCommand(
                 cardEnvironment.pin1,
-                readCardData.cardId,
+                cardData.cardId,
                 challenge,
                 byteArrayOf())
     }
