@@ -67,10 +67,10 @@ class SignCommand(private val hashes: Array<ByteArray>, private val cardId: Stri
 
         val tlvMapper = TlvMapper(tlvData)
         return SignResponse(
-                tlvMapper.map(TlvTag.CardId),
-                tlvMapper.map(TlvTag.Signature),
-                tlvMapper.map(TlvTag.RemainingSignatures),
-                tlvMapper.map(TlvTag.SignedHashes)
+                cardId= tlvMapper.map(TlvTag.CardId),
+                signature = tlvMapper.map(TlvTag.Signature),
+                remainingSignatures = tlvMapper.map(TlvTag.RemainingSignatures),
+                signedHashes = tlvMapper.map(TlvTag.SignedHashes)
         )
     }
 }
