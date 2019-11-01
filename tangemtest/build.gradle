@@ -32,8 +32,8 @@ android {
 }
 
 dependencies {
-    implementation project(':tangem-card-new')
-    implementation project(':tangem-sdk-new')
+    implementation project(':tangem-card')
+    implementation project(':tangem-sdk')
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
