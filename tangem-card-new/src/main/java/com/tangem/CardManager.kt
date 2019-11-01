@@ -6,15 +6,15 @@ import com.tangem.commands.SignCommand
 import com.tangem.commands.SignResponse
 import com.tangem.crypto.initCrypto
 import com.tangem.tasks.*
+import java.util.concurrent.Executors
 
 class CardManager(
         private val reader: CardReader,
         private val cardManagerDelegate: CardManagerDelegate? = null) {
 
     private var isBusy = false
-        private set
-
     private val cardEnvironmentRepository = mutableMapOf<String, CardEnvironment>()
+    private val cardManagerExecutor = Executors.newSingleThreadExecutor()
 
     init {
         initCrypto()
@@ -44,8 +44,6 @@ class CardManager(
 
     fun <T> runTask(task: Task<T>, cardId: String? = null,
                     callback: (result: TaskEvent<T>) -> Unit) {
-//        AppExecutors.diskIO().execute {
-
         if (isBusy) {
             callback(TaskEvent.Completion(TaskError.Busy()))
             return
@@ -57,16 +55,17 @@ class CardManager(
         task.reader = reader
         task.delegate = cardManagerDelegate
 
-        task.run(environment) {
-            when (it) {
-                is TaskEvent.Event -> callback(it)
-                is TaskEvent.Completion -> {
-                    isBusy = false
-                    callback(it)
+        cardManagerExecutor.execute {
+            task.run(environment) {
+                when (it) {
+                    is TaskEvent.Event -> callback(it)
+                    is TaskEvent.Completion -> {
+                        isBusy = false
+                        callback(it)
+                    }
                 }
             }
         }
-//        }
     }
 
     private fun fetchCardEnvironment(cardId: String?): CardEnvironment {
