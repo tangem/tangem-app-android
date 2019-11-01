@@ -1,13 +1,15 @@
 package com.tangem
 
+import com.tangem.common.CompletionResult
 import com.tangem.tasks.TaskError
 
 interface CardManagerDelegate {
 
+    fun onTaskStarted()
     fun showSecurityDelay(ms: Int)
-    fun requestPin(success: () -> String, error: (cardError: TaskError.CardError) -> TaskError.CardError)
+    fun onTaskCompleted()
+    fun onTaskError(error: TaskError? = null)
 
-    fun openNfcPopup()
-    fun closeNfcPopup()
+    fun requestPin(callback: (result: CompletionResult<String>) -> Unit)
 
 }

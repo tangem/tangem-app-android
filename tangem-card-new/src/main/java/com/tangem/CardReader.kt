@@ -8,4 +8,5 @@ interface CardReader {
     var readingActive: Boolean
     fun transceiveApdu(apdu: CommandApdu, callback: (response: CompletionResult<ResponseApdu>) -> Unit)
     fun setStartSession()
+    fun closeSession()
 }
