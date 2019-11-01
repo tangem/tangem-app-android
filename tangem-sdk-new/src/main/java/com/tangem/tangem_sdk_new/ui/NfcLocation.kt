@@ -1,4 +1,4 @@
-package com.tangem.tangem_sdk_new
+package com.tangem.tangem_sdk_new.ui
 
 enum class NfcLocation(val codename: String, val fullName: String, val orientation: Int, val x: Int, val y: Int, val z: Int) {
     model1("sailfish", "Google Pixel", 0, 65, 25, 0),
