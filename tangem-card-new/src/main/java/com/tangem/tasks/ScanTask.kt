@@ -5,6 +5,7 @@ import com.tangem.commands.CheckWalletCommand
 import com.tangem.commands.EllipticCurve
 import com.tangem.commands.ReadCardCommand
 import com.tangem.commands.ReadCardResponse
+import com.tangem.common.CompletionResult
 import com.tangem.crypto.generateRandomBytes
 import com.tangem.crypto.verify
 
@@ -28,7 +29,7 @@ internal class ScanTask : Task<ScanEvent>() {
         sendCommand(readCommand, cardEnvironment) { readEvent ->
 
             when (readEvent) {
-                is TaskEvent.Event -> {
+                is CompletionResult.Success -> {
                     readCardData = readEvent.data
 
                     callback(TaskEvent.Event(ScanEvent.OnReadEvent(readCardData)))
@@ -37,38 +38,41 @@ internal class ScanTask : Task<ScanEvent>() {
                         curve = readCardData.curve!!
                         walletPublickKey = readCardData.walletPublicKey!!
                     } else {
-                        delegate?.closeNfcPopup()
+                        delegate?.onTaskError()
                         callback(TaskEvent.Completion(TaskError.CardError()))
                     }
 
                     val checkWalletCommand = prepareCheckWalletCommand(cardEnvironment)
 
                     sendCommand(checkWalletCommand, cardEnvironment) { checkWalletEvent ->
-                        delegate?.closeNfcPopup()
-
                         when (checkWalletEvent) {
-                            is TaskEvent.Event -> {
+                            is CompletionResult.Success -> {
                                 val checkWalletResponse = checkWalletEvent.data
                                 val verified = verify(walletPublickKey,
                                         challenge + checkWalletResponse.salt,
                                         checkWalletResponse.walletSignature,
                                         curve)
                                 if (verified) {
-                                    callback(TaskEvent.Event(ScanEvent.OnVerifyEvent(true)))
+                                    delegate?.onTaskCompleted()
                                     callback(TaskEvent.Completion())
+                                    callback(TaskEvent.Event(ScanEvent.OnVerifyEvent(true)))
                                 } else {
+                                    delegate?.onTaskError()
                                     callback(TaskEvent.Completion(TaskError.VefificationFailed()))
                                 }
                             }
-                            is TaskEvent.Completion ->
-                                if (checkWalletEvent.error != null)
-                                    callback(TaskEvent.Completion(checkWalletEvent.error))
+                            is CompletionResult.Failure -> {
+                                if (checkWalletEvent.error !is TaskError.UserCancelledError) delegate?.onTaskError()
+                                callback(TaskEvent.Completion(checkWalletEvent.error))
+                            }
                         }
 
                     }
                 }
-                is TaskEvent.Completion ->
-                    if (readEvent.error != null) callback(TaskEvent.Completion(readEvent.error))
+                is CompletionResult.Failure -> {
+                    if (readEvent.error !is TaskError.UserCancelledError) delegate?.onTaskError()
+                    callback(TaskEvent.Completion(readEvent.error))
+                }
             }
         }
     }
