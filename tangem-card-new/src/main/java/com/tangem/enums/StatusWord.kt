@@ -1,6 +1,6 @@
 package com.tangem.enums
 
-enum class Status (val code: Int, val description: String){
+enum class StatusWord (val code: Int, val description: String){
 
     ProcessCompleted(0x9000, "SW_PROCESS_COMPLETED"),
     InvalidParams(0x6A86, "SW_INVALID_PARAMS"),
@@ -15,7 +15,7 @@ enum class Status (val code: Int, val description: String){
     NeedPause(0x9789, "SW_NEED_PAUSE");
 
     companion object {
-        fun byCode(code: Int): Status = values().find { it.code == code } ?: InvalidParams
+        fun byCode(code: Int): StatusWord = values().find { it.code == code } ?: InvalidParams
     }
 
 }
