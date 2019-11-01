@@ -1,28 +1,26 @@
 package com.tangem.tangem_sdk_new
 
-import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.OnLifecycleEvent
+import com.tangem.tangem_sdk_new.nfc.NfcManager
 
 
-class NfcLifecycleObserver(private var nfcManager: NfcManager) : DefaultLifecycleObserver {
+class NfcLifecycleObserver(private var nfcManager: NfcManager) : LifecycleObserver {
 
-    override fun onResume(owner: LifecycleOwner) {
-        super.onResume(owner)
+    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    fun onResume(owner: LifecycleOwner) {
         nfcManager.onResume()
     }
 
-    override fun onPause(owner: LifecycleOwner) {
-        super.onPause(owner)
+    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+    fun onPause(owner: LifecycleOwner) {
         nfcManager.onPause()
     }
 
-    override fun onStop(owner: LifecycleOwner) {
-        super.onStop(owner)
-        nfcManager.onStop()
-    }
-
-    override fun onDestroy(owner: LifecycleOwner) {
-        super.onDestroy(owner)
+    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+    fun onDestroy(owner: LifecycleOwner) {
         nfcManager.onDestroy()
     }
 }
