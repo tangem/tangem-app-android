@@ -1,23 +1,23 @@
 package com.tangem.tangemtest
 
+import android.nfc.NfcAdapter
+import android.nfc.Tag
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.CardManager
-import com.tangem.CardManagerDelegate
 import com.tangem.tangem_sdk_new.DefaultCardManagerDelegate
-import com.tangem.tangem_sdk_new.NfcManager
-import com.tangem.tangem_sdk_new.NfcReader
-import com.tangem.tangem_sdk_new.postUI
+import com.tangem.tangem_sdk_new.NfcLifecycleObserver
+import com.tangem.tangem_sdk_new.nfc.NfcManager
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskEvent
 import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
-    private val nfcReader = NfcReader()
-    private val nfcManager = NfcManager(nfcReader)
-    private val cardManagerDelegate: CardManagerDelegate = DefaultCardManagerDelegate(this, nfcReader)
-    private val cardManager = CardManager(nfcReader, cardManagerDelegate)
+    private val nfcManager = NfcManager()
+    private val cardManagerDelegate: DefaultCardManagerDelegate = DefaultCardManagerDelegate(nfcManager.reader)
+    private val cardManager = CardManager(nfcManager.reader, cardManagerDelegate)
+
     private lateinit var cid: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,8 +25,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         nfcManager.setCurrentActivity(this)
+        cardManagerDelegate.activity = this
 
-//        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
+        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         btn_scan?.setOnClickListener { _ ->
             cardManager.scanCard {
@@ -36,7 +37,7 @@ class MainActivity : AppCompatActivity() {
                             cid = (it.data as ScanEvent.OnReadEvent).result.cardId
                         }
                         is ScanEvent.OnVerifyEvent -> {
-                            postUI {
+                            runOnUiThread {
                                 tv_card_cid?.text = cid
                                 btn_sign.isEnabled = true
                             }
@@ -46,42 +47,32 @@ class MainActivity : AppCompatActivity() {
             }
         }
         btn_sign?.setOnClickListener { _ ->
-            val hash1 = ByteArray(32)
-            for (i in 0 until 32) {
-                hash1[i] = 1
-            }
-            val hash2 = ByteArray(32)
-            for (i in 0 until 32) {
-                hash2[i] = 2
-            }
             cardManager.sign(
-                    arrayOf(hash1, hash2),
+                    createSampleHashes(),
                     cid) {
                 when (it) {
                     is TaskEvent.Completion -> {
-                        if (it.error != null) postUI { tv_card_cid?.text = it.error!!::class.simpleName }
+                        if (it.error != null) runOnUiThread { tv_card_cid?.text = it.error!!::class.simpleName }
                     }
-                    is TaskEvent.Event -> postUI { tv_card_cid?.text = cid + " used to sign sample hashes." }
+                    is TaskEvent.Event -> runOnUiThread { tv_card_cid?.text = cid + " used to sign sample hashes." }
                 }
-
             }
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        nfcManager.onResume()
+    private fun createSampleHashes(): Array<ByteArray> {
+        val hash1 = ByteArray(32)
+        for (i in 0 until 32) {
+            hash1[i] = 1
+        }
+        val hash2 = ByteArray(32)
+        for (i in 0 until 32) {
+            hash2[i] = 2
+        }
+        return arrayOf(hash1, hash2)
     }
 
-
-    override fun onPause() {
-        super.onPause()
-        nfcManager.onPause()
-    }
-
-
-    override fun onDestroy() {
-        super.onDestroy()
-        nfcManager.onDestroy()
+    override fun onTagDiscovered(tag: Tag?) {
+        nfcManager.onTagDiscovered(tag)
     }
 }
