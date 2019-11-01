@@ -63,7 +63,7 @@ class NfcManager : NfcAdapter.ReaderCallback {
 
     private fun enableReaderMode() {
         val options = Bundle()
-        nfcAdapter?.enableReaderMode(activity, activity as NfcAdapter.ReaderCallback, READER_FLAGS, options)
+        nfcAdapter?.enableReaderMode(activity, this, READER_FLAGS, options)
     }
 
     private fun disableReaderMode() {
