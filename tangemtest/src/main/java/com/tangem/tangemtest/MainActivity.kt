@@ -1,7 +1,5 @@
 package com.tangem.tangemtest
 
-import android.nfc.NfcAdapter
-import android.nfc.Tag
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.CardManager
@@ -9,16 +7,17 @@ import com.tangem.tangem_sdk_new.DefaultCardManagerDelegate
 import com.tangem.tangem_sdk_new.NfcLifecycleObserver
 import com.tangem.tangem_sdk_new.nfc.NfcManager
 import com.tangem.tasks.ScanEvent
+import com.tangem.tasks.TaskError
 import com.tangem.tasks.TaskEvent
 import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
+class MainActivity : AppCompatActivity() {
 
     private val nfcManager = NfcManager()
     private val cardManagerDelegate: DefaultCardManagerDelegate = DefaultCardManagerDelegate(nfcManager.reader)
     private val cardManager = CardManager(nfcManager.reader, cardManagerDelegate)
 
-    private lateinit var cid: String
+    private lateinit var cardId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,18 +29,31 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
 
         btn_scan?.setOnClickListener { _ ->
-            cardManager.scanCard {
-                if (it is TaskEvent.Event<ScanEvent>) {
-                    when (it.data) {
-                        is ScanEvent.OnReadEvent -> {
-                            cid = (it.data as ScanEvent.OnReadEvent).result.cardId
-                        }
-                        is ScanEvent.OnVerifyEvent -> {
-                            runOnUiThread {
-                                tv_card_cid?.text = cid
-                                btn_sign.isEnabled = true
+            cardManager.scanCard { taskEvent ->
+                when (taskEvent) {
+                    is TaskEvent.Event -> {
+                        when (taskEvent.data) {
+                            is ScanEvent.OnReadEvent -> {
+                                // Handle returned card data
+                                cardId = (taskEvent.data as ScanEvent.OnReadEvent).card.cardId
+                            }
+                            is ScanEvent.OnVerifyEvent -> {
+                                //Handle card verification
+                                runOnUiThread {
+                                    tv_card_cid?.text = cardId
+                                    btn_sign.isEnabled = true
+                                }
                             }
                         }
+                }
+                    is TaskEvent.Completion -> {
+                        if (taskEvent.error != null) {
+                            if (taskEvent.error is TaskError.UserCancelledError) {
+                                // Handle case when user cancelled manually
+                            }
+                            // Handle other errors
+                        }
+                        // Handle completion
                     }
                 }
             }
@@ -49,12 +61,12 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         btn_sign?.setOnClickListener { _ ->
             cardManager.sign(
                     createSampleHashes(),
-                    cid) {
+                    cardId) {
                 when (it) {
                     is TaskEvent.Completion -> {
                         if (it.error != null) runOnUiThread { tv_card_cid?.text = it.error!!::class.simpleName }
                     }
-                    is TaskEvent.Event -> runOnUiThread { tv_card_cid?.text = cid + " used to sign sample hashes." }
+                    is TaskEvent.Event -> runOnUiThread { tv_card_cid?.text = cardId + " used to sign sample hashes." }
                 }
             }
         }
@@ -70,9 +82,5 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             hash2[i] = 2
         }
         return arrayOf(hash1, hash2)
-    }
-
-    override fun onTagDiscovered(tag: Tag?) {
-        nfcManager.onTagDiscovered(tag)
     }
 }
