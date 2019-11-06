@@ -182,7 +182,8 @@ public class TokenEngine extends CoinEngine {
         if (coinData == null) return false;
         if (coinData.getBalanceInInternalUnits() == null && coinData.getBalanceAlterInInternalUnits() == null)
             return false;
-        return coinData.getBalanceInInternalUnits().notZero() || coinData.getBalanceAlterInInternalUnits().notZero();
+        return (coinData.getBalanceInInternalUnits() != null && coinData.getBalanceInInternalUnits().notZero() ) ||
+                (coinData.getBalanceAlterInInternalUnits() != null && coinData.getBalanceAlterInInternalUnits().notZero());
     }
 
 
