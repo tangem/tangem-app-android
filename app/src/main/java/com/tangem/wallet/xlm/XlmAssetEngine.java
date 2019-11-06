@@ -163,7 +163,7 @@ public class XlmAssetEngine extends CoinEngine {
 
     @Override
     public Uri getWalletExplorerUri() {
-        return Uri.parse("http://stellarchain.io/address/" + ctx.getCoinData().getWallet());
+        return Uri.parse("https://stellar.expert/explorer/public/account/" + ctx.getCoinData().getWallet());
     }
 
     @Override
