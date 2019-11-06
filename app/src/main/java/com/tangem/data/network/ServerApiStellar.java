@@ -136,7 +136,7 @@ public class ServerApiStellar {
                 LOG.e(TAG, "requestData " + stellarRequest.getClass().getSimpleName() + " onError " + e.getMessage());
                 LOG.e(TAG, String.format("%d requests left in processing", requestsCount));
 
-                if (isRetry || stellarRequest.errorResponse.getCode() == 404) {
+                if (isRetry || (stellarRequest.errorResponse != null && stellarRequest.errorResponse.getCode() == 404)) {
                     stellarRequest.setError(e.getMessage());
                     //setErrorOccurred(e.getMessage());//;
                     listener.onFail(stellarRequest);
@@ -155,7 +155,7 @@ public class ServerApiStellar {
                 if (stellarRequest.getError() != null) {
                     LOG.i(TAG, "requestData " + stellarRequest.getClass().getSimpleName() + " onComplete, error!=null");
 
-                    if (isRetry || stellarRequest.errorResponse.getCode() == 404) {
+                    if (isRetry || (stellarRequest.errorResponse != null && stellarRequest.errorResponse.getCode() == 404)) {
                         listener.onFail(stellarRequest);
                     } else {
                         retryRequest(ctx, stellarRequest);
