@@ -143,7 +143,7 @@ public class XlmEngine extends CoinEngine {
 
     @Override
     public Uri getWalletExplorerUri() {
-        return Uri.parse((ctx.getBlockchain() == Blockchain.Stellar ? "http://stellarchain.io/address/" : "http://testnet.stellarchain.io/address/") + ctx.getCoinData().getWallet());
+        return Uri.parse((ctx.getBlockchain() == Blockchain.Stellar ? "https://stellar.expert/explorer/public/account/" : "https://stellar.expert/explorer/testnet/account/") + ctx.getCoinData().getWallet());
     }
 
     @Override
@@ -429,7 +429,7 @@ public class XlmEngine extends CoinEngine {
             public void onFail(StellarRequest.Base request) {
                 Log.i(TAG, "onFail: " + request.getClass().getSimpleName() + " " + request.getError());
 
-                if (request.errorResponse.getCode() == 404) {
+                if (request.errorResponse != null && request.errorResponse.getCode() == 404) {
                     coinData.setTargetAccountCreated(false);
 
                     if (amount.compareTo(coinData.getReserve()) >= 0) { //TODO: take fee inclusion in account, now 1 XLM with fee included will fail after transaction is sent
@@ -492,7 +492,7 @@ public class XlmEngine extends CoinEngine {
             public void onFail(StellarRequest.Base request) {
                 Log.i(TAG, "onFail: " + request.getClass().getSimpleName() + " " + request.getError());
 
-                if (request.errorResponse.getCode() == 404) {
+                if (request.errorResponse != null && request.errorResponse.getCode() == 404) {
                     coinData.setError404(true);
                 } else {
                     ctx.setError(request.getError());
