@@ -37,6 +37,10 @@ import com.tangem.wallet.TangemContext;
 import com.tangem.wallet.Transaction;
 import com.tangem.wallet.UnspentOutputInfo;
 
+import org.bitcoinj.core.SegwitAddress;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.params.TestNet3Params;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -148,42 +152,52 @@ public class BtcEngine extends CoinEngine {
             return false;
         }
 
-        if (address.length() < 25) {
-            return false;
-        }
-
-        if (address.length() > 35) {
-            return false;
-        }
-
-        if (!address.startsWith("1") && !address.startsWith("2") && !address.startsWith("3") && !address.startsWith("n") && !address.startsWith("m")) {
-            return false;
-        }
-
-        byte[] decAddress = Base58.decodeBase58(address);
-
-        if (decAddress == null || decAddress.length == 0) {
-            return false;
-        }
-
-        byte[] rip = new byte[21];
-        for (int i = 0; i < 21; ++i) {
-            rip[i] = decAddress[i];
-        }
-
-        byte[] kcv = CryptoUtil.doubleSha256(rip);
-
-        for (int i = 0; i < 4; ++i) {
-            if (kcv[i] != decAddress[21 + i])
+        if (address.startsWith("1") || address.startsWith("2") || address.startsWith("3") || address.startsWith("n") || address.startsWith("m")) {
+            if (address.length() < 25) {
                 return false;
-        }
+            }
 
-        if (ctx.getBlockchain() != Blockchain.BitcoinTestNet && ctx.getBlockchain() != Blockchain.Bitcoin) {
-            return false;
-        }
+            if (address.length() > 35) {
+                return false;
+            }
 
-        if (ctx.getBlockchain() == Blockchain.BitcoinTestNet && (address.startsWith("1") || address.startsWith("3"))) {
-            return false;
+            byte[] decAddress = Base58.decodeBase58(address);
+
+            if (decAddress == null || decAddress.length == 0) {
+                return false;
+            }
+
+            byte[] rip = new byte[21];
+            for (int i = 0; i < 21; ++i) {
+                rip[i] = decAddress[i];
+            }
+
+            byte[] kcv = CryptoUtil.doubleSha256(rip);
+
+            for (int i = 0; i < 4; ++i) {
+                if (kcv[i] != decAddress[21 + i])
+                    return false;
+            }
+
+            if (ctx.getBlockchain() != Blockchain.BitcoinTestNet && ctx.getBlockchain() != Blockchain.Bitcoin) {
+                return false;
+            }
+
+            if (ctx.getBlockchain() == Blockchain.BitcoinTestNet && (address.startsWith("1") || address.startsWith("3"))) {
+                return false;
+            }
+        } else {
+            try {
+                if (ctx.getBlockchain() == Blockchain.Bitcoin) {
+                    SegwitAddress.fromBech32(new MainNetParams(), address);
+                } else if (ctx.getBlockchain() == Blockchain.BitcoinTestNet) {
+                    SegwitAddress.fromBech32(new TestNet3Params(), address);
+                } else {
+                    return false;
+                }
+            } catch (Exception e) {
+                return false;
+            }
         }
 
         return true;
