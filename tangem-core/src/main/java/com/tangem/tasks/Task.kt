@@ -7,7 +7,7 @@ import com.tangem.Log
 import com.tangem.commands.CommandResponse
 import com.tangem.commands.CommandSerializer
 import com.tangem.common.CompletionResult
-import com.tangem.enums.StatusWord
+import com.tangem.common.apdu.StatusWord
 
 abstract class Task<T> {
 
@@ -22,8 +22,17 @@ abstract class Task<T> {
         onRun(cardEnvironment, callback)
     }
 
-    abstract fun onRun(cardEnvironment: CardEnvironment,
-                       callback: (result: TaskEvent<T>) -> Unit)
+    protected fun onTaskCompleted(withError: Boolean = false, taskError: TaskError? = null) {
+        reader?.closeSession()
+        if (withError) {
+            delegate?.onTaskError(taskError)
+        } else {
+            delegate?.onTaskCompleted()
+        }
+    }
+
+    protected abstract fun onRun(cardEnvironment: CardEnvironment,
+                                 callback: (result: TaskEvent<T>) -> Unit)
 
     protected fun <T : CommandResponse> sendCommand(
             commandSerializer: CommandSerializer<T>,
@@ -75,31 +84,9 @@ abstract class Task<T> {
     }
 }
 
-sealed class TaskError(description: String? = null) : Exception(description) {
-    class UnknownStatus(sw: Int) : TaskError()
-    class MappingError : TaskError()
-    class GenericError(description: String? = null) : TaskError(description)
-    class UserCancelledError() : TaskError()
-    class Busy() : TaskError()
-
-    class ErrorProcessingCommand : TaskError()
-    class InvalidState : TaskError()
-    class InsNotSupported : TaskError()
-    class InvalidParams : TaskError()
-    class NeedEncryption : TaskError()
-    class NeedPause : TaskError()
-
-    class VefificationFailed : TaskError()
-    class CardError : TaskError()
-    class ReaderError() : TaskError()
-    class SerializeCommandError() : TaskError()
-
-    class CardIsMissing() : TaskError()
-    class EmptyHashes() : TaskError()
-    class TooMuchHashes() : TaskError()
-    class HashSizeMustBeEqual() : TaskError()
-}
-
+/**
+ * Returns in callback from tasks
+ */
 sealed class TaskEvent<T> {
     class Event<T>(val data: T) : TaskEvent<T>()
     class Completion<T>(val error: TaskError? = null) : TaskEvent<T>()

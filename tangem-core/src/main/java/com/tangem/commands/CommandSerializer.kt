@@ -2,10 +2,10 @@ package com.tangem.commands
 
 import com.tangem.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
+import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.extentions.toInt
 import com.tangem.common.tlv.TlvTag
-import com.tangem.enums.Instruction
 
 interface CommandResponse
 
