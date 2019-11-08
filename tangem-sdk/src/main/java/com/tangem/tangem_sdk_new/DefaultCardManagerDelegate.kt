@@ -47,7 +47,7 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
         }
         readingDialog?.setOnCancelListener {
             reader.readingCancelled = true
-//            reader.closeSession()
+            reader.closeSession()
             Log.i(this::class.simpleName!!, "readingCancelled is set to true")
         }
         readingDialog?.show()
@@ -70,7 +70,6 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
     }
 
     override fun onTaskCompleted() {
-        reader.closeSession()
         postUI {
             readingDialog?.lTouchCard?.visibility = View.GONE
             readingDialog?.flSecurityDelay?.visibility = View.GONE
@@ -81,7 +80,6 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
     }
 
     override fun onTaskError(error: TaskError?) {
-        reader.closeSession()
         postUI {
             readingDialog?.lTouchCard?.visibility = View.GONE
             readingDialog?.flSecurityDelay?.visibility = View.GONE
