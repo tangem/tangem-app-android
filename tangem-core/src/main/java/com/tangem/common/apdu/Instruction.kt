@@ -1,4 +1,4 @@
-package com.tangem.enums
+package com.tangem.common.apdu
 
 enum class Instruction(var code: Int) {
     Unknown(0x00),
