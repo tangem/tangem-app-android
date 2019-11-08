@@ -1,4 +1,4 @@
-package com.tangem.enums
+package com.tangem.common.apdu
 
 enum class StatusWord (val code: Int, val description: String){
 
