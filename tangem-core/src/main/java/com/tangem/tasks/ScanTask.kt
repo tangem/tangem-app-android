@@ -38,7 +38,7 @@ internal class ScanTask : Task<ScanEvent>() {
                         curve = cardData.curve!!
                         walletPublickKey = cardData.walletPublicKey!!
                     } else {
-                        delegate?.onTaskError()
+                        onTaskCompleted(true)
                         callback(TaskEvent.Completion(TaskError.CardError()))
                     }
 
@@ -53,16 +53,18 @@ internal class ScanTask : Task<ScanEvent>() {
                                         checkWalletResponse.walletSignature,
                                         curve)
                                 if (verified) {
-                                    delegate?.onTaskCompleted()
+                                    onTaskCompleted()
                                     callback(TaskEvent.Completion())
                                     callback(TaskEvent.Event(ScanEvent.OnVerifyEvent(true)))
                                 } else {
-                                    delegate?.onTaskError()
+                                    onTaskCompleted(true)
                                     callback(TaskEvent.Completion(TaskError.VefificationFailed()))
                                 }
                             }
                             is CompletionResult.Failure -> {
-                                if (checkWalletEvent.error !is TaskError.UserCancelledError) delegate?.onTaskError()
+                                if (checkWalletEvent.error !is TaskError.UserCancelledError) {
+                                    onTaskCompleted(true, checkWalletEvent.error)
+                                }
                                 callback(TaskEvent.Completion(checkWalletEvent.error))
                             }
                         }
@@ -70,7 +72,9 @@ internal class ScanTask : Task<ScanEvent>() {
                     }
                 }
                 is CompletionResult.Failure -> {
-                    if (readEvent.error !is TaskError.UserCancelledError) delegate?.onTaskError()
+                    if (readEvent.error !is TaskError.UserCancelledError) {
+                        onTaskCompleted(true, readEvent.error)
+                    }
                     callback(TaskEvent.Completion(readEvent.error))
                 }
             }
