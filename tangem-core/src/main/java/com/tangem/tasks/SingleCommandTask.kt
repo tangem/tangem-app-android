@@ -10,16 +10,18 @@ class SingleCommandTask<Event : CommandResponse>(
 
     override fun onRun(cardEnvironment: CardEnvironment,
                        callback: (result: TaskEvent<Event>) -> Unit) {
-        sendCommand(commandSerializer, cardEnvironment) {
-            when (it) {
+        sendCommand(commandSerializer, cardEnvironment) { completionResult ->
+            when (completionResult) {
                 is CompletionResult.Success -> {
-                    delegate?.onTaskCompleted()
-                    callback(TaskEvent.Event(it.data))
+                    onTaskCompleted()
+                    callback(TaskEvent.Event(completionResult.data))
                     callback(TaskEvent.Completion())
                 }
                 is CompletionResult.Failure -> {
-                    if (it.error !is TaskError.UserCancelledError) delegate?.onTaskError()
-                    callback(TaskEvent.Completion(it.error))
+                    if (completionResult.error !is TaskError.UserCancelledError) {
+                        onTaskCompleted(true, completionResult.error)
+                    }
+                    callback(TaskEvent.Completion(completionResult.error))
                 }
             }
         }
