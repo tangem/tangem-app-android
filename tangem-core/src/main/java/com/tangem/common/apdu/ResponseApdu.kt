@@ -31,7 +31,7 @@ class ResponseApdu(val data: ByteArray) {
             }
 
     private fun decrypt(encryptionKey: ByteArray) {
-
+        TODO("not implemented")
     }
 
 }
