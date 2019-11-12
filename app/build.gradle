@@ -88,8 +88,8 @@ configurations {
 }
 
 dependencies {
-    implementation project(':tangem-card')
-    implementation project(':tangem-sdk')
+    implementation project(':tangem-card-old')
+    implementation project(':tangem-sdk-old')
     implementation project(':server-android')
 
     implementation 'androidx.navigation:navigation-fragment:2.1.0'
@@ -105,7 +105,7 @@ dependencies {
     implementation "androidx.preference:preference:1.1.0"
     implementation 'androidx.biometric:biometric:1.0.0-beta01'
     implementation 'androidx.core:core-ktx:1.1.0'
-    implementation 'com.google.android.material:material:1.1.0-alpha10'
+    implementation 'com.google.android.material:material:1.1.0-beta01'
 
     implementation 'com.google.dagger:dagger:2.21'
     kapt 'com.google.dagger:dagger-compiler:2.21'
