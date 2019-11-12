@@ -1,7 +1,6 @@
 package com.tangem.common.apdu
 
 import com.tangem.common.tlv.Tlv
-import com.tangem.enums.StatusWord
 
 class ResponseApdu(val data: ByteArray) {
 
