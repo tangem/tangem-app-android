@@ -69,6 +69,15 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
         }
     }
 
+    override fun hideSecurityDelay() {
+        postUI {
+            readingDialog?.lTouchCard?.visibility = View.VISIBLE
+            readingDialog?.flSecurityDelay?.visibility = View.GONE
+            readingDialog?.tvTaskTitle?.text = activity.getText(R.string.dialog_ready_to_scan)
+            readingDialog?.tvTaskText?.text = activity.getText(R.string.dialog_scan_text)
+        }
+    }
+
     override fun onTaskCompleted() {
         postUI {
             readingDialog?.lTouchCard?.visibility = View.GONE
