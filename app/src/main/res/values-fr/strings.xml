@@ -50,9 +50,8 @@
     <string name="dialog_the_nfc_adapter_length_apdu_advice">Essayez d\'envoyer une quantité inférieure ou utilisez un smartphone avec prise en charge complète de NFC.</string>
     <string name="dialog_title_money_is_at_risk">Votre argent est en jeu!</string>
     <string name="dialog_this_banknote_has_enforced_security_delay">Cette carte a imposé un délai de sécurité</string>
-    <string name="dialog_hold_banknote">Veuillez tenir la carte fermement \ n jusqu\'à ce que l\'opération soit terminéev…</string>
-    <string name="dialog_you_may_be_required_to_repeat">Vous devrez peut-être répéter cette opération plusieurs fois en fonction des performances NFC de votre smartphone. \ n Ceci est fait pour la sécurité de vos fonds.</string>
-    <string name="alert_unknown_blockchain">Cette carte n\'est pas supportée</string>
+    <string name="dialog_hold_banknote">Veuillez tenir la carte fermement \ n jusqu\'à ce que l\'opération soit terminée…</string>
+    <string name="dialog_you_may_be_required_to_repeat">Vous devrez peut-être répéter cette opération plusieurs fois en fonction des performances NFC de votre smartphone. \ n Ceci est fait pour sécuriser vos fonds.</string>
 
     <!-- menu main -->
     <string name="main_menu_manage_pin_1">Gérer le code PIN de l\'utilisateur…</string>
@@ -95,7 +94,7 @@
     <string name="loaded_wallet_error_blockchain_communication_error">Impossible d\'obtenir les données de la blockchain (erreur de communication)</string>
     <string name="loaded_wallet_chooser_share">Partager l\'adresse du porte-monnaie avec:</string>
     <string name="loaded_wallet_toast_copied">copié dans le presse-papiers</string>
-    <string name="loaded_wallet_btn_extract">Retirer</string>
+    <string name="loaded_wallet_btn_extract">Transférer</string>
     <string name="loaded_wallet_btn_load">Charger</string>
     <string name="loaded_wallet_btn_explore">Explorer</string>
     <string name="loaded_wallet_btn_copy">Copier</string>
@@ -240,12 +239,12 @@
     <string name="details_private_key">Clé privée</string>
     <string name="details_validation_node">Noeud de validation</string>
     <string name="details_unspents">Unspents</string>
-    <string name="details_protected_by_default_pin_1">Cette carte est protégé par le code PIN1 par défaut</string>
-    <string name="details_protected_by_user_pin_1">Cette carte est protégé par le code PIN1 de l’utilisateur</string>
-    <string name="details_protected_by_default_pin_2">Cette carte est protégé par le code PIN2 par défaut</string>
-    <string name="details_protected_by_user_pin_2">Cette carte est protégé par le code PIN2 de l’utilisateur</string>
-    <string name="details_unlocked_banknote">Carte débloqué, uniquement à des fins de développement</string>
-    <string name="details_security_delay">Cette carte appliquera un délai de sécurité de %.0f secondes pour toutes lesopérations nécessitant un code PIN2</string>
+    <string name="details_protected_by_default_pin_1">Cette carte est protégée par le code PIN1 par défaut</string>
+    <string name="details_protected_by_user_pin_1">Cette carte est protégée par le code PIN1 de l’utilisateur</string>
+    <string name="details_protected_by_default_pin_2">Cette carte est protégée par le code PIN2 par défaut</string>
+    <string name="details_protected_by_user_pin_2">Cette carte est protégée par le code PIN2 de l’utilisateur</string>
+    <string name="details_unlocked_banknote">Carte débloquée, uniquement à des fins de développement</string>
+    <string name="details_security_delay">Cette carte appliquera un délai de sécurité de %.0f secondes pour toutes les opérations nécessitant un code PIN2</string>
     <string name="details_both_pins_can_be_changed">Permet de changer les codes PIN1 et PIN2\n</string>
     <string name="details_pin1_can_be_changed">Permet de changer PIN1\n</string>
     <string name="details_pin2_can_be_changed">Permet de changer le code PIN2\n</string>
