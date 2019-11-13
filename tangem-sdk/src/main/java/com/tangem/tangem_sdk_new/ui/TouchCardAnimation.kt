@@ -11,10 +11,10 @@ import android.widget.RelativeLayout
 import androidx.appcompat.widget.LinearLayoutCompat
 
 class TouchCardAnimation(private var context: Context,
-                               private var ivHandCardHorizontal: ImageView,
-                               private var ivHandCardVertical: ImageView,
-                               private var llHand: LinearLayoutCompat,
-                               private var llNfc: LinearLayoutCompat) {
+                         private var ivHandCardHorizontal: ImageView,
+                         private var ivHandCardVertical: ImageView,
+                         private var llHand: LinearLayoutCompat,
+                         private var llNfc: LinearLayoutCompat) {
 
     companion object {
         const val CARD_ON_BACK = 0
