@@ -49,7 +49,7 @@ class Tlv {
         }
 
 
-        fun fromBytes(mData: ByteArray): List<Tlv> {
+        fun tlvListFromBytes(mData: ByteArray): List<Tlv> {
             val tlvList = mutableListOf<Tlv>()
             val stream = ByteArrayInputStream(mData)
             var tlv: Tlv? = null
