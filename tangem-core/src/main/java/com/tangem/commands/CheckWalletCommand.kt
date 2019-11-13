@@ -19,20 +19,19 @@ class CheckWalletResponse(
 
 
 class CheckWalletCommand(
-        val pin1: String, val cid: String,
-        val challenge: ByteArray, val publicKeyChallenge: ByteArray) : CommandSerializer<CheckWalletResponse>() {
-
-    override val instruction = Instruction.CheckWallet
-    override val instructionCode = instruction.code
+        private val pin1: String,
+        private val cardId: String,
+        private val challenge: ByteArray
+) : CommandSerializer<CheckWalletResponse>() {
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
         val tlvData = listOf(
                 Tlv(TlvTag.Pin, cardEnvironment.pin1.calculateSha256()),
-                Tlv(TlvTag.CardId, cid.hexToBytes()),
+                Tlv(TlvTag.CardId, cardId.hexToBytes()),
                 Tlv(TlvTag.Challenge, challenge)
         )
 
-        return CommandApdu(instructionCode, tlvData)
+        return CommandApdu(Instruction.CheckWallet, tlvData)
     }
 
     override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): CheckWalletResponse? {
