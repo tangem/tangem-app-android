@@ -1,14 +1,10 @@
 package com.tangem.common.tlv
 
-import com.tangem.commands.CardStatus
-import com.tangem.commands.EllipticCurve
-import com.tangem.commands.ProductMask
-import com.tangem.commands.SigningMethod
+import com.tangem.commands.*
 import com.tangem.common.extentions.toDate
 import com.tangem.common.extentions.toHexString
 import com.tangem.common.extentions.toInt
 import com.tangem.common.extentions.toUtf8
-import com.tangem.data.SettingsMask
 import java.util.*
 
 
@@ -16,7 +12,7 @@ open class TlvMapperException(message: String?) : Exception(message)
 
 class MissingTagException(message: String? = null) : TlvMapperException(message)
 class WrongTypeException(message: String? = null) : TlvMapperException(message)
-class ConvertionException(message: String? = null) : TlvMapperException(message)
+class ConversionException(message: String? = null) : TlvMapperException(message)
 
 class TlvMapper(val tlvList: List<Tlv>) {
 
@@ -49,7 +45,11 @@ class TlvMapper(val tlvList: List<Tlv>) {
             TlvValueType.IntValue -> {
                 if (T::class != Integer::class)
                     throw WrongTypeException("Mapping error. Type for tag: $tag must be ${tag.valueType()}. It is ${T::class}")
-                tlvValue.toInt() as T
+                try {
+                    tlvValue.toInt() as T
+                } catch (exception: IllegalArgumentException) {
+                    throw ConversionException(exception.message)
+                }
             }
             TlvValueType.BoolValue -> {
                 if (T::class != Boolean::class)
@@ -64,34 +64,40 @@ class TlvMapper(val tlvList: List<Tlv>) {
             TlvValueType.EllipticCurve -> {
                 if (T::class != EllipticCurve::class)
                     throw WrongTypeException("Mapping error. Type for tag: $tag must be ${tag.valueType()}. It is ${T::class}")
-                EllipticCurve.byName(tlvValue.toUtf8()) as T
+                EllipticCurve.byName(tlvValue.toUtf8()) as? T
+                        ?: throw ConversionException("Unknown Elliptic Curve value: ${tlvValue.toUtf8()}")
             }
             TlvValueType.DateTime -> {
                 if (T::class != Date::class)
                     throw WrongTypeException("Mapping error. Type for tag: $tag must be ${tag.valueType()}. It is ${T::class}")
-                tlvValue.toDate() as T
+                try {
+                    tlvValue.toDate() as T
+                } catch (exception: Exception) {
+                    throw ConversionException("Converting to date with the following exception: " + exception.message)
+                }
             }
             TlvValueType.ProductMask -> {
                 if (T::class != ProductMask::class)
                     throw WrongTypeException("Mapping error. Type for tag: $tag must be ${tag.valueType()}. It is ${T::class}")
-                ProductMask.byCode(tlvValue.first()) as T
-
+                ProductMask.byCode(tlvValue.first()) as? T
+                        ?: throw ConversionException("Unknown Product Mask Code: ${tlvValue.first()}.")
             }
             TlvValueType.SettingsMask -> {
                 if (T::class != SettingsMask::class)
                     throw WrongTypeException("Mapping error. Type for tag: $tag must be ${tag.valueType()}. It is ${T::class}")
                 SettingsMask(tlvValue.toInt()) as T
-
             }
             TlvValueType.CardStatus -> {
                 if (T::class != CardStatus::class)
                     throw WrongTypeException("Mapping error. Type for tag: $tag must be ${tag.valueType()}. It is ${T::class}")
                 CardStatus.byCode(tlvValue.toInt()) as T
+                        ?: throw ConversionException("Unknown Card Status with code of: ${tlvValue.toInt()}")
             }
             TlvValueType.SigningMethod -> {
                 if (T::class != SigningMethod::class)
                     throw WrongTypeException("Mapping error. Type for tag: $tag must be ${tag.valueType()}. It is ${T::class}")
                 SigningMethod.byCode(tlvValue.toInt()) as T
+                        ?: throw ConversionException("Unknown Signing Method with code of: ${tlvValue.toInt()}")
             }
         }
     }
