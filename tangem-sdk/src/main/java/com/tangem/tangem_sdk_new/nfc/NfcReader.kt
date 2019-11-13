@@ -66,6 +66,10 @@ class NfcReader : CardReader {
         val rawResponse: ByteArray?
         try {
             rawResponse = isoDep?.transceive(data)
+        } catch (exception: TagLostException) {
+            callback?.invoke(CompletionResult.Failure(TaskError.TagLost()))
+            isoDep = null
+            return
         } catch (exception: Exception) {
             isoDep = null
             return
