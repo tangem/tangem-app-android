@@ -74,7 +74,9 @@ abstract class Task<T> {
                     }
                 }
                 is CompletionResult.Failure ->
-                    if (result.error is TaskError.UserCancelledError) {
+                    if (result.error is TaskError.TagLost) {
+                        delegate?.hideSecurityDelay()
+                    } else if (result.error is TaskError.UserCancelledError) {
                         callback(CompletionResult.Failure(TaskError.UserCancelledError()))
                         reader?.readingActive = false
                     }
