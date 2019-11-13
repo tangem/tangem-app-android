@@ -4,7 +4,7 @@ import com.tangem.commands.CommandResponse
 import com.tangem.commands.CommandSerializer
 import com.tangem.commands.SignCommand
 import com.tangem.commands.SignResponse
-import com.tangem.crypto.initCrypto
+import com.tangem.crypto.CryptoUtils
 import com.tangem.tasks.*
 import java.util.concurrent.Executors
 
@@ -17,7 +17,7 @@ class CardManager(
     private val cardManagerExecutor = Executors.newSingleThreadExecutor()
 
     init {
-        initCrypto()
+        CryptoUtils.initCrypto()
     }
 
     fun scanCard(callback: (result: TaskEvent<ScanEvent>) -> Unit) {
@@ -56,26 +56,21 @@ class CardManager(
         task.delegate = cardManagerDelegate
 
         cardManagerExecutor.execute {
-            task.run(environment) {
-                when (it) {
-                    is TaskEvent.Event -> callback(it)
-                    is TaskEvent.Completion -> {
-                        isBusy = false
-                        callback(it)
-                    }
-                }
+            task.run(environment) { taskEvent ->
+                if (taskEvent is TaskEvent.Completion) isBusy = false
+                callback(taskEvent)
             }
         }
     }
 
-    private fun fetchCardEnvironment(cardId: String?): CardEnvironment {
-        return cardEnvironmentRepository[cardId] ?: CardEnvironment()
-    }
-
-    fun <T : CommandResponse> runCommand(commandSerializer: CommandSerializer<T>,
+    fun <T : CommandResponse> runCommand(command: CommandSerializer<T>,
                                          cardId: String? = null,
                                          callback: (result: TaskEvent<T>) -> Unit) {
-        val task = SingleCommandTask(commandSerializer)
+        val task = SingleCommandTask(command)
         runTask(task, cardId, callback)
+    }
+
+    private fun fetchCardEnvironment(cardId: String?): CardEnvironment {
+        return cardEnvironmentRepository[cardId] ?: CardEnvironment()
     }
 }
