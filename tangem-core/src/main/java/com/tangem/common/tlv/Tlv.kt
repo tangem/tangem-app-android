@@ -7,17 +7,17 @@ class Tlv {
 
     val tag: TlvTag
     val value: ByteArray
-    val tagCode: Int
+    val tagRaw: Int
 
     constructor(tagCode: Int, value: ByteArray = byteArrayOf()) {
         this.tag = TlvTag.byCode(tagCode)
-        this.tagCode = tagCode
+        this.tagRaw = tagCode
         this.value = value
     }
 
     constructor(tag: TlvTag, value: ByteArray = byteArrayOf()) {
         this.tag = tag
-        this.tagCode = tag.code
+        this.tagRaw = tag.code
         this.value = value
     }
 
