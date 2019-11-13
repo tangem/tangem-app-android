@@ -1,5 +1,6 @@
 package com.tangem.tangem_sdk_new.nfc
 
+import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -9,16 +10,15 @@ import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Build
 import android.os.Bundle
-import androidx.fragment.app.FragmentActivity
 import com.tangem.Log
 
 class NfcManager : NfcAdapter.ReaderCallback {
 
     val reader = NfcReader()
-    private var activity: FragmentActivity? = null
+    private var activity: Activity? = null
     private var nfcAdapter: NfcAdapter? = null
 
-    fun setCurrentActivity(activity: FragmentActivity) {
+    fun setCurrentActivity(activity: Activity) {
         this.activity = activity
         nfcAdapter = NfcAdapter.getDefaultAdapter(activity)
     }
@@ -49,11 +49,13 @@ class NfcManager : NfcAdapter.ReaderCallback {
             reader.nfcEnabled = true
             enableReaderMode()
         }
+        reader.manager = this
     }
 
     fun onPause() {
         activity?.unregisterReceiver(mBroadcastReceiver)
         disableReaderMode()
+        reader.manager = null
     }
 
     fun onDestroy() {
@@ -61,12 +63,11 @@ class NfcManager : NfcAdapter.ReaderCallback {
         nfcAdapter = null
     }
 
-    private fun enableReaderMode() {
-        val options = Bundle()
-        nfcAdapter?.enableReaderMode(activity, this, READER_FLAGS, options)
+    fun enableReaderMode() {
+        nfcAdapter?.enableReaderMode(activity, this, READER_FLAGS, Bundle())
     }
 
-    private fun disableReaderMode() {
+    fun disableReaderMode() {
         nfcAdapter?.disableReaderMode(activity)
     }
 
