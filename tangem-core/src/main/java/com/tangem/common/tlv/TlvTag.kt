@@ -108,9 +108,9 @@ enum class TlvTag(val code: Int) {
         }
     }
 
-
     companion object {
-        fun byCode(code: Int): TlvTag = values().find { it.code == code } ?: Unknown
+        private val values = values()
+        fun byCode(code: Int): TlvTag = values.find { it.code == code } ?: Unknown
     }
 }
 
