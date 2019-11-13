@@ -12,22 +12,13 @@ class ResponseApdu(val data: ByteArray) {
     val statusWord: StatusWord = StatusWord.byCode(sw)
 
     fun getTlvData(encryptionKey: ByteArray? = null): List<Tlv>? {
-        val tlvs = when {
+        return when {
             data.size < 2 -> null
             data.size == 2 -> emptyList()
-            else -> Tlv.fromBytes(data.copyOf(data.size - 2))
+            else -> Tlv.tlvListFromBytes(data.copyOf(data.size - 2))
         }
-        return flattenNestedTlvs(tlvs)
     }
 
-    private fun flattenNestedTlvs(tlvs: List<Tlv>?): List<Tlv>? =
-            tlvs?.flatMap {
-                if (it.tag.hasNestedTlv()) {
-                    Tlv.fromBytes(it.value)
-                } else {
-                    listOf(it)
-                }
-            }
 
     private fun decrypt(encryptionKey: ByteArray) {
         TODO("not implemented")
