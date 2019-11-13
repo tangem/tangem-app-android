@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="24dp"
-        android:text="Ready to Scan"
+        android:text="@string/dialog_ready_to_scan"
         android:textAppearance="@style/TextAppearance.AppCompat.Large" />
 
     <include
@@ -70,7 +70,7 @@
         android:gravity="center"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:text="\nScan card with your phone as shown above\n"
+        android:text="@string/dialog_scan_text"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
 
