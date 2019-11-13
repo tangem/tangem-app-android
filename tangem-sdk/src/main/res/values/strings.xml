@@ -6,5 +6,7 @@
     <string name="dialog_security_delay">Security delay</string>
     <string name="dialog_security_delay_description">This banknote has enforced security delay. Please hold the banknote firmly until the operation is completed…</string>
     <string name="dialog_error">Error</string>
+    <string name="dialog_ready_to_scan">Ready to Scan</string>
+    <string name="dialog_scan_text">Scan card with your phone as shown above</string>
 
 </resources>
