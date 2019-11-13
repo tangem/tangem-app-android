@@ -7,7 +7,39 @@ import com.tangem.Log
 import com.tangem.commands.CommandResponse
 import com.tangem.commands.CommandSerializer
 import com.tangem.common.CompletionResult
+import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.StatusWord
+
+sealed class TaskError(description: String? = null) : Exception(description) {
+    class UnknownStatus(sw: Int) : TaskError("Unknown StatusWord: $sw")
+    class MappingError : TaskError()
+    class GenericError(description: String? = null) : TaskError(description)
+    class UserCancelledError() : TaskError()
+    class Busy() : TaskError()
+    class TagLost() : TaskError()
+
+    class ErrorProcessingCommand : TaskError()
+    class InvalidState : TaskError()
+    class InsNotSupported : TaskError()
+    class InvalidParams : TaskError()
+    class NeedEncryption : TaskError()
+    class NeedPause : TaskError()
+
+    class VefificationFailed : TaskError()
+    class CardError : TaskError()
+    class ReaderError() : TaskError()
+    class SerializeCommandError() : TaskError()
+
+    class CardIsMissing() : TaskError()
+    class EmptyHashes() : TaskError()
+    class TooMuchHashes() : TaskError()
+    class HashSizeMustBeEqual() : TaskError()
+}
+
+sealed class TaskEvent<T> {
+    class Event<T>(val data: T) : TaskEvent<T>()
+    class Completion<T>(val error: TaskError? = null) : TaskEvent<T>()
+}
 
 abstract class Task<T> {
 
@@ -16,18 +48,18 @@ abstract class Task<T> {
 
     fun run(cardEnvironment: CardEnvironment,
             callback: (result: TaskEvent<T>) -> Unit) {
-        delegate?.onTaskStarted()
-        reader?.setStartSession()
+        delegate?.onNfcSessionStarted()
+        reader?.startNfcSession()
         Log.i(this::class.simpleName!!, "Nfc task is started")
         onRun(cardEnvironment, callback)
     }
 
-    protected fun onTaskCompleted(withError: Boolean = false, taskError: TaskError? = null) {
+    protected fun completeNfcSession(withError: Boolean = false, taskError: TaskError? = null) {
         reader?.closeSession()
         if (withError) {
-            delegate?.onTaskError(taskError)
+            delegate?.onError(taskError)
         } else {
-            delegate?.onTaskCompleted()
+            delegate?.onNfcSessionCompleted()
         }
     }
 
@@ -35,15 +67,22 @@ abstract class Task<T> {
                                  callback: (result: TaskEvent<T>) -> Unit)
 
     protected fun <T : CommandResponse> sendCommand(
-            commandSerializer: CommandSerializer<T>,
+            command: CommandSerializer<T>,
             cardEnvironment: CardEnvironment,
             callback: (result: CompletionResult<T>) -> Unit) {
 
-        Log.i(this::class.simpleName!!, "Nfc command ${commandSerializer::class.simpleName!!} is initiated")
+        Log.i(this::class.simpleName!!, "Nfc command ${command::class.simpleName!!} is initiated")
 
+        val commandApdu = command.serialize(cardEnvironment)
+        sendRequest(command, commandApdu, cardEnvironment, callback)
+    }
 
-        reader?.transceiveApdu(
-                commandSerializer.serialize(cardEnvironment)) { result ->
+    private fun <T : CommandResponse> sendRequest(command: CommandSerializer<T>,
+                                                  commandApdu: CommandApdu,
+                                                  cardEnvironment: CardEnvironment,
+                                                  callback: (result: CompletionResult<T>) -> Unit) {
+
+        reader?.transceiveApdu(commandApdu) { result ->
 
             when (result) {
                 is CompletionResult.Success -> {
@@ -52,24 +91,26 @@ abstract class Task<T> {
                         StatusWord.ProcessCompleted, StatusWord.Pin1Changed, StatusWord.Pin2Changed, StatusWord.PinsChanged
                         -> {
                             try {
-                                val responseData = commandSerializer.deserialize(cardEnvironment, responseApdu)
-                                Log.i(this::class.simpleName!!, "Nfc command ${commandSerializer::class.simpleName!!} is completed")
+                                val responseData = command.deserialize(cardEnvironment, responseApdu)
+                                Log.i(this::class.simpleName!!, "Nfc command ${command::class.simpleName!!} is completed")
                                 callback(CompletionResult.Success(responseData as T))
                             } catch (error: TaskError) {
                                 callback(CompletionResult.Failure(error))
                             }
                         }
                         StatusWord.InvalidParams -> callback(CompletionResult.Failure(TaskError.InvalidParams()))
+                        StatusWord.Unknown -> callback(CompletionResult.Failure(TaskError.UnknownStatus(result.data.sw)))
                         StatusWord.ErrorProcessingCommand -> callback(CompletionResult.Failure(TaskError.ErrorProcessingCommand()))
                         StatusWord.InvalidState -> callback(CompletionResult.Failure(TaskError.InvalidState()))
 
                         StatusWord.InsNotSupported -> callback(CompletionResult.Failure(TaskError.InsNotSupported()))
                         StatusWord.NeedEncryption -> callback(CompletionResult.Failure(TaskError.NeedEncryption()))
                         StatusWord.NeedPause -> {
-                            val remainingTime = commandSerializer.deserializeSecurityDelay(responseApdu, cardEnvironment)
-                            if (remainingTime != null) delegate?.showSecurityDelay(remainingTime)
-                            Log.i(this::class.simpleName!!, "Nfc command ${commandSerializer::class.simpleName!!} triggered security delay of $remainingTime milliseconds")
-                            sendCommand(commandSerializer, cardEnvironment, callback)
+                            // When NeedPause is returned from the card whenever security delay is triggered.
+                            val remainingTime = command.deserializeSecurityDelay(responseApdu, cardEnvironment)
+                            if (remainingTime != null) delegate?.onSecurityDelay(remainingTime)
+                            Log.i(this::class.simpleName!!, "Nfc command ${command::class.simpleName!!} triggered security delay of $remainingTime milliseconds")
+                            sendRequest(command, commandApdu, cardEnvironment, callback)
                         }
                     }
                 }
@@ -80,18 +121,9 @@ abstract class Task<T> {
                         callback(CompletionResult.Failure(TaskError.UserCancelledError()))
                         reader?.readingActive = false
                     }
-
             }
         }
     }
-}
-
-/**
- * Returns in callback from tasks
- */
-sealed class TaskEvent<T> {
-    class Event<T>(val data: T) : TaskEvent<T>()
-    class Completion<T>(val error: TaskError? = null) : TaskEvent<T>()
 }
 
 
