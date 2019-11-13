@@ -25,8 +25,7 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
         setLogger()
     }
 
-    override fun onTaskStarted() {
-//        reader.isoDep = null
+    override fun onNfcSessionStarted() {
         reader.readingCancelled = false
         postUI { showReadingDialog(activity) }
         if (!reader.nfcEnabled) showNFCEnableDialog()
@@ -58,7 +57,7 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
         activity.supportFragmentManager.let { nfcEnableDialog?.show(it, NfcEnableDialog.TAG) }
     }
 
-    override fun showSecurityDelay(ms: Int) {
+    override fun onSecurityDelay(ms: Int) {
         postUI {
             readingDialog?.lTouchCard?.visibility = View.GONE
             readingDialog?.tvRemainingTime?.text = ms.div(100).toString()
@@ -78,7 +77,7 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
         }
     }
 
-    override fun onTaskCompleted() {
+    override fun onNfcSessionCompleted() {
         postUI {
             readingDialog?.lTouchCard?.visibility = View.GONE
             readingDialog?.flSecurityDelay?.visibility = View.GONE
@@ -88,7 +87,7 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
         postUI(300) { readingDialog?.dismiss() }
     }
 
-    override fun onTaskError(error: TaskError?) {
+    override fun onError(error: TaskError?) {
         postUI {
             readingDialog?.lTouchCard?.visibility = View.GONE
             readingDialog?.flSecurityDelay?.visibility = View.GONE
