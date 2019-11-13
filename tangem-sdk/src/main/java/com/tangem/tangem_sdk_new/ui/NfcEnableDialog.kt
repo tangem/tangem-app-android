@@ -15,7 +15,7 @@ class NfcEnableDialog : DialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val builder =  AlertDialog.Builder(requireContext())
+        val builder = AlertDialog.Builder(requireContext())
         builder.setCancelable(false)
                 .setIcon(R.drawable.ic_action_nfc_gray)
                 .setTitle(R.string.dialog_nfc_enable_title)
