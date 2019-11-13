@@ -15,7 +15,8 @@ enum class StatusWord (val code: Int, val description: String){
     NeedPause(0x9789, "SW_NEED_PAUSE");
 
     companion object {
-        fun byCode(code: Int): StatusWord = values().find { it.code == code } ?: InvalidParams
+        private val values = values()
+        fun byCode(code: Int): StatusWord = values.find { it.code == code } ?: Unknown
     }
 
 }
