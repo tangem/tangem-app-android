@@ -10,7 +10,7 @@ import java.io.ByteArrayOutputStream
  * to a raw data that can be sent to the card.
  *
  * @property ins Instruction code that determines the type of request for the card.
- * @property tlvList list of TLVs that are to be sent to the card
+ * @property tlvList A list of TLVs that are to be sent to the card
  */
 class CommandApdu(
 
