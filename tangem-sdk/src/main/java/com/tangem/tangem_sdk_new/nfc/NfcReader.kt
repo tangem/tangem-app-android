@@ -1,6 +1,7 @@
 package com.tangem.tangem_sdk_new.nfc
 
 import android.nfc.Tag
+import android.nfc.TagLostException
 import android.nfc.tech.IsoDep
 import com.tangem.CardReader
 import com.tangem.Log
@@ -13,14 +14,15 @@ class NfcReader : CardReader {
 
     override var readingActive = false
     var nfcEnabled = false
-    var isoDep: IsoDep? = null
+    var manager: NfcManager? = null
+    private var isoDep: IsoDep? = null
         set(value) {
-            // if tag is received, call connect first before transceiving data
+            // don't reassign when there's an active tag already
             if (field == null) {
                 field = value
+                // if tag is received, call connect first before transceiving data
                 connect()
             }
-            // don't reassign when there's an active tag already
             if (value == null) field = value
         }
 
@@ -38,9 +40,11 @@ class NfcReader : CardReader {
     var data: ByteArray? = null
     var callback: ((response: CompletionResult<ResponseApdu>) -> Unit)? = null
 
-    override fun setStartSession() {
+    override fun startNfcSession() {
         readingActive = true
         readingCancelled = false
+        manager?.disableReaderMode()
+        manager?.enableReaderMode()
     }
 
     override fun closeSession() {
@@ -93,7 +97,6 @@ class NfcReader : CardReader {
         isoDep?.connect()
         isoDep?.timeout = 240000
         Log.i(this::class.simpleName!!, "Nfc session is started")
-
     }
 
 }
