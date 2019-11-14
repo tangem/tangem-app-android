@@ -14,8 +14,22 @@ class MissingTagException(message: String? = null) : TlvMapperException(message)
 class WrongTypeException(message: String? = null) : TlvMapperException(message)
 class ConversionException(message: String? = null) : TlvMapperException(message)
 
+/**
+ * Maps value fields in [Tlv] from raw [ByteArray] to concrete classes
+ * according to their [TlvTag] and corresponding [TlvValueType].
+ *
+ * @property tlvList List of TLVs, which values are to be converted to particular classes.
+ */
 class TlvMapper(val tlvList: List<Tlv>) {
 
+    /**
+     * Finds [Tlv] by its [TlvTag].
+     * Returns null if [Tlv] is not found, otherwise converts its value to [T].
+     *
+     * @param tag [TlvTag] of a [Tlv] which value is to be returned.
+     *
+     * @return value converted to a nullable type [T].
+     */
     inline fun <reified T> mapOptional(tag: TlvTag): T? =
             try {
                 map<T>(tag)
@@ -23,6 +37,17 @@ class TlvMapper(val tlvList: List<Tlv>) {
                 null
             }
 
+    /**
+     * Finds [Tlv] by its [TlvTag].
+     * Throws [MissingTagException] if [Tlv] is not found,
+     * otherwise converts [Tlv] value to [T].
+     *
+     * @param tag [TlvTag] of a [Tlv] which value is to be returned.
+     *
+     * @return [Tlv] value converted to a nullable type [T].
+     *
+     * @throws [MissingTagException] if no [Tlv] is found by the Tag.
+     */
     inline fun <reified T> map(tag: TlvTag): T {
         val tlvValue: ByteArray = tlvList.find { it.tag == tag }?.value
                 ?: if (tag.valueType() == TlvValueType.BoolValue && T::class == Boolean::class) {
