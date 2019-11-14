@@ -1,5 +1,19 @@
 package com.tangem.common.tlv
 
+enum class TlvValueType {
+    HexString,
+    Utf8String,
+    IntValue,
+    BoolValue,
+    ByteArray,
+    EllipticCurve,
+    DateTime,
+    ProductMask,
+    SettingsMask,
+    CardStatus,
+    SigningMethod
+}
+
 enum class TlvTag(val code: Int) {
     Unknown(0x00),
     CardId(0x01),
@@ -108,9 +122,9 @@ enum class TlvTag(val code: Int) {
         }
     }
 
-
     companion object {
-        fun byCode(code: Int): TlvTag = values().find { it.code == code } ?: Unknown
+        private val values = values()
+        fun byCode(code: Int): TlvTag = values.find { it.code == code } ?: Unknown
     }
 }
 
