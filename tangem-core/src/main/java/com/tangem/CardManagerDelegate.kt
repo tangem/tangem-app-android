@@ -5,10 +5,11 @@ import com.tangem.tasks.TaskError
 
 interface CardManagerDelegate {
 
-    fun onTaskStarted()
-    fun showSecurityDelay(ms: Int)
-    fun onTaskCompleted()
-    fun onTaskError(error: TaskError? = null)
+    fun onNfcSessionStarted()
+    fun onSecurityDelay(ms: Int)
+    fun onTagLost()
+    fun onNfcSessionCompleted()
+    fun onError(error: TaskError? = null)
 
     fun requestPin(callback: (result: CompletionResult<String>) -> Unit)
 
