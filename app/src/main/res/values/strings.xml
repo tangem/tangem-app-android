@@ -52,6 +52,7 @@
     <string name="dialog_this_banknote_has_enforced_security_delay">This banknote has enforced security delay</string>
     <string name="dialog_hold_banknote">Please hold the banknote firmly\n until the operation is completed…</string>
     <string name="dialog_you_may_be_required_to_repeat">You may be required to repeat this operation a few times depending on the NFC performance of your smartphone.\n This is made for safety of your funds.</string>
+    <string name="alert_unknown_blockchain">This is a genuine Tangem card. Please follow instructions written on the card to install the official app.</string>
 
     <!-- menu main -->
     <string name="main_menu_manage_pin_1">Manage user PIN1…</string>
@@ -71,7 +72,6 @@
     <string name="splash_version_name_debug">ALPHA v.%1$s \n dev \n build %2$s</string>
     <string name="splash_version_name_release">v.%1$s</string>
     <string name="splash_cardano">Cardano</string>
-    <string name="alert_unknown_blockchain">This card is not supported</string>
 
     <!-- Main -->
     <string name="main_screen_tap_card">Tap Tangem card with your smartphone</string>
