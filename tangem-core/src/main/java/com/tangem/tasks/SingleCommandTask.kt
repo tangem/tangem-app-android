@@ -6,22 +6,23 @@ import com.tangem.commands.CommandSerializer
 import com.tangem.common.CompletionResult
 
 class SingleCommandTask<Event : CommandResponse>(
-        private val commandSerializer: CommandSerializer<Event>) : Task<Event>() {
+        private val command: CommandSerializer<Event>
+) : Task<Event>() {
 
     override fun onRun(cardEnvironment: CardEnvironment,
                        callback: (result: TaskEvent<Event>) -> Unit) {
-        sendCommand(commandSerializer, cardEnvironment) { completionResult ->
-            when (completionResult) {
+        sendCommand(command, cardEnvironment) { result ->
+            when (result) {
                 is CompletionResult.Success -> {
-                    onTaskCompleted()
-                    callback(TaskEvent.Event(completionResult.data))
+                    completeNfcSession()
+                    callback(TaskEvent.Event(result.data))
                     callback(TaskEvent.Completion())
                 }
                 is CompletionResult.Failure -> {
-                    if (completionResult.error !is TaskError.UserCancelledError) {
-                        onTaskCompleted(true, completionResult.error)
+                    if (result.error !is TaskError.UserCancelledError) {
+                        completeNfcSession(true, result.error)
                     }
-                    callback(TaskEvent.Completion(completionResult.error))
+                    callback(TaskEvent.Completion(result.error))
                 }
             }
         }
