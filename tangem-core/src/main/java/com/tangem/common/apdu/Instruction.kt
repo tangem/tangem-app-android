@@ -18,6 +18,7 @@ enum class Instruction(var code: Int) {
 
 
     companion object {
-        fun byCode(code: Int): Instruction = values().find { it.code == code } ?: Unknown
+        private val values = values()
+        fun byCode(code: Int): Instruction = values.find { it.code == code } ?: Unknown
     }
 }
