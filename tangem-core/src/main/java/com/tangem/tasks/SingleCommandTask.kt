@@ -8,7 +8,7 @@ import com.tangem.common.CompletionResult
 /**
  * Allows to perform a single command.
  *
- * @property command is a command that will be performed.
+ * @property command A command that will be performed.
  */
 class SingleCommandTask<Event : CommandResponse>(
         private val command: CommandSerializer<Event>
