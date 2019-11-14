@@ -1,6 +1,10 @@
 package com.tangem
 
 
+/**
+ * Contains data relating to a Tangem card. It is used in constructing all the commands,
+ * and commands can return modified [CardEnvironment].
+ */
 data class CardEnvironment(
         val pin1: String = DEFAULT_PIN,
         val pin2: String = DEFAULT_PIN2,
