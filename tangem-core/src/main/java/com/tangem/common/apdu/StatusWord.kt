@@ -1,6 +1,9 @@
 package com.tangem.common.apdu
 
-enum class StatusWord (val code: Int, val description: String){
+/**
+ * Part of a response from the card, shows the status of the operation
+ */
+enum class StatusWord(val code: Int, val description: String) {
 
     ProcessCompleted(0x9000, "SW_PROCESS_COMPLETED"),
     InvalidParams(0x6A86, "SW_INVALID_PARAMS"),
