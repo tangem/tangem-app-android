@@ -12,24 +12,18 @@ import com.tangem.common.apdu.ResponseApdu
 interface CardReader {
 
     /**
-     * [com.tangem.tasks.Task] sets it to true before the first command,
-     * and it should be set to false on completion of the task.
-     */
-    var readingActive: Boolean
-
-    /**
      * Sends data to the card and receives the reply.
      *
-     * @param apdu data to be sent. [CommandApdu] serializes it to a [ByteArray]
-     * @param callback returns response from the card,
-     * [ResponseApdu] allows to convert raw data to [Tlv]
+     * @param apdu Data to be sent. [CommandApdu] serializes it to a [ByteArray]
+     * @param callback Returns response from the card,
+     * [ResponseApdu] Allows to convert raw data to [Tlv]
      */
     fun transceiveApdu(apdu: CommandApdu, callback: (response: CompletionResult<ResponseApdu>) -> Unit)
 
     /**
      * Signals to [CardReader] to become ready to transceive data.
      */
-    fun startNfcSession()
+    fun openSession()
 
     /**
      * Signals to [CardReader] that no further NFC transition is expected.
