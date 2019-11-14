@@ -30,12 +30,12 @@ object CryptoUtils {
      * Helper function to verify that the data was signed with a private key that corresponds
      * to the provided public key.
      *
-     * @param publicKey public key corresponding to the private key that was used to sing a message
-     * @param message the data that was signed
-     * @param signature signed data
-     * @param curve elliptic curve used
+     * @param publicKey Corresponding to the private key that was used to sing a message
+     * @param message The data that was signed
+     * @param signature Signed data
+     * @param curve Elliptic curve used
      *
-     * @return result of a verification
+     * @return Result of a verification
      */
     fun verify(publicKey: ByteArray, message: ByteArray, signature: ByteArray,
                curve: EllipticCurve = EllipticCurve.Secp256k1): Boolean {
@@ -48,10 +48,10 @@ object CryptoUtils {
     /**
      * Helper function that generates public key from a private key.
      *
-     * @param privateKeyArray a private key from which a public key is generated
-     * @param curve elliptic curve used
+     * @param privateKeyArray  A private key from which a public key is generated
+     * @param curve Elliptic curve used
      *
-     * @return public key [ByteArray]
+     * @return Public key [ByteArray]
      */
     fun generatePublicKey(
             privateKeyArray: ByteArray,
@@ -67,10 +67,10 @@ object CryptoUtils {
 /**
  * Extension function to sign a ByteArray with an elliptic curve cryptography.
  *
- * @param privateKeyArray key to sign data
- * @param curve curve that is used to sign data
+ * @param privateKeyArray Key to sign data
+ * @param curve Elliptic curve that is used to sign data
  *
- * @return signed data
+ * @return Signed data
  */
 fun ByteArray.sign(privateKeyArray: ByteArray, curve: EllipticCurve = EllipticCurve.Secp256k1): ByteArray {
     return when (curve) {
