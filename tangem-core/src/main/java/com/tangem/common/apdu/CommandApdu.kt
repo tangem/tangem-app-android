@@ -7,7 +7,7 @@ import java.io.ByteArrayOutputStream
 
 class CommandApdu(
 
-        private val instruction: Int,
+        private val ins: Int,
         private val tlvList: List<Tlv>,
 
         private val cla: Byte = ISO_CLA,
@@ -18,6 +18,18 @@ class CommandApdu(
 
         private val encryptionMode: EncryptionMode = EncryptionMode.NONE,
         private val encryptionKey: ByteArray? = null) {
+
+    constructor(
+            instruction: Instruction,
+            tlvList: List<Tlv>,
+            encryptionMode: EncryptionMode = EncryptionMode.NONE,
+            encryptionKey: ByteArray? = null
+    ) : this(
+            instruction.code,
+            tlvList,
+            encryptionMode = encryptionMode,
+            encryptionKey = encryptionKey
+    )
 
     val apduData: ByteArray
 
@@ -39,7 +51,7 @@ class CommandApdu(
 
         val byteStream = ByteArrayOutputStream()
         byteStream.write(cla.toInt())
-        byteStream.write(instruction)
+        byteStream.write(ins)
         byteStream.write(p1.toInt())
         byteStream.write(p2.toInt())
         if (lc != 0) {
@@ -58,7 +70,7 @@ class CommandApdu(
 
 
     private fun encrypt() {
-
+        TODO("not implemented")
     }
 
     companion object {
