@@ -68,7 +68,7 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
         }
     }
 
-    override fun hideSecurityDelay() {
+    override fun onTagLost() {
         postUI {
             readingDialog?.lTouchCard?.visibility = View.VISIBLE
             readingDialog?.flSecurityDelay?.visibility = View.GONE
