@@ -3,6 +3,11 @@ package com.tangem
 import com.tangem.common.CompletionResult
 import com.tangem.tasks.TaskError
 
+/**
+ * Allows interaction with users and shows visual elements.
+ *
+ * Its default implementation, DefaultCardManagerDelegate, is in our tangem-sdk module.
+ */
 interface CardManagerDelegate {
 
     fun onNfcSessionStarted()
