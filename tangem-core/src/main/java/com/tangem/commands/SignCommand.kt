@@ -23,9 +23,6 @@ class SignResponse(
 class SignCommand(private val hashes: Array<ByteArray>, private val cardId: String)
     : CommandSerializer<SignResponse>() {
 
-    override val instruction = Instruction.Sign
-    override val instructionCode = instruction.code
-
     private val hashSizes = if (hashes.isNotEmpty()) hashes.first().size else 0
     private val dataToSign = flattenHashes()
 
@@ -36,7 +33,7 @@ class SignCommand(private val hashes: Array<ByteArray>, private val cardId: Stri
 
     private fun checkForErrors() {
         if (hashes.isEmpty()) throw TaskError.EmptyHashes()
-        if (hashes.size > 10) throw  TaskError.TooMuchHashes()
+        if (hashes.size > 10) throw TaskError.TooMuchHashes()
         if (hashes.any { it.size != hashSizes }) throw TaskError.HashSizeMustBeEqual()
     }
 
@@ -45,20 +42,20 @@ class SignCommand(private val hashes: Array<ByteArray>, private val cardId: Stri
                 Tlv(TlvTag.Pin, cardEnvironment.pin1.calculateSha256()),
                 Tlv(TlvTag.Pin2, cardEnvironment.pin2.calculateSha256()),
                 Tlv(TlvTag.CardId, cardId.hexToBytes()),
-                Tlv(TlvTag.TransactionOutHashSize,byteArrayOf(hashSizes.toByte())),
+                Tlv(TlvTag.TransactionOutHashSize, byteArrayOf(hashSizes.toByte())),
                 Tlv(TlvTag.TransactionOutHash, dataToSign)
         )
 
         addTerminalSignature(cardEnvironment, tlvData)
 
-        return CommandApdu(instructionCode, tlvData)
+        return CommandApdu(Instruction.Sign, tlvData)
     }
 
     private fun addTerminalSignature(cardEnvironment: CardEnvironment, tlvData: MutableList<Tlv>) {
-        cardEnvironment.terminalKeys?.let {
-            val signedData = dataToSign.sign(it.privateKey)
+        cardEnvironment.terminalKeys?.let { terminalKeyPair ->
+            val signedData = dataToSign.sign(terminalKeyPair.privateKey)
             tlvData.add(Tlv(TlvTag.TerminalTransactionSignature, signedData))
-            tlvData.add(Tlv(TlvTag.TerminalPublicKey, it.publicKey))
+            tlvData.add(Tlv(TlvTag.TerminalPublicKey, terminalKeyPair.publicKey))
         }
     }
 
@@ -67,7 +64,7 @@ class SignCommand(private val hashes: Array<ByteArray>, private val cardId: Stri
 
         val tlvMapper = TlvMapper(tlvData)
         return SignResponse(
-                cardId= tlvMapper.map(TlvTag.CardId),
+                cardId = tlvMapper.map(TlvTag.CardId),
                 signature = tlvMapper.map(TlvTag.Signature),
                 remainingSignatures = tlvMapper.map(TlvTag.RemainingSignatures),
                 signedHashes = tlvMapper.map(TlvTag.SignedHashes)
