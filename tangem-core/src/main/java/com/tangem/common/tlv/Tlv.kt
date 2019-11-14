@@ -3,6 +3,9 @@ package com.tangem.common.tlv
 import java.io.ByteArrayInputStream
 import java.io.IOException
 
+/**
+ * The data converted to the Tag Length Value protocol.
+ */
 class Tlv {
 
     val tag: TlvTag
