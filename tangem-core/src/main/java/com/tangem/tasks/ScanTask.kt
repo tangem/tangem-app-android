@@ -7,12 +7,27 @@ import com.tangem.commands.ReadCommand
 import com.tangem.common.CompletionResult
 import com.tangem.crypto.CryptoUtils
 
+/**
+ * Events that [ScanTask] returns on completion of its commands.
+ */
 sealed class ScanEvent {
+
+    /**
+     * Contains data from a Tangem card after successful completion of [ReadCommand].
+     */
     data class OnReadEvent(val card: Card) : ScanEvent()
+
+    /**
+     * Shows whether the Tangem card was verified on completion of [CheckWalletCommand].
+     */
     data class OnVerifyEvent(val isGenuine: Boolean) : ScanEvent()
 }
 
-
+/**
+ * Task that allows to read Tangem card and verify its private key.
+ *
+ * It performs two commands, [ReadCommand] and [CheckWalletCommand], subsequently.
+ */
 internal class ScanTask : Task<ScanEvent>() {
 
     override fun onRun(cardEnvironment: CardEnvironment,
