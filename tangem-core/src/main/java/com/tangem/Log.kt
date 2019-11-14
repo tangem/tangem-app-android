@@ -22,6 +22,11 @@ object Log {
     }
 }
 
+/**
+ * Interface for logging events within the SDK.
+ *
+ * It allows to use Android logger or to choose another.
+ */
 interface LoggerInterface {
     fun i(logTag: String, message: String)
     fun e(logTag: String, message: String)
