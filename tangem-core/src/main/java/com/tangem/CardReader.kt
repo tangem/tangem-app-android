@@ -7,6 +7,6 @@ import com.tangem.common.apdu.ResponseApdu
 interface CardReader {
     var readingActive: Boolean
     fun transceiveApdu(apdu: CommandApdu, callback: (response: CompletionResult<ResponseApdu>) -> Unit)
-    fun setStartSession()
+    fun startNfcSession()
     fun closeSession()
 }
