@@ -7,7 +7,7 @@ interface CardManagerDelegate {
 
     fun onNfcSessionStarted()
     fun onSecurityDelay(ms: Int)
-    fun hideSecurityDelay()
+    fun onTagLost()
     fun onNfcSessionCompleted()
     fun onError(error: TaskError? = null)
 
