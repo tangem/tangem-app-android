@@ -41,13 +41,12 @@ sealed class TaskError(description: String? = null) : Exception(description) {
 }
 
 /**
- * Events that are are sent in callbacks from [Task] during [Task] and Commands completions.
+ * Events that are are sent in callbacks from [Task].
  */
 sealed class TaskEvent<T> {
 
     /**
-     * A callback that is triggered when a command returns response from a card
-     * (on a completion of a [CommandSerializer]).
+     * A callback that is triggered by a Task.
      */
     class Event<T>(val data: T) : TaskEvent<T>()
 
@@ -72,13 +71,13 @@ abstract class Task<T> {
     /**
      * This method should be called to run the [Task] and perform all its operations.
      *
-     * @param cardEnvironment is a relevant current version of a card environment
-     * @param callback is a callback that will be triggered during the performance of the [Task]
+     * @param cardEnvironment Relevant current version of a card environment
+     * @param callback It will be triggered during the performance of the [Task]
      */
     fun run(cardEnvironment: CardEnvironment,
             callback: (result: TaskEvent<T>) -> Unit) {
         delegate?.onNfcSessionStarted()
-        reader?.startNfcSession()
+        reader?.openSession()
         Log.i(this::class.simpleName!!, "Nfc task is started")
         onRun(cardEnvironment, callback)
     }
@@ -86,8 +85,8 @@ abstract class Task<T> {
     /**
      * Should be called on [Task] completion, whether it was successful or with failure.
      *
-     * @param withError is true when there is an error
-     * @param taskError the error to be shown by [CardManagerDelegate]
+     * @param withError True when there is an error
+     * @param taskError The error to be shown by [CardManagerDelegate]
      */
     protected fun completeNfcSession(withError: Boolean = false, taskError: TaskError? = null) {
         reader?.closeSession()
@@ -161,7 +160,7 @@ abstract class Task<T> {
                         delegate?.onTagLost()
                     } else if (result.error is TaskError.UserCancelledError) {
                         callback(CompletionResult.Failure(TaskError.UserCancelledError()))
-                        reader?.readingActive = false
+                        reader?.closeSession()
                     }
             }
         }
