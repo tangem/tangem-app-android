@@ -28,7 +28,7 @@ class TlvMapper(val tlvList: List<Tlv>) {
      *
      * @param tag [TlvTag] of a [Tlv] which value is to be returned.
      *
-     * @return value converted to a nullable type [T].
+     * @return Value converted to a nullable type [T].
      */
     inline fun <reified T> mapOptional(tag: TlvTag): T? =
             try {
