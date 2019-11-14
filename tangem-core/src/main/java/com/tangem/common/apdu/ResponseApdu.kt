@@ -5,9 +5,9 @@ import com.tangem.common.tlv.Tlv
 /**
  * Stores response data from the card and parses it to [Tlv] and [StatusWord].
  *
- * @property data raw response from the card.
+ * @property data Raw response from the card.
  * @property sw Status word code, reflecting the status of the response.
- * @property statusWord parsed status word.
+ * @property statusWord Parsed status word.
  */
 class ResponseApdu(val data: ByteArray) {
 
