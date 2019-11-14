@@ -20,7 +20,7 @@ abstract class CommandSerializer<T : CommandResponse> {
      * Serializes data into a [List] of [com.tangem.common.tlv.Tlv],
      * then creates [CommandApdu] with this data.
      *
-     * @return command data that can be converted to raw bytes with a method [CommandApdu.toBytes].
+     * @return Command data that can be converted to raw bytes with a method [CommandApdu.toBytes].
      */
     abstract fun serialize(cardEnvironment: CardEnvironment): CommandApdu
 
@@ -28,7 +28,7 @@ abstract class CommandSerializer<T : CommandResponse> {
      * Deserializes data, received from a card and stored in [ResponseApdu],
      * into a [List] of [com.tangem.common.tlv.Tlv]. Then this method maps it into a [CommandResponse].
      *
-     * @return card response, converted to a [CommandResponse] of a type [T].
+     * @return Card response, converted to a [CommandResponse] of a type [T].
      */
     abstract fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): T?
 
