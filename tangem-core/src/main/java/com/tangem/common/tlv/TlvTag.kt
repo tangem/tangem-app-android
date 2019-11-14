@@ -1,5 +1,8 @@
 package com.tangem.common.tlv
 
+/**
+ * Contains all possible value types that value for [TlvTag] can contain.
+ */
 enum class TlvValueType {
     HexString,
     Utf8String,
@@ -14,6 +17,9 @@ enum class TlvValueType {
     SigningMethod
 }
 
+/**
+ * Contains all TLV tags, with their code and descriptive name.
+ */
 enum class TlvTag(val code: Int) {
     Unknown(0x00),
     CardId(0x01),
@@ -97,13 +103,9 @@ enum class TlvTag(val code: Int) {
     TerminalPublicKey(0x5C),
     TerminalTransactionSignature(0x57);
 
-    fun hasNestedTlv(): Boolean {
-        return when (this) {
-            TlvTag.CardData -> true
-            else -> false
-        }
-    }
-
+    /**
+     * @return [TlvValueType] associated with a [TlvTag]
+     */
     fun valueType(): TlvValueType {
         return when (this) {
             CardId, Pin, Batch -> TlvValueType.HexString
