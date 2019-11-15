@@ -5,6 +5,11 @@ import com.tangem.commands.CommandResponse
 import com.tangem.commands.CommandSerializer
 import com.tangem.common.CompletionResult
 
+/**
+ * Allows to perform a single command.
+ *
+ * @property command A command that will be performed.
+ */
 class SingleCommandTask<Event : CommandResponse>(
         private val command: CommandSerializer<Event>
 ) : Task<Event>() {
