@@ -14,7 +14,10 @@ import com.tangem.tasks.TaskError
 import kotlinx.android.synthetic.main.layout_touch_card.*
 import kotlinx.android.synthetic.main.nfc_bottom_sheet.*
 
-
+/**
+ * Default implementation of [CardManagerDelegate].
+ * If no customisation is required, this is the preferred way to use Tangem SDK.
+ */
 class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDelegate {
 
     lateinit var activity: FragmentActivity
