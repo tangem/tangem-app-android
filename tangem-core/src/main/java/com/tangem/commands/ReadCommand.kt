@@ -71,7 +71,7 @@ enum class ProductMask(val code: Byte) {
 /**
  * Stores and maps Tangem card settings.
  *
- * @property rawValue are card settings in a form of flags,
+ * @property rawValue Card settings in a form of flags,
  * while flags definitions and values are in [SettingsMask.Companion] as constants.
  */
 data class SettingsMask(val rawValue: Int) {
@@ -152,7 +152,6 @@ class Card(
 /**
  * This command receives from the Tangem Card all the data about the card and the wallet,
  * including unique card number (CID or cardId) that has to be submitted while calling all other commands.
- *
  */
 class ReadCommand : CommandSerializer<Card>() {
 
