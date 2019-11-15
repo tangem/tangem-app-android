@@ -10,6 +10,10 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.StatusWord
 
+/**
+ * An error class that represent typical errors that may occur when performing Tangem SDK tasks.
+ * Errors are propagated back to the caller in callbacks.
+ */
 sealed class TaskError(description: String? = null) : Exception(description) {
     class UnknownStatus(sw: Int) : TaskError("Unknown StatusWord: $sw")
     class MappingError : TaskError()
@@ -36,24 +40,54 @@ sealed class TaskError(description: String? = null) : Exception(description) {
     class HashSizeMustBeEqual() : TaskError()
 }
 
+/**
+ * Events that are are sent in callbacks from [Task].
+ */
 sealed class TaskEvent<T> {
+
+    /**
+     * A callback that is triggered by a Task.
+     */
     class Event<T>(val data: T) : TaskEvent<T>()
+
+    /**
+     * A callback that is triggered when a [Task] is completed.
+     *
+     * @param error is null if it's a successful completion of a [Task]
+     */
     class Completion<T>(val error: TaskError? = null) : TaskEvent<T>()
 }
 
+/**
+ * Allows to perform a group of commands interacting between the card and the application.
+ * A task opens an NFC session, sends commands to the card and receives its responses,
+ * repeats the commands if needed, and closes session after receiving the last answer.
+ */
 abstract class Task<T> {
 
     var delegate: CardManagerDelegate? = null
     var reader: CardReader? = null
 
+    /**
+     * This method should be called to run the [Task] and perform all its operations.
+     *
+     * @param cardEnvironment Relevant current version of a card environment
+     * @param callback It will be triggered during the performance of the [Task]
+     */
     fun run(cardEnvironment: CardEnvironment,
             callback: (result: TaskEvent<T>) -> Unit) {
         delegate?.onNfcSessionStarted()
-        reader?.startNfcSession()
+        reader?.openSession()
         Log.i(this::class.simpleName!!, "Nfc task is started")
         onRun(cardEnvironment, callback)
     }
 
+    /**
+     * Should be called on [Task] completion, whether it was successful or with failure.
+     *
+     * @param withError True when there is an error
+     * @param taskError The error to be shown by [CardManagerDelegate]
+     */
     protected fun completeNfcSession(withError: Boolean = false, taskError: TaskError? = null) {
         reader?.closeSession()
         if (withError) {
@@ -63,9 +97,16 @@ abstract class Task<T> {
         }
     }
 
+    /**
+     * In this method the individual Tasks' logic should be implemented.
+     */
     protected abstract fun onRun(cardEnvironment: CardEnvironment,
                                  callback: (result: TaskEvent<T>) -> Unit)
 
+    /**
+     * This method should be called by Tasks in their [onRun] method wherever
+     * they need to communicate with the Tangem Card by launching commands.
+     */
     protected fun <T : CommandResponse> sendCommand(
             command: CommandSerializer<T>,
             cardEnvironment: CardEnvironment,
@@ -116,10 +157,10 @@ abstract class Task<T> {
                 }
                 is CompletionResult.Failure ->
                     if (result.error is TaskError.TagLost) {
-                        delegate?.hideSecurityDelay()
+                        delegate?.onTagLost()
                     } else if (result.error is TaskError.UserCancelledError) {
                         callback(CompletionResult.Failure(TaskError.UserCancelledError()))
-                        reader?.readingActive = false
+                        reader?.closeSession()
                     }
             }
         }
