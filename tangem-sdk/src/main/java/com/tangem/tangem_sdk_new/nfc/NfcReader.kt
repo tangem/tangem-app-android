@@ -10,6 +10,9 @@ import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.tasks.TaskError
 
+/**
+ * Provides NFC communication between an Android application and Tangem card.
+ */
 class NfcReader : CardReader {
 
     override var readingActive = false
