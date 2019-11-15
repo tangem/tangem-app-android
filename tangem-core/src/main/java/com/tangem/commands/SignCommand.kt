@@ -12,6 +12,13 @@ import com.tangem.common.tlv.TlvTag
 import com.tangem.crypto.sign
 import com.tangem.tasks.TaskError
 
+/**
+ * @param cardId CID, Unique Tangem card ID number
+ * @param signature Signed hashes (array of resulting signatures)
+ * @param remainingSignatures Remaining number of sign operations before the wallet will stop signing transactions.
+ * @param signedHashes Total number of signed single hashes returned by the card in sign command responses.
+ * Sums up array elements within all SIGN commands
+ */
 class SignResponse(
         val cardId: String,
         val signature: ByteArray,
@@ -19,7 +26,12 @@ class SignResponse(
         val signedHashes: Int
 ) : CommandResponse
 
-
+/**
+ * Signs transaction hashes using a wallet private key, stored on the card.
+ *
+ * @property hashes Array of transaction hashes.
+ * @property cardId CID, Unique Tangem card ID number
+ */
 class SignCommand(private val hashes: Array<ByteArray>, private val cardId: String)
     : CommandSerializer<SignResponse>() {
 
@@ -51,6 +63,14 @@ class SignCommand(private val hashes: Array<ByteArray>, private val cardId: Stri
         return CommandApdu(Instruction.Sign, tlvData)
     }
 
+    /**
+d
+     * Application can optionally submit a public key Terminal_PublicKey in [SignCommand].
+     * Submitted key is stored by the Tangem card if it differs from a previous submitted Terminal_PublicKey.
+     * The Tangem card will not enforce security delay if [SignCommand] will be called with
+     * TerminalTransactionSignature parameter containing a correct signature of raw data to be signed made with TerminalPrivateKey
+     * (this key should be generated and securily stored by the application).
+     */
     private fun addTerminalSignature(cardEnvironment: CardEnvironment, tlvData: MutableList<Tlv>) {
         cardEnvironment.terminalKeys?.let { terminalKeyPair ->
             val signedData = dataToSign.sign(terminalKeyPair.privateKey)
