@@ -12,6 +12,11 @@ import android.os.Build
 import android.os.Bundle
 import com.tangem.Log
 
+/**
+ * Helps use of NFC, leveraging Android NFC functionality.
+ * Launches [NfcAdapter], manages it with [Activity] lifecycle,
+ * enables and disables Nfc Reading Mode, receives NFC [Tag].
+ */
 class NfcManager : NfcAdapter.ReaderCallback {
 
     val reader = NfcReader()
