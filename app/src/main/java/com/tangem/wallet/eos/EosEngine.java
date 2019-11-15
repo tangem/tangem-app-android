@@ -317,7 +317,7 @@ public class EosEngine extends CoinEngine {
     public String calculateAddress(byte[] pkCompressed) {
         String cid = Util.bytesToHex(ctx.getCard().getCID()).toLowerCase();
         String address = cid.substring(0, 4) + cid.substring(8, 16);
-        address = address.replace("0", "o").replace("6", "b").replace("7,", "t").replace("8", "s").replace("9", "g");
+        address = address.replace("0", "o").replace("6", "b").replace("7", "t").replace("8", "s").replace("9", "g");
         return address;
 
 //        String cid = Util.bytesToHex(ctx.getCard().getCID());
