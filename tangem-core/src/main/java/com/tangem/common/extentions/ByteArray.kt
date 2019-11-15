@@ -5,6 +5,9 @@ import java.security.MessageDigest
 import java.util.*
 import kotlin.experimental.and
 
+/**
+ * Extension functions for [ByteArray].
+ */
 
 fun ByteArray.toHexString() = joinToString("") { "%02x".format(it) }
 

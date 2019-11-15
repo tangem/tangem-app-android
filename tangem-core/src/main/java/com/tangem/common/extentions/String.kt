@@ -3,7 +3,9 @@ package com.tangem.common.extentions
 import java.nio.charset.Charset
 import java.security.MessageDigest
 
-
+/**
+ * Extension functions for [String].
+ */
 fun String.calculateSha256(): ByteArray {
     val sha256 = MessageDigest.getInstance("SHA-256")
     val data = this.toByteArray(Charset.forName("UTF-8"))
