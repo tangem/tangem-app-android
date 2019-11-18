@@ -15,7 +15,8 @@ import com.tangem.tasks.TaskError
  */
 class NfcReader : CardReader {
 
-    override var readingActive = false
+    var readingActive = false
+        private set
     var nfcEnabled = false
     var manager: NfcManager? = null
     private var isoDep: IsoDep? = null
@@ -35,7 +36,7 @@ class NfcReader : CardReader {
             if (value) {
                 // Stops reading and sends failure callback to a task
                 // if reading is cancelled (when user closes nfc bottom sheet dialog).
-                readingActive = false
+                closeSession()
                 callback?.invoke(CompletionResult.Failure(TaskError.UserCancelledError()))
             }
         }
@@ -43,7 +44,7 @@ class NfcReader : CardReader {
     var data: ByteArray? = null
     var callback: ((response: CompletionResult<ResponseApdu>) -> Unit)? = null
 
-    override fun startNfcSession() {
+    override fun openSession() {
         readingActive = true
         readingCancelled = false
         manager?.disableReaderMode()
