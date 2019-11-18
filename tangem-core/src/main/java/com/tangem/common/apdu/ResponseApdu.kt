@@ -9,7 +9,7 @@ import com.tangem.common.tlv.Tlv
  * @property sw Status word code, reflecting the status of the response.
  * @property statusWord Parsed status word.
  */
-class ResponseApdu(val data: ByteArray) {
+class ResponseApdu(private val data: ByteArray) {
 
     private val sw1: Int = 0x00FF and data[data.size - 2].toInt()
     private val sw2: Int = 0x00FF and data[data.size - 1].toInt()
@@ -26,8 +26,7 @@ class ResponseApdu(val data: ByteArray) {
      */
     fun getTlvData(encryptionKey: ByteArray? = null): List<Tlv>? {
         return when {
-            data.size < 2 -> null
-            data.size == 2 -> emptyList()
+            data.size <= 2 -> null
             else -> Tlv.tlvListFromBytes(data.copyOf(data.size - 2))
         }
     }
