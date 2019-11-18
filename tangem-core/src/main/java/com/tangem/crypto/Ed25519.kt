@@ -1,6 +1,6 @@
 package com.tangem.crypto
 
-import com.tangem.common.extentions.calculateSha512
+import com.tangem.common.extensions.calculateSha512
 import net.i2p.crypto.eddsa.EdDSAEngine
 import net.i2p.crypto.eddsa.EdDSAPrivateKey
 import net.i2p.crypto.eddsa.EdDSAPublicKey
@@ -10,36 +10,46 @@ import net.i2p.crypto.eddsa.spec.EdDSAPublicKeySpec
 import java.security.MessageDigest
 import java.security.PublicKey
 
-internal fun verifyEd25519(publicKey: ByteArray, message: ByteArray, signature: ByteArray): Boolean {
-    val messageSha512 = message.calculateSha512()
-    val loadedPublicKey = loadPublicKey(publicKey)
-    val spec = EdDSANamedCurveTable.getByName(EdDSANamedCurveTable.ED_25519)
-    val signatureInstance = EdDSAEngine(MessageDigest.getInstance(spec.hashAlgorithm))
-    signatureInstance.initVerify(loadedPublicKey)
+object Ed25519 {
 
-    signatureInstance.update(messageSha512)
+    internal fun verify(publicKey: ByteArray, message: ByteArray, signature: ByteArray): Boolean {
+        val messageSha512 = message.calculateSha512()
+        val loadedPublicKey = loadPublicKey(publicKey)
+        val spec = EdDSANamedCurveTable.getByName(EdDSANamedCurveTable.ED_25519)
+        val signatureInstance = EdDSAEngine(MessageDigest.getInstance(spec.hashAlgorithm))
+        signatureInstance.initVerify(loadedPublicKey)
 
-    return signatureInstance.verify(signature)
-}
+        signatureInstance.update(messageSha512)
 
-private fun loadPublicKey(publicKeyArray: ByteArray): PublicKey {
-    val spec = EdDSANamedCurveTable.getByName(EdDSANamedCurveTable.ED_25519)
-    val pubKey = EdDSAPublicKeySpec(publicKeyArray, spec)
-    return EdDSAPublicKey(pubKey)
-}
+        return signatureInstance.verify(signature)
+    }
 
-internal fun signEd25519(data: ByteArray, privateKeyArray: ByteArray): ByteArray {
+    private fun loadPublicKey(publicKeyArray: ByteArray): PublicKey {
+        val spec = EdDSANamedCurveTable.getByName(EdDSANamedCurveTable.ED_25519)
+        val pubKey = EdDSAPublicKeySpec(publicKeyArray, spec)
+        return EdDSAPublicKey(pubKey)
+    }
 
-    val dataSha512 = data.calculateSha512()
-    val spec = EdDSANamedCurveTable.getByName(EdDSANamedCurveTable.ED_25519)
-    val signatureInstance = EdDSAEngine(MessageDigest.getInstance(spec.hashAlgorithm))
+    internal fun sign(data: ByteArray, privateKeyArray: ByteArray): ByteArray {
 
-    val privateKeySpec = EdDSAPrivateKeySpec(privateKeyArray, spec)
-    val privateKey = EdDSAPrivateKey(privateKeySpec)
+        val dataSha512 = data.calculateSha512()
+        val spec = EdDSANamedCurveTable.getByName(EdDSANamedCurveTable.ED_25519)
+        val signatureInstance = EdDSAEngine(MessageDigest.getInstance(spec.hashAlgorithm))
 
-    signatureInstance.initSign(privateKey)
-    signatureInstance.update(dataSha512)
+        val privateKeySpec = EdDSAPrivateKeySpec(privateKeyArray, spec)
+        val privateKey = EdDSAPrivateKey(privateKeySpec)
 
-    return signatureInstance.sign()
+        signatureInstance.initSign(privateKey)
+        signatureInstance.update(dataSha512)
 
+        return signatureInstance.sign()
+    }
+
+    internal fun generatePublicKey(privateKeyArray: ByteArray): ByteArray {
+        val spec = EdDSANamedCurveTable.getByName(EdDSANamedCurveTable.ED_25519)
+        val privateKeySpec = EdDSAPrivateKeySpec(privateKeyArray, spec)
+        val publicKeySpec = EdDSAPublicKeySpec(privateKeySpec.a, spec)
+        val publicKey = EdDSAPublicKey(publicKeySpec)
+        return publicKey.abyte
+    }
 }
