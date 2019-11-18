@@ -4,8 +4,8 @@ import com.tangem.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
-import com.tangem.common.extentions.calculateSha256
-import com.tangem.common.extentions.hexToBytes
+import com.tangem.common.extensions.calculateSha256
+import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
