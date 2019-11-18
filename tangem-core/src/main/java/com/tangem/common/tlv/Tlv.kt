@@ -1,5 +1,6 @@
 package com.tangem.common.tlv
 
+import com.tangem.Log
 import java.io.ByteArrayInputStream
 import java.io.IOException
 
@@ -52,7 +53,7 @@ class Tlv {
         }
 
 
-        fun tlvListFromBytes(mData: ByteArray): List<Tlv> {
+        fun tlvListFromBytes(mData: ByteArray): List<Tlv>? {
             val tlvList = mutableListOf<Tlv>()
             val stream = ByteArrayInputStream(mData)
             var tlv: Tlv? = null
@@ -61,7 +62,8 @@ class Tlv {
                     tlv = Tlv.tlvFromBytes(stream)
                     if (tlv != null) tlvList.add(tlv)
                 } catch (e: IOException) {
-                    throw TlvMapperException("TLVError: " + e.message)
+                    Log.e(this::class.java.simpleName,"TLVError: " + e.message)
+                    return null
                 }
 
             } while (tlv != null)
