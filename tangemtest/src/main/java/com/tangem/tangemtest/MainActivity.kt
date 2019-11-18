@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                         }
-                }
+                    }
                     is TaskEvent.Completion -> {
                         if (taskEvent.error != null) {
                             if (taskEvent.error is TaskError.UserCancelledError) {
@@ -73,14 +73,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createSampleHashes(): Array<ByteArray> {
-        val hash1 = ByteArray(32)
-        for (i in 0 until 32) {
-            hash1[i] = 1
-        }
-        val hash2 = ByteArray(32)
-        for (i in 0 until 32) {
-            hash2[i] = 2
-        }
+        val hash1 = ByteArray(32) { 1 }
+        val hash2 = ByteArray(32) { 2 }
         return arrayOf(hash1, hash2)
     }
 }
