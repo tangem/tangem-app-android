@@ -109,15 +109,50 @@ data class SettingsMask(val rawValue: Int) {
  * Detailed information about card contents.
  */
 class CardData(
+
+        /**
+         * Tangem internal manufacturing batch ID.
+         */
         val batchId: String?,
+
+        /**
+         * Timestamp of manufacturing.
+         */
         val manufactureDateTime: Date?,
+
+        /**
+         * Name of the issuer.
+         */
         val issuerName: String?,
+
+        /**
+         * Name of the blockchain.
+         */
         val blockchainName: String?,
+
+        /**
+         * Signature of CardId with manufacturer’s private key.
+         */
         val manufacturerSignature: ByteArray?,
+
+        /**
+         * Mask of products enabled on card.
+         */
         val productMask: ProductMask?,
 
+        /**
+         * Name of the token.
+         */
         val tokenSymbol: String?,
+
+        /**
+         * Smart contract address.
+         */
         val tokenContractAddress: String?,
+
+        /**
+         * Number of decimals in token value.
+         */
         val tokenDecimal: Int?
 )
 
