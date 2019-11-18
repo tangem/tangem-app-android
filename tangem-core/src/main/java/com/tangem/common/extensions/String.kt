@@ -1,4 +1,4 @@
-package com.tangem.common.extentions
+package com.tangem.common.extensions
 
 import java.nio.charset.Charset
 import java.security.MessageDigest
@@ -13,10 +13,8 @@ fun String.calculateSha256(): ByteArray {
 }
 
 fun String.hexToBytes(): ByteArray {
-    val bytes = ByteArray(this.length / 2)
-    for (i in bytes.indices) {
-        bytes[i] = Integer.parseInt(this.substring(2 * i, 2 * i + 2),
-                16).toByte()
+    return ByteArray(this.length / 2)
+    { i ->
+        Integer.parseInt(this.substring(2 * i, 2 * i + 2), 16).toByte()
     }
-    return bytes
 }
