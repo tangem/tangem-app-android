@@ -40,7 +40,7 @@ object CryptoUtils {
     fun verify(publicKey: ByteArray, message: ByteArray, signature: ByteArray,
                curve: EllipticCurve = EllipticCurve.Secp256k1): Boolean {
         return when (curve) {
-            EllipticCurve.Secp256k1 -> Sepc256k1.verify(publicKey, message, signature)
+            EllipticCurve.Secp256k1 -> Secp256k1.verify(publicKey, message, signature)
             EllipticCurve.Ed25519 -> Ed25519.verify(publicKey, message, signature)
         }
     }
@@ -58,7 +58,7 @@ object CryptoUtils {
             curve: EllipticCurve = EllipticCurve.Secp256k1
     ): ByteArray {
         return when (curve) {
-            EllipticCurve.Secp256k1 -> Sepc256k1.generatePublicKey(privateKeyArray)
+            EllipticCurve.Secp256k1 -> Secp256k1.generatePublicKey(privateKeyArray)
             EllipticCurve.Ed25519 -> Ed25519.generatePublicKey(privateKeyArray)
         }
     }
@@ -74,8 +74,8 @@ object CryptoUtils {
  */
 fun ByteArray.sign(privateKeyArray: ByteArray, curve: EllipticCurve = EllipticCurve.Secp256k1): ByteArray {
     return when (curve) {
-        EllipticCurve.Secp256k1 -> signSecp256k1(this, privateKeyArray)
-        EllipticCurve.Ed25519 -> signEd25519(this, privateKeyArray)
+        EllipticCurve.Secp256k1 -> Secp256k1.sign(this, privateKeyArray)
+        EllipticCurve.Ed25519 -> Ed25519.sign(this, privateKeyArray)
     }
 }
 
