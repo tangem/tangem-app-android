@@ -101,7 +101,7 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
         }
     }
 
-    override fun requestPin(callback: (result: CompletionResult<String>) -> Unit) {
+    override fun onPinRequested(callback: (result: CompletionResult<String>) -> Unit) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
