@@ -59,7 +59,6 @@ class CommandApdu(
 
         val lc = data.size
 
-
         val byteStream = ByteArrayOutputStream()
         byteStream.write(cla.toInt())
         byteStream.write(ins)
@@ -73,7 +72,6 @@ class CommandApdu(
     }
 
     private fun writeLength(stream: ByteArrayOutputStream, lc: Int) {
-
         stream.write(0)
         stream.write(lc shr 8)
         stream.write(lc and 0xFF)
