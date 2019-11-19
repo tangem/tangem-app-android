@@ -73,7 +73,7 @@
     <string name="splash_cardano">Cardano</string>
 
     <!-- Main -->
-    <string name="main_screen_tap_card">Appuyez sur la carte Tangem avec votre smartphone</string>
+    <string name="main_screen_tap_card">Mettez en contact la carte avec votre smartphone</string>
     <string name="main_screen_scan_banknote">Scanner une carte avec votre \n %1$s \n comme indiqué ci-dessus</string>
     <string name="main_screen_phone">phone</string>
     <string name="main_screen_erased_wallet">Le porte-monnaie a été effacé</string>
@@ -151,7 +151,7 @@
     <string name="to_erase_the_wallet">pour effacer le porte-monnaie</string>
     <string name="to_sign_the_transaction">pour signer le paiement</string>
     <string name="to_change_pin_codes">pour changer les codes PIN / PIN2</string>
-    <string name="nfc_purge_warning">En tapotant sur la carte, vous retirerez définitivement le porte-monnaie de la blockchain. Assurez-vous qu\'il n\'y aura pas d\autres transactions entrantes</string>
+    <string name="nfc_purge_warning">En mettant la carte en contact avec votre smartphone, vous retirerez définitivement le porte-monnaie de la blockchain. Assurez-vous qu\'il n'y aura pas d\'autres transactions entrantes</string>
     <string name="nfc_error_cannot_erase_wallet">Impossible d\'effacer le porte-monnaie. Veillez à entrer le code PIN2 correct!</string>
     <string name="nfc_error_cannot_create_wallet">Impossible de créer un porte-monnaie. Veillez à entrer le code PIN2 correct!</string>
 
