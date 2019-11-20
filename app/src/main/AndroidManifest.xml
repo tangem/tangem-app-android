@@ -62,6 +62,9 @@
                 <data
                     android:host="tangem.com"
                     android:scheme="https" />
+                <data
+                    android:host="app.tangem.com"
+                    android:scheme="https" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.nfc.action.TECH_DISCOVERED" />
