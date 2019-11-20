@@ -35,7 +35,7 @@ android {
         debug {
             debuggable true
             minifyEnabled false
-            applicationIdSuffix ".debug"
+            applicationIdSuffix ".dev"
             signingConfig signingConfigs.debug
             buildConfigField 'boolean', 'CRASHLYTICS', 'Boolean.parseBoolean("false")'
             ext.enableCrashlytics = false
@@ -43,7 +43,7 @@ android {
         debug_beta {
             initWith debug
             versionNameSuffix "-beta"
-            applicationIdSuffix ".debug_beta"
+            applicationIdSuffix ".debug"
             buildConfigField 'boolean', 'CRASHLYTICS', 'Boolean.parseBoolean("true")'
             manifestPlaceholders = [fabric_api_key: properties.hasProperty('fabric_api_key')
                     ? project.property('fabric_api_key') : '000']
