@@ -14,18 +14,24 @@ import java.util.*
 /**
  * Determines which type of data is required for signing.
  */
-enum class SigningMethod(val code: Int) {
-    SignHash(0),
-    SignRaw(1),
-    SignHashValidatedByIssuer(2),
-    SignRawValidatedByIssuer(3),
-    SignHashValidatedByIssuerAndWriteIssuerData(4),
-    SignRawValidatedByIssuerAndWriteIssuerData(5),
-    SignPos(6);
+data class SigningMethod(val rawValue: Int) {
+
+    fun contains(value: Int): Boolean {
+        return if (rawValue and 0x80 == 0) {
+            value == rawValue
+        } else {
+            rawValue and (0x01 shl value) != 0
+        }
+    }
 
     companion object {
-        private val values = values()
-        fun byCode(code: Int): SigningMethod? = values.find { it.code == code }
+        const val signHash = 0
+        const val signRaw = 1
+        const val signHashValidatedByIssuer = 2
+        const val signRawValidatedByIssuer = 3
+        const val signHashValidatedByIssuerAndWriteIssuerData = 4
+        const val signRawValidatedByIssuerAndWriteIssuerData = 5
+        const val signPos = 6
     }
 }
 
@@ -75,6 +81,8 @@ enum class ProductMask(val code: Byte) {
  * while flags definitions and values are in [SettingsMask.Companion] as constants.
  */
 data class SettingsMask(val rawValue: Int) {
+
+    fun contains(value: Int): Boolean = (rawValue and value) != 0
 
     companion object {
         const val isReusable = 0x0001
