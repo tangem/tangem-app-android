@@ -113,7 +113,7 @@ enum class TlvTag(val code: Int) {
                 TlvValueType.Utf8String
             CurveId -> TlvValueType.EllipticCurve
             MaxSignatures, PauseBeforePin2, RemainingSignatures,
-            SignedHashes, Health, TokenDecimal, UserCounter -> TlvValueType.IntValue
+            SignedHashes, Health, TokenDecimal, UserCounter, IssuerDataCounter -> TlvValueType.IntValue
             IsActivated, TerminalIsLinked -> TlvValueType.BoolValue
             ManufactureDateTime -> TlvValueType.DateTime
             ProductMask -> TlvValueType.ProductMask
