@@ -121,7 +121,7 @@ class TlvMapper(val tlvList: List<Tlv>) {
             TlvValueType.SigningMethod -> {
                 if (T::class != SigningMethod::class)
                     throw WrongTypeException("Mapping error. Type for tag: $tag must be ${tag.valueType()}. It is ${T::class}")
-                SigningMethod.byCode(tlvValue.toInt()) as T
+                SigningMethod(tlvValue.toInt()) as T
                         ?: throw ConversionException("Unknown Signing Method with code of: ${tlvValue.toInt()}")
             }
         }
