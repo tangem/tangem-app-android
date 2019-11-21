@@ -27,7 +27,7 @@ class Tlv {
 
 
     companion object {
-        fun tlvFromBytes(stream: ByteArrayInputStream): Tlv? {
+        private fun tlvFromBytes(stream: ByteArrayInputStream): Tlv? {
             val code = stream.read()
             if (code == -1) return null
             var len = stream.read()
