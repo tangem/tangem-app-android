@@ -58,7 +58,6 @@ internal class ScanTask : Task<ScanEvent>() {
 
                     val challenge = CryptoUtils.generateRandomBytes(16)
                     val checkWalletCommand = CheckWalletCommand(
-                            cardEnvironment.pin1,
                             card.cardId,
                             challenge)
 
