@@ -9,14 +9,9 @@ import kotlin.experimental.and
  * Extension functions for [ByteArray].
  */
 
-fun ByteArray.toHexString() = joinToString("") { "%02x".format(it) }
+fun ByteArray.toHexString(): String = joinToString("") { "%02x".format(it) }
 
-fun ByteArray.toUtf8(): String {
-    val string = String(this)
-    if (this.isNotEmpty() && this.last() == 0.toByte()) return string.dropLast(1)
-    return string
-}
-
+fun ByteArray.toUtf8(): String = String(this).removeSuffix("\u0000")
 
 fun ByteArray.toInt(): Int {
     return when (this.size) {
