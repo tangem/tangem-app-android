@@ -33,6 +33,14 @@ class ByteArrayExtensionsTest {
     }
 
     @Test
+    fun `empty byteArray to Utf8 returns empty String`() {
+        val bytes = byteArrayOf()
+        val expected = ""
+        assertThat(bytes.toUtf8())
+                .matches(expected)
+    }
+
+    @Test
     fun `blockchain name to Utf8`() {
         val bytes = byteArrayOf(69, 84, 72)
         val expected = "ETH"
@@ -47,6 +55,11 @@ class ByteArrayExtensionsTest {
         val expected = 158211
         assertThat(bytes.toInt())
                 .isEqualTo(expected)
+
+        val bytes1 = byteArrayOf(0, 0, 0, 13)
+        val expected1 = 13
+        assertThat(bytes1.toInt())
+                .isEqualTo(expected1)
     }
 
     @Test
