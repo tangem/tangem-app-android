@@ -1,9 +1,6 @@
 package com.tangem
 
-import com.tangem.commands.CommandResponse
-import com.tangem.commands.CommandSerializer
-import com.tangem.commands.SignCommand
-import com.tangem.commands.SignResponse
+import com.tangem.commands.*
 import com.tangem.crypto.CryptoUtils
 import com.tangem.tasks.*
 import java.util.concurrent.Executors
@@ -78,6 +75,28 @@ class CardManager(
             return
         }
         val task = SingleCommandTask(signCommand)
+        runTask(task, cardId, callback)
+    }
+
+    fun readIssuerData(cardId: String,
+                       callback: (result: TaskEvent<ReadIssuerDataResponse>) -> Unit) {
+        val getIssuerDataCommand = ReadIssuerDataCommand(cardId)
+        val task = SingleCommandTask(getIssuerDataCommand)
+        runTask(task, cardId, callback)
+    }
+
+
+    fun writeIssuerData(cardId: String,
+                        issuerData: ByteArray,
+                        issuerDataSignature: ByteArray,
+                        issuerDataCounter: Int? = null,
+                        callback: (result: TaskEvent<WriteIssuerDataResponse>) -> Unit) {
+        val writeIssuerDataCommand = WriteIssuerDataCommand(
+                    cardId,
+                    issuerData,
+                    issuerDataSignature,
+                    issuerDataCounter)
+        val task = SingleCommandTask(writeIssuerDataCommand)
         runTask(task, cardId, callback)
     }
 
