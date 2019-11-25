@@ -33,3 +33,4 @@ fun ByteArray.toDate(): Date {
 
 fun ByteArray.calculateSha512(): ByteArray = MessageDigest.getInstance("SHA-512").digest(this)
 
+fun ByteArray.calculateSha256(): ByteArray = MessageDigest.getInstance("SHA-256").digest(this)
