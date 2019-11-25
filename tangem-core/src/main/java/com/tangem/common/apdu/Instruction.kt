@@ -11,7 +11,7 @@ enum class Instruction(var code: Int) {
     ValidateCard(0xF4),
     VerifyCode(0xF5),
     WriteIssuerData(0xF6),
-    GetIssuerData(0xF7),
+    ReadIssuerData(0xF7),
     CreateWallet(0xF8),
     CheckWallet(0xF9),
     SwapPIN(0xFA),
