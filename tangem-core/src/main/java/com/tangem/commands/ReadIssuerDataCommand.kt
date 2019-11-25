@@ -47,6 +47,7 @@ class ReadIssuerDataResponse(
  * Issuer Data is never changed or parsed from within the Tangem COS. The issuer defines purpose of use,
  * format and payload of Issuer Data. For example, this field may contain information about
  * wallet balance signed by the issuer or additional issuer’s attestation data.
+ * @property cardId CID, Unique Tangem card ID number.
  */
 class ReadIssuerDataCommand(
         private val cardId: String
