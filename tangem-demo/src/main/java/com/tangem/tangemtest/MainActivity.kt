@@ -18,6 +18,8 @@ class MainActivity : AppCompatActivity() {
     private val cardManager = CardManager(nfcManager.reader, cardManagerDelegate)
 
     private lateinit var cardId: String
+    private lateinit var issuerData: ByteArray
+    private lateinit var issuerDataSignature: ByteArray
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,6 +44,7 @@ class MainActivity : AppCompatActivity() {
                                 runOnUiThread {
                                     tv_card_cid?.text = cardId
                                     btn_sign.isEnabled = true
+                                    btn_read_issuer_data.isEnabled = true
                                 }
                             }
                         }
@@ -66,7 +69,37 @@ class MainActivity : AppCompatActivity() {
                     is TaskEvent.Completion -> {
                         if (it.error != null) runOnUiThread { tv_card_cid?.text = it.error!!::class.simpleName }
                     }
-                    is TaskEvent.Event -> runOnUiThread { tv_card_cid?.text = cardId + " used to sign sample hashes." }
+                    is TaskEvent.Event -> runOnUiThread { tv_card_cid?.text = cardId + "was used to sign sample hashes." }
+                }
+            }
+        }
+        btn_read_issuer_data?.setOnClickListener { _ ->
+            cardManager.readIssuerData(cardId) {
+                when (it) {
+                    is TaskEvent.Completion -> {
+                        if (it.error != null) runOnUiThread { tv_card_cid?.text = it.error!!::class.simpleName }
+                    }
+                    is TaskEvent.Event -> runOnUiThread {
+                        btn_write_issuer_data.isEnabled = true
+                        tv_card_cid?.text = it.data.issuerData.contentToString()
+                        issuerData = it.data.issuerData
+                        issuerDataSignature = it.data.issuerDataSignature
+                    }
+                }
+            }
+        }
+        btn_write_issuer_data?.setOnClickListener { _ ->
+            cardManager.writeIssuerData(
+                    cardId,
+                    issuerData,
+                    issuerDataSignature) {
+                when (it) {
+                    is TaskEvent.Completion -> {
+                        if (it.error != null) runOnUiThread { tv_card_cid?.text = it.error!!::class.simpleName }
+                    }
+                    is TaskEvent.Event -> runOnUiThread {
+                        tv_card_cid?.text = it.data.cardId
+                    }
                 }
             }
         }
