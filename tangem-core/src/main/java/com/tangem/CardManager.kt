@@ -37,6 +37,8 @@ class CardManager(
      * [ScanEvent.OnVerifyEvent] after completing [com.tangem.commands.CheckWalletCommand]
      * [TaskEvent.Completion] with an error field null after successful completion of a task or
      * [TaskEvent.Completion] with a [TaskError] if some error occurs.
+     * @param callback is triggered on events during a performance of the task,
+     * provides data in form of [ScanEvent] subclasses.
      */
     fun scanCard(callback: (result: TaskEvent<ScanEvent>) -> Unit) {
         val task = ScanTask()
@@ -58,8 +60,8 @@ class CardManager(
      * It is for [CardManagerDelegate] to notify users of security delay.
      * @param hashes Array of transaction hashes. It can be from one or up to ten hashes of the same length.
      * @param cardId CID, Unique Tangem card ID number
-     * @param callback
-     *
+     * @param callback is triggered on the completion of the [SignCommand],
+     * provides card response in the form of [SignResponse].
      */
     fun sign(hashes: Array<ByteArray>, cardId: String,
              callback: (result: TaskEvent<SignResponse>) -> Unit) {
@@ -78,6 +80,15 @@ class CardManager(
         runTask(task, cardId, callback)
     }
 
+    /**
+     * This command returns 512-byte Issuer Data field and its issuer’s signature.
+     * Issuer Data is never changed or parsed from within the Tangem COS. The issuer defines purpose of use,
+     * format and payload of Issuer Data. For example, this field may contain information about
+     * wallet balance signed by the issuer or additional issuer’s attestation data.
+     * @param cardId CID, Unique Tangem card ID number.
+     * @param callback is triggered on the completion of the [ReadIssuerDataCommand],
+     * provides card response in the form of [ReadIssuerDataResponse].
+     */
     fun readIssuerData(cardId: String,
                        callback: (result: TaskEvent<ReadIssuerDataResponse>) -> Unit) {
         val getIssuerDataCommand = ReadIssuerDataCommand(cardId)
@@ -85,7 +96,18 @@ class CardManager(
         runTask(task, cardId, callback)
     }
 
-
+    /**
+     * This command writes 512-byte Issuer Data field and its issuer’s signature.
+     * Issuer Data is never changed or parsed from within the Tangem COS. The issuer defines purpose of use,
+     * format and payload of Issuer Data. For example, this field may contain information about
+     * wallet balance signed by the issuer or additional issuer’s attestation data.
+     * @param cardId CID, Unique Tangem card ID number.
+     * @param issuerData Data provided by issuer.
+     * @param issuerDataSignature Issuer’s signature of [issuerData] with Issuer Data Private Key (which is kept on card).
+     * @param issuerDataCounter An optional counter that protect issuer data against replay attack.
+     * @param callback is triggered on the completion of the [WriteIssuerDataCommand],
+     * provides card response in the form of [WriteIssuerDataResponse].
+     */
     fun writeIssuerData(cardId: String,
                         issuerData: ByteArray,
                         issuerDataSignature: ByteArray,
