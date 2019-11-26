@@ -5,6 +5,6 @@
 
     <string name="verify">Confirm</string>
     <string name="send_1">Checkout</string>
-    <string name="now_touch_the_banknote_with_id">Now touch the banknote</string>
+    <string name="now_touch_the_banknote_with_id">Now touch the card</string>
 
 </resources>
