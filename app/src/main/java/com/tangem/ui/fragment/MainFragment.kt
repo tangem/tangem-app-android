@@ -83,9 +83,9 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
 
         // set phone name
         if (nfcDeviceAntenna.fullName != "")
-            tvNFCHint.text = String.format(getString(R.string.main_screen_scan_banknote), nfcDeviceAntenna.fullName)
+            tvNFCHint.text = String.format(getString(R.string.main_screen_scan_card), nfcDeviceAntenna.fullName)
         else
-            tvNFCHint.text = String.format(getString(R.string.main_screen_scan_banknote), getString(R.string.main_screen_phone))
+            tvNFCHint.text = String.format(getString(R.string.main_screen_scan_card), getString(R.string.main_screen_phone))
 
         // set listeners
         fab.setOnClickListener { showMenu(it) }
