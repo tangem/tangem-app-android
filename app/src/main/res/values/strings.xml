@@ -11,8 +11,8 @@
     <string name="general_notification_scan_again">Try to scan again</string>
     <string name="general_error_cannot_erase_wallet_with_non_zero_balance">Cannot erase wallet with non-zero balance</string>
     <string name="general_send_transaction">Send payment</string>
-    <string name="general_from_banknote">From banknote</string>
-    <string name="general_on_banknote">on banknote</string>
+    <string name="general_from_card">From card</string>
+    <string name="general_on_card">on card</string>
     <string name="general_balance">with balance</string>
     <string name="general_send_to_wallet">Send to wallet</string>
     <string name="general_amount">Amount</string>
@@ -49,8 +49,8 @@
     <string name="dialog_the_nfc_adapter_length_apdu">Oops.. It seems your smartphone does not support such long NFC packets.</string>
     <string name="dialog_the_nfc_adapter_length_apdu_advice">Try sending smaller amount or use a smartphone with full NFC support.</string>
     <string name="dialog_title_money_is_at_risk">Your money is at risk!</string>
-    <string name="dialog_this_banknote_has_enforced_security_delay">This banknote has enforced security delay</string>
-    <string name="dialog_hold_banknote">Please hold the banknote firmly\n until the operation is completed…</string>
+    <string name="dialog_this_card_has_enforced_security_delay">This card has enforced security delay</string>
+    <string name="dialog_hold_card">Please hold the card firmly\n until the operation is completed…</string>
     <string name="dialog_you_may_be_required_to_repeat">You may be required to repeat this operation a few times depending on the NFC performance of your smartphone.\n This is made for safety of your funds.</string>
     <string name="alert_unknown_blockchain">This is a genuine Tangem card. Please follow instructions written on the card to install the official app.</string>
 
@@ -75,7 +75,7 @@
 
     <!-- Main -->
     <string name="main_screen_tap_card">Tap Tangem card with your smartphone</string>
-    <string name="main_screen_scan_banknote">Scan a banknote with your \n %1$s \n as shown above</string>
+    <string name="main_screen_scan_card">Scan a card with your \n %1$s \n as shown above</string>
     <string name="main_screen_phone">phone</string>
     <string name="main_screen_erased_wallet">Wallet was erased</string>
     <string name="main_screen_not_personalized">Not personalized</string>
@@ -123,7 +123,7 @@
     <string name="balance_validator_first_line_empty_wallet">Empty wallet</string>
     <string name="balance_validator_first_line_verification_failed">Verification failed</string>
     <string name="balance_validator_first_line_pending_transaction">Pending transaction…</string>
-    <string name="balance_validator_first_line_not_genuine">Not genuine banknote</string>
+    <string name="balance_validator_first_line_not_genuine">Not genuine card</string>
     <string name="balance_validator_first_line_locked_pin2">Locked with PIN2</string>
     <string name="balance_validator_first_line_verify_identity">Verified note identity.</string>
     <string name="balance_validator_first_line_no_account">No account or network error</string>
@@ -139,7 +139,7 @@
     <string name="balance_validator_second_line_internet_to_get_balance">Can\'t obtain balance from blockchain. Restore internet connection to be more confident.</string>
     <string name="balance_validator_second_line_swipe_to_refresh">Swipe down to refresh</string>
     <string name="balance_validator_second_line_verification_failed">Wallet verification failed. Tap again.</string>
-    <string name="balance_validator_second_line_failed_attestation">Tangem Attestation service says the banknote is not genuine.</string>
+    <string name="balance_validator_second_line_failed_attestation">Tangem Attestation service says the card is not genuine.</string>
     <string name="balance_validator_second_line_failed_binary_code_verification">Firmware binary code verification failed</string>
     <string name="balance_validator_second_line_disable_pin_2">Ask the holder to disable PIN2 before accepting</string>
     <string name="balance_validator_second_line_identity_not_verified">Card identity was not verified. Cannot reach Tangem attestation service.</string>
@@ -149,7 +149,7 @@
     <string name="balance_validator_second_line_authenticity_not_verified">Authenticity cannot be verified. Swipe down to refresh.</string>
 
     <!-- CreateNewWallet, Purge, SignTransaction -->
-    <string name="now_touch_the_banknote_with_id">Now touch the banknote with ID</string>
+    <string name="now_touch_the_card_with_id">Now touch the card with ID</string>
     <string name="to_create_the_wallet">to create the wallet</string>
     <string name="to_erase_the_wallet">to erase the wallet</string>
     <string name="to_sign_the_transaction">to sign the payment</string>
@@ -234,7 +234,7 @@
     <string name="details_none">None</string>
     <string name="details_last_one">Last one!</string>
     <string name="details_unlimited">Unlimited</string>
-    <string name="details_one_off_banknote">One-off banknote</string>
+    <string name="details_one_off_card">One-off card</string>
     <string name="details_firmware">Firmware</string>
     <string name="details_registration_date">Registration date</string>
     <string name="details_possession_proved">Possession proved</string>
@@ -244,12 +244,12 @@
     <string name="details_private_key">Private key</string>
     <string name="details_validation_node">Validation node</string>
     <string name="details_unspents">Unspents</string>
-    <string name="details_protected_by_default_pin_1">This banknote is protected by default PIN1 code</string>
-    <string name="details_protected_by_user_pin_1">This banknote is protected by user\'s PIN1 code</string>
-    <string name="details_protected_by_default_pin_2">This banknote is protected by default PIN2 code</string>
-    <string name="details_protected_by_user_pin_2">This banknote is protected by user\'s PIN2 code</string>
-    <string name="details_unlocked_banknote">Unlocked banknote, only for development use</string>
-    <string name="details_security_delay">This banknote will enforce %.0f seconds security delay for all operations requiring PIN2 code</string>
+    <string name="details_protected_by_default_pin_1">This card is protected by default PIN1 code</string>
+    <string name="details_protected_by_user_pin_1">This card is protected by user\'s PIN1 code</string>
+    <string name="details_protected_by_default_pin_2">This card is protected by default PIN2 code</string>
+    <string name="details_protected_by_user_pin_2">This card is protected by user\'s PIN2 code</string>
+    <string name="details_unlocked_card">Unlocked card, only for development use</string>
+    <string name="details_security_delay">This card will enforce %.0f seconds security delay for all operations requiring PIN2 code</string>
     <string name="details_both_pins_can_be_changed">Allows to change PIN1 and PIN2\n</string>
     <string name="details_pin1_can_be_changed">Allows to change PIN1\n</string>
     <string name="details_pin2_can_be_changed">Allows to change PIN2\n</string>
