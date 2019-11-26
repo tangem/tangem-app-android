@@ -43,7 +43,7 @@
             android:layout_marginStart="7dp"
             android:layout_marginTop="8dp"
             android:fontFamily="@font/maax"
-            android:text="@string/general_from_banknote"
+            android:text="@string/general_from_card"
             android:textColor="@color/primary"
             android:textSize="@dimen/text_size_medium" />
 
