@@ -9,7 +9,7 @@
         android:id="@+id/main"
         android:name="com.tangem.ui.fragment.MainFragment"
         android:label="fragment_main"
-        tools:layout="@layout/main_fragment">
+        tools:layout="@layout/fragment_main">
         <action
             android:id="@+id/action_main_to_loadedWalletFragment"
             app:destination="@id/loadedWalletFragment" />
