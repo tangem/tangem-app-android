@@ -81,6 +81,8 @@
     <string name="main_screen_not_personalized">Not personalized</string>
     <string name="main_screen_new_version_toast">There is a new application version: %1$s</string>
     <string name="main_screen_btn_update">Update</string>
+    <string name="main_screen_visit_store">Don\'t have a card?\n Visit our store at %1$s</string>
+    <string name="main_screen_store_address">tangemcards.com</string>
 
     <!-- LoadedWallet -->
     <string name="loaded_wallet_no_compatible_wallet">No compatible wallets installed</string>
