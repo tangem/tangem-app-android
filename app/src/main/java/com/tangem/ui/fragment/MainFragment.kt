@@ -2,12 +2,18 @@ package com.tangem.ui.fragment
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Intent
+import android.net.Uri
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
 import android.view.*
 import android.widget.PopupMenu
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
@@ -34,12 +40,13 @@ import com.tangem.ui.navigation.NavigationResultListener
 import com.tangem.util.CommonUtil
 import com.tangem.util.LOG
 import com.tangem.util.UtilHelper
+import com.tangem.util.extensions.colorFrom
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.CoinEngineFactory
 import com.tangem.wallet.R
 import com.tangem.wallet.TangemContext
+import kotlinx.android.synthetic.main.fragment_main.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
-import kotlinx.android.synthetic.main.main_fragment.*
 import java.io.File
 import java.util.*
 
@@ -52,7 +59,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
         val TAG: String = MainFragment::class.java.simpleName
     }
 
-    override val layoutId = R.layout.main_fragment
+    override val layoutId = R.layout.fragment_main
     private lateinit var viewModel: MainViewModel
     private lateinit var nfcDeviceAntenna: NfcDeviceAntennaLocation
     private var unsuccessReadCount = 0
@@ -76,12 +83,31 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
 
         // set phone name
         if (nfcDeviceAntenna.fullName != "")
-            tvNFCHint.text = String.format(getString(R.string.main_screen_scan_banknote), nfcDeviceAntenna.fullName)
+            tvNFCHint.text = String.format(getString(R.string.main_screen_scan_card), nfcDeviceAntenna.fullName)
         else
-            tvNFCHint.text = String.format(getString(R.string.main_screen_scan_banknote), getString(R.string.main_screen_phone))
+            tvNFCHint.text = String.format(getString(R.string.main_screen_scan_card), getString(R.string.main_screen_phone))
 
         // set listeners
         fab.setOnClickListener { showMenu(it) }
+
+        setCardStoreLink()
+    }
+
+    private fun setCardStoreLink() {
+        val text = getString(R.string.main_screen_visit_store, getString(R.string.main_screen_store_address))
+        val spannable = SpannableString(text)
+        spannable.setSpan(
+                ForegroundColorSpan(requireContext().colorFrom(R.color.colorAccent)),
+                text.indexOf(getString(R.string.main_screen_store_address)),
+                text.length,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+        tvBuyCards?.setText(spannable, TextView.BufferType.SPANNABLE)
+        llShoppingView?.setOnClickListener {
+            val uri = Uri.parse ("https://www.tangemcards.com")
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            startActivity(intent)
+        }
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
