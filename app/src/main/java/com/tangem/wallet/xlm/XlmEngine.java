@@ -98,7 +98,7 @@ public class XlmEngine extends CoinEngine {
     @Override
     public boolean hasBalanceInfo() {
         if (coinData == null) return false;
-        return coinData.getBalance() != null;
+        return (coinData.getBalance() != null) || (coinData.isError404()) ;
     }
 
 
