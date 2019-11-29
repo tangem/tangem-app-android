@@ -2,6 +2,7 @@ package com.tangem.data.network;
 
 import com.tangem.data.network.model.InsightBody;
 import com.tangem.data.network.model.InsightResponse;
+import com.tangem.data.network.model.InsightUtxo;
 
 import java.util.List;
 
@@ -18,7 +19,7 @@ public interface InsightApi {
     Call<InsightResponse> insightAddress(@Path("address") String address);
 
     @GET(ServerApiInsight.INSIGHT_UNSPENT_OUTPUTS)
-    Call<List<InsightResponse>> insightUnspent(@Path("address") String address);
+    Call<List<InsightUtxo>> insightUnspent(@Path("address") String address);
 
     @GET(ServerApiInsight.INSIGHT_TRANSACTION)
     Call<InsightResponse> insightTransaction(@Path("txId") String txId);
