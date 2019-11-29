@@ -89,11 +89,11 @@ public class XrpEngine extends CoinEngine {
     @Override
     public boolean hasBalanceInfo() {
         if (coinData == null) return false;
-        return coinData.hasBalanceInfo();
+        return coinData.hasBalanceInfo() || coinData.isAccountNotFound();
     }
 
     public boolean isExtractPossible() {
-        if (!hasBalanceInfo()) {
+        if (coinData == null || !coinData.hasBalanceInfo()) {
             ctx.setMessage(R.string.loaded_wallet_error_obtaining_blockchain_data);
         } else if (!isBalanceNotZero()) {
             ctx.setMessage(R.string.general_wallet_empty);
@@ -242,7 +242,7 @@ public class XrpEngine extends CoinEngine {
 
     @Override
     public Amount getBalance() {
-        if (!hasBalanceInfo()) return null;
+        if (coinData == null || !coinData.hasBalanceInfo()) return null;
         return convertToAmount(coinData.getBalanceInInternalUnits());
     }
 
