@@ -323,6 +323,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         super.onStart()
         if (!EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().register(this)
+        refresh()
     }
 
     override fun onStop() {
