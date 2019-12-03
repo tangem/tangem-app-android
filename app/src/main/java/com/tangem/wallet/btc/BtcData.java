@@ -117,6 +117,7 @@ public class BtcData extends CoinData {
         balanceConfirmed = null;
         balanceUnconfirmed = null;
         unspentTransactions = null;
+        hasUnconfirmed = false;
     }
 
     public CoinEngine.InternalAmount getBalanceInInternalUnits() {
