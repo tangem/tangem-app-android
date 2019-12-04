@@ -9,6 +9,7 @@ import com.ripple.core.coretypes.uint.UInt32;
 import com.ripple.crypto.ecdsa.ECDSASignature;
 import com.ripple.encodings.addresses.Addresses;
 import com.ripple.utils.HashUtils;
+import com.tangem.App;
 import com.tangem.data.network.ServerApiRipple;
 import com.tangem.data.network.model.RippleResponse;
 import com.tangem.tangem_card.data.TangemCard;
@@ -61,7 +62,7 @@ public class XrpEngine extends CoinEngine {
     @Override
     public boolean awaitingConfirmation() {
         if (coinData == null) return false;
-        return coinData.hasUnconfirmed();
+        return coinData.hasUnconfirmed() || App.pendingTransactionsStorage.hasTransactions(ctx.getCard());
     }
 
     @Override
