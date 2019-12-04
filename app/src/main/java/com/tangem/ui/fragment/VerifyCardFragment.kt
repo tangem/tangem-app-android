@@ -69,8 +69,6 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
         super.onViewCreated(view, savedInstanceState)
         updateViews()
 
-        srlVerifyCard.setOnRefreshListener { srlVerifyCard.isRefreshing = false }
-
         // set listeners
         fabMenu.setOnClickListener { showMenu(fabMenu) }
 
