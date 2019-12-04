@@ -293,9 +293,6 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
             }
         }
         serverApiTangem.setArtworkListener(artworkListener)
-
-        refresh()
-
         startVerify(lastTag)
     }
 
