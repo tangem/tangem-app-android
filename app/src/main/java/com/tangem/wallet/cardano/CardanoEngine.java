@@ -85,7 +85,7 @@ public class CardanoEngine extends CoinEngine {
 
     @Override
     public boolean awaitingConfirmation() {
-        return false;
+        return App.pendingTransactionsStorage.hasTransactions(ctx.getCard());
     }
 
     @Override
