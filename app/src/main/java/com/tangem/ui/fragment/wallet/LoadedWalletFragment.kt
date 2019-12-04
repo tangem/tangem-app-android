@@ -293,6 +293,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
             }
         }
         serverApiTangem.setArtworkListener(artworkListener)
+        refresh()
         startVerify(lastTag)
     }
 
@@ -320,7 +321,6 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         super.onStart()
         if (!EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().register(this)
-        refresh()
     }
 
     override fun onStop() {
