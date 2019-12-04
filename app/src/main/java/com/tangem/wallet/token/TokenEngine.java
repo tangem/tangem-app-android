@@ -6,6 +6,7 @@ import android.text.InputFilter;
 import android.util.Log;
 
 import com.google.common.base.Strings;
+import com.tangem.App;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiInfura;
 import com.tangem.data.network.model.InfuraResponse;
@@ -73,7 +74,7 @@ public class TokenEngine extends CoinEngine {
 
     @Override
     public boolean awaitingConfirmation() {
-        return false;
+        return !coinData.getUnconfirmedTXCount().equals(coinData.getConfirmedTXCount()) || App.pendingTransactionsStorage.hasTransactions(ctx.getCard());
     }
 
     @Override
