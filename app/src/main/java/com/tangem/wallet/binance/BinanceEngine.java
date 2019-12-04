@@ -6,6 +6,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.tangem.App;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.BinanceApi;
 import com.tangem.data.network.Server;
@@ -91,7 +92,7 @@ public class BinanceEngine extends CoinEngine {
 
     @Override
     public boolean awaitingConfirmation() {
-        return false;
+        return App.pendingTransactionsStorage.hasTransactions(ctx.getCard());
     }
 
     @Override
