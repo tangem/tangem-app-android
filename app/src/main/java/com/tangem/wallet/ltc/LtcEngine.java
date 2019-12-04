@@ -76,7 +76,7 @@ public class LtcEngine extends BtcEngine {
     @Override
     public boolean awaitingConfirmation() {
         if (coinData == null) return false;
-        return coinData.getBalanceUnconfirmed() != 0;
+        return coinData.getBalanceUnconfirmed() != 0 || App.pendingTransactionsStorage.hasTransactions(ctx.getCard());
     }
 
     @Override
