@@ -9,6 +9,7 @@ import com.ripple.core.coretypes.uint.UInt32;
 import com.ripple.crypto.ecdsa.ECDSASignature;
 import com.ripple.encodings.addresses.Addresses;
 import com.ripple.utils.HashUtils;
+import com.tangem.App;
 import com.tangem.data.network.ServerApiRipple;
 import com.tangem.data.network.model.RippleResponse;
 import com.tangem.tangem_card.data.TangemCard;
@@ -61,7 +62,7 @@ public class XrpEngine extends CoinEngine {
     @Override
     public boolean awaitingConfirmation() {
         if (coinData == null) return false;
-        return coinData.hasUnconfirmed();
+        return coinData.hasUnconfirmed() || App.pendingTransactionsStorage.hasTransactions(ctx.getCard());
     }
 
     @Override
@@ -89,11 +90,11 @@ public class XrpEngine extends CoinEngine {
     @Override
     public boolean hasBalanceInfo() {
         if (coinData == null) return false;
-        return coinData.hasBalanceInfo();
+        return coinData.hasBalanceInfo() || coinData.isAccountNotFound();
     }
 
     public boolean isExtractPossible() {
-        if (!hasBalanceInfo()) {
+        if (coinData == null || !coinData.hasBalanceInfo()) {
             ctx.setMessage(R.string.loaded_wallet_error_obtaining_blockchain_data);
         } else if (!isBalanceNotZero()) {
             ctx.setMessage(R.string.general_wallet_empty);
@@ -242,7 +243,7 @@ public class XrpEngine extends CoinEngine {
 
     @Override
     public Amount getBalance() {
-        if (!hasBalanceInfo()) return null;
+        if (coinData == null || !coinData.hasBalanceInfo()) return null;
         return convertToAmount(coinData.getBalanceInInternalUnits());
     }
 
