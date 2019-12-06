@@ -30,7 +30,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="@font/maax"
-            android:text="@string/now_touch_the_banknote_with_id"
+            android:text="@string/now_touch_the_card_with_id"
             android:textAlignment="center"
             android:textSize="@dimen/text_size_medium" />
 
