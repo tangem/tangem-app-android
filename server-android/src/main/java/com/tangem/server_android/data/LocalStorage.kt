@@ -158,18 +158,24 @@ class LocalStorage
 
     @SuppressLint("ResourceType")
     private fun putResourceArtworkToCatalog(resourceId: Int, forceSave: Boolean) {
-        context.resources.openRawResource(R.drawable.card_default).use { putArtworkToCatalog(context.resources.getResourceEntryName(resourceId), true, it.readBytes(), null, forceSave) }
+        context.resources.openRawResource(resourceId).use {
+            putArtworkToCatalog(context.resources.getResourceEntryName(resourceId), true, it.readBytes(), null, forceSave)
+        }
     }
 
     private fun putArtworkToCatalog(artworkId: String, isResource: Boolean, data: ByteArray, updateDate: Date?, forceSave: Boolean = true) {
-        val artworkInfo = ArtworkInfo(
-                isResource, Util.bytesToHex(Util.calculateSHA256(data)), updateDate
-        )
+        val artworkInfo = ArtworkInfo(isResource, calculateImageHash(data), updateDate)
         artworks[artworkId.toLowerCase()] = artworkInfo
         if (forceSave) {
             val sArtworks = Gson().toJson(artworks)
             artworksFile.bufferedWriter().use { it.write(sArtworks) }
         }
+    }
+
+    private fun calculateImageHash(data: ByteArray): String {
+        val encodedData = Util.bytesToHex(data).toUpperCase(Locale.US).toByteArray()
+        val hash = Util.calculateSHA256(encodedData)
+        return Util.bytesToHex(hash).toUpperCase(Locale.US)
     }
 
     private fun getArtworkBitmap(artworkId: String): Bitmap? {

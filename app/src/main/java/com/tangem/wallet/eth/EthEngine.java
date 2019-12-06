@@ -4,6 +4,7 @@ import android.net.Uri;
 import android.text.InputFilter;
 import android.util.Log;
 
+import com.tangem.App;
 import com.tangem.Constant;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiInfura;
@@ -65,7 +66,7 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public boolean awaitingConfirmation() {
-        return false;
+        return !coinData.getUnconfirmedTXCount().equals(coinData.getConfirmedTXCount()) || App.pendingTransactionsStorage.hasTransactions(ctx.getCard());
     }
 
     @Override
