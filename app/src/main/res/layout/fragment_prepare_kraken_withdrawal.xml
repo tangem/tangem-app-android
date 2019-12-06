@@ -227,7 +227,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/maax"
-                android:text="@string/general_on_banknote"
+                android:text="@string/general_on_card"
                 android:textColor="@color/primary"
                 android:textSize="@dimen/text_size_medium"
                 app:layout_constraintBottom_toBottomOf="parent"
