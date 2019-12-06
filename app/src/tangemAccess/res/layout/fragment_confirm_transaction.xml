@@ -42,7 +42,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/maax"
-            android:text="@string/general_from_banknote"
+            android:text="@string/general_from_card"
             android:textColor="@color/primary"
             android:textSize="@dimen/text_size_medium" />
 
@@ -168,7 +168,9 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintWidth_min="150dp"
-                tools:text="1.34343434343443434343434" />
+                android:enabled="false"
+                android:textColor="@color/black"
+                tools:text="1.34343434343443434343434"/>
 
             <TextView
                 android:id="@+id/tvCurrency"
