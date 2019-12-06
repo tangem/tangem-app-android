@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
+import com.tangem.App;
 import com.tangem.Constant;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiEos;
@@ -86,7 +87,7 @@ public class EosEngine extends CoinEngine {
 
     @Override
     public boolean awaitingConfirmation() {
-        return false;
+        return App.pendingTransactionsStorage.hasTransactions(ctx.getCard());
     }
 
     @Override
@@ -317,7 +318,7 @@ public class EosEngine extends CoinEngine {
     public String calculateAddress(byte[] pkCompressed) {
         String cid = Util.bytesToHex(ctx.getCard().getCID()).toLowerCase();
         String address = cid.substring(0, 4) + cid.substring(8, 16);
-        address = address.replace("0", "o").replace("6", "b").replace("7,", "t").replace("8", "s").replace("9", "g");
+        address = address.replace("0", "o").replace("6", "b").replace("7", "t").replace("8", "s").replace("9", "g");
         return address;
 
 //        String cid = Util.bytesToHex(ctx.getCard().getCID());

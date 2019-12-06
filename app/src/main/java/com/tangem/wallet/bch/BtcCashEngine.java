@@ -4,6 +4,7 @@ import android.net.Uri;
 import android.text.InputFilter;
 import android.util.Log;
 
+import com.tangem.App;
 import com.tangem.data.network.ElectrumRequest;
 import com.tangem.data.network.ServerApiElectrum;
 import com.tangem.tangem_card.data.TangemCard;
@@ -71,7 +72,7 @@ public class BtcCashEngine extends CoinEngine {
     @Override
     public boolean awaitingConfirmation() {
         if (coinData == null) return false;
-        return coinData.getBalanceUnconfirmed() != 0;
+        return coinData.getBalanceUnconfirmed() != 0 || App.pendingTransactionsStorage.hasTransactions(ctx.getCard());
     }
 
     @Override
