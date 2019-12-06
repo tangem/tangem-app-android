@@ -69,8 +69,6 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
         super.onViewCreated(view, savedInstanceState)
         updateViews()
 
-        srlVerifyCard.setOnRefreshListener { srlVerifyCard.isRefreshing = false }
-
         // set listeners
         fabMenu.setOnClickListener { showMenu(fabMenu) }
 
@@ -283,7 +281,7 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
             if (ctx.card!!.isReusable!!)
                 tvReusable.setText(R.string.details_reusable)
             else
-                tvReusable.setText(R.string.details_one_off_banknote)
+                tvReusable.setText(R.string.details_one_off_card)
 
             var s = ""
             for (signingM in ctx.card!!.allowedSigningMethod) {
@@ -397,7 +395,7 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
             if (ctx.card!!.useDevelopersFirmware()!!) {
                 imgDeveloperVersion.setImageResource(R.drawable.ic_developer_version)
                 imgDeveloperVersion.visibility = View.VISIBLE
-                imgDeveloperVersion.setOnClickListener { Toast.makeText(context, R.string.details_unlocked_banknote, Toast.LENGTH_LONG).show() }
+                imgDeveloperVersion.setOnClickListener { Toast.makeText(context, R.string.details_unlocked_card, Toast.LENGTH_LONG).show() }
             } else
                 imgDeveloperVersion.visibility = View.INVISIBLE
 
