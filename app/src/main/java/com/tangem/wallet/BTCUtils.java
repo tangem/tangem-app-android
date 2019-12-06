@@ -13,6 +13,10 @@ import com.tangem.wallet.btc.BitcoinException;
 import com.tangem.wallet.btc.BitcoinOutputStream;
 import com.tangem.wallet.btc.BtcData;
 
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.SegwitAddress;
+import org.bitcoinj.script.ScriptBuilder;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -103,7 +107,15 @@ public final class BTCUtils {
         //8 bytes
 
         forSign.writeInt64(amount); //amount
-        byte[] sendScript = Transaction.Script.buildOutput(outputAddress).bytes; // build out
+
+        byte[] sendScript;
+        if (outputAddress.startsWith("bc1") || outputAddress.startsWith("tb1")) {
+            Address address = SegwitAddress.fromBech32(null, outputAddress);
+            sendScript = ScriptBuilder.createOutputScript(address).getProgram();
+        } else {
+            sendScript = Transaction.Script.buildOutput(outputAddress).bytes; // build out
+        }
+
         //hex str 1976a914....88ac
         forSign.write((byte) sendScript.length);
         forSign.write(sendScript);
