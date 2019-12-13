@@ -105,7 +105,7 @@ public class CardanoData extends CoinData {
     }
 
     public CoinEngine.InternalAmount getBalanceInInternalUnits() {
-        return new CoinEngine.InternalAmount(BigDecimal.valueOf(balance),"Lovelace");
+        return balance == null ? null : new CoinEngine.InternalAmount(BigDecimal.valueOf(balance),"Lovelace");
     }
 
     public void setBalance(Long balance) {
