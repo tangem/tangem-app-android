@@ -88,7 +88,12 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
             tvNFCHint.text = String.format(getString(R.string.main_screen_scan_card), getString(R.string.main_screen_phone))
 
         // set listeners
-        fab.setOnClickListener { showMenu(it) }
+//        ivMenu.setOnClickListener { showMenu(it) }
+
+        val toolbar = tb_main
+        (activity as? AppCompatActivity)?.setSupportActionBar(toolbar)
+        (activity as? AppCompatActivity)?.supportActionBar?.setDisplayShowTitleEnabled(false)
+
 
         setCardStoreLink()
     }
