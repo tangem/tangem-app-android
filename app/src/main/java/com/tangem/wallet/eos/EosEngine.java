@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
+import com.tangem.App;
 import com.tangem.Constant;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiEos;
@@ -86,7 +87,7 @@ public class EosEngine extends CoinEngine {
 
     @Override
     public boolean awaitingConfirmation() {
-        return false;
+        return App.pendingTransactionsStorage.hasTransactions(ctx.getCard());
     }
 
     @Override
