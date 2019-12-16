@@ -93,7 +93,7 @@ public class BtcEngine extends CoinEngine {
     @Override
     public boolean awaitingConfirmation() {
         if (coinData == null) return false;
-        return coinData.getBalanceUnconfirmed() != 0 || coinData.isHasUnconfirmed();
+        return coinData.getBalanceUnconfirmed() != 0 || coinData.isHasUnconfirmed() || App.pendingTransactionsStorage.hasTransactions(ctx.getCard());
     }
 
     @Override
