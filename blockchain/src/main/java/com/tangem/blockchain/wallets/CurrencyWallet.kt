@@ -6,10 +6,10 @@ import java.util.*
 class CurrencyWallet(
         override val config: WalletConfig,
         override val address: String,
-        override val exploreUrl: String?,
-        override val shareUrl: String?,
-        val pendingTransactions: List<Transaction> = listOf(),
-        val balances: List<Amount> = listOf(),
+        override val exploreUrl: String? = null,
+        override val shareUrl: String? = null,
+        val pendingTransactions: List<TransactionData> = listOf(),
+        val balances: MutableList<Amount> = mutableListOf(),
         val isTestnet: Boolean = false
 ) : Wallet, TransactionValidator {
 
