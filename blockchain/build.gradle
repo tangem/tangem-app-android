@@ -26,7 +26,7 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+//    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':tangem-core')
     implementation project(':tangem-sdk')
 
@@ -34,12 +34,13 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.core:core-ktx:1.1.0'
 
-    implementation 'com.squareup.retrofit2:retrofit:2.6.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.6.2'
     implementation 'com.squareup.retrofit2:converter-moshi:2.6.0'
     implementation 'com.squareup.moshi:moshi:1.9.2'
 
     implementation 'org.bitcoinj:bitcoinj-core:0.15.2'
-
+    implementation 'com.github.komputing:kethereum:0.79.5'
+    implementation 'com.github.stellar:java-stellar-sdk:0.11.0'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
