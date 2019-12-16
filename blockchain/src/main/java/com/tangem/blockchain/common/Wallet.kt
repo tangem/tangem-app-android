@@ -18,12 +18,14 @@ class WalletConfig(
 )
 
 data class Amount(
-        val type: AmountType = AmountType.Coin,
         val currencySymbol: String,
-        val value: BigDecimal
-)
+        val value: BigDecimal?,
+        val address: String,
+        val decimals: Int,
+        val type: AmountType = AmountType.Coin
+        )
 
-data class Transaction(
+data class TransactionData(
         val amount: Amount,
         val fee: Amount?,
         val sourceAddress: String,
@@ -34,6 +36,6 @@ enum class AmountType { Coin, Token, Reserve }
 
 enum class ValidationError { WrongAmount, WrongFee, WrongTotal }
 
-interface TransactionValidator{
+interface TransactionValidator {
     fun validateTransaction(amount: Amount, fee: Amount?): EnumSet<ValidationError>
 }
