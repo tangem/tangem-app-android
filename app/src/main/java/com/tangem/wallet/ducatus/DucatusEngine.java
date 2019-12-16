@@ -4,6 +4,7 @@ import android.net.Uri;
 import android.text.InputFilter;
 import android.util.Log;
 
+import com.tangem.App;
 import com.tangem.data.network.ServerApiInsight;
 import com.tangem.data.network.model.InsightResponse;
 import com.tangem.data.network.model.InsightUtxo;
@@ -67,7 +68,7 @@ public class DucatusEngine extends BtcEngine {
     @Override
     public boolean awaitingConfirmation() {
         if (coinData == null) return false;
-        return coinData.getBalanceUnconfirmed() != 0;
+        return coinData.getBalanceUnconfirmed() != 0 || App.pendingTransactionsStorage.hasTransactions(ctx.getCard());
     }
 
     @Override
