@@ -5,6 +5,7 @@ import android.os.StrictMode;
 import android.text.InputFilter;
 import android.util.Log;
 
+import com.tangem.App;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiStellar;
 import com.tangem.data.network.StellarRequest;
@@ -70,9 +71,7 @@ public class XlmAssetEngine extends CoinEngine {
 
     @Override
     public boolean awaitingConfirmation() {
-        if (coinData == null) return false;
-        //TODO
-        return false;//coinData.getBalanceUnconfirmed() != 0;
+        return App.pendingTransactionsStorage.hasTransactions(ctx.getCard());
     }
 
     @Override
