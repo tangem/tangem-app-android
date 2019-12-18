@@ -25,6 +25,7 @@ import com.tangem.wallet.Transaction;
 import com.tangem.wallet.UnspentOutputInfo;
 import com.tangem.wallet.btc.BtcData;
 import com.tangem.wallet.btc.BtcEngine;
+import com.tangem.wallet.btc.Unspents;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
@@ -377,7 +378,15 @@ public class DucatusEngine extends BtcEngine {
 
     @Override
     public String getUnspentInputsDescription() {
-        return coinData.getUnspentInputsDescription();
+        Unspents unspents = coinData.getUnspentInputsDescription();
+        if (unspents == null) {
+            return "";
+        } else {
+            return String.format(
+                    ctx.getContext().getString(R.string.details_unspents_number),
+                    unspents.getUnspetns(),
+                    unspents.getGatheredUnspents());
+        }
     }
 
     @Override
