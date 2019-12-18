@@ -9,9 +9,9 @@
     <string name="general_continue">Continuer</string>
     <string name="error_empty_pin">Le code PIN est vide</string>
     <string name="general_blockchain">Blockchain</string>
-    <string name="general_notification_scan_again">Réessayez de numériser</string>
+    <string name="general_notification_scan_again">Réessayez de scanner la carte</string>
     <string name="general_error_cannot_erase_wallet_with_non_zero_balance">Impossible d\'effacer le porte-monnaie avec un solde différent de zéro</string>
-    <string name="general_send_transaction">Envoyer le paiement</string>
+    <string name="general_send_transaction">Transférer les fonds</string>
     <string name="general_from_card">Depuis la carte</string>
     <string name="general_on_card">sur la carte</string>
     <string name="general_balance">avec solde</string>
@@ -49,9 +49,9 @@
     <string name="dialog_the_nfc_adapter_length_apdu">Oups .. Il semble que votre smartphone ne supporte pas de tels paquets NFC.</string>
     <string name="dialog_the_nfc_adapter_length_apdu_advice">Essayez d\'envoyer une quantité inférieure ou utilisez un smartphone avec prise en charge complète de NFC.</string>
     <string name="dialog_title_money_is_at_risk">Votre argent est en jeu!</string>
-    <string name="dialog_this_card_has_enforced_security_delay">Cette carte a imposé un délai de sécurité</string>
-    <string name="dialog_hold_card">Veuillez tenir la carte fermement \ n jusqu\'à ce que l\'opération soit terminée…</string>
-    <string name="dialog_you_may_be_required_to_repeat">Vous devrez peut-être répéter cette opération plusieurs fois en fonction des performances NFC de votre smartphone. \ n Ceci est fait pour sécuriser vos fonds.</string>
+    <string name="dialog_this_card_has_enforced_security_delay">Cette carte impose un délai de sécurité pour confirmer le transfert des fonds</string>
+    <string name="dialog_hold_card">Veuillez maintenir la carte dans cette position jusqu\'à ce que l\'opération soit terminée…</string>
+    <string name="dialog_you_may_be_required_to_repeat">Vous devrez peut-être répéter cette opération plusieurs fois en fonction des performances NFC de votre smartphone.\nCeci est fait pour sécuriser vos fonds.</string>
 
     <!-- menu main -->
     <string name="main_menu_manage_pin_1">Gérer le code PIN de l\'utilisateur…</string>
@@ -74,12 +74,14 @@
 
     <!-- Main -->
     <string name="main_screen_tap_card">Mettez en contact la carte avec votre smartphone</string>
-    <string name="main_screen_scan_card">Scanner une carte avec votre \n %1$s \n comme indiqué ci-dessus</string>
+    <string name="main_screen_scan_card">Scanner votre carte avec votre %1$s comme indiqué ci-dessus</string>
     <string name="main_screen_phone">phone</string>
     <string name="main_screen_erased_wallet">Le porte-monnaie a été effacé</string>
     <string name="main_screen_not_personalized">Non personnalisé</string>
     <string name="main_screen_new_version_toast">Il existe une nouvelle version de l\'application: %1$s</string>
     <string name="main_screen_btn_update">Mettre à jour</string>
+    <string name="main_screen_visit_store">Vous n’avez pas de carte?\nVisitez notre boutique sur %1$s</string>
+
 
     <!-- LoadedWallet -->
     <string name="loaded_wallet_no_compatible_wallet">Aucun porte-monnaie compatible installé</string>
@@ -146,10 +148,10 @@
     <string name="balance_validator_second_line_authenticity_not_verified">L\'authenticité ne peut pas être vérifiée. Balayez vers le bas pour actualiser.</string>
         
     <!-- CreateNewWallet, Purge, SignTransaction -->
-    <string name="now_touch_the_card_with_id"> Maintenant, touchez la carte avec l\'ID </string>
+    <string name="now_touch_the_card_with_id">Maintenir la carte avec l\’ID</string>
     <string name="to_create_the_wallet">pour créer le porte-monnaie </string>
     <string name="to_erase_the_wallet">pour effacer le porte-monnaie</string>
-    <string name="to_sign_the_transaction">pour signer le paiement</string>
+    <string name="to_sign_the_transaction">pour confirmer le transfert des fonds</string>
     <string name="to_change_pin_codes">pour changer les codes PIN / PIN2</string>
     <string name="nfc_purge_warning">En mettant la carte en contact avec votre smartphone, vous retirerez définitivement le porte-monnaie de la blockchain. Assurez-vous qu\'il n\'y aura pas d\'autres transactions entrantes</string>
     <string name="nfc_error_cannot_erase_wallet">Impossible d\'effacer le porte-monnaie. Veillez à entrer le code PIN2 correct!</string>
@@ -178,7 +180,7 @@
     <!-- PrepareTransaction -->
     <string name="prepare_transaction_hint_enter_address">entrez l\'adresse du porte-monnaie</string>
     <string name="prepare_transaction_hint_enter_amount">entrer le montant</string>
-    <string name="prepare_transaction_btn_verify">Vérifiez</string>
+    <string name="prepare_transaction_btn_verify">Vérifier</string>
     <string name="prepare_transaction_error_not_enough_funds">Pas assez de fonds</string>
     <string name="prepare_transaction_error_unknown_amount_format">Format de montant inconnu</string>
     <string name="prepare_transaction_error_incorrect_destination">Adresse du porte-monnaie de destination incorrecte</string>
@@ -223,12 +225,12 @@
     <string name="details_category_manufacturer">Fabricant</string>
     <string name="details_category_wallet">Porte-monnaie</string>
     <string name="details_card_identity">Identité de la carte</string>
-    <string name="details_attested">Attested</string>
+    <string name="details_attested">Attestée</string>
     <string name="details_not_confirmed">Non confirmé</string>
     <string name="details_reusable">Réutilisable</string>
     <string name="details_none">None</string>
     <string name="details_last_one">Le dernier!</string>
-    <string name="details_unlimited">Unlimited</string>
+    <string name="details_unlimited">illimitées</string>
     <string name="details_one_off_card">Carte ponctuelle</string>
     <string name="details_firmware">Micrologiciel</string>
     <string name="details_registration_date">Date d\'enregistrement</string>
@@ -238,7 +240,7 @@
     <string name="details_category_issuer">Émetteur</string>
     <string name="details_private_key">Clé privée</string>
     <string name="details_validation_node">Noeud de validation</string>
-    <string name="details_unspents">Unspents</string>
+    <string name="details_unspents">Transferts</string>
     <string name="details_protected_by_default_pin_1">Cette carte est protégée par le code PIN1 par défaut</string>
     <string name="details_protected_by_user_pin_1">Cette carte est protégée par le code PIN1 de l’utilisateur</string>
     <string name="details_protected_by_default_pin_2">Cette carte est protégée par le code PIN2 par défaut</string>
@@ -255,8 +257,9 @@
     <string name="details_blockable">Bloquable\n</string>
     <string name="details_atomic_commmands">Mode de commande atomique\n</string>
     <string name="details_linking_card_supported">La liaison au terminal est prise en charge\n</string>
-    <string name="details_linked_card_title">La carte est liée</string>
+    <string name="details_linked_card_title">La carte est associée</string>
     <string name="details_linked_card_to_phone">à ce téléphone</string>
+    <string name="details_unspents_number">%1$d envoyé(s), %2$d reçu(s)</string>
 
     <!-- PinSave -->
     <string name="pin_save_btn_save">Enregistrer</string>
