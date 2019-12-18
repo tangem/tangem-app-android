@@ -24,6 +24,7 @@ import com.tangem.wallet.TangemContext;
 import com.tangem.wallet.Transaction;
 import com.tangem.wallet.UnspentOutputInfo;
 import com.tangem.wallet.btc.BtcData;
+import com.tangem.wallet.btc.Unspents;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -424,7 +425,15 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public String getUnspentInputsDescription() {
-        return coinData.getUnspentInputsDescription();
+        Unspents unspents = coinData.getUnspentInputsDescription();
+        if (unspents == null) {
+            return "";
+        } else {
+            return String.format(
+                    ctx.getContext().getString(R.string.details_unspents_number),
+                    unspents.getUnspetns(),
+                    unspents.getGatheredUnspents());
+        }
     }
 
     @Override
