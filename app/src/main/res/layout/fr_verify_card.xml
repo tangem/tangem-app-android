@@ -198,7 +198,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
                         android:fontFamily="@font/maax"
-                        android:text="The card is linked"
+                        android:text="@string/details_linked_card_title"
                         android:textSize="@dimen/text_size_1_small" />
 
                     <TextView
