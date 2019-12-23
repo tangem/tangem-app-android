@@ -11,6 +11,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/blockchain" />
             <option value="$PROJECT_DIR$/server-android" />
             <option value="$PROJECT_DIR$/tangem-card-old" />
             <option value="$PROJECT_DIR$/tangem-core" />
