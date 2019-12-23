@@ -21,7 +21,7 @@ data class Amount(
         val currencySymbol: String,
         val value: BigDecimal?,
         val address: String,
-        val decimals: Int,
+        val decimals: Byte,
         val type: AmountType = AmountType.Coin
         )
 
