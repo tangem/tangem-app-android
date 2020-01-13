@@ -7,10 +7,13 @@ import android.net.Uri
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
+import android.nfc.tech.Ndef
+import android.nfc.tech.NfcV
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
+import android.util.Log
 import android.view.*
 import android.widget.PopupMenu
 import android.widget.TextView
@@ -20,9 +23,13 @@ import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModelProviders
 import com.tangem.App
 import com.tangem.Constant
+import com.tangem.data.Blockchain
 import com.tangem.data.Logger
 import com.tangem.tangem_card.data.TangemCard
 import com.tangem.tangem_card.reader.CardProtocol
+import com.tangem.tangem_card.reader.TLV
+import com.tangem.tangem_card.reader.TLVException
+import com.tangem.tangem_card.reader.TLVList
 import com.tangem.tangem_card.tasks.CustomReadCardTask
 import com.tangem.tangem_card.tasks.ReadCardInfoTask
 import com.tangem.tangem_sdk.android.data.PINStorage
@@ -45,10 +52,16 @@ import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.CoinEngineFactory
 import com.tangem.wallet.R
 import com.tangem.wallet.TangemContext
+import com.tangem.wallet.xlmtag.XlmTagEngine
 import kotlinx.android.synthetic.main.fragment_main.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
+import kotlin.coroutines.CoroutineContext
 
 class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.ReaderCallback,
         CardProtocol.Notifications, androidx.appcompat.widget.PopupMenu.OnMenuItemClickListener,
@@ -67,6 +80,11 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
     private var lastTag: Tag? = null
     private var zipFile: File? = null
     private var unknownBlockchain = false
+
+    private val parentJob = Job()
+    private val coroutineContext: CoroutineContext
+        get() = parentJob + Dispatchers.IO
+    private val scope = CoroutineScope(coroutineContext)
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         setHasOptionsMenu(true)
@@ -152,6 +170,8 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
             return
         }
 
+        parseNfcvTag(tag)
+
         try {
             // get IsoDep handle and run cardReader thread
             val isoDep = IsoDep.get(tag)
@@ -172,6 +192,77 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
         } catch (e: Exception) {
             e.printStackTrace()
             (activity as MainActivity).nfcManager.notifyReadResult(false)
+        }
+    }
+
+    private fun parseNfcvTag(tag: Tag) {
+        if (NfcV.get(tag) != null) {
+            if (Ndef.get(tag) != null) {
+                try {
+                    onNdefDiscovered(Ndef.get(tag), tag.id)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    (activity as MainActivity).nfcManager.notifyReadResult(false)
+                }
+                return
+            } else {
+                (activity as MainActivity).nfcManager.notifyReadResult(false)
+                return
+            }
+        }
+    }
+
+    private fun onNdefDiscovered(ndef: Ndef, uid: ByteArray) {
+        scope.launch {
+
+
+            try {
+                ndef.connect()
+                val records = ndef.ndefMessage.records
+                for (record in records) {
+                    if (record.toUri() != null) {
+                        when (record.toUri().toString()) {
+                            "vnd.android.nfc://ext/tangem.com:wallet" -> {
+                                //mConsole.write(Util.bytesToHex(record.getPayload()), MessageAdapter.MSG_OKAY, "", null, false);
+                                val payload = record.payload
+                                Log.v(TAG, "tangem.com:wallet[${payload.size} bytes]:")
+                                try {
+                                    val tlvNDEF: TLVList = TLVList.fromBytes(Arrays.copyOfRange(payload, 2, payload.size))
+                                    val cardDataTlv = TLVList.fromBytes((tlvNDEF.getTLV(TLV.Tag.TAG_CardData)).Value)
+                                    Log.v(TAG, "\n" + tlvNDEF.getParsedTLVs(""))
+                                    val card = TangemCard(uid.toString())
+                                    card.batch = cardDataTlv.getTLV(TLV.Tag.TAG_Batch).asHexString
+                                    card.setIssuer(cardDataTlv.getTLV(TLV.Tag.TAG_Issuer_ID).Value.toString(), null)
+                                    card.blockchainID =  Blockchain.StellarTag.id
+                                    card.walletPublicKey = tlvNDEF.getTLV(TLV.Tag.TAG_Wallet_PublicKey).Value
+                                    card.status = TangemCard.Status.Loaded
+                                    card.tagSignature = tlvNDEF.getTLV(TLV.Tag.TAG_Signature).Value
+
+                                    val ctx = TangemContext(card)
+                                    val engineCoin = XlmTagEngine(ctx)
+                                    engineCoin.defineWallet()
+                                    launch(Dispatchers.Main) {
+
+                                        val bundle = Bundle()
+                                        bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
+                                        ctx.saveToBundle(bundle)
+                                        navigateForResult(Constant.REQUEST_CODE_SHOW_CARD_ACTIVITY,
+                                                R.id.action_main_to_tagFragment, bundle)
+                                    }
+                                } catch (e: TLVException) {
+                                    e.printStackTrace()
+                                    Log.v(TAG, e.message)
+                                }
+                            }
+                            else -> Log.v(TAG, record.toUri().toString())
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                (activity as MainActivity).nfcManager.notifyReadResult(false)
+            }
+
         }
     }
 
