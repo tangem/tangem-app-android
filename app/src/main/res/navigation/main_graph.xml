@@ -28,6 +28,9 @@
         <action
             android:id="@+id/action_main_to_settingsFragment"
             app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_main_to_tagFragment"
+            app:destination="@id/tagFragment" />
     </fragment>
 
     <fragment
@@ -188,5 +191,10 @@
         android:id="@+id/prepareKrakenWithdrawalFragment"
         android:name="com.tangem.ui.fragment.additional.PrepareKrakenWithdrawalFragment"
         android:label="PrepareKrakenWithdrawalFragment" />
+    <fragment
+        android:id="@+id/tagFragment"
+        android:name="com.tangem.ui.fragment.additional.TagFragment"
+        android:label="fragment_tag"
+        tools:layout="@layout/fragment_tag" />
 
 </navigation>
