@@ -1,23 +1,24 @@
 package com.tangem.wallet
 
 import android.util.Log
-
-import com.tangem.wallet.btc.BtcEngine
-import com.tangem.wallet.eth.EthEngine
-import com.tangem.wallet.token.TokenEngine
-import com.tangem.wallet.bch.BtcCashEngine
 import com.tangem.data.Blockchain
-import com.tangem.wallet.eos.EosEngine
+import com.tangem.wallet.bch.BtcCashEngine
 import com.tangem.wallet.binance.BinanceEngine
+import com.tangem.wallet.btc.BtcEngine
 import com.tangem.wallet.cardano.CardanoData
 import com.tangem.wallet.cardano.CardanoEngine
+import com.tangem.wallet.ducatus.DucatusEngine
+import com.tangem.wallet.eos.EosEngine
+import com.tangem.wallet.eth.EthEngine
 import com.tangem.wallet.ltc.LtcEngine
 import com.tangem.wallet.matic.MaticTokenEngine
 import com.tangem.wallet.nftToken.NftTokenEngine
 import com.tangem.wallet.rsk.RskEngine
 import com.tangem.wallet.rsk.RskTokenEngine
+import com.tangem.wallet.token.TokenEngine
 import com.tangem.wallet.xlm.XlmAssetEngine
 import com.tangem.wallet.xlm.XlmEngine
+import com.tangem.wallet.xlmtag.XlmTagEngine
 import com.tangem.wallet.xrp.XrpEngine
 
 /**
@@ -48,7 +49,9 @@ object CoinEngineFactory {
             Blockchain.Matic, Blockchain.MaticTestNet -> MaticTokenEngine()
             Blockchain.StellarTestNet, Blockchain.Stellar -> XlmEngine()
             Blockchain.StellarAsset -> XlmAssetEngine()
+            Blockchain.StellarTag -> XlmTagEngine()
             Blockchain.Eos -> EosEngine()
+            Blockchain.Ducatus -> DucatusEngine()
             else -> null
         }
     }
@@ -84,8 +87,12 @@ object CoinEngineFactory {
                 XlmEngine(context)
             else if (Blockchain.StellarAsset == context.blockchain)
                 XlmAssetEngine(context)
+            else if (Blockchain.StellarTag == context.blockchain)
+                XlmTagEngine(context)
             else if (Blockchain.Eos == context.blockchain)
                 EosEngine(context)
+            else if (Blockchain.Ducatus == context.blockchain)
+                DucatusEngine(context)
             else
                 return null
         } catch (e: Exception) {
