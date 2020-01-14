@@ -437,7 +437,15 @@ public class BtcEngine extends CoinEngine {
 
     @Override
     public String getUnspentInputsDescription() {
-        return coinData.getUnspentInputsDescription();
+        Unspents unspents = coinData.getUnspentInputsDescription();
+        if (unspents == null) {
+            return "";
+        } else {
+            return String.format(
+                    ctx.getContext().getString(R.string.details_unspents_number),
+                    unspents.getUnspetns(),
+                    unspents.getGatheredUnspents());
+        }
     }
 
     @Override
