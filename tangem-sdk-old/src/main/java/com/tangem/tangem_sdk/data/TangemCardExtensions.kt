@@ -85,6 +85,8 @@ fun TangemCard.loadFromBundle(B: Bundle) {
     if (B.containsKey("terminalPublicKey")) terminalPublicKey = B.getByteArray("terminalPublicKey")
     terminalIsLinked = B.getBoolean("terminalIsLinked")
 
+    if (B.containsKey("tagSignature")) tagSignature = B.getByteArray("tagSignature")
+
 }
 
 val TangemCard.asBundle: Bundle
@@ -112,11 +114,10 @@ fun TangemCard.saveToBundle(B: Bundle) {
         B.putInt("Health", health)
         if (settingsMask != null) B.putInt("settingsMask", settingsMask)
         B.putInt("pauseBeforePIN2", pauseBeforePIN2)
-        if( allowedSigningMethod!=null ){
-            var iSigningMethod=0x80
-            for(sM in allowedSigningMethod)
-            {
-                iSigningMethod=iSigningMethod.or(0x01.shl(sM.ID))
+        if (allowedSigningMethod != null) {
+            var iSigningMethod = 0x80
+            for (sM in allowedSigningMethod) {
+                iSigningMethod = iSigningMethod.or(0x01.shl(sM.ID))
             }
             B.putInt("signingMethod", iSigningMethod)
         }
@@ -162,6 +163,8 @@ fun TangemCard.saveToBundle(B: Bundle) {
         if (terminalPublicKey != null)
             B.putByteArray("terminalPublicKey", terminalPublicKey)
         B.putBoolean("terminalIsLinked", terminalIsLinked)
+
+        if (tagSignature != null) B.putByteArray("tagSignature", tagSignature)
 
     } catch (e: Exception) {
         Log.e("Can't save to bundle ", e.message)
