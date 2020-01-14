@@ -33,7 +33,7 @@ import io.reactivex.schedulers.Schedulers;
 public class ServerApiStellar {
 
     public ServerApiStellar(Blockchain blockchain) {
-        if (blockchain == Blockchain.Stellar || blockchain == Blockchain.StellarAsset) {
+        if (blockchain == Blockchain.Stellar || blockchain == Blockchain.StellarAsset || blockchain == Blockchain.StellarTag) {
             currentURL = ServerURL.API_STELLAR;
         } else {
             currentURL = ServerURL.API_STELLAR_TESTNET;
@@ -173,10 +173,11 @@ public class ServerApiStellar {
         stellarRequest.setError(null);
         try {
             Server server;
-            if (ctx.getBlockchain() == Blockchain.Stellar || ctx.getBlockchain() == Blockchain.StellarAsset) {
+            Blockchain blockchain = ctx.getBlockchain();
+            if (blockchain == Blockchain.Stellar || blockchain == Blockchain.StellarAsset || blockchain == Blockchain.StellarTag) {
                 Network.usePublicNetwork();
                 server = new Server(currentURL);
-            } else if (ctx.getBlockchain() == Blockchain.StellarTestNet) {
+            } else if (blockchain == Blockchain.StellarTestNet) {
                 Network.useTestNetwork();
                 server = new Server(currentURL);
             } else {
