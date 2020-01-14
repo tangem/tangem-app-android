@@ -264,6 +264,12 @@
     <string name="details_linked_card_to_phone">To this phone</string>
     <string name="details_unspents_number">%1$d unspents (%2$d received)</string>
 
+    <!-- TagFragment -->
+    <string name="tag_claim">Claim</string>
+    <string name="tag_genuine">GENUINE</string>
+    <string name="tag_not_genuine">NOT GENUINE</string>
+    <string name="tag_claimed">ALREADY CLAIMED</string>
+
     <!-- PinSave -->
     <string name="pin_save_btn_save">Save</string>
     <string name="pin_save_btn_delete">Delete</string>
