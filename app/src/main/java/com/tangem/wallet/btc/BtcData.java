@@ -22,18 +22,19 @@ public class BtcData extends CoinData {
     //for blockchain.info
     private boolean hasUnconfirmed = false;
 
-    public String getUnspentInputsDescription() {
+    public Unspents getUnspentInputsDescription() {
         try {
             int gatheredUnspents = 0;
-            if (unspentTransactions == null) return "";
+            if (unspentTransactions == null) return null;
             for (int i = 0; i < unspentTransactions.size(); i++) {
                 if (unspentTransactions.get(i).script != null && unspentTransactions.get(i).script.length() > 1)
                     gatheredUnspents++;
             }
-            return unspentTransactions.size() + " unspents (" + gatheredUnspents + " received)";
+
+            return new Unspents(unspentTransactions.size(), gatheredUnspents);
         } catch (Exception e) {
             e.printStackTrace();
-            return "";
+            return null;
         }
     }
 
