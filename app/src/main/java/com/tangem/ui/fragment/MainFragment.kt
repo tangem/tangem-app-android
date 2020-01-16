@@ -127,7 +127,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
 
         tvBuyCards?.setText(spannable, TextView.BufferType.SPANNABLE)
         llShoppingView?.setOnClickListener {
-            val uri = Uri.parse ("https://www.tangemcards.com")
+            val uri = Uri.parse("https://www.tangemcards.com")
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
         }
@@ -233,7 +233,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                                     val card = TangemCard(uid.toString())
                                     card.batch = cardDataTlv.getTLV(TLV.Tag.TAG_Batch).asHexString
                                     card.setIssuer(cardDataTlv.getTLV(TLV.Tag.TAG_Issuer_ID).Value.toString(), null)
-                                    card.blockchainID =  Blockchain.StellarTag.id
+                                    card.blockchainID = Blockchain.StellarTag.id
                                     card.walletPublicKey = tlvNDEF.getTLV(TLV.Tag.TAG_Wallet_PublicKey).Value
                                     card.status = TangemCard.Status.Loaded
                                     card.tagSignature = tlvNDEF.getTLV(TLV.Tag.TAG_Signature).Value
@@ -316,8 +316,13 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                             }
                         }
                         card.status == TangemCard.Status.Empty -> {
-                            val bundle = Bundle().apply { ctx.saveToBundle(this) }
-                            navigateToDestination(R.id.action_main_to_emptyWalletFragment, bundle)
+                            val engineCoin = CoinEngineFactory.create(ctx)
+                            if (engineCoin != null) {
+                                val bundle = Bundle().apply { ctx.saveToBundle(this) }
+                                navigateToDestination(R.id.action_main_to_emptyWalletFragment, bundle)
+                            } else {
+                                showUnkownBlockchainWarning()
+                            }
                         }
                         card.status == TangemCard.Status.Purged -> Toast.makeText(context, R.string.main_screen_erased_wallet, Toast.LENGTH_SHORT).show()
                         card.status == TangemCard.Status.NotPersonalized -> Toast.makeText(context, R.string.main_screen_not_personalized, Toast.LENGTH_SHORT).show()
