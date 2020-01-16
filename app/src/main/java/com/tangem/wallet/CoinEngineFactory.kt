@@ -16,6 +16,7 @@ import com.tangem.wallet.nftToken.NftTokenEngine
 import com.tangem.wallet.rsk.RskEngine
 import com.tangem.wallet.rsk.RskTokenEngine
 import com.tangem.wallet.token.TokenEngine
+import com.tangem.wallet.tezos.TezosEngine
 import com.tangem.wallet.xlm.XlmAssetEngine
 import com.tangem.wallet.xlm.XlmEngine
 import com.tangem.wallet.xlmtag.XlmTagEngine
@@ -52,6 +53,7 @@ object CoinEngineFactory {
             Blockchain.StellarTag -> XlmTagEngine()
             Blockchain.Eos -> EosEngine()
             Blockchain.Ducatus -> DucatusEngine()
+            Blockchain.Tezos -> TezosEngine()
             else -> null
         }
     }
@@ -93,6 +95,8 @@ object CoinEngineFactory {
                 EosEngine(context)
             else if (Blockchain.Ducatus == context.blockchain)
                 DucatusEngine(context)
+            else if (Blockchain.Tezos == context.blockchain)
+                TezosEngine(context)
             else
                 return null
         } catch (e: Exception) {
