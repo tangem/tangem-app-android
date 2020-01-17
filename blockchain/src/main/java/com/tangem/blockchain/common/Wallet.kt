@@ -19,8 +19,8 @@ class WalletConfig(
 
 data class Amount(
         val currencySymbol: String,
-        val value: BigDecimal?,
-        val address: String,
+        var value: BigDecimal? = null,
+        val address: String? = null,
         val decimals: Byte,
         val type: AmountType = AmountType.Coin
         )
@@ -29,10 +29,13 @@ data class TransactionData(
         val amount: Amount,
         val fee: Amount?,
         val sourceAddress: String,
-        val destinationAddress: String
+        val destinationAddress: String,
+        var status: TransactionStatus = TransactionStatus.Uncomfirmed
 )
 
 enum class AmountType { Coin, Token, Reserve }
+
+enum class TransactionStatus {Confirmed, Uncomfirmed}
 
 enum class ValidationError { WrongAmount, WrongFee, WrongTotal }
 
