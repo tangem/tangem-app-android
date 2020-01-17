@@ -38,4 +38,8 @@ data class NfcReader(
         isoDep.timeout = timeout
     }
 
+    override fun isConnected(): Boolean {
+        return isoDep.isConnected
+    }
+
 }
