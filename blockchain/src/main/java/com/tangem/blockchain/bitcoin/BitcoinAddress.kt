@@ -1,6 +1,7 @@
 package com.tangem.blockchain.bitcoin
 
-import com.tangem.blockchain.extensions.calculateRipemd160
+
+import com.tangem.common.extensions.calculateRipemd160
 import com.tangem.common.extensions.calculateSha256
 import org.bitcoinj.core.AddressFormatException
 import org.bitcoinj.core.Base58
