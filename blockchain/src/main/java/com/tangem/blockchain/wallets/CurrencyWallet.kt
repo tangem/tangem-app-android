@@ -8,8 +8,8 @@ class CurrencyWallet(
         override val address: String,
         override val exploreUrl: String? = null,
         override val shareUrl: String? = null,
-        val pendingTransactions: List<TransactionData> = listOf(),
-        val balances: MutableList<Amount> = mutableListOf(),
+        val pendingTransactions: MutableList<TransactionData> = mutableListOf(),
+        val balances: MutableMap<AmountType, Amount> = mutableMapOf(),
         val isTestnet: Boolean = false
 ) : Wallet, TransactionValidator {
 
