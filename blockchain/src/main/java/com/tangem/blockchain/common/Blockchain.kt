@@ -5,7 +5,6 @@ import com.tangem.blockchain.bitcoin.BitcoinAddressValidator
 import com.tangem.blockchain.eth.EthereumAddressFactory
 import com.tangem.blockchain.eth.EthereumAddressValidator
 import com.tangem.blockchain.stellar.StellarAddressFactory
-import com.tangem.blockchain.stellar.StellarAddressValidator
 import java.math.BigDecimal
 
 enum class Blockchain(
@@ -13,10 +12,11 @@ enum class Blockchain(
         val currency: String,
         val decimals: Byte,
         val fullName: String,
-        val pendingTransactionTimeout: Int) {
+        val pendingTransactionTimeout: Int
+) {
     Unknown("", "", 0, "", 0),
-    Bitcoin("", "", 8, "", 0),
-    BitcoinTestnet("", "", 8, "", 0),
+    Bitcoin("btc", "", 8, "", 0),
+    BitcoinTestnet("btc", "", 8, "", 0),
     Ethereum("", "", 18, "", 0),
     Rootstock("", "", 18, "", 0),
     Cardano("", "", 6, "", 0),
@@ -36,11 +36,12 @@ enum class Blockchain(
             Bitcoin -> BitcoinAddressFactory.makeAddress(cardPublicKey)
             BitcoinTestnet -> BitcoinAddressFactory.makeAddress(cardPublicKey, testNet = true)
             Ethereum -> EthereumAddressFactory.makeAddress(cardPublicKey)
-            Rootstock -> RootstockAddressFactory.makeAddress(cardPublicKey)
-            Cardano -> CardanoAddressFactory.makeAddress(cardPublicKey)
-            Ripple -> RippleAddressFactory.makeAddress(cardPublicKey)
-            Binance -> BinanceAddressFactory.makeAddress(cardPublicKey)
+//            Rootstock -> RootstockAddressFactory.makeAddress(cardPublicKey)
+//            Cardano -> CardanoAddressFactory.makeAddress(cardPublicKey)
+//            Ripple -> RippleAddressFactory.makeAddress(cardPublicKey)
+//            Binance -> BinanceAddressFactory.makeAddress(cardPublicKey)
             Stellar -> StellarAddressFactory.makeAddress(cardPublicKey)
+            else -> throw Exception("unsupported blockchain")
         }
     }
 
@@ -50,11 +51,12 @@ enum class Blockchain(
             Bitcoin -> BitcoinAddressValidator.validate(address)
             BitcoinTestnet -> BitcoinAddressValidator.validate(address, testNet = true)
             Ethereum -> EthereumAddressValidator.validate(address)
-            Rootstock -> RootstockAddressValidator.validate(address)
-            Cardano -> CardanoAddressValidator.validate(address)
-            Ripple -> RippleAddressValidator.validate(address)
-            Binance -> BinanceAddressValidator.validate(address)
-            Stellar -> StellarAddressValidator.validate(address)
+//            Rootstock -> RootstockAddressValidator.validate(address)
+//            Cardano -> CardanoAddressValidator.validate(address)
+//            Ripple -> RippleAddressValidator.validate(address)
+//            Binance -> BinanceAddressValidator.validate(address)
+//            Stellar -> StellarAddressValidator.validate(address)
+            else -> throw Exception("unsupported blockchain")
         }
     }
 
