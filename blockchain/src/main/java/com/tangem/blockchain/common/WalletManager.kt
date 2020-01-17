@@ -1,5 +1,7 @@
 package com.tangem.blockchain.common
 
+import com.tangem.blockchain.common.extensions.Result
+import com.tangem.blockchain.common.extensions.SimpleResult
 import com.tangem.commands.SignResponse
 import com.tangem.tasks.TaskEvent
 
@@ -7,22 +9,21 @@ interface WalletManager {
     var wallet: Wallet
     val blockchain: Blockchain
 
-    fun update()
+    suspend fun update()
 }
 
 interface TransactionEstimator {
-    fun getEstimateSize(transactionData: TransactionData): Int
+    suspend fun getEstimateSize(transactionData: TransactionData): Int
 }
 
 interface TransactionSender {
-    fun send(transactionData: TransactionData, signer: TransactionSigner)
+    suspend fun send(transactionData: TransactionData, signer: TransactionSigner) : SimpleResult
 }
 
 interface TransactionSigner {
-    fun sign(hashes: Array<ByteArray>, cardId: String,
-             callback: (result: TaskEvent<SignResponse>) -> Unit)
+    suspend fun sign(hashes: Array<ByteArray>, cardId: String): TaskEvent<SignResponse>
 }
 
 interface FeeProvider {
-    fun getFee(amount: Amount, source: String, destination: String): List<Amount>
+    suspend fun getFee(amount: Amount, source: String, destination: String): Result<List<Amount>>
 }
