@@ -47,7 +47,7 @@ class LocalStorage
             artworks = HashMap()
         }
 
-        if (artworks.count() < 29) {
+        if (artworks.count() < 31) {
 //          forceSave=true only on the last one
             putResourceArtworkToCatalog(R.drawable.card_default, false)
             putResourceArtworkToCatalog(R.drawable.card_default_nft, false)
@@ -70,6 +70,7 @@ class LocalStorage
             putResourceArtworkToCatalog(R.drawable.card_ru031, false)
             putResourceArtworkToCatalog(R.drawable.card_ru032, false)
             putResourceArtworkToCatalog(R.drawable.card_ru037, false)
+            putResourceArtworkToCatalog(R.drawable.card_ru038, false)
             putResourceArtworkToCatalog(R.drawable.card_ru039, false)
             putResourceArtworkToCatalog(R.drawable.card_ru040, false)
             putResourceArtworkToCatalog(R.drawable.card_ru041, false)
@@ -77,6 +78,7 @@ class LocalStorage
             putResourceArtworkToCatalog(R.drawable.card_ru043, false)
             putResourceArtworkToCatalog(R.drawable.card_tg044, false)
             putResourceArtworkToCatalog(R.drawable.card_tg046, false)
+            putResourceArtworkToCatalog(R.drawable.card_bc00, false)
             putResourceArtworkToCatalog(R.drawable.card_ff32, true)
         }
         if (batchesFile.exists()) {
@@ -236,6 +238,9 @@ class LocalStorage
             //LTC and DGX
             hexCID in "CB25000000000000".."CB25000000099999" -> R.drawable.card_ru043
             hexCID in "CB26000000000000".."CB26000000099999" -> R.drawable.card_tg044
+
+            //Sergio's business card
+            hexCID in "BC00000000000000".."BC99999999999999" -> R.drawable.card_bc00
 
             card.batch == "0004" -> R.drawable.card_ru006
             card.batch == "0006" -> R.drawable.card_ru006
