@@ -69,4 +69,20 @@ public class TLVList extends ArrayList<TLV> {
         while (tlv != null);
         return tlvList;
     }
+
+    public static TLVList tryFromBytes(byte[] mData) {
+        TLVList tlvList = new TLVList();
+        ByteArrayInputStream stream = new ByteArrayInputStream(mData);
+        TLV tlv = null;
+        do {
+            try {
+                tlv = TLV.ReadFromStream(stream);
+                if (tlv != null) tlvList.add(tlv);
+            } catch (IOException e) {
+                break;
+            }
+        }
+        while (tlv != null);
+        return tlvList;
+    }
 }
