@@ -35,6 +35,9 @@ import com.tangem.tangem_card.tasks.ReadCardInfoTask
 import com.tangem.tangem_sdk.android.data.PINStorage
 import com.tangem.tangem_sdk.android.nfc.NfcDeviceAntennaLocation
 import com.tangem.tangem_sdk.android.reader.NfcReader
+import com.tangem.tangem_sdk.android.reader.NfcVReader
+import com.tangem.tangem_sdk.android.reader.ReadResult
+import com.tangem.tangem_sdk.android.reader.ReadSlixTagTask
 import com.tangem.tangem_sdk.data.EXTRA_TANGEM_CARD
 import com.tangem.tangem_sdk.data.EXTRA_TANGEM_CARD_UID
 import com.tangem.tangem_sdk.data.loadFromBundle
@@ -127,7 +130,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
 
         tvBuyCards?.setText(spannable, TextView.BufferType.SPANNABLE)
         llShoppingView?.setOnClickListener {
-            val uri = Uri.parse ("https://www.tangemcards.com")
+            val uri = Uri.parse("https://www.tangemcards.com")
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
         }
@@ -170,7 +173,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
             return
         }
 
-        parseNfcvTag(tag)
+        NfcV.get(tag)?.let { onNfcVDiscovered(it, tag.id) }
 
         try {
             // get IsoDep handle and run cardReader thread
@@ -195,74 +198,41 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
         }
     }
 
-    private fun parseNfcvTag(tag: Tag) {
-        if (NfcV.get(tag) != null) {
-            if (Ndef.get(tag) != null) {
-                try {
-                    onNdefDiscovered(Ndef.get(tag), tag.id)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    (activity as MainActivity).nfcManager.notifyReadResult(false)
-                }
-                return
-            } else {
-                (activity as MainActivity).nfcManager.notifyReadResult(false)
-                return
-            }
-        }
-    }
 
-    private fun onNdefDiscovered(ndef: Ndef, uid: ByteArray) {
+    private fun onNfcVDiscovered(nfcV: NfcV, uid: ByteArray) {
         scope.launch {
+            when (val readResult = ReadSlixTagTask(NfcVReader(nfcV)).read()) {
+                is ReadResult.Failure -> (activity as MainActivity).nfcManager.notifyReadResult(false)
+                is ReadResult.Success -> {
+                    try {
+                        val tlvs = readResult.tlvs
+                        val cardDataTlv = TLVList.fromBytes((tlvs.getTLV(TLV.Tag.TAG_CardData)).Value)
+                        Log.v(TAG, "\n" + tlvs.getParsedTLVs(""))
+                        val card = TangemCard(uid.toString())
+                        card.batch = cardDataTlv.getTLV(TLV.Tag.TAG_Batch).asHexString
+                        card.setIssuer(cardDataTlv.getTLV(TLV.Tag.TAG_Issuer_ID).Value.toString(), null)
+                        card.blockchainID = Blockchain.StellarTag.id
+                        card.walletPublicKey = tlvs.getTLV(TLV.Tag.TAG_Wallet_PublicKey).Value
+                        card.status = TangemCard.Status.Loaded
+                        card.tagSignature = tlvs.getTLV(TLV.Tag.TAG_Signature).Value
 
+                        val ctx = TangemContext(card)
+                        val engineCoin = XlmTagEngine(ctx)
+                        engineCoin.defineWallet()
+                        launch(Dispatchers.Main) {
 
-            try {
-                ndef.connect()
-                val records = ndef.ndefMessage.records
-                for (record in records) {
-                    if (record.toUri() != null) {
-                        when (record.toUri().toString()) {
-                            "vnd.android.nfc://ext/tangem.com:wallet" -> {
-                                //mConsole.write(Util.bytesToHex(record.getPayload()), MessageAdapter.MSG_OKAY, "", null, false);
-                                val payload = record.payload
-                                Log.v(TAG, "tangem.com:wallet[${payload.size} bytes]:")
-                                try {
-                                    val tlvNDEF: TLVList = TLVList.fromBytes(Arrays.copyOfRange(payload, 2, payload.size))
-                                    val cardDataTlv = TLVList.fromBytes((tlvNDEF.getTLV(TLV.Tag.TAG_CardData)).Value)
-                                    Log.v(TAG, "\n" + tlvNDEF.getParsedTLVs(""))
-                                    val card = TangemCard(uid.toString())
-                                    card.batch = cardDataTlv.getTLV(TLV.Tag.TAG_Batch).asHexString
-                                    card.setIssuer(cardDataTlv.getTLV(TLV.Tag.TAG_Issuer_ID).Value.toString(), null)
-                                    card.blockchainID =  Blockchain.StellarTag.id
-                                    card.walletPublicKey = tlvNDEF.getTLV(TLV.Tag.TAG_Wallet_PublicKey).Value
-                                    card.status = TangemCard.Status.Loaded
-                                    card.tagSignature = tlvNDEF.getTLV(TLV.Tag.TAG_Signature).Value
-
-                                    val ctx = TangemContext(card)
-                                    val engineCoin = XlmTagEngine(ctx)
-                                    engineCoin.defineWallet()
-                                    launch(Dispatchers.Main) {
-
-                                        val bundle = Bundle()
-                                        bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
-                                        ctx.saveToBundle(bundle)
-                                        navigateForResult(Constant.REQUEST_CODE_SHOW_CARD_ACTIVITY,
-                                                R.id.action_main_to_tagFragment, bundle)
-                                    }
-                                } catch (e: TLVException) {
-                                    e.printStackTrace()
-                                    Log.v(TAG, e.message)
-                                }
-                            }
-                            else -> Log.v(TAG, record.toUri().toString())
+                            val bundle = Bundle()
+                            bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
+                            ctx.saveToBundle(bundle)
+                            navigateForResult(Constant.REQUEST_CODE_SHOW_CARD_ACTIVITY,
+                                    R.id.action_main_to_tagFragment, bundle)
                         }
+                    } catch (e: TLVException) {
+                        e.printStackTrace()
+                        Log.v(TAG, e.message)
                     }
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                (activity as MainActivity).nfcManager.notifyReadResult(false)
             }
-
         }
     }
 
@@ -316,8 +286,13 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                             }
                         }
                         card.status == TangemCard.Status.Empty -> {
-                            val bundle = Bundle().apply { ctx.saveToBundle(this) }
-                            navigateToDestination(R.id.action_main_to_emptyWalletFragment, bundle)
+                            val engineCoin = CoinEngineFactory.create(ctx)
+                            if (engineCoin != null) {
+                                val bundle = Bundle().apply { ctx.saveToBundle(this) }
+                                navigateToDestination(R.id.action_main_to_emptyWalletFragment, bundle)
+                            } else {
+                                showUnkownBlockchainWarning()
+                            }
                         }
                         card.status == TangemCard.Status.Purged -> Toast.makeText(context, R.string.main_screen_erased_wallet, Toast.LENGTH_SHORT).show()
                         card.status == TangemCard.Status.NotPersonalized -> Toast.makeText(context, R.string.main_screen_not_personalized, Toast.LENGTH_SHORT).show()
