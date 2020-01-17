@@ -1,7 +1,7 @@
 package com.tangem.blockchain.bitcoin
 
 import com.tangem.blockchain.common.TransactionData
-import com.tangem.blockchain.extensions.toCanonicalised
+import com.tangem.blockchain.common.extensions.toCanonicalised
 import org.bitcoinj.core.*
 import org.bitcoinj.crypto.TransactionSignature
 import org.bitcoinj.script.Script
@@ -17,7 +17,7 @@ class BitcoinTransactionBuilder(private val testNet: Boolean) {
 
     fun calculateChange(transactionData: TransactionData) : Long {
         val fullAmount = unspentOutputs.map { it.amount }.sum()
-        return fullAmount - (transactionData.amount.value!!.toLong() + (transactionData.fee?.value!!.toLong()))
+        return fullAmount - (transactionData.amount.value!!.toLong() + (transactionData.fee?.value?.toLong() ?: 0))
     }
 
     fun buildToSign(
