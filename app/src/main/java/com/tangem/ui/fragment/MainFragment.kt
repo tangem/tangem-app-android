@@ -286,8 +286,13 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                             }
                         }
                         card.status == TangemCard.Status.Empty -> {
-                            val bundle = Bundle().apply { ctx.saveToBundle(this) }
-                            navigateToDestination(R.id.action_main_to_emptyWalletFragment, bundle)
+                            val engineCoin = CoinEngineFactory.create(ctx)
+                            if (engineCoin != null) {
+                                val bundle = Bundle().apply { ctx.saveToBundle(this) }
+                                navigateToDestination(R.id.action_main_to_emptyWalletFragment, bundle)
+                            } else {
+                                showUnkownBlockchainWarning()
+                            }
                         }
                         card.status == TangemCard.Status.Purged -> Toast.makeText(context, R.string.main_screen_erased_wallet, Toast.LENGTH_SHORT).show()
                         card.status == TangemCard.Status.NotPersonalized -> Toast.makeText(context, R.string.main_screen_not_personalized, Toast.LENGTH_SHORT).show()
