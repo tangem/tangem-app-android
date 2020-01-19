@@ -1,9 +1,14 @@
 package com.tangem.tangem_card.data;
 
 import com.tangem.tangem_card.reader.CardProtocol;
+import com.tangem.tangem_card.reader.ProductMask;
 import com.tangem.tangem_card.reader.SettingsMask;
+import com.tangem.tangem_card.reader.TLV;
+import com.tangem.tangem_card.reader.TLVList;
 import com.tangem.tangem_card.util.Util;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
 
@@ -286,6 +291,28 @@ public class TangemCard {
 
     public String getIssuerDataDescription() {
         return "";
+    }
+
+    private byte[] issuerDataEx;
+    private byte[] issuerDataExSignature;
+    private int issuerDataExCounter;
+
+    public byte[] getIssuerDataEx() {
+        return issuerDataEx;
+    }
+
+    public byte[] getIssuerDataExSignature() {
+        return issuerDataExSignature;
+    }
+
+    public int getIssuerDataExCounter() {
+        return issuerDataExCounter;
+    }
+
+    public void setIssuerDataEx(byte[] value, byte[] signature, int counter) {
+        issuerDataEx = value;
+        issuerDataExSignature = signature;
+        issuerDataExCounter = counter;
     }
 
     private int pauseBeforePIN2 = 0;
@@ -579,6 +606,79 @@ public class TangemCard {
         this.UID = UID;
     }
 
+    public int productMask = ProductMask.Note;
+
+    public void setProductMask(int productMask) {
+        this.productMask = productMask;
+    }
+
+    public boolean isIDCard() {
+        try {
+            return (productMask & ProductMask.IdCard) != 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    TLVList tlvIDCardData = null;
+
+    public boolean hasIDCardData() {
+        if (tlvIDCardData == null) {
+            if (issuerDataEx == null) return false;
+            try {
+                tlvIDCardData = TLVList.fromBytes(issuerDataEx);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        return tlvIDCardData.hasTag(TLV.Tag.TAG_FullName) && tlvIDCardData.hasTag(TLV.Tag.TAG_Birthday) && tlvIDCardData.hasTag(TLV.Tag.TAG_Gender) && tlvIDCardData.hasTag(TLV.Tag.TAG_Photo)
+                && tlvIDCardData.hasTag(TLV.Tag.TAG_IssueDate) && tlvIDCardData.hasTag(TLV.Tag.TAG_ExpireDate) && tlvIDCardData.hasTag(TLV.Tag.TAG_TrustedAddress);
+    }
+
+    public static class IDCardData
+    {
+        public String fullName;
+        public String birthday;
+        public String gender;
+        public byte[] photo;
+        public String issueDate;
+        public String expireDate;
+        public String trustedAddress;
+
+        public TLVList toTLVList() {
+            TLVList tlvIDCardData=new TLVList();
+            tlvIDCardData.add(new TLV(TLV.Tag.TAG_FullName,fullName.getBytes(StandardCharsets.UTF_8)));
+            tlvIDCardData.add(new TLV(TLV.Tag.TAG_Birthday,birthday.getBytes(StandardCharsets.UTF_8)));
+            tlvIDCardData.add(new TLV(TLV.Tag.TAG_Gender, gender.getBytes(StandardCharsets.UTF_8)));
+            tlvIDCardData.add(new TLV(TLV.Tag.TAG_Photo, photo));
+            tlvIDCardData.add(new TLV(TLV.Tag.TAG_IssueDate,issueDate.getBytes(StandardCharsets.UTF_8)));
+            tlvIDCardData.add(new TLV(TLV.Tag.TAG_ExpireDate,expireDate.getBytes(StandardCharsets.UTF_8)));
+            tlvIDCardData.add(new TLV(TLV.Tag.TAG_TrustedAddress,trustedAddress.getBytes(StandardCharsets.UTF_8)));
+            return tlvIDCardData;
+        }
+
+        public static IDCardData fromTLVList(TLVList tlvIDCardData)
+        {
+            IDCardData result=new IDCardData();
+            result.fullName=tlvIDCardData.getTLV(TLV.Tag.TAG_FullName).getAsString();
+            result.birthday=tlvIDCardData.getTLV(TLV.Tag.TAG_Birthday).getAsString();
+            result.gender=tlvIDCardData.getTLV(TLV.Tag.TAG_Gender).getAsString();
+            result.photo=tlvIDCardData.getTLV(TLV.Tag.TAG_Photo).Value;
+            result.issueDate=tlvIDCardData.getTLV(TLV.Tag.TAG_IssueDate).getAsString();
+            result.expireDate=tlvIDCardData.getTLV(TLV.Tag.TAG_ExpireDate).getAsString();
+            result.trustedAddress=tlvIDCardData.getTLV(TLV.Tag.TAG_TrustedAddress).getAsString();
+            return result;
+        }
+    }
+
+    public IDCardData getIDCardData()
+    {
+        if( !hasIDCardData() ) return null;
+        return IDCardData.fromTLVList(tlvIDCardData);
+    }
 
     private byte[] offlineBalance;
 
@@ -637,164 +737,6 @@ public class TangemCard {
     public void setTagSignature(byte[] tagSignature) {
         this.tagSignature = tagSignature;
     }
-
-//    public Bundle getAsBundle() {
-//        Bundle B = new Bundle();
-//        saveToBundle(B);
-//        return B;
-//    }
-//
-//    public void saveToBundle(Bundle B) {
-//        try {
-//            B.putString("UID", UID);
-//            B.putByteArray("CID", CID);
-//            B.putString("PIN", PIN);
-//            B.putString("PIN2", PIN2.name());
-//            B.putString("Status", status.name());
-//            B.putString("Blockchain", blockchainID);
-//            B.putString("BlockchainName", blockchainName);
-//            B.putInt("TokensDecimal", tokensDecimal);
-//            B.putString("TokenSymbol", tokenSymbol);
-//            B.putString("ContractAddress", contractAddress);
-//            if (dtPersonalization != null) B.putLong("dtPersonalization", dtPersonalization.getTime());
-//            B.putInt("RemainingSignatures", remainingSignatures);
-//            B.putInt("MaxSignatures", maxSignatures);
-//            B.putInt("Health", health);
-//            if (settingsMask != null) B.putInt("settingsMask", settingsMask);
-//            B.putInt("pauseBeforePIN2", pauseBeforePIN2);
-//            if (signingMethod != null) B.putString("signingMethod", signingMethod.name());
-//            if (manufacturer != null) B.putString("Manufacturer", manufacturer.name());
-//            if (encryptionMode != null) B.putString("EncryptionMode", encryptionMode.name());
-//            if (issuer != null) B.putString("Issuer", issuer.getID());
-//            if (issuerPublicDataKey != null) B.putByteArray("IssuerPublicDataKey", issuerPublicDataKey);
-//            if (firmwareVersion != null) B.putString("FirmwareVersion", firmwareVersion);
-//            if (batch != null) B.putString("Batch", batch);
-//            B.putBoolean("ManufacturerConfirmed", manufacturerConfirmed);
-//            B.putBoolean("CardPublicKeyValid", isCardPublicKeyValid());
-//            B.putByteArray("CardPublicKey", getCardPublicKey());
-//
-//            B.putInt("SignedHashes", getSignedHashes());
-//            B.putBoolean("WalletPublicKeyValid", isWalletPublicKeyValid());
-//            if (pbWalletKey != null)
-//                B.putByteArray("PublicKey", pbWalletKey);
-//            if (pbWalletKeyRar != null)
-//                B.putByteArray("PublicKeyRar", pbWalletKeyRar);
-//
-//            if (getOfflineBalance() != null) B.putByteArray("OfflineBalance", getOfflineBalance());
-//
-//            if (getDenomination() != null) B.putByteArray("Denomination", getDenomination());
-//            if (getDenominationText() != null) B.putString("DenominationText", getDenominationText());
-//
-//            if (getIssuerData() != null && getIssuerDataSignature() != null) {
-//                B.putByteArray("IssuerData", getIssuerData());
-//                B.putByteArray("IssuerDataSignature", getIssuerDataSignature());
-//                B.putBoolean("NeedWriteIssuerData", getNeedWriteIssuerData());
-//            }
-//
-//            if (codeConfirmed != null)
-//                B.putBoolean("codeConfirmed", codeConfirmed);
-//
-//            if (codeConfirmed != null)
-//                B.putBoolean("codeConfirmed", codeConfirmed);
-//
-//            if (onlineVerified != null)
-//                B.putBoolean("onlineVerified", onlineVerified);
-//
-//            if (onlineValidated != null)
-//                B.putBoolean("onlineValidated", onlineValidated);
-//
-//            if (codeConfirmed != null)
-//                B.putBoolean("codeConfirmed", codeConfirmed);
-//
-//            if (codeConfirmed != null)
-//                B.putBoolean("codeConfirmed", codeConfirmed);
-//
-//            if (onlineVerified != null)
-//                B.putBoolean("onlineVerified", onlineVerified);
-//
-//            if (onlineValidated != null)
-//                B.putBoolean("onlineValidated", onlineValidated);
-//        } catch (Exception e) {
-//            Log.e("Can't save to bundle ", e.getMessage());
-//        }
-//
-//    }
-//
-//    public void loadFromBundle(Bundle B) {
-//        UID = B.getString("UID");
-//        CID = B.getByteArray("CID");
-//        PIN = B.getString("PIN");
-//        PIN2 = PIN2_Mode.valueOf(B.getString("PIN2"));
-//        status = Status.valueOf(B.getString("Status"));
-//        blockchainID = B.getString("Blockchain");
-//        tokensDecimal = B.getInt("TokensDecimal", 18);
-//        tokenSymbol = B.getString("TokenSymbol", "");
-//        contractAddress = B.getString("ContractAddress", "");
-//        if (B.containsKey("BlockchainName"))
-//            blockchainName = B.getString("BlockchainName", "");
-//        if (B.containsKey("dtPersonalization")) {
-//            dtPersonalization = new Date(B.getLong("dtPersonalization"));
-//        }
-//        remainingSignatures = B.getInt("RemainingSignatures");
-//        maxSignatures = B.getInt("MaxSignatures");
-//        health = B.getInt("health");
-//        if (B.containsKey("settingsMask")) settingsMask = B.getInt("settingsMask");
-//        pauseBeforePIN2 = B.getInt("pauseBeforePIN2");
-//        if (B.containsKey("signingMethod"))
-//            signingMethod = SigningMethod.valueOf(B.getString("signingMethod"));
-//        if (B.containsKey("Manufacturer"))
-//            manufacturer = Manufacturer.valueOf(B.getString("Manufacturer"));
-//        manufacturerConfirmed = B.getBoolean("ManufacturerConfirmed");
-//        if (B.containsKey("EncryptionMode"))
-//            encryptionMode = EncryptionMode.valueOf(B.getString("EncryptionMode"));
-//        else
-//            encryptionMode = null;
-//
-//        if (B.containsKey("SignedHashes")) setSignedHashes(B.getInt("SignedHashes"));
-//
-//        if (B.containsKey("Issuer")) issuer = Issuer.FindIssuer(B.getString("Issuer"));
-//        if (B.containsKey("IssuerPublicDataKey"))
-//            issuerPublicDataKey = B.getByteArray("IssuerPublicDataKey");
-//
-//        if (B.containsKey("FirmwareVersion")) firmwareVersion = B.getString("FirmwareVersion");
-//        if (B.containsKey("Batch")) batch = B.getString("Batch");
-//
-//        cardPublicKeyValid = B.getBoolean("CardPublicKeyValid");
-//        if (B.containsKey("CardPublicKey")) setCardPublicKey(B.getByteArray("CardPublicKey"));
-//
-//        if (B.containsKey("OfflineBalance")) setOfflineBalance(B.getByteArray("OfflineBalance"));
-//        else clearOfflineBalance();
-//
-//        if (B.containsKey("Denomination") && B.containsKey("DenominationText")) {
-//            setDenomination(B.getByteArray("Denomination"), B.getString("DenominationText"));
-//        } else if (B.containsKey("Denomination")) {
-//            setDenomination(B.getByteArray("Denomination"), "N/A");
-//        } else clearDenomination();
-//
-//        if (B.containsKey("IssuerData") && B.containsKey("IssuerDataSignature"))
-//            setIssuerData(B.getByteArray("IssuerData"), B.getByteArray("IssuerDataSignature"));
-//        else setIssuerData(null, null);
-//
-//        if (B.containsKey("NeedWriteIssuerData"))
-//            setNeedWriteIssuerData(B.getBoolean("NeedWriteIssuerData"));
-//
-//        walletPublicKeyValid = B.getBoolean("WalletPublicKeyValid");
-//        if (B.containsKey("PublicKey")) {
-//            pbWalletKey = B.getByteArray("PublicKey");
-//        }
-//        if (B.containsKey("PublicKeyRar")) {
-//            pbWalletKeyRar = B.getByteArray("PublicKeyRar");
-//        }
-//
-//        if (B.containsKey("codeConfirmed"))
-//            codeConfirmed = B.getBoolean("codeConfirmed");
-//
-//        if (B.containsKey("onlineVerified"))
-//            onlineVerified = B.getBoolean("onlineVerified");
-//
-//        if (B.containsKey("onlineValidated"))
-//            onlineValidated = B.getBoolean("onlineValidated");
-//    }
 
     public enum EncryptionMode {
         None((byte) 0x0), Fast((byte) 0x1), Strong((byte) 0x2);
