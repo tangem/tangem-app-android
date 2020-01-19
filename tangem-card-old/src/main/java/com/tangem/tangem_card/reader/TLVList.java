@@ -85,4 +85,8 @@ public class TLVList extends ArrayList<TLV> {
         while (tlv != null);
         return tlvList;
     }
+
+    public boolean hasTag(TLV.Tag tag) {
+        return getTLV(tag)!=null;
+    }
 }
