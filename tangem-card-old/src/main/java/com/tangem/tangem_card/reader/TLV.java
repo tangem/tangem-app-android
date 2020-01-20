@@ -44,8 +44,19 @@ public class TLV {
         TAG_Session_Key_B(0x1B),
         TAG_Pause(0x1C),
 
+        TAG_PIN3(0x1D),
+        TAG_NewPIN3(0x1E),
+        TAG_CrEx_Key(0x1F),
+
         TAG_Manufacture_ID(0x20),
         TAG_Manufacturer_Signature(0x21),
+
+        TAG_Mode(0x23),
+        TAG_Offset(0x24),
+        TAG_Size(0x25),
+
+        TAG_User_Data(0x2A),
+        TAG_User_ProtectedData(0x2B),
 
         TAG_Issuer_Data_PublicKey(0x30),
         TAG_Issuer_Transaction_PublicKey(0x31),
@@ -53,6 +64,7 @@ public class TLV {
         TAG_Issuer_Data_Signature(0x33),
         TAG_Issuer_Transaction_Signature(0x34),
         TAG_Issuer_Data_Counter(0x35),
+        TAG_Acquirer_PublicKey(0x37),
 
         TAG_IsActivated(0x3A),
         TAG_ActivationSeed(0x3B),
@@ -65,11 +77,37 @@ public class TLV {
         TAG_TrOut_Hash(0x50),
         TAG_TrOut_HashSize(0x51),
         TAG_TrOut_Raw(0x52),
+        TAG_TrOut_Amount(0x53),
+
+        TAG_Terminal_PaymentFlowVersion(0x54),
+        TAG_Terminal_Certificate(0x55),
+        // hash of extra data to transaction (for SIGN_HASH_EXTERNAL)
+        TAG_TrOut_Extra_Hash(0x56),
+        TAG_Terminal_Transaction_Signature(0x57),
+        TAG_Terminal_Certificate_Id(0x5A),
+        TAG_Terminal_Certificate_Param(0x5B),
+        TAG_Terminal_Certificate_PublicKey(0x5C),
+        TAG_Terminal_Certificate_Signature(0x5D),
 
         TAG_Wallet_PublicKey(0x60),
         TAG_Signature(0x61),
         TAG_RemainingSignatures(0x62),
         TAG_SignedHashes(0x63),
+
+        TAG_CheckWalletCounter(0x64),
+
+        TAG_CrEx_Salt(0x65),
+        TAG_CrEx_Message(0x66),
+        TAG_CrEx_CryptedMessage(0x67),
+        TAG_CrEx_HMAC(0x68),
+
+        TAG_CrEx_RequirePIN3(0x69),
+        TAG_TrOut_Extra_Signature(0x6A),
+        TAG_SignCommand_ChecksPassed(0x6B),
+
+        TAG_Wallet_PrivateKey(0x70),
+        TAG_Card_PrivateKey(0x71),
+        TAG_Block_Reason(0x72),
 
         TAG_Firmware(0x80),
         TAG_Batch(0x81),
@@ -79,6 +117,10 @@ public class TLV {
         TAG_Manufacturer_PublicKey(0x85),
         TAG_CardID_Manufacturer_Signature(0x86),
 
+        TAG_ProductMask(0x8A),
+
+        TAG_PinLessFloorLimit(0x90),
+
         TAG_Token_Symbol(0xA0),
         TAG_Token_Contract_Address(0xA1),
         TAG_Token_Decimal(0xA2),
@@ -86,6 +128,14 @@ public class TLV {
         TAG_ValidatedBalance(0xC1),
         TAG_LastSign_Date(0xC2),
         TAG_DenominationText(0xC3),
+
+        TAG_FullName (0xD0),
+        TAG_Birthday (0xD1),
+        TAG_Photo (0xD2),
+        TAG_Gender(0xD3),
+        TAG_IssueDate (0xD4),
+        TAG_ExpireDate(0xD5),
+        TAG_TrustedAddress (0xD6),
 
         TAG_Terminal_IsLinked(0x58),
         TAG_Terminal_PublicKey(0x5C),
@@ -172,7 +222,7 @@ public class TLV {
     }
 
     public String getAsString() {
-        if( Value.length==0 ) return "";
+        if (Value.length == 0) return "";
 
         if (Value[Value.length - 1] == 0) {
             String s1 = new String(Arrays.copyOfRange(Value, 0, Value.length - 1), Charset.forName("utf-8"));
@@ -214,18 +264,29 @@ public class TLV {
                     return String.format("%s[]: [[NULL]]", tag.name());
                 }
             case TAG_SettingsMask: {
-                StringBuilder sb=new StringBuilder();
-                if( Value!=null ) {
+                StringBuilder sb = new StringBuilder();
+                if (Value != null) {
                     try {
                         int iValue = Util.byteArrayToInt(Value);
                         return String.format("%s[%d]: %s (%s)", tag.name(), Value.length, Util.bytesToHex(Value), SettingsMask.getDescription(iValue));
-                    }
-                    catch (Exception e)
-                    {
+                    } catch (Exception e) {
                         e.printStackTrace();
                         return String.format("%s[%d]: %s", tag.name(), Value.length, Util.bytesToHex(Value));
                     }
-                }else{
+                } else {
+                    return String.format("%s[]: [[NULL]]", tag.name());
+                }
+            }
+            case TAG_ProductMask: {
+                if (Value != null) {
+                    try {
+                        int iValue = Util.byteArrayToInt(Value);
+                        return String.format("%s[%d]: %s (%s)", tag.name(), Value.length, Util.bytesToHex(Value), ProductMask.getDescription(iValue));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return String.format("%s[%d]: %s (%s)", tag.name(), Value.length, Util.bytesToHex(Value));
+                    }
+                } else {
                     return String.format("%s[]: [[NULL]]", tag.name());
                 }
             }
