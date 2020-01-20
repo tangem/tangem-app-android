@@ -10,6 +10,7 @@ import com.tangem.wallet.cardano.CardanoEngine
 import com.tangem.wallet.ducatus.DucatusEngine
 import com.tangem.wallet.eos.EosEngine
 import com.tangem.wallet.eth.EthEngine
+import com.tangem.wallet.ethID.EthIdEngine
 import com.tangem.wallet.ltc.LtcEngine
 import com.tangem.wallet.matic.MaticTokenEngine
 import com.tangem.wallet.nftToken.NftTokenEngine
@@ -39,6 +40,7 @@ object CoinEngineFactory {
             Blockchain.Bitcoin, Blockchain.BitcoinTestNet -> BtcEngine()
             Blockchain.BitcoinCash -> BtcCashEngine()
             Blockchain.Ethereum, Blockchain.EthereumTestNet -> EthEngine()
+            Blockchain.EthereumId -> EthIdEngine()
             Blockchain.Token -> TokenEngine()
             Blockchain.NftToken -> NftTokenEngine()
             Blockchain.Litecoin -> LtcEngine()
@@ -67,6 +69,8 @@ object CoinEngineFactory {
                 BtcEngine(context)
             else if (Blockchain.Ethereum == context.blockchain || Blockchain.EthereumTestNet == context.blockchain)
                 EthEngine(context)
+            else if (Blockchain.EthereumId == context.blockchain)
+                EthIdEngine(context)
             else if (Blockchain.Token == context.blockchain)
                 TokenEngine(context)
             else if (Blockchain.NftToken == context.blockchain)
