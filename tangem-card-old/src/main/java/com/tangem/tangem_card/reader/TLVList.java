@@ -9,10 +9,11 @@ import com.tangem.tangem_card.util.Util;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class TLVList extends ArrayList<TLV> {
+public class TLVList extends ArrayList<TLV> implements Serializable {
     public String getParsedTLVs(String Prefix) {
         String parsed = "";
         for (int i = 0; i < size(); i++) {
