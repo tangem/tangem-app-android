@@ -7,6 +7,7 @@ import com.tangem.tangem_card.data.external.PINsProvider;
 import com.tangem.tangem_card.reader.CardCrypto;
 import com.tangem.tangem_card.reader.CardProtocol;
 import com.tangem.tangem_card.reader.NfcReader;
+import com.tangem.tangem_card.reader.ProductMask;
 import com.tangem.tangem_card.reader.TLV;
 import com.tangem.tangem_card.reader.TLVException;
 import com.tangem.tangem_card.reader.TLVList;
@@ -136,6 +137,12 @@ public class CustomReadCardTask extends Thread {
                 TLVList tlvCardData = TLVList.fromBytes(protocol.getReadResult().getTLV(TLV.Tag.TAG_CardData).Value);
 
                 mCard.setBatch(tlvCardData.getTLV(TLV.Tag.TAG_Batch).getAsHexString());
+
+                if( tlvCardData.hasTag(TLV.Tag.TAG_ProductMask)) {
+                    mCard.setProductMask(tlvCardData.getTagAsInt(TLV.Tag.TAG_ProductMask));
+                }else{
+                    mCard.setProductMask(ProductMask.Note);
+                }
 
                 TLV tokenSymbol = tlvCardData.getTLV(TLV.Tag.TAG_Token_Symbol);
                 TLV contractAddress = tlvCardData.getTLV(TLV.Tag.TAG_Token_Contract_Address);
