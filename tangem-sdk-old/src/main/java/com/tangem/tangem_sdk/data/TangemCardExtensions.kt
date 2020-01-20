@@ -3,6 +3,7 @@ package com.tangem.tangem_sdk.data
 import android.os.Bundle
 import com.tangem.tangem_card.data.Manufacturer
 import com.tangem.tangem_card.data.TangemCard
+import com.tangem.tangem_card.reader.TLVList
 import com.tangem.tangem_card.util.Log
 import java.util.*
 
@@ -93,6 +94,8 @@ fun TangemCard.loadFromBundle(B: Bundle) {
     terminalIsLinked = B.getBoolean("terminalIsLinked")
 
     if (B.containsKey("tagSignature")) tagSignature = B.getByteArray("tagSignature")
+    if (B.containsKey("idHash")) idHash = B.getByteArray("idHash")
+    if (B.containsKey("tlvIDCardData")) tlvIDCardData = B.getSerializable("tlvIDCardData") as TLVList
 
 }
 
@@ -180,6 +183,9 @@ fun TangemCard.saveToBundle(B: Bundle) {
         B.putBoolean("terminalIsLinked", terminalIsLinked)
 
         if (tagSignature != null) B.putByteArray("tagSignature", tagSignature)
+
+        if (idHash != null) B.putByteArray("idHash", idHash)
+        if (tlvIDCardData != null) B.putSerializable("tlvIDCardData", tlvIDCardData)
 
     } catch (e: Exception) {
         Log.e("Can't save to bundle ", e.message)
