@@ -35,6 +35,7 @@ public class TangemCard {
     private byte[] terminalPublicKey;
     private boolean terminalIsLinked = false;
     private byte[] tagSignature = null;
+    private byte[] idHash = null;
 
     public String getBlockchainID() {
         return blockchainID;
@@ -187,6 +188,14 @@ public class TangemCard {
 
     public void setTerminalIsLinked(boolean terminalIsLinked) {
         this.terminalIsLinked = terminalIsLinked;
+    }
+
+    public byte[] getIdHash() {
+        return idHash;
+    }
+
+    public void setIdHash(byte[] idHash) {
+        this.idHash = idHash;
     }
 
     private int health = 0;
@@ -621,7 +630,32 @@ public class TangemCard {
         }
     }
 
-    TLVList tlvIDCardData = null;
+    public TLVList tlvIDCardData = null;
+
+    public void setTlvIdCardData(TLVList tlvIDCardData) {
+        this.tlvIDCardData = tlvIDCardData;
+    }
+
+    public void setTlvIDCardData(
+            String fullName,
+            String birthday,
+            String gender,
+            byte[] photo,
+            String issueDate,
+            String expireDate,
+            String trustedAddress) {
+
+        IDCardData data = new IDCardData();
+        data.fullName = fullName;
+        data.birthday = birthday;
+        data.gender = gender;
+        data.photo = photo;
+        data.issueDate = issueDate;
+        data.expireDate = expireDate;
+        data.trustedAddress = trustedAddress;
+
+        this.tlvIDCardData = data.toTLVList();
+    }
 
     public boolean hasIDCardData() {
         if (tlvIDCardData == null) {
@@ -638,8 +672,7 @@ public class TangemCard {
                 && tlvIDCardData.hasTag(TLV.Tag.TAG_IssueDate) && tlvIDCardData.hasTag(TLV.Tag.TAG_ExpireDate) && tlvIDCardData.hasTag(TLV.Tag.TAG_TrustedAddress);
     }
 
-    public static class IDCardData
-    {
+    public static class IDCardData {
         public String fullName;
         public String birthday;
         public String gender;
@@ -649,34 +682,32 @@ public class TangemCard {
         public String trustedAddress;
 
         public TLVList toTLVList() {
-            TLVList tlvIDCardData=new TLVList();
-            tlvIDCardData.add(new TLV(TLV.Tag.TAG_FullName,fullName.getBytes(StandardCharsets.UTF_8)));
-            tlvIDCardData.add(new TLV(TLV.Tag.TAG_Birthday,birthday.getBytes(StandardCharsets.UTF_8)));
+            TLVList tlvIDCardData = new TLVList();
+            tlvIDCardData.add(new TLV(TLV.Tag.TAG_FullName, fullName.getBytes(StandardCharsets.UTF_8)));
+            tlvIDCardData.add(new TLV(TLV.Tag.TAG_Birthday, birthday.getBytes(StandardCharsets.UTF_8)));
             tlvIDCardData.add(new TLV(TLV.Tag.TAG_Gender, gender.getBytes(StandardCharsets.UTF_8)));
             tlvIDCardData.add(new TLV(TLV.Tag.TAG_Photo, photo));
-            tlvIDCardData.add(new TLV(TLV.Tag.TAG_IssueDate,issueDate.getBytes(StandardCharsets.UTF_8)));
-            tlvIDCardData.add(new TLV(TLV.Tag.TAG_ExpireDate,expireDate.getBytes(StandardCharsets.UTF_8)));
-            tlvIDCardData.add(new TLV(TLV.Tag.TAG_TrustedAddress,trustedAddress.getBytes(StandardCharsets.UTF_8)));
+            tlvIDCardData.add(new TLV(TLV.Tag.TAG_IssueDate, issueDate.getBytes(StandardCharsets.UTF_8)));
+            tlvIDCardData.add(new TLV(TLV.Tag.TAG_ExpireDate, expireDate.getBytes(StandardCharsets.UTF_8)));
+            tlvIDCardData.add(new TLV(TLV.Tag.TAG_TrustedAddress, trustedAddress.getBytes(StandardCharsets.UTF_8)));
             return tlvIDCardData;
         }
 
-        public static IDCardData fromTLVList(TLVList tlvIDCardData)
-        {
-            IDCardData result=new IDCardData();
-            result.fullName=tlvIDCardData.getTLV(TLV.Tag.TAG_FullName).getAsString();
-            result.birthday=tlvIDCardData.getTLV(TLV.Tag.TAG_Birthday).getAsString();
-            result.gender=tlvIDCardData.getTLV(TLV.Tag.TAG_Gender).getAsString();
-            result.photo=tlvIDCardData.getTLV(TLV.Tag.TAG_Photo).Value;
-            result.issueDate=tlvIDCardData.getTLV(TLV.Tag.TAG_IssueDate).getAsString();
-            result.expireDate=tlvIDCardData.getTLV(TLV.Tag.TAG_ExpireDate).getAsString();
-            result.trustedAddress=tlvIDCardData.getTLV(TLV.Tag.TAG_TrustedAddress).getAsString();
+        public static IDCardData fromTLVList(TLVList tlvIDCardData) {
+            IDCardData result = new IDCardData();
+            result.fullName = tlvIDCardData.getTLV(TLV.Tag.TAG_FullName).getAsString();
+            result.birthday = tlvIDCardData.getTLV(TLV.Tag.TAG_Birthday).getAsString();
+            result.gender = tlvIDCardData.getTLV(TLV.Tag.TAG_Gender).getAsString();
+            result.photo = tlvIDCardData.getTLV(TLV.Tag.TAG_Photo).Value;
+            result.issueDate = tlvIDCardData.getTLV(TLV.Tag.TAG_IssueDate).getAsString();
+            result.expireDate = tlvIDCardData.getTLV(TLV.Tag.TAG_ExpireDate).getAsString();
+            result.trustedAddress = tlvIDCardData.getTLV(TLV.Tag.TAG_TrustedAddress).getAsString();
             return result;
         }
     }
 
-    public IDCardData getIDCardData()
-    {
-        if( !hasIDCardData() ) return null;
+    public IDCardData getIDCardData() {
+        if (!hasIDCardData()) return null;
         return IDCardData.fromTLVList(tlvIDCardData);
     }
 
