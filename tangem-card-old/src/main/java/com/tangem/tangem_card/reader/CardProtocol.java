@@ -964,9 +964,11 @@ public class CardProtocol {
     }
 
     private void prepareDataForLinkingTerminal(CommandApdu apdu, byte[] data) throws Exception {
-        byte[] transactionSignature = CardCrypto.Signature(mCard.getTerminalPrivateKey(), data);
-        apdu.addTLV(TLV.Tag.TAG_Terminal_TransactionSignature, transactionSignature);
-        addTerminalPublicKeyToApdu(apdu);
+        if (mCard.getTerminalPrivateKey() != null) {
+            byte[] transactionSignature = CardCrypto.Signature(mCard.getTerminalPrivateKey(), data);
+            apdu.addTLV(TLV.Tag.TAG_Terminal_TransactionSignature, transactionSignature);
+            addTerminalPublicKeyToApdu(apdu);
+        }
     }
 
     /**
