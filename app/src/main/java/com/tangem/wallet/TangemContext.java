@@ -36,6 +36,9 @@ public class TangemContext {
                 return Blockchain.Token;
             }
         }
+        if (blockchain == Blockchain.Ethereum && card.isIDCard()) {
+            return Blockchain.EthereumId;
+        }
         if ((blockchain == Blockchain.Rootstock) && card.isToken()) {
             return Blockchain.RootstockToken;
         }
