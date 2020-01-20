@@ -61,6 +61,13 @@ fun TangemCard.loadFromBundle(B: Bundle) {
         setIssuerData(B.getByteArray("IssuerData"), B.getByteArray("IssuerDataSignature"))
     else setIssuerData(null, null)
 
+    if (B.containsKey("IssuerDataEx") && B.containsKey("IssuerDataExSignature") && B.containsKey("IssuerDataExCounter"))
+        setIssuerDataEx(B.getByteArray("IssuerDataEx"), B.getByteArray("IssuerDataExSignature"), B.getInt("IssuerDataExCounter"))
+    else setIssuerDataEx(null, null, 0)
+
+    if( B.containsKey("ProductMask") )
+        setProductMask(B.getInt("ProductMask"))
+
     if (B.containsKey("NeedWriteIssuerData"))
         needWriteIssuerData = B.getBoolean("NeedWriteIssuerData")
 
@@ -148,6 +155,14 @@ fun TangemCard.saveToBundle(B: Bundle) {
             B.putByteArray("IssuerDataSignature", issuerDataSignature)
             B.putBoolean("NeedWriteIssuerData", needWriteIssuerData)
         }
+
+        if (issuerDataEx != null && issuerDataExSignature != null) {
+            B.putByteArray("IssuerDataEx", issuerDataEx)
+            B.putByteArray("IssuerDataExSignature", issuerDataExSignature)
+            B.putInt("IssuerDataExCounter", issuerDataExCounter)
+        }
+
+        B.putInt("ProductMask",productMask)
 
         if (isCodeConfirmed != null)
             B.putBoolean("codeConfirmed", isCodeConfirmed)
