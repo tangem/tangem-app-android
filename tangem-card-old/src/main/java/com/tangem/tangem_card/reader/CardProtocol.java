@@ -1,5 +1,6 @@
 package com.tangem.tangem_card.reader;
 
+import com.tangem.tangem_card.data.Issuer;
 import com.tangem.tangem_card.data.Manufacturer;
 import com.tangem.tangem_card.data.TangemCard;
 import com.tangem.tangem_card.util.Log;
@@ -17,6 +18,7 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.ECGenParameterSpec;
+import java.util.Arrays;
 
 import javax.crypto.KeyAgreement;
 
@@ -98,6 +100,11 @@ public class CardProtocol {
     private static final int SW_PIN_ERROR = SW.INVALID_PARAMS;
 
     private NfcReader mIsoDep;
+
+    public NfcReader getReader()
+    {
+        return mIsoDep;
+    }
 
 
     public static final String DefaultPIN = "000000";
@@ -1095,6 +1102,12 @@ public class CardProtocol {
             if (issuerData == null || issuerDataSignature == null)
                 throw new TangemException("Invalid answer format (GetIssuerData)");
 
+            if( issuerData.Value.length==0 && issuerDataSignature.Value.length==0 )
+            {
+                mCard.setIssuerData(null, null);
+                return new TLVList();
+            }
+
             ByteArrayOutputStream bsDataToVerify = new ByteArrayOutputStream();
             bsDataToVerify.write(mCard.getCID());
             bsDataToVerify.write(issuerData.Value);
@@ -1116,6 +1129,185 @@ public class CardProtocol {
             throw new TangemException(String.format("Failed: %04X", rspApdu.getSW1SW2()));
         }
     }
+
+    /**
+     * Series of GET_ISSUER_DATA command to read extra data and verify issuer signature of returned extra data
+     * See [1] 3.3, 8.7
+     * This command returns Issuer_Extra_Data data block and its issuer’s signature.
+     *
+     * @return TLVList with issuerData (if success read and verify)
+     * @throws Exception - if something went wrong
+     */
+    public TLVList run_GetIssuerDataEx(Notifications notifications) throws Exception {
+        boolean needReadIssuerDataCounter = (readResult.getTagAsInt(TLV.Tag.TAG_SettingsMask) & SettingsMask.ProtectIssuerDataAgainstReplay) != 0;
+        TLV issuerDataSignature = null;
+        TLV issuerDataCounter = null;
+        TLV issuerDataSize = null;
+        ByteArrayOutputStream bsIssuerDataEx = new ByteArrayOutputStream();
+        do {
+
+            CommandApdu rqApdu = StartPrepareCommand(INS.GetIssuerData);
+            rqApdu.addTLV_U8(TLV.Tag.TAG_Mode, 0x01);
+            rqApdu.addTLV_U16(TLV.Tag.TAG_Offset, bsIssuerDataEx.size());
+
+            Log.i(logTag, String.format("[%s]\n%s", rqApdu.getCommandName(), rqApdu.getTLVs().getParsedTLVs("  ")));
+
+            ResponseApdu rspApdu = SendAndReceive(rqApdu, false);
+
+            if (rspApdu.isStatus(SW.PROCESS_COMPLETED)) {
+                Log.i(logTag, String.format("OK: [%04X]\n%s", rspApdu.getSW1SW2(), rspApdu.getTLVs().getParsedTLVs("  ")));
+                TLV issuerData = rspApdu.getTLVs().getTLV(TLV.Tag.TAG_Issuer_Data);
+                if (issuerData != null && issuerData.Value != null)
+                    bsIssuerDataEx.write(issuerData.Value);
+                issuerDataSignature = rspApdu.getTLVs().getTLV(TLV.Tag.TAG_Issuer_Data_Signature);
+                issuerDataCounter = rspApdu.getTLVs().getTLV(TLV.Tag.TAG_Issuer_Data_Counter);
+                if (issuerDataSize == null)
+                    issuerDataSize = rspApdu.getTLVs().getTLV(TLV.Tag.TAG_Size);
+            } else {
+                throw new TangemException(String.format("Failed: %04X", rspApdu.getSW1SW2()));
+            }
+            if (issuerDataSize != null && issuerDataSize.getAsInt() != 0) {
+                if (notifications != null)
+                    notifications.onReadProgress(this, (int) Math.round(bsIssuerDataEx.size() * 100.0 / issuerDataSize.getAsInt()));
+                Log.i(logTag, String.format("Read %d/%d bytes", bsIssuerDataEx.size(), issuerDataSize.getAsInt()));
+            }
+
+        } while ((issuerDataSignature == null) || (needReadIssuerDataCounter && (issuerDataCounter == null)));
+        boolean protectIssuerDataAgainstReplay = (readResult.getTagAsInt(TLV.Tag.TAG_SettingsMask) & SettingsMask.ProtectIssuerDataAgainstReplay) != 0;
+
+        if (notifications != null) notifications.onReadProgress(this, 100);
+
+        if (bsIssuerDataEx.size() > 0 && issuerDataSignature != null && issuerDataSignature.Value != null) {
+            ByteArrayOutputStream bsDataToVerify = new ByteArrayOutputStream();
+            bsDataToVerify.write(mCard.getCID());
+            bsDataToVerify.write(bsIssuerDataEx.toByteArray());
+            if (protectIssuerDataAgainstReplay) {
+                bsDataToVerify.write(issuerDataCounter.Value);
+            }
+            try {
+                if (CardCrypto.VerifySignature(mCard.getIssuerPublicDataKey(), bsDataToVerify.toByteArray(), issuerDataSignature.Value)) {
+                    mCard.setIssuerDataEx(bsIssuerDataEx.toByteArray(), issuerDataSignature.Value, issuerDataCounter.getAsInt());
+                    return TLVList.fromBytes(bsIssuerDataEx.toByteArray());
+                } else {
+                    throw new TangemException("Invalid issuer data read (signature verification failed)");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new TangemException("Invalid issuer data read");
+            }
+        } else {
+            mCard.setIssuerDataEx(null, null, issuerDataCounter.getAsInt());
+            return null;
+        }
+    }
+
+    /**
+     * Series of WRITE_ISSUER_DATA command to write extra data:
+     * 1. start write procedure
+     * 2. series of writing data blocks
+     * 3. finalize write procedure
+     * This command make signatures with provided issuer privateDataKey
+     *  - to start write procedure (sign CID|Counter|Size)
+     *  - to finalize write procedure (sign CID|dataEx|Counter)
+     * See [1] 3.3, 8.8
+     *
+     * @throws Exception - if something went wrong
+     */
+    public void run_WriteIssuerDataEx(Notifications notifications, byte[] dataEx, byte[] issuerPrivateDataKey) throws Exception {
+        boolean needCounter = readResult.getTLV(TLV.Tag.TAG_SettingsMask) != null && (readResult.getTagAsInt(TLV.Tag.TAG_SettingsMask) & SettingsMask.ProtectIssuerDataAgainstReplay) != 0;
+
+        Log.i(logTag, "WriteIssuerDataEx - Start");
+
+        int issuerDataCounter = 0;
+        ByteArrayOutputStream osDataToSign = new ByteArrayOutputStream();
+        osDataToSign.write(mCard.getCID());
+        if (needCounter) {
+            issuerDataCounter = mCard.getIssuerDataExCounter() + 1;
+            osDataToSign.write(Util.intToByteArray4(issuerDataCounter));
+        }
+        osDataToSign.write(Util.intToByteArray2(dataEx.length));
+
+        byte[] issuerDataSignature = CardCrypto.Signature(issuerPrivateDataKey, osDataToSign.toByteArray());
+
+        CommandApdu rqApdu = StartPrepareCommand(INS.WriteIssuerData);
+        rqApdu.addTLV_U8(TLV.Tag.TAG_Mode, 0x01);
+        if (needCounter) {
+            rqApdu.addTLV_U32(TLV.Tag.TAG_Issuer_Data_Counter, issuerDataCounter);
+        }
+        rqApdu.addTLV_U16(TLV.Tag.TAG_Size, dataEx.length);
+        rqApdu.addTLV(TLV.Tag.TAG_Issuer_Data_Signature, issuerDataSignature);
+
+        Log.i(logTag, String.format("[%s]\n%s", rqApdu.getCommandName(), rqApdu.getTLVs().getParsedTLVs("  ")));
+
+        ResponseApdu rspApdu = SendAndReceive(rqApdu, true);
+
+        if (rspApdu.isStatus(SW.PROCESS_COMPLETED)) {
+            Log.i(logTag, String.format("OK: [%04X]\n%s", rspApdu.getSW1SW2(), rspApdu.getTLVs().getParsedTLVs("  ")));
+        } else {
+            throw new TangemException(String.format("Failed: %04X", rspApdu.getSW1SW2()));
+        }
+
+        if (notifications != null)
+            notifications.onReadProgress(this, 10);
+
+
+        Log.i(logTag, "WriteIssuerDataEx - Send data");
+        int offset = 0;
+        int partSize = 1524;
+        while (offset < dataEx.length) {
+
+            if (dataEx.length - offset < partSize) {
+                partSize = dataEx.length - offset;
+            }
+            byte[] part = Arrays.copyOfRange(dataEx, offset, offset + partSize);
+
+            rqApdu = StartPrepareCommand(INS.WriteIssuerData);
+            rqApdu.addTLV_U8(TLV.Tag.TAG_Mode, 0x02);
+            rqApdu.addTLV_U16(TLV.Tag.TAG_Offset, offset);
+            rqApdu.addTLV(TLV.Tag.TAG_Issuer_Data, part);
+
+            Log.i(logTag, String.format("[%s]\n%s", rqApdu.getCommandName(), rqApdu.getTLVs().getParsedTLVs("  ")));
+
+            rspApdu = SendAndReceive(rqApdu, true);
+
+            if (rspApdu.isStatus(SW.PROCESS_COMPLETED)) {
+                Log.i(logTag, String.format("OK: [%04X]\n%s", rspApdu.getSW1SW2(), rspApdu.getTLVs().getParsedTLVs("  ")));
+            } else {
+                throw new TangemException(String.format("Failed: %04X", rspApdu.getSW1SW2()));
+            }
+
+            offset += partSize;
+            if (notifications != null)
+                notifications.onReadProgress(this, 10+(int) Math.round(offset * 80.0 / dataEx.length));
+        }
+
+        Log.i(logTag, "WriteIssuerDataEx - Finalize");
+
+        osDataToSign = new ByteArrayOutputStream();
+        osDataToSign.write(mCard.getCID());
+        osDataToSign.write(dataEx);
+        if (needCounter) {
+            osDataToSign.write(Util.intToByteArray4(issuerDataCounter));
+        }
+        issuerDataSignature = CardCrypto.Signature(issuerPrivateDataKey, osDataToSign.toByteArray());
+
+        rqApdu = StartPrepareCommand(INS.WriteIssuerData);
+        rqApdu.addTLV_U8(TLV.Tag.TAG_Mode, 0x03);
+        rqApdu.addTLV(TLV.Tag.TAG_Issuer_Data_Signature, issuerDataSignature);
+
+        Log.i(logTag, String.format("[%s]\n%s", rqApdu.getCommandName(), rqApdu.getTLVs().getParsedTLVs("  ")));
+
+        rspApdu = SendAndReceive(rqApdu, true);
+
+        if (rspApdu.isStatus(SW.PROCESS_COMPLETED)) {
+            Log.i(logTag, String.format("OK: [%04X]\n%s", rspApdu.getSW1SW2(), rspApdu.getTLVs().getParsedTLVs("  ")));
+        } else {
+            throw new TangemException(String.format("Failed: %04X", rspApdu.getSW1SW2()));
+        }
+        if (notifications != null)
+            notifications.onReadProgress(this, 100);
+    }
+
 
     /**
      * Execute consecutive READ commands with increasing encryption level from EncryptionMode.None to EncryptionMode.Strong, see {@link TangemCard.EncryptionMode}
