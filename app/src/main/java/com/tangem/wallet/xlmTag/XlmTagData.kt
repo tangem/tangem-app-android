@@ -1,4 +1,4 @@
-package com.tangem.wallet.xlmtag
+package com.tangem.wallet.xlmTag
 
 import android.os.Bundle
 import android.util.Log
