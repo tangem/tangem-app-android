@@ -7,7 +7,6 @@ import android.net.Uri
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
-import android.nfc.tech.Ndef
 import android.nfc.tech.NfcV
 import android.os.Bundle
 import android.text.Spannable
@@ -55,7 +54,7 @@ import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.CoinEngineFactory
 import com.tangem.wallet.R
 import com.tangem.wallet.TangemContext
-import com.tangem.wallet.xlmtag.XlmTagEngine
+import com.tangem.wallet.xlmTag.XlmTagEngine
 import kotlinx.android.synthetic.main.fragment_main.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
 import kotlinx.coroutines.CoroutineScope
