@@ -45,6 +45,8 @@ class MainActivity : AppCompatActivity() {
                                     tv_card_cid?.text = cardId
                                     btn_sign.isEnabled = true
                                     btn_read_issuer_data.isEnabled = true
+                                    btn_purge_wallet.isEnabled = true
+                                    btn_create_wallet.isEnabled = true
                                 }
                             }
                         }
@@ -99,6 +101,32 @@ class MainActivity : AppCompatActivity() {
                     }
                     is TaskEvent.Event -> runOnUiThread {
                         tv_card_cid?.text = it.data.cardId
+                    }
+                }
+            }
+        }
+        btn_purge_wallet?.setOnClickListener { _ ->
+            cardManager.purgeWallet(
+                    cardId) {
+                when (it) {
+                    is TaskEvent.Completion -> {
+                        if (it.error != null) runOnUiThread { tv_card_cid?.text = it.error!!::class.simpleName }
+                    }
+                    is TaskEvent.Event -> runOnUiThread {
+                        tv_card_cid?.text = it.data.status.name
+                    }
+                }
+            }
+        }
+        btn_create_wallet?.setOnClickListener { _ ->
+            cardManager.createWallet(
+                    cardId) {
+                when (it) {
+                    is TaskEvent.Completion -> {
+                        if (it.error != null) runOnUiThread { tv_card_cid?.text = it.error!!::class.simpleName }
+                    }
+                    is TaskEvent.Event -> runOnUiThread {
+                        tv_card_cid?.text = it.data.status.name
                     }
                 }
             }
