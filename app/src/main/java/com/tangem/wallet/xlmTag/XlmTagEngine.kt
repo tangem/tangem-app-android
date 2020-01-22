@@ -1,4 +1,4 @@
-package com.tangem.wallet.xlmtag
+package com.tangem.wallet.xlmTag
 
 import android.net.Uri
 import android.os.StrictMode
@@ -53,12 +53,18 @@ class XlmTagEngine : CoinEngine {
     }
 
     override fun getBalanceHTML(): String {
-        return if (hasBalanceInfo() && isBalanceNotZero && coinData!!.fundsFromTrustedSource) {
-           ctx.getString(R.string.tag_genuine)
-        } else if (coinData!!.fundsSentToTrustedSource) {
-            ctx.getString(R.string.tag_claimed)
+        return if (hasBalanceInfo()) {
+            if (coinData!!.fundsFromTrustedSource) {
+//                if (coinData!!.fundsSentToTrustedSource) { //TODO: shut down for example tags to appear genuine, turn on for production
+//                    ctx.getString(R.string.tag_claimed)
+//                } else {
+                    ctx.getString(R.string.tag_genuine)
+//                }
+            } else {
+                ctx.getString(R.string.tag_not_genuine)
+            }
         } else {
-            ctx.getString(R.string.tag_not_genuine)
+            ""
         }
     }
 
@@ -72,7 +78,7 @@ class XlmTagEngine : CoinEngine {
     }
 
     override fun hasBalanceInfo(): Boolean {
-        return if (coinData == null) false else coinData!!.getBalance() != null || coinData!!.isError404
+        return if (coinData == null) false else coinData!!.isBalanceReceived
     }
 
     override fun isExtractPossible(): Boolean {
@@ -130,42 +136,29 @@ class XlmTagEngine : CoinEngine {
     }
 
     override fun validateBalance(balanceValidator: BalanceValidator): Boolean {
-        return try {
-            if (ctx.card.offlineBalance == null && !ctx.coinData.isBalanceReceived || !ctx.coinData.isBalanceReceived && ctx.card.remainingSignatures != ctx.card.maxSignatures) {
-                if (coinData!!.isError404) {
-                    balanceValidator.setScore(0)
-                    balanceValidator.firstLine = R.string.balance_validator_first_line_no_account
-                    balanceValidator.setSecondLine(R.string.balance_validator_second_line_create_account_instruction)
-                } else {
-                    balanceValidator.setScore(0)
-                    balanceValidator.firstLine = R.string.balance_validator_first_line_unknown_balance
-                    balanceValidator.setSecondLine(R.string.balance_validator_second_line_unverified_balance)
-                    return false
-                }
+        try {
+            if (!hasBalanceInfo()) {
+                balanceValidator.setScore(0)
+                balanceValidator.firstLine = R.string.balance_validator_first_line_no_connection
+                balanceValidator.setSecondLine(R.string.balance_validator_second_line_authenticity_not_verified)
+                return false
             }
-
-            if (coinData!!.isBalanceReceived && coinData!!.isBalanceEqual) {
+            if (coinData!!.fundsFromTrustedSource) {
                 balanceValidator.setScore(100)
-                balanceValidator.firstLine = R.string.balance_validator_first_line_verified_balance
-                balanceValidator.setSecondLine(R.string.balance_validator_second_line_confirmed_in_blockchain)
-                if (coinData!!.getBalance()!!.isZero) {
-                    balanceValidator.firstLine = R.string.balance_validator_first_line_empty_wallet
-                    balanceValidator.setSecondLine(R.string.empty_string)
-                }
+                balanceValidator.firstLine = R.string.balance_validator_first_line_verified_in_blockchain
+                balanceValidator.setSecondLine(R.string.empty_string)
+            } else {
+                balanceValidator.setScore(0)
+                balanceValidator.firstLine = R.string.balance_validator_first_line_authenticity
+                balanceValidator.setSecondLine(R.string.empty_string)
             }
-
-            if (ctx.card.offlineBalance != null && !coinData!!.isBalanceReceived && ctx.card.remainingSignatures == ctx.card.maxSignatures && coinData!!.getBalance()!!.notZero()) {
-                balanceValidator.setScore(80)
-                balanceValidator.firstLine = R.string.balance_validator_first_line_verified_offline
-                balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_get_balance)
-            }
-
-            true
+            return true
         } catch (e: Exception) {
             e.printStackTrace()
-            false
+            return false
         }
     }
+
 
     override fun getBalance(): Amount? {
         return if (!hasBalanceInfo()) null else coinData!!.getBalance()!!
@@ -310,7 +303,7 @@ class XlmTagEngine : CoinEngine {
         val accountKeyPair = KeyPair.fromAccountId(coinData!!.wallet)
 
         try {
-            var operationsPage = server.payments().forAccount(accountKeyPair).order(RequestBuilder.Order.DESC).execute()
+            var operationsPage = server.payments().forAccount(accountKeyPair).limit(200).order(RequestBuilder.Order.DESC).execute()
             Log.e("Stellar", operationsPage.records.toString())
 
             operations.addAll(operationsPage.records)
@@ -324,6 +317,8 @@ class XlmTagEngine : CoinEngine {
             }
 
             parsePayments(blockchainRequestsCallbacks)
+
+            CoroutineScope(Dispatchers.Main).launch { blockchainRequestsCallbacks.onComplete(!ctx.hasError()) }
         } catch (e: Exception) {
             if (e.message != null) {
                 ctx.error = e.message
@@ -342,53 +337,11 @@ class XlmTagEngine : CoinEngine {
         Log.e("Stellar",
                 "fundsFromTrustedSource $coinData!!.fundsFromTrustedSource, " +
                         "fundsSentToTrustedSource $coinData!!.fundsSentToTrustedSource")
-        blockchainRequestsCallbacks.onComplete(!ctx.hasError())
+        coinData!!.isBalanceReceived = true
     }
 
     override fun requestBalanceAndUnspentTransactions(blockchainRequestsCallbacks: BlockchainRequestsCallbacks) {
         CoroutineScope(Dispatchers.IO).launch { requestPayments(blockchainRequestsCallbacks) }
-        val serverApi = ServerApiStellar(Blockchain.Stellar)
-        val listener: ServerApiStellar.Listener = object : ServerApiStellar.Listener {
-            override fun onSuccess(request: StellarRequest.Base) {
-                Log.i(TAG, "onSuccess: " + request.javaClass.simpleName)
-                if (request is StellarRequest.Balance) {
-                    coinData!!.accountResponse = request.accountResponse
-                    coinData!!.validationNodeDescription = serverApi.currentURL
-
-                    blockchainRequestsCallbacks.onProgress()
-                } else if (request is Ledgers) {
-                    coinData!!.setLedgerResponse(request.ledgerResponse)
-                    if (serverApi.isRequestsSequenceCompleted) {
-                    } else {
-                        blockchainRequestsCallbacks.onProgress()
-                    }
-                } else {
-                    ctx.error = "Invalid request logic"
-                    blockchainRequestsCallbacks.onComplete(false)
-                }
-            }
-
-            override fun onFail(request: StellarRequest.Base) {
-                Log.i(TAG, "onFail: " + request.javaClass.simpleName + " " + request.error)
-                if (request.errorResponse != null && request.errorResponse.code == 404) {
-                    coinData!!.isError404 = true
-                } else {
-                    ctx.error = request.error
-                }
-                if (serverApi.isRequestsSequenceCompleted) {
-                    if (ctx.hasError()) {
-                        blockchainRequestsCallbacks.onComplete(false)
-                    } else {
-                        blockchainRequestsCallbacks.onComplete(true)
-                    }
-                } else {
-                    blockchainRequestsCallbacks.onProgress()
-                }
-            }
-        }
-        serverApi.setListener(listener)
-        serverApi.requestData(ctx, StellarRequest.Balance(coinData!!.wallet))
-        serverApi.requestData(ctx, Ledgers())
     }
 
     @Throws(Exception::class)
@@ -463,7 +416,7 @@ class XlmTagEngine : CoinEngine {
 
         private val multiplier = BigDecimal("10000000")
 
-        const val OPERATIONS_LIMIT = 50
+        const val OPERATIONS_LIMIT = 200
         private val TRUSTED_DESTINATION = "GAYPZMHFZERB42ONEJ4CY6ADDVTINEXMY6OZ5G6CLR4HHVKOSNJSZGMM"
         private val TRUSTED_SOURCE = "GAZY7H4BWWEVB6QGB4RV3LW7DH5NO5CD5O6JCEQXA7N2UCGZSAPJFYW2"
     }
