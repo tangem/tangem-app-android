@@ -76,7 +76,7 @@ public class XlmEngine extends CoinEngine {
     public String getBalanceHTML() {
         Amount balance = getBalance();
         if (balance != null) {
-            return " " + balance.toDescriptionString(getDecimals()) + "<br><small><small>+ " + coinData.getReserve().toDescriptionString(getDecimals()) + " reserve</small></small>1";
+            return " " + balance.toDescriptionString(getDecimals()) + "<br><small><small>+ " + coinData.getReserve().toDescriptionString(getDecimals()) + " reserve</small></small>";
         } else {
             return "";
         }
@@ -243,11 +243,11 @@ public class XlmEngine extends CoinEngine {
 //            return;
 //        }
 
-            if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures())) {
-                balanceValidator.setScore(80);
-                balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_offline);
-                balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_get_balance);
-            }
+//            if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) {
+//                balanceValidator.setScore(80);
+//                balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_offline);
+//                balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_get_balance);
+//            }
 
 //            if(card.getFailedBalanceRequestCounter()!=0) {
 //                score -= 5 * card.getFailedBalanceRequestCounter();
