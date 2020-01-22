@@ -159,7 +159,6 @@ class XlmTagEngine : CoinEngine {
         }
     }
 
-
     override fun getBalance(): Amount? {
         return if (!hasBalanceInfo()) null else coinData!!.getBalance()!!
     }
