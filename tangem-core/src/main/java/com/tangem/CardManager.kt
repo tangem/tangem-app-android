@@ -130,16 +130,10 @@ class CardManager(
      * according to a specific blockchain algorithm.
      * WalletPrivateKey is never revealed by the card and will be used by [SignCommand] and [CheckWalletCommand].
      * RemainingSignature is set to MaxSignatures.
-     *
-     * @property cardId CID, Unique Tangem card ID number.
-     * @property cvc Optional 3-digit code printed on the card. Required if Use_CVC flag is set in Settings_Mask.
+     * @param cardId CID, Unique Tangem card ID number.
      */
     fun createWallet(cardId: String,
-                     cvc: ByteArray? = null,
                      callback: (result: TaskEvent<CreateWalletResponse>) -> Unit) {
-
-        if (cvc != null) cardEnvironmentRepository[cardId] = fetchCardEnvironment(cardId).copy(cvc = cvc)
-
         val createWalletCommand = CreateWalletCommand(cardId)
         val task = SingleCommandTask(createWalletCommand)
         runTask(task, cardId, callback)
@@ -150,8 +144,7 @@ class CardManager(
 
      * If Is_Reusable flag is disabled, the card switches to ‘Purged’ state.
      * ‘Purged’ state is final, it makes the card useless.
-     * @property cardId CID, Unique Tangem card ID number.
-     * @property cvc Optional 3-digit code printed on the card. Required if Use_CVC flag is set in Settings_Mask.
+     * @param cardId CID, Unique Tangem card ID number.
      */
     fun purgeWallet(cardId: String,
                     callback: (result: TaskEvent<PurgeWalletResponse>) -> Unit) {
