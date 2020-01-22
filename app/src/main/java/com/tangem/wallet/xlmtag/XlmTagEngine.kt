@@ -154,11 +154,11 @@ class XlmTagEngine : CoinEngine {
                 }
             }
 
-            if (ctx.card.offlineBalance != null && !coinData!!.isBalanceReceived && ctx.card.remainingSignatures == ctx.card.maxSignatures && coinData!!.getBalance()!!.notZero()) {
-                balanceValidator.setScore(80)
-                balanceValidator.firstLine = R.string.balance_validator_first_line_verified_offline
-                balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_get_balance)
-            }
+//            if (ctx.card.offlineBalance != null && !coinData!!.isBalanceReceived && ctx.card.remainingSignatures == ctx.card.maxSignatures) {
+//                balanceValidator.setScore(80)
+//                balanceValidator.firstLine = R.string.balance_validator_first_line_verified_offline
+//                balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_get_balance)
+//            }
 
             true
         } catch (e: Exception) {
