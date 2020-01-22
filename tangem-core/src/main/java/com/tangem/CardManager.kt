@@ -137,6 +137,9 @@ class CardManager(
     fun createWallet(cardId: String,
                      cvc: ByteArray? = null,
                      callback: (result: TaskEvent<CreateWalletResponse>) -> Unit) {
+
+        if (cvc != null) cardEnvironmentRepository[cardId] = fetchCardEnvironment(cardId).copy(cvc = cvc)
+
         val createWalletCommand = CreateWalletCommand(cardId)
         val task = SingleCommandTask(createWalletCommand)
         runTask(task, cardId, callback)
