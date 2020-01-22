@@ -36,11 +36,9 @@ class CreateWalletResponse(
  * RemainingSignature is set to MaxSignatures.
  *
  * @property cardId CID, Unique Tangem card ID number.
- * @property cvc Optional 3-digit code printed on the card. Required if Use_CVC flag is set in Settings_Mask.
  */
 class CreateWalletCommand(
-        private val cardId: String,
-        private val cvc: ByteArray? = null
+        private val cardId: String
 ) : CommandSerializer<CreateWalletResponse>() {
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
@@ -49,8 +47,8 @@ class CreateWalletCommand(
                 Tlv(TlvTag.CardId, cardId.hexToBytes()),
                 Tlv(TlvTag.Pin2, cardEnvironment.pin2.calculateSha256())
         )
-        if (cvc != null) {
-            tlvData.add(Tlv(TlvTag.Cvc, cvc))
+        if (cardEnvironment.cvc != null) {
+            tlvData.add(Tlv(TlvTag.Cvc, cardEnvironment.cvc))
         }
 
         return CommandApdu(Instruction.CreateWallet, tlvData)
