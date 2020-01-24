@@ -20,7 +20,7 @@ import com.tangem.wallet.token.TokenEngine
 import com.tangem.wallet.tezos.TezosEngine
 import com.tangem.wallet.xlm.XlmAssetEngine
 import com.tangem.wallet.xlm.XlmEngine
-import com.tangem.wallet.xlmtag.XlmTagEngine
+import com.tangem.wallet.xlmTag.XlmTagEngine
 import com.tangem.wallet.xrp.XrpEngine
 
 /**
