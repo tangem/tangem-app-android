@@ -63,6 +63,7 @@ class IdFragment : BaseFragment(), NfcAdapter.ReaderCallback,
     private var cardProtocol: CardProtocol? = null
     private var refreshAction: Runnable? = null
     private var hasIdInfo: Boolean? = null
+    private var toast: Toast? = null
 
     private var requestCounter: Int = 0
         set(value) {
@@ -172,6 +173,7 @@ class IdFragment : BaseFragment(), NfcAdapter.ReaderCallback,
 
     override fun onStop() {
         srl?.removeCallbacks(refreshAction)
+        toast?.cancel()
         super.onStop()
     }
 
@@ -203,7 +205,6 @@ class IdFragment : BaseFragment(), NfcAdapter.ReaderCallback,
                     if (cardProtocol.card.isIDCard) {
                         if (cardProtocol.card.hasIDCardData()) {
 
-                            Toast.makeText(activity, "ID card: ${cardProtocol.card.idCardData.fullName}", Toast.LENGTH_SHORT).show()
                             ctx.card = cardProtocol.card
 
                             tvBalanceLine1?.visibility = View.VISIBLE
@@ -221,9 +222,8 @@ class IdFragment : BaseFragment(), NfcAdapter.ReaderCallback,
                             refresh()
 
                         } else {
-                            Toast.makeText(activity, "Empty ID card", Toast.LENGTH_SHORT).show()
                             rlToolButtons?.visibility = View.VISIBLE
-                            tvBalanceLine1?.text = "Empty ID card".toUpperCase()
+                            tvBalanceLine1?.text = resources.getString(R.string.id_empty).toUpperCase(Locale.ENGLISH)
                             tvBalanceLine1?.setTextSize(18F)
                             tvBalanceLine1?.visibility = View.VISIBLE
                             hasIdInfo = false
@@ -239,8 +239,10 @@ class IdFragment : BaseFragment(), NfcAdapter.ReaderCallback,
                     if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported)
                         if (!NoExtendedLengthSupportDialog.allReadyShowed)
                             activity?.supportFragmentManager?.let { NoExtendedLengthSupportDialog().show(it, NoExtendedLengthSupportDialog.TAG) }
-                        else
-                            Toast.makeText(activity, R.string.general_notification_scan_again, Toast.LENGTH_SHORT).show()
+                        else {
+                            toast = Toast.makeText(activity, R.string.general_notification_scan_again, Toast.LENGTH_SHORT)
+                            toast?.show()
+                        }
                 }
             }
         }
