@@ -48,6 +48,7 @@ class WriteIdFragment : BaseFragment(), NavigationResultListener,
     private lateinit var ctx: TangemContext
     private lateinit var tx: ByteArray
     private lateinit var mpFinishSignSound: MediaPlayer
+    private var toast: Toast? = null
 
     private var idWasWritten = false
 
@@ -92,6 +93,7 @@ class WriteIdFragment : BaseFragment(), NavigationResultListener,
 
     override fun onStop() {
         writeIDCardTask?.cancel(true)
+        toast?.cancel()
         super.onStop()
     }
 
@@ -170,8 +172,10 @@ class WriteIdFragment : BaseFragment(), NavigationResultListener,
                             override fun onComplete(success: Boolean) {
                                 if (success) {
                                     navigateUp(R.id.main)
-                                } else
+                                } else {
+                                    toast?.cancel()
                                     navigateUp(R.id.issueNewIdFragment)
+                                }
                             }
 
                             override fun onProgress() {
@@ -224,7 +228,10 @@ class WriteIdFragment : BaseFragment(), NavigationResultListener,
                                 NoExtendedLengthSupportDialog().show(requireFragmentManager(), NoExtendedLengthSupportDialog.TAG)
                             }
                         } else {
-                           if (!idWasWritten) Toast.makeText(context, R.string.general_notification_scan_again, Toast.LENGTH_LONG).show()
+                           if (!idWasWritten) {
+                               toast = Toast.makeText(context, R.string.general_notification_scan_again, Toast.LENGTH_SHORT)
+                               toast?.show()
+                           }
                         }
                         progressBar?.progress = 100
                         progressBar?.progressTintList = ColorStateList.valueOf(Color.RED)
