@@ -44,7 +44,7 @@ public class EthIdEngine extends CoinEngine {
 
     private static final String TAG = com.tangem.wallet.eth.EthEngine.class.getSimpleName();
     public EthIdData coinData = null;
-    byte[] approvalPubKey = Util.hexToBytes("04EAD74FEEE4061044F46B19EB654CEEE981E9318F0C8FE99AF5CDB9D779D2E52BB51EA2D14545E0B323F7A90CF4CC72753C973149009C10DB2D83DCEC28487729"); //TODO
+    private byte[] approvalPubKey = Util.hexToBytes("04EAD74FEEE4061044F46B19EB654CEEE981E9318F0C8FE99AF5CDB9D779D2E52BB51EA2D14545E0B323F7A90CF4CC72753C973149009C10DB2D83DCEC28487729"); //TODO
     public String approvalAddress = calculateAddress(approvalPubKey); //TODO
 
     public EthIdEngine(TangemContext ctx) throws Exception {
@@ -232,12 +232,12 @@ public class EthIdEngine extends CoinEngine {
     public boolean validateBalance(BalanceValidator balanceValidator) {
         if (coinData != null && coinData.isHasApprovalTx()) {
             balanceValidator.setScore(100);
-            balanceValidator.setFirstLine(R.string.verified);
+            balanceValidator.setFirstLine(R.string.id_verified);
             balanceValidator.setSecondLine(R.string.balance_validator_second_line_unverified_balance);
             return false;
         } else {
             balanceValidator.setScore(0);
-            balanceValidator.setFirstLine(R.string.not_registered);
+            balanceValidator.setFirstLine(R.string.id_not_registered);
             balanceValidator.setSecondLine(R.string.balance_validator_second_line_unverified_balance);
             return false;
         }
