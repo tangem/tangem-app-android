@@ -20,7 +20,7 @@ import com.tangem.ui.navigation.NavigationResultListener
 import com.tangem.util.LOG
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.*
-import com.tangem.wallet.xlmtag.XlmTagEngine
+import com.tangem.wallet.xlmTag.XlmTagEngine
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
 import kotlinx.android.synthetic.main.layout_btn_details.*
 import kotlinx.android.synthetic.main.layout_tangem_card.*
@@ -67,7 +67,7 @@ class TagFragment : BaseFragment(), NavigationResultListener {
         btnExtract.backgroundTintList =
                 ContextCompat.getColorStateList(requireContext(), R.color.btn_dark)
 
-        ivTangemCard.setImageResource(R.drawable.card_default_nft)
+        ivTangemCard.setImageResource(R.drawable.card_tgslix)
 
         tvBalance.setSingleLine(!engine.needMultipleLinesForBalance())
         tvWallet.text = ctx.coinData.wallet
@@ -78,7 +78,6 @@ class TagFragment : BaseFragment(), NavigationResultListener {
         srl?.setOnRefreshListener { refresh(true) }
 
         requestBalanceAndUnspentTransactions()
-//        update()
     }
 
 
@@ -129,14 +128,13 @@ class TagFragment : BaseFragment(), NavigationResultListener {
             else -> tvBalance.text = ""
         }
 
-        if (ctx.card!!.tokenSymbol.length > 1) {
-            @Suppress("DEPRECATION") val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                Html.fromHtml(ctx.blockchainName, Html.FROM_HTML_MODE_LEGACY)
-            else
-                Html.fromHtml(ctx.blockchainName)
-            tvBlockchain.text = html
-        } else
-            tvBlockchain.text = ctx.blockchainName
+
+        @Suppress("DEPRECATION") val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+            Html.fromHtml(ctx.blockchainName, Html.FROM_HTML_MODE_LEGACY)
+        else
+            Html.fromHtml(ctx.blockchainName)
+        tvBlockchain.text = html
+
 
     }
 
