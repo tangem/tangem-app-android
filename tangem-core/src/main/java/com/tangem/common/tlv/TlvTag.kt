@@ -52,7 +52,7 @@ enum class TlvTag(val code: Int) {
     Pause(0x1C),
 
     ManufactureId(0x20),
-    ManufacturerSignature(0x21),
+    ManufacturerSignature(0x86),
 
     IssuerDataPublicKey(0x30),
     IssuerTransactionPublicKey(0x31),
