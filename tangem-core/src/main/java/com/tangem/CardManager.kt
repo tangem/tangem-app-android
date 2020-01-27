@@ -123,6 +123,37 @@ class CardManager(
     }
 
     /**
+     * This command will create a new wallet on the card having ‘Empty’ state.
+     * A key pair WalletPublicKey / WalletPrivateKey is generated and securely stored in the card.
+     * App will need to obtain Wallet_PublicKey from the response of [CreateWalletCommand] or [ReadCommand]
+     * and then transform it into an address of corresponding blockchain wallet
+     * according to a specific blockchain algorithm.
+     * WalletPrivateKey is never revealed by the card and will be used by [SignCommand] and [CheckWalletCommand].
+     * RemainingSignature is set to MaxSignatures.
+     * @param cardId CID, Unique Tangem card ID number.
+     */
+    fun createWallet(cardId: String,
+                     callback: (result: TaskEvent<CreateWalletResponse>) -> Unit) {
+        val createWalletCommand = CreateWalletCommand(cardId)
+        val task = SingleCommandTask(createWalletCommand)
+        runTask(task, cardId, callback)
+    }
+
+    /**
+     * This command deletes all wallet data. If Is_Reusable flag is enabled during personalization,
+
+     * If Is_Reusable flag is disabled, the card switches to ‘Purged’ state.
+     * ‘Purged’ state is final, it makes the card useless.
+     * @param cardId CID, Unique Tangem card ID number.
+     */
+    fun purgeWallet(cardId: String,
+                    callback: (result: TaskEvent<PurgeWalletResponse>) -> Unit) {
+        val purgeWalletCommand = PurgeWalletCommand(cardId)
+        val task = SingleCommandTask(purgeWalletCommand)
+        runTask(task, cardId, callback)
+    }
+
+    /**
 
      */
     fun <T> runTask(task: Task<T>, cardId: String? = null,
@@ -157,6 +188,6 @@ class CardManager(
     }
 
     private fun fetchCardEnvironment(cardId: String?): CardEnvironment {
-        return cardEnvironmentRepository[cardId] ?: CardEnvironment()
+        return cardEnvironmentRepository[cardId] ?: CardEnvironment(cardId = cardId)
     }
 }
