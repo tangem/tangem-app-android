@@ -55,7 +55,6 @@
                         android:fontFamily="@font/maaxmedium"
                         android:textAlignment="center"
                         android:visibility="visible"
-                        tools:text="Verified in blockchain"
                         tools:textColor="@color/confirmed" />
 
                     <TextView
