@@ -85,7 +85,7 @@
 
     <!-- LoadedWallet -->
     <string name="loaded_wallet_no_compatible_wallet">Aucun porte-monnaie compatible installé</string>
-    <string name="loaded_wallet_message_wait">Veuillez patienter pendant que la transaction précédente est confirmée dans la blockchain</string>
+    <string name="loaded_wallet_message_wait">Veuillez patienter que votre précédente transaction soit confirmée dans la blockchai</string>
     <string name="loaded_wallet_message_refresh">Impossible d\'obtenir toutes les entrées. Balayez vers le bas pour actualiser.</string>
     <string name="loaded_wallet_warning_no_signature">La carte n\'a plus de signature!</string>
     <string name="loaded_wallet_warning_dont_forget_pin">Si vous oubliez votre nouveau code PIN, vous perdrez votre argent pour toujours!</string>
@@ -132,7 +132,7 @@
 
     <string name="balance_validator_second_line_confirmed_in_blockchain">Solde confirmé dans la blockchain</string>
     <string name="balance_validator_second_line_unverified_balance">Solde ne peut pas être vérifié. Balayez vers le bas pour actualiser..</string>
-    <string name="balance_validator_second_line_wait_for_confirmation">Attendez la confirmation dans la chaîne de blocs</string>
+    <string name="balance_validator_second_line_wait_for_confirmation">En attente de confirmation dans la blockchain</string>
     <string name="balance_validator_second_line_internet_to_verify_online">Restaurez la connexion Internet pour obtenir un solde sécurisé de la chaîne de blocs</string>
     <string name="balance_validator_second_line_internet_to_get_balance">Impossible d\'obtenir le
     solde de la blockchain. Restaurez la connexion Internet pour être plus confiant.</string>
@@ -172,7 +172,7 @@
 
     <!-- SendTransaction -->
     <string name="send_transaction_notification_wait">Veuillez patienter pendant l\'envoi du paiement…</string>
-    <string name="send_transaction_success">La transaction a été signée et envoyée avec succès au noeud de la blockchain. La balance de porte-monnaie sera mise à jour dans un moment</string>
+    <string name="send_transaction_success">La transaction a été signée et envoyée avec succès au noeud de la blockchain. Le solde de votre porte-monnaie sera mise à jour dès que transaction sera validée sur la blockchain</string>
     <string name="send_transaction_error_failed_to_send">Réessayez. Échec d\'envoi de la transaction (%s)</string>
     <string name="send_transaction_error_cannot_sign">Impossible de signer la transaction. Veillez à entrer le code PIN2 correct!</string>
     <string name="send_transaction_error_wrong_amount">Le montant et les frais sont supérieurs au solde total du porte-monnaie!</string>
@@ -196,9 +196,9 @@
     <string name="confirm_transaction_btn_fee_normal">Normal</string>
     <string name="confirm_transaction_btn_fee_priority">Priorité</string>
     <string name="confirm_transaction_btn_including_fee">Frais inclus</string>
-    <string name="confirm_transaction_btn_not_including_fee">Frais non compris</string>
+    <string name="confirm_transaction_btn_not_including_fee">Frais non inclus</string>
     <string name="confirm_transaction_including_fee">(frais inclus)</string>
-    <string name="confirm_transaction_not_including_fee">(sans frais)</string>
+    <string name="confirm_transaction_not_including_fee">(frais non inclus)</string>
     <string name="confirm_transaction_error_data_is_outdated">Les données obtenues sont obsolètes! Réessayez</string>
     <string name="confirm_transaction_error_cannot_reach_node">Impossible d\'atteindre le nœud de la blockchain active en cours. Réessayez</string>
     <string name="confirm_transaction_error_cannot_check_balance">Impossible de vérifier le solde! Pas de connexion avec les noeuds de la blockchain</string>
