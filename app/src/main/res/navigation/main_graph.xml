@@ -31,6 +31,9 @@
         <action
             android:id="@+id/action_main_to_tagFragment"
             app:destination="@id/tagFragment" />
+        <action
+            android:id="@+id/action_main_to_idFragment"
+            app:destination="@id/idFragment" />
     </fragment>
 
     <fragment
@@ -196,5 +199,43 @@
         android:name="com.tangem.ui.fragment.additional.TagFragment"
         android:label="fragment_tag"
         tools:layout="@layout/fragment_tag" />
+    <fragment
+        android:id="@+id/issueNewIdFragment"
+        android:name="com.tangem.ui.fragment.id.IssueNewIdFragment"
+        android:label="IssueNewIdFragment" >
+        <action
+            android:id="@+id/action_issueNewIdFragment_to_cameraFragment"
+            app:destination="@id/cameraFragment" />
+        <action
+            android:id="@+id/action_issueNewIdFragment_to_validateIdFragment"
+            app:destination="@id/validateIdFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/idFragment"
+        android:name="com.tangem.ui.fragment.id.IdFragment"
+        android:label="IdFragment" >
+        <action
+            android:id="@+id/action_idFragment_to_issueNewIdFragment"
+            app:destination="@id/issueNewIdFragment" />
+        <action
+            android:id="@+id/action_idFragment_to_verifyCard"
+            app:destination="@id/verifyCard" />
+    </fragment>
+    <fragment
+        android:id="@+id/cameraFragment"
+        android:name="com.tangem.ui.fragment.id.CameraFragment"
+        android:label="CameraFragment" />
+    <fragment
+        android:id="@+id/validateIdFragment"
+        android:name="com.tangem.ui.fragment.id.ValidateIdFragment"
+        android:label="ValidateIdFragment" >
+        <action
+            android:id="@+id/action_validateIdFragment_to_writeIdFragment"
+            app:destination="@id/writeIdFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/writeIdFragment"
+        android:name="com.tangem.ui.fragment.id.WriteIdFragment"
+        android:label="WriteIdFragment" />
 
 </navigation>
