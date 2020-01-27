@@ -7,7 +7,6 @@ import android.net.Uri
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
-import android.nfc.tech.Ndef
 import android.nfc.tech.NfcV
 import android.os.Bundle
 import android.text.Spannable
@@ -55,7 +54,7 @@ import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.CoinEngineFactory
 import com.tangem.wallet.R
 import com.tangem.wallet.TangemContext
-import com.tangem.wallet.xlmtag.XlmTagEngine
+import com.tangem.wallet.xlmTag.XlmTagEngine
 import kotlinx.android.synthetic.main.fragment_main.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
 import kotlinx.coroutines.CoroutineScope
@@ -98,6 +97,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
         super.onViewCreated(view, savedInstanceState)
         rippleBackgroundNfc.startRippleAnimation()
 
+//        navigateToDestination(R.id.action_main_to_emptyIdFragment)
         // init NFC Antenna
         nfcDeviceAntenna = NfcDeviceAntennaLocation(context!!, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
         nfcDeviceAntenna.init()
@@ -274,13 +274,19 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                         card.status == TangemCard.Status.Loaded -> lastTag?.let {
                             val engineCoin = CoinEngineFactory.create(ctx)
                             if (engineCoin != null) {
-                                engineCoin.defineWallet()
-
-                                val bundle = Bundle()
-                                bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
-                                ctx.saveToBundle(bundle)
-                                navigateForResult(Constant.REQUEST_CODE_SHOW_CARD_ACTIVITY,
-                                        R.id.action_main_to_loadedWalletFragment, bundle)
+                                if (card.isIDCard) {
+                                    val bundle = Bundle()
+                                    bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
+                                    ctx.saveToBundle(bundle)
+                                    navigateToDestination(R.id.action_main_to_idFragment, bundle)
+                                } else {
+                                    engineCoin.defineWallet()
+                                    val bundle = Bundle()
+                                    bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
+                                    ctx.saveToBundle(bundle)
+                                    navigateForResult(Constant.REQUEST_CODE_SHOW_CARD_ACTIVITY,
+                                            R.id.action_main_to_loadedWalletFragment, bundle)
+                                }
                             } else {
                                 showUnkownBlockchainWarning()
                             }
