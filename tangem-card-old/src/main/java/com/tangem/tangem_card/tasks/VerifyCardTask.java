@@ -46,6 +46,10 @@ public class VerifyCardTask extends CustomReadCardTask {
         }
         mNotifications.onReadProgress(protocol, 90);
 
+        if( protocol.getCard().isIDCard() )
+        {
+            protocol.run_GetIssuerDataEx(mNotifications);
+        }
     }
 
 }
