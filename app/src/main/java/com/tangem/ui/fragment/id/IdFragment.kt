@@ -47,7 +47,6 @@ class IdFragment : BaseFragment(), NfcAdapter.ReaderCallback,
 
     override val layoutId = R.layout.fragment_id
 
-    private lateinit var viewModel: LoadedWalletViewModel
     private lateinit var ctx: TangemContext
     private lateinit var mpSecondScanSound: MediaPlayer
     private var serverApiCommon: ServerApiCommon = ServerApiCommon()
@@ -121,7 +120,6 @@ class IdFragment : BaseFragment(), NfcAdapter.ReaderCallback,
         if (hasIdInfo == null) tvBalanceLine1?.text = "Reading... Hold the card firmly"
 
         btnNewScan.setOnClickListener {
-            //            navigateToDestination(R.id.action_loadedWalletFragment_to_main)
             navigateUp()
         }
 
@@ -328,7 +326,7 @@ class IdFragment : BaseFragment(), NfcAdapter.ReaderCallback,
                     5000)
         }
 
-        if (srl.isRefreshing && hasIdInfo != null && hasIdInfo != false) {
+        if (srl.isRefreshing && ctx.card?.hasIDCardData() != false) {
             tvBalanceLine1.setTextColor(resources.getColor(R.color.primary))
             tvBalanceLine1.text = getString(R.string.loaded_wallet_verifying_in_blockchain)
             tvBalanceLine2.text = ""
@@ -375,9 +373,6 @@ class IdFragment : BaseFragment(), NfcAdapter.ReaderCallback,
         requestVerifyAndGetInfo()
 
         if (ctx.card.hasIDCardData()) requestBalanceAndUnspentTransactions()
-
-        if (::viewModel.isInitialized)
-            viewModel.requestRateInfo(ctx)
 
         if (requestCounter == 0) {
             // if no connection and no requests posted
