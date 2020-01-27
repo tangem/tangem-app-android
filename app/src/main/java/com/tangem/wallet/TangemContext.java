@@ -55,14 +55,16 @@ public class TangemContext {
     public String getBlockchainName() {
         Blockchain blockchain = getBlockchain();
         if (blockchain == Blockchain.Token || blockchain == Blockchain.RootstockToken) {
-            String token = card.getTokenSymbol();
-            return token + " <br><small><small> " + getBlockchain().getOfficialName() + " smart contract token</small></small>";
+            return card.getTokenSymbol()+ "<br><small><small> " + getBlockchain().getOfficialName() + " smart contract token</small></small>";
         }
         if (blockchain == Blockchain.NftToken) {
-            return card.getTokenSymbol().substring(4) + " <br><small><small> " + getBlockchain().getOfficialName() + " NFT token</small></small>";
+            return card.getTokenSymbol().substring(4) + "<br><small><small> " + getBlockchain().getOfficialName() + " non-fungible token</small></small>";
         }
         if (blockchain == Blockchain.StellarAsset) {
-            return card.getTokenSymbol() + " <br><small><small> " + getBlockchain().getOfficialName() + " asset</small></small>";
+            return card.getTokenSymbol() + "<br><small><small> " + getBlockchain().getOfficialName() + " asset</small></small>";
+        }
+        if (blockchain == Blockchain.StellarTag) {
+            return "TANGEM TAG<br><small><small> "+ getBlockchain().getOfficialName() + " non-fungible token </small></small>";
         }
         return blockchain.getOfficialName();
     }

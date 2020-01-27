@@ -82,7 +82,7 @@
     <string name="main_screen_new_version_toast">There is a new application version: %1$s</string>
     <string name="main_screen_btn_update">Update</string>
     <string name="main_screen_visit_store">Don\'t have a card?\n Visit our store at %1$s</string>
-    <string name="main_screen_store_address">tangemcards.com</string>
+    <string name="main_screen_store_address" translatable="false">tangemcards.com</string>
 
     <!-- LoadedWallet -->
     <string name="loaded_wallet_no_compatible_wallet">No compatible wallets installed</string>
@@ -262,6 +262,13 @@
     <string name="details_linking_card_supported">Linking to the terminal is supported\n</string>
     <string name="details_linked_card_title">The card is linked</string>
     <string name="details_linked_card_to_phone">To this phone</string>
+    <string name="details_unspents_number">%1$d unspents (%2$d received)</string>
+
+    <!-- TagFragment -->
+    <string name="tag_claim">Claim</string>
+    <string name="tag_genuine">GENUINE</string>
+    <string name="tag_not_genuine">NOT GENUINE</string>
+    <string name="tag_claimed">ALREADY CLAIMED</string>
 
     <!-- PinSave -->
     <string name="pin_save_btn_save">Save</string>
