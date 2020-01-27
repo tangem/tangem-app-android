@@ -17,4 +17,5 @@ public interface NfcReader {
 
     void connect();
 
+    boolean isConnected();
 }
