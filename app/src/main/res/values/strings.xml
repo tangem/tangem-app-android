@@ -270,6 +270,12 @@
     <string name="tag_not_genuine">NOT GENUINE</string>
     <string name="tag_claimed">ALREADY CLAIMED</string>
 
+    <!-- Id Card -->
+    <string name="id_verified">VERIFIED</string>
+    <string name="id_not_registered">NOT REGISTERED</string>
+    <string name="id_demo">ID DEMO</string>
+    <string name="id_empty">Empty ID card</string>
+
     <!-- PinSave -->
     <string name="pin_save_btn_save">Save</string>
     <string name="pin_save_btn_delete">Delete</string>
