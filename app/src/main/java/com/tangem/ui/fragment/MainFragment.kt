@@ -97,6 +97,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
         super.onViewCreated(view, savedInstanceState)
         rippleBackgroundNfc.startRippleAnimation()
 
+//        navigateToDestination(R.id.action_main_to_emptyIdFragment)
         // init NFC Antenna
         nfcDeviceAntenna = NfcDeviceAntennaLocation(context!!, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
         nfcDeviceAntenna.init()
@@ -273,13 +274,19 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                         card.status == TangemCard.Status.Loaded -> lastTag?.let {
                             val engineCoin = CoinEngineFactory.create(ctx)
                             if (engineCoin != null) {
-                                engineCoin.defineWallet()
-
-                                val bundle = Bundle()
-                                bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
-                                ctx.saveToBundle(bundle)
-                                navigateForResult(Constant.REQUEST_CODE_SHOW_CARD_ACTIVITY,
-                                        R.id.action_main_to_loadedWalletFragment, bundle)
+                                if (card.isIDCard) {
+                                    val bundle = Bundle()
+                                    bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
+                                    ctx.saveToBundle(bundle)
+                                    navigateToDestination(R.id.action_main_to_idFragment, bundle)
+                                } else {
+                                    engineCoin.defineWallet()
+                                    val bundle = Bundle()
+                                    bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
+                                    ctx.saveToBundle(bundle)
+                                    navigateForResult(Constant.REQUEST_CODE_SHOW_CARD_ACTIVITY,
+                                            R.id.action_main_to_loadedWalletFragment, bundle)
+                                }
                             } else {
                                 showUnkownBlockchainWarning()
                             }
