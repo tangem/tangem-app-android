@@ -251,11 +251,11 @@ public class CardanoEngine extends CoinEngine {
                 }
             }
 
-            if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && coinData.getBalanceInInternalUnits().notZero()) {
-                balanceValidator.setScore(80);
-                balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_offline);
-                balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_get_balance);
-            }
+//            if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) {
+//                balanceValidator.setScore(80);
+//                balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_offline);
+//                balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_get_balance);
+//            }
 
             return true;
         } catch (Exception e) {
