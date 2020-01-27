@@ -35,7 +35,10 @@ data class BlockcypherTxref(
 
 data class BlockcypherTx(
         @SerializedName("hex")
-        var hex: String? = null
+        var hex: String? = null,
+
+        @SerializedName("addresses")
+        var addesses: List<String>? = null
 )
 
 data class BlockcypherFee(
