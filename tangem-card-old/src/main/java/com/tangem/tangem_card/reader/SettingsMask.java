@@ -29,7 +29,15 @@ public class SettingsMask {
 
     public static final int DisablePrecomputedNDEF = 0x00010000;
 
+    public static final int SkipSecurityDelayIfValidatedByIssuer = 0x00020000;
+    public static final int SkipCheckPIN2andCVCIfValidatedByIssuer = 0x00040000;
     public static final int SkipSecurityDelayIfValidatedByLinkedTerminal = 0x00080000;
+
+    public static final int RestrictOverwriteIssuerDataEx = 0x00100000;
+
+    public static final int RequireTermTxSignature = 0x01000000;
+    public static final int RequireTermCertSignature = 0x02000000;
+    public static final int CheckPIN3onCard = 0x04000000;
 
     public static String getDescription(int iValue) {
         StringBuilder sb=new StringBuilder();
@@ -62,6 +70,24 @@ public class SettingsMask {
         if ((iValue & SettingsMask.DisablePrecomputedNDEF) != 0) sb.append("DisablePrecomputedNDEF, ");
         if ((iValue & SettingsMask.SkipSecurityDelayIfValidatedByLinkedTerminal) != 0)
             sb.append("SkipSecurityDelayIfValidatedByLinkedTerminal, ");
+
+
+        if ((iValue & SettingsMask.SkipSecurityDelayIfValidatedByIssuer) != 0)
+            sb.append("SkipSecurityDelayIfValidatedByIssuer, ");
+        if ((iValue & SettingsMask.SkipCheckPIN2andCVCIfValidatedByIssuer) != 0)
+            sb.append("SkipCheckPIN2andCVCIfValidatedByIssuer, ");
+
+        if ((iValue & SettingsMask.RestrictOverwriteIssuerDataEx) != 0)
+            sb.append("RestrictOverwriteIssuerDataEx, ");
+
+        if ((iValue & SettingsMask.RequireTermTxSignature) != 0)
+            sb.append("RequireTermTxSignature, ");
+
+        if ((iValue & SettingsMask.RequireTermCertSignature) != 0)
+            sb.append("RequireTermCertSignature, ");
+
+        if ((iValue & SettingsMask.CheckPIN3onCard) != 0)
+            sb.append("CheckPIN3onCard, ");
 
         if (sb.length() > 1) sb.delete(sb.length() - 2, sb.length());
         sb.append("]");
