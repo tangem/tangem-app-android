@@ -29,6 +29,7 @@ public class TangemCard {
     private byte[] terminalPrivateKey;
     private byte[] terminalPublicKey;
     private boolean terminalIsLinked = false;
+    private byte[] tagSignature = null;
 
     public String getBlockchainID() {
         return blockchainID;
@@ -627,6 +628,14 @@ public class TangemCard {
     public void clearDenomination() {
         Denomination = null;
         DenominationText = null;
+    }
+
+    public byte[] getTagSignature() {
+        return tagSignature;
+    }
+
+    public void setTagSignature(byte[] tagSignature) {
+        this.tagSignature = tagSignature;
     }
 
 //    public Bundle getAsBundle() {
