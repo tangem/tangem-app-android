@@ -16,4 +16,5 @@ class ServerURL {
     static final String API_STELLAR_RESERVE = "https://horizon.sui.li/";
     static final String API_STELLAR_TESTNET = "https://horizon-testnet.stellar.org/";
     static final String API_BLOCKCHAIN_INFO = "https://blockchain.info/";
+    static final String API_DUCATUS = "https://ducapi.rocknblock.io/";
 }
