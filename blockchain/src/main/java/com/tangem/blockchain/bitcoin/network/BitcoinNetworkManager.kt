@@ -90,7 +90,8 @@ class BitcoinNetworkManager(private val isTestNet: Boolean) : BitcoinProvider {
 data class BitcoinAddressResponse(
         val balance: Long,
         val hasUnconfirmed: Boolean,
-        val unspentTransactions: List<UnspentTransaction>)
+        val unspentTransactions: List<UnspentTransaction>
+)
 
 data class BitcoinFee(
         val minimalPerKb: BigDecimal,
