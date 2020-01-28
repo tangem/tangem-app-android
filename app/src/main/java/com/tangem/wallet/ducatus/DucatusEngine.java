@@ -176,7 +176,7 @@ public class DucatusEngine extends BtcEngine {
 
     @Override
     public Uri getWalletExplorerUri() {
-        return Uri.parse("https://insight.ducatus.io/insight/address/" + ctx.getCoinData().getWallet());
+        return Uri.parse("https://insight.ducatus.io/#/DUC/mainnet/address/" + ctx.getCoinData().getWallet());
     }
 
     @Override
