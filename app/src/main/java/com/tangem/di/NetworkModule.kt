@@ -133,6 +133,20 @@ internal class NetworkModule {
         return builder.build()
     }
 
+    @Singleton
+    @Provides
+    @Named(Server.ApiDucatus.URL_DUCATUS)
+    fun provideRetrofitDucatus(): Retrofit {
+        val builder = Retrofit.Builder()
+                .baseUrl(Server.ApiDucatus.URL_DUCATUS)
+                .addConverterFactory(GsonConverterFactory.create())
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+        if (BuildConfig.DEBUG)
+            builder.client(createOkHttpClient())
+        return builder.build()
+    }
+
     private fun createOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder().addInterceptor(createHttpLoggingInterceptor()).build()
     }
