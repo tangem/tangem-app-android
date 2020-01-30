@@ -2,6 +2,8 @@ package com.tangem.blockchain.common
 
 import com.tangem.blockchain.bitcoin.BitcoinAddressFactory
 import com.tangem.blockchain.bitcoin.BitcoinAddressValidator
+import com.tangem.blockchain.cardano.CardanoAddressFactory
+import com.tangem.blockchain.cardano.CardanoAddressValidator
 import com.tangem.blockchain.eth.EthereumAddressFactory
 import com.tangem.blockchain.eth.EthereumAddressValidator
 import com.tangem.blockchain.stellar.StellarAddressFactory
@@ -37,7 +39,7 @@ enum class Blockchain(
             BitcoinTestnet -> BitcoinAddressFactory.makeAddress(cardPublicKey, testNet = true)
             Ethereum -> EthereumAddressFactory.makeAddress(cardPublicKey)
 //            Rootstock -> RootstockAddressFactory.makeAddress(cardPublicKey)
-//            Cardano -> CardanoAddressFactory.makeAddress(cardPublicKey)
+            Cardano -> CardanoAddressFactory.makeAddress(cardPublicKey)
 //            Ripple -> RippleAddressFactory.makeAddress(cardPublicKey)
 //            Binance -> BinanceAddressFactory.makeAddress(cardPublicKey)
             Stellar -> StellarAddressFactory.makeAddress(cardPublicKey)
@@ -52,7 +54,7 @@ enum class Blockchain(
             BitcoinTestnet -> BitcoinAddressValidator.validate(address, testNet = true)
             Ethereum -> EthereumAddressValidator.validate(address)
 //            Rootstock -> RootstockAddressValidator.validate(address)
-//            Cardano -> CardanoAddressValidator.validate(address)
+            Cardano -> CardanoAddressValidator.validate(address)
 //            Ripple -> RippleAddressValidator.validate(address)
 //            Binance -> BinanceAddressValidator.validate(address)
 //            Stellar -> StellarAddressValidator.validate(address)
