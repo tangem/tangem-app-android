@@ -1,6 +1,7 @@
 package com.tangem.blockchain.common
 
 import com.tangem.blockchain.bitcoin.BitcoinWalletManager
+import com.tangem.blockchain.cardano.CardanoWalletManager
 import com.tangem.blockchain.eth.Chain
 import com.tangem.blockchain.eth.EthereumWalletManager
 import com.tangem.blockchain.stellar.StellarWalletManager
@@ -40,6 +41,13 @@ object WalletManagerFactory {
                         walletConfig = WalletConfig(true, token == null),
                         token = token,
                         isTestNet = isTestNet(blockchainName))
+            }
+            blockchainName.contains("cardano") -> {
+                return CardanoWalletManager(
+                        cardId = card.cardId,
+                        walletPublicKey = walletPublicKey,
+                        walletConfig = WalletConfig(false, true)
+                )
             }
             else -> return null
         }
