@@ -15,13 +15,13 @@ import retrofit2.http.Query;
 
 public interface BlockcypherApi {
     @GET(Server.ApiBlockcypher.Method.MAIN)
-    Call<BlockcypherFee> blockcypherMain(@Path("blockchain") String blockchain, @Path("network") String network);
+    Call<BlockcypherFee> blockcypherMain(@Path("blockchain") String blockchain, @Path("network") String network, @Query("token") String token);
 
     @GET(Server.ApiBlockcypher.Method.ADDRESS)
-    Call<BlockcypherResponse> blockcypherAddress(@Path("blockchain") String blockchain, @Path("network") String network, @Path("address") String address);
+    Call<BlockcypherResponse> blockcypherAddress(@Path("blockchain") String blockchain, @Path("network") String network, @Path("address") String address, @Query("token") String token);
 
     @GET(Server.ApiBlockcypher.Method.TXS)
-    Call<BlockcypherTx> blockcypherTxs(@Path("blockchain") String blockchain, @Path("network") String network, @Path("txHash") String txHash);
+    Call<BlockcypherTx> blockcypherTxs(@Path("blockchain") String blockchain, @Path("network") String network, @Path("txHash") String txHash, @Query("token") String token);
 
     @Headers("Content-Type: application/json")
     @POST(Server.ApiBlockcypher.Method.PUSH)
