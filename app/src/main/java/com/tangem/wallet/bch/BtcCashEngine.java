@@ -24,6 +24,7 @@ import com.tangem.wallet.TangemContext;
 import com.tangem.wallet.Transaction;
 import com.tangem.wallet.UnspentOutputInfo;
 import com.tangem.wallet.btc.BtcData;
+import com.tangem.wallet.btc.Unspents;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -274,11 +275,11 @@ public class BtcCashEngine extends CoinEngine {
 //            return;
 //        }
 
-        if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && coinData.getBalanceInInternalUnits().notZero()) {
-            balanceValidator.setScore(80);
-            balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_offline);
-            balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_get_balance);
-        }
+//        if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) {
+//            balanceValidator.setScore(80);
+//            balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_offline);
+//            balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_get_balance);
+//        }
 
 //            if(card.getFailedBalanceRequestCounter()!=0) {
 //                score -= 5 * card.getFailedBalanceRequestCounter();
@@ -424,7 +425,15 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public String getUnspentInputsDescription() {
-        return coinData.getUnspentInputsDescription();
+        Unspents unspents = coinData.getUnspentInputsDescription();
+        if (unspents == null) {
+            return "";
+        } else {
+            return String.format(
+                    ctx.getContext().getString(R.string.details_unspents_number),
+                    unspents.getUnspetns(),
+                    unspents.getGatheredUnspents());
+        }
     }
 
     @Override
