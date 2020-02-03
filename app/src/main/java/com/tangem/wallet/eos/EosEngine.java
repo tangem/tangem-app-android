@@ -293,11 +293,11 @@ public class EosEngine extends CoinEngine {
             }
         }
 
-        if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && getBalance().notZero()) {
-            balanceValidator.setScore(80);
-            balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_offline);
-            balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_verify_online);
-        }
+//        if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) {
+//            balanceValidator.setScore(80);
+//            balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_offline);
+//            balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_verify_online);
+//        }
 
         return true;
 

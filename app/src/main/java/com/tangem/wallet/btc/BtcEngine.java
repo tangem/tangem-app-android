@@ -310,11 +310,11 @@ public class BtcEngine extends CoinEngine {
 //            return;
 //        }
 
-            if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && coinData.getBalanceInInternalUnits().notZero()) {
-                balanceValidator.setScore(80);
-                balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_offline);
-                balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_get_balance);
-            }
+//            if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) {
+//                balanceValidator.setScore(80);
+//                balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_offline);
+//                balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_get_balance);
+//            }
 
 //            if(card.getFailedBalanceRequestCounter()!=0) {
 //                score -= 5 * card.getFailedBalanceRequestCounter();
@@ -437,7 +437,15 @@ public class BtcEngine extends CoinEngine {
 
     @Override
     public String getUnspentInputsDescription() {
-        return coinData.getUnspentInputsDescription();
+        Unspents unspents = coinData.getUnspentInputsDescription();
+        if (unspents == null) {
+            return "";
+        } else {
+            return String.format(
+                    ctx.getContext().getString(R.string.details_unspents_number),
+                    unspents.getUnspetns(),
+                    unspents.getGatheredUnspents());
+        }
     }
 
     @Override
