@@ -12,27 +12,29 @@ data class InsightResponse(
         @SerializedName("addrStr")
         var addrStr: String = "",
 
+//        @SerializedName("2")
+//        var fee2: String = "",
+//
+//        @SerializedName("3")
+//        var fee3: String = "",
+//
+//        @SerializedName("6")
+//        var fee6: String = "",
+
+        @SerializedName("error")
+        var error: String = ""
+)
+
+data class InsightUtxo(
         @SerializedName("txid")
         var txid: String = "",
 
         @SerializedName("satoshis")
         var satoshis: Long? = null,
 
-        @SerializedName("height")
-        var height: Int? = null,
+        @SerializedName("vout")
+        var vout: Int? = null,
 
-        @SerializedName("2")
-        var fee2: String = "",
-
-        @SerializedName("3")
-        var fee3: String = "",
-
-        @SerializedName("6")
-        var fee6: String = "",
-
-        @SerializedName("rawtx")
-        var rawtx: String = "",
-
-        @SerializedName("error")
-        var error: String = ""
+        @SerializedName("scriptPubKey")
+        var scriptPubKey: String? = null
 )
