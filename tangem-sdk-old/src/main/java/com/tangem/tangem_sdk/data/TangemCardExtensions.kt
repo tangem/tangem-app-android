@@ -3,6 +3,7 @@ package com.tangem.tangem_sdk.data
 import android.os.Bundle
 import com.tangem.tangem_card.data.Manufacturer
 import com.tangem.tangem_card.data.TangemCard
+import com.tangem.tangem_card.reader.TLVList
 import com.tangem.tangem_card.util.Log
 import java.util.*
 
@@ -61,6 +62,13 @@ fun TangemCard.loadFromBundle(B: Bundle) {
         setIssuerData(B.getByteArray("IssuerData"), B.getByteArray("IssuerDataSignature"))
     else setIssuerData(null, null)
 
+    if (B.containsKey("IssuerDataEx") && B.containsKey("IssuerDataExSignature") && B.containsKey("IssuerDataExCounter"))
+        setIssuerDataEx(B.getByteArray("IssuerDataEx"), B.getByteArray("IssuerDataExSignature"), B.getInt("IssuerDataExCounter"))
+    else setIssuerDataEx(null, null, 0)
+
+    if( B.containsKey("ProductMask") )
+        setProductMask(B.getInt("ProductMask"))
+
     if (B.containsKey("NeedWriteIssuerData"))
         needWriteIssuerData = B.getBoolean("NeedWriteIssuerData")
 
@@ -84,6 +92,10 @@ fun TangemCard.loadFromBundle(B: Bundle) {
     if (B.containsKey("terminalPrivateKey")) terminalPrivateKey = B.getByteArray("terminalPrivateKey")
     if (B.containsKey("terminalPublicKey")) terminalPublicKey = B.getByteArray("terminalPublicKey")
     terminalIsLinked = B.getBoolean("terminalIsLinked")
+
+    if (B.containsKey("tagSignature")) tagSignature = B.getByteArray("tagSignature")
+    if (B.containsKey("idHash")) idHash = B.getByteArray("idHash")
+    if (B.containsKey("tlvIDCardData")) tlvIDCardData = B.getSerializable("tlvIDCardData") as TLVList
 
 }
 
@@ -112,11 +124,10 @@ fun TangemCard.saveToBundle(B: Bundle) {
         B.putInt("Health", health)
         if (settingsMask != null) B.putInt("settingsMask", settingsMask)
         B.putInt("pauseBeforePIN2", pauseBeforePIN2)
-        if( allowedSigningMethod!=null ){
-            var iSigningMethod=0x80
-            for(sM in allowedSigningMethod)
-            {
-                iSigningMethod=iSigningMethod.or(0x01.shl(sM.ID))
+        if (allowedSigningMethod != null) {
+            var iSigningMethod = 0x80
+            for (sM in allowedSigningMethod) {
+                iSigningMethod = iSigningMethod.or(0x01.shl(sM.ID))
             }
             B.putInt("signingMethod", iSigningMethod)
         }
@@ -148,6 +159,14 @@ fun TangemCard.saveToBundle(B: Bundle) {
             B.putBoolean("NeedWriteIssuerData", needWriteIssuerData)
         }
 
+        if (issuerDataEx != null && issuerDataExSignature != null) {
+            B.putByteArray("IssuerDataEx", issuerDataEx)
+            B.putByteArray("IssuerDataExSignature", issuerDataExSignature)
+            B.putInt("IssuerDataExCounter", issuerDataExCounter)
+        }
+
+        B.putInt("ProductMask",productMask)
+
         if (isCodeConfirmed != null)
             B.putBoolean("codeConfirmed", isCodeConfirmed)
 
@@ -162,6 +181,11 @@ fun TangemCard.saveToBundle(B: Bundle) {
         if (terminalPublicKey != null)
             B.putByteArray("terminalPublicKey", terminalPublicKey)
         B.putBoolean("terminalIsLinked", terminalIsLinked)
+
+        if (tagSignature != null) B.putByteArray("tagSignature", tagSignature)
+
+        if (idHash != null) B.putByteArray("idHash", idHash)
+        if (tlvIDCardData != null) B.putSerializable("tlvIDCardData", tlvIDCardData)
 
     } catch (e: Exception) {
         Log.e("Can't save to bundle ", e.message)
