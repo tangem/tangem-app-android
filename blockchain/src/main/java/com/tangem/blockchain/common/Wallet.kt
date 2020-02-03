@@ -23,19 +23,27 @@ data class Amount(
         val address: String? = null,
         val decimals: Byte,
         val type: AmountType = AmountType.Coin
-        )
+) {
+    constructor(
+            value: BigDecimal?,
+            blockchain: Blockchain,
+            address: String? = null,
+            type: AmountType = AmountType.Coin
+    ) : this(blockchain.currency, value, address, blockchain.decimals, type)
+}
 
 data class TransactionData(
         val amount: Amount,
         val fee: Amount?,
         val sourceAddress: String,
         val destinationAddress: String,
-        var status: TransactionStatus = TransactionStatus.Uncomfirmed
+        var status: TransactionStatus = TransactionStatus.Unconfirmed,
+        var date: Calendar? = null
 )
 
 enum class AmountType { Coin, Token, Reserve }
 
-enum class TransactionStatus {Confirmed, Uncomfirmed}
+enum class TransactionStatus { Confirmed, Unconfirmed }
 
 enum class ValidationError { WrongAmount, WrongFee, WrongTotal }
 
