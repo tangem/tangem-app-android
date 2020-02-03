@@ -7,10 +7,12 @@ import android.net.Uri
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
+import android.nfc.tech.NfcV
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
+import android.util.Log
 import android.view.*
 import android.widget.PopupMenu
 import android.widget.TextView
@@ -20,14 +22,21 @@ import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModelProviders
 import com.tangem.App
 import com.tangem.Constant
+import com.tangem.data.Blockchain
 import com.tangem.data.Logger
 import com.tangem.tangem_card.data.TangemCard
 import com.tangem.tangem_card.reader.CardProtocol
+import com.tangem.tangem_card.reader.TLV
+import com.tangem.tangem_card.reader.TLVException
+import com.tangem.tangem_card.reader.TLVList
 import com.tangem.tangem_card.tasks.CustomReadCardTask
 import com.tangem.tangem_card.tasks.ReadCardInfoTask
 import com.tangem.tangem_sdk.android.data.PINStorage
 import com.tangem.tangem_sdk.android.nfc.NfcDeviceAntennaLocation
 import com.tangem.tangem_sdk.android.reader.NfcReader
+import com.tangem.tangem_sdk.android.reader.NfcVReader
+import com.tangem.tangem_sdk.android.reader.ReadResult
+import com.tangem.tangem_sdk.android.reader.ReadSlixTagTask
 import com.tangem.tangem_sdk.data.EXTRA_TANGEM_CARD
 import com.tangem.tangem_sdk.data.EXTRA_TANGEM_CARD_UID
 import com.tangem.tangem_sdk.data.loadFromBundle
@@ -45,10 +54,16 @@ import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.CoinEngineFactory
 import com.tangem.wallet.R
 import com.tangem.wallet.TangemContext
+import com.tangem.wallet.xlmTag.XlmTagEngine
 import kotlinx.android.synthetic.main.fragment_main.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
+import kotlin.coroutines.CoroutineContext
 
 class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.ReaderCallback,
         CardProtocol.Notifications, androidx.appcompat.widget.PopupMenu.OnMenuItemClickListener,
@@ -68,6 +83,11 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
     private var zipFile: File? = null
     private var unknownBlockchain = false
 
+    private val parentJob = Job()
+    private val coroutineContext: CoroutineContext
+        get() = parentJob + Dispatchers.IO
+    private val scope = CoroutineScope(coroutineContext)
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         setHasOptionsMenu(true)
         return super.onCreateView(inflater, container, savedInstanceState)
@@ -77,6 +97,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
         super.onViewCreated(view, savedInstanceState)
         rippleBackgroundNfc.startRippleAnimation()
 
+//        navigateToDestination(R.id.action_main_to_emptyIdFragment)
         // init NFC Antenna
         nfcDeviceAntenna = NfcDeviceAntennaLocation(context!!, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
         nfcDeviceAntenna.init()
@@ -109,7 +130,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
 
         tvBuyCards?.setText(spannable, TextView.BufferType.SPANNABLE)
         llShoppingView?.setOnClickListener {
-            val uri = Uri.parse ("https://www.tangemcards.com")
+            val uri = Uri.parse("https://www.tangemcards.com")
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
         }
@@ -152,6 +173,8 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
             return
         }
 
+        NfcV.get(tag)?.let { onNfcVDiscovered(it, tag.id) }
+
         try {
             // get IsoDep handle and run cardReader thread
             val isoDep = IsoDep.get(tag)
@@ -172,6 +195,44 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
         } catch (e: Exception) {
             e.printStackTrace()
             (activity as MainActivity).nfcManager.notifyReadResult(false)
+        }
+    }
+
+
+    private fun onNfcVDiscovered(nfcV: NfcV, uid: ByteArray) {
+        scope.launch {
+            when (val readResult = ReadSlixTagTask(NfcVReader(nfcV)).read()) {
+                is ReadResult.Failure -> (activity as MainActivity).nfcManager.notifyReadResult(false)
+                is ReadResult.Success -> {
+                    try {
+                        val tlvs = readResult.tlvs
+                        val cardDataTlv = TLVList.fromBytes((tlvs.getTLV(TLV.Tag.TAG_CardData)).Value)
+                        Log.v(TAG, "\n" + tlvs.getParsedTLVs(""))
+                        val card = TangemCard(uid.toString())
+                        card.batch = cardDataTlv.getTLV(TLV.Tag.TAG_Batch).asHexString
+                        card.setIssuer(cardDataTlv.getTLV(TLV.Tag.TAG_Issuer_ID).Value.toString(), null)
+                        card.blockchainID = Blockchain.StellarTag.id
+                        card.walletPublicKey = tlvs.getTLV(TLV.Tag.TAG_Wallet_PublicKey).Value
+                        card.status = TangemCard.Status.Loaded
+                        card.tagSignature = tlvs.getTLV(TLV.Tag.TAG_Signature).Value
+
+                        val ctx = TangemContext(card)
+                        val engineCoin = XlmTagEngine(ctx)
+                        engineCoin.defineWallet()
+                        launch(Dispatchers.Main) {
+
+                            val bundle = Bundle()
+                            bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
+                            ctx.saveToBundle(bundle)
+                            navigateForResult(Constant.REQUEST_CODE_SHOW_CARD_ACTIVITY,
+                                    R.id.action_main_to_tagFragment, bundle)
+                        }
+                    } catch (e: TLVException) {
+                        e.printStackTrace()
+                        Log.v(TAG, e.message)
+                    }
+                }
+            }
         }
     }
 
@@ -213,20 +274,31 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                         card.status == TangemCard.Status.Loaded -> lastTag?.let {
                             val engineCoin = CoinEngineFactory.create(ctx)
                             if (engineCoin != null) {
-                                engineCoin.defineWallet()
-
-                                val bundle = Bundle()
-                                bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
-                                ctx.saveToBundle(bundle)
-                                navigateForResult(Constant.REQUEST_CODE_SHOW_CARD_ACTIVITY,
-                                        R.id.action_main_to_loadedWalletFragment, bundle)
+                                if (card.isIDCard) {
+                                    val bundle = Bundle()
+                                    bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
+                                    ctx.saveToBundle(bundle)
+                                    navigateToDestination(R.id.action_main_to_idFragment, bundle)
+                                } else {
+                                    engineCoin.defineWallet()
+                                    val bundle = Bundle()
+                                    bundle.putParcelable(Constant.EXTRA_LAST_DISCOVERED_TAG, lastTag)
+                                    ctx.saveToBundle(bundle)
+                                    navigateForResult(Constant.REQUEST_CODE_SHOW_CARD_ACTIVITY,
+                                            R.id.action_main_to_loadedWalletFragment, bundle)
+                                }
                             } else {
                                 showUnkownBlockchainWarning()
                             }
                         }
                         card.status == TangemCard.Status.Empty -> {
-                            val bundle = Bundle().apply { ctx.saveToBundle(this) }
-                            navigateToDestination(R.id.action_main_to_emptyWalletFragment, bundle)
+                            val engineCoin = CoinEngineFactory.create(ctx)
+                            if (engineCoin != null) {
+                                val bundle = Bundle().apply { ctx.saveToBundle(this) }
+                                navigateToDestination(R.id.action_main_to_emptyWalletFragment, bundle)
+                            } else {
+                                showUnkownBlockchainWarning()
+                            }
                         }
                         card.status == TangemCard.Status.Purged -> Toast.makeText(context, R.string.main_screen_erased_wallet, Toast.LENGTH_SHORT).show()
                         card.status == TangemCard.Status.NotPersonalized -> Toast.makeText(context, R.string.main_screen_not_personalized, Toast.LENGTH_SHORT).show()
