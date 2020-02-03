@@ -164,4 +164,7 @@ dependencies {
     implementation 'io.jafka:jeos:0.9.15'
 //    implementation 'one.block:eosiojava:0.1.0'
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.61'
+
+    implementation 'io.fotoapparat:fotoapparat:2.6.1'
+    implementation 'com.otaliastudios:cameraview:2.6.1'
 }
