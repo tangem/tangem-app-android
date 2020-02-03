@@ -31,6 +31,7 @@ import com.tangem.wallet.Transaction;
 import com.tangem.wallet.UnspentOutputInfo;
 import com.tangem.wallet.btc.BtcData;
 import com.tangem.wallet.btc.BtcEngine;
+import com.tangem.wallet.btc.Unspents;
 
 import org.json.JSONException;
 
@@ -274,11 +275,11 @@ public class LtcEngine extends BtcEngine {
 //            return;
 //        }
 
-        if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && (ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) && coinData.getBalanceInInternalUnits().notZero()) {
-            balanceValidator.setScore(80);
-            balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_offline);
-            balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_verify_online);
-        }
+//        if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) {
+//            balanceValidator.setScore(80);
+//            balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_offline);
+//            balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_verify_online);
+//        }
 
 //            if(card.getFailedBalanceRequestCounter()!=0) {
 //                score -= 5 * card.getFailedBalanceRequestCounter();
@@ -389,7 +390,15 @@ public class LtcEngine extends BtcEngine {
 
     @Override
     public String getUnspentInputsDescription() {
-        return coinData.getUnspentInputsDescription();
+        Unspents unspents = coinData.getUnspentInputsDescription();
+        if (unspents == null) {
+            return "";
+        } else {
+            return String.format(
+                    ctx.getContext().getString(R.string.details_unspents_number),
+                    unspents.getUnspetns(),
+                    unspents.getGatheredUnspents());
+        }
     }
 
     @Override

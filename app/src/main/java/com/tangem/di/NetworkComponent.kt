@@ -38,6 +38,9 @@ interface NetworkComponent {
     @get:Named(Server.ApiBlockchainInfo.URL_BLOCKCHAININFO)
     val retrofitBlockchainInfo: Retrofit
 
+    @get:Named(Server.ApiDucatus.URL_DUCATUS)
+    val retrofitDucatus: Retrofit
+
     @get:Named("socket")
     val socket: Socket
 
