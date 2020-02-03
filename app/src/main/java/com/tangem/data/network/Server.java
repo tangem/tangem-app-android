@@ -129,4 +129,14 @@ public class Server {
             static final String PUSH = URL_BLOCKCHAININFO + "pushtx";
         }
     }
+
+    public static class ApiDucatus {
+        public static final String URL_DUCATUS = ServerURL.API_DUCATUS + "api/DUC/mainnet/";
+
+        public static class Method {
+            static final String BALANCE = URL_DUCATUS + "address/{address}/balance";
+            static final String UTXO = URL_DUCATUS + "address/{address}/?unspent=true";
+            static final String SEND = URL_DUCATUS + "tx/send";
+        }
+    }
 }
