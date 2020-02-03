@@ -23,7 +23,7 @@ class BlockchainInfoProvider(
 
                 val addressData = addressDeferred.await()
                 val unspents = unspentsDeferred.await()
-                val unconfinedTransactions = addressData.transactions?.find { it.blockHeight == 0L } != null
+                val unconfirmedTransactions = addressData.transactions?.find { it.blockHeight == 0L } != null
 
                 val bitcoinUnspents = unspents.unspentOutputs.map {
                     UnspentTransaction(
@@ -36,7 +36,7 @@ class BlockchainInfoProvider(
                 Result.Success(
                         BitcoinAddressResponse(
                                 addressData.finalBalance
-                                        ?: 0L, unconfinedTransactions, bitcoinUnspents))
+                                        ?: 0L, unconfirmedTransactions, bitcoinUnspents))
             }
         } catch (exception: Exception) {
             Result.Failure(exception)
