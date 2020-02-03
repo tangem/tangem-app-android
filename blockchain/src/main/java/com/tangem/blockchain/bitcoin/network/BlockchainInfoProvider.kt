@@ -1,11 +1,13 @@
 package com.tangem.blockchain.bitcoin.network
 
 import com.tangem.blockchain.bitcoin.UnspentTransaction
+import com.tangem.blockchain.bitcoin.network.BitcoinNetworkManager.Companion.SATOSHI_IN_BTC
 import com.tangem.blockchain.bitcoin.network.api.BlockchainInfoApi
 import com.tangem.blockchain.bitcoin.network.api.EstimatefeeApi
 import com.tangem.blockchain.common.extensions.Result
 import com.tangem.blockchain.common.extensions.SimpleResult
 import com.tangem.blockchain.common.extensions.retryIO
+import com.tangem.common.extensions.hexToBytes
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 
@@ -27,16 +29,16 @@ class BlockchainInfoProvider(
 
                 val bitcoinUnspents = unspents.unspentOutputs.map {
                     UnspentTransaction(
-                            it.amount!!,
+                            it.amount!!.toBigDecimal().divide(SATOSHI_IN_BTC),
                             it.outputIndex!!.toLong(),
-                            it.hash!!.toByteArray(),
-                            it.outputScript!!.toByteArray())
+                            it.hash!!.hexToBytes(),
+                            it.outputScript!!.hexToBytes())
                 }
 
                 Result.Success(
                         BitcoinAddressResponse(
-                                addressData.finalBalance
-                                        ?: 0L, unconfirmedTransactions, bitcoinUnspents))
+                                addressData.finalBalance?.toBigDecimal()?.divide(SATOSHI_IN_BTC)
+                                        ?: 0.toBigDecimal(), unconfirmedTransactions, bitcoinUnspents))
             }
         } catch (exception: Exception) {
             Result.Failure(exception)

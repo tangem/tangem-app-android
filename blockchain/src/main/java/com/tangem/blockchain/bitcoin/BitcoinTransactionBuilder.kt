@@ -1,66 +1,68 @@
 package com.tangem.blockchain.bitcoin
 
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.extensions.Result
 import com.tangem.blockchain.common.extensions.toCanonicalised
 import org.bitcoinj.core.*
 import org.bitcoinj.crypto.TransactionSignature
 import org.bitcoinj.script.Script
 import org.bitcoinj.script.ScriptBuilder
-import java.io.ByteArrayOutputStream
+import java.math.BigDecimal
 import java.math.BigInteger
 
 class BitcoinTransactionBuilder(private val testNet: Boolean) {
 
     private lateinit var transaction: Transaction
     private var networkParameters: NetworkParameters? = null
-    var unspentOutputs: List<UnspentTransaction> = listOf()
-
-    fun calculateChange(transactionData: TransactionData) : Long {
-        val fullAmount = unspentOutputs.map { it.amount }.sum()
-        return fullAmount - (transactionData.amount.value!!.toLong() + (transactionData.fee?.value?.toLong() ?: 0))
-    }
+    var unspentOutputs: List<UnspentTransaction>? = null
 
     fun buildToSign(
-            transactionData: TransactionData): List<ByteArray> {
+            transactionData: TransactionData): Result<List<ByteArray>> {
 
-        val change: Long = calculateChange(transactionData)
+        if (unspentOutputs == null) return Result.Failure(Exception("Currently there's an unconfirmed transaction"))
+
+        val change: BigDecimal = calculateChange(transactionData)
 
         networkParameters = if (testNet) {
             NetworkParameters.fromID(NetworkParameters.ID_TESTNET)
         } else {
             NetworkParameters.fromID(NetworkParameters.ID_MAINNET)
         }
-        transaction = transactionData.toBitcoinJTransaction(networkParameters, unspentOutputs, change)
+        transaction = transactionData.toBitcoinJTransaction(networkParameters, unspentOutputs!!, change)
 
-        val hashesForSign: MutableList<ByteArray> = mutableListOf()
+        val hashesForSign: MutableList<ByteArray> = MutableList(transaction.inputs.size) { byteArrayOf() }
         for (input in transaction.inputs) {
             val index = input.index
             hashesForSign[index] = transaction.hashForSignature(index, input.scriptBytes, Transaction.SigHash.ALL, false).bytes
         }
-        return hashesForSign
+        return Result.Success(hashesForSign)
+    }
+
+    private fun calculateChange(transactionData: TransactionData): BigDecimal {
+        val fullAmount = unspentOutputs!!.map { it.amount }.reduce { acc, number -> acc + number }
+        return fullAmount - (transactionData.amount.value!! + (transactionData.fee?.value
+                ?: 0.toBigDecimal()))
     }
 
     fun buildToSend(signedTransaction: ByteArray, publicKey: ByteArray): ByteArray {
         for (index in transaction.inputs.indices) {
             transaction.inputs[index].scriptSig = createScript(index, signedTransaction, publicKey)
         }
-        val serializer = BitcoinSerializer(networkParameters, false)
-        val outputStream = ByteArrayOutputStream()
-        serializer.serialize(transaction, outputStream)
-        return outputStream.toByteArray()
+        return transaction.bitcoinSerialize()
     }
 
     private fun createScript(index: Int, signedTransaction: ByteArray, publicKey: ByteArray): Script {
-        val r = BigInteger(1, signedTransaction.copyOfRange(index * 64, 32 + index * 64));
-        val s = BigInteger(1, signedTransaction.copyOfRange(32 + index * 64, 64 + index * 64));
-        val signature = TransactionSignature(r, s.toCanonicalised())
+        val r = BigInteger(1, signedTransaction.copyOfRange(index * 64, 32 + index * 64))
+        val s = BigInteger(1, signedTransaction.copyOfRange(32 + index * 64, 64 + index * 64))
+        val canonicalS = ECKey.ECDSASignature(r, s).toCanonicalised().s
+        val signature = TransactionSignature(r, canonicalS)
         return ScriptBuilder.createInputScript(signature, ECKey.fromPublicOnly(publicKey))
     }
 }
 
 internal fun TransactionData.toBitcoinJTransaction(networkParameters: NetworkParameters?,
                                                    unspentOutputs: List<UnspentTransaction>,
-                                                   change: Long): Transaction {
+                                                   change: BigDecimal): Transaction {
     val transaction = Transaction(networkParameters)
     for (utxo in unspentOutputs) {
         transaction.addInput(Sha256Hash.wrap(utxo.hash), utxo.outputIndex, Script(utxo.outputScript))
@@ -68,9 +70,9 @@ internal fun TransactionData.toBitcoinJTransaction(networkParameters: NetworkPar
     transaction.addOutput(
             Coin.parseCoin(this.amount.value!!.toPlainString()),
             Address.fromString(networkParameters, this.destinationAddress))
-    if (change != 0L) {
+    if (change != 0.toBigDecimal()) {
         transaction.addOutput(
-                Coin.parseCoin(change.toString()),
+                Coin.parseCoin(change.toPlainString()),
                 Address.fromString(networkParameters,
                         this.sourceAddress))
     }
@@ -78,7 +80,7 @@ internal fun TransactionData.toBitcoinJTransaction(networkParameters: NetworkPar
 }
 
 class UnspentTransaction(
-        val amount: Long,
+        val amount: BigDecimal,
         val outputIndex: Long,
         val hash: ByteArray,
         val outputScript: ByteArray
