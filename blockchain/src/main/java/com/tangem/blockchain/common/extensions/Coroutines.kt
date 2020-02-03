@@ -1,10 +1,18 @@
 package com.tangem.blockchain.common.extensions
 
-import kotlinx.coroutines.delay
+import com.tangem.CardManager
+import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.commands.SignResponse
+import com.tangem.tasks.TaskEvent
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import java.io.IOException
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 suspend fun <T> retryIO(
-        times: Int = Int.MAX_VALUE,
+        times: Int = 3,
         initialDelay: Long = 100,
         maxDelay: Long = 1000,
         factor: Double = 2.0,
@@ -47,3 +55,12 @@ sealed class SimpleResult {
     data class Failure(val error: Throwable?) : SimpleResult()
 }
 
+class Signer(private val cardManager: CardManager) : TransactionSigner {
+    override suspend fun sign(hashes: Array<ByteArray>, cardId: String): TaskEvent<SignResponse> = coroutineScope {
+        async {
+            suspendCancellableCoroutine<TaskEvent<SignResponse>> { continuation ->
+                cardManager.sign(hashes, cardId) { if (continuation.isActive) continuation.resume(it) }
+            }
+        }.await()
+    }
+}
