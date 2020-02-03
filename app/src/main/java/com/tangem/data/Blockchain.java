@@ -10,6 +10,7 @@ public enum Blockchain {
     Bitcoin("BTC", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin, "Bitcoin"),
     BitcoinTestNet("BTC/test", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin_testnet, "Bitcoin Testnet"),
     Ethereum("ETH", "ETH", 1.0, R.drawable.ic_logo_ethereum, "Ethereum"),
+    EthereumId("ETH/ID", "ETH", 1.0, R.drawable.ic_logo_ethereum, "Ethereum ID"),
     EthereumTestNet("ETH/test", "ETH", 1.0, R.drawable.ic_logo_ethereum_testnet, "Ethereum Testnet"),
     Token("Token", "ETH", 1.0, R.drawable.ic_logo_bat_token, "Ethereum"),
     NftToken("NftToken", "", 1.0, R.drawable.tangem2, "Ethereum"),
@@ -23,10 +24,13 @@ public enum Blockchain {
     BinanceTestNet("BINANCE/test", "BNB", 100000000.0, R.drawable.tangem2, "Binance Testnet"),
     Matic("MATIC", "MTX", 1.0, R.drawable.tangem2, "Matic"),
     MaticTestNet("MATIC/test", "MTX", 1.0, R.drawable.tangem2, "Matic Testnet"),
-    Stellar("XLM", "XLM", 1000000.0, R.drawable.ic_logo_stellar, "Stellar"),
-    StellarTestNet("XLM/test", "XLM", 1000000.0, R.drawable.ic_logo_stellar, "Stellar Testnet"),
+    Stellar("XLM", "XLM", 10000000.0, R.drawable.ic_logo_stellar, "Stellar"),
+    StellarTestNet("XLM/test", "XLM", 10000000.0, R.drawable.ic_logo_stellar, "Stellar Testnet"),
     StellarAsset("Asset", "XLM", 10000000.0, R.drawable.ic_logo_stellar, "Stellar"),
-    Eos("EOS", "EOS", 10000.0, R.drawable.tangem2, "EOS");
+    StellarTag("XLM-Tag", "XLM", 1000000.0, R.drawable.ic_logo_stellar, "Stellar"),
+    Eos("EOS", "EOS", 10000.0, R.drawable.tangem2, "EOS"),
+    Ducatus("DUC", "DUC", 100000000.0, R.drawable.tangem2, "Ducatus"),
+    Tezos("TEZOS", "XTZ", 10000000.0, R.drawable.tangem2, "Tezos");
 
     Blockchain(String ID, String currency, double multiplier, int imageResource, String officialName) {
         mID = ID;
