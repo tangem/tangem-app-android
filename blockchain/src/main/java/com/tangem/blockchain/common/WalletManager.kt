@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.extensions.Result
 import com.tangem.blockchain.common.extensions.SimpleResult
 import com.tangem.commands.SignResponse
 import com.tangem.tasks.TaskEvent
+import kotlinx.coroutines.flow.Flow
 
 interface WalletManager {
     var wallet: Wallet
@@ -13,7 +14,7 @@ interface WalletManager {
 }
 
 interface TransactionEstimator {
-    suspend fun getEstimateSize(transactionData: TransactionData): Int
+    suspend fun getEstimateSize(transactionData: TransactionData): Result<Int>
 }
 
 interface TransactionSender {
