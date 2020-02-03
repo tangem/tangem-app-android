@@ -2,10 +2,10 @@ package com.tangem.blockchain.common
 
 import com.tangem.blockchain.bitcoin.BitcoinAddressFactory
 import com.tangem.blockchain.bitcoin.BitcoinAddressValidator
+import com.tangem.blockchain.ethereum.EthereumAddressFactory
+import com.tangem.blockchain.ethereum.EthereumAddressValidator
 import com.tangem.blockchain.cardano.CardanoAddressFactory
 import com.tangem.blockchain.cardano.CardanoAddressValidator
-import com.tangem.blockchain.eth.EthereumAddressFactory
-import com.tangem.blockchain.eth.EthereumAddressValidator
 import com.tangem.blockchain.stellar.StellarAddressFactory
 import java.math.BigDecimal
 
@@ -17,14 +17,14 @@ enum class Blockchain(
         val pendingTransactionTimeout: Int
 ) {
     Unknown("", "", 0, "", 0),
-    Bitcoin("btc", "", 8, "", 0),
-    BitcoinTestnet("btc", "", 8, "", 0),
-    Ethereum("", "", 18, "", 0),
+    Bitcoin("BTC", "BTC", 8, "Bitcoin", 0),
+    BitcoinTestnet("BTC", "BTC", 8, "Bitcoin Testnet", 0),
+    Ethereum("ETH", "ETH", 18, "Ethereum", 0),
     Rootstock("", "", 18, "", 0),
-    Cardano("", "", 6, "", 0),
+    Cardano("CARDANO", "ADA", 6, "Cardano", 0),
     Ripple("", "", 6, "", 0),
     Binance("", "", 8, "", 0),
-    Stellar("", "", 7, "", 0);
+    Stellar("XLM", "XLM", 7, "Stellar", 0);
 
     fun roundingMode(): Int = when (this) {
         Bitcoin, Ethereum, Rootstock, Binance -> BigDecimal.ROUND_DOWN
@@ -32,17 +32,17 @@ enum class Blockchain(
         else -> BigDecimal.ROUND_HALF_UP
     }
 
-    fun makeAddress(cardPublicKey: ByteArray): String {
+    fun makeAddress(walletPublicKey: ByteArray): String {
         return when (this) {
             Unknown -> throw Exception("unsupported blockchain")
-            Bitcoin -> BitcoinAddressFactory.makeAddress(cardPublicKey)
-            BitcoinTestnet -> BitcoinAddressFactory.makeAddress(cardPublicKey, testNet = true)
-            Ethereum -> EthereumAddressFactory.makeAddress(cardPublicKey)
+            Bitcoin -> BitcoinAddressFactory.makeAddress(walletPublicKey)
+            BitcoinTestnet -> BitcoinAddressFactory.makeAddress(walletPublicKey, testNet = true)
+            Ethereum -> EthereumAddressFactory.makeAddress(walletPublicKey)
 //            Rootstock -> RootstockAddressFactory.makeAddress(cardPublicKey)
-            Cardano -> CardanoAddressFactory.makeAddress(cardPublicKey)
+            Cardano -> CardanoAddressFactory.makeAddress(walletPublicKey)
 //            Ripple -> RippleAddressFactory.makeAddress(cardPublicKey)
 //            Binance -> BinanceAddressFactory.makeAddress(cardPublicKey)
-            Stellar -> StellarAddressFactory.makeAddress(cardPublicKey)
+            Stellar -> StellarAddressFactory.makeAddress(walletPublicKey)
             else -> throw Exception("unsupported blockchain")
         }
     }
