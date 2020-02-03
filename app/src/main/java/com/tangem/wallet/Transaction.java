@@ -566,7 +566,7 @@ public final class Transaction {
         public static Script buildOutput(String address) throws BitcoinException {
             //noinspection TryWithIdenticalCatches
                 byte[] addressWithCheckSumAndNetworkCode = Base58.decodeBase58(address);
-                if (addressWithCheckSumAndNetworkCode[0] == 0 || addressWithCheckSumAndNetworkCode[0] == 111 || addressWithCheckSumAndNetworkCode[0] == 48) { //0 for BTC/BCH 1 address | 48 for LTC L address
+                if (addressWithCheckSumAndNetworkCode[0] == 0 || addressWithCheckSumAndNetworkCode[0] == 111 || addressWithCheckSumAndNetworkCode[0] == 48 || addressWithCheckSumAndNetworkCode[0] == 49) { //0 for BTC/BCH 1 address | 48 for LTC L address | 49 for Ducatus
                     return buildOutputP2H(address);
                 }
 
@@ -601,7 +601,7 @@ public final class Transaction {
             //noinspection TryWithIdenticalCatches
             try {
                 byte[] addressWithCheckSumAndNetworkCode = Base58.decodeBase58(address);
-                if (addressWithCheckSumAndNetworkCode[0] != 0 && addressWithCheckSumAndNetworkCode[0] != 111 && addressWithCheckSumAndNetworkCode[0] != 48) {
+                if (addressWithCheckSumAndNetworkCode[0] != 0 && addressWithCheckSumAndNetworkCode[0] != 111 && addressWithCheckSumAndNetworkCode[0] != 48 && addressWithCheckSumAndNetworkCode[0] != 49) {
                     throw new BitcoinException(BitcoinException.ERR_UNSUPPORTED, "Unknown address type", address);
                 }
 
