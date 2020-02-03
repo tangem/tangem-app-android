@@ -1,13 +1,15 @@
 package com.tangem.blockchain.bitcoin.network
 
 import com.tangem.blockchain.bitcoin.UnspentTransaction
+import com.tangem.blockchain.bitcoin.network.BitcoinNetworkManager.Companion.SATOSHI_IN_BTC
 import com.tangem.blockchain.bitcoin.network.api.BlockcypherApi
-import com.tangem.blockchain.bitcoin.network.response.BlockcypherBody
+import com.tangem.blockchain.bitcoin.network.api.BlockcypherBody
 import com.tangem.blockchain.bitcoin.network.response.BlockcypherFee
 import com.tangem.blockchain.bitcoin.network.response.BlockcypherResponse
 import com.tangem.blockchain.common.extensions.Result
 import com.tangem.blockchain.common.extensions.SimpleResult
 import com.tangem.blockchain.common.extensions.retryIO
+import com.tangem.common.extensions.hexToBytes
 
 class BlockcypherProvider(private val api: BlockcypherApi, isTestNet: Boolean) : BitcoinProvider {
 
@@ -22,16 +24,16 @@ class BlockcypherProvider(private val api: BlockcypherApi, isTestNet: Boolean) :
     override suspend fun getInfo(address: String): Result<BitcoinAddressResponse> {
         try {
             val addressData: BlockcypherResponse = retryIO { api.getAddressData(blockchain, network, address) }
-            val unspents = addressData.txrefs!!.map {
+            val unspents = addressData.txrefs?.map {
                 UnspentTransaction(
-                        it.amount!!,
+                        it.amount!!.toBigDecimal().divide(SATOSHI_IN_BTC),
                         it.outputIndex!!.toLong(),
-                        it.hash!!.toByteArray(),
-                        it.outputScript!!.toByteArray()
+                        it.hash!!.hexToBytes(),
+                        it.outputScript!!.hexToBytes()
                 )
             }
             return Result.Success(BitcoinAddressResponse(
-                    addressData.balance!!,
+                    addressData.balance!!.toBigDecimal().divide(SATOSHI_IN_BTC),
                     addressData.unconfirmedBalance != 0L,
                     unspents))
 
@@ -44,9 +46,9 @@ class BlockcypherProvider(private val api: BlockcypherApi, isTestNet: Boolean) :
         try {
             val receivedFee: BlockcypherFee = retryIO { api.getFee(blockchain, network) }
             return Result.Success(
-                    BitcoinFee(receivedFee.minFeePerKb!!.toBigDecimal() / satoshiInBtc,
-                            receivedFee.normalFeePerKb!!.toBigDecimal() / satoshiInBtc,
-                            receivedFee.priorityFeePerKb!!.toBigDecimal() / satoshiInBtc)
+                    BitcoinFee(receivedFee.minFeePerKb!!.toBigDecimal().divide(SATOSHI_IN_BTC),
+                            receivedFee.normalFeePerKb!!.toBigDecimal().divide(SATOSHI_IN_BTC),
+                            receivedFee.priorityFeePerKb!!.toBigDecimal().divide(SATOSHI_IN_BTC))
             )
         } catch (error: Exception) {
             return Result.Failure(error)
@@ -79,5 +81,3 @@ private enum class BlockcypherNetwork(val network: String) {
     Main("main"),
     Test("test3")
 }
-
-val satoshiInBtc = 100000000.toBigDecimal()

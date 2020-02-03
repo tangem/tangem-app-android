@@ -3,14 +3,13 @@ package com.tangem.blockchain.bitcoin
 import android.util.Log
 import com.tangem.blockchain.bitcoin.network.BitcoinAddressResponse
 import com.tangem.blockchain.bitcoin.network.BitcoinNetworkManager
+import com.tangem.blockchain.bitcoin.network.BitcoinNetworkManager.Companion.SATOSHI_IN_BTC
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.extensions.Result
 import com.tangem.blockchain.common.extensions.SimpleResult
 import com.tangem.blockchain.wallets.CurrencyWallet
 import com.tangem.common.extensions.toHexString
 import com.tangem.tasks.TaskEvent
-import org.bitcoinj.core.NetworkParameters
-import org.bitcoinj.core.Transaction
 import java.math.BigDecimal
 
 class BitcoinWalletManager(
@@ -39,8 +38,8 @@ class BitcoinWalletManager(
     }
 
     private fun updateWallet(response: BitcoinAddressResponse) {
-        Log.d(this::class.java.simpleName, "Balance is ${response.balance.toString()}")
-        currencyWallet.balances[AmountType.Coin]?.value = response.balance.toBigDecimal()
+        Log.d(this::class.java.simpleName, "Balance is ${response.balance}")
+        currencyWallet.balances[AmountType.Coin]?.value = response.balance
         transactionBuilder.unspentOutputs = response.unspentTransactions
         if (response.hasUnconfirmed) {
             if (currencyWallet.pendingTransactions.isEmpty()) {
@@ -59,26 +58,31 @@ class BitcoinWalletManager(
         Log.e(this::class.java.simpleName, error?.message ?: "")
     }
 
-
-    override suspend fun getEstimateSize(transactionData: TransactionData): Int {
-        val transaction: Transaction = transactionData.toBitcoinJTransaction(
-                NetworkParameters.fromID(NetworkParameters.ID_MAINNET),
-                transactionBuilder.unspentOutputs,
-                transactionBuilder.calculateChange(transactionData)
-        )
-        var size: Int = transaction.unsafeBitcoinSerialize().size
-        size += transaction.inputs.sumBy { 130 }
-        return size
+    override suspend fun getEstimateSize(transactionData: TransactionData): Result<Int> {
+        val buildTransactionResult = transactionBuilder.buildToSign(transactionData)
+        when (buildTransactionResult) {
+            is Result.Failure -> return buildTransactionResult
+            is Result.Success -> {
+                val hashes = buildTransactionResult.data
+                val finalTransaction = transactionBuilder.buildToSend(ByteArray(64 * hashes.size) {1}, walletPublicKey)
+                return Result.Success(finalTransaction.size)
+            }
+        }
     }
 
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
-        val hashes = transactionBuilder.buildToSign(transactionData)
-        when (val signerResponse = signer.sign(hashes.toTypedArray(), cardId)) {
-            is TaskEvent.Event -> {
-                val transactionToSend = transactionBuilder.buildToSend(signerResponse.data.signature, walletPublicKey)
-                return networkManager.sendTransaction(transactionToSend.toHexString())
+        val buildTransactionResult = transactionBuilder.buildToSign(transactionData)
+        when (buildTransactionResult) {
+            is Result.Failure -> return SimpleResult.Failure(buildTransactionResult.error)
+            is Result.Success -> {
+                when (val signerResponse = signer.sign(buildTransactionResult.data.toTypedArray(), cardId)) {
+                    is TaskEvent.Event -> {
+                        val transactionToSend = transactionBuilder.buildToSend(signerResponse.data.signature, walletPublicKey)
+                        return networkManager.sendTransaction(transactionToSend.toHexString())
+                    }
+                    is TaskEvent.Completion -> return SimpleResult.Failure(signerResponse.error)
+                }
             }
-            is TaskEvent.Completion -> return SimpleResult.Failure(signerResponse.error)
         }
     }
 
@@ -86,28 +90,32 @@ class BitcoinWalletManager(
         when (val result = networkManager.getFee()) {
             is Result.Failure -> return result
             is Result.Success -> {
-                val bytesInKb = BigDecimal(1024)
-                val size = getEstimateSize(TransactionData(amount, null, source, destination)).toBigDecimal()
-                val minFee = result.data.minimalPerKb / bytesInKb * size
-                val normalFee = result.data.normalPerKb / bytesInKb * size
-                val priorityFee = result.data.priorityPerKb / bytesInKb * size
-                return Result.Success(
-                        listOf(
-                                Amount(blockchain.currency,
-                                        minFee,
-                                        source,
-                                        blockchain.decimals),
-                                Amount(blockchain.currency,
-                                        normalFee,
-                                        source,
-                                        blockchain.decimals),
-                                Amount(blockchain.currency,
-                                        priorityFee,
-                                        source,
-                                        blockchain.decimals)
-                        )
+                val sizeResult = getEstimateSize(
+                        TransactionData(amount,
+                                Amount(1.toBigDecimal().divide(SATOSHI_IN_BTC), blockchain),
+                                address, destination)
                 )
+                when (sizeResult) {
+                    is Result.Failure -> return sizeResult
+                    is Result.Success -> {
+                        val transactionSize = sizeResult.data.toBigDecimal()
+                        val minFee = result.data.minimalPerKb.calculateFee(transactionSize)
+                        val normalFee = result.data.normalPerKb.calculateFee(transactionSize)
+                        val priorityFee = result.data.priorityPerKb.calculateFee(transactionSize)
+                        return Result.Success(
+                                listOf(Amount(minFee, blockchain),
+                                        Amount(normalFee, blockchain),
+                                        Amount(priorityFee, blockchain))
+                        )
+                    }
+                }
             }
         }
+    }
+
+    private fun BigDecimal.calculateFee(transactionSize: BigDecimal): BigDecimal {
+        val bytesInKb = BigDecimal(1024)
+        return this.divide(bytesInKb).multiply(transactionSize)
+                .setScale(8, blockchain.roundingMode())
     }
 }
