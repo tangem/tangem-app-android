@@ -53,7 +53,7 @@ public class BinanceData extends CoinData {
     }
 
     public CoinEngine.Amount getBalance() {
-        return new CoinEngine.Amount(balance, "BNB");
+        return balance == null ? null : new CoinEngine.Amount(balance, "BNB");
     }
 
     public void setBalance(String balance) {
