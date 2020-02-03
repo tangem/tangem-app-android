@@ -60,6 +60,8 @@ dependencies {
     implementation "com.github.walleth.kethereum:crypto_api:$kethereum_version"
     implementation "com.github.walleth.kethereum:model:$kethereum_version"
 
+    implementation 'co.nstant.in:cbor:0.8'
+
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
     testImplementation "com.google.truth:truth:1.0"
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
