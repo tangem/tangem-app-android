@@ -1,9 +1,9 @@
 package com.tangem.blockchain.common
 
 import com.tangem.blockchain.bitcoin.BitcoinWalletManager
+import com.tangem.blockchain.ethereum.Chain
+import com.tangem.blockchain.ethereum.EthereumWalletManager
 import com.tangem.blockchain.cardano.CardanoWalletManager
-import com.tangem.blockchain.eth.Chain
-import com.tangem.blockchain.eth.EthereumWalletManager
 import com.tangem.blockchain.stellar.StellarWalletManager
 import com.tangem.commands.Card
 
@@ -25,7 +25,7 @@ object WalletManagerFactory {
                 val chain = if (isTestNet(blockchainName)) {
                     Chain.EthereumClassicTestnet
                 } else {
-                    Chain.EthereumClassicMainnet
+                    Chain.Mainnet
                 }
                 return EthereumWalletManager(
                         cardId = card.cardId,
