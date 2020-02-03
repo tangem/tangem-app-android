@@ -12,9 +12,9 @@ import java.security.MessageDigest
 
 class BitcoinAddressFactory {
     companion object {
-        fun makeAddress(cardPublicKey: ByteArray, testNet: Boolean = false): String {
+        fun makeAddress(walletPublicKey: ByteArray, testNet: Boolean = false): String {
             val netSelectionByte = if (testNet) 0x6f.toByte() else 0x00.toByte()
-            val hash1 = cardPublicKey.calculateSha256().calculateRipemd160()
+            val hash1 = walletPublicKey.calculateSha256().calculateRipemd160()
             val hash2 = byteArrayOf(netSelectionByte).plus(hash1).calculateSha256().calculateSha256()
             val result = byteArrayOf(netSelectionByte) + hash1 + hash2[0] + hash2[1] + hash2[2] + hash2[3]
             return Base58.encode(result)
