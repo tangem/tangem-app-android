@@ -1,52 +1,55 @@
 package com.tangem.blockchain.bitcoin.network.response
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 
+@JsonClass(generateAdapter = true)
 data class BlockcypherResponse(
         @Json(name = "address")
-        var address: String? = null,
+        val address: String? = null,
 
         @Json(name = "balance")
-        var balance: Long? = null,
+        val balance: Long? = null,
 
         @Json(name = "unconfirmed_balance")
-        var unconfirmedBalance: Long? = null,
+        val unconfirmedBalance: Long? = null,
 
         @Json(name = "txrefs")
-        var txrefs: List<BlockcypherTxref>? = null
+        val txrefs: List<BlockcypherTxref>? = null
 )
 
+@JsonClass(generateAdapter = true)
 data class BlockcypherTxref(
         @Json(name = "tx_hash")
-        var hash: String? = null,
+        val hash: String? = null,
 
         @Json(name = "tx_output_n")
-        var outputIndex: Int? = null,
+        val outputIndex: Int? = null,
 
         @Json(name = "value")
-        var amount: Long? = null,
+        val amount: Long? = null,
 
         @Json(name = "confirmations")
-        var confirmations: Long? = null,
+        val confirmations: Long? = null,
 
         @Json(name = "script")
-        var outputScript: String? = null
+        val outputScript: String? = null
 )
 
+@JsonClass(generateAdapter = true)
 data class BlockcypherTx(
         @Json(name = "hex")
-        var hex: String? = null
+        val hex: String? = null
 )
 
+@JsonClass(generateAdapter = true)
 data class BlockcypherFee(
         @Json(name = "low_fee_per_kb")
-        var minFeePerKb: Long? = null,
+        val minFeePerKb: Long? = null,
 
         @Json(name = "medium_fee_per_kb")
-        var normalFeePerKb: Long? = null,
+        val normalFeePerKb: Long? = null,
 
         @Json(name = "high_fee_per_kb")
-        var priorityFeePerKb: Long? = null
+        val priorityFeePerKb: Long? = null
 )
-
-data class BlockcypherBody(val tx: String)
