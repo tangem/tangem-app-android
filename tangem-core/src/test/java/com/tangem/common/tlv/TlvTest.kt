@@ -17,7 +17,7 @@ class TlvTest {
                 -10, -111, 34, -34, 67, -13, 95, 5, 122, -104, -115, -106, 25, -10, -45, 19, -124,
                 -123, -55, -94, 3)
 
-        assertThat(tlvs.toBytes())
+        assertThat(tlvs.serialize())
                 .isEqualTo(expected)
     }
 
@@ -34,7 +34,7 @@ class TlvTest {
                 -55, -94, 3, 1, 8, -53, 34, 0, 0, 0, 2, 115, 116, 22, 16, -82, -78, -31, 34, 66, -19,
                 -86, -1, 26, 8, 100, -126, -74, 20, -28, 83)
 
-        assertThat(tlvs.toBytes())
+        assertThat(tlvs.serialize())
                 .isEqualTo(expected)
     }
 
@@ -44,7 +44,7 @@ class TlvTest {
                 -10, -111, 34, -34, 67, -13, 95, 5, 122, -104, -115, -106, 25, -10, -45, 19, -124,
                 -123, -55, -94, 3)
 
-        val tlvs = Tlv.tlvListFromBytes(bytes)
+        val tlvs = Tlv.deserialize(bytes)
 
         assertThat(tlvs)
                 .isNotNull()
@@ -65,7 +65,7 @@ class TlvTest {
                 -55, -94, 3, 1, 8, -53, 34, 0, 0, 0, 2, 115, 116, 22, 16, -82, -78, -31, 34, 66, -19,
                 -86, -1, 26, 8, 100, -126, -74, 20, -28, 83)
 
-        val tlvs = Tlv.tlvListFromBytes(bytes)
+        val tlvs = Tlv.deserialize(bytes)
 
         assertThat(tlvs)
                 .isNotNull()
@@ -91,12 +91,12 @@ class TlvTest {
     @Test
     fun `Bytes to TLVs, wrong values`() {
         val bytes = byteArrayOf(0)
-        val tlvs = Tlv.tlvListFromBytes(bytes)
+        val tlvs = Tlv.deserialize(bytes)
        assertThat(tlvs)
                .isNull()
 
         val bytes1 = byteArrayOf(0, 0, 0, 0, 0, 0, 0)
-        val tlvs1 = Tlv.tlvListFromBytes(bytes1)
+        val tlvs1 = Tlv.deserialize(bytes1)
         assertThat(tlvs1)
                 .isNull()
     }
