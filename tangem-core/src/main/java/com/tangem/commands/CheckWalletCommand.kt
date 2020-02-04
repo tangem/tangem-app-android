@@ -1,12 +1,13 @@
 package com.tangem.commands
 
-import com.tangem.CardEnvironment
+import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.tlv.Tlv
+import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
 import com.tangem.tasks.TaskError
@@ -38,12 +39,11 @@ class CheckWalletCommand(
 ) : CommandSerializer<CheckWalletResponse>() {
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
-        val tlvData = listOf(
-                Tlv(TlvTag.Pin, cardEnvironment.pin1.calculateSha256()),
-                Tlv(TlvTag.CardId, cardId.hexToBytes()),
-                Tlv(TlvTag.Challenge, challenge)
-        )
-        return CommandApdu(Instruction.CheckWallet, tlvData)
+        val tlvBuilder = TlvBuilder()
+        tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
+        tlvBuilder.append(TlvTag.CardId, cardId)
+        tlvBuilder.append(TlvTag.Challenge, challenge)
+        return CommandApdu(Instruction.CheckWallet, tlvBuilder.serialize())
     }
 
     override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): CheckWalletResponse? {
