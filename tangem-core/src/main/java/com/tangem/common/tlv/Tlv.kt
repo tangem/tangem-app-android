@@ -53,13 +53,13 @@ class Tlv {
         }
 
 
-        fun tlvListFromBytes(mData: ByteArray): List<Tlv>? {
+        fun deserialize(mData: ByteArray): List<Tlv>? {
             val tlvList = mutableListOf<Tlv>()
             val stream = ByteArrayInputStream(mData)
-            var tlv: Tlv? = null
+            var tlv: Tlv?
             do {
                 try {
-                    tlv = Tlv.tlvFromBytes(stream)
+                    tlv = tlvFromBytes(stream)
                     if (tlv != null) tlvList.add(tlv)
                 } catch (e: IOException) {
                     Log.e(this::class.java.simpleName,"TLVError: " + e.message)
@@ -73,10 +73,10 @@ class Tlv {
 
 }
 
-fun List<Tlv>.toBytes(): ByteArray =
-        this.map { it.toBytes() }.reduce { arr1, arr2 -> arr1 + arr2 }
+fun List<Tlv>.serialize(): ByteArray =
+        this.map { it.serialize() }.reduce { arr1, arr2 -> arr1 + arr2 }
 
-fun Tlv.toBytes(): ByteArray {
+fun Tlv.serialize(): ByteArray {
     val tag = byteArrayOf(this.tag.code.toByte())
     val length = getLengthInBytes(this.value.size)
     val value = if (this.value.isNotEmpty()) this.value else byteArrayOf(0x00)
