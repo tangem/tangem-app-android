@@ -1,12 +1,13 @@
 package com.tangem.commands
 
-import com.tangem.CardEnvironment
+import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.tlv.Tlv
+import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
 import com.tangem.crypto.sign
@@ -50,17 +51,16 @@ class SignCommand(private val hashes: Array<ByteArray>, private val cardId: Stri
     }
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
-        val tlvData = mutableListOf(
-                Tlv(TlvTag.Pin, cardEnvironment.pin1.calculateSha256()),
-                Tlv(TlvTag.Pin2, cardEnvironment.pin2.calculateSha256()),
-                Tlv(TlvTag.CardId, cardId.hexToBytes()),
-                Tlv(TlvTag.TransactionOutHashSize, byteArrayOf(hashSizes.toByte())),
-                Tlv(TlvTag.TransactionOutHash, dataToSign)
-        )
+        val tlvBuilder = TlvBuilder()
+        tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
+        tlvBuilder.append(TlvTag.Pin2, cardEnvironment.pin2)
+        tlvBuilder.append(TlvTag.CardId, cardId)
+        tlvBuilder.append(TlvTag.TransactionOutHashSize, byteArrayOf(hashSizes.toByte()))
+        tlvBuilder.append(TlvTag.TransactionOutHash, dataToSign)
+        tlvBuilder.append(TlvTag.Cvc, cardEnvironment.cvc)
 
-        addTerminalSignature(cardEnvironment, tlvData)
-
-        return CommandApdu(Instruction.Sign, tlvData)
+        addTerminalSignature(cardEnvironment, tlvBuilder)
+        return CommandApdu(Instruction.Sign, tlvBuilder.serialize())
     }
 
     /**
@@ -70,11 +70,11 @@ class SignCommand(private val hashes: Array<ByteArray>, private val cardId: Stri
      * TerminalTransactionSignature parameter containing a correct signature of raw data to be signed made with TerminalPrivateKey
      * (this key should be generated and securily stored by the application).
      */
-    private fun addTerminalSignature(cardEnvironment: CardEnvironment, tlvData: MutableList<Tlv>) {
+    private fun addTerminalSignature(cardEnvironment: CardEnvironment, tlvBuilder: TlvBuilder) {
         cardEnvironment.terminalKeys?.let { terminalKeyPair ->
             val signedData = dataToSign.sign(terminalKeyPair.privateKey)
-            tlvData.add(Tlv(TlvTag.TerminalTransactionSignature, signedData))
-            tlvData.add(Tlv(TlvTag.TerminalPublicKey, terminalKeyPair.publicKey))
+            tlvBuilder.append(TlvTag.TerminalTransactionSignature, signedData)
+            tlvBuilder.append(TlvTag.TerminalPublicKey, terminalKeyPair.publicKey)
         }
     }
 
