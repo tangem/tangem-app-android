@@ -30,14 +30,12 @@ class PurgeWalletResponse(
  * ‘Purged’ state is final, it makes the card useless.
  * @property cardId CID, Unique Tangem card ID number.
  */
-class PurgeWalletCommand(
-        private val cardId: String
-) : CommandSerializer<PurgeWalletResponse>() {
+class PurgeWalletCommand : CommandSerializer<PurgeWalletResponse>() {
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
-        tlvBuilder.append(TlvTag.CardId, cardId)
+        tlvBuilder.append(TlvTag.CardId, cardEnvironment.cardId)
         tlvBuilder.append(TlvTag.Pin2, cardEnvironment.pin2)
         return CommandApdu(Instruction.PurgeWallet, tlvBuilder.serialize())
     }
