@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.tangem.CardManager
 import com.tangem.tangem_sdk_new.DefaultCardManagerDelegate
 import com.tangem.tangem_sdk_new.NfcLifecycleObserver
+import com.tangem.tangem_sdk_new.TerminalKeysStorage
 import com.tangem.tangem_sdk_new.nfc.NfcManager
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskError
@@ -15,7 +16,7 @@ class MainActivity : AppCompatActivity() {
 
     private val nfcManager = NfcManager()
     private val cardManagerDelegate: DefaultCardManagerDelegate = DefaultCardManagerDelegate(nfcManager.reader)
-    private val cardManager = CardManager(nfcManager.reader, cardManagerDelegate)
+    private val cardManager = CardManager(nfcManager.reader, cardManagerDelegate, TerminalKeysStorage())
 
     private lateinit var cardId: String
     private lateinit var issuerData: ByteArray
@@ -38,6 +39,10 @@ class MainActivity : AppCompatActivity() {
                             is ScanEvent.OnReadEvent -> {
                                 // Handle returned card data
                                 cardId = (taskEvent.data as ScanEvent.OnReadEvent).card.cardId
+                                runOnUiThread {
+                                    tv_card_cid?.text = cardId
+                                    btn_create_wallet.isEnabled = true
+                                }
                             }
                             is ScanEvent.OnVerifyEvent -> {
                                 //Handle card verification
@@ -127,6 +132,11 @@ class MainActivity : AppCompatActivity() {
                     }
                     is TaskEvent.Event -> runOnUiThread {
                         tv_card_cid?.text = it.data.status.name
+                        btn_sign.isEnabled = true
+                        btn_read_issuer_data.isEnabled = true
+                        btn_purge_wallet.isEnabled = true
+                        btn_create_wallet.isEnabled = false
+
                     }
                 }
             }
