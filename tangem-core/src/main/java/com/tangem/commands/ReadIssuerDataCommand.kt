@@ -50,14 +50,12 @@ class ReadIssuerDataResponse(
  * wallet balance signed by the issuer or additional issuer’s attestation data.
  * @property cardId CID, Unique Tangem card ID number.
  */
-class ReadIssuerDataCommand(
-        private val cardId: String
-) : CommandSerializer<ReadIssuerDataResponse>() {
+class ReadIssuerDataCommand : CommandSerializer<ReadIssuerDataResponse>() {
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
-        tlvBuilder.append(TlvTag.CardId, cardId)
+        tlvBuilder.append(TlvTag.CardId, cardEnvironment.cardId)
         return CommandApdu(Instruction.ReadIssuerData, tlvBuilder.serialize())
     }
 
