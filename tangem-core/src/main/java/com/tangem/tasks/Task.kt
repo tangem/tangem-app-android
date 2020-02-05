@@ -1,11 +1,13 @@
 package com.tangem.tasks
 
-import com.tangem.CardEnvironment
+import com.tangem.common.CardEnvironment
 import com.tangem.CardManagerDelegate
 import com.tangem.CardReader
 import com.tangem.Log
+import com.tangem.commands.Card
 import com.tangem.commands.CommandResponse
 import com.tangem.commands.CommandSerializer
+import com.tangem.commands.ReadCommand
 import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.StatusWord
@@ -32,12 +34,15 @@ sealed class TaskError(description: String? = null) : Exception(description) {
     class VefificationFailed : TaskError()
     class CardError : TaskError()
     class ReaderError() : TaskError()
-    class SerializeCommandError() : TaskError()
+    class SerializeCommandError(description: String? = null) : TaskError(description)
 
     class CardIsMissing() : TaskError()
     class EmptyHashes() : TaskError()
     class TooMuchHashes() : TaskError()
     class HashSizeMustBeEqual() : TaskError()
+
+    class WrongCard() : TaskError()
+    class MissingPreflightRead() : TaskError()
 }
 
 /**
@@ -67,6 +72,7 @@ abstract class Task<T> {
 
     var delegate: CardManagerDelegate? = null
     var reader: CardReader? = null
+    var performPreflightRead: Boolean = true
 
     /**
      * This method should be called to run the [Task] and perform all its operations.
@@ -79,7 +85,12 @@ abstract class Task<T> {
         delegate?.onNfcSessionStarted()
         reader?.openSession()
         Log.i(this::class.simpleName!!, "Nfc task is started")
-        onRun(cardEnvironment, callback)
+
+        if (performPreflightRead) {
+            runWithPreflightRead(cardEnvironment, callback)
+        } else {
+            onRun(cardEnvironment, null, callback)
+        }
     }
 
     /**
@@ -101,6 +112,7 @@ abstract class Task<T> {
      * In this method the individual Tasks' logic should be implemented.
      */
     protected abstract fun onRun(cardEnvironment: CardEnvironment,
+                                 currentCard: Card?,
                                  callback: (result: TaskEvent<T>) -> Unit)
 
     /**
@@ -164,6 +176,34 @@ abstract class Task<T> {
                     }
             }
         }
+    }
+
+    private fun runWithPreflightRead(
+            environment: CardEnvironment, callback: (result: TaskEvent<T>) -> Unit) {
+        sendCommand(ReadCommand(), environment) { readResult ->
+            when (readResult) {
+                is CompletionResult.Failure -> {
+                    completeNfcSession(true, readResult.error)
+                    callback(TaskEvent.Completion(readResult.error))
+                }
+                is CompletionResult.Success -> {
+
+                    val receivedCardId = readResult.data.cardId
+
+                    if (environment.cardId != null && environment.cardId != receivedCardId) {
+                        completeNfcSession(true, TaskError.WrongCard())
+                        callback(TaskEvent.Completion(TaskError.WrongCard()))
+                        return@sendCommand
+                    }
+
+                    val newEnvironment = environment.copy(cardId = receivedCardId)
+                    onRun(newEnvironment, readResult.data, callback)
+                }
+            }
+
+
+        }
+
     }
 }
 
