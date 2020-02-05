@@ -1,6 +1,8 @@
 package com.tangem
 
 import com.tangem.commands.*
+import com.tangem.common.CardEnvironment
+import com.tangem.common.TerminalKeysService
 import com.tangem.crypto.CryptoUtils
 import com.tangem.tasks.*
 import java.util.concurrent.Executors
@@ -16,10 +18,12 @@ import java.util.concurrent.Executors
  */
 class CardManager(
         private val reader: CardReader,
-        private val cardManagerDelegate: CardManagerDelegate? = null) {
+        private val cardManagerDelegate: CardManagerDelegate? = null,
+        private val config: Config = Config()
+) {
 
+    private var terminalKeysService: TerminalKeysService? = null
     private var isBusy = false
-    private val cardEnvironmentRepository = mutableMapOf<String, CardEnvironment>()
     private val cardManagerExecutor = Executors.newSingleThreadExecutor()
 
     init {
@@ -67,7 +71,7 @@ class CardManager(
              callback: (result: TaskEvent<SignResponse>) -> Unit) {
         val signCommand: SignCommand
         try {
-            signCommand = SignCommand(hashes, cardId)
+            signCommand = SignCommand(hashes)
         } catch (error: Exception) {
             if (error is TaskError) {
                 callback(TaskEvent.Completion(error))
@@ -91,7 +95,7 @@ class CardManager(
      */
     fun readIssuerData(cardId: String,
                        callback: (result: TaskEvent<ReadIssuerDataResponse>) -> Unit) {
-        val getIssuerDataCommand = ReadIssuerDataCommand(cardId)
+        val getIssuerDataCommand = ReadIssuerDataCommand()
         val task = SingleCommandTask(getIssuerDataCommand)
         runTask(task, cardId, callback)
     }
@@ -114,10 +118,10 @@ class CardManager(
                         issuerDataCounter: Int? = null,
                         callback: (result: TaskEvent<WriteIssuerDataResponse>) -> Unit) {
         val writeIssuerDataCommand = WriteIssuerDataCommand(
-                    cardId,
-                    issuerData,
-                    issuerDataSignature,
-                    issuerDataCounter)
+                issuerData,
+                issuerDataSignature,
+                issuerDataCounter
+        )
         val task = SingleCommandTask(writeIssuerDataCommand)
         runTask(task, cardId, callback)
     }
@@ -134,7 +138,7 @@ class CardManager(
      */
     fun createWallet(cardId: String,
                      callback: (result: TaskEvent<CreateWalletResponse>) -> Unit) {
-        val createWalletCommand = CreateWalletCommand(cardId)
+        val createWalletCommand = CreateWalletCommand()
         val task = SingleCommandTask(createWalletCommand)
         runTask(task, cardId, callback)
     }
@@ -148,7 +152,7 @@ class CardManager(
      */
     fun purgeWallet(cardId: String,
                     callback: (result: TaskEvent<PurgeWalletResponse>) -> Unit) {
-        val purgeWalletCommand = PurgeWalletCommand(cardId)
+        val purgeWalletCommand = PurgeWalletCommand()
         val task = SingleCommandTask(purgeWalletCommand)
         runTask(task, cardId, callback)
     }
@@ -163,7 +167,7 @@ class CardManager(
             return
         }
 
-        val environment = fetchCardEnvironment(cardId)
+        val environment = prepareCardEnvironment(cardId)
         isBusy = true
 
         task.reader = reader
@@ -187,7 +191,19 @@ class CardManager(
         runTask(task, cardId, callback)
     }
 
-    private fun fetchCardEnvironment(cardId: String?): CardEnvironment {
-        return cardEnvironmentRepository[cardId] ?: CardEnvironment(cardId = cardId)
+    /**
+     * Allows to set a particular [TerminalKeysService] to retrieve terminal keys.
+     * Default implementation is provided in tangem-sdk module: [TerminalKeysStorage].
+     */
+    fun setTerminalKeysService(terminalKeysService: TerminalKeysService) {
+        this.terminalKeysService = terminalKeysService
+    }
+
+    private fun prepareCardEnvironment(cardId: String?): CardEnvironment {
+        val terminalKeys = if (config.linkedTerminal) terminalKeysService?.getKeys() else null
+        return CardEnvironment(
+                cardId = cardId,
+                terminalKeys = terminalKeys
+        )
     }
 }
