@@ -33,7 +33,7 @@ class SignResponse(
  * @property hashes Array of transaction hashes.
  * @property cardId CID, Unique Tangem card ID number
  */
-class SignCommand(private val hashes: Array<ByteArray>, private val cardId: String)
+class SignCommand(private val hashes: Array<ByteArray>)
     : CommandSerializer<SignResponse>() {
 
     private val hashSizes = if (hashes.isNotEmpty()) hashes.first().size else 0
@@ -54,7 +54,7 @@ class SignCommand(private val hashes: Array<ByteArray>, private val cardId: Stri
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
         tlvBuilder.append(TlvTag.Pin2, cardEnvironment.pin2)
-        tlvBuilder.append(TlvTag.CardId, cardId)
+        tlvBuilder.append(TlvTag.CardId, cardEnvironment.cardId)
         tlvBuilder.append(TlvTag.TransactionOutHashSize, byteArrayOf(hashSizes.toByte()))
         tlvBuilder.append(TlvTag.TransactionOutHash, dataToSign)
         tlvBuilder.append(TlvTag.Cvc, cardEnvironment.cvc)
