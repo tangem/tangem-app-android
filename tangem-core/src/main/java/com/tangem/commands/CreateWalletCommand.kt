@@ -38,14 +38,12 @@ class CreateWalletResponse(
  *
  * @property cardId CID, Unique Tangem card ID number.
  */
-class CreateWalletCommand(
-        private val cardId: String
-) : CommandSerializer<CreateWalletResponse>() {
+class CreateWalletCommand : CommandSerializer<CreateWalletResponse>() {
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
-        tlvBuilder.append(TlvTag.CardId, cardId)
+        tlvBuilder.append(TlvTag.CardId, cardEnvironment.cardId)
         tlvBuilder.append(TlvTag.Pin2, cardEnvironment.pin2)
         tlvBuilder.append(TlvTag.Cvc, cardEnvironment.cvc)
         return CommandApdu(Instruction.CreateWallet, tlvBuilder.serialize())
