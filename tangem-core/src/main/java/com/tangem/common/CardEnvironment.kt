@@ -1,4 +1,4 @@
-package com.tangem
+package com.tangem.common
 
 
 /**
