@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
 
     private val nfcManager = NfcManager()
     private val cardManagerDelegate: DefaultCardManagerDelegate = DefaultCardManagerDelegate(nfcManager.reader)
-    private val cardManager = CardManager(nfcManager.reader, cardManagerDelegate, TerminalKeysStorage())
+    private val cardManager = CardManager(nfcManager.reader, cardManagerDelegate)
 
     private lateinit var cardId: String
     private lateinit var issuerData: ByteArray
@@ -26,6 +26,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        cardManager.setTerminalKeysService(TerminalKeysStorage(application))
         nfcManager.setCurrentActivity(this)
         cardManagerDelegate.activity = this
 
