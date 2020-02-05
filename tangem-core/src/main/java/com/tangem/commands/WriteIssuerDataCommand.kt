@@ -31,7 +31,6 @@ class WriteIssuerDataResponse(
  * @property issuerDataCounter An optional counter that protect issuer data against replay attack.
  */
 class WriteIssuerDataCommand(
-        private val cardId: String,
         private val issuerData: ByteArray,
         private val issuerDataSignature: ByteArray,
         private val issuerDataCounter: Int? = null
@@ -40,7 +39,7 @@ class WriteIssuerDataCommand(
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
-        tlvBuilder.append(TlvTag.CardId, cardId)
+        tlvBuilder.append(TlvTag.CardId, cardEnvironment.cardId)
         tlvBuilder.append(TlvTag.IssuerData, issuerData)
         tlvBuilder.append(TlvTag.IssuerDataSignature, issuerDataSignature)
         tlvBuilder.append(TlvTag.IssuerDataCounter, issuerDataCounter)
