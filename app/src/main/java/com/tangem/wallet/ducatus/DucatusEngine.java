@@ -5,7 +5,11 @@ import android.text.InputFilter;
 import android.util.Log;
 
 import com.tangem.App;
+import com.tangem.data.network.ServerApiBitcore;
 import com.tangem.data.network.ServerApiInsight;
+import com.tangem.data.network.model.BitcoreBalanceAndUnspents;
+import com.tangem.data.network.model.BitcoreSendResponse;
+import com.tangem.data.network.model.BitcoreUtxo;
 import com.tangem.data.network.model.InsightResponse;
 import com.tangem.data.network.model.InsightUtxo;
 import com.tangem.tangem_card.data.TangemCard;
@@ -36,6 +40,9 @@ import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import io.reactivex.SingleObserver;
+import io.reactivex.observers.DisposableSingleObserver;
 
 public class DucatusEngine extends BtcEngine {
     private static final String TAG = DucatusEngine.class.getSimpleName();
@@ -169,7 +176,7 @@ public class DucatusEngine extends BtcEngine {
 
     @Override
     public Uri getWalletExplorerUri() {
-        return Uri.parse("https://insight.ducatus.io/insight/address/" + ctx.getCoinData().getWallet());
+        return Uri.parse("https://insight.ducatus.io/#/DUC/mainnet/address/" + ctx.getCoinData().getWallet());
     }
 
     @Override
@@ -397,13 +404,6 @@ public class DucatusEngine extends BtcEngine {
         String myAddress = ctx.getCoinData().getWallet();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
 
-//        // Build script for our address
-//        List<BtcData.UnspentTransaction> rawTxList = coinData.getUnspentTransactions();
-//        byte[] outputScriptWeAreAbleToSpend = Transaction.Script.buildOutput(myAddress).bytes;
-//
-//        // Collect unspent
-//        unspentOutputs = BTCUtils.getOutputs(rawTxList, outputScriptWeAreAbleToSpend);
-
         for (BtcData.UnspentTransaction utxo : coinData.getUnspentTransactions()) {
             unspentOutputs.add(new UnspentOutputInfo(BTCUtils.fromHex(utxo.txID), new Transaction.Script(BTCUtils.fromHex(utxo.script)), utxo.amount, utxo.outputN, -1, utxo.txID, null));
         }
@@ -498,70 +498,43 @@ public class DucatusEngine extends BtcEngine {
 
     @Override
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
-        final ServerApiInsight serverApiInsight = new ServerApiInsight();
-
-        ServerApiInsight.ResponseListener responseListener = new ServerApiInsight.ResponseListener() {
+        SingleObserver<BitcoreBalanceAndUnspents> balanceAndUnspentsObserver = new DisposableSingleObserver<BitcoreBalanceAndUnspents>() {
             @Override
-            public void onSuccess(String method, InsightResponse insightResponse) {
-
+            public void onSuccess(BitcoreBalanceAndUnspents balanceAndUnspents) {
                 try {
-                    String walletAddress = insightResponse.getAddrStr();
-                    if (!walletAddress.equals(coinData.getWallet())) {
-                        // todo - check
-                        throw new Exception("Invalid wallet address in answer!");
-                    }
+                    coinData.setBalanceConfirmed(balanceAndUnspents.getBalance().getConfirmed());
+                    coinData.setBalanceUnconfirmed(balanceAndUnspents.getBalance().getUnconfirmed());
                     coinData.setBalanceReceived(true);
-                    coinData.setBalanceConfirmed(insightResponse.getBalanceSat());
-                    coinData.setBalanceUnconfirmed(insightResponse.getUnconfirmedBalanceSat());
-                    coinData.setValidationNodeDescription(ServerApiInsight.lastNode);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Log.e(TAG, "FAIL INSIGHT_ADDRESS Exception");
-                }
 
-                if (serverApiInsight.isRequestsSequenceCompleted()) {
-                    blockchainRequestsCallbacks.onComplete(!ctx.hasError());
-                } else {
-                    blockchainRequestsCallbacks.onProgress();
-                }
-            }
-
-            public void onSuccess(String method, List<InsightUtxo> utxoList) {
-                // case ServerApiInsight.INSIGHT_UNSPENT_OUTPUTS: TODO: check method
-                try {
-                    coinData.getUnspentTransactions().clear();
-                    for (InsightUtxo utxo : utxoList) {
+                    for (BitcoreUtxo utxo : balanceAndUnspents.getUnspents()) {
                         BtcData.UnspentTransaction trUnspent = new BtcData.UnspentTransaction();
-                        trUnspent.txID = utxo.getTxid();
-                        trUnspent.amount = utxo.getSatoshis();
-                        trUnspent.outputN = utxo.getVout();
-                        trUnspent.script = utxo.getScriptPubKey();
+                        trUnspent.txID = utxo.getMintTxid();
+                        trUnspent.amount = utxo.getValue();
+                        trUnspent.outputN = utxo.getMintIndex();
+                        trUnspent.script = utxo.getScript();
                         coinData.getUnspentTransactions().add(trUnspent);
                     }
+                    blockchainRequestsCallbacks.onComplete(true);
+
                 } catch (Exception e) {
+                    Log.e(TAG, "FAIL BITCORE_BALANCE_AND_UNSPENTS Exception");
                     e.printStackTrace();
-                }
-
-                if (serverApiInsight.isRequestsSequenceCompleted()) {
-                    blockchainRequestsCallbacks.onComplete(!ctx.hasError());
-                } else {
-                    blockchainRequestsCallbacks.onProgress();
-                }
-            }
-
-            @Override
-            public void onFail(String method, String message) {
-                if (!serverApiInsight.isRequestsSequenceCompleted()) { //TODO: rework request sequence
-                    ctx.setError(message);
+                    ctx.setError(e.getMessage());
                     blockchainRequestsCallbacks.onComplete(false);
                 }
             }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.e(TAG, "FAIL BITCORE_BALANCE_AND_UNSPENTS Exception");
+                e.printStackTrace();
+                ctx.setError(e.getMessage());
+                blockchainRequestsCallbacks.onComplete(false);
+            }
         };
 
-        serverApiInsight.setResponseListener(responseListener);
-
-        serverApiInsight.requestData(ServerApiInsight.INSIGHT_ADDRESS, coinData.getWallet(), "");
-        serverApiInsight.requestData(ServerApiInsight.INSIGHT_UNSPENT_OUTPUTS, coinData.getWallet(), "");
+        ServerApiBitcore serverApiBitcore = new ServerApiBitcore();
+        serverApiBitcore.getBalanceAndUnspents(coinData.getWallet(), balanceAndUnspentsObserver);
     }
 
 //    private final static BigDecimal relayFee = new BigDecimal(0.00001);
@@ -570,65 +543,6 @@ public class DucatusEngine extends BtcEngine {
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) throws Exception {
         final int calcSize = calculateEstimatedTransactionSize(targetAddress, amount.toValueString());
         Log.e(TAG, String.format("Estimated tx size %d", calcSize));
-//        coinData.minFee=null;
-//        coinData.maxFee=null;
-//        coinData.normalFee=null;
-//
-//        final ServerApiInsight serverApiInsight = new ServerApiInsight();
-//
-//        final ServerApiInsight.ResponseListener responseListener = new ServerApiInsight.ResponseListener() {
-//            @Override
-//            public void onSuccess(String method, InsightResponse insightResponse) {
-//                if ( method.equals(ServerApiInsight.INSIGHT_FEE)) {
-//                    try {
-//                        BigDecimal minFee = new BigDecimal(insightResponse.getFee2()); //fee per KB
-//                        BigDecimal normalFee = new BigDecimal(insightResponse.getFee3());
-//                        BigDecimal maxFee = new BigDecimal(insightResponse.getFee6());
-//
-//                        if (minFee.equals(BigDecimal.ZERO) || normalFee.equals(BigDecimal.ZERO) || maxFee.equals(BigDecimal.ZERO)) {
-//                            serverApiInsight.requestData(ServerApiInsight.INSIGHT_FEE, "","");
-//                        }
-//
-//                        minFee = minFee.multiply(new BigDecimal(calcSize)).divide(new BigDecimal(1024)); // (per KB -> per byte)*size
-//                        normalFee = normalFee.multiply(new BigDecimal(calcSize)).divide(new BigDecimal(1024));
-//                        maxFee = maxFee.multiply(new BigDecimal(calcSize)).divide(new BigDecimal(1024));
-//
-////                        //compare fee to usual relay fee TODO: check if needed after we get access to Ducatus network
-////                        if (fee.compareTo(relayFee) < 0) {
-////                            fee = relayFee;
-////                        }
-//                        minFee = minFee.setScale(8, RoundingMode.DOWN);
-//                        normalFee = normalFee.setScale(8, RoundingMode.DOWN);
-//                        maxFee = maxFee.setScale(8, RoundingMode.DOWN);
-//
-//                        coinData.minFee = new Amount(minFee,  ctx.getBlockchain().getCurrency());
-//                        coinData.normalFee = new Amount(normalFee,  ctx.getBlockchain().getCurrency());
-//                        coinData.maxFee = new Amount(maxFee,  ctx.getBlockchain().getCurrency());
-//
-//                        blockchainRequestsCallbacks.onComplete(true);
-//
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            }
-//
-//            @Override
-//            public void onSuccess (String method, List<InsightResponse> utxoList) {
-//                Log.e(TAG, "Wrong response body, InsightResponse expected");
-//            }
-//
-//            @Override
-//            public void onFail(String method, String message) {
-//                if (!serverApiInsight.isRequestsSequenceCompleted()) {
-//                    ctx.setError(message);
-//                    blockchainRequestsCallbacks.onComplete(false);
-//                }
-//            }
-//        };
-//        serverApiInsight.setResponseListener(responseListener);
-//
-//        serverApiInsight.requestData(ServerApiInsight.INSIGHT_FEE, "", ""); TODO: fee api returns -1 now
 
         coinData.minFee = new Amount(BigDecimal.valueOf(calcSize).multiply(BigDecimal.valueOf(0.00000089)), ctx.getBlockchain().getCurrency()); //fee for byte from Ducatus wallet for android
         coinData.normalFee = new Amount(BigDecimal.valueOf(calcSize).multiply(BigDecimal.valueOf(0.00000144)), ctx.getBlockchain().getCurrency());
@@ -639,51 +553,28 @@ public class DucatusEngine extends BtcEngine {
 
     @Override
     public void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) {
-        final ServerApiInsight serverApiInsight = new ServerApiInsight();
         final String txStr = BTCUtils.toHex(txForSend);
 
-        final ServerApiInsight.ResponseListener responseListener = new ServerApiInsight.ResponseListener() {
+        SingleObserver<BitcoreSendResponse> sendResponseObserver = new DisposableSingleObserver<BitcoreSendResponse>() {
             @Override
-            public void onSuccess(String method, InsightResponse insightResponse) {
-                if (method.equals(ServerApiInsight.INSIGHT_SEND)) {
-                    String resultString = insightResponse.toString();
-                    try {
-                        if (resultString.isEmpty()) {
-                            ctx.setError("No response from node");
-                            blockchainRequestsCallbacks.onComplete(false);
-                        } else { // TODO: Make check for a valid send response
-                            ctx.setError(null);
-                            blockchainRequestsCallbacks.onComplete(true);
-                        }
-                    } catch (Exception e) {
-                        if (e.getMessage() != null) {
-                            ctx.setError(e.getMessage());
-                            blockchainRequestsCallbacks.onComplete(false);
-                        } else {
-                            ctx.setError(e.getClass().getName());
-                            blockchainRequestsCallbacks.onComplete(false);
-
-                            Log.e(TAG, resultString);
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onSuccess(String method, List<InsightUtxo> utxoList) {
-                Log.e(TAG, "Wrong response body, InsightResponse expected");
-            }
-
-            @Override
-            public void onFail(String method, String message) {
-                if (!serverApiInsight.isRequestsSequenceCompleted()) {
-                    ctx.setError(message);
+            public void onSuccess(BitcoreSendResponse sendResponse) {
+                if (sendResponse.getTxid() != null) {
+                    blockchainRequestsCallbacks.onComplete(true);
+                } else {
+                    ctx.setError("Unknown send error");
                     blockchainRequestsCallbacks.onComplete(false);
                 }
             }
-        };
-        serverApiInsight.setResponseListener(responseListener);
 
-        serverApiInsight.requestData(ServerApiInsight.INSIGHT_SEND, "", txStr);
+            @Override
+            public void onError(Throwable e) {
+                Log.e(TAG, "onError: Bitcore sendTransaction" + e.getMessage());
+                ctx.setError(e.getMessage());
+                blockchainRequestsCallbacks.onComplete(false);
+            }
+        };
+
+        ServerApiBitcore serverApiBitcore = new ServerApiBitcore();
+        serverApiBitcore.sendTransaction(txStr, sendResponseObserver);
     }
 }
