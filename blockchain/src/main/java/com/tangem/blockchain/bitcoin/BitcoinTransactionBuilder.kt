@@ -58,6 +58,18 @@ class BitcoinTransactionBuilder(private val testNet: Boolean) {
         val signature = TransactionSignature(r, canonicalS)
         return ScriptBuilder.createInputScript(signature, ECKey.fromPublicOnly(publicKey))
     }
+
+    fun getEstimateSize(transactionData: TransactionData, walletPublicKey: ByteArray): Result<Int> {
+        val buildTransactionResult = buildToSign(transactionData)
+        when (buildTransactionResult) {
+            is Result.Failure -> return buildTransactionResult
+            is Result.Success -> {
+                val hashes = buildTransactionResult.data
+                val finalTransaction = buildToSend(ByteArray(64 * hashes.size) { 1 }, walletPublicKey)
+                return Result.Success(finalTransaction.size)
+            }
+        }
+    }
 }
 
 internal fun TransactionData.toBitcoinJTransaction(networkParameters: NetworkParameters?,
