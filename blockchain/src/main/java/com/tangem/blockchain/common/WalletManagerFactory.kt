@@ -14,35 +14,40 @@ object WalletManagerFactory {
         val blockchainName: String = card.cardData?.blockchainName ?: return null
 
         when {
-            blockchainName.contains("btc") || blockchainName.contains("bitcoin") -> {
+            blockchainName == Blockchain.Bitcoin.id -> {
+                return BitcoinWalletManager(
+                        cardId = card.cardId,
+                        walletPublicKey = walletPublicKey,
+                        walletConfig = WalletConfig(true, true)
+                )
+            }
+            blockchainName == Blockchain.BitcoinTestnet.id -> {
                 return BitcoinWalletManager(
                         cardId = card.cardId,
                         walletPublicKey = walletPublicKey,
                         walletConfig = WalletConfig(true, true),
-                        isTestNet = isTestNet(blockchainName))
+                        isTestNet = true
+                )
             }
-            blockchainName.contains("eth") -> {
-                val chain = if (isTestNet(blockchainName)) {
-                    Chain.EthereumClassicTestnet
-                } else {
-                    Chain.Mainnet
-                }
+            blockchainName == Blockchain.Ethereum.id -> {
+                val chain = Chain.Mainnet
                 return EthereumWalletManager(
                         cardId = card.cardId,
                         walletPublicKey = walletPublicKey,
                         walletConfig = WalletConfig(true, true),
-                        chain = chain)
+                        chain = chain
+                )
             }
-            blockchainName.contains("xlm") -> {
+            blockchainName == Blockchain.Stellar.id -> {
                 val token = getToken(card)
                 return StellarWalletManager(
                         cardId = card.cardId,
                         walletPublicKey = walletPublicKey,
                         walletConfig = WalletConfig(true, token == null),
-                        token = token,
-                        isTestNet = isTestNet(blockchainName))
+                        token = token
+                )
             }
-            blockchainName.contains("cardano") -> {
+            blockchainName == Blockchain.Cardano.id -> {
                 return CardanoWalletManager(
                         cardId = card.cardId,
                         walletPublicKey = walletPublicKey,
@@ -52,8 +57,6 @@ object WalletManagerFactory {
             else -> return null
         }
     }
-
-    private fun isTestNet(blockchainName: String) = blockchainName.contains("test")
 
     private fun getToken(card: Card): Token? {
         val symbol = card.cardData?.tokenSymbol ?: return null
