@@ -3,10 +3,7 @@ package com.tangem.tangemtest
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.CardManager
-import com.tangem.tangem_sdk_new.DefaultCardManagerDelegate
-import com.tangem.tangem_sdk_new.NfcLifecycleObserver
-import com.tangem.tangem_sdk_new.TerminalKeysStorage
-import com.tangem.tangem_sdk_new.nfc.NfcManager
+import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskError
 import com.tangem.tasks.TaskEvent
@@ -14,10 +11,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
-    private val nfcManager = NfcManager()
-    private val cardManagerDelegate: DefaultCardManagerDelegate = DefaultCardManagerDelegate(nfcManager.reader)
-    private val cardManager = CardManager(nfcManager.reader, cardManagerDelegate)
-
+    private lateinit var cardManager: CardManager
     private lateinit var cardId: String
     private lateinit var issuerData: ByteArray
     private lateinit var issuerDataSignature: ByteArray
@@ -26,11 +20,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        cardManager.setTerminalKeysService(TerminalKeysStorage(application))
-        nfcManager.setCurrentActivity(this)
-        cardManagerDelegate.activity = this
-
-        lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
+        cardManager = CardManager.init(this)
 
         btn_scan?.setOnClickListener { _ ->
             cardManager.scanCard { taskEvent ->
