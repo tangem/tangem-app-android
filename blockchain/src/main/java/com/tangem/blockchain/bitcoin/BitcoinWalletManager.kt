@@ -18,7 +18,6 @@ class BitcoinWalletManager(
         walletConfig: WalletConfig,
         isTestNet: Boolean = false
 ) : WalletManager,
-        TransactionEstimator,
         TransactionSender,
         FeeProvider {
 
@@ -48,26 +47,14 @@ class BitcoinWalletManager(
                         null,
                         "unknown",
                         currencyWallet.address))
-            } else {
-                currencyWallet.pendingTransactions.clear()
             }
+        } else {
+            currencyWallet.pendingTransactions.clear()
         }
     }
 
     private fun updateError(error: Throwable?) {
         Log.e(this::class.java.simpleName, error?.message ?: "")
-    }
-
-    override suspend fun getEstimateSize(transactionData: TransactionData): Result<Int> {
-        val buildTransactionResult = transactionBuilder.buildToSign(transactionData)
-        when (buildTransactionResult) {
-            is Result.Failure -> return buildTransactionResult
-            is Result.Success -> {
-                val hashes = buildTransactionResult.data
-                val finalTransaction = transactionBuilder.buildToSend(ByteArray(64 * hashes.size) {1}, walletPublicKey)
-                return Result.Success(finalTransaction.size)
-            }
-        }
     }
 
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
@@ -90,10 +77,11 @@ class BitcoinWalletManager(
         when (val result = networkManager.getFee()) {
             is Result.Failure -> return result
             is Result.Success -> {
-                val sizeResult = getEstimateSize(
+                val sizeResult = transactionBuilder.getEstimateSize(
                         TransactionData(amount,
                                 Amount(1.toBigDecimal().divide(SATOSHI_IN_BTC), blockchain),
-                                address, destination)
+                                address, destination),
+                        walletPublicKey
                 )
                 when (sizeResult) {
                     is Result.Failure -> return sizeResult
