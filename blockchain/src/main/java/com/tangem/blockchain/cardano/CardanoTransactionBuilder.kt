@@ -9,6 +9,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.extensions.decodeBase58
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.math.BigDecimal
 
 class CardanoTransactionBuilder() {
     var unspentOutputs: List<UnspentOutput> = listOf()
@@ -141,6 +142,21 @@ class CardanoTransactionBuilder() {
     private fun calculateChange(amount: Long, fee: Long): Long {
         val fullAmount = unspentOutputs.map { it.amount }.sum()
         return fullAmount - (amount + fee)
+    }
+
+    fun getEstimateSize(transactionData: TransactionData, walletPublicKey: ByteArray): Int {
+        val dummyFeeValue = BigDecimal.valueOf(0.1)
+
+        val dummyFee = transactionData.amount.copy(value = dummyFeeValue)
+        val dummyAmount =
+                transactionData.amount.copy(value = transactionData.amount.value!! - dummyFeeValue)
+
+        val dummyTransactionData = transactionData.copy(
+                amount = dummyAmount,
+                fee = dummyFee
+        )
+        buildToSign(dummyTransactionData)
+        return buildToSend(ByteArray(64), walletPublicKey).size
     }
 
     companion object {
