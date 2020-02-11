@@ -27,7 +27,7 @@ class ResponseApdu(private val data: ByteArray) {
     fun getTlvData(encryptionKey: ByteArray? = null): List<Tlv>? {
         return when {
             data.size <= 2 -> null
-            else -> Tlv.tlvListFromBytes(data.copyOf(data.size - 2))
+            else -> Tlv.deserialize(data.copyOf(data.size - 2))
         }
     }
 
