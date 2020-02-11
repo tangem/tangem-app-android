@@ -38,7 +38,7 @@ class NfcReader : CardReader {
                 // Stops reading and sends failure callback to a task
                 // if reading is cancelled (when user closes nfc bottom sheet dialog).
                 closeSession()
-                callback?.invoke(CompletionResult.Failure(TaskError.UserCancelledError()))
+                callback?.invoke(CompletionResult.Failure(TaskError.UserCancelled()))
             }
         }
 
@@ -67,7 +67,7 @@ class NfcReader : CardReader {
 
     private fun transceiveData() {
         if (readingCancelled) {
-            callback?.invoke(CompletionResult.Failure(TaskError.UserCancelledError()))
+            callback?.invoke(CompletionResult.Failure(TaskError.UserCancelled()))
             return
         }
         if (data == null) return
@@ -109,9 +109,8 @@ class NfcReader : CardReader {
         val response = SlixTagReader().transceive(nfcV)
         when (response) {
             is SlixReadResult.Failure -> {
-                callback?.invoke(CompletionResult.Failure(
-                        TaskError.ErrorProcessingCommand(response.exception.message))
-                )
+                Log.e(this::class.simpleName!!, "${response.exception.message}")
+                callback?.invoke(CompletionResult.Failure(TaskError.ErrorProcessingCommand()))
             }
             is SlixReadResult.Success -> {
                  callback?.invoke(CompletionResult.Success(ResponseApdu(response.data)))
