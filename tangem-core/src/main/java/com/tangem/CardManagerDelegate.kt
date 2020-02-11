@@ -35,7 +35,7 @@ interface CardManagerDelegate {
     /**
      * It is called when some error occur during NFC session.
      */
-    fun onError(error: TaskError? = null)
+    fun onError(error: TaskError)
 
     /**
      * It is called when a user is expected to enter pin code.

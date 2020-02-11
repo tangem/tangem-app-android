@@ -12,6 +12,7 @@ dependencies {
     implementation 'net.i2p.crypto:eddsa:0.3.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
     testImplementation "com.google.truth:truth:1.0"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:1.3.61"
 }
 
 sourceCompatibility = "8"

@@ -1,5 +1,6 @@
 package com.tangem.common.tlv
 
+import com.tangem.Log
 import com.tangem.commands.*
 import com.tangem.common.extensions.*
 import com.tangem.tasks.TaskError
@@ -11,7 +12,8 @@ class TlvEncoder {
         if (value != null) {
             return Tlv(tag, encodeValue(value, tag))
         } else {
-            throw TaskError.SerializeCommandError("Encoding error. Value for tag $tag is null")
+            Log.e(this::class.simpleName!!, "Encoding error. Value for tag $tag is null")
+            throw TaskError.SerializeCommandError()
         }
     }
 
@@ -35,7 +37,8 @@ class TlvEncoder {
             }
             TlvValueType.BoolValue -> {
                 typeCheck<T, Boolean>(tag)
-                throw ConversionException("Usopported operation: Boolean to ByteArray for tag $tag")
+                Log.e(this::class.simpleName!!, "Unsupported operation: Boolean to ByteArray for tag $tag")
+                throw TaskError.ConvertError()
             }
             TlvValueType.ByteArray -> {
                 typeCheck<T, ByteArray>(tag)
@@ -75,7 +78,10 @@ class TlvEncoder {
     }
 
     private inline fun <reified T, reified ExpectedT> typeCheck(tag: TlvTag) {
-        if (T::class != ExpectedT::class)
-            throw WrongTypeException("Mapping error. Type for tag: $tag must be ${tag.valueType()}. It is ${T::class}")
+        if (T::class != ExpectedT::class){
+            Log.e(this::class.simpleName!!,
+                    "Mapping error. Type for tag: $tag must be ${tag.valueType()}. It is ${T::class}")
+            throw TaskError.WrongType()
+        }
     }
 }
