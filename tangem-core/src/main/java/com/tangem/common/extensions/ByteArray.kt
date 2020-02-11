@@ -1,6 +1,7 @@
 package com.tangem.common.extensions
 
 import org.spongycastle.crypto.digests.RIPEMD160Digest
+import org.spongycastle.jce.ECNamedCurveTable
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.*
@@ -42,4 +43,14 @@ fun ByteArray.calculateRipemd160(): ByteArray {
     val out = ByteArray(20)
     digest.doFinal(out, 0)
     return out
+}
+
+fun ByteArray.toCompressedPublicKey(): ByteArray {
+    return if (this.size == 65) {
+        val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
+        val publicKeyPoint = spec.curve.decodePoint(this)
+        publicKeyPoint.getEncoded(true)
+    } else {
+        this
+    }
 }
