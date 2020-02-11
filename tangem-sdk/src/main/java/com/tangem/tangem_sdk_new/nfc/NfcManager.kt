@@ -13,7 +13,7 @@ import android.os.Bundle
 import com.tangem.Log
 
 /**
- * Helps use of NFC, leveraging Android NFC functionality.
+ * Helps use NFC, leveraging Android NFC functionality.
  * Launches [NfcAdapter], manages it with [Activity] lifecycle,
  * enables and disables Nfc Reading Mode, receives NFC [Tag].
  */
@@ -87,6 +87,7 @@ class NfcManager : NfcAdapter.ReaderCallback {
     companion object {
         // reader mode flags: listen for type A (not B), skipping ndef check
         private const val READER_FLAGS = NfcAdapter.FLAG_READER_NFC_A or
+                NfcAdapter.FLAG_READER_NFC_V or
                 NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK or
                 NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS
     }
