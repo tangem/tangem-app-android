@@ -206,4 +206,6 @@ class CardManager(
                 terminalKeys = terminalKeys
         )
     }
+
+    companion object
 }
