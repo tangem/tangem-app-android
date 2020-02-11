@@ -5,6 +5,7 @@ import com.tangem.blockchain.ethereum.Chain
 import com.tangem.blockchain.ethereum.EthereumWalletManager
 import com.tangem.blockchain.cardano.CardanoWalletManager
 import com.tangem.blockchain.stellar.StellarWalletManager
+import com.tangem.blockchain.xrp.XrpWalletManager
 import com.tangem.commands.Card
 
 object WalletManagerFactory {
@@ -47,6 +48,13 @@ object WalletManagerFactory {
                         cardId = card.cardId,
                         walletPublicKey = walletPublicKey,
                         walletConfig = WalletConfig(false, true)
+                )
+            }
+            blockchainName.contains("xrp") -> {
+                return XrpWalletManager(
+                        cardId = card.cardId,
+                        walletPublicKey = walletPublicKey,
+                        walletConfig = WalletConfig(true, true)
                 )
             }
             else -> return null
