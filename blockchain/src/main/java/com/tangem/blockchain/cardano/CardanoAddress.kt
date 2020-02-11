@@ -5,7 +5,6 @@ import co.nstant.`in`.cbor.CborDecoder
 import co.nstant.`in`.cbor.CborEncoder
 import co.nstant.`in`.cbor.model.Array
 import co.nstant.`in`.cbor.model.ByteString
-import co.nstant.`in`.cbor.model.DataItem
 import co.nstant.`in`.cbor.model.UnsignedInteger
 import com.tangem.blockchain.cardano.crypto.Blake2b
 import com.tangem.blockchain.common.extensions.decodeBase58
