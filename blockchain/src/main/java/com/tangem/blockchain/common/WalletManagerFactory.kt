@@ -55,7 +55,7 @@ object WalletManagerFactory {
                         walletConfig = WalletConfig(false, true)
                 )
             }
-            blockchainName.contains("xrp") -> {
+            blockchainName == Blockchain.XRP.id -> {
                 return XrpWalletManager(
                         cardId = card.cardId,
                         walletPublicKey = walletPublicKey,
