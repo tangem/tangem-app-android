@@ -1,12 +1,13 @@
 package com.tangem.commands
 
-import com.tangem.CardEnvironment
+import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.tlv.Tlv
+import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
 import com.tangem.tasks.TaskError
@@ -37,21 +38,15 @@ class CreateWalletResponse(
  *
  * @property cardId CID, Unique Tangem card ID number.
  */
-class CreateWalletCommand(
-        private val cardId: String
-) : CommandSerializer<CreateWalletResponse>() {
+class CreateWalletCommand : CommandSerializer<CreateWalletResponse>() {
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
-        val tlvData = mutableListOf(
-                Tlv(TlvTag.Pin, cardEnvironment.pin1.calculateSha256()),
-                Tlv(TlvTag.CardId, cardId.hexToBytes()),
-                Tlv(TlvTag.Pin2, cardEnvironment.pin2.calculateSha256())
-        )
-        if (cardEnvironment.cvc != null) {
-            tlvData.add(Tlv(TlvTag.Cvc, cardEnvironment.cvc))
-        }
-
-        return CommandApdu(Instruction.CreateWallet, tlvData)
+        val tlvBuilder = TlvBuilder()
+        tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
+        tlvBuilder.append(TlvTag.CardId, cardEnvironment.cardId)
+        tlvBuilder.append(TlvTag.Pin2, cardEnvironment.pin2)
+        tlvBuilder.append(TlvTag.Cvc, cardEnvironment.cvc)
+        return CommandApdu(Instruction.CreateWallet, tlvBuilder.serialize())
     }
 
     override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): CreateWalletResponse? {
