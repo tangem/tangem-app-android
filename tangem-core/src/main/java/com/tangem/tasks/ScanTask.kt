@@ -1,10 +1,7 @@
 package com.tangem.tasks
 
+import com.tangem.commands.*
 import com.tangem.common.CardEnvironment
-import com.tangem.commands.Card
-import com.tangem.commands.CardStatus
-import com.tangem.commands.CheckWalletCommand
-import com.tangem.commands.ReadCommand
 import com.tangem.common.CompletionResult
 import com.tangem.crypto.CryptoUtils
 
@@ -40,6 +37,10 @@ internal class ScanTask : Task<ScanEvent>() {
         if (currentCard == null) {
             completeNfcSession(true, TaskError.MissingPreflightRead())
             callback(TaskEvent.Completion(TaskError.MissingPreflightRead()))
+
+        } else if (currentCard.cardData?.productMask == ProductMask.Tag) {
+            completeNfcSession()
+            callback(TaskEvent.Completion())
 
         } else if (currentCard.status != CardStatus.Loaded) {
             completeNfcSession()
