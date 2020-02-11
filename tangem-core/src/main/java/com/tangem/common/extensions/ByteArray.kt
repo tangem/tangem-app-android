@@ -1,5 +1,6 @@
 package com.tangem.common.extensions
 
+import org.spongycastle.crypto.digests.RIPEMD160Digest
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.*
@@ -34,3 +35,11 @@ fun ByteArray.toDate(): Date {
 fun ByteArray.calculateSha512(): ByteArray = MessageDigest.getInstance("SHA-512").digest(this)
 
 fun ByteArray.calculateSha256(): ByteArray = MessageDigest.getInstance("SHA-256").digest(this)
+
+fun ByteArray.calculateRipemd160(): ByteArray {
+    val digest = RIPEMD160Digest()
+    digest.update(this, 0, this.size)
+    val out = ByteArray(20)
+    digest.doFinal(out, 0)
+    return out
+}
