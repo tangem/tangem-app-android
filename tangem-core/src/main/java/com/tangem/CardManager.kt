@@ -76,7 +76,8 @@ class CardManager(
             if (error is TaskError) {
                 callback(TaskEvent.Completion(error))
             } else {
-                callback(TaskEvent.Completion(TaskError.GenericError(error.message)))
+                Log.e(this::class.simpleName!!, error.message ?: "")
+                callback(TaskEvent.Completion(TaskError.UnknownError()))
             }
             return
         }
