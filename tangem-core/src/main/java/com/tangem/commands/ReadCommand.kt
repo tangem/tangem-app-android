@@ -183,7 +183,7 @@ class Card(
         /**
          * Current status of the card.
          */
-        val status: CardStatus,
+        val status: CardStatus?,
 
         /**
          * Version of Tangem COS.
@@ -316,9 +316,9 @@ class ReadCommand : CommandSerializer<Card>() {
             val tlvMapper = TlvMapper(tlvData)
 
             Card(
-                    cardId = tlvMapper.map(TlvTag.CardId),
-                    manufacturerName = tlvMapper.map(TlvTag.ManufactureId),
-                    status = tlvMapper.map(TlvTag.Status),
+                    cardId = tlvMapper.mapOptional(TlvTag.CardId) ?: "",
+                    manufacturerName = tlvMapper.mapOptional(TlvTag.ManufactureId) ?: "",
+                    status = tlvMapper.mapOptional(TlvTag.Status),
 
                     firmwareVersion = tlvMapper.mapOptional(TlvTag.Firmware),
                     cardPublicKey = tlvMapper.mapOptional(TlvTag.CardPublicKey),
