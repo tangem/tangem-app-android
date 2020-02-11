@@ -13,10 +13,6 @@ interface WalletManager {
     suspend fun update()
 }
 
-interface TransactionEstimator {
-    suspend fun getEstimateSize(transactionData: TransactionData): Result<Int>
-}
-
 interface TransactionSender {
     suspend fun send(transactionData: TransactionData, signer: TransactionSigner) : SimpleResult
 }
