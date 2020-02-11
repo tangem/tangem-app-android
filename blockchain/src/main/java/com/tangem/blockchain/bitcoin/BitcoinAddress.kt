@@ -33,18 +33,18 @@ class BitcoinAddressValidator {
                 if (testNet && firstLettersNonTestNet.contains(address.first())) return false
                 if (address.length !in 26..35) return false
                 val decoded = address.decodeBase58() ?: return false
-                val hash = sha256(decoded, 0, 21, 2)
+                val hash = recursiveSha256(decoded, 0, 21, 2)
                 return hash.sliceArray(0..3).contentEquals(decoded.sliceArray(21..24))
             } else {
                 return validateSegwitAddress(address, testNet)
             }
         }
 
-        private fun sha256(data: ByteArray, start: Int, len: Int, recursion: Int): ByteArray {
+        private fun recursiveSha256(data: ByteArray, start: Int, len: Int, recursion: Int): ByteArray {
             if (recursion == 0) return data
             val md = MessageDigest.getInstance("SHA-256")
             md.update(data.sliceArray(start until start + len))
-            return sha256(md.digest(), 0, 32, recursion - 1)
+            return recursiveSha256(md.digest(), 0, 32, recursion - 1)
         }
 
         private fun String.decodeBase58(): ByteArray? {
