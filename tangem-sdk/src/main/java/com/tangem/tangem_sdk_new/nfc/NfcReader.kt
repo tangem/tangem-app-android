@@ -3,6 +3,7 @@ package com.tangem.tangem_sdk_new.nfc
 import android.nfc.Tag
 import android.nfc.TagLostException
 import android.nfc.tech.IsoDep
+import android.nfc.tech.NfcV
 import com.tangem.CardReader
 import com.tangem.Log
 import com.tangem.common.CompletionResult
@@ -41,8 +42,8 @@ class NfcReader : CardReader {
             }
         }
 
-    var data: ByteArray? = null
-    var callback: ((response: CompletionResult<ResponseApdu>) -> Unit)? = null
+    private var data: ByteArray? = null
+    private var callback: ((response: CompletionResult<ResponseApdu>) -> Unit)? = null
 
     override fun openSession() {
         readingActive = true
@@ -90,6 +91,7 @@ class NfcReader : CardReader {
     }
 
     fun onTagDiscovered(tag: Tag?) {
+        NfcV.get(tag)?.let { onNfcVDiscovered(it) }
         isoDep = IsoDep.get(tag)
         transceiveData()
     }
@@ -103,4 +105,17 @@ class NfcReader : CardReader {
         Log.i(this::class.simpleName!!, "Nfc session is started")
     }
 
+    private fun onNfcVDiscovered(nfcV: NfcV) {
+        val response = SlixTagReader().transceive(nfcV)
+        when (response) {
+            is SlixReadResult.Failure -> {
+                callback?.invoke(CompletionResult.Failure(
+                        TaskError.ErrorProcessingCommand(response.exception.message))
+                )
+            }
+            is SlixReadResult.Success -> {
+                 callback?.invoke(CompletionResult.Success(ResponseApdu(response.data)))
+            }
+        }
+    }
 }
