@@ -60,6 +60,14 @@ dependencies {
 
     implementation 'co.nstant.in:cbor:0.8'
 
+    implementation files('libs/ripple-core-0.0.1.jar')
+    //4 dependencies for ripple-core
+    implementation 'net.i2p.crypto:eddsa:0.3.0'
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.61'
+    //noinspection DuplicatePlatformClasses
+    implementation 'org.json:json:20180813'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
+
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
     testImplementation "com.google.truth:truth:1.0"
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
