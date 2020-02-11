@@ -17,7 +17,6 @@ class CardanoWalletManager(
         private val walletPublicKey: ByteArray,
         walletConfig: WalletConfig
 ) : WalletManager,
-        TransactionEstimator,
         TransactionSender,
         FeeProvider {
 
@@ -47,21 +46,6 @@ class CardanoWalletManager(
         Log.e(this::class.java.simpleName, error?.message ?: "")
     }
 
-    override suspend fun getEstimateSize(transactionData: TransactionData): Int {
-        val dummyFeeValue = BigDecimal.valueOf(0.1)
-
-        val dummyFee = transactionData.amount.copy(value = dummyFeeValue)
-        val dummyAmount =
-                transactionData.amount.copy(value = transactionData.amount.value!! - dummyFeeValue)
-
-        val dummyTransactionData = transactionData.copy(
-                amount = dummyAmount,
-                fee = dummyFee
-        )
-        transactionBuilder.buildToSign(dummyTransactionData)
-        return transactionBuilder.buildToSend(ByteArray(64), walletPublicKey).size
-    }
-
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
         val transactionHash = transactionBuilder.buildToSign(transactionData)
 
@@ -77,8 +61,9 @@ class CardanoWalletManager(
     override suspend fun getFee(amount: Amount, source: String, destination: String): Result<List<Amount>> {
         val a = 0.155381
         val b = 0.000043946
-        val size = getEstimateSize(TransactionData(amount, null, source, destination))
-
+        val size = transactionBuilder.getEstimateSize(
+                TransactionData(amount, null, source, destination), walletPublicKey
+        )
         val fee = (a + b * size).toBigDecimal()
         return Result.Success(listOf(Amount(blockchain.currency, fee, source, blockchain.decimals)))
     }
