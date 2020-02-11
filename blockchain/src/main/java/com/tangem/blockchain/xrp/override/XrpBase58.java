@@ -2,10 +2,6 @@ package com.tangem.blockchain.xrp.override;
 
 import java.math.BigInteger;
 
-/**
- * Created by Ilia on 15.02.2018.
- */
-
 public class XrpBase58 {
     private static final char[] BASE58 = "rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz".toCharArray();
 
