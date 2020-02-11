@@ -24,7 +24,7 @@ sealed class TaskError(description: String? = null) : Exception(description) {
     class Busy() : TaskError()
     class TagLost() : TaskError()
 
-    class ErrorProcessingCommand : TaskError()
+    class ErrorProcessingCommand(description: String? = null) : TaskError(description)
     class InvalidState : TaskError()
     class InsNotSupported : TaskError()
     class InvalidParams : TaskError()
@@ -73,6 +73,7 @@ abstract class Task<T> {
     var delegate: CardManagerDelegate? = null
     var reader: CardReader? = null
     var performPreflightRead: Boolean = true
+    var securityDelayDuration: Int = 0
 
     /**
      * This method should be called to run the [Task] and perform all its operations.
@@ -82,7 +83,7 @@ abstract class Task<T> {
      */
     fun run(cardEnvironment: CardEnvironment,
             callback: (result: TaskEvent<T>) -> Unit) {
-        delegate?.onNfcSessionStarted()
+        delegate?.onNfcSessionStarted(cardEnvironment.cardId)
         reader?.openSession()
         Log.i(this::class.simpleName!!, "Nfc task is started")
 
@@ -161,7 +162,7 @@ abstract class Task<T> {
                         StatusWord.NeedPause -> {
                             // When NeedPause is returned from the card whenever security delay is triggered.
                             val remainingTime = command.deserializeSecurityDelay(responseApdu, cardEnvironment)
-                            if (remainingTime != null) delegate?.onSecurityDelay(remainingTime)
+                            if (remainingTime != null) delegate?.onSecurityDelay(remainingTime, securityDelayDuration)
                             Log.i(this::class.simpleName!!, "Nfc command ${command::class.simpleName!!} triggered security delay of $remainingTime milliseconds")
                             sendRequest(command, commandApdu, cardEnvironment, callback)
                         }
