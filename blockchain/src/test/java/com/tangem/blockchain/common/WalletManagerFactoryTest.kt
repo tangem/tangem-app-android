@@ -1,11 +1,12 @@
 package com.tangem.blockchain.common
 
 import com.google.common.truth.Truth
-import com.tangem.CardEnvironment
+import com.tangem.common.CardEnvironment
 import com.tangem.blockchain.bitcoin.BitcoinWalletManager
 import com.tangem.blockchain.cardano.CardanoWalletManager
 import com.tangem.blockchain.ethereum.EthereumWalletManager
 import com.tangem.blockchain.stellar.StellarWalletManager
+import com.tangem.blockchain.xrp.XrpWalletManager
 import com.tangem.commands.ReadCommand
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.extensions.hexToBytes
@@ -55,5 +56,16 @@ internal class WalletManagerFactoryTest {
 
         Truth.assertThat(walletManager)
                 .isInstanceOf(CardanoWalletManager::class.java)
+    }
+
+    @Test
+    fun createXrpWalletManager() {
+        val data = "0108cb21000000002154200b534d4152542043415348000201028006322e31317200034104bdad63848f97c535da53cf8fd300d24fa33f0516d194aa78ec164a06994d00204bae243a424e316c6ec845e02d9b15eafae8c19018a926b0b7435e6e941cdadb0a0400007e210c5a81020028820407e30502830754414e47454d00840358525086400ed8734b877869722c7d0b37ffb154b9fef21c54bf2c6496feb1fb5c1fc28a2ac28e201dde84f27495fa7f08b3ca2be2fb4954bf0fe78af027d6cdc16c3eee923041048196aa4b410ac44a3b9cce18e7be226aea070acc83a9cf67540fac49af25129f6a538a28ad6341358e3c4f9963064f7e365372a651d374e5c23cdd37fd099bf2050a736563703235366b31000804000f4240070100090205dc604104d2b9fb288540d54e5b32ecaf0381cd571f97f6f1ecd036b66bb11aa52ffe9981110d883080e2e255c6b1640586f7765e6faa325d1340f49b56b83d9de56bc7ed6204000f42406304000000000f01009000"
+        val responseApdu = ResponseApdu(data.hexToBytes())
+        val card = ReadCommand().deserialize(CardEnvironment(), responseApdu)
+        val walletManager = WalletManagerFactory.makeWalletManager(card!!)
+
+        Truth.assertThat(walletManager)
+                .isInstanceOf(XrpWalletManager::class.java)
     }
 }
