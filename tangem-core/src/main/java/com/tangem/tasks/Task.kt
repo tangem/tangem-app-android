@@ -190,6 +190,7 @@ abstract class Task<T> {
                 is CompletionResult.Success -> {
 
                     val receivedCardId = readResult.data.cardId
+                    securityDelayDuration = readResult.data.pauseBeforePin2 ?: 0
 
                     if (environment.cardId != null && environment.cardId != receivedCardId) {
                         completeNfcSession(true, TaskError.WrongCard())
