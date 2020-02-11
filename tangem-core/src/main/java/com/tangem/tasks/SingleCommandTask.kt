@@ -28,8 +28,8 @@ class SingleCommandTask<Event : CommandResponse>(
                     callback(TaskEvent.Completion())
                 }
                 is CompletionResult.Failure -> {
-                    if (result.error !is TaskError.UserCancelledError) {
-                        completeNfcSession(true, result.error)
+                    if (result.error !is TaskError.UserCancelled) {
+                        completeNfcSession(result.error)
                     }
                     callback(TaskEvent.Completion(result.error))
                 }
