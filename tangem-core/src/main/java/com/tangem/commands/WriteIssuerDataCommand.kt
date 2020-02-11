@@ -1,6 +1,6 @@
 package com.tangem.commands
 
-import com.tangem.CardEnvironment
+import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
@@ -8,6 +8,7 @@ import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toByteArray
 import com.tangem.common.tlv.Tlv
+import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
 import com.tangem.tasks.TaskError
@@ -30,24 +31,20 @@ class WriteIssuerDataResponse(
  * @property issuerDataCounter An optional counter that protect issuer data against replay attack.
  */
 class WriteIssuerDataCommand(
-        private val cardId: String,
         private val issuerData: ByteArray,
         private val issuerDataSignature: ByteArray,
         private val issuerDataCounter: Int? = null
 ) : CommandSerializer<WriteIssuerDataResponse>() {
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
-        val tlvData = mutableListOf(
-                Tlv(TlvTag.Pin, cardEnvironment.pin1.calculateSha256()),
-                Tlv(TlvTag.CardId, cardId.hexToBytes()),
-                Tlv(TlvTag.IssuerData, issuerData),
-                Tlv(TlvTag.IssuerDataSignature, issuerDataSignature)
-        )
-        if (issuerDataCounter != null) {
-            tlvData.add(Tlv(TlvTag.IssuerDataCounter, issuerDataCounter.toByteArray()))
-        }
+        val tlvBuilder = TlvBuilder()
+        tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
+        tlvBuilder.append(TlvTag.CardId, cardEnvironment.cardId)
+        tlvBuilder.append(TlvTag.IssuerData, issuerData)
+        tlvBuilder.append(TlvTag.IssuerDataSignature, issuerDataSignature)
+        tlvBuilder.append(TlvTag.IssuerDataCounter, issuerDataCounter)
 
-        return CommandApdu(Instruction.WriteIssuerData, tlvData)
+        return CommandApdu(Instruction.WriteIssuerData, tlvBuilder.serialize())
     }
 
     override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): WriteIssuerDataResponse? {
