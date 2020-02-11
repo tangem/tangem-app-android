@@ -13,13 +13,13 @@ interface CardManagerDelegate {
     /**
      * It is called when user is expected to scan a Tangem Card with an Android device.
      */
-    fun onNfcSessionStarted()
+    fun onNfcSessionStarted(cardId: String?)
 
     /**
      * It is called when security delay is triggered by the card.
      * A user is expected to hold the card until the security delay is over.
      */
-    fun onSecurityDelay(ms: Int)
+    fun onSecurityDelay(ms: Int, totalDurationSeconds: Int)
 
     /**
      * It is called when user takes the card away from the Android device during the scanning
