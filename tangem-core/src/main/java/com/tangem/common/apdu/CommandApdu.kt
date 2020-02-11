@@ -1,8 +1,6 @@
 package com.tangem.common.apdu
 
-import com.tangem.EncryptionMode
-import com.tangem.common.tlv.Tlv
-import com.tangem.common.tlv.toBytes
+import com.tangem.common.EncryptionMode
 import java.io.ByteArrayOutputStream
 
 /**
@@ -15,7 +13,7 @@ import java.io.ByteArrayOutputStream
 class CommandApdu(
 
         private val ins: Int,
-        private val tlvList: List<Tlv>,
+        private val tlvs: ByteArray,
 
         private val cla: Byte = ISO_CLA,
         private val p1: Byte = 0x00,
@@ -28,12 +26,12 @@ class CommandApdu(
 
     constructor(
             instruction: Instruction,
-            tlvList: List<Tlv>,
+            tlvs: ByteArray,
             encryptionMode: EncryptionMode = EncryptionMode.NONE,
             encryptionKey: ByteArray? = null
     ) : this(
             instruction.code,
-            tlvList,
+            tlvs,
             encryptionMode = encryptionMode,
             encryptionKey = encryptionKey
     )
@@ -51,13 +49,7 @@ class CommandApdu(
 
     private fun toBytes(): ByteArray {
 
-        val data = if (tlvList.isNotEmpty()) {
-            tlvList.toBytes()
-        } else {
-            byteArrayOf()
-        }
-
-        val lc = data.size
+        val lc = tlvs.size
 
         val byteStream = ByteArrayOutputStream()
         byteStream.write(cla.toInt())
@@ -66,7 +58,7 @@ class CommandApdu(
         byteStream.write(p2.toInt())
         if (lc != 0) {
             writeLength(byteStream, lc)
-            byteStream.write(data)
+            byteStream.write(tlvs)
         }
         return byteStream.toByteArray()
     }
