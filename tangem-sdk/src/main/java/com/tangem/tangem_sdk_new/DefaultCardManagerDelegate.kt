@@ -114,14 +114,14 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
         postUI(300) { readingDialog?.dismiss() }
     }
 
-    override fun onError(error: TaskError?) {
+    override fun onError(error: TaskError) {
         postUI {
             readingDialog?.lTouchCard?.hide()
             readingDialog?.flSecurityDelay?.hide()
             readingDialog?.flCompletion?.hide()
             readingDialog?.flError?.show()
             readingDialog?.tvTaskTitle?.text = activity.getText(R.string.dialog_error)
-            readingDialog?.tvTaskText?.text = if (error != null) error::class.simpleName else ""
+            readingDialog?.tvTaskText?.text = "${error::class.simpleName}: ${error.code}"
         }
     }
 

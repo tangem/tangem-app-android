@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     is TaskEvent.Completion -> {
                         if (taskEvent.error != null) {
-                            if (taskEvent.error is TaskError.UserCancelledError) {
+                            if (taskEvent.error is TaskError.UserCancelled) {
                                 // Handle case when user cancelled manually
                             }
                             // Handle other errors
