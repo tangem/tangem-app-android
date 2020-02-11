@@ -12,18 +12,18 @@ import com.tangem.blockchain.xrp.override.XrpSignedTransaction
 import org.bitcoinj.core.ECKey
 import java.math.BigInteger
 
-class XrpTransactionBuilder(private val walletPublicKey: ByteArray) {
+class XrpTransactionBuilder(walletPublicKey: ByteArray) {
     private val canonicalPublicKey = XrpAddressFactory.canonizePublicKey(walletPublicKey)
     var sequence: Long? = null
     private var transaction: XrpSignedTransaction? = null
 
     fun buildToSign(transactionData: TransactionData): ByteArray {
         val payment = XrpPayment()
-        payment.`as`(AccountID.Account, transactionData.sourceAddress)
-        payment.`as`(AccountID.Destination, transactionData.destinationAddress)
-        payment.`as`(Amount.Amount, transactionData.amount.bigIntegerValue().toString())
-        payment.`as`(UInt32.Sequence, sequence)
-        payment.`as`(Amount.Fee, transactionData.fee!!.bigIntegerValue().toString())
+        payment.putTranslated(AccountID.Account, transactionData.sourceAddress)
+        payment.putTranslated(AccountID.Destination, transactionData.destinationAddress)
+        payment.putTranslated(Amount.Amount, transactionData.amount.bigIntegerValue().toString())
+        payment.putTranslated(UInt32.Sequence, sequence)
+        payment.putTranslated(Amount.Fee, transactionData.fee!!.bigIntegerValue().toString())
 
         transaction = payment.prepare(canonicalPublicKey)
 
