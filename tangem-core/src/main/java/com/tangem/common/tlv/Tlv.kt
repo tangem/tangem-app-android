@@ -53,9 +53,9 @@ class Tlv {
         }
 
 
-        fun deserialize(mData: ByteArray): List<Tlv>? {
+        fun deserialize(data: ByteArray, nfcV: Boolean = false): List<Tlv>? {
             val tlvList = mutableListOf<Tlv>()
-            val stream = ByteArrayInputStream(mData)
+            val stream = ByteArrayInputStream(data)
             var tlv: Tlv?
             do {
                 try {
@@ -63,7 +63,7 @@ class Tlv {
                     if (tlv != null) tlvList.add(tlv)
                 } catch (e: IOException) {
                     Log.e(this::class.java.simpleName,"TLVError: " + e.message)
-                    return null
+                    if (nfcV) break else return null
                 }
 
             } while (tlv != null)
