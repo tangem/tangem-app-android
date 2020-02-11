@@ -16,33 +16,41 @@ import com.tangem.common.apdu.StatusWord
  * An error class that represent typical errors that may occur when performing Tangem SDK tasks.
  * Errors are propagated back to the caller in callbacks.
  */
-sealed class TaskError(description: String? = null) : Exception(description) {
-    class UnknownStatus(sw: Int) : TaskError("Unknown StatusWord: $sw")
-    class MappingError : TaskError()
-    class GenericError(description: String? = null) : TaskError(description)
-    class UserCancelledError() : TaskError()
-    class Busy() : TaskError()
-    class TagLost() : TaskError()
+sealed class TaskError(val code: Int): Exception() {
 
-    class ErrorProcessingCommand(description: String? = null) : TaskError(description)
-    class InvalidState : TaskError()
-    class InsNotSupported : TaskError()
-    class InvalidParams : TaskError()
-    class NeedEncryption : TaskError()
-    class NeedPause : TaskError()
+    //Errors in serializing APDU
+    class SerializeCommandError: TaskError(1001)
+    class EncodingError: TaskError(1002)
+    class MissingTag: TaskError(1003)
+    class WrongType: TaskError(1004)
+    class ConvertError: TaskError(1005)
 
-    class VefificationFailed : TaskError()
-    class CardError : TaskError()
-    class ReaderError() : TaskError()
-    class SerializeCommandError(description: String? = null) : TaskError(description)
+    //Card errors
+    class UnknownStatus: TaskError(2001)
+    class ErrorProcessingCommand: TaskError(2002)
+    class MissingPreflightRead: TaskError(2003)
+    class InvalidState: TaskError(2004)
+    class InsNotSupported: TaskError(2005)
+    class InvalidParams: TaskError(2006)
+    class NeedEncryption: TaskError(2007)
 
-    class CardIsMissing() : TaskError()
-    class EmptyHashes() : TaskError()
-    class TooMuchHashes() : TaskError()
-    class HashSizeMustBeEqual() : TaskError()
+    //Scan errors
+    class VerificationFailed: TaskError(3000)
+    class CardError: TaskError(3001)
+    class WrongCard: TaskError(3002)
+    class TooMuchHashesInOneTransaction: TaskError(3003)
+    class EmptyHashes: TaskError(3004)
+    class HashSizeMustBeEqual: TaskError(3005)
 
-    class WrongCard() : TaskError()
-    class MissingPreflightRead() : TaskError()
+    class Busy: TaskError(4000)
+    class UserCancelled: TaskError(4001)
+    class UnsupportedDevice: TaskError(4002)
+
+    //NFC error
+    class NfcReaderError: TaskError(5002)
+    class TagLost: TaskError(5003)
+
+    class UnknownError: TaskError(6000)
 }
 
 /**
@@ -100,9 +108,9 @@ abstract class Task<T> {
      * @param withError True when there is an error
      * @param taskError The error to be shown by [CardManagerDelegate]
      */
-    protected fun completeNfcSession(withError: Boolean = false, taskError: TaskError? = null) {
+    protected fun completeNfcSession(taskError: TaskError? = null) {
         reader?.closeSession()
-        if (withError) {
+        if (taskError != null) {
             delegate?.onError(taskError)
         } else {
             delegate?.onNfcSessionCompleted()
@@ -153,7 +161,10 @@ abstract class Task<T> {
                             }
                         }
                         StatusWord.InvalidParams -> callback(CompletionResult.Failure(TaskError.InvalidParams()))
-                        StatusWord.Unknown -> callback(CompletionResult.Failure(TaskError.UnknownStatus(result.data.sw)))
+                        StatusWord.Unknown -> {
+                            Log.e(this::class.simpleName!!, "Unknown status error: ${result.data.sw}")
+                            callback(CompletionResult.Failure(TaskError.UnknownStatus()))
+                        }
                         StatusWord.ErrorProcessingCommand -> callback(CompletionResult.Failure(TaskError.ErrorProcessingCommand()))
                         StatusWord.InvalidState -> callback(CompletionResult.Failure(TaskError.InvalidState()))
 
@@ -169,10 +180,10 @@ abstract class Task<T> {
                     }
                 }
                 is CompletionResult.Failure ->
-                    if (result.error is TaskError.TagLost) {
+                    if (result.error == TaskError.TagLost()) {
                         delegate?.onTagLost()
-                    } else if (result.error is TaskError.UserCancelledError) {
-                        callback(CompletionResult.Failure(TaskError.UserCancelledError()))
+                    } else if (result.error is TaskError.UserCancelled) {
+                        callback(CompletionResult.Failure(TaskError.UserCancelled()))
                         reader?.closeSession()
                     }
             }
@@ -184,7 +195,7 @@ abstract class Task<T> {
         sendCommand(ReadCommand(), environment) { readResult ->
             when (readResult) {
                 is CompletionResult.Failure -> {
-                    completeNfcSession(true, readResult.error)
+                    completeNfcSession(readResult.error)
                     callback(TaskEvent.Completion(readResult.error))
                 }
                 is CompletionResult.Success -> {
@@ -193,7 +204,7 @@ abstract class Task<T> {
                     securityDelayDuration = readResult.data.pauseBeforePin2 ?: 0
 
                     if (environment.cardId != null && environment.cardId != receivedCardId) {
-                        completeNfcSession(true, TaskError.WrongCard())
+                        completeNfcSession(TaskError.WrongCard())
                         callback(TaskEvent.Completion(TaskError.WrongCard()))
                         return@sendCommand
                     }
