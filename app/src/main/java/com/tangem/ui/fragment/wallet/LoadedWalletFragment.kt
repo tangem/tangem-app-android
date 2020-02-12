@@ -773,7 +773,8 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
     }
 
     private fun showWarningIfPendingTransactionIsPossible() {
-        if (ctx.card.signedHashes > 0 && isNewCid(ctx.card.cidDescription)) {
+        if (ctx.card.signedHashes > 0 && isNewCid(ctx.card.cidDescription)
+                && ctx.card.signedHashes != ctx.coinData.sentTransactionsCount) {
             AlertDialog.Builder(context)
                     .setTitle(R.string.dialog_warning)
                     .setMessage(R.string.loaded_wallet_warning_card_signed_transactions)
