@@ -14,7 +14,7 @@ import retrofit2.http.Query;
 
 public interface BlockchainInfoApi {
     @GET(Server.ApiBlockchainInfo.Method.ADDRESS)
-    Single<BlockchainInfoAddress> blockchainInfoAddress(@Path("address") String address);
+    Single<BlockchainInfoAddress> blockchainInfoAddress(@Path("address") String address, @Query("offset") Integer offset);
 
     @GET(Server.ApiBlockchainInfo.Method.UTXO)
     Single<BlockchainInfoUnspents> blockchainInfoUnspents(@Query("active") String address);
