@@ -46,7 +46,7 @@ class SignCommand(private val hashes: Array<ByteArray>)
 
     private fun checkForErrors() {
         if (hashes.isEmpty()) throw TaskError.EmptyHashes()
-        if (hashes.size > 10) throw TaskError.TooMuchHashes()
+        if (hashes.size > 10) throw TaskError.TooMuchHashesInOneTransaction()
         if (hashes.any { it.size != hashSizes }) throw TaskError.HashSizeMustBeEqual()
     }
 
