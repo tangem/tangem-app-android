@@ -3,6 +3,7 @@ package com.tangem.common.tlv
 import com.google.common.truth.Truth.assertThat
 import com.tangem.commands.*
 import com.tangem.common.extensions.hexToBytes
+import com.tangem.tasks.TaskError
 import org.junit.Test
 import org.junit.jupiter.api.assertThrows
 import java.util.*
@@ -34,21 +35,21 @@ class TlvMapperTest {
 
     @Test
     fun `map when value is null throws MissingTagException`() {
-        assertThrows<MissingTagException> {
+        assertThrows<TaskError.MissingTag> {
             tlvMapper.map<String>(TlvTag.TokenSymbol)
         }
     }
 
     @Test
     fun `map optional to wrong type throws WrongTypeException`() {
-        assertThrows<WrongTypeException> {
+        assertThrows<TaskError.WrongType> {
             tlvMapper.mapOptional<String?>(TlvTag.CardData)
         }
     }
 
     @Test
     fun `map to wrong type throws WrongTypeException`() {
-        assertThrows<WrongTypeException> {
+        assertThrows<TaskError.WrongType> {
             tlvMapper.map<String>(TlvTag.CardData)
         }
     }
@@ -125,7 +126,7 @@ class TlvMapperTest {
     @Test
     fun `map Enum with unknown code throws ConversionException error`() {
         val localMapper = TlvMapper(listOf(Tlv(TlvTag.ProductMask, byteArrayOf(5))))
-        assertThrows<ConversionException> {
+        assertThrows<TaskError.ConvertError> {
             localMapper.map<ProductMask>(TlvTag.ProductMask)
         }
     }
@@ -162,7 +163,7 @@ class TlvMapperTest {
     @Test
     fun `map Int with wrong value throws ConversionException`() {
         val localMapper = TlvMapper(listOf(Tlv(TlvTag.SignedHashes, byteArrayOf(1, 2, 3, 4, 5))))
-        assertThrows<ConversionException> {
+        assertThrows<TaskError.ConvertError> {
             localMapper.map<Int>(TlvTag.SignedHashes)
         }
     }
