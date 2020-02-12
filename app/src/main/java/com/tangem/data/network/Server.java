@@ -113,7 +113,7 @@ public class Server {
 
         public static class Method {
             static final String MAIN = URL_BLOCKCYPHER + V1_MAIN;
-            static final String ADDRESS = MAIN + "/addrs/{address}?unspentOnly=true&includeScript=true";
+            static final String ADDRESS = MAIN + "/addrs/{address}?includeScript=true&limit=2000";
             static final String TXS = MAIN + "/txs/{txHash}?includeHex=true";
             static final String PUSH = MAIN + "/txs/push";
         }
@@ -123,7 +123,7 @@ public class Server {
         public static final String URL_BLOCKCHAININFO = ServerURL.API_BLOCKCHAIN_INFO;
 
         public static class Method {
-            static final String ADDRESS = URL_BLOCKCHAININFO + "rawaddr/{address}?limit=5";
+            static final String ADDRESS = URL_BLOCKCHAININFO + "rawaddr/{address}";
             static final String UTXO = URL_BLOCKCHAININFO + "unspent";
 //            static final String TX = URL_BLOCKCHAININFO + "rawtx/{txHash}";
             static final String PUSH = URL_BLOCKCHAININFO + "pushtx";
