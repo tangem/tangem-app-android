@@ -7,7 +7,11 @@ import android.util.Log;
 import com.tangem.App;
 import com.tangem.Constant;
 import com.tangem.data.Blockchain;
+import com.tangem.data.network.ServerApiBlockcypher;
 import com.tangem.data.network.ServerApiInfura;
+import com.tangem.data.network.model.BlockcypherFee;
+import com.tangem.data.network.model.BlockcypherResponse;
+import com.tangem.data.network.model.BlockcypherTxref;
 import com.tangem.data.network.model.InfuraResponse;
 import com.tangem.tangem_card.data.TangemCard;
 import com.tangem.tangem_card.tasks.SignTask;
@@ -463,7 +467,8 @@ public class EthEngine extends CoinEngine {
     @Override
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
         final ServerApiInfura serverApiInfura = new ServerApiInfura();
-        // request requestData listener
+        final ServerApiBlockcypher serverApiBlockcypher = new ServerApiBlockcypher();
+
         ServerApiInfura.ResponseListener responseListener = new ServerApiInfura.ResponseListener() {
             @Override
             public void onSuccess(String method, InfuraResponse infuraResponse) {
@@ -501,7 +506,7 @@ public class EthEngine extends CoinEngine {
                     break;
                 }
 
-                if (serverApiInfura.isRequestsSequenceCompleted()) {
+                if (serverApiInfura.isRequestsSequenceCompleted()&& serverApiBlockcypher.isRequestsSequenceCompleted()) {
                     blockchainRequestsCallbacks.onComplete(!ctx.hasError());
                 } else {
                     blockchainRequestsCallbacks.onProgress();
@@ -512,7 +517,7 @@ public class EthEngine extends CoinEngine {
             public void onFail(String method, String message) {
                 Log.e(TAG, "onFail: " + method + " " + message);
                 ctx.setError(message);
-                if (serverApiInfura.isRequestsSequenceCompleted()) {
+                if (serverApiInfura.isRequestsSequenceCompleted()&& serverApiBlockcypher.isRequestsSequenceCompleted()) {
                     blockchainRequestsCallbacks.onComplete(false);
                 } else {
                     blockchainRequestsCallbacks.onProgress();
@@ -521,9 +526,55 @@ public class EthEngine extends CoinEngine {
         };
         serverApiInfura.setResponseListener(responseListener);
 
+        ServerApiBlockcypher.ResponseListener blockcypherListener = new ServerApiBlockcypher.ResponseListener() {
+            @Override
+            public void onSuccess(String method, BlockcypherResponse blockcypherResponse) {
+                Log.i(TAG, "onSuccess: " + method);
+                try {
+                    //TODO: change request logic, 2000 tx max
+                    if (blockcypherResponse.getTxrefs() != null) {
+                        for (BlockcypherTxref txref : blockcypherResponse.getTxrefs()) {
+                            if (txref.getTx_input_n() != -1) { //sent only
+                                coinData.incSentTransactionsCount();
+                            }
+                        }
+                    }
+
+                    if (blockcypherResponse.getUnconfirmed_txrefs() != null) {
+                        for (BlockcypherTxref unconfirmedTxref : blockcypherResponse.getUnconfirmed_txrefs()) {
+                            if (unconfirmedTxref.getTx_input_n() != -1) {
+                                coinData.incSentTransactionsCount();
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.e(TAG, "FAIL BLOCKCYPHER_ADDRESS Exception");
+                }
+
+                if (serverApiInfura.isRequestsSequenceCompleted()&& serverApiBlockcypher.isRequestsSequenceCompleted()) {
+                    blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                } else {
+                    blockchainRequestsCallbacks.onProgress();
+                }
+            }
+
+            public void onSuccess(String method, BlockcypherFee blockcypherFee) {
+                Log.e(TAG, "Wrong response type for requestBalanceAndUnspentTransactions");
+            }
+
+            @Override
+            public void onFail(String method, String message) {
+                Log.i(TAG, "onFail: " + method + " " + message);
+            }
+        };
+        serverApiBlockcypher.setResponseListener(blockcypherListener);
+
         serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
         serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT, 67, coinData.getWallet(), "", "");
         serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, 67, coinData.getWallet(), "", "");
+
+        serverApiBlockcypher.requestData(ctx.getBlockchain().getID(), ServerApiBlockcypher.BLOCKCYPHER_ADDRESS, ctx.getCoinData().getWallet(), "");
     }
 
     @Override
