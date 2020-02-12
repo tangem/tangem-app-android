@@ -35,7 +35,7 @@ internal class ScanTask : Task<ScanEvent>() {
         if (currentCard != null) callback(TaskEvent.Event(ScanEvent.OnReadEvent(currentCard)))
 
         if (currentCard == null) {
-            completeNfcSession(true, TaskError.MissingPreflightRead())
+            completeNfcSession(TaskError.MissingPreflightRead())
             callback(TaskEvent.Completion(TaskError.MissingPreflightRead()))
 
         } else if (currentCard.cardData?.productMask == ProductMask.Tag) {
@@ -47,7 +47,7 @@ internal class ScanTask : Task<ScanEvent>() {
             callback(TaskEvent.Completion())
 
         } else if (currentCard.curve == null || currentCard.walletPublicKey == null) {
-            completeNfcSession(true, TaskError.CardError())
+            completeNfcSession(TaskError.CardError())
             callback(TaskEvent.Completion(TaskError.CardError()))
 
         } else {
@@ -57,8 +57,8 @@ internal class ScanTask : Task<ScanEvent>() {
             sendCommand(checkWalletCommand, cardEnvironment) { result ->
                 when (result) {
                     is CompletionResult.Failure -> {
-                        if (result.error !is TaskError.UserCancelledError) {
-                            completeNfcSession(true, result.error)
+                        if (result.error !is TaskError.UserCancelled) {
+                            completeNfcSession(result.error)
                         }
                         callback(TaskEvent.Completion(result.error))
                     }
