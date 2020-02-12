@@ -4,11 +4,16 @@ import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.Server;
 import org.stellar.sdk.Transaction;
 import org.stellar.sdk.requests.ErrorResponse;
+import org.stellar.sdk.requests.RequestBuilder;
 import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.LedgerResponse;
+import org.stellar.sdk.responses.Page;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
+import org.stellar.sdk.responses.operations.OperationResponse;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.List;
 
 /**
  * Created by dvol on 7.01.2019.
@@ -72,13 +77,37 @@ public class StellarRequest {
     public static class Ledgers extends Base {
         public LedgerResponse ledgerResponse;
 
-        public Ledgers() {};
+        public Ledgers() {
+        }
 
         @Override
         public void process(Server server) throws IOException {
-            int latestLedger = server.root().getCoreLatestLedger();
+            int latestLedger = server.root().getHistoryLatestLedger();
             ledgerResponse = server.ledgers().ledger(latestLedger);
         }
     }
 
+    public static class Operations extends Base {
+        KeyPair accountKeyPair;
+        public List<OperationResponse> operationsList;
+        int limit = 200;
+
+        public Operations(String walletAddress) {
+            accountKeyPair = KeyPair.fromAccountId(walletAddress);
+        }
+
+        @Override
+        public void process(Server server) throws IOException {
+            Page<OperationResponse> operationsResponse = server.operations().forAccount(accountKeyPair).limit(limit).order(RequestBuilder.Order.DESC).execute();
+            operationsList = operationsResponse.getRecords();
+            while (operationsResponse.getRecords().size() == limit) {
+                try {
+                    operationsResponse = operationsResponse.getNextPage(server.getHttpClient());
+                    operationsList.addAll(operationsResponse.getRecords());
+                } catch (URISyntaxException e) {
+                    break;
+                }
+            }
+        }
+    }
 }
