@@ -13,12 +13,21 @@ data class BlockcypherResponse(
         var unconfirmed_balance: Long? = null,
 
         @SerializedName("txrefs")
-        var txrefs: List<BlockcypherTxref>? = null
+        var txrefs: List<BlockcypherTxref>? = null,
+
+        @SerializedName("unconfirmed_txrefs")
+        var unconfirmed_txrefs: List<BlockcypherTxref>? = null,
+
+        @SerializedName("hasMore")
+        var hasMore: Boolean? = null
 )
 
 data class BlockcypherTxref(
         @SerializedName("tx_hash")
         var tx_hash: String? = null,
+
+        @SerializedName("tx_input_n")
+        var tx_input_n: Int? = null,
 
         @SerializedName("tx_output_n")
         var tx_output_n: Int? = null,
@@ -30,7 +39,10 @@ data class BlockcypherTxref(
         var confirmations: Long? = null,
 
         @SerializedName("script")
-        var script: String? = null
+        var script: String? = null,
+
+        @SerializedName("spent")
+        var spent: Boolean? = null
 )
 
 data class BlockcypherTx(
