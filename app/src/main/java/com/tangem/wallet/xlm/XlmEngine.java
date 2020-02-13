@@ -26,6 +26,7 @@ import org.stellar.sdk.Operation;
 import org.stellar.sdk.PaymentOperation;
 import org.stellar.sdk.Transaction;
 import org.stellar.sdk.TransactionEx;
+import org.stellar.sdk.responses.operations.OperationResponse;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -97,7 +98,7 @@ public class XlmEngine extends CoinEngine {
     @Override
     public boolean hasBalanceInfo() {
         if (coinData == null) return false;
-        return (coinData.getBalance() != null) || (coinData.isError404()) ;
+        return (coinData.getBalance() != null) || (coinData.isError404());
     }
 
 
@@ -470,6 +471,7 @@ public class XlmEngine extends CoinEngine {
                     } else {
                         blockchainRequestsCallbacks.onProgress();
                     }
+
                 } else if (request instanceof StellarRequest.Ledgers) {
                     StellarRequest.Ledgers ledgersRequest = (StellarRequest.Ledgers) request;
 
@@ -480,6 +482,22 @@ public class XlmEngine extends CoinEngine {
                     } else {
                         blockchainRequestsCallbacks.onProgress();
                     }
+
+                } else if (request instanceof StellarRequest.Operations) {
+                    StellarRequest.Operations operationsRequest = (StellarRequest.Operations) request;
+
+                    for (OperationResponse operationResponse : operationsRequest.operationsList) {
+                        if (operationResponse.getSourceAccount().getAccountId().equals(coinData.getWallet())) {
+                            coinData.incSentTransactionsCount();
+                        }
+                    }
+
+                    if (serverApi.isRequestsSequenceCompleted()) {
+                        blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                    } else {
+                        blockchainRequestsCallbacks.onProgress();
+                    }
+
                 } else {
                     ctx.setError("Invalid request logic");
                     blockchainRequestsCallbacks.onComplete(false);
@@ -513,6 +531,7 @@ public class XlmEngine extends CoinEngine {
 
         serverApi.requestData(ctx, new StellarRequest.Balance(coinData.getWallet()));
         serverApi.requestData(ctx, new StellarRequest.Ledgers());
+        serverApi.requestData(ctx, new StellarRequest.Operations(coinData.getWallet()));
     }
 
     @Override
