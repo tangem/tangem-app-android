@@ -61,7 +61,7 @@ class StellarTransactionBuilder(private val newtorkManager: StellarNetworkManage
         accountID.accountID = sourceKeyPair.xdrPublicKey
         val currentTime = Calendar.getInstance().timeInMillis / 1000
         val minTime = 0L
-        val maxTime = currentTime + 60
+        val maxTime = currentTime + 120
 
         transaction = Transaction.Builder(
                 Account(sourceKeyPair.accountId, sequence), newtorkManager.network)

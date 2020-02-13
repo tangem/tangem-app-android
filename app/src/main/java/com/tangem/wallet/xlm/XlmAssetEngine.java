@@ -394,7 +394,7 @@ public class XlmAssetEngine extends CoinEngine {
                     operation = new CreateAccountOperation.Builder(KeyPair.fromAccountId(targetAddress), amountValue.toValueString()).build();
             }
         }
-        TransactionEx transaction = TransactionEx.buildEx(60, coinData.getAccountResponse(), operation);
+        TransactionEx transaction = TransactionEx.buildEx(120, coinData.getAccountResponse(), operation);
 
 
         if (transaction.getFee() != convertToInternalAmount(feeValue).intValueExact()) {
