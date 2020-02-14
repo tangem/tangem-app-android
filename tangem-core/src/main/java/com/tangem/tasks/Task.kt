@@ -51,6 +51,10 @@ sealed class TaskError(val code: Int): Exception() {
     class TagLost: TaskError(5003)
 
     class UnknownError: TaskError(6000)
+
+    //Input Data Errors
+    class MissingCounter: TaskError(7001)
+    class NoData: TaskError(7002)
 }
 
 /**
@@ -105,7 +109,6 @@ abstract class Task<T> {
     /**
      * Should be called on [Task] completion, whether it was successful or with failure.
      *
-     * @param withError True when there is an error
      * @param taskError The error to be shown by [CardManagerDelegate]
      */
     protected fun completeNfcSession(taskError: TaskError? = null) {
