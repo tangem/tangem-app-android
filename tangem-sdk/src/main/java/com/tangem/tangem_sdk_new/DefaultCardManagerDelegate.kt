@@ -95,6 +95,29 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
         }
     }
 
+    override fun onDelay(total: Int, current: Int, step: Int) {
+        postUI {
+            readingDialog?.lTouchCard?.hide()
+            readingDialog?.flSecurityDelay?.show()
+            readingDialog?.tvRemainingTime?.text = (((total - current) / step ) + 1).toString()
+            readingDialog?.tvTaskTitle?.text = "Operation in process"
+            readingDialog?.tvTaskText?.text = "Please hold the card firmly until the operation is completed…"
+
+            if (readingDialog?.pbSecurityDelay?.max != total) {
+                readingDialog?.pbSecurityDelay?.max = total
+            }
+            readingDialog?.pbSecurityDelay?.progress = current
+
+            val animation = ObjectAnimator.ofInt(
+                    readingDialog?.pbSecurityDelay,
+                    "progress",
+                    current,
+                    current + step)
+            animation.duration = 300
+            animation.interpolator = DecelerateInterpolator()
+            animation.start()
+        }    }
+
     override fun onTagLost() {
         postUI {
             readingDialog?.lTouchCard?.show()
