@@ -102,13 +102,29 @@ class CardManager(
     }
 
     /**
+     * This task retrieves Issuer Extra Data field and its issuer’s signature.
+     * Issuer Extra Data is never changed or parsed from within the Tangem COS. The issuer defines purpose of use,
+     * format and payload of Issuer Data. . For example, this field may contain photo or
+     * biometric information for ID card product. Because of the large size of Issuer_Extra_Data,
+     * a series of these commands have to be executed to read the entire Issuer_Extra_Data.
+     * @param cardId CID, Unique Tangem card ID number.
+     * @param callback is triggered on the completion of the [ReadIssuerExtraDataTask],
+     * provides card response in the form of [ReadIssuerExtraDataResponse].
+     */
+    fun readIssuerExtraData(cardId: String,
+                            callback: (result: TaskEvent<ReadIssuerExtraDataResponse>) -> Unit) {
+        val task = ReadIssuerExtraDataTask()
+        runTask(task, cardId, callback)
+    }
+
+    /**
      * This command writes 512-byte Issuer Data field and its issuer’s signature.
      * Issuer Data is never changed or parsed from within the Tangem COS. The issuer defines purpose of use,
      * format and payload of Issuer Data. For example, this field may contain information about
      * wallet balance signed by the issuer or additional issuer’s attestation data.
      * @param cardId CID, Unique Tangem card ID number.
      * @param issuerData Data provided by issuer.
-     * @param issuerDataSignature Issuer’s signature of [issuerData] with Issuer Data Private Key (which is kept on card).
+     * @param issuerDataSignature Issuer’s signature of [issuerData] with Issuer Data Private Key.
      * @param issuerDataCounter An optional counter that protect issuer data against replay attack.
      * @param callback is triggered on the completion of the [WriteIssuerDataCommand],
      * provides card response in the form of [WriteIssuerDataResponse].
@@ -124,6 +140,39 @@ class CardManager(
                 issuerDataCounter
         )
         val task = SingleCommandTask(writeIssuerDataCommand)
+        runTask(task, cardId, callback)
+    }
+
+    /**
+     * This task writes Issuer Extra Data field and its issuer’s signature.
+     * Issuer Extra Data is never changed or parsed from within the Tangem COS.
+     * The issuer defines purpose of use, format and payload of Issuer Data.
+     * For example, this field may contain a photo or biometric information for ID card products.
+     * Because of the large size of Issuer_Extra_Data, a series of these commands have to be executed
+     * to write entire Issuer_Extra_Data.
+     * @param cardId CID, Unique Tangem card ID number.
+     * @param issuerData Data provided by issuer.
+     * @param startingSignature Issuer’s signature with Issuer Data Private Key of [cardId],
+     * [issuerDataCounter] (if flags Protect_Issuer_Data_Against_Replay and
+     * Restrict_Overwrite_Issuer_Extra_Data are set in [SettingsMask]) and size of [issuerData].
+     * @param finalizingSignature Issuer’s signature with Issuer Data Private Key of [cardId],
+     * [issuerData] and [issuerDataCounter] (the latter one only if flags Protect_Issuer_Data_Against_Replay
+     * andRestrict_Overwrite_Issuer_Extra_Data are set in [SettingsMask]).
+     * @param issuerDataCounter An optional counter that protect issuer data against replay attack.
+     * @param callback is triggered on the completion of the [WriteIssuerDataCommand],
+     * provides card response in the form of [WriteIssuerDataResponse].
+     */
+    fun writeIssuerExtraData(cardId: String,
+                             issuerData: ByteArray,
+                             startingSignature: ByteArray,
+                             finalizingSignature: ByteArray,
+                             issuerDataCounter: Int? = null,
+                             callback: (result: TaskEvent<WriteIssuerDataResponse>) -> Unit) {
+        val task = WriteIssuerExtraDataTask(
+                issuerData,
+                startingSignature, finalizingSignature,
+                issuerDataCounter
+        )
         runTask(task, cardId, callback)
     }
 
