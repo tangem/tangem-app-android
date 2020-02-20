@@ -40,8 +40,9 @@ class WriteIssuerExtraDataCommand(
         private val issuerData: ByteArray,
         private val startingSignature: ByteArray,
         private val finalizingSignature: ByteArray,
-        private val issuerDataCounter: Int? = null
-) : CommandSerializer<WriteIssuerDataResponse>() {
+        private val issuerDataCounter: Int? = null,
+        verifier: IssuerDataVerifier = DefaultIssuerDataVerifier()
+) : CommandSerializer<WriteIssuerDataResponse>(), IssuerDataVerifier by verifier {
 
     var mode: IssuerDataMode = IssuerDataMode.ExtraData
     var offset: Int = 0
