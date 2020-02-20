@@ -7,7 +7,6 @@ import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
-import com.tangem.tasks.ReadIssuerExtraDataTask
 import com.tangem.tasks.TaskError
 
 class ReadIssuerExtraDataResponse(
@@ -53,7 +52,9 @@ class ReadIssuerExtraDataResponse(
  * biometric information for ID card product. Because of the large size of Issuer_Extra_Data,
  * a series of these commands have to be executed to read the entire Issuer_Extra_Data.
  */
-class ReadIssuerExtraDataCommand : CommandSerializer<ReadIssuerExtraDataResponse>() {
+class ReadIssuerExtraDataCommand(
+        verifier: IssuerDataVerifier = DefaultIssuerDataVerifier()
+) : CommandSerializer<ReadIssuerExtraDataResponse>(), IssuerDataVerifier by verifier {
 
     var offset: Int = 0
 
