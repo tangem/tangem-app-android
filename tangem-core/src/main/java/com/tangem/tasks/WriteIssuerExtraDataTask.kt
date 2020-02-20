@@ -3,10 +3,6 @@ package com.tangem.tasks
 import com.tangem.commands.*
 import com.tangem.common.CardEnvironment
 import com.tangem.common.CompletionResult
-import com.tangem.common.tlv.TlvEncoder
-import com.tangem.common.tlv.TlvTag
-import com.tangem.crypto.CryptoUtils
-import java.io.ByteArrayOutputStream
 
 /**
  * This task performs [WriteIssuerExtraDataCommand] repeatedly until the issuer extra data is fully
@@ -24,32 +20,35 @@ internal class WriteIssuerExtraDataTask(
         private val issuerData: ByteArray,
         private val startingSignature: ByteArray,
         private val finalizingSignature: ByteArray,
+        private val issuerPublicKey: ByteArray? = null,
         private val issuerDataCounter: Int? = null
 ) : Task<WriteIssuerDataResponse>() {
 
     private lateinit var card: Card
+    private lateinit var cardEnvironment: CardEnvironment
 
     override fun onRun(cardEnvironment: CardEnvironment,
                        currentCard: Card?,
                        callback: (result: TaskEvent<WriteIssuerDataResponse>) -> Unit) {
 
         card = currentCard!!
-        if (!isCounterValid(issuerDataCounter)) {
-            completeNfcSession(TaskError.MissingCounter())
-            callback(TaskEvent.Completion(TaskError.MissingCounter()))
-        } else if (!verifySignatures()) {
-            completeNfcSession(TaskError.VerificationFailed())
-            callback(TaskEvent.Completion(TaskError.VerificationFailed()))
-        }
+        this.cardEnvironment = cardEnvironment
         val command = WriteIssuerExtraDataCommand(
                 issuerData, startingSignature, finalizingSignature, issuerDataCounter
         )
-        writeIssuerData(command, cardEnvironment, callback)
+        if (!isCounterValid(issuerDataCounter)) {
+            completeNfcSession(TaskError.MissingCounter())
+            callback(TaskEvent.Completion(TaskError.MissingCounter()))
+        } else if (!verifySignatures(command)) {
+            completeNfcSession(TaskError.VerificationFailed())
+            callback(TaskEvent.Completion(TaskError.VerificationFailed()))
+        }
+
+        writeIssuerData(command, callback)
     }
 
     private fun writeIssuerData(
             command: WriteIssuerExtraDataCommand,
-            cardEnvironment: CardEnvironment,
             callback: (result: TaskEvent<WriteIssuerDataResponse>) -> Unit) {
 
         if (command.mode == IssuerDataMode.WriteExtraData) {
@@ -62,7 +61,7 @@ internal class WriteIssuerExtraDataTask(
                     when (command.mode) {
                         IssuerDataMode.ExtraData -> {
                             command.mode = IssuerDataMode.WriteExtraData
-                            writeIssuerData(command, cardEnvironment, callback)
+                            writeIssuerData(command, callback)
                             return@sendCommand
                         }
                         IssuerDataMode.WriteExtraData -> {
@@ -70,7 +69,7 @@ internal class WriteIssuerExtraDataTask(
                             if (command.offset >= issuerData.size) {
                                 command.mode = IssuerDataMode.FinalizeExtraData
                             }
-                            writeIssuerData(command, cardEnvironment, callback)
+                            writeIssuerData(command, callback)
                             return@sendCommand
                         }
                         IssuerDataMode.FinalizeExtraData -> {
@@ -96,32 +95,14 @@ internal class WriteIssuerExtraDataTask(
     private fun isCounterRequired(): Boolean =
             card.settingsMask?.contains(SettingsMask.protectIssuerDataAgainstReplay) != false
 
-    private fun verifySignatures(): Boolean = verifyFirstSignature() && verifyFinalizingSignature()
+    private fun verifySignatures(command: WriteIssuerExtraDataCommand): Boolean {
+        val publicKey = issuerPublicKey ?: card.issuerPublicKey!!
+        val cardId = cardEnvironment.cardId!!
 
-    private fun verifyFirstSignature(): Boolean {
-        val tlvEncoder = TlvEncoder()
-        val dataToVerify = ByteArrayOutputStream()
-        dataToVerify.write(tlvEncoder.encodeValue(TlvTag.CardId, card.cardId))
-        if (isCounterRequired()) {
-            dataToVerify.write(tlvEncoder.encodeValue(TlvTag.IssuerDataCounter, issuerDataCounter))
-        }
-        dataToVerify.write(tlvEncoder.encodeValue(TlvTag.Size, issuerData.size))
+        val firstData = IssuerDataToVerify(cardId, null, issuerDataCounter, issuerData.size)
+        val secondData = IssuerDataToVerify(cardId, issuerData, issuerDataCounter)
 
-        return CryptoUtils.verify(
-                card.issuerPublicKey!!, dataToVerify.toByteArray(), startingSignature
-        )
-    }
-
-    private fun verifyFinalizingSignature(): Boolean {
-        val tlvEncoder = TlvEncoder()
-        val dataToVerify = ByteArrayOutputStream()
-        dataToVerify.write(tlvEncoder.encodeValue(TlvTag.CardId, card.cardId))
-        dataToVerify.write(tlvEncoder.encodeValue(TlvTag.IssuerData, issuerData))
-        if (isCounterRequired()) {
-            dataToVerify.write(tlvEncoder.encodeValue(TlvTag.IssuerDataCounter, issuerDataCounter))
-        }
-        return CryptoUtils.verify(
-                card.issuerPublicKey!!, dataToVerify.toByteArray(), finalizingSignature
-        )
+        return command.verify(publicKey, startingSignature, firstData) &&
+                command.verify(publicKey, finalizingSignature, secondData)
     }
 }
