@@ -59,7 +59,7 @@ internal class WriteIssuerExtraDataTask(
 
                 is CompletionResult.Success -> {
                     when (command.mode) {
-                        IssuerDataMode.ExtraData -> {
+                        IssuerDataMode.InitializeWritingExtraData -> {
                             command.mode = IssuerDataMode.WriteExtraData
                             writeIssuerData(command, callback)
                             return@sendCommand
