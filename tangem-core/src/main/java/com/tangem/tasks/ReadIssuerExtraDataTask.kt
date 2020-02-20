@@ -3,20 +3,19 @@ package com.tangem.tasks
 import com.tangem.commands.*
 import com.tangem.common.CardEnvironment
 import com.tangem.common.CompletionResult
-import com.tangem.common.tlv.TlvEncoder
-import com.tangem.common.tlv.TlvTag
-import com.tangem.crypto.CryptoUtils
 import java.io.ByteArrayOutputStream
 
 /**
  * This task performs [ReadIssuerExtraDataCommand] repeatedly until
  * the issuer extra data is fully retrieved.
  */
-internal class ReadIssuerExtraDataTask : Task<ReadIssuerExtraDataResponse>() {
+internal class ReadIssuerExtraDataTask(
+        private val issuerPublicKey: ByteArray?) : Task<ReadIssuerExtraDataResponse>() {
 
     private val issuerData = ByteArrayOutputStream()
     private var issuerDataSize = 0
     private lateinit var card: Card
+    private lateinit var cardEnvironment: CardEnvironment
 
     override fun onRun(
             cardEnvironment: CardEnvironment,
@@ -24,13 +23,13 @@ internal class ReadIssuerExtraDataTask : Task<ReadIssuerExtraDataResponse>() {
             callback: (result: TaskEvent<ReadIssuerExtraDataResponse>) -> Unit
     ) {
         card = currentCard!!
+        this.cardEnvironment = cardEnvironment
         val command = ReadIssuerExtraDataCommand()
-        readIssuerData(command, cardEnvironment, callback)
+        readIssuerData(command, callback)
     }
 
     private fun readIssuerData(
             command: ReadIssuerExtraDataCommand,
-            cardEnvironment: CardEnvironment,
             callback: (result: TaskEvent<ReadIssuerExtraDataResponse>) -> Unit) {
 
         if (issuerDataSize != 0) {
@@ -45,8 +44,9 @@ internal class ReadIssuerExtraDataTask : Task<ReadIssuerExtraDataResponse>() {
                 is CompletionResult.Success -> {
                     if (result.data.size != null) {
                         if (result.data.size == 0) {
-                            completeNfcSession(TaskError.NoData())
-                            callback(TaskEvent.Completion(TaskError.NoData()))
+                            completeNfcSession()
+                            callback(TaskEvent.Event(result.data))
+                            callback(TaskEvent.Completion())
                             return@sendCommand
                         }
                         issuerDataSize = result.data.size
@@ -54,9 +54,9 @@ internal class ReadIssuerExtraDataTask : Task<ReadIssuerExtraDataResponse>() {
                     issuerData.write(result.data.issuerData)
                     if (result.data.issuerDataSignature == null) {
                         command.offset = issuerData.size()
-                        readIssuerData(command, cardEnvironment, callback)
+                        readIssuerData(command, callback)
                     } else {
-                        completeTask(result.data, callback)
+                        completeTask(result.data, command, callback)
                     }
                 }
                 is CompletionResult.Failure -> {
@@ -69,9 +69,15 @@ internal class ReadIssuerExtraDataTask : Task<ReadIssuerExtraDataResponse>() {
         }
     }
 
-    private fun completeTask(data: ReadIssuerExtraDataResponse,
+    private fun completeTask(data: ReadIssuerExtraDataResponse, command: ReadIssuerExtraDataCommand,
                              callback: (result: TaskEvent<ReadIssuerExtraDataResponse>) -> Unit) {
-        if (isIssuerDataValid(data.issuerDataCounter, data.issuerDataSignature!!)) {
+        val publicKey = issuerPublicKey ?: card.issuerPublicKey!!
+        val dataToVerify = IssuerDataToVerify(
+                cardEnvironment.cardId!!,
+                issuerData.toByteArray(),
+                data.issuerDataCounter
+        )
+        if (command.verify(publicKey, data.issuerDataSignature!!, dataToVerify)) {
             completeNfcSession()
             val finalResult = ReadIssuerExtraDataResponse(
                     data.cardId,
@@ -87,21 +93,4 @@ internal class ReadIssuerExtraDataTask : Task<ReadIssuerExtraDataResponse>() {
             callback(TaskEvent.Completion(TaskError.VerificationFailed()))
         }
     }
-
-    private fun isIssuerDataValid(issuerDataCounter: Int?, signature: ByteArray): Boolean {
-        val tlvEncoder = TlvEncoder()
-        val dataToVerify = ByteArrayOutputStream()
-        dataToVerify.write(tlvEncoder.encodeValue(TlvTag.CardId, card.cardId))
-        dataToVerify.write(issuerData.toByteArray())
-        if (counterIncludedInSignature(issuerDataCounter)) {
-            dataToVerify.write(tlvEncoder.encodeValue(TlvTag.IssuerDataCounter, issuerDataCounter))
-        }
-        return CryptoUtils.verify(card.issuerPublicKey!!, dataToVerify.toByteArray(), signature)
-    }
-
-    private fun counterIncludedInSignature(issuerDataCounter: Int?): Boolean {
-        return issuerDataCounter != null &&
-                card.settingsMask?.contains(SettingsMask.protectIssuerDataAgainstReplay) != false
-    }
-
 }
