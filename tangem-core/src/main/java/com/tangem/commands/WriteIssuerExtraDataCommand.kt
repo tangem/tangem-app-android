@@ -9,9 +9,24 @@ import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
 import com.tangem.tasks.TaskError
 
+/**
+ * This enum specifies modes for [WriteIssuerExtraDataCommand].
+ */
 enum class IssuerDataMode(val code: Byte) {
-    ExtraData(1),
+    /**
+     * This mode is required to initiate writing issuer extra data to the card.
+     */
+    InitializeWritingExtraData(1),
+    /**
+     * With this mode, the command writes part of issuer extra data
+     * (block of a size [WriteIssuerExtraDataCommand.SINGLE_WRITE_SIZE]) to the card.
+     */
     WriteExtraData(2),
+    /**
+     * This mode is used after the issuer extra data was fully written to the card.
+     * Under this mode the command provides the issuer signature
+     * to confirm the validity of data that was written to card.
+     */
     FinalizeExtraData(3);
 
     companion object {
@@ -44,7 +59,7 @@ class WriteIssuerExtraDataCommand(
         verifier: IssuerDataVerifier = DefaultIssuerDataVerifier()
 ) : CommandSerializer<WriteIssuerDataResponse>(), IssuerDataVerifier by verifier {
 
-    var mode: IssuerDataMode = IssuerDataMode.ExtraData
+    var mode: IssuerDataMode = IssuerDataMode.InitializeWritingExtraData
     var offset: Int = 0
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
@@ -55,7 +70,7 @@ class WriteIssuerExtraDataCommand(
         tlvBuilder.append(TlvTag.Mode, mode)
 
         when (mode) {
-            IssuerDataMode.ExtraData -> {
+            IssuerDataMode.InitializeWritingExtraData -> {
                 tlvBuilder.append(TlvTag.Size, issuerData.size)
                 tlvBuilder.append(TlvTag.IssuerDataSignature, startingSignature)
                 tlvBuilder.append(TlvTag.IssuerDataCounter, issuerDataCounter)

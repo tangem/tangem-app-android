@@ -62,7 +62,7 @@ class ReadIssuerExtraDataCommand(
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
         tlvBuilder.append(TlvTag.CardId, cardEnvironment.cardId)
-        tlvBuilder.append(TlvTag.Mode, IssuerDataMode.ExtraData)
+        tlvBuilder.append(TlvTag.Mode, EXTRA_DATA_MODE)
         tlvBuilder.append(TlvTag.Offset, offset)
         return CommandApdu(Instruction.ReadIssuerData, tlvBuilder.serialize())
     }
@@ -82,5 +82,13 @@ class ReadIssuerExtraDataCommand(
         } catch (exception: Exception) {
             throw TaskError.SerializeCommandError()
         }
+    }
+
+    companion object {
+        /**
+         * This mode value specifies that this command retrieves Issuer EXTRA data from the card
+         * (with value 0 the command will get instead simple Issuer Data from the card).
+         */
+        const val EXTRA_DATA_MODE = 1
     }
 }
