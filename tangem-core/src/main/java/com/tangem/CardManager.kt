@@ -113,7 +113,7 @@ class CardManager(
      */
     fun readIssuerExtraData(cardId: String,
                             callback: (result: TaskEvent<ReadIssuerExtraDataResponse>) -> Unit) {
-        val task = ReadIssuerExtraDataTask()
+        val task = ReadIssuerExtraDataTask(config.issuerPublicKey)
         runTask(task, cardId, callback)
     }
 
@@ -171,6 +171,7 @@ class CardManager(
         val task = WriteIssuerExtraDataTask(
                 issuerData,
                 startingSignature, finalizingSignature,
+                config.issuerPublicKey,
                 issuerDataCounter
         )
         runTask(task, cardId, callback)
