@@ -1,6 +1,5 @@
 package com.tangem.tasks
 
-import com.tangem.common.CardEnvironment
 import com.tangem.CardManagerDelegate
 import com.tangem.CardReader
 import com.tangem.Log
@@ -8,6 +7,7 @@ import com.tangem.commands.Card
 import com.tangem.commands.CommandResponse
 import com.tangem.commands.CommandSerializer
 import com.tangem.commands.ReadCommand
+import com.tangem.common.CardEnvironment
 import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.StatusWord
@@ -52,9 +52,8 @@ sealed class TaskError(val code: Int): Exception() {
 
     class UnknownError: TaskError(6000)
 
-    //Input Data Errors
+    //Issuer Data Errors
     class MissingCounter: TaskError(7001)
-    class NoData: TaskError(7002)
 }
 
 /**
