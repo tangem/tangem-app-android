@@ -671,7 +671,7 @@ public class CardanoEngine extends CoinEngine {
             }
 
             @Override
-            public void onSuccess(String method, List listResponse) {
+            public void onSuccess(String method, String stringResponse) {
                 Log.e(TAG, "Wrong response type for requestBalanceAndUnspentTransactions");
                 ctx.setError("Wrong response type for requestBalanceAndUnspentTransactions");
                 blockchainRequestsCallbacks.onComplete(false);
@@ -731,29 +731,18 @@ public class CardanoEngine extends CoinEngine {
             }
 
             @Override
-            public void onSuccess(String method, List listResponse) {
+            public void onSuccess(String method, String stringResponse) {
                 if (method.equals(ServerApiAdalite.ADALITE_SEND)) {
-                    String resultString = listResponse.toString();
-                    try {
-                        if (resultString.isEmpty()) {
-                            ctx.setError("No response from node");
-                            blockchainRequestsCallbacks.onComplete(false);
-                        } else { // TODO: Make check for a valid send response
-                            ctx.setError(null);
-                            blockchainRequestsCallbacks.onComplete(true);
-                        }
-                    } catch (Exception e) {
-                        if (e.getMessage() != null) {
-                            ctx.setError(e.getMessage());
-                            blockchainRequestsCallbacks.onComplete(false);
-                        } else {
-                            ctx.setError(e.getClass().getName());
-                            blockchainRequestsCallbacks.onComplete(false);
-                            Log.e(TAG, resultString);
-                        }
+                    if (stringResponse.equals("\"Transaction sent successfully!\"")) {
+                        ctx.setError(null);
+                        blockchainRequestsCallbacks.onComplete(true);
+                    } else { // TODO: Make check for a valid send response
+                        ctx.setError(stringResponse);
+                        blockchainRequestsCallbacks.onComplete(false);
                     }
                 }
             }
+
 
             @Override
             public void onFail(String method, String message) {
