@@ -2,6 +2,7 @@ package com.tangem.common.tlv
 
 import com.tangem.Log
 import com.tangem.commands.*
+import com.tangem.commands.common.IssuerDataMode
 import com.tangem.common.extensions.toDate
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.extensions.toInt
@@ -132,7 +133,7 @@ class TlvMapper(val tlvList: List<Tlv>) {
             TlvValueType.IssuerDataMode -> {
                 typeCheck<T, IssuerDataMode>(tag)
                 try {
-                    IssuerDataMode.byCode(tlvValue.toInt()) as T
+                    IssuerDataMode.byCode(tlvValue.toInt().toByte()) as T
                 } catch (exception: Exception) {
                     logException(tag, tlvValue.toInt().toString(), exception)
                     throw TaskError.ConvertError()
