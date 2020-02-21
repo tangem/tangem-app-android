@@ -1,12 +1,12 @@
 package com.tangem.commands
 
+import com.tangem.commands.common.DefaultIssuerDataVerifier
+import com.tangem.commands.common.IssuerDataMode
+import com.tangem.commands.common.IssuerDataVerifier
 import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
-import com.tangem.common.extensions.calculateSha256
-import com.tangem.common.extensions.hexToBytes
-import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
@@ -50,12 +50,16 @@ class ReadIssuerDataResponse(
  * wallet balance signed by the issuer or additional issuer’s attestation data.
  * @property cardId CID, Unique Tangem card ID number.
  */
-class ReadIssuerDataCommand : CommandSerializer<ReadIssuerDataResponse>() {
+class ReadIssuerDataCommand(
+        verifier: IssuerDataVerifier = DefaultIssuerDataVerifier()
+) : CommandSerializer<ReadIssuerDataResponse>(),
+        IssuerDataVerifier by verifier {
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
         tlvBuilder.append(TlvTag.CardId, cardEnvironment.cardId)
+        tlvBuilder.append(TlvTag.Mode, IssuerDataMode.ReadData)
         return CommandApdu(Instruction.ReadIssuerData, tlvBuilder.serialize())
     }
 
