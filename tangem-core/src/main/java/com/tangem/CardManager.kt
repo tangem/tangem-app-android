@@ -96,8 +96,7 @@ class CardManager(
      */
     fun readIssuerData(cardId: String,
                        callback: (result: TaskEvent<ReadIssuerDataResponse>) -> Unit) {
-        val getIssuerDataCommand = ReadIssuerDataCommand()
-        val task = SingleCommandTask(getIssuerDataCommand)
+        val task = ReadIssuerDataTask(config.issuerPublicKey)
         runTask(task, cardId, callback)
     }
 
@@ -134,12 +133,12 @@ class CardManager(
                         issuerDataSignature: ByteArray,
                         issuerDataCounter: Int? = null,
                         callback: (result: TaskEvent<WriteIssuerDataResponse>) -> Unit) {
-        val writeIssuerDataCommand = WriteIssuerDataCommand(
+        val task = WriteIssuerDataTask(
                 issuerData,
                 issuerDataSignature,
-                issuerDataCounter
+                issuerDataCounter,
+                config.issuerPublicKey
         )
-        val task = SingleCommandTask(writeIssuerDataCommand)
         runTask(task, cardId, callback)
     }
 
