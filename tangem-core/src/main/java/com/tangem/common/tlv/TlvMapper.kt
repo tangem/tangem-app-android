@@ -34,7 +34,7 @@ class TlvMapper(val tlvList: List<Tlv>) {
 
     /**
      * Finds [Tlv] by its [TlvTag].
-     * Throws [MissingTagException] if [Tlv] is not found,
+     * Throws [TaskError.MissingTag] if [Tlv] is not found,
      * otherwise converts [Tlv] value to [T].
      *
      * @param tag [TlvTag] of a [Tlv] which value is to be returned.
@@ -61,7 +61,7 @@ class TlvMapper(val tlvList: List<Tlv>) {
                 typeCheck<T, String>(tag)
                 tlvValue.toUtf8() as T
             }
-            TlvValueType.IntValue -> {
+            TlvValueType.Uint16, TlvValueType.Uint32 -> {
                 typeCheck<T, Int>(tag)
                 try {
                     tlvValue.toInt() as T
@@ -124,6 +124,15 @@ class TlvMapper(val tlvList: List<Tlv>) {
                 typeCheck<T, SigningMethod>(tag)
                 try {
                     SigningMethod(tlvValue.toInt()) as T
+                } catch (exception: Exception) {
+                    logException(tag, tlvValue.toInt().toString(), exception)
+                    throw TaskError.ConvertError()
+                }
+            }
+            TlvValueType.IssuerDataMode -> {
+                typeCheck<T, IssuerDataMode>(tag)
+                try {
+                    IssuerDataMode.byCode(tlvValue.toInt()) as T
                 } catch (exception: Exception) {
                     logException(tag, tlvValue.toInt().toString(), exception)
                     throw TaskError.ConvertError()
