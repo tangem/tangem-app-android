@@ -27,7 +27,7 @@ public class ServerApiAdalite {
 
     private int requestsCount = 0;
 
-    private final String adaliteURL1 = "https://explorer2.adalite.io"; //TODO: make random selection, add more?, move
+    private final String adaliteURL1 = "https://explorer3.adalite.io"; //TODO: make random selection, add more?, move
     private final String adaliteURL2 = "https://nodes.southeastasia.cloudapp.azure.com";
 
     private String currentURL = adaliteURL1;
@@ -48,7 +48,7 @@ public class ServerApiAdalite {
 
         void onSuccess(String method, AdaliteResponseUtxo adaliteResponseUtxo);
 
-        void onSuccess(String method, List listResponse);
+        void onSuccess(String method, String stringResponse);
 
         void onFail(String method, String message);
     }
@@ -145,10 +145,10 @@ public class ServerApiAdalite {
             break;
 
             case ADALITE_SEND:
-                Call<List> sendCall = adaliteApi.adaliteSend(new AdaliteBody(tx));
-                sendCall.enqueue(new Callback<List>() {
+                Call<String> sendCall = adaliteApi.adaliteSend(new AdaliteBody(tx));
+                sendCall.enqueue(new Callback<String>() {
                     @Override
-                    public void onResponse(@NonNull Call<List> call, @NonNull Response<List> response) {
+                    public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
                         requestsCount--;
 
                         if (response.code() == 200) {
@@ -166,7 +166,7 @@ public class ServerApiAdalite {
                     }
 
                     @Override
-                    public void onFailure(@NonNull Call<List> call, @NonNull Throwable t) {
+                    public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
                         Log.e(TAG, "requestData " + method + " onFailure " + t.getMessage());
                         requestsCount--;
 
