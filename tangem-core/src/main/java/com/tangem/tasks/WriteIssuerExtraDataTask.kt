@@ -1,6 +1,11 @@
 package com.tangem.tasks
 
-import com.tangem.commands.*
+import com.tangem.commands.Card
+import com.tangem.commands.SettingsMask
+import com.tangem.commands.WriteIssuerDataResponse
+import com.tangem.commands.WriteIssuerExtraDataCommand
+import com.tangem.commands.common.IssuerDataMode
+import com.tangem.commands.common.IssuerDataToVerify
 import com.tangem.common.CardEnvironment
 import com.tangem.common.CompletionResult
 
