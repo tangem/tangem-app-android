@@ -8,6 +8,7 @@
     app:layout_behavior="@string/bottom_sheet_behavior">
 
     <LinearLayout
+        android:id="@+id/llHeader"
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:background="#e2e5e6"
