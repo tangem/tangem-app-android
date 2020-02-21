@@ -3,6 +3,11 @@ package com.tangem.tangemtest
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.CardManager
+import com.tangem.common.extensions.hexToBytes
+import com.tangem.common.extensions.toByteArray
+import com.tangem.common.extensions.toHexString
+import com.tangem.crypto.CryptoUtils
+import com.tangem.crypto.sign
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskError
@@ -15,6 +20,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cardId: String
     private lateinit var issuerData: ByteArray
     private lateinit var issuerDataSignature: ByteArray
+    private var issuerDataCounter: Int = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,6 +47,8 @@ class MainActivity : AppCompatActivity() {
                                     tv_card_cid?.text = cardId
                                     btn_sign.isEnabled = true
                                     btn_read_issuer_data.isEnabled = true
+                                    btn_read_issuer_extra_data.isEnabled = true
+                                    btn_write_issuer_data.isEnabled = true
                                     btn_purge_wallet.isEnabled = true
                                     btn_create_wallet.isEnabled = true
                                 }
@@ -97,6 +105,20 @@ class MainActivity : AppCompatActivity() {
                     }
                     is TaskEvent.Event -> runOnUiThread {
                         tv_card_cid?.text = it.data.cardId
+                    }
+                }
+            }
+        }
+        btn_read_issuer_extra_data?.setOnClickListener { _ ->
+            cardManager.readIssuerExtraData(cardId) {
+                when (it) {
+                    is TaskEvent.Completion -> {
+                        if (it.error != null) runOnUiThread { tv_card_cid?.text = it.error!!::class.simpleName }
+                    }
+                    is TaskEvent.Event -> runOnUiThread {
+                        issuerDataCounter = (it.data.issuerDataCounter ?: 0) + 1
+                        btn_write_issuer_data.isEnabled = true
+                        tv_card_cid?.text = "Read ${it.data.issuerData.size} bytes of data."
                     }
                 }
             }
