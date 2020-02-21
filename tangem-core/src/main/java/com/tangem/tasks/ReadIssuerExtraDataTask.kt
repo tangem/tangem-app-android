@@ -1,6 +1,10 @@
 package com.tangem.tasks
 
-import com.tangem.commands.*
+import com.tangem.commands.Card
+import com.tangem.commands.ReadIssuerExtraDataCommand
+import com.tangem.commands.ReadIssuerExtraDataResponse
+import com.tangem.commands.WriteIssuerExtraDataCommand
+import com.tangem.commands.common.IssuerDataToVerify
 import com.tangem.common.CardEnvironment
 import com.tangem.common.CompletionResult
 import java.io.ByteArrayOutputStream
