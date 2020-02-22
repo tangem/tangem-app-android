@@ -68,7 +68,7 @@ class ReadUserDataCommand: CommandSerializer<ReadUserDataResponse>() {
 			append(TlvTag.Pin, cardEnvironment.pin1)
 		}.serialize()
 
-		return CommandApdu(Instruction.ReadIssuerData, serializedTlv)
+		return CommandApdu(Instruction.ReadUserData, serializedTlv)
 	}
 
 	override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): ReadUserDataResponse? {
