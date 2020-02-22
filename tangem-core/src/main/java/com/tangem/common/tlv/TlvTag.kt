@@ -94,7 +94,6 @@ enum class TlvTag(val code: Int) {
 
     ProductMask(0x8A),
     PaymentFlowVersion(0x54),
-    UserCounter(0x2C),
 
 
     TokenSymbol(0xA0),
@@ -107,7 +106,12 @@ enum class TlvTag(val code: Int) {
 
     TerminalIsLinked(0x58),
     TerminalPublicKey(0x5C),
-    TerminalTransactionSignature(0x57);
+    TerminalTransactionSignature(0x57),
+
+		UserData(0x2A),
+		UserProtectedData(0x2B),
+		UserCounter(0x2C),
+		UserProtectedCounter(0x2D);
 
     /**
      * @return [TlvValueType] associated with a [TlvTag]
