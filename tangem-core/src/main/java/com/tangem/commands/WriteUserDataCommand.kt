@@ -49,7 +49,7 @@ class WriteUserDataCommand(
 			if (userProtectedCounter != null || userProtectedData != null)
 				append(TlvTag.Pin2, cardEnvironment.pin2)
 		}.serialize()
-		return CommandApdu(Instruction.ReadIssuerData, serializedTlv)
+		return CommandApdu(Instruction.WriteUserData, serializedTlv)
 	}
 
 	override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): WriteUserDataResponse? {
