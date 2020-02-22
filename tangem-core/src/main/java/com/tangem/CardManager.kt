@@ -177,6 +177,46 @@ class CardManager(
         runTask(task, cardId, callback)
     }
 
+		/**
+		 * This command write some of User_Data, User_ProtectedData, User_Counter and User_ProtectedCounter fields.
+		 * User_Data and User_ProtectedData are never changed or parsed by the executable code the Tangem COS.
+		 * The App defines purpose of use, format and it's payload. For example, this field may contain cashed information
+		 * from blockchain to accelerate preparing new transaction.
+		 * User_Counter and User_ProtectedCounter are counters, that initial values can be set by App and increased on every signing
+		 * of new transaction (on SIGN command that calculate new signatures). The App defines purpose of use.
+		 * For example, this fields may contain blockchain nonce value.
+		 *
+		 * Writing of User_Counter and User_Data protected only by PIN1.
+		 * User_ProtectedCounter and User_ProtectedData additionaly need PIN2 to confirmation.
+		 */
+		fun writeUserData(
+				cardId: String,
+				userData: ByteArray,
+				userProtectedData: ByteArray? = null,
+				userCounter: Int? = null,
+				userProtectedCounter: Int? = null,
+				callback: (result: TaskEvent<WriteUserDataResponse>) -> Unit
+		) {
+			val writeIssuerDataCommand = WriteUserDataCommand(userData, userProtectedData, userCounter, userProtectedCounter)
+			val task = SingleCommandTask(writeIssuerDataCommand)
+			runTask(task, cardId, callback)
+		}
+
+		/**
+		 * This command returns two up to 512-byte User_Data, User_Protected_Data and two counters User_Counter and
+		 * User_Protected_Counter fields.
+		 * User_Data and User_ProtectedData are never changed or parsed by the executable code the Tangem COS.
+		 * The App defines purpose of use, format and it's payload. For example, this field may contain cashed information
+		 * from blockchain to accelerate preparing new transaction.
+		 * User_Counter and User_ProtectedCounter are counters, that initial values can be set by App and increased on every signing
+		 * of new transaction (on SIGN command that calculate new signatures). The App defines purpose of use.
+		 * For example, this fields may contain blockchain nonce value.
+		 */
+		fun readUserData(cardId: String, callback: (result: TaskEvent<ReadUserDataResponse>) -> Unit) {
+			val task = SingleCommandTask(ReadUserDataCommand())
+			runTask(task, cardId, callback)
+		}
+
     /**
      * This command will create a new wallet on the card having ‘Empty’ state.
      * A key pair WalletPublicKey / WalletPrivateKey is generated and securely stored in the card.
@@ -211,8 +251,7 @@ class CardManager(
     /**
 
      */
-    fun <T> runTask(task: Task<T>, cardId: String? = null,
-                    callback: (result: TaskEvent<T>) -> Unit) {
+    fun <T> runTask(task: Task<T>, cardId: String? = null, callback: (result: TaskEvent<T>) -> Unit) {
         if (isBusy) {
             callback(TaskEvent.Completion(TaskError.Busy()))
             return
