@@ -19,8 +19,8 @@ enum class Instruction(var code: Int) {
     PurgeWallet(0xFC),
     Activate(0xFE),
     OpenSession(0xFF),
-		WriteUserData(0xE0),
-		ReadUserData(0xE1);
+    WriteUserData(0xE0),
+    ReadUserData(0xE1);
 
 
     companion object {
