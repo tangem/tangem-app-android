@@ -14,10 +14,10 @@ import com.tangem.tasks.TaskError
  */
 
 class WriteUserDataResponse(
-		/**
-		 * CID, Unique Tangem card ID number.
-		 */
-		val cardId: String
+    /**
+     * CID, Unique Tangem card ID number.
+     */
+    val cardId: String
 ): CommandResponse
 
 /**
@@ -33,32 +33,33 @@ class WriteUserDataResponse(
  * User_ProtectedCounter and User_ProtectedData additionaly need PIN2 to confirmation.
  */
 class WriteUserDataCommand(
-		private val userData: ByteArray? = null,
-		private val userProtectedData: ByteArray? = null,
-		private val userCounter: Int? = null,
-		private val userProtectedCounter: Int? = null
+    private val userData: ByteArray? = null,
+    private val userProtectedData: ByteArray? = null,
+    private val userCounter: Int? = null,
+    private val userProtectedCounter: Int? = null
 ): CommandSerializer<WriteUserDataResponse>() {
-	override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
-		val serializedTlv = TlvBuilder().apply {
-			append(TlvTag.CardId, cardEnvironment.cardId)
-			append(TlvTag.Pin, cardEnvironment.pin1)
-			append(TlvTag.UserData, userData)
-			append(TlvTag.UserCounter, userCounter)
-			append(TlvTag.UserProtectedData, userProtectedData)
-			append(TlvTag.UserProtectedCounter, userProtectedCounter)
-			if (userProtectedCounter != null || userProtectedData != null)
-				append(TlvTag.Pin2, cardEnvironment.pin2)
-		}.serialize()
-		return CommandApdu(Instruction.WriteUserData, serializedTlv)
-	}
 
-	override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): WriteUserDataResponse? {
-		val tlvData = responseApdu.getTlvData() ?: return null
+  override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
+    val serializedTlv = TlvBuilder().apply {
+      append(TlvTag.CardId, cardEnvironment.cardId)
+      append(TlvTag.Pin, cardEnvironment.pin1)
+      append(TlvTag.UserData, userData)
+      append(TlvTag.UserCounter, userCounter)
+      append(TlvTag.UserProtectedData, userProtectedData)
+      append(TlvTag.UserProtectedCounter, userProtectedCounter)
+      if (userProtectedCounter != null || userProtectedData != null)
+        append(TlvTag.Pin2, cardEnvironment.pin2)
+    }.serialize()
+    return CommandApdu(Instruction.WriteUserData, serializedTlv)
+  }
 
-		return try {
-			WriteUserDataResponse(TlvMapper(tlvData).map(TlvTag.CardId))
-		} catch (exception: Exception) {
-			throw TaskError.SerializeCommandError()
-		}
-	}
+  override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): WriteUserDataResponse? {
+    val tlvData = responseApdu.getTlvData() ?: return null
+
+    return try {
+      WriteUserDataResponse(TlvMapper(tlvData).map(TlvTag.CardId))
+    } catch (exception: Exception) {
+      throw TaskError.SerializeCommandError()
+    }
+  }
 }
