@@ -13,41 +13,41 @@ import com.tangem.tasks.TaskError
 [REDACTED_AUTHOR]
  */
 class ReadUserDataResponse(
-		/**
-		 * CID, Unique Tangem card ID number.
-		 */
-		val cardId: String,
+    /**
+     * CID, Unique Tangem card ID number.
+     */
+    val cardId: String,
 
-		/**
-		 * Data defined by user's App.
-		 */
-		val userData: ByteArray,
+    /**
+     * Data defined by user's App.
+     */
+    val userData: ByteArray,
 
-		/**
-		 * Data defined by user's App (confirmed by PIN2).
-		 */
-		val userProtectedData: ByteArray,
+    /**
+     * Data defined by user's App (confirmed by PIN2).
+     */
+    val userProtectedData: ByteArray,
 
-		/**
-		 * Counter initialized by user's App and increased on every signing of new transaction
-		 */
-		val userCounter: Int,
+    /**
+     * Counter initialized by user's App and increased on every signing of new transaction
+     */
+    val userCounter: Int,
 
-		/**
-		 * Counter initialized by user's App (confirmed by PIN2) and increased on every signing of new transaction
-		 */
-		val userProtectedCounter: Int
+    /**
+     * Counter initialized by user's App (confirmed by PIN2) and increased on every signing of new transaction
+     */
+    val userProtectedCounter: Int
 
 ): CommandResponse {
-	companion object {
-		internal fun fromMapper(mapper: TlvMapper): ReadUserDataResponse = ReadUserDataResponse(
-				cardId = mapper.map(TlvTag.CardId),
-				userData = mapper.map(TlvTag.IssuerData),
-				userProtectedData = mapper.map(TlvTag.IssuerDataSignature),
-				userCounter = mapper.map(TlvTag.IssuerDataCounter),
-				userProtectedCounter = mapper.map(TlvTag.IssuerDataCounter)
-		)
-	}
+  companion object {
+    internal fun fromMapper(mapper: TlvMapper): ReadUserDataResponse = ReadUserDataResponse(
+        cardId = mapper.map(TlvTag.CardId),
+        userData = mapper.map(TlvTag.IssuerData),
+        userProtectedData = mapper.map(TlvTag.IssuerDataSignature),
+        userCounter = mapper.map(TlvTag.IssuerDataCounter),
+        userProtectedCounter = mapper.map(TlvTag.IssuerDataCounter)
+    )
+  }
 }
 
 /**
@@ -62,22 +62,22 @@ class ReadUserDataResponse(
  */
 class ReadUserDataCommand: CommandSerializer<ReadUserDataResponse>() {
 
-	override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
-		val serializedTlv = TlvBuilder().apply {
-			append(TlvTag.CardId, cardEnvironment.cardId)
-			append(TlvTag.Pin, cardEnvironment.pin1)
-		}.serialize()
+  override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
+    val serializedTlv = TlvBuilder().apply {
+      append(TlvTag.CardId, cardEnvironment.cardId)
+      append(TlvTag.Pin, cardEnvironment.pin1)
+    }.serialize()
 
-		return CommandApdu(Instruction.ReadUserData, serializedTlv)
-	}
+    return CommandApdu(Instruction.ReadUserData, serializedTlv)
+  }
 
-	override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): ReadUserDataResponse? {
-		val tlvData = responseApdu.getTlvData() ?: return null
+  override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): ReadUserDataResponse? {
+    val tlvData = responseApdu.getTlvData() ?: return null
 
-		return try {
-			ReadUserDataResponse.fromMapper(TlvMapper(tlvData))
-		} catch (exception: Exception) {
-			throw TaskError.SerializeCommandError()
-		}
-	}
+    return try {
+      ReadUserDataResponse.fromMapper(TlvMapper(tlvData))
+    } catch (exception: Exception) {
+      throw TaskError.SerializeCommandError()
+    }
+  }
 }
