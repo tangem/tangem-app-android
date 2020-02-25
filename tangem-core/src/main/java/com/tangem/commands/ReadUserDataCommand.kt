@@ -38,17 +38,7 @@ class ReadUserDataResponse(
      */
     val userProtectedCounter: Int
 
-): CommandResponse {
-  companion object {
-    internal fun fromMapper(mapper: TlvMapper): ReadUserDataResponse = ReadUserDataResponse(
-        cardId = mapper.map(TlvTag.CardId),
-        userData = mapper.map(TlvTag.IssuerData),
-        userProtectedData = mapper.map(TlvTag.IssuerDataSignature),
-        userCounter = mapper.map(TlvTag.IssuerDataCounter),
-        userProtectedCounter = mapper.map(TlvTag.IssuerDataCounter)
-    )
-  }
-}
+): CommandResponse
 
 /**
  * This command returns two up to 512-byte User_Data, User_Protected_Data and two counters User_Counter and
@@ -74,7 +64,14 @@ class ReadUserDataCommand: CommandSerializer<ReadUserDataResponse>() {
     val tlvData = responseApdu.getTlvData() ?: return null
 
     return try {
-      ReadUserDataResponse.fromMapper(TlvMapper(tlvData))
+      val mapper = TlvMapper(tlvData)
+      ReadUserDataResponse(
+          cardId = mapper.map(TlvTag.CardId),
+          userData = mapper.map(TlvTag.IssuerData),
+          userProtectedData = mapper.map(TlvTag.IssuerDataSignature),
+          userCounter = mapper.map(TlvTag.IssuerDataCounter),
+          userProtectedCounter = mapper.map(TlvTag.IssuerDataCounter)
+      )
     } catch (exception: Exception) {
       throw TaskError.SerializeCommandError()
     }
