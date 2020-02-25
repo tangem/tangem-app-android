@@ -32,25 +32,22 @@ class WriteUserDataResponse(
  * Writing of User_Counter and User_Data protected only by PIN1.
  * User_ProtectedCounter and User_ProtectedData additionaly need PIN2 to confirmation.
  */
-class WriteUserDataCommand(
-    private val userData: ByteArray? = null,
-    private val userProtectedData: ByteArray? = null,
+class WriteUserDataCommand(private val userData: ByteArray? = null, private val userProtectedData: ByteArray? = null,
     private val userCounter: Int? = null,
-    private val userProtectedCounter: Int? = null
-): CommandSerializer<WriteUserDataResponse>() {
+    private val userProtectedCounter: Int? = null): CommandSerializer<WriteUserDataResponse>() {
 
   override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
-    val serializedTlv = TlvBuilder().apply {
-      append(TlvTag.CardId, cardEnvironment.cardId)
-      append(TlvTag.Pin, cardEnvironment.pin1)
-      append(TlvTag.UserData, userData)
-      append(TlvTag.UserCounter, userCounter)
-      append(TlvTag.UserProtectedData, userProtectedData)
-      append(TlvTag.UserProtectedCounter, userProtectedCounter)
-      if (userProtectedCounter != null || userProtectedData != null)
-        append(TlvTag.Pin2, cardEnvironment.pin2)
-    }.serialize()
-    return CommandApdu(Instruction.WriteUserData, serializedTlv)
+    val builder = TlvBuilder()
+    builder.append(TlvTag.CardId, cardEnvironment.cardId)
+    builder.append(TlvTag.Pin, cardEnvironment.pin1)
+    builder.append(TlvTag.UserData, userData)
+    builder.append(TlvTag.UserCounter, userCounter)
+    builder.append(TlvTag.UserProtectedData, userProtectedData)
+    builder.append(TlvTag.UserProtectedCounter, userProtectedCounter)
+    if (userProtectedCounter != null || userProtectedData != null)
+      builder.append(TlvTag.Pin2, cardEnvironment.pin2)
+
+    return CommandApdu(Instruction.WriteUserData, builder.serialize())
   }
 
   override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): WriteUserDataResponse? {

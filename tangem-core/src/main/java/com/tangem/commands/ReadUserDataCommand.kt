@@ -63,12 +63,11 @@ class ReadUserDataResponse(
 class ReadUserDataCommand: CommandSerializer<ReadUserDataResponse>() {
 
   override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
-    val serializedTlv = TlvBuilder().apply {
-      append(TlvTag.CardId, cardEnvironment.cardId)
-      append(TlvTag.Pin, cardEnvironment.pin1)
-    }.serialize()
+    val builder = TlvBuilder()
+    builder.append(TlvTag.CardId, cardEnvironment.cardId)
+    builder.append(TlvTag.Pin, cardEnvironment.pin1)
 
-    return CommandApdu(Instruction.ReadUserData, serializedTlv)
+    return CommandApdu(Instruction.ReadUserData, builder.serialize())
   }
 
   override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): ReadUserDataResponse? {
