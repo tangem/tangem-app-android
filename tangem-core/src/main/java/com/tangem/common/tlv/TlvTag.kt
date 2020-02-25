@@ -125,7 +125,7 @@ enum class TlvTag(val code: Int) {
             MaxSignatures, PauseBeforePin2, RemainingSignatures,
             SignedHashes, Health, TokenDecimal,
             Offset, Size -> TlvValueType.Uint16
-            UserCounter, IssuerDataCounter -> TlvValueType.Uint32
+            UserCounter, UserProtectedCounter, IssuerDataCounter -> TlvValueType.Uint32
             IsActivated, TerminalIsLinked -> TlvValueType.BoolValue
             ManufactureDateTime -> TlvValueType.DateTime
             ProductMask -> TlvValueType.ProductMask
