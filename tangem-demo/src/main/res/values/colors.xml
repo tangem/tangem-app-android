@@ -3,4 +3,6 @@
     <color name="colorPrimary">#027aff</color>
     <color name="colorPrimaryDark">#027AFF</color>
     <color name="colorAccent">#027AFF</color>
+
+    <color name="delimiter">#000000</color>
 </resources>
