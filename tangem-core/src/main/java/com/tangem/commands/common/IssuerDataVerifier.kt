@@ -1,4 +1,4 @@
-package com.tangem.commands
+package com.tangem.commands.common
 
 import com.tangem.common.tlv.TlvEncoder
 import com.tangem.common.tlv.TlvTag
