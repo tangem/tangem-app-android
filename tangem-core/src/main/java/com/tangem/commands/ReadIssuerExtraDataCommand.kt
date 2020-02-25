@@ -1,5 +1,8 @@
 package com.tangem.commands
 
+import com.tangem.commands.common.DefaultIssuerDataVerifier
+import com.tangem.commands.common.IssuerDataMode
+import com.tangem.commands.common.IssuerDataVerifier
 import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
@@ -62,7 +65,7 @@ class ReadIssuerExtraDataCommand(
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
         tlvBuilder.append(TlvTag.CardId, cardEnvironment.cardId)
-        tlvBuilder.append(TlvTag.Mode, EXTRA_DATA_MODE)
+        tlvBuilder.append(TlvTag.Mode, IssuerDataMode.ReadExtraData)
         tlvBuilder.append(TlvTag.Offset, offset)
         return CommandApdu(Instruction.ReadIssuerData, tlvBuilder.serialize())
     }
