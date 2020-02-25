@@ -1,13 +1,9 @@
 package com.tangem.tangemtest
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.CardManager
-import com.tangem.common.extensions.hexToBytes
-import com.tangem.common.extensions.toByteArray
-import com.tangem.common.extensions.toHexString
-import com.tangem.crypto.CryptoUtils
-import com.tangem.crypto.sign
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskError
@@ -154,6 +150,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        btn_read_write_user_data?.setOnClickListener { startActivity(Intent(this, TestUserDataActivity::class.java)) }
     }
 
     private fun createSampleHashes(): Array<ByteArray> {
