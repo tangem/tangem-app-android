@@ -1,5 +1,8 @@
 package com.tangem.commands
 
+import com.tangem.commands.common.DefaultIssuerDataVerifier
+import com.tangem.commands.common.IssuerDataMode
+import com.tangem.commands.common.IssuerDataVerifier
 import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
@@ -8,32 +11,6 @@ import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
 import com.tangem.tasks.TaskError
-
-/**
- * This enum specifies modes for [WriteIssuerExtraDataCommand].
- */
-enum class IssuerDataMode(val code: Byte) {
-    /**
-     * This mode is required to initiate writing issuer extra data to the card.
-     */
-    InitializeWritingExtraData(1),
-    /**
-     * With this mode, the command writes part of issuer extra data
-     * (block of a size [WriteIssuerExtraDataCommand.SINGLE_WRITE_SIZE]) to the card.
-     */
-    WriteExtraData(2),
-    /**
-     * This mode is used after the issuer extra data was fully written to the card.
-     * Under this mode the command provides the issuer signature
-     * to confirm the validity of data that was written to card.
-     */
-    FinalizeExtraData(3);
-
-    companion object {
-        private val values = CardStatus.values()
-        fun byCode(code: Int): CardStatus? = values.find { it.code == code }
-    }
-}
 
 /**
  * This command writes Issuer Extra Data field and its issuer’s signature.
