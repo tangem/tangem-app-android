@@ -191,7 +191,7 @@ class CardManager(
      */
     fun writeUserData(
         cardId: String,
-        userData: ByteArray,
+        userData: ByteArray? = null,
         userProtectedData: ByteArray? = null,
         userCounter: Int? = null,
         userProtectedCounter: Int? = null,
