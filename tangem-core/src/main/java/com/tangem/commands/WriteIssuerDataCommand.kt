@@ -1,13 +1,12 @@
 package com.tangem.commands
 
+import com.tangem.commands.common.DefaultIssuerDataVerifier
+import com.tangem.commands.common.IssuerDataMode
+import com.tangem.commands.common.IssuerDataVerifier
 import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
-import com.tangem.common.extensions.calculateSha256
-import com.tangem.common.extensions.hexToBytes
-import com.tangem.common.extensions.toByteArray
-import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
@@ -33,13 +32,15 @@ class WriteIssuerDataResponse(
 class WriteIssuerDataCommand(
         private val issuerData: ByteArray,
         private val issuerDataSignature: ByteArray,
-        private val issuerDataCounter: Int? = null
-) : CommandSerializer<WriteIssuerDataResponse>() {
+        private val issuerDataCounter: Int? = null,
+        verifier: IssuerDataVerifier = DefaultIssuerDataVerifier()
+) : CommandSerializer<WriteIssuerDataResponse>(), IssuerDataVerifier by verifier {
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
         tlvBuilder.append(TlvTag.CardId, cardEnvironment.cardId)
+        tlvBuilder.append(TlvTag.Mode, IssuerDataMode.WriteData)
         tlvBuilder.append(TlvTag.IssuerData, issuerData)
         tlvBuilder.append(TlvTag.IssuerDataSignature, issuerDataSignature)
         tlvBuilder.append(TlvTag.IssuerDataCounter, issuerDataCounter)
