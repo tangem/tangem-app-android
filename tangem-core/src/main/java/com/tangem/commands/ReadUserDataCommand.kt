@@ -67,10 +67,10 @@ class ReadUserDataCommand: CommandSerializer<ReadUserDataResponse>() {
       val mapper = TlvMapper(tlvData)
       ReadUserDataResponse(
           cardId = mapper.map(TlvTag.CardId),
-          userData = mapper.map(TlvTag.IssuerData),
-          userProtectedData = mapper.map(TlvTag.IssuerDataSignature),
-          userCounter = mapper.map(TlvTag.IssuerDataCounter),
-          userProtectedCounter = mapper.map(TlvTag.IssuerDataCounter)
+          userData = mapper.map(TlvTag.UserData),
+          userProtectedData = mapper.map(TlvTag.UserProtectedData),
+          userCounter = mapper.map(TlvTag.UserCounter),
+          userProtectedCounter = mapper.map(TlvTag.UserProtectedCounter)
       )
     } catch (exception: Exception) {
       throw TaskError.SerializeCommandError()
