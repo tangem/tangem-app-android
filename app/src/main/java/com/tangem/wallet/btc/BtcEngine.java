@@ -181,7 +181,7 @@ public class BtcEngine extends CoinEngine {
                     return false;
             }
 
-            if (ctx.getBlockchain() != Blockchain.BitcoinTestNet && ctx.getBlockchain() != Blockchain.Bitcoin) {
+            if (ctx.getBlockchain() != Blockchain.BitcoinTestNet && ctx.getBlockchain() != Blockchain.Bitcoin && ctx.getBlockchain() != Blockchain.BitcoinDual) {
                 return false;
             }
 
@@ -190,7 +190,7 @@ public class BtcEngine extends CoinEngine {
             }
         } else {
             try {
-                if (ctx.getBlockchain() == Blockchain.Bitcoin) {
+                if (ctx.getBlockchain() == Blockchain.Bitcoin || ctx.getBlockchain() == Blockchain.BitcoinDual) {
                     SegwitAddress.fromBech32(new MainNetParams(), address);
                 } else if (ctx.getBlockchain() == Blockchain.BitcoinTestNet) {
                     SegwitAddress.fromBech32(new TestNet3Params(), address);
@@ -213,7 +213,7 @@ public class BtcEngine extends CoinEngine {
 
     @Override
     public Uri getWalletExplorerUri() {
-        return Uri.parse((ctx.getBlockchain() == Blockchain.Bitcoin ? "https://www.blockchain.com/btc/address/" : "https://live.blockcypher.com/btc-testnet/address/") + ctx.getCoinData().getWallet());
+        return Uri.parse((ctx.getBlockchain() == Blockchain.Bitcoin || ctx.getBlockchain() == Blockchain.BitcoinDual ? "https://www.blockchain.com/btc/address/" : "https://live.blockcypher.com/btc-testnet/address/") + ctx.getCoinData().getWallet());
     }
 
     @Override
