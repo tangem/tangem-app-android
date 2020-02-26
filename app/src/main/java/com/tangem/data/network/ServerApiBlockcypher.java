@@ -70,6 +70,7 @@ public class ServerApiBlockcypher {
             network = "test3";
         }
         if (blockchainID.equals(Blockchain.Token.getID())) blockchain = "eth";
+        if (blockchainID.equals(Blockchain.BitcoinDual.getID())) blockchain = "btc";
 
         switch (method) {
             case BLOCKCYPHER_ADDRESS:
