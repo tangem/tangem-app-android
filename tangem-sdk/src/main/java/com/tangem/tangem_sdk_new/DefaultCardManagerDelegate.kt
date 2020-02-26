@@ -1,6 +1,7 @@
 package com.tangem.tangem_sdk_new
 
 import android.animation.ObjectAnimator
+import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.fragment.app.FragmentActivity
@@ -77,7 +78,8 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
             readingDialog?.tvTaskTitle?.text = activity.getText(R.string.dialog_security_delay)
             readingDialog?.tvTaskText?.text =
                     activity.getText(R.string.dialog_security_delay_description)
-//            readingDialog?.pbSecurityDelay?.isIndeterminate = false
+
+            performHapticFeedback()
 
             if (readingDialog?.pbSecurityDelay?.max != totalDurationSeconds) {
                 readingDialog?.pbSecurityDelay?.max = totalDurationSeconds
@@ -90,6 +92,32 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
                     totalDurationSeconds - ms,
                     totalDurationSeconds - ms + 100)
             animation.duration = 500
+            animation.interpolator = DecelerateInterpolator()
+            animation.start()
+        }
+    }
+
+    override fun onDelay(total: Int, current: Int, step: Int) {
+        postUI {
+            readingDialog?.lTouchCard?.hide()
+            readingDialog?.flSecurityDelay?.show()
+            readingDialog?.tvRemainingTime?.text = (((total - current) / step) + 1).toString()
+            readingDialog?.tvTaskTitle?.text = "Operation in process"
+            readingDialog?.tvTaskText?.text = "Please hold the card firmly until the operation is completed…"
+
+            performHapticFeedback()
+
+            if (readingDialog?.pbSecurityDelay?.max != total) {
+                readingDialog?.pbSecurityDelay?.max = total
+            }
+            readingDialog?.pbSecurityDelay?.progress = current
+
+            val animation = ObjectAnimator.ofInt(
+                    readingDialog?.pbSecurityDelay,
+                    "progress",
+                    current,
+                    current + step)
+            animation.duration = 300
             animation.interpolator = DecelerateInterpolator()
             animation.start()
         }
@@ -110,6 +138,7 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
             readingDialog?.flSecurityDelay?.hide()
             readingDialog?.flCompletion?.show()
             readingDialog?.ivCompletion?.setImageDrawable(activity.getDrawable(R.drawable.ic_done_135dp))
+            performHapticFeedback()
         }
         postUI(300) { readingDialog?.dismiss() }
     }
@@ -122,6 +151,7 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
             readingDialog?.flError?.show()
             readingDialog?.tvTaskTitle?.text = activity.getText(R.string.dialog_error)
             readingDialog?.tvTaskText?.text = "${error::class.simpleName}: ${error.code}"
+            performHapticFeedback()
         }
     }
 
@@ -129,6 +159,12 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
+    private fun performHapticFeedback() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            readingDialog?.llHeader?.isHapticFeedbackEnabled = true
+            readingDialog?.llHeader?.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+        }
+    }
 
     private fun setLogger() {
         Log.setLogger(
