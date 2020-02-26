@@ -2,22 +2,33 @@ package com.tangem.common.tlv
 
 import com.tangem.Log
 import com.tangem.commands.*
-import com.tangem.common.extensions.*
+import com.tangem.commands.common.IssuerDataMode
+import com.tangem.common.extensions.calculateSha256
+import com.tangem.common.extensions.hexToBytes
+import com.tangem.common.extensions.toByteArray
 import com.tangem.tasks.TaskError
-import java.time.Year
 import java.util.*
 
+/**
+ * Encodes information that is to be written on the card from parsed classes into [ByteArray]
+ * (according to the provided [TlvTag] and corresponding [TlvValueType])
+ * and then forms [Tlv] with the encoded values.
+ */
 class TlvEncoder {
+    /**
+
+     * @param value information that is to be encoded into [Tlv].
+     */
     internal inline fun <reified T> encode(tag: TlvTag, value: T?): Tlv {
         if (value != null) {
-            return Tlv(tag, encodeValue(value, tag))
+            return Tlv(tag, encodeValue(tag, value))
         } else {
             Log.e(this::class.simpleName!!, "Encoding error. Value for tag $tag is null")
             throw TaskError.SerializeCommandError()
         }
     }
 
-    private inline fun <reified T> encodeValue(value: T, tag: TlvTag): ByteArray {
+    internal inline fun <reified T> encodeValue(tag: TlvTag, value: T): ByteArray {
         return when (tag.valueType()) {
             TlvValueType.HexString -> {
                 typeCheck<T, String>(tag)
@@ -31,7 +42,11 @@ class TlvEncoder {
                 typeCheck<T, String>(tag)
                 (value as String).toByteArray()
             }
-            TlvValueType.IntValue -> {
+            TlvValueType.Uint16 -> {
+                typeCheck<T, Int>(tag)
+                (value as Int).toByteArray(2)
+            }
+            TlvValueType.Uint32 -> {
                 typeCheck<T, Int>(tag)
                 (value as Int).toByteArray()
             }
@@ -73,6 +88,10 @@ class TlvEncoder {
             TlvValueType.SigningMethod -> {
                 typeCheck<T, SigningMethod>(tag)
                 (value as SigningMethod).rawValue.toByteArray()
+            }
+            TlvValueType.IssuerDataMode -> {
+                typeCheck<T, IssuerDataMode>(tag)
+                byteArrayOf((value as IssuerDataMode).code)
             }
         }
     }
