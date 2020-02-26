@@ -13,7 +13,7 @@ import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskError
 import com.tangem.tasks.TaskEvent
-import kotlinx.android.synthetic.main.a_test_user_data.*
+import kotlinx.android.synthetic.main.activity_test_user_data.*
 import java.nio.charset.StandardCharsets
 
 /**
@@ -26,7 +26,7 @@ class TestUserDataActivity: AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.a_test_user_data)
+    setContentView(R.layout.activity_test_user_data)
 
     init()
     initWriteOptions()
