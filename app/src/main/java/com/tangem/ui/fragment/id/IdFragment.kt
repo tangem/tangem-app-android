@@ -364,7 +364,7 @@ class IdFragment : BaseFragment(), NfcAdapter.ReaderCallback,
         updateViews()
 
         // Bitcoin, Litecoin, BitcoinCash, Stellar
-        if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet ||
+        if (ctx.blockchain == Blockchain.Bitcoin || ctx.blockchain == Blockchain.BitcoinTestNet || ctx.blockchain == Blockchain.BitcoinDual ||
                 ctx.blockchain == Blockchain.Litecoin || ctx.blockchain == Blockchain.BitcoinCash ||
                 ctx.blockchain == Blockchain.Stellar || ctx.blockchain == Blockchain.StellarTestNet || ctx.blockchain == Blockchain.StellarAsset) {
             ctx.coinData.setIsBalanceEqual(true)
