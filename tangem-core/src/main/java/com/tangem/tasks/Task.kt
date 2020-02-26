@@ -1,6 +1,5 @@
 package com.tangem.tasks
 
-import com.tangem.common.CardEnvironment
 import com.tangem.CardManagerDelegate
 import com.tangem.CardReader
 import com.tangem.Log
@@ -8,6 +7,7 @@ import com.tangem.commands.Card
 import com.tangem.commands.CommandResponse
 import com.tangem.commands.CommandSerializer
 import com.tangem.commands.ReadCommand
+import com.tangem.common.CardEnvironment
 import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.StatusWord
@@ -51,6 +51,9 @@ sealed class TaskError(val code: Int): Exception() {
     class TagLost: TaskError(5003)
 
     class UnknownError: TaskError(6000)
+
+    //Issuer Data Errors
+    class MissingCounter: TaskError(7001)
 }
 
 /**
@@ -105,7 +108,6 @@ abstract class Task<T> {
     /**
      * Should be called on [Task] completion, whether it was successful or with failure.
      *
-     * @param withError True when there is an error
      * @param taskError The error to be shown by [CardManagerDelegate]
      */
     protected fun completeNfcSession(taskError: TaskError? = null) {
