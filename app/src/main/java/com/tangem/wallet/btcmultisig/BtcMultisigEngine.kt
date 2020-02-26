@@ -5,17 +5,21 @@ import com.tangem.tangem_card.data.TangemCard
 import com.tangem.tangem_card.reader.CardProtocol.TangemException
 import com.tangem.tangem_card.tasks.SignTask
 import com.tangem.tangem_card.util.Util
+import com.tangem.wallet.TangemContext
 import com.tangem.wallet.btc.BtcEngine
 import org.bitcoinj.core.*
 import org.bitcoinj.crypto.TransactionSignature
 import org.bitcoinj.params.MainNetParams
 import org.bitcoinj.script.Script
 import org.bitcoinj.script.ScriptBuilder
-import org.bitcoinj.script.ScriptPattern
 import java.math.BigInteger
 
-class BtcMultisigEngine : BtcEngine() {
+class BtcMultisigEngine : BtcEngine {
     val networkParameters = MainNetParams.get()
+
+    constructor(): super()
+
+    constructor(context: TangemContext): super(context)
 
     override fun defineWallet() {
         try {
@@ -28,13 +32,14 @@ class BtcMultisigEngine : BtcEngine() {
     }
 
     override fun calculateAddress(compressedPublicKey: ByteArray): String? {
-        val script = createMultisigOutputScript(
-                mutableListOf(compressedPublicKey, ctx.card.getUserData)
-        )
-        val scriptHash = ScriptPattern.extractHashFromP2SH(script)
-
-        val address = LegacyAddress.fromScriptHash(networkParameters, scriptHash)
-        return address.toBase58()
+        if (ctx.card.issuerData != null && ctx.card.issuerData.size == 33) {
+            val script = createMultisigOutputScript()
+            val scriptHash = Utils.sha256hash160(script.program)
+            val address = LegacyAddress.fromScriptHash(networkParameters, scriptHash)
+            return address.toBase58()
+        } else {
+            return Util.byteArrayToHexString(compressedPublicKey)
+        }
     }
 
     override fun constructTransaction(amountValue: Amount, feeValue: Amount, IncFee: Boolean, targetAddress: String): SignTask.TransactionToSign {
@@ -78,7 +83,8 @@ class BtcMultisigEngine : BtcEngine() {
                 val hashesForSign: MutableList<ByteArray> = MutableList(transaction.inputs.size) { byteArrayOf() }
                 for (input in transaction.inputs) {
                     val index = input.index
-                    hashesForSign[index] = transaction.hashForSignature(index, input.scriptBytes, Transaction.SigHash.ALL, false).bytes
+                    val outputScript = createMultisigOutputScript()
+                    hashesForSign[index] = transaction.hashForSignature(index, outputScript, Transaction.SigHash.ALL, false).bytes
                 }
                 return hashesForSign.toTypedArray()
             }
@@ -116,13 +122,12 @@ class BtcMultisigEngine : BtcEngine() {
         val canonicalS = ECKey.ECDSASignature(r, s).toCanonicalised().s
         val signature = TransactionSignature(r, canonicalS)
 
-        val outputScript = createMultisigOutputScript(
-                mutableListOf(ctx.card.walletPublicKeyRar, ctx.card.getUserData)
-        )
+        val outputScript = createMultisigOutputScript()
         return ScriptBuilder.createP2SHMultiSigInputScript(mutableListOf(signature), outputScript)
     }
 
-    private fun createMultisigOutputScript(publicKeys: MutableList<ByteArray>): Script {
+    private fun createMultisigOutputScript(): Script {
+        val publicKeys =  mutableListOf(ctx.card.walletPublicKeyRar, ctx.card.issuerData)
         publicKeys.sortWith(UnsignedBytes.lexicographicalComparator())
         val publicEcKeys =
                 MutableList(publicKeys.size) { i -> ECKey.fromPublicOnly(publicKeys[i]) }
