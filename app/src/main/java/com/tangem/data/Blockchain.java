@@ -9,6 +9,7 @@ public enum Blockchain {
     Unknown("", "", 1.0, R.drawable.ic_logo_unknown, ""),
     Bitcoin("BTC", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin, "Bitcoin"),
     BitcoinTestNet("BTC/test", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin_testnet, "Bitcoin Testnet"),
+    BitcoinDual("BTC/dual", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin, "Bitcoin"),
     Ethereum("ETH", "ETH", 1.0, R.drawable.ic_logo_ethereum, "Ethereum"),
     EthereumId("ETH/ID", "ETH", 1.0, R.drawable.ic_logo_ethereum, "Ethereum ID"),
     EthereumTestNet("ETH/test", "ETH", 1.0, R.drawable.ic_logo_ethereum_testnet, "Ethereum Testnet"),
