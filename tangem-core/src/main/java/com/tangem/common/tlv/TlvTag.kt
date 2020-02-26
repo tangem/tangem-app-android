@@ -6,7 +6,8 @@ package com.tangem.common.tlv
 enum class TlvValueType {
     HexString,
     Utf8String,
-    IntValue,
+    Uint16,
+    Uint32,
     BoolValue,
     ByteArray,
     EllipticCurve,
@@ -14,7 +15,8 @@ enum class TlvValueType {
     ProductMask,
     SettingsMask,
     CardStatus,
-    SigningMethod
+    SigningMethod,
+    IssuerDataMode
 }
 
 /**
@@ -60,6 +62,10 @@ enum class TlvTag(val code: Int) {
     IssuerDataSignature(0x33),
     IssuerTransactionSignature(0x34),
     IssuerDataCounter(0x35),
+    Size(0x25),
+    Mode(0x23),
+    Offset(0x24),
+
 
     IsActivated(0x3A),
     ActivationSeed(0x3B),
@@ -113,13 +119,16 @@ enum class TlvTag(val code: Int) {
                 TlvValueType.Utf8String
             CurveId -> TlvValueType.EllipticCurve
             MaxSignatures, PauseBeforePin2, RemainingSignatures,
-            SignedHashes, Health, TokenDecimal, UserCounter, IssuerDataCounter -> TlvValueType.IntValue
+            SignedHashes, Health, TokenDecimal,
+            Offset, Size -> TlvValueType.Uint16
+            UserCounter, IssuerDataCounter -> TlvValueType.Uint32
             IsActivated, TerminalIsLinked -> TlvValueType.BoolValue
             ManufactureDateTime -> TlvValueType.DateTime
             ProductMask -> TlvValueType.ProductMask
             SettingsMask -> TlvValueType.SettingsMask
             Status -> TlvValueType.CardStatus
             SigningMethod -> TlvValueType.SigningMethod
+            Mode -> TlvValueType.IssuerDataMode
             else -> TlvValueType.ByteArray
         }
     }
