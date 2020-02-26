@@ -33,7 +33,7 @@
 
     <Button
         android:id="@+id/btn_sign"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:text="Sign transaction"
@@ -44,7 +44,7 @@
 
     <Button
         android:id="@+id/btn_read_issuer_data"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:text="Read issuer data"
@@ -55,7 +55,7 @@
 
     <Button
         android:id="@+id/btn_write_issuer_data"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:text="Write issuer data"
@@ -65,19 +65,30 @@
         android:enabled="false"/>
 
     <Button
-        android:id="@+id/btn_purge_wallet"
-        android:layout_marginTop="24dp"
+        android:id="@+id/btn_read_issuer_extra_data"
+        android:layout_marginTop="16dp"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:text="Purge wallet"
+        android:text="Read issuer extra data"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btn_write_issuer_data"
         android:enabled="false"/>
 
     <Button
+        android:id="@+id/btn_purge_wallet"
+        android:layout_marginTop="16dp"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:text="Purge wallet"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_read_issuer_extra_data"
+        android:enabled="false"/>
+
+    <Button
         android:id="@+id/btn_create_wallet"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:text="Create wallet"
