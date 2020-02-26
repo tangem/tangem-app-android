@@ -197,8 +197,8 @@ class CardManager(
         userProtectedCounter: Int? = null,
         callback: (result: TaskEvent<WriteUserDataResponse>) -> Unit
     ) {
-      val writeIssuerDataCommand = WriteUserDataCommand(userData, userProtectedData, userCounter, userProtectedCounter)
-      val task = SingleCommandTask(writeIssuerDataCommand)
+      val writeUserDataCommand = WriteUserDataCommand(userData, userProtectedData, userCounter, userProtectedCounter)
+      val task = SingleCommandTask(writeUserDataCommand)
       runTask(task, cardId, callback)
     }
 
