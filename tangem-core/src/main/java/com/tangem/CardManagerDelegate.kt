@@ -22,6 +22,12 @@ interface CardManagerDelegate {
     fun onSecurityDelay(ms: Int, totalDurationSeconds: Int)
 
     /**
+     * It is called when long tasks are performed.
+     * A user is expected to hold the card until the task is complete.
+     */
+    fun onDelay(total: Int, current: Int, step: Int)
+
+    /**
      * It is called when user takes the card away from the Android device during the scanning
      * (for example when security delay is in progress) and the TagLostException is received.
      */
