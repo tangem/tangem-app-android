@@ -12,12 +12,17 @@ import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
 import com.tangem.tasks.TaskError
 
-class ReadIssuerDataResponse(
+class ReadIssuerExtraDataResponse(
 
         /**
          * CID, Unique Tangem card ID number.
          */
         val cardId: String,
+
+        /**
+         * Size of all Issuer_Extra_Data field.
+         */
+        val size: Int?,
 
         /**
          * Data defined by issuer.
@@ -32,7 +37,7 @@ class ReadIssuerDataResponse(
          * SHA256-hashed CID Issuer_Data concatenated with and [issuerDataCounter]:
          * SHA256([cardId] | [issuerData] | [issuerDataCounter]).
          */
-        val issuerDataSignature: ByteArray,
+        val issuerDataSignature: ByteArray?,
 
         /**
          * An optional counter that protect issuer data against replay attack.
@@ -44,38 +49,49 @@ class ReadIssuerDataResponse(
 
 
 /**
- * This command returns 512-byte Issuer Data field and its issuer’s signature.
- * Issuer Data is never changed or parsed from within the Tangem COS. The issuer defines purpose of use,
- * format and payload of Issuer Data. For example, this field may contain information about
- * wallet balance signed by the issuer or additional issuer’s attestation data.
- * @property cardId CID, Unique Tangem card ID number.
+ * This command retrieves Issuer Extra Data field and its issuer’s signature.
+ * Issuer Extra Data is never changed or parsed from within the Tangem COS. The issuer defines purpose of use,
+ * format and payload of Issuer Data. . For example, this field may contain photo or
+ * biometric information for ID card product. Because of the large size of Issuer_Extra_Data,
+ * a series of these commands have to be executed to read the entire Issuer_Extra_Data.
  */
-class ReadIssuerDataCommand(
+class ReadIssuerExtraDataCommand(
         verifier: IssuerDataVerifier = DefaultIssuerDataVerifier()
-) : CommandSerializer<ReadIssuerDataResponse>(),
-        IssuerDataVerifier by verifier {
+) : CommandSerializer<ReadIssuerExtraDataResponse>(), IssuerDataVerifier by verifier {
+
+    var offset: Int = 0
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
         tlvBuilder.append(TlvTag.CardId, cardEnvironment.cardId)
-        tlvBuilder.append(TlvTag.Mode, IssuerDataMode.ReadData)
+        tlvBuilder.append(TlvTag.Mode, IssuerDataMode.ReadExtraData)
+        tlvBuilder.append(TlvTag.Offset, offset)
         return CommandApdu(Instruction.ReadIssuerData, tlvBuilder.serialize())
     }
 
-    override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): ReadIssuerDataResponse? {
+    override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): ReadIssuerExtraDataResponse? {
         val tlvData = responseApdu.getTlvData() ?: return null
 
         return try {
             val mapper = TlvMapper(tlvData)
-            ReadIssuerDataResponse(
+            ReadIssuerExtraDataResponse(
                     cardId = mapper.map(TlvTag.CardId),
-                    issuerData = mapper.map(TlvTag.IssuerData),
-                    issuerDataSignature = mapper.map(TlvTag.IssuerDataSignature),
+                    size = mapper.mapOptional(TlvTag.Size),
+                    issuerData = mapper.mapOptional(TlvTag.IssuerData) ?: byteArrayOf(),
+                    issuerDataSignature = mapper.mapOptional(TlvTag.IssuerDataSignature),
                     issuerDataCounter = mapper.mapOptional(TlvTag.IssuerDataCounter)
             )
         } catch (exception: Exception) {
             throw TaskError.SerializeCommandError()
         }
+    }
+
+    companion object {
+        /**
+         * This mode value specifies that this command retrieves Issuer EXTRA data from the card
+         * (with value 0 the command will get instead simple Issuer Data from the card).
+         */
+        const val EXTRA_DATA_MODE = 1
     }
 }

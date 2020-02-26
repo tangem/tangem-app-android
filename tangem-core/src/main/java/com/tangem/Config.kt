@@ -1,5 +1,6 @@
 package com.tangem
 
-data class Config(
-        val linkedTerminal: Boolean = true
+class Config(
+        val linkedTerminal: Boolean = true,
+        val issuerPublicKey: ByteArray? = null
 )
