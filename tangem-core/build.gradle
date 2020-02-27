@@ -1,9 +1,10 @@
 apply plugin: "kotlin"
 apply plugin: 'org.jetbrains.dokka'
 apply from: '../dependencies.gradle'
+apply from: '../jitpack.gradle'
 
-group = "$versions.gitpackGroup"
-version "$versions.gitpackCore"
+group = "$jitpackSdk.group"
+version "$jitpackSdk.version"
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
