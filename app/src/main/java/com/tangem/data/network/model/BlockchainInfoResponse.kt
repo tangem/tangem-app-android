@@ -15,7 +15,10 @@ data class BlockchainInfoTransaction(
         var hash: String? = null,
 
         @SerializedName("block_height")
-        var block_height: Long? = null
+        var block_height: Long? = null,
+
+        @SerializedName("inputs")
+        var inputs: List<BlockchainInfoInput>
 )
 
 data class BlockchainInfoUnspents(
@@ -35,6 +38,16 @@ data class BlockchainInfoUtxo(
 
         @SerializedName("script")
         var script: String? = null
+)
+
+data class BlockchainInfoInput(
+        @SerializedName("prev_out")
+        var prev_out: BlockchainInfoOutput
+)
+
+data class BlockchainInfoOutput(
+        @SerializedName("addr")
+        var addr: String? = null
 )
 
 data class BlockchainInfoAddressAndUnspents(
