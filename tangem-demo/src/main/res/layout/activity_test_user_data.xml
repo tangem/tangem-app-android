@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:orientation="vertical">
+
+  <Button
+    android:id="@+id/btn_scan"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal"
+    android:layout_marginTop="16dp"
+    android:text="Scan card" />
+
+  <androidx.constraintlayout.widget.ConstraintLayout
+    android:id="@+id/cl_read_write"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
+    android:orientation="vertical"
+    android:visibility="gone">
+
+    <LinearLayout
+      android:id="@+id/linearLayout"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="16dp"
+      android:layout_marginEnd="16dp"
+      android:orientation="vertical"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent">
+
+      <CheckBox
+        android:id="@+id/chb_with_ud"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="With User data" />
+
+      <CheckBox
+        android:id="@+id/chb_with_ud_protected"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="With User protected data" />
+
+      <CheckBox
+        android:id="@+id/chb_with_pin2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="With Pin2" />
+
+      <CheckBox
+        android:id="@+id/chb_with_counter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="With User counter" />
+
+      <CheckBox
+        android:id="@+id/chb_with_protected_counter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="With User protected counter" />
+    </LinearLayout>
+
+    <Button
+      android:id="@+id/btn_write"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="16dp"
+      android:layout_marginTop="16dp"
+      android:text="Write user data"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+
+    <androidx.constraintlayout.widget.Guideline
+      android:id="@+id/guideline2"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      app:layout_constraintGuide_begin="205dp" />
+
+    <TextView
+      android:id="@+id/tv_write_result"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:text="Write result"
+      app:layout_constraintBottom_toBottomOf="@+id/btn_write"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="@+id/guideline2"
+      app:layout_constraintTop_toTopOf="@+id/btn_write" />
+
+    <include
+      android:id="@+id/m_delimiter_h"
+      layout="@layout/m_delimiter_h"
+      android:layout_width="0dp"
+      android:layout_height="@dimen/delimiter_size"
+      android:layout_marginTop="16dp"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/btn_write" />
+
+    <Button
+      android:id="@+id/btn_read"
+      android:layout_width="170dp"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="16dp"
+      android:layout_marginTop="16dp"
+      android:text="Read User Data"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/m_delimiter_h" />
+
+    <TextView
+      android:id="@+id/tv_read_result"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:text="Read result"
+      app:layout_constraintBottom_toBottomOf="@+id/btn_read"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="@+id/guideline2"
+      app:layout_constraintTop_toTopOf="@+id/btn_read" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+      android:layout_width="0dp"
+      android:layout_height="0dp"
+      android:layout_marginStart="20dp"
+      android:layout_marginTop="8dp"
+      android:layout_marginEnd="16dp"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintHorizontal_bias="0.0"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/btn_read"
+      app:layout_constraintVertical_bias="0.0">
+
+      <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="156dp" />
+
+      <TextView
+        android:id="@+id/textView6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Card Id:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+      <TextView
+        android:id="@+id/textView7"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="User data:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView6" />
+
+      <TextView
+        android:id="@+id/textView8"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="User protected data:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView7" />
+
+      <TextView
+        android:id="@+id/textView9"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="User counter:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView8" />
+
+      <TextView
+        android:id="@+id/textView10"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="User protected counter:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView9" />
+
+
+      <TextView
+        android:id="@+id/tv_card_cid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@+id/guideline"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="card id" />
+
+      <TextView
+        android:id="@+id/tv_data"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintStart_toStartOf="@+id/tv_card_cid"
+        app:layout_constraintTop_toBottomOf="@+id/textView6"
+        tools:text="data" />
+
+      <TextView
+        android:id="@+id/tv_protected_data"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintStart_toStartOf="@+id/tv_data"
+        app:layout_constraintTop_toBottomOf="@+id/textView7"
+        tools:text="protected data" />
+
+      <TextView
+        android:id="@+id/tv_counter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintStart_toStartOf="@+id/tv_protected_data"
+        app:layout_constraintTop_toBottomOf="@+id/tv_protected_data"
+        tools:text="counter" />
+
+      <TextView
+        android:id="@+id/tv_protected_counter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintStart_toStartOf="@+id/tv_counter"
+        app:layout_constraintTop_toBottomOf="@+id/tv_counter"
+        tools:text="protected counter" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+  </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.appcompat.widget.LinearLayoutCompat>
