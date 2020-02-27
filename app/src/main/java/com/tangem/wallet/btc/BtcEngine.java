@@ -13,6 +13,7 @@ import com.tangem.data.network.ServerApiBlockcypher;
 import com.tangem.data.network.ServerApiCommon;
 import com.tangem.data.network.model.BlockchainInfoAddress;
 import com.tangem.data.network.model.BlockchainInfoAddressAndUnspents;
+import com.tangem.data.network.model.BlockchainInfoInput;
 import com.tangem.data.network.model.BlockchainInfoTransaction;
 import com.tangem.data.network.model.BlockchainInfoUnspents;
 import com.tangem.data.network.model.BlockchainInfoUtxo;
@@ -53,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.observers.DisposableSingleObserver;
 import okhttp3.ResponseBody;
@@ -179,7 +181,7 @@ public class BtcEngine extends CoinEngine {
                     return false;
             }
 
-            if (ctx.getBlockchain() != Blockchain.BitcoinTestNet && ctx.getBlockchain() != Blockchain.Bitcoin) {
+            if (ctx.getBlockchain() != Blockchain.BitcoinTestNet && ctx.getBlockchain() != Blockchain.Bitcoin && ctx.getBlockchain() != Blockchain.BitcoinDual) {
                 return false;
             }
 
@@ -188,7 +190,7 @@ public class BtcEngine extends CoinEngine {
             }
         } else {
             try {
-                if (ctx.getBlockchain() == Blockchain.Bitcoin) {
+                if (ctx.getBlockchain() == Blockchain.Bitcoin || ctx.getBlockchain() == Blockchain.BitcoinDual) {
                     SegwitAddress.fromBech32(new MainNetParams(), address);
                 } else if (ctx.getBlockchain() == Blockchain.BitcoinTestNet) {
                     SegwitAddress.fromBech32(new TestNet3Params(), address);
@@ -211,7 +213,7 @@ public class BtcEngine extends CoinEngine {
 
     @Override
     public Uri getWalletExplorerUri() {
-        return Uri.parse((ctx.getBlockchain() == Blockchain.Bitcoin ? "https://www.blockchain.com/btc/address/" : "https://live.blockcypher.com/btc-testnet/address/") + ctx.getCoinData().getWallet());
+        return Uri.parse((ctx.getBlockchain() == Blockchain.Bitcoin || ctx.getBlockchain() == Blockchain.BitcoinDual ? "https://www.blockchain.com/btc/address/" : "https://live.blockcypher.com/btc-testnet/address/") + ctx.getCoinData().getWallet());
     }
 
     @Override
@@ -576,30 +578,6 @@ public class BtcEngine extends CoinEngine {
                     BlockchainInfoAddress blockchainInfoAddress = blockchainInfoAddressAndUnspents.getAddress();
                     BlockchainInfoUnspents blockchainInfoUnspents = blockchainInfoAddressAndUnspents.getUnspents();
 
-                    if (blockchainInfoAddress.getFinal_balance() != null) {
-                        coinData.setBalanceReceived(true);
-                        coinData.setBalanceConfirmed(blockchainInfoAddress.getFinal_balance());
-                        coinData.setBalanceUnconfirmed(0L);
-                        coinData.setValidationNodeDescription(Server.ApiBlockchainInfo.URL_BLOCKCHAININFO);
-
-                        for (BlockchainInfoTransaction tx : blockchainInfoAddress.getTxs()) {
-                            if (tx.getBlock_height() == null) {
-                                coinData.setHasUnconfirmed(true);
-                            }
-                        }
-
-                        if (App.pendingTransactionsStorage.hasTransactions(ctx.getCard())) {
-                            for (PendingTransactionsStorage.TransactionInfo pendingTx : App.pendingTransactionsStorage.getTransactions(ctx.getCard()).getTransactions()) {
-                                String pendingTxId = BTCUtils.toHex(BTCUtils.reverse(CryptoUtil.doubleSha256(BTCUtils.fromHex(pendingTx.getTx()))));
-                                for (BlockchainInfoTransaction responseTx : blockchainInfoAddress.getTxs()) {
-                                    if (responseTx.getHash().equals(pendingTxId)) {
-                                        App.pendingTransactionsStorage.removeTransaction(ctx.getCard(), pendingTx.getTx());
-                                    }
-                                }
-                            }
-                        }
-                    }
-
                     for (BlockchainInfoUtxo utxo : blockchainInfoUnspents.getUnspent_outputs()) {
                         BtcData.UnspentTransaction trUnspent = new BtcData.UnspentTransaction();
                         trUnspent.txID = utxo.getTx_hash_big_endian();
@@ -609,7 +587,18 @@ public class BtcEngine extends CoinEngine {
                         coinData.getUnspentTransactions().add(trUnspent);
                     }
 
-                    blockchainRequestsCallbacks.onComplete(true);
+                    if (blockchainInfoAddress.getFinal_balance() != null) {
+                        coinData.setBalanceReceived(true);
+                        coinData.setBalanceConfirmed(blockchainInfoAddress.getFinal_balance());
+                        coinData.setBalanceUnconfirmed(0L);
+                        coinData.setValidationNodeDescription(Server.ApiBlockchainInfo.URL_BLOCKCHAININFO);
+                    }
+
+                    if (blockchainInfoAddress.getTxs() != null) {
+                        checkTransactionsBlockchainInfo(Single.just(blockchainInfoAddress.getTxs()), serverApiBlockchainInfo, blockchainRequestsCallbacks);
+                    } else {
+                        blockchainRequestsCallbacks.onComplete(true);
+                    }
                 }
 
                 @Override
@@ -648,14 +637,29 @@ public class BtcEngine extends CoinEngine {
                         coinData.setValidationNodeDescription(Server.ApiBlockcypher.URL_BLOCKCYPHER);
 
                         coinData.getUnspentTransactions().clear();
+                        //TODO: change request logic, 2000 tx max
                         if (blockcypherResponse.getTxrefs() != null) {
                             for (BlockcypherTxref txref : blockcypherResponse.getTxrefs()) {
-                                BtcData.UnspentTransaction trUnspent = new BtcData.UnspentTransaction();
-                                trUnspent.txID = txref.getTx_hash();
-                                trUnspent.amount = txref.getValue();
-                                trUnspent.outputN = txref.getTx_output_n();
-                                trUnspent.script = txref.getScript();
-                                coinData.getUnspentTransactions().add(trUnspent);
+                                if (txref.getTx_input_n() == -1) { //recieved only
+                                    if (!txref.getSpent()) {
+                                        BtcData.UnspentTransaction trUnspent = new BtcData.UnspentTransaction();
+                                        trUnspent.txID = txref.getTx_hash();
+                                        trUnspent.amount = txref.getValue();
+                                        trUnspent.outputN = txref.getTx_output_n();
+                                        trUnspent.script = txref.getScript();
+                                        coinData.getUnspentTransactions().add(trUnspent);
+                                    }
+                                } else { //sent only
+                                    coinData.incSentTransactionsCount();
+                                }
+                            }
+                        }
+
+                        if (blockcypherResponse.getUnconfirmed_txrefs() != null) {
+                            for (BlockcypherTxref unconfirmedTxref : blockcypherResponse.getUnconfirmed_txrefs()) {
+                                if (unconfirmedTxref.getTx_input_n() != -1) {
+                                    coinData.incSentTransactionsCount();
+                                }
                             }
                         }
                     } catch (Exception e) {
@@ -663,7 +667,7 @@ public class BtcEngine extends CoinEngine {
                         Log.e(TAG, "FAIL BLOCKCYPHER_ADDRESS Exception");
                     }
 
-                    checkPending(blockchainRequestsCallbacks);
+                    checkPendingBlockcypher(blockchainRequestsCallbacks);
                 }
 
                 public void onSuccess(String method, BlockcypherFee blockcypherFee) {
@@ -686,7 +690,59 @@ public class BtcEngine extends CoinEngine {
         }
     }
 
-    private void checkPending(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
+    private void checkTransactionsBlockchainInfo(Single<List<BlockchainInfoTransaction>> txsSingle, ServerApiBlockchainInfo serverApiBlockchainInfo, BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
+        SingleObserver<List<BlockchainInfoTransaction>> txsObserver = new DisposableSingleObserver<List<BlockchainInfoTransaction>>() {
+            @Override
+            public void onSuccess(List<BlockchainInfoTransaction> txs) {
+                if (App.pendingTransactionsStorage.hasTransactions(ctx.getCard())) {
+                    for (PendingTransactionsStorage.TransactionInfo pendingTx : App.pendingTransactionsStorage.getTransactions(ctx.getCard()).getTransactions()) {
+                        String pendingTxId = BTCUtils.toHex(BTCUtils.reverse(CryptoUtil.doubleSha256(BTCUtils.fromHex(pendingTx.getTx()))));
+                        for (BlockchainInfoTransaction responseTx : txs) {
+                            if (pendingTxId.equals(responseTx.getHash())) {
+                                App.pendingTransactionsStorage.removeTransaction(ctx.getCard(), pendingTx.getTx());
+                            }
+                        }
+                    }
+                }
+
+                for (BlockchainInfoTransaction tx : txs) {
+                    if (tx.getBlock_height() == null) {
+                        coinData.setHasUnconfirmed(true);
+                    }
+
+                    for (BlockchainInfoInput input : tx.getInputs()) {
+                        String inputAddress = input.getPrev_out().getAddr();
+                        if (coinData.getWallet().equals(inputAddress)) {
+                            coinData.incSentTransactionsCount();
+                        }
+                    }
+                }
+
+                if (txs.size() == 50) {
+                    final ServerApiBlockchainInfo serverApiBlockchainInfo = new ServerApiBlockchainInfo();
+                    checkTransactionsBlockchainInfo(serverApiBlockchainInfo.getMoreAddressTxs(coinData.getWallet()), serverApiBlockchainInfo, blockchainRequestsCallbacks);
+                } else {
+                    blockchainRequestsCallbacks.onComplete(true);
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.i(TAG, "onError: getMoreAddressTxs" + e.getMessage());
+                coinData.setUseBlockcypher(true);
+                try {
+                    requestBalanceAndUnspentTransactions(blockchainRequestsCallbacks);
+                } catch (Exception ex) {
+                    ctx.setError(ex.getMessage());
+                    blockchainRequestsCallbacks.onComplete(false);
+                }
+            }
+        };
+
+        txsSingle.subscribe(txsObserver);
+    }
+
+    private void checkPendingBlockcypher(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
         if (App.pendingTransactionsStorage.hasTransactions(ctx.getCard())) {
             ServerApiBlockcypher serverApiBlockcypher = new ServerApiBlockcypher();
 
