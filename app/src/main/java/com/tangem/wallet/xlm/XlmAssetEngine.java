@@ -1,12 +1,10 @@
 package com.tangem.wallet.xlm;
 
 import android.net.Uri;
-import android.os.StrictMode;
 import android.text.InputFilter;
 import android.util.Log;
 
 import com.tangem.App;
-import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiStellar;
 import com.tangem.data.network.StellarRequest;
 import com.tangem.tangem_card.data.TangemCard;
@@ -28,6 +26,7 @@ import org.stellar.sdk.Operation;
 import org.stellar.sdk.PaymentOperation;
 import org.stellar.sdk.Transaction;
 import org.stellar.sdk.TransactionEx;
+import org.stellar.sdk.responses.operations.OperationResponse;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -90,7 +89,7 @@ public class XlmAssetEngine extends CoinEngine {
 
         if (balance != null) {
             if (!coinData.isAssetBalanceZero()) {
-                return " " + assetBalance.toDescriptionString(getDecimals()) + "<br><small><small>"+ balance.toDescriptionString(getDecimals()) + " for fee + " + coinData.getReserve().toDescriptionString(getDecimals()) + " reserve</small></small>";
+                return " " + assetBalance.toDescriptionString(getDecimals()) + "<br><small><small>" + balance.toDescriptionString(getDecimals()) + " for fee + " + coinData.getReserve().toDescriptionString(getDecimals()) + " reserve</small></small>";
             }
             return " " + balance.toDescriptionString(getDecimals()) + "<br><small><small>+ " + coinData.getReserve().toDescriptionString(getDecimals()) + " reserve</small></small>";
         } else {
@@ -171,7 +170,7 @@ public class XlmAssetEngine extends CoinEngine {
 //        if (ctx.getCard().getDenomination() != null) {
 //            return Uri.parse(ctx.getCoinData().getWallet() + "?amount=" + convertToAmount(convertToInternalAmount(ctx.getCard().getDenomination())).toValueString());
 //        } else {
-            return Uri.parse(ctx.getCoinData().getWallet());
+        return Uri.parse(ctx.getCoinData().getWallet());
 //        }
     }
 
@@ -186,7 +185,7 @@ public class XlmAssetEngine extends CoinEngine {
 
         Amount balance;
         if (!coinData.isAssetBalanceZero()) {
-             balance = coinData.getAssetBalance();
+            balance = coinData.getAssetBalance();
         } else {
             balance = coinData.getXlmBalance();
         }
@@ -377,9 +376,6 @@ public class XlmAssetEngine extends CoinEngine {
     @Override
     public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         checkBlockchainDataExists();
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-
-        StrictMode.setThreadPolicy(policy);
 
         if (coinData.isAssetBalanceZero() && IncFee) {
             amountValue = new Amount(amountValue.subtract(feeValue), amountValue.getCurrency());
@@ -392,13 +388,13 @@ public class XlmAssetEngine extends CoinEngine {
             if (!coinData.isAssetBalanceZero()) {
                 operation = new PaymentOperation.Builder(KeyPair.fromAccountId(targetAddress), Asset.createNonNativeAsset(ctx.getCard().getTokenSymbol(), KeyPair.fromAccountId(ctx.getCard().getContractAddress())), amountValue.toValueString()).build();
             } else {
-                if (isAccountCreated(targetAddress))
+                if (coinData.isTargetAccountCreated())
                     operation = new PaymentOperation.Builder(KeyPair.fromAccountId(targetAddress), new AssetTypeNative(), amountValue.toValueString()).build();
                 else
                     operation = new CreateAccountOperation.Builder(KeyPair.fromAccountId(targetAddress), amountValue.toValueString()).build();
             }
         }
-        TransactionEx transaction = TransactionEx.buildEx(60, coinData.getAccountResponse(), operation);
+        TransactionEx transaction = TransactionEx.buildEx(120, coinData.getAccountResponse(), operation);
 
 
         if (transaction.getFee() != convertToInternalAmount(feeValue).intValueExact()) {
@@ -447,23 +443,40 @@ public class XlmAssetEngine extends CoinEngine {
     }
 
 
-    // network call inside, don't use on main thread
-    private boolean isAccountCreated(String address) {
+    private void checkTargetAccountCreated(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
         final ServerApiStellar serverApi = new ServerApiStellar(ctx.getBlockchain());
 
-        StellarRequest.Balance request = new StellarRequest.Balance(address);
+        ServerApiStellar.Listener listener = new ServerApiStellar.Listener() {
+            @Override
+            public void onSuccess(StellarRequest.Base request) {
+                coinData.setTargetAccountCreated(true);
+                blockchainRequestsCallbacks.onComplete(true);
+            }
 
-        try {
-            serverApi.doStellarRequest(ctx, request);
-        } catch (IOException e) {
-            Log.e(TAG, e.getMessage());
-            return true; // suppose account is created if anything goes wrong TODO:check
-        }
 
-        if (request.errorResponse != null && request.errorResponse.getCode() == 404)
-            return false;
-        else
-            return true;
+            @Override
+            public void onFail(StellarRequest.Base request) {
+                Log.i(TAG, "onFail: " + request.getClass().getSimpleName() + " " + request.getError());
+
+                if (request.errorResponse != null && request.errorResponse.getCode() == 404) {
+                    coinData.setTargetAccountCreated(false);
+
+                    if (amount.compareTo(coinData.getReserve()) >= 0) { //TODO: take fee inclusion in account, now 1 XLM with fee included will fail after transaction is sent
+                        blockchainRequestsCallbacks.onComplete(true);
+                    } else {
+                        ctx.setError(R.string.confirm_transaction_error_not_enough_xlm_for_create);
+                        blockchainRequestsCallbacks.onComplete(false);
+                    }
+                } else { // suppose account is created if anything goes wrong
+                    coinData.setTargetAccountCreated(true);
+                    blockchainRequestsCallbacks.onComplete(true);
+                }
+            }
+        };
+
+        serverApi.setListener(listener);
+
+        serverApi.requestData(ctx, new StellarRequest.Balance(targetAddress));
     }
 
     @Override
@@ -496,6 +509,21 @@ public class XlmAssetEngine extends CoinEngine {
                     } else {
                         blockchainRequestsCallbacks.onProgress();
                     }
+                } else if (request instanceof StellarRequest.Operations) {
+                    StellarRequest.Operations operationsRequest = (StellarRequest.Operations) request;
+
+                    for (OperationResponse operationResponse : operationsRequest.operationsList) {
+                        if (operationResponse.getSourceAccount().getAccountId().equals(coinData.getWallet())) {
+                            coinData.incSentTransactionsCount();
+                        }
+                    }
+
+                    if (serverApi.isRequestsSequenceCompleted()) {
+                        blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                    } else {
+                        blockchainRequestsCallbacks.onProgress();
+                    }
+
                 } else {
                     ctx.setError("Invalid request logic");
                     blockchainRequestsCallbacks.onComplete(false);
@@ -529,13 +557,14 @@ public class XlmAssetEngine extends CoinEngine {
 
         serverApi.requestData(ctx, new StellarRequest.Balance(coinData.getWallet()));
         serverApi.requestData(ctx, new StellarRequest.Ledgers());
+        serverApi.requestData(ctx, new StellarRequest.Operations(coinData.getWallet()));
     }
 
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) throws Exception {
         // TODO: get fee stats?
         coinData.minFee = coinData.normalFee = coinData.maxFee = coinData.getBaseFee();
-        blockchainRequestsCallbacks.onComplete(true);
+        checkTargetAccountCreated(blockchainRequestsCallbacks, targetAddress, amount);
     }
 
     @Override

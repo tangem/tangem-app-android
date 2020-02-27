@@ -1,12 +1,13 @@
 package com.tangem.commands
 
-import com.tangem.CardEnvironment
+import com.tangem.commands.common.DefaultIssuerDataVerifier
+import com.tangem.commands.common.IssuerDataMode
+import com.tangem.commands.common.IssuerDataVerifier
+import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
-import com.tangem.common.extensions.calculateSha256
-import com.tangem.common.extensions.hexToBytes
-import com.tangem.common.tlv.Tlv
+import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
 import com.tangem.tasks.TaskError
@@ -50,15 +51,16 @@ class ReadIssuerDataResponse(
  * @property cardId CID, Unique Tangem card ID number.
  */
 class ReadIssuerDataCommand(
-        private val cardId: String
-) : CommandSerializer<ReadIssuerDataResponse>() {
+        verifier: IssuerDataVerifier = DefaultIssuerDataVerifier()
+) : CommandSerializer<ReadIssuerDataResponse>(),
+        IssuerDataVerifier by verifier {
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
-        val tlvData = listOf(
-                Tlv(TlvTag.Pin, cardEnvironment.pin1.calculateSha256()),
-                Tlv(TlvTag.CardId, cardId.hexToBytes())
-        )
-        return CommandApdu(Instruction.ReadIssuerData, tlvData)
+        val tlvBuilder = TlvBuilder()
+        tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
+        tlvBuilder.append(TlvTag.CardId, cardEnvironment.cardId)
+        tlvBuilder.append(TlvTag.Mode, IssuerDataMode.ReadData)
+        return CommandApdu(Instruction.ReadIssuerData, tlvBuilder.serialize())
     }
 
     override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): ReadIssuerDataResponse? {
