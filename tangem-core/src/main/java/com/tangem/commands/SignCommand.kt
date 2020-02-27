@@ -1,12 +1,13 @@
 package com.tangem.commands
 
-import com.tangem.CardEnvironment
+import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.tlv.Tlv
+import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
 import com.tangem.crypto.sign
@@ -32,7 +33,7 @@ class SignResponse(
  * @property hashes Array of transaction hashes.
  * @property cardId CID, Unique Tangem card ID number
  */
-class SignCommand(private val hashes: Array<ByteArray>, private val cardId: String)
+class SignCommand(private val hashes: Array<ByteArray>)
     : CommandSerializer<SignResponse>() {
 
     private val hashSizes = if (hashes.isNotEmpty()) hashes.first().size else 0
@@ -45,22 +46,21 @@ class SignCommand(private val hashes: Array<ByteArray>, private val cardId: Stri
 
     private fun checkForErrors() {
         if (hashes.isEmpty()) throw TaskError.EmptyHashes()
-        if (hashes.size > 10) throw TaskError.TooMuchHashes()
+        if (hashes.size > 10) throw TaskError.TooMuchHashesInOneTransaction()
         if (hashes.any { it.size != hashSizes }) throw TaskError.HashSizeMustBeEqual()
     }
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
-        val tlvData = mutableListOf(
-                Tlv(TlvTag.Pin, cardEnvironment.pin1.calculateSha256()),
-                Tlv(TlvTag.Pin2, cardEnvironment.pin2.calculateSha256()),
-                Tlv(TlvTag.CardId, cardId.hexToBytes()),
-                Tlv(TlvTag.TransactionOutHashSize, byteArrayOf(hashSizes.toByte())),
-                Tlv(TlvTag.TransactionOutHash, dataToSign)
-        )
+        val tlvBuilder = TlvBuilder()
+        tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
+        tlvBuilder.append(TlvTag.Pin2, cardEnvironment.pin2)
+        tlvBuilder.append(TlvTag.CardId, cardEnvironment.cardId)
+        tlvBuilder.append(TlvTag.TransactionOutHashSize, byteArrayOf(hashSizes.toByte()))
+        tlvBuilder.append(TlvTag.TransactionOutHash, dataToSign)
+        tlvBuilder.append(TlvTag.Cvc, cardEnvironment.cvc)
 
-        addTerminalSignature(cardEnvironment, tlvData)
-
-        return CommandApdu(Instruction.Sign, tlvData)
+        addTerminalSignature(cardEnvironment, tlvBuilder)
+        return CommandApdu(Instruction.Sign, tlvBuilder.serialize())
     }
 
     /**
@@ -70,11 +70,11 @@ class SignCommand(private val hashes: Array<ByteArray>, private val cardId: Stri
      * TerminalTransactionSignature parameter containing a correct signature of raw data to be signed made with TerminalPrivateKey
      * (this key should be generated and securily stored by the application).
      */
-    private fun addTerminalSignature(cardEnvironment: CardEnvironment, tlvData: MutableList<Tlv>) {
+    private fun addTerminalSignature(cardEnvironment: CardEnvironment, tlvBuilder: TlvBuilder) {
         cardEnvironment.terminalKeys?.let { terminalKeyPair ->
             val signedData = dataToSign.sign(terminalKeyPair.privateKey)
-            tlvData.add(Tlv(TlvTag.TerminalTransactionSignature, signedData))
-            tlvData.add(Tlv(TlvTag.TerminalPublicKey, terminalKeyPair.publicKey))
+            tlvBuilder.append(TlvTag.TerminalTransactionSignature, signedData)
+            tlvBuilder.append(TlvTag.TerminalPublicKey, terminalKeyPair.publicKey)
         }
     }
 

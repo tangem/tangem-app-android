@@ -1,11 +1,12 @@
 package com.tangem.commands
 
-import com.tangem.CardEnvironment
+import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.tlv.Tlv
+import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
 import com.tangem.tasks.TaskError
@@ -182,7 +183,7 @@ class Card(
         /**
          * Current status of the card.
          */
-        val status: CardStatus,
+        val status: CardStatus?,
 
         /**
          * Version of Tangem COS.
@@ -296,19 +297,16 @@ class Card(
 class ReadCommand : CommandSerializer<Card>() {
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
+        val tlvBuilder = TlvBuilder()
         /**
          *  [CardEnvironment] stores the pin1 value. If no pin1 value was set, it will contain
          *  default value of ‘000000’.
          *  In order to obtain card’s data, [ReadCommand] should use the correct pin 1 value.
          *  The card will not respond if wrong pin 1 has been submitted.
          */
-        val tlvData = mutableListOf(Tlv(TlvTag.Pin, cardEnvironment.pin1.calculateSha256()))
-
-        cardEnvironment.terminalKeys?.let { terminalKeys ->
-            Tlv(TlvTag.TerminalPublicKey, terminalKeys.publicKey)
-        }
-
-        return CommandApdu(Instruction.Read, tlvData)
+        tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
+        tlvBuilder.append(TlvTag.TerminalPublicKey, cardEnvironment.terminalKeys?.publicKey)
+        return CommandApdu(Instruction.Read, tlvBuilder.serialize())
     }
 
     override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): Card? {
@@ -318,9 +316,9 @@ class ReadCommand : CommandSerializer<Card>() {
             val tlvMapper = TlvMapper(tlvData)
 
             Card(
-                    cardId = tlvMapper.map(TlvTag.CardId),
-                    manufacturerName = tlvMapper.map(TlvTag.ManufactureId),
-                    status = tlvMapper.map(TlvTag.Status),
+                    cardId = tlvMapper.mapOptional(TlvTag.CardId) ?: "",
+                    manufacturerName = tlvMapper.mapOptional(TlvTag.ManufactureId) ?: "",
+                    status = tlvMapper.mapOptional(TlvTag.Status),
 
                     firmwareVersion = tlvMapper.mapOptional(TlvTag.Firmware),
                     cardPublicKey = tlvMapper.mapOptional(TlvTag.CardPublicKey),
@@ -349,7 +347,7 @@ class ReadCommand : CommandSerializer<Card>() {
 
     private fun deserializeCardData(tlvData: List<Tlv>): CardData? {
         val cardDataTlvs = tlvData.find { it.tag == TlvTag.CardData }?.let {
-            Tlv.tlvListFromBytes(it.value)
+            Tlv.deserialize(it.value)
         }
         if (cardDataTlvs.isNullOrEmpty()) return null
 
