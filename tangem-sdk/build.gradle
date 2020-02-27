@@ -2,9 +2,10 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply from: '../dependencies.gradle'
+apply from: '../jitpack.gradle'
 
-group = "$versions.gitpackGroup"
-version "$versions.gitpackSdk"
+group = "$jitpackSdk.group"
+version "$jitpackSdk.version"
 
 android {
     compileSdkVersion 29
