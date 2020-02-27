@@ -94,7 +94,6 @@ enum class TlvTag(val code: Int) {
 
     ProductMask(0x8A),
     PaymentFlowVersion(0x54),
-    UserCounter(0x2C),
 
 
     TokenSymbol(0xA0),
@@ -107,7 +106,12 @@ enum class TlvTag(val code: Int) {
 
     TerminalIsLinked(0x58),
     TerminalPublicKey(0x5C),
-    TerminalTransactionSignature(0x57);
+    TerminalTransactionSignature(0x57),
+
+    UserData(0x2A),
+    UserProtectedData(0x2B),
+    UserCounter(0x2C),
+    UserProtectedCounter(0x2D);
 
     /**
      * @return [TlvValueType] associated with a [TlvTag]
@@ -121,7 +125,7 @@ enum class TlvTag(val code: Int) {
             MaxSignatures, PauseBeforePin2, RemainingSignatures,
             SignedHashes, Health, TokenDecimal,
             Offset, Size -> TlvValueType.Uint16
-            UserCounter, IssuerDataCounter -> TlvValueType.Uint32
+            UserCounter, UserProtectedCounter, IssuerDataCounter -> TlvValueType.Uint32
             IsActivated, TerminalIsLinked -> TlvValueType.BoolValue
             ManufactureDateTime -> TlvValueType.DateTime
             ProductMask -> TlvValueType.ProductMask
