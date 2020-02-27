@@ -138,6 +138,7 @@ private fun getGasLimit(amount: Amount): GasLimit {
     return when (amount.currencySymbol) {
         Blockchain.Ethereum.currency -> GasLimit.Default
         "DGX" -> GasLimit.High
+        "CGT" -> GasLimit.High
         else -> GasLimit.Token
     }
 }
