@@ -6,7 +6,8 @@ package com.tangem.common.tlv
 enum class TlvValueType {
     HexString,
     Utf8String,
-    IntValue,
+    Uint16,
+    Uint32,
     BoolValue,
     ByteArray,
     EllipticCurve,
@@ -14,7 +15,8 @@ enum class TlvValueType {
     ProductMask,
     SettingsMask,
     CardStatus,
-    SigningMethod
+    SigningMethod,
+    IssuerDataMode
 }
 
 /**
@@ -60,6 +62,10 @@ enum class TlvTag(val code: Int) {
     IssuerDataSignature(0x33),
     IssuerTransactionSignature(0x34),
     IssuerDataCounter(0x35),
+    Size(0x25),
+    Mode(0x23),
+    Offset(0x24),
+
 
     IsActivated(0x3A),
     ActivationSeed(0x3B),
@@ -88,7 +94,6 @@ enum class TlvTag(val code: Int) {
 
     ProductMask(0x8A),
     PaymentFlowVersion(0x54),
-    UserCounter(0x2C),
 
 
     TokenSymbol(0xA0),
@@ -101,25 +106,33 @@ enum class TlvTag(val code: Int) {
 
     TerminalIsLinked(0x58),
     TerminalPublicKey(0x5C),
-    TerminalTransactionSignature(0x57);
+    TerminalTransactionSignature(0x57),
+
+    UserData(0x2A),
+    UserProtectedData(0x2B),
+    UserCounter(0x2C),
+    UserProtectedCounter(0x2D);
 
     /**
      * @return [TlvValueType] associated with a [TlvTag]
      */
     fun valueType(): TlvValueType {
         return when (this) {
-            CardId, Pin, Batch -> TlvValueType.HexString
+            CardId, Pin, Pin2, Batch -> TlvValueType.HexString
             ManufactureId, Firmware, IssuerId, BlockchainId, TokenSymbol, TokenContractAddress ->
                 TlvValueType.Utf8String
             CurveId -> TlvValueType.EllipticCurve
             MaxSignatures, PauseBeforePin2, RemainingSignatures,
-            SignedHashes, Health, TokenDecimal, UserCounter, IssuerDataCounter -> TlvValueType.IntValue
+            SignedHashes, Health, TokenDecimal,
+            Offset, Size -> TlvValueType.Uint16
+            UserCounter, UserProtectedCounter, IssuerDataCounter -> TlvValueType.Uint32
             IsActivated, TerminalIsLinked -> TlvValueType.BoolValue
             ManufactureDateTime -> TlvValueType.DateTime
             ProductMask -> TlvValueType.ProductMask
             SettingsMask -> TlvValueType.SettingsMask
             Status -> TlvValueType.CardStatus
             SigningMethod -> TlvValueType.SigningMethod
+            Mode -> TlvValueType.IssuerDataMode
             else -> TlvValueType.ByteArray
         }
     }
