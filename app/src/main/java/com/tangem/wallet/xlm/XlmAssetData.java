@@ -30,7 +30,7 @@ public class XlmAssetData extends CoinData {
     private Long sequenceNumber = 0L;
     private CoinEngine.Amount baseReserve = new CoinEngine.Amount("0.5", "XLM");
     private CoinEngine.Amount baseFee = new CoinEngine.Amount("0.00001", "XLM");
-    private boolean error404 = false;
+    private boolean error404, targetAccountCreated = false;
 
     @Override
     public void clearInfo() {
@@ -38,6 +38,7 @@ public class XlmAssetData extends CoinData {
         xlmBalance = null;
         assetBalance = null;
         error404 = false;
+        targetAccountCreated = false;
     }
 
     CoinEngine.Amount getXlmBalance() {
@@ -101,6 +102,14 @@ public class XlmAssetData extends CoinData {
             return true;
     }
 
+    public boolean isTargetAccountCreated() {
+        return targetAccountCreated;
+    }
+
+    public void setTargetAccountCreated(boolean targetAccountCreated) {
+        this.targetAccountCreated = targetAccountCreated;
+    }
+
     @Override
     public void loadFromBundle(Bundle B) {
         super.loadFromBundle(B);
@@ -137,6 +146,10 @@ public class XlmAssetData extends CoinData {
 
         if (B.containsKey("Error404")) error404 = B.getBoolean("Error404");
         else error404 = false;
+
+        if (B.containsKey("TargetAccountCreated"))
+            targetAccountCreated = B.getBoolean("TargetAccountCreated");
+        else targetAccountCreated = false;
     }
 
     @Override
@@ -168,6 +181,8 @@ public class XlmAssetData extends CoinData {
             }
 
             if (error404) B.putBoolean("Error404", true);
+
+            if (targetAccountCreated) B.putBoolean("TargetAccountCreated", true);
 
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());
