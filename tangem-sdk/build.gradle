@@ -1,9 +1,11 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply from: '../dependencies.gradle'
+apply from: '../jitpack.gradle'
 
-group = 'com.github.TangemCash'
-version '0.1.0'
+group = "$jitpackSdk.group"
+version "$jitpackSdk.version"
 
 android {
     compileSdkVersion 29
@@ -38,7 +40,7 @@ android {
 dependencies {
     implementation project(':tangem-core')
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$versions.kotlin"
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'com.google.android.material:material:1.1.0'
     implementation 'com.skyfishjy.ripplebackground:library:1.0.1'
