@@ -546,7 +546,7 @@ public class TokenEngine extends CoinEngine {
 
 
         int gasLimitInt = 60000;
-        if (amountValue.getCurrency().equals("DGX")) {
+        if (amountValue.getCurrency().equals("DGX") || amountValue.getCurrency().equals("CGT")) {
             gasLimitInt = 300000;
         }
 
@@ -796,7 +796,7 @@ public class TokenEngine extends CoinEngine {
                 Log.i(TAG, "Infura gas price: " + gasPrice + " (" + l.toString() + ")");
                 BigInteger m;
                 if (!amount.getCurrency().equals(Blockchain.Ethereum.getCurrency()))
-                    if (amount.getCurrency().equals("DGX")) {
+                    if (amount.getCurrency().equals("DGX") || amount.getCurrency().equals("CGT")) {
                         m = BigInteger.valueOf(300000);
                     } else {
                         m = BigInteger.valueOf(60000);
