@@ -1,11 +1,13 @@
 package com.tangem.tasks
 
-import com.tangem.CardEnvironment
 import com.tangem.CardManagerDelegate
 import com.tangem.CardReader
 import com.tangem.Log
+import com.tangem.commands.Card
 import com.tangem.commands.CommandResponse
 import com.tangem.commands.CommandSerializer
+import com.tangem.commands.ReadCommand
+import com.tangem.common.CardEnvironment
 import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.StatusWord
@@ -14,30 +16,44 @@ import com.tangem.common.apdu.StatusWord
  * An error class that represent typical errors that may occur when performing Tangem SDK tasks.
  * Errors are propagated back to the caller in callbacks.
  */
-sealed class TaskError(description: String? = null) : Exception(description) {
-    class UnknownStatus(sw: Int) : TaskError("Unknown StatusWord: $sw")
-    class MappingError : TaskError()
-    class GenericError(description: String? = null) : TaskError(description)
-    class UserCancelledError() : TaskError()
-    class Busy() : TaskError()
-    class TagLost() : TaskError()
+sealed class TaskError(val code: Int): Exception() {
 
-    class ErrorProcessingCommand : TaskError()
-    class InvalidState : TaskError()
-    class InsNotSupported : TaskError()
-    class InvalidParams : TaskError()
-    class NeedEncryption : TaskError()
-    class NeedPause : TaskError()
+    //Errors in serializing APDU
+    class SerializeCommandError: TaskError(1001)
+    class EncodingError: TaskError(1002)
+    class MissingTag: TaskError(1003)
+    class WrongType: TaskError(1004)
+    class ConvertError: TaskError(1005)
 
-    class VefificationFailed : TaskError()
-    class CardError : TaskError()
-    class ReaderError() : TaskError()
-    class SerializeCommandError() : TaskError()
+    //Card errors
+    class UnknownStatus: TaskError(2001)
+    class ErrorProcessingCommand: TaskError(2002)
+    class MissingPreflightRead: TaskError(2003)
+    class InvalidState: TaskError(2004)
+    class InsNotSupported: TaskError(2005)
+    class InvalidParams: TaskError(2006)
+    class NeedEncryption: TaskError(2007)
 
-    class CardIsMissing() : TaskError()
-    class EmptyHashes() : TaskError()
-    class TooMuchHashes() : TaskError()
-    class HashSizeMustBeEqual() : TaskError()
+    //Scan errors
+    class VerificationFailed: TaskError(3000)
+    class CardError: TaskError(3001)
+    class WrongCard: TaskError(3002)
+    class TooMuchHashesInOneTransaction: TaskError(3003)
+    class EmptyHashes: TaskError(3004)
+    class HashSizeMustBeEqual: TaskError(3005)
+
+    class Busy: TaskError(4000)
+    class UserCancelled: TaskError(4001)
+    class UnsupportedDevice: TaskError(4002)
+
+    //NFC error
+    class NfcReaderError: TaskError(5002)
+    class TagLost: TaskError(5003)
+
+    class UnknownError: TaskError(6000)
+
+    //Issuer Data Errors
+    class MissingCounter: TaskError(7001)
 }
 
 /**
@@ -67,6 +83,8 @@ abstract class Task<T> {
 
     var delegate: CardManagerDelegate? = null
     var reader: CardReader? = null
+    var performPreflightRead: Boolean = true
+    var securityDelayDuration: Int = 0
 
     /**
      * This method should be called to run the [Task] and perform all its operations.
@@ -76,21 +94,25 @@ abstract class Task<T> {
      */
     fun run(cardEnvironment: CardEnvironment,
             callback: (result: TaskEvent<T>) -> Unit) {
-        delegate?.onNfcSessionStarted()
+        delegate?.onNfcSessionStarted(cardEnvironment.cardId)
         reader?.openSession()
         Log.i(this::class.simpleName!!, "Nfc task is started")
-        onRun(cardEnvironment, callback)
+
+        if (performPreflightRead) {
+            runWithPreflightRead(cardEnvironment, callback)
+        } else {
+            onRun(cardEnvironment, null, callback)
+        }
     }
 
     /**
      * Should be called on [Task] completion, whether it was successful or with failure.
      *
-     * @param withError True when there is an error
      * @param taskError The error to be shown by [CardManagerDelegate]
      */
-    protected fun completeNfcSession(withError: Boolean = false, taskError: TaskError? = null) {
+    protected fun completeNfcSession(taskError: TaskError? = null) {
         reader?.closeSession()
-        if (withError) {
+        if (taskError != null) {
             delegate?.onError(taskError)
         } else {
             delegate?.onNfcSessionCompleted()
@@ -101,6 +123,7 @@ abstract class Task<T> {
      * In this method the individual Tasks' logic should be implemented.
      */
     protected abstract fun onRun(cardEnvironment: CardEnvironment,
+                                 currentCard: Card?,
                                  callback: (result: TaskEvent<T>) -> Unit)
 
     /**
@@ -140,7 +163,10 @@ abstract class Task<T> {
                             }
                         }
                         StatusWord.InvalidParams -> callback(CompletionResult.Failure(TaskError.InvalidParams()))
-                        StatusWord.Unknown -> callback(CompletionResult.Failure(TaskError.UnknownStatus(result.data.sw)))
+                        StatusWord.Unknown -> {
+                            Log.e(this::class.simpleName!!, "Unknown status error: ${result.data.sw}")
+                            callback(CompletionResult.Failure(TaskError.UnknownStatus()))
+                        }
                         StatusWord.ErrorProcessingCommand -> callback(CompletionResult.Failure(TaskError.ErrorProcessingCommand()))
                         StatusWord.InvalidState -> callback(CompletionResult.Failure(TaskError.InvalidState()))
 
@@ -149,21 +175,50 @@ abstract class Task<T> {
                         StatusWord.NeedPause -> {
                             // When NeedPause is returned from the card whenever security delay is triggered.
                             val remainingTime = command.deserializeSecurityDelay(responseApdu, cardEnvironment)
-                            if (remainingTime != null) delegate?.onSecurityDelay(remainingTime)
+                            if (remainingTime != null) delegate?.onSecurityDelay(remainingTime, securityDelayDuration)
                             Log.i(this::class.simpleName!!, "Nfc command ${command::class.simpleName!!} triggered security delay of $remainingTime milliseconds")
                             sendRequest(command, commandApdu, cardEnvironment, callback)
                         }
                     }
                 }
                 is CompletionResult.Failure ->
-                    if (result.error is TaskError.TagLost) {
+                    if (result.error == TaskError.TagLost()) {
                         delegate?.onTagLost()
-                    } else if (result.error is TaskError.UserCancelledError) {
-                        callback(CompletionResult.Failure(TaskError.UserCancelledError()))
+                    } else if (result.error is TaskError.UserCancelled) {
+                        callback(CompletionResult.Failure(TaskError.UserCancelled()))
                         reader?.closeSession()
                     }
             }
         }
+    }
+
+    private fun runWithPreflightRead(
+            environment: CardEnvironment, callback: (result: TaskEvent<T>) -> Unit) {
+        sendCommand(ReadCommand(), environment) { readResult ->
+            when (readResult) {
+                is CompletionResult.Failure -> {
+                    completeNfcSession(readResult.error)
+                    callback(TaskEvent.Completion(readResult.error))
+                }
+                is CompletionResult.Success -> {
+
+                    val receivedCardId = readResult.data.cardId
+                    securityDelayDuration = readResult.data.pauseBeforePin2 ?: 0
+
+                    if (environment.cardId != null && environment.cardId != receivedCardId) {
+                        completeNfcSession(TaskError.WrongCard())
+                        callback(TaskEvent.Completion(TaskError.WrongCard()))
+                        return@sendCommand
+                    }
+
+                    val newEnvironment = environment.copy(cardId = receivedCardId)
+                    onRun(newEnvironment, readResult.data, callback)
+                }
+            }
+
+
+        }
+
     }
 }
 
