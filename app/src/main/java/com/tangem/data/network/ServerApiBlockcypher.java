@@ -32,8 +32,9 @@ public class ServerApiBlockcypher {
         return requestsCount <= 0;
     }
 
-    private ResponseListener responseListener;
+    private String apiKey = null;
 
+    private ResponseListener responseListener;
     private TxResponseListener txResponseListener;
 
     public interface ResponseListener {
@@ -68,20 +69,29 @@ public class ServerApiBlockcypher {
             blockchain = "btc";
             network = "test3";
         }
+        if (blockchainID.equals(Blockchain.Token.getID())) blockchain = "eth";
+        if (blockchainID.equals(Blockchain.BitcoinDual.getID())) blockchain = "btc";
 
         switch (method) {
             case BLOCKCYPHER_ADDRESS:
-                Call<BlockcypherResponse> addressCall = blockcypherApi.blockcypherAddress(blockchain, network, wallet);
+                Call<BlockcypherResponse> addressCall = blockcypherApi.blockcypherAddress(blockchain, network, wallet, apiKey);
                 addressCall.enqueue(new Callback<BlockcypherResponse>() {
                     @Override
                     public void onResponse(@NonNull Call<BlockcypherResponse> call, @NonNull Response<BlockcypherResponse> response) {
                         requestsCount--;
-                        if (response.code() == 200) {
-                            responseListener.onSuccess(method, response.body());
-                            Log.i(TAG, "requestData " + method + " onResponse " + response.code());
-                        } else {
-                            responseListener.onFail(method, String.valueOf(response.code()));
-                            Log.e(TAG, "requestData " + method + " onResponse " + response.code());
+                        switch (response.code()) {
+                            case 200:
+                                responseListener.onSuccess(method, response.body());
+                                Log.i(TAG, "requestData " + method + " onResponse " + response.code());
+                                break;
+                            case 429:
+                                apiKey = getRandomApiKey();
+                                requestData(blockchainID, method, wallet, tx);
+                                break;
+                            default:
+                                responseListener.onFail(method, String.valueOf(response.code()));
+                                Log.e(TAG, "requestData " + method + " onResponse " + response.code());
+                                break;
                         }
                     }
 
@@ -95,17 +105,24 @@ public class ServerApiBlockcypher {
                 break;
 
             case BLOCKCYPHER_FEE:
-                Call<BlockcypherFee> feeCall = blockcypherApi.blockcypherMain(blockchain, network);
+                Call<BlockcypherFee> feeCall = blockcypherApi.blockcypherMain(blockchain, network, apiKey);
                 feeCall.enqueue(new Callback<BlockcypherFee>() {
                     @Override
                     public void onResponse(@NonNull Call<BlockcypherFee> call, @NonNull Response<BlockcypherFee> response) {
                         requestsCount--;
-                        if (response.code() == 200) {
-                            responseListener.onSuccess(method, response.body());
-                            Log.i(TAG, "requestData " + method + " onResponse " + response.code());
-                        } else {
-                            responseListener.onFail(method, String.valueOf(response.code()));
-                            Log.e(TAG, "requestData " + method + " onResponse " + response.code());
+                        switch (response.code()) {
+                            case 200:
+                                responseListener.onSuccess(method, response.body());
+                                Log.i(TAG, "requestData " + method + " onResponse " + response.code());
+                                break;
+                            case 429:
+                                apiKey = getRandomApiKey();
+                                requestData(blockchainID, method, wallet, tx);
+                                break;
+                            default:
+                                responseListener.onFail(method, String.valueOf(response.code()));
+                                Log.e(TAG, "requestData " + method + " onResponse " + response.code());
+                                break;
                         }
                     }
 
@@ -119,17 +136,24 @@ public class ServerApiBlockcypher {
                 break;
 
             case BLOCKCYPHER_TXS:
-                Call<BlockcypherTx> txsCall = blockcypherApi.blockcypherTxs(blockchain, network, tx);
+                Call<BlockcypherTx> txsCall = blockcypherApi.blockcypherTxs(blockchain, network, tx, apiKey);
                 txsCall.enqueue(new Callback<BlockcypherTx>() {
                     @Override
                     public void onResponse(@NonNull Call<BlockcypherTx> call,@NonNull Response<BlockcypherTx> response) {
                         requestsCount--;
-                        if (response.code() == 200) {
-                            txResponseListener.onSuccess(response.body());
-                            Log.i(TAG, "requestData " + method + " onResponse " + response.code());
-                        } else {
-                            txResponseListener.onFail(String.valueOf(response.code()));
-                            Log.e(TAG, "requestData " + method + " onResponse " + response.code());
+                        switch (response.code()) {
+                            case 200:
+                                txResponseListener.onSuccess(response.body());
+                                Log.i(TAG, "requestData " + method + " onResponse " + response.code());
+                                break;
+                            case 429:
+                                apiKey = getRandomApiKey();
+                                requestData(blockchainID, method, wallet, tx);
+                                break;
+                            default:
+                                txResponseListener.onFail(String.valueOf(response.code()));
+                                Log.e(TAG, "requestData " + method + " onResponse " + response.code());
+                                break;
                         }
                     }
 
@@ -143,19 +167,24 @@ public class ServerApiBlockcypher {
                 break;
 
             case BLOCKCYPHER_SEND:
-                BlockcypherToken blockcypherToken = BlockcypherToken.values()[new Random().nextInt(BlockcypherToken.values().length)];
-
-                Call<BlockcypherResponse> sendCall = blockcypherApi.blockcypherPush(blockchain, network, new BlockcypherBody(tx), blockcypherToken.getToken());
+                Call<BlockcypherResponse> sendCall = blockcypherApi.blockcypherPush(blockchain, network, new BlockcypherBody(tx), apiKey);
                 sendCall.enqueue(new Callback<BlockcypherResponse>() {
                     @Override
                     public void onResponse(@NonNull Call<BlockcypherResponse> call, @NonNull Response<BlockcypherResponse> response) {
                         requestsCount--;
-                        if (response.code() == 201) {
-                            responseListener.onSuccess(method, response.body());
-                            Log.i(TAG, "requestData " + method + " onResponse " + response.code());
-                        } else {
-                            responseListener.onFail(method, String.valueOf(response.code()));
-                            Log.e(TAG, "requestData " + method + " onResponse " + response.code());
+                        switch (response.code()) {
+                            case 201:
+                                responseListener.onSuccess(method, response.body());
+                                Log.i(TAG, "requestData " + method + " onResponse " + response.code());
+                                break;
+                            case 429:
+                                apiKey = getRandomApiKey();
+                                requestData(blockchainID, method, wallet, tx);
+                                break;
+                            default:
+                                responseListener.onFail(method, String.valueOf(response.code()));
+                                Log.e(TAG, "requestData " + method + " onResponse " + response.code());
+                                break;
                         }
                     }
 
@@ -174,5 +203,10 @@ public class ServerApiBlockcypher {
                 Log.e(TAG, "requestData " + method + " onFailure - undeclared method");
                 break;
         }
+    }
+
+    private String getRandomApiKey() {
+        return BlockcypherToken
+                .values()[new Random().nextInt(BlockcypherToken.values().length)].getToken();
     }
 }
