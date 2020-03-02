@@ -205,6 +205,10 @@ public abstract class CoinData {
         return sentTransactionsCount;
     }
 
+    public void setSentTransactionsCount(int sentTransactionsCount) {
+        this.sentTransactionsCount = sentTransactionsCount;
+    }
+
     public void incSentTransactionsCount() {
         sentTransactionsCount++;
     }
