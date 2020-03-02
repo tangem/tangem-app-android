@@ -1,10 +1,12 @@
 package com.tangem.blockchain.common
 
 import com.tangem.blockchain.bitcoin.BitcoinWalletManager
+import com.tangem.blockchain.cardano.CardanoWalletManager
 import com.tangem.blockchain.ethereum.Chain
 import com.tangem.blockchain.ethereum.EthereumWalletManager
-import com.tangem.blockchain.cardano.CardanoWalletManager
+
 import com.tangem.blockchain.stellar.StellarWalletManager
+import com.tangem.blockchain.wallets.CurrencyWallet
 import com.tangem.blockchain.xrp.XrpWalletManager
 import com.tangem.commands.Card
 
@@ -13,53 +15,56 @@ object WalletManagerFactory {
     fun makeWalletManager(card: Card): WalletManager? {
         val walletPublicKey: ByteArray = card.walletPublicKey ?: return null
         val blockchainName: String = card.cardData?.blockchainName ?: return null
+        val blockchain = Blockchain.fromId(blockchainName)
 
-        when {
-            blockchainName == Blockchain.Bitcoin.id -> {
+        val token = getToken(card)
+        val wallet = CurrencyWallet.newInstance(blockchain, blockchain.makeAddress(walletPublicKey), token)
+
+
+        when (blockchain) {
+            Blockchain.Bitcoin -> {
                 return BitcoinWalletManager(
                         cardId = card.cardId,
                         walletPublicKey = walletPublicKey,
-                        walletConfig = WalletConfig(true, true)
+                        wallet = wallet
                 )
             }
-            blockchainName == Blockchain.BitcoinTestnet.id -> {
+            Blockchain.BitcoinTestnet -> {
                 return BitcoinWalletManager(
                         cardId = card.cardId,
                         walletPublicKey = walletPublicKey,
-                        walletConfig = WalletConfig(true, true),
+                        wallet = wallet,
                         isTestNet = true
                 )
             }
-            blockchainName == Blockchain.Ethereum.id -> {
+            Blockchain.Ethereum -> {
                 val chain = Chain.Mainnet
                 return EthereumWalletManager(
                         cardId = card.cardId,
                         walletPublicKey = walletPublicKey,
-                        walletConfig = WalletConfig(true, true),
+                        wallet = wallet,
                         chain = chain
                 )
             }
-            blockchainName == Blockchain.Stellar.id -> {
-                val token = getToken(card)
+            Blockchain.Stellar -> {
                 return StellarWalletManager(
                         cardId = card.cardId,
                         walletPublicKey = walletPublicKey,
-                        walletConfig = WalletConfig(true, token == null),
-                        token = token
+                        wallet = wallet
                 )
             }
-            blockchainName == Blockchain.Cardano.id -> {
+            Blockchain.Cardano -> {
                 return CardanoWalletManager(
                         cardId = card.cardId,
                         walletPublicKey = walletPublicKey,
-                        walletConfig = WalletConfig(false, true)
+                        wallet = wallet
                 )
             }
-            blockchainName == Blockchain.XRP.id -> {
+            Blockchain.XRP -> {
                 return XrpWalletManager(
                         cardId = card.cardId,
                         walletPublicKey = walletPublicKey,
-                        walletConfig = WalletConfig(true, true)
+                        wallet = wallet
                 )
             }
             else -> return null
