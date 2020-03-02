@@ -44,8 +44,7 @@ public class CashAddr {
         byte[] checksumBytes = calculateChecksumBytesPolymod(allChecksumInput);
         checksumBytes = convertBits(checksumBytes, 8, 5, true);
         String cashAddress = BitcoinCashBase32.encode(concatenateByteArrays(payloadBytes, checksumBytes));
-        //return prefixString + SEPARATOR + cashAddress;
-        return cashAddress;
+        return prefixString + SEPARATOR + cashAddress;
     }
 
     public static BitcoinCashAddressDecodedParts decodeCashAddress(String bitcoinCashAddress) {
