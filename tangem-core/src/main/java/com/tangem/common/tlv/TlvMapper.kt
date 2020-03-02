@@ -101,12 +101,7 @@ class TlvMapper(val tlvList: List<Tlv>) {
             }
             TlvValueType.ProductMask -> {
                 typeCheck<T, ProductMask>(tag)
-                try {
-                    ProductMask.byCode(tlvValue.first()) as T
-                } catch (exception: Exception) {
-                    logException(tag, tlvValue.first().toString(), exception)
-                    throw TaskError.ConvertError()
-                }
+                ProductMask(tlvValue.toInt()) as T
             }
             TlvValueType.SettingsMask -> {
                 typeCheck<T, SettingsMask>(tag)
