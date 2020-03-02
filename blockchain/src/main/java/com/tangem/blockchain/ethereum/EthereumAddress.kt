@@ -1,7 +1,7 @@
 package com.tangem.blockchain.ethereum
 
 import org.kethereum.crypto.toAddress
-import org.kethereum.functions.isValid
+import org.kethereum.erc55.isValid
 import org.kethereum.model.Address
 import org.kethereum.model.PublicKey
 
