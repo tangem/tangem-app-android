@@ -74,12 +74,12 @@ class TlvEncoder {
             TlvValueType.ProductMask -> {
                 typeCheck<T, ProductMask>(tag)
                 byteArrayOf(
-                        (value as ProductMask).code
+                        (value as ProductMask).rawValue.toByte()
                 )
             }
             TlvValueType.SettingsMask -> {
                 typeCheck<T, SettingsMask>(tag)
-                (value as SettingsMask).rawValue.toByteArray()
+                (value as SettingsMask).rawValue.toByteArray(2)
             }
             TlvValueType.CardStatus -> {
                 typeCheck<T, CardStatus>(tag)
@@ -97,7 +97,7 @@ class TlvEncoder {
     }
 
     private inline fun <reified T, reified ExpectedT> typeCheck(tag: TlvTag) {
-        if (T::class != ExpectedT::class){
+        if (T::class != ExpectedT::class) {
             Log.e(this::class.simpleName!!,
                     "Mapping error. Type for tag: $tag must be ${tag.valueType()}. It is ${T::class}")
             throw TaskError.WrongType()
