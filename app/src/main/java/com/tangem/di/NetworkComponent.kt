@@ -41,7 +41,9 @@ interface NetworkComponent {
     @get:Named(Server.ApiDucatus.URL_DUCATUS)
     val retrofitDucatus: Retrofit
 
+    @get:Named(Server.ApiBlockchair.URL_BLOCKCHAIR)
+    val retrofitBlockchair: Retrofit
+
     @get:Named("socket")
     val socket: Socket
-
 }
