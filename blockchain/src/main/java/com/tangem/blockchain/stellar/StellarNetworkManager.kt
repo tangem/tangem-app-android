@@ -54,7 +54,7 @@ class StellarNetworkManager(isTestNet: Boolean) {
             coroutineScope {
                 val accountResponseDefered = async(Dispatchers.IO) { stellarServer.accounts().account(accountId) }
                 val ledgerResponseDeferred = async(Dispatchers.IO) {
-                    val latestLedger: Int = stellarServer.root().coreLatestLedger
+                    val latestLedger: Int = stellarServer.root().historyLatestLedger
                     stellarServer.ledgers().ledger(latestLedger.toLong())
                 }
 
@@ -67,7 +67,7 @@ class StellarNetworkManager(isTestNet: Boolean) {
                     null
                 } else {
                     accountResponse.balances
-                            .find { it.assetType != "native" && it.assetCode == assetCode }
+                            .find { it.assetType != "native" && it.assetIssuer == assetCode }
                             ?.balance?.toBigDecimal()
                             ?: return@coroutineScope Result.Failure(Exception("Stellar Balance not found"))
                 }
