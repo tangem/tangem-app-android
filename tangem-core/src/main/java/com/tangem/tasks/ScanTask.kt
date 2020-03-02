@@ -3,7 +3,6 @@ package com.tangem.tasks
 import com.tangem.commands.*
 import com.tangem.common.CardEnvironment
 import com.tangem.common.CompletionResult
-import com.tangem.crypto.CryptoUtils
 
 /**
  * Events that [ScanTask] returns on completion of its commands.
@@ -38,7 +37,7 @@ internal class ScanTask : Task<ScanEvent>() {
             completeNfcSession(TaskError.MissingPreflightRead())
             callback(TaskEvent.Completion(TaskError.MissingPreflightRead()))
 
-        } else if (currentCard.cardData?.productMask == ProductMask.Tag) {
+        } else if (currentCard.cardData?.productMask?.contains(ProductMask.tag) != false) {
             completeNfcSession()
             callback(TaskEvent.Completion())
 
