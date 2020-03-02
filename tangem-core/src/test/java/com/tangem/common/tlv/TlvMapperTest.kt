@@ -116,18 +116,26 @@ class TlvMapperTest {
     }
 
     @Test
-    fun `map ProductMask returns correct value`() {
-        val localMapper = TlvMapper(listOf(Tlv(TlvTag.ProductMask, byteArrayOf(4))))
+    fun `map ProductMask with raw value 5 returns correct value`() {
+        val localMapper = TlvMapper(listOf(Tlv(TlvTag.ProductMask, byteArrayOf(5))))
         val productMask: ProductMask = localMapper.map(TlvTag.ProductMask)
-        assertThat(productMask)
-                .isEqualTo(ProductMask.Card)
+        assertThat(productMask.contains(ProductMask.note) && productMask.contains(ProductMask.idCard))
+                .isTrue()
+    }
+
+    @Test
+    fun `map ProductMask with raw value 1 returns correct value`() {
+        val localMapper = TlvMapper(listOf(Tlv(TlvTag.ProductMask, byteArrayOf(1))))
+        val productMask: ProductMask = localMapper.map(TlvTag.ProductMask)
+        assertThat(productMask.contains(ProductMask.note))
+                .isTrue()
     }
 
     @Test
     fun `map Enum with unknown code throws ConversionException error`() {
-        val localMapper = TlvMapper(listOf(Tlv(TlvTag.ProductMask, byteArrayOf(5))))
+        val localMapper = TlvMapper(listOf(Tlv(TlvTag.CurveId, "test".toByteArray())))
         assertThrows<TaskError.ConvertError> {
-            localMapper.map<ProductMask>(TlvTag.ProductMask)
+            localMapper.map<EllipticCurve>(TlvTag.CurveId)
         }
     }
 
