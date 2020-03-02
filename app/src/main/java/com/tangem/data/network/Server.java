@@ -139,4 +139,15 @@ public class Server {
             static final String SEND = URL_DUCATUS + "tx/send";
         }
     }
+
+    public static class ApiBlockchair {
+        public static final String URL_BLOCKCHAIR = ServerURL.API_BLOCKCHAIR + "{blockchain}/";
+
+        public static class Method {
+            static final String ADDRESS = URL_BLOCKCHAIR + "dashboards/address/{address}";
+            static final String TRANSACTION = URL_BLOCKCHAIR + "dashboards/transaction/{transaction}";
+            static final String STATS = URL_BLOCKCHAIR + "stats";
+            static final String PUSH = URL_BLOCKCHAIR + "push/transaction";
+        }
+    }
 }
