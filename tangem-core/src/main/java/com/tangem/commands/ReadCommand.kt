@@ -4,7 +4,6 @@ import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
-import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvMapper
@@ -64,14 +63,19 @@ enum class CardStatus(val code: Int) {
     }
 }
 
-enum class ProductMask(val code: Byte) {
-    Note(0x01),
-    Tag(0x02),
-    Card(0x04);
+/**
+ * Mask of products enabled on card
+ * @property rawValue Products mask values,
+ * while flags definitions and values are in [ProductMask.Companion] as constants.
+ */
+data class ProductMask(val rawValue: Int) {
+
+    fun contains(value: Int): Boolean = (rawValue and value) != 0
 
     companion object {
-        private val values = values()
-        fun byCode(code: Byte): ProductMask? = values.find { it.code == code }
+        const val note = 0x01
+        const val tag = 0x02
+        const val idCard = 0x04
     }
 }
 
