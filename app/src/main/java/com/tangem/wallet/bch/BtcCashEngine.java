@@ -503,8 +503,12 @@ public class BtcCashEngine extends CoinEngine {
 
                     if (addressData.getAddress().getBalance() != 0) {
                         blockchainRequestsCallbacks.onComplete(true);
-                    } else {
-                        requestIsTransactionConfirmed(addressData.getTransactions().get(0), blockchainRequestsCallbacks);
+                    } else { //check if there is an unconfirmed tx, which spent all funds
+                        if (addressData.getTransactions().isEmpty()) {
+                            blockchainRequestsCallbacks.onComplete(true);
+                        } else {
+                            requestIsTransactionConfirmed(addressData.getTransactions().get(0), blockchainRequestsCallbacks);
+                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
