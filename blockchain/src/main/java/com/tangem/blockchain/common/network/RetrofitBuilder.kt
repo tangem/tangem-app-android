@@ -1,5 +1,7 @@
 package com.tangem.blockchain.common.network
 
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.blockchain.BuildConfig
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -18,11 +20,16 @@ private fun createHttpLoggingInterceptor(): HttpLoggingInterceptor {
     return logging
 }
 
+private val moshi: Moshi by lazy {
+    Moshi.Builder()
+            .add(KotlinJsonAdapterFactory())
+            .build()
+}
 
 fun createRetrofitInstance(baseUrl: String): Retrofit =
         Retrofit.Builder()
                 .baseUrl(baseUrl)
-                .addConverterFactory(MoshiConverterFactory.create())
+                .addConverterFactory(MoshiConverterFactory.create(moshi))
                 .client(okHttpClient)
                 .build()
 
