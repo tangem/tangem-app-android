@@ -1,6 +1,5 @@
 package com.tangem.blockchain.cardano
 
-import android.util.Base64
 import android.util.Log
 import com.tangem.blockchain.cardano.network.CardanoAddressResponse
 import com.tangem.blockchain.cardano.network.CardanoNetworkManager
@@ -10,20 +9,17 @@ import com.tangem.blockchain.common.extensions.SimpleResult
 import com.tangem.blockchain.common.extensions.encodeBase64NoWrap
 import com.tangem.blockchain.wallets.CurrencyWallet
 import com.tangem.tasks.TaskEvent
-import java.math.BigDecimal
 
 class CardanoWalletManager(
         private val cardId: String,
         private val walletPublicKey: ByteArray,
-        walletConfig: WalletConfig
+        override var wallet: CurrencyWallet
 ) : WalletManager,
         TransactionSender,
         FeeProvider {
 
     override val blockchain = Blockchain.Cardano
     private val address = blockchain.makeAddress(walletPublicKey)
-    private val currencyWallet = CurrencyWallet(walletConfig, address)
-    override var wallet: Wallet = currencyWallet
     private val transactionBuilder = CardanoTransactionBuilder()
     private val networkManager = CardanoNetworkManager()
 
@@ -37,13 +33,14 @@ class CardanoWalletManager(
 
     private fun updateWallet(response: CardanoAddressResponse) {
         Log.d(this::class.java.simpleName, "Balance is ${response.balance.toString()}")
-        currencyWallet.balances[AmountType.Coin]?.value =
+        wallet.balances[AmountType.Coin]?.value =
                 response.balance.toBigDecimal().movePointLeft(blockchain.decimals.toInt())
         transactionBuilder.unspentOutputs = response.unspentOutputs
     }
 
     private fun updateError(error: Throwable?) {
         Log.e(this::class.java.simpleName, error?.message ?: "")
+        if (error != null) throw error
     }
 
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
@@ -58,13 +55,13 @@ class CardanoWalletManager(
         }
     }
 
-    override suspend fun getFee(amount: Amount, source: String, destination: String): Result<List<Amount>> {
+    override suspend fun getFee(amount: Amount, destination: String): Result<List<Amount>> {
         val a = 0.155381
         val b = 0.000043946
         val size = transactionBuilder.getEstimateSize(
-                TransactionData(amount, null, source, destination), walletPublicKey
+                TransactionData(amount, null, address, destination), walletPublicKey
         )
         val fee = (a + b * size).toBigDecimal()
-        return Result.Success(listOf(Amount(blockchain.currency, fee, source, blockchain.decimals)))
+        return Result.Success(listOf(Amount(blockchain.currency, fee, address, blockchain.decimals)))
     }
 }
