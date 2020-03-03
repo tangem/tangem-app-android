@@ -12,17 +12,20 @@ import com.tangem.tasks.TaskEvent
 class XrpWalletManager(
         private val cardId: String,
         private val walletPublicKey: ByteArray,
-        walletConfig: WalletConfig
+        override var wallet: CurrencyWallet
 ) : WalletManager,
         TransactionSender,
         FeeProvider {
 
     override val blockchain = Blockchain.XRP
     private val address = blockchain.makeAddress(walletPublicKey)
-    private val currencyWallet = CurrencyWallet(walletConfig, address)
-    override var wallet: Wallet = currencyWallet
     private val transactionBuilder = XrpTransactionBuilder(walletPublicKey)
     private val networkManager = XrpNetworkManager()
+
+    init {
+        wallet.balances[AmountType.Coin] = Amount(null, blockchain)
+        wallet.balances[AmountType.Reserve] = Amount(null, blockchain, type = AmountType.Reserve)
+    }
 
     override suspend fun update() {
         val result = networkManager.getInfo(address)
@@ -34,30 +37,31 @@ class XrpWalletManager(
 
     private fun updateWallet(response: XrpInfoResponse) {
         Log.d(this::class.java.simpleName, "Balance is ${response.balance}")
-        currencyWallet.balances[AmountType.Reserve]?.value = response.reserveBase
+        wallet.balances[AmountType.Reserve]?.value = response.reserveBase
 
         if (!response.accountFound) {
             updateError(Exception("Account not found")) //TODO rework, add reserve
             return
         }
-        currencyWallet.balances[AmountType.Coin]?.value = response.balance - response.reserveBase
+        wallet.balances[AmountType.Coin]?.value = response.balance - response.reserveBase
         transactionBuilder.sequence = response.sequence
 
         if (response.hasUnconfirmed) {
-            if (currencyWallet.pendingTransactions.isEmpty()) {
-                currencyWallet.pendingTransactions.add(TransactionData(
+            if (wallet.pendingTransactions.isEmpty()) {
+                wallet.pendingTransactions.add(TransactionData(
                         Amount(blockchain.currency, decimals = blockchain.decimals),
                         null,
                         "unknown",
-                        currencyWallet.address))
+                        wallet.address))
             }
         } else {
-            currencyWallet.pendingTransactions.clear()
+            wallet.pendingTransactions.clear()
         }
     }
 
     private fun updateError(error: Throwable?) {
         Log.e(this::class.java.simpleName, error?.message ?: "")
+        if (error != null) throw error
     }
 
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
@@ -72,7 +76,7 @@ class XrpWalletManager(
         }
     }
 
-    override suspend fun getFee(amount: Amount, source: String, destination: String): Result<List<Amount>> {
+    override suspend fun getFee(amount: Amount, destination: String): Result<List<Amount>> {
         val result = networkManager.getFee()
         when (result) {
             is Result.Failure -> return result
