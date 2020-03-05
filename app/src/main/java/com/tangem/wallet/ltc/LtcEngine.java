@@ -8,12 +8,10 @@ import com.tangem.App;
 import com.tangem.data.local.PendingTransactionsStorage;
 import com.tangem.data.network.Server;
 import com.tangem.data.network.ServerApiBlockcypher;
-import com.tangem.data.network.ServerApiSoChain;
 import com.tangem.data.network.model.BlockcypherFee;
 import com.tangem.data.network.model.BlockcypherResponse;
 import com.tangem.data.network.model.BlockcypherTx;
 import com.tangem.data.network.model.BlockcypherTxref;
-import com.tangem.data.network.model.SoChain;
 import com.tangem.tangem_card.data.TangemCard;
 import com.tangem.tangem_card.reader.CardProtocol;
 import com.tangem.tangem_card.tasks.SignTask;
@@ -32,8 +30,6 @@ import com.tangem.wallet.UnspentOutputInfo;
 import com.tangem.wallet.btc.BtcData;
 import com.tangem.wallet.btc.BtcEngine;
 import com.tangem.wallet.btc.Unspents;
-
-import org.json.JSONException;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
@@ -505,268 +501,121 @@ public class LtcEngine extends BtcEngine {
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) throws Exception {
         ctx.setError(null);
 
-        if (!coinData.isUseBlockcypher()) {
-            final ServerApiSoChain serverApiSoChain = new ServerApiSoChain();
+        final ServerApiBlockcypher serverApiBlockcypher = new ServerApiBlockcypher();
 
-            ServerApiSoChain.AddressInfoListener addressInfoListener = new ServerApiSoChain.AddressInfoListener() {
-                @Override
-                public void onSuccess(SoChain.Response.AddressBalance response) {
-                    try {
-                        String walletAddress = response.getData().getAddress();
-                        if (!walletAddress.equals(coinData.getWallet())) {
-                            // todo - check
-                            throw new Exception("Invalid wallet address in answer!");
-                        }
-                        Long confBalance = convertToInternalAmount(convertToAmount(response.getData().getConfirmed_balance(), getBalanceCurrency())).longValueExact();
-                        Long unconfirmedBalance = convertToInternalAmount(convertToAmount(response.getData().getUnconfirmed_balance(), getBalanceCurrency())).longValueExact();
-                        coinData.setBalanceReceived(true);
-                        coinData.setBalanceConfirmed(confBalance);
-                        coinData.setBalanceUnconfirmed(unconfirmedBalance);
-                        coinData.setValidationNodeDescription(Server.ApiSoChain.URL);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                        Log.e(TAG, "FAIL METHOD_GetBalance JSONException");
-                        ctx.setError("FAIL METHOD_GetBalance JSONException");
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Log.e(TAG, "FAIL METHOD_GetBalance Exception");
-                        ctx.setError("FAIL METHOD_GetBalance Exception");
+        ServerApiBlockcypher.ResponseListener blockcypherListener = new ServerApiBlockcypher.ResponseListener() {
+            @Override
+            public void onSuccess(String method, BlockcypherResponse blockcypherResponse) {
+                Log.i(TAG, "onSuccess: " + method);
+                try {
+                    String walletAddress = blockcypherResponse.getAddress();
+                    if (!walletAddress.equals(coinData.getWallet())) {
+                        // todo - check
+                        throw new Exception("Invalid wallet address in answer!");
                     }
-                    if (serverApiSoChain.isRequestsSequenceCompleted()) {
-                        if (!coinData.isUseBlockcypher()) {
-                            checkPending(blockchainRequestsCallbacks);
-                        } else {
-                            try {
-                                requestBalanceAndUnspentTransactions(blockchainRequestsCallbacks);
-                            } catch (Exception e) {
-                                ctx.setError(e.getMessage());
-                                blockchainRequestsCallbacks.onComplete(false);
+                    Long confBalance = blockcypherResponse.getBalance();
+                    Long unconfirmedBalance = blockcypherResponse.getUnconfirmed_balance();
+                    coinData.setBalanceReceived(true);
+                    coinData.setBalanceConfirmed(confBalance);
+                    coinData.setBalanceUnconfirmed(unconfirmedBalance);
+                    coinData.setValidationNodeDescription(Server.ApiBlockcypher.URL_BLOCKCYPHER);
+
+                    coinData.getUnspentTransactions().clear();
+                    //TODO: change request logic, 2000 tx max
+                    if (blockcypherResponse.getTxrefs() != null) {
+                        for (BlockcypherTxref txref : blockcypherResponse.getTxrefs()) {
+                            if (txref.getTx_input_n() == -1) { //recieved only
+                                if (!txref.getSpent()) {
+                                    BtcData.UnspentTransaction trUnspent = new BtcData.UnspentTransaction();
+                                    trUnspent.txID = txref.getTx_hash();
+                                    trUnspent.amount = txref.getValue();
+                                    trUnspent.outputN = txref.getTx_output_n();
+                                    trUnspent.script = txref.getScript();
+                                    coinData.getUnspentTransactions().add(trUnspent);
+                                }
+                            } else { //sent only
+                                coinData.incSentTransactionsCount();
                             }
                         }
-                    } else {
-                        blockchainRequestsCallbacks.onProgress();
                     }
 
-                }
-
-                @Override
-                public void onSuccess(SoChain.Response.TxUnspent response) {
-                    String walletAddress = response.getData().getAddress();
-                    try {
-                        if (!walletAddress.equals(coinData.getWallet())) {
-                            // todo - check
-                            throw new Exception("Invalid wallet address in answer!");
-                        }
-                        coinData.getUnspentTransactions().clear();
-                        if (response.getData().getTxs() != null)
-                            for (SoChain.Response.TxUnspent.Data.Tx tx : response.getData().getTxs()) {
-                                BtcData.UnspentTransaction trUnspent = new BtcData.UnspentTransaction();
-                                trUnspent.txID = tx.getTxid();
-                                trUnspent.amount = convertToInternalAmount(convertToAmount(tx.getValue(), getBalanceCurrency())).longValueExact();
-                                trUnspent.outputN = tx.getOutput_no();
-                                trUnspent.script = tx.getScript_hex();
-                                coinData.getUnspentTransactions().add(trUnspent);
-
-//                                    if (blockchainRequestsCallbacks.allowAdvance()) {
-//                                        //serverApiSoChain.requestData(ctx, ElectrumRequest.getTransaction(walletAddress, hash));
-//                                    } else {
-//                                        ctx.setError("Terminated by user");
-//                                    }
-                            }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Log.e(TAG, "FAIL METHOD_ListUnspent JSONException");
-                    }
-
-                    if (serverApiSoChain.isRequestsSequenceCompleted()) {
-                        if (!coinData.isUseBlockcypher()) {
-                            checkPending(blockchainRequestsCallbacks);
-                        } else {
-                            try {
-                                requestBalanceAndUnspentTransactions(blockchainRequestsCallbacks);
-                            } catch (Exception e) {
-                                ctx.setError(e.getMessage());
-                                blockchainRequestsCallbacks.onComplete(false);
+                    if (blockcypherResponse.getUnconfirmed_txrefs() != null) {
+                        for (BlockcypherTxref unconfirmedTxref : blockcypherResponse.getUnconfirmed_txrefs()) {
+                            if (unconfirmedTxref.getTx_input_n() != -1) {
+                                coinData.incSentTransactionsCount();
                             }
                         }
-                    } else {
-                        blockchainRequestsCallbacks.onProgress();
                     }
-
-                }
-
-                @Override
-                public void onFail(String message) {
-                    Log.i(TAG, "onFail: " + message);
-                    coinData.setUseBlockcypher(true);
-//                ctx.setError(R.string.cannot_obtain_data_from_blockchain);
-                    if (serverApiSoChain.isRequestsSequenceCompleted()) {
-//                        blockchainRequestsCallbacks.onComplete(false);//serverApiElectrum.isErrorOccurred(), serverApiElectrum.getError());
-                        try {
-                            requestBalanceAndUnspentTransactions(blockchainRequestsCallbacks);
-                        } catch (Exception e) {
-                            ctx.setError(e.getMessage());
-                            blockchainRequestsCallbacks.onComplete(false);
-                        }
-                    } else {
-                        blockchainRequestsCallbacks.onProgress();
-                    }
-                }
-            };
-
-
-            serverApiSoChain.setAddressInfoListener(addressInfoListener);
-
-            serverApiSoChain.requestAddressBalance(ctx.getBlockchain(), coinData.getWallet());
-            serverApiSoChain.requestUnspentTx(ctx.getBlockchain(), coinData.getWallet());
-        } else {
-            final ServerApiBlockcypher serverApiBlockcypher = new ServerApiBlockcypher();
-
-            ServerApiBlockcypher.ResponseListener blockcypherListener = new ServerApiBlockcypher.ResponseListener() {
-                @Override
-                public void onSuccess(String method, BlockcypherResponse blockcypherResponse) {
-                    Log.i(TAG, "onSuccess: " + method);
-                    try {
-                        String walletAddress = blockcypherResponse.getAddress();
-                        if (!walletAddress.equals(coinData.getWallet())) {
-                            // todo - check
-                            throw new Exception("Invalid wallet address in answer!");
-                        }
-                        Long confBalance = blockcypherResponse.getBalance();
-                        Long unconfirmedBalance = blockcypherResponse.getUnconfirmed_balance();
-                        coinData.setBalanceReceived(true);
-                        coinData.setBalanceConfirmed(confBalance);
-                        coinData.setBalanceUnconfirmed(unconfirmedBalance);
-                        coinData.setValidationNodeDescription(Server.ApiBlockcypher.URL_BLOCKCYPHER);
-
-                        coinData.getUnspentTransactions().clear();
-                        if (blockcypherResponse.getTxrefs() != null) {
-                            for (BlockcypherTxref txref : blockcypherResponse.getTxrefs()) {
-                                BtcData.UnspentTransaction trUnspent = new BtcData.UnspentTransaction();
-                                trUnspent.txID = txref.getTx_hash();
-                                trUnspent.amount = txref.getValue();
-                                trUnspent.outputN = txref.getTx_output_n();
-                                trUnspent.script = txref.getScript();
-                                coinData.getUnspentTransactions().add(trUnspent);
-                            }
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "FAIL BLOCKCYPHER_ADDRESS Exception");
-                        e.printStackTrace();
-                        ctx.setError(e.getMessage());
-                        blockchainRequestsCallbacks.onComplete(false);
-                    }
-
-                    checkPending(blockchainRequestsCallbacks);
-                }
-
-                public void onSuccess(String method, BlockcypherFee blockcypherFee) {
-                    Log.e(TAG, "Wrong response type for requestBalanceAndUnspentTransactions");
-                    ctx.setError("Wrong response type for requestBalanceAndUnspentTransactions");
+                } catch (Exception e) {
+                    Log.e(TAG, "FAIL BLOCKCYPHER_ADDRESS Exception");
+                    e.printStackTrace();
+                    ctx.setError(e.getMessage());
                     blockchainRequestsCallbacks.onComplete(false);
                 }
 
-                @Override
-                public void onFail(String method, String message) {
-                    Log.i(TAG, "onFail: " + method + " " + message);
-                    ctx.setError(message);
-                    blockchainRequestsCallbacks.onComplete(false);
-                }
-            };
+                checkPending(blockchainRequestsCallbacks);
+            }
 
-            serverApiBlockcypher.setResponseListener(blockcypherListener);
+            public void onSuccess(String method, BlockcypherFee blockcypherFee) {
+                Log.e(TAG, "Wrong response type for requestBalanceAndUnspentTransactions");
+                ctx.setError("Wrong response type for requestBalanceAndUnspentTransactions");
+                blockchainRequestsCallbacks.onComplete(false);
+            }
 
-            serverApiBlockcypher.requestData(ctx.getBlockchain().getID(), ServerApiBlockcypher.BLOCKCYPHER_ADDRESS, ctx.getCoinData().getWallet(), "");
-        }
+            @Override
+            public void onFail(String method, String message) {
+                Log.i(TAG, "onFail: " + method + " " + message);
+                ctx.setError(message);
+                blockchainRequestsCallbacks.onComplete(false);
+            }
+        };
+
+        serverApiBlockcypher.setResponseListener(blockcypherListener);
+
+        serverApiBlockcypher.requestData(ctx.getBlockchain().getID(), ServerApiBlockcypher.BLOCKCYPHER_ADDRESS, ctx.getCoinData().getWallet(), "");
     }
 
     private void checkPending(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
         if (App.pendingTransactionsStorage.hasTransactions(ctx.getCard())) {
+            ServerApiBlockcypher serverApiBlockcypher = new ServerApiBlockcypher();
 
-            if (!coinData.isUseBlockcypher()) {
-                ServerApiSoChain serverApiSoChain = new ServerApiSoChain();
-
-                ServerApiSoChain.TransactionInfoListener listener = new ServerApiSoChain.TransactionInfoListener() {
-                    @Override
-                    public void onSuccess(SoChain.Response.GetTx response) {
-                        Log.i(TAG, "onSuccess: GetTx");
-                        try {
-                            if (response.getData() != null && response.getData().getTx_hex() != null && response.getData().getTxid() != null) {
-                                App.pendingTransactionsStorage.removeTransaction(ctx.getCard(), response.getData().getTx_hex());
-                            }
-                        } catch (Exception e) {
-                            Log.e(TAG, "onFail: GetTx" + response);
-                        }
-                        if (serverApiSoChain.isRequestsSequenceCompleted()) {
-                            blockchainRequestsCallbacks.onComplete(!ctx.hasError());
-                        } else {
-                            blockchainRequestsCallbacks.onProgress();
-                        }
-                    }
-
-                    @Override
-                    public void onFail(String message) {
-                        Log.i(TAG, "onFail: GetTx " + message);
-                        if (serverApiSoChain.isRequestsSequenceCompleted()) {
-                            blockchainRequestsCallbacks.onComplete(!ctx.hasError());//serverApiElectrum.isErrorOccurred(), serverApiElectrum.getError());
-                        } else {
-                            blockchainRequestsCallbacks.onProgress();
-                        }
-                    }
-                };
-
-                serverApiSoChain.setTransactionInfoListener(listener);
-                for (PendingTransactionsStorage.TransactionInfo pendingTx : App.pendingTransactionsStorage.getTransactions(ctx.getCard()).getTransactions()) {
-                    String txId = BTCUtils.toHex(BTCUtils.reverse(CryptoUtil.doubleSha256(BTCUtils.fromHex(pendingTx.getTx()))));
+            ServerApiBlockcypher.TxResponseListener listener = new ServerApiBlockcypher.TxResponseListener() {
+                @Override
+                public void onSuccess(BlockcypherTx response) {
+                    Log.i(TAG, "onSuccess: BlockcypherTx");
                     try {
-                        serverApiSoChain.requestTransactionInfo(ctx.getBlockchain(), txId);
+                        if (response.getHex() != null) {
+                            App.pendingTransactionsStorage.removeTransaction(ctx.getCard(), response.getHex());
+                        }
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Log.e(TAG, "onFail: BlockcypherTx" + response);
+                    }
+                    if (serverApiBlockcypher.isRequestsSequenceCompleted()) {
                         blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                    } else {
+                        blockchainRequestsCallbacks.onProgress();
                     }
                 }
-            } else {
-                ServerApiBlockcypher serverApiBlockcypher = new ServerApiBlockcypher();
 
-                ServerApiBlockcypher.TxResponseListener listener = new ServerApiBlockcypher.TxResponseListener() {
-
-                    @Override
-                    public void onSuccess(BlockcypherTx response) {
-                        Log.i(TAG, "onSuccess: BlockcypherTx");
-                        try {
-                            if (response.getHex() != null) {
-                                App.pendingTransactionsStorage.removeTransaction(ctx.getCard(), response.getHex());
-                            }
-                        } catch (Exception e) {
-                            Log.e(TAG, "onFail: BlockcypherTx" + response);
-                        }
-                        if (serverApiBlockcypher.isRequestsSequenceCompleted()) {
-                            blockchainRequestsCallbacks.onComplete(!ctx.hasError());
-                        } else {
-                            blockchainRequestsCallbacks.onProgress();
-                        }
+                @Override
+                public void onFail(String message) {
+                    Log.i(TAG, "onFail: BlockcypherTx " + message);
+                    if (serverApiBlockcypher.isRequestsSequenceCompleted()) {
+                        blockchainRequestsCallbacks.onComplete(!ctx.hasError());//serverApiElectrum.isErrorOccurred(), serverApiElectrum.getError());
+                    } else {
+                        blockchainRequestsCallbacks.onProgress();
                     }
+                }
+            };
+            serverApiBlockcypher.setTxResponseListener(listener);
 
-                    @Override
-                    public void onFail(String message) {
-                        Log.i(TAG, "onFail: BlockcypherTx " + message);
-                        if (serverApiBlockcypher.isRequestsSequenceCompleted()) {
-                            blockchainRequestsCallbacks.onComplete(!ctx.hasError());//serverApiElectrum.isErrorOccurred(), serverApiElectrum.getError());
-                        } else {
-                            blockchainRequestsCallbacks.onProgress();
-                        }
-                    }
-                };
-                serverApiBlockcypher.setTxResponseListener(listener);
-
-                for (PendingTransactionsStorage.TransactionInfo pendingTx : App.pendingTransactionsStorage.getTransactions(ctx.getCard()).getTransactions()) {
-                    String txId = BTCUtils.toHex(BTCUtils.reverse(CryptoUtil.doubleSha256(BTCUtils.fromHex(pendingTx.getTx()))));
-                    try {
-                        serverApiBlockcypher.requestData(ctx.getBlockchain().getID(), ServerApiBlockcypher.BLOCKCYPHER_TXS, "", txId);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        blockchainRequestsCallbacks.onComplete(!ctx.hasError());
-                    }
+            for (PendingTransactionsStorage.TransactionInfo pendingTx : App.pendingTransactionsStorage.getTransactions(ctx.getCard()).getTransactions()) {
+                String txId = BTCUtils.toHex(BTCUtils.reverse(CryptoUtil.doubleSha256(BTCUtils.fromHex(pendingTx.getTx()))));
+                try {
+                    serverApiBlockcypher.requestData(ctx.getBlockchain().getID(), ServerApiBlockcypher.BLOCKCYPHER_TXS, "", txId);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    blockchainRequestsCallbacks.onComplete(!ctx.hasError());
                 }
             }
         } else {
@@ -785,87 +634,48 @@ public class LtcEngine extends BtcEngine {
     @Override
     public void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) throws Exception {
         final String txStr = BTCUtils.toHex(txForSend);
-        if (!coinData.isUseBlockcypher()) {
-            final ServerApiSoChain serverApiSoChain = new ServerApiSoChain();
+        final ServerApiBlockcypher serverApiBlockcypher = new ServerApiBlockcypher();
 
-            ServerApiSoChain.SendTxListener listener = new ServerApiSoChain.SendTxListener() {
-                @Override
-                public void onSuccess(SoChain.Response.SendTx response) {
-                    try {
-                        if (response.getStatus() == null || response.getData() == null) {
-                            ctx.setError("Rejected by node: invalid answer received");
-                            blockchainRequestsCallbacks.onComplete(false);
-                        } else if (response.getStatus().equals("fail") || response.getData().getTxid() == null) {
-                            ctx.setError("Rejected by node: " + response.getData());
-                            blockchainRequestsCallbacks.onComplete(false);
-                        } else {
-                            ctx.setError(null);
-                            blockchainRequestsCallbacks.onComplete(true);
-                        }
-                    } catch (Exception e) {
-                        if (e.getMessage() != null) {
-                            ctx.setError(e.getMessage());
-                            blockchainRequestsCallbacks.onComplete(false);
-                        } else {
-                            ctx.setError(e.getClass().getName());
-                            blockchainRequestsCallbacks.onComplete(false);
-                        }
+        ServerApiBlockcypher.ResponseListener blockcypherListener = new ServerApiBlockcypher.ResponseListener() {
+            @Override
+            public void onSuccess(String method, BlockcypherResponse blockcypherResponse) {
+                String resultString = blockcypherResponse.toString();
+                try {
+                    if (resultString.isEmpty()) {
+                        ctx.setError("No response from node");
+                        blockchainRequestsCallbacks.onComplete(false);
+                    } else { // TODO: Make check for a valid send response
+                        ctx.setError(null);
+                        blockchainRequestsCallbacks.onComplete(true);
+                    }
+                } catch (Exception e) {
+                    if (e.getMessage() != null) {
+                        ctx.setError(e.getMessage());
+                        blockchainRequestsCallbacks.onComplete(false);
+                    } else {
+                        ctx.setError(e.getClass().getName());
+                        blockchainRequestsCallbacks.onComplete(false);
+                        Log.e(TAG, resultString);
                     }
                 }
+            }
 
-                @Override
-                public void onFail(String message) {
-                    ctx.setError(message);
-                    blockchainRequestsCallbacks.onComplete(false);
-                }
-            };
-            serverApiSoChain.setSendTxListener(listener);
-            serverApiSoChain.requestSendTransaction(ctx.getBlockchain(), txStr);
+            public void onSuccess(String method, BlockcypherFee blockcypherFee) {
+                Log.e(TAG, "Wrong response type for requestSendTransaction");
+                ctx.setError("Wrong response type for requestSendTransaction");
+                blockchainRequestsCallbacks.onComplete(false);
+            }
 
-        } else {
-            final ServerApiBlockcypher serverApiBlockcypher = new ServerApiBlockcypher();
+            @Override
+            public void onFail(String method, String message) {
+                Log.i(TAG, "onFail: " + method + " " + message);
+                ctx.setError(message);
+                blockchainRequestsCallbacks.onComplete(false);
+            }
+        };
+        serverApiBlockcypher.setResponseListener(blockcypherListener);
 
-            ServerApiBlockcypher.ResponseListener blockcypherListener = new ServerApiBlockcypher.ResponseListener() {
-                @Override
-                public void onSuccess(String method, BlockcypherResponse blockcypherResponse) {
-                    String resultString = blockcypherResponse.toString();
-                    try {
-                        if (resultString.isEmpty()) {
-                            ctx.setError("No response from node");
-                            blockchainRequestsCallbacks.onComplete(false);
-                        } else { // TODO: Make check for a valid send response
-                            ctx.setError(null);
-                            blockchainRequestsCallbacks.onComplete(true);
-                        }
-                    } catch (Exception e) {
-                        if (e.getMessage() != null) {
-                            ctx.setError(e.getMessage());
-                            blockchainRequestsCallbacks.onComplete(false);
-                        } else {
-                            ctx.setError(e.getClass().getName());
-                            blockchainRequestsCallbacks.onComplete(false);
-                            Log.e(TAG, resultString);
-                        }
-                    }
-                }
-
-                public void onSuccess(String method, BlockcypherFee blockcypherFee) {
-                    Log.e(TAG, "Wrong response type for requestSendTransaction");
-                    ctx.setError("Wrong response type for requestSendTransaction");
-                    blockchainRequestsCallbacks.onComplete(false);
-                }
-
-                @Override
-                public void onFail(String method, String message) {
-                    Log.i(TAG, "onFail: " + method + " " + message);
-                    ctx.setError(message);
-                    blockchainRequestsCallbacks.onComplete(false);
-                }
-            };
-            serverApiBlockcypher.setResponseListener(blockcypherListener);
-
-            serverApiBlockcypher.requestData(ctx.getBlockchain().getID(), ServerApiBlockcypher.BLOCKCYPHER_SEND, "", txStr);
-        }
+        serverApiBlockcypher.requestData(ctx.getBlockchain().getID(), ServerApiBlockcypher.BLOCKCYPHER_SEND, "", txStr);
     }
 
     @Override
