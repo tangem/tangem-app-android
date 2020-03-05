@@ -30,6 +30,9 @@ data class Amount(
             address: String? = null,
             type: AmountType = AmountType.Coin
     ) : this(blockchain.currency, value, address, blockchain.decimals, type)
+
+    constructor(token: Token, value: BigDecimal? = null) :
+            this(token.symbol, value, token.contractAddress, token.decimals, AmountType.Token)
 }
 
 data class TransactionData(
