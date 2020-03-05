@@ -1,5 +1,6 @@
 package com.tangem.blockchain.stellar
 
+import android.util.Log
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.extensions.Result
 import com.tangem.blockchain.common.extensions.SimpleResult
@@ -11,8 +12,7 @@ import java.util.*
 class StellarWalletManager(
         private val cardId: String,
         walletPublicKey: ByteArray,
-        walletConfig: WalletConfig,
-        token: Token? = null,
+        override var wallet: CurrencyWallet,
         isTestNet: Boolean = false
 ) : WalletManager,
         TransactionSender,
@@ -20,26 +20,14 @@ class StellarWalletManager(
 
     override val blockchain: Blockchain = Blockchain.Stellar
     private val address = blockchain.makeAddress(walletPublicKey)
-    private val currencyWallet = CurrencyWallet(walletConfig, address)
-    override var wallet: Wallet = currencyWallet
     private val networkManager = StellarNetworkManager(isTestNet)
     private val builder = StellarTransactionBuilder(networkManager, walletPublicKey)
     private var baseFee = BASE_FEE
     private var baseReserve = BASE_RESERVE
     private var sequence = 0L
 
-    init {
-        if (token != null) currencyWallet.balances[AmountType.Token] =
-                Amount(
-                        token.symbol,
-                        null,
-                        token.contractAddress,
-                        token.decimals,
-                        AmountType.Token)
-    }
-
     override suspend fun update() {
-        val result = networkManager.getInfo(address, currencyWallet.balances[AmountType.Token]?.address)
+        val result = networkManager.getInfo(address, wallet.balances[AmountType.Token]?.address)
         when (result) {
             is Result.Failure -> updateError(result.error)
             is Result.Success -> updateWallet(result.data)
@@ -47,15 +35,15 @@ class StellarWalletManager(
     }
 
     private fun updateWallet(data: StellarResponse) {
-        currencyWallet.balances[AmountType.Coin]?.value = data.balance
-        currencyWallet.balances[AmountType.Token]?.value = data.assetBalance
-        currencyWallet.balances[AmountType.Reserve]?.value = data.baseReserve
+        wallet.balances[AmountType.Coin]?.value = data.balance
+        wallet.balances[AmountType.Token]?.value = data.assetBalance
+        wallet.balances[AmountType.Reserve]?.value = data.baseReserve
         sequence = data.sequence
         baseFee = data.baseFee
         baseReserve = data.baseReserve
 
         val currentTime = Calendar.getInstance().timeInMillis
-        currencyWallet.pendingTransactions.forEach { transaction ->
+        wallet.pendingTransactions.forEach { transaction ->
             if (transaction.date?.timeInMillis ?: 0 - currentTime > 10) {
                 transaction.status = TransactionStatus.Confirmed
             }
@@ -63,7 +51,8 @@ class StellarWalletManager(
     }
 
     private fun updateError(error: Throwable?) {
-
+        Log.e(this::class.java.simpleName, error?.message ?: "")
+        if (error != null) throw error
     }
 
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
@@ -77,7 +66,7 @@ class StellarWalletManager(
         }
     }
 
-    override suspend fun getFee(amount: Amount, source: String, destination: String): Result<List<Amount>> {
+    override suspend fun getFee(amount: Amount, destination: String): Result<List<Amount>> {
         return Result.Success(listOf(
                 Amount(baseFee, blockchain)
         ))
