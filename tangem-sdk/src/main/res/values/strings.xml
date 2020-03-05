@@ -8,5 +8,6 @@
     <string name="dialog_error">Error</string>
     <string name="dialog_ready_to_scan">Ready to Scan</string>
     <string name="dialog_scan_text">Scan card with your phone as shown above</string>
+    <string name="header_card">Card</string>
 
 </resources>
