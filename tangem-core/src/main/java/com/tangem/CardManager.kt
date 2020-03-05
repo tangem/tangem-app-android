@@ -1,6 +1,8 @@
 package com.tangem
 
 import com.tangem.commands.*
+import com.tangem.common.CardEnvironment
+import com.tangem.common.TerminalKeysService
 import com.tangem.crypto.CryptoUtils
 import com.tangem.tasks.*
 import java.util.concurrent.Executors
@@ -16,10 +18,12 @@ import java.util.concurrent.Executors
  */
 class CardManager(
         private val reader: CardReader,
-        private val cardManagerDelegate: CardManagerDelegate? = null) {
+        private val cardManagerDelegate: CardManagerDelegate? = null,
+        private val config: Config = Config()
+) {
 
+    private var terminalKeysService: TerminalKeysService? = null
     private var isBusy = false
-    private val cardEnvironmentRepository = mutableMapOf<String, CardEnvironment>()
     private val cardManagerExecutor = Executors.newSingleThreadExecutor()
 
     init {
@@ -67,12 +71,13 @@ class CardManager(
              callback: (result: TaskEvent<SignResponse>) -> Unit) {
         val signCommand: SignCommand
         try {
-            signCommand = SignCommand(hashes, cardId)
+            signCommand = SignCommand(hashes)
         } catch (error: Exception) {
             if (error is TaskError) {
                 callback(TaskEvent.Completion(error))
             } else {
-                callback(TaskEvent.Completion(TaskError.GenericError(error.message)))
+                Log.e(this::class.simpleName!!, error.message ?: "")
+                callback(TaskEvent.Completion(TaskError.UnknownError()))
             }
             return
         }
@@ -91,8 +96,23 @@ class CardManager(
      */
     fun readIssuerData(cardId: String,
                        callback: (result: TaskEvent<ReadIssuerDataResponse>) -> Unit) {
-        val getIssuerDataCommand = ReadIssuerDataCommand(cardId)
-        val task = SingleCommandTask(getIssuerDataCommand)
+        val task = ReadIssuerDataTask(config.issuerPublicKey)
+        runTask(task, cardId, callback)
+    }
+
+    /**
+     * This task retrieves Issuer Extra Data field and its issuer’s signature.
+     * Issuer Extra Data is never changed or parsed from within the Tangem COS. The issuer defines purpose of use,
+     * format and payload of Issuer Data. . For example, this field may contain photo or
+     * biometric information for ID card product. Because of the large size of Issuer_Extra_Data,
+     * a series of these commands have to be executed to read the entire Issuer_Extra_Data.
+     * @param cardId CID, Unique Tangem card ID number.
+     * @param callback is triggered on the completion of the [ReadIssuerExtraDataTask],
+     * provides card response in the form of [ReadIssuerExtraDataResponse].
+     */
+    fun readIssuerExtraData(cardId: String,
+                            callback: (result: TaskEvent<ReadIssuerExtraDataResponse>) -> Unit) {
+        val task = ReadIssuerExtraDataTask(config.issuerPublicKey)
         runTask(task, cardId, callback)
     }
 
@@ -103,7 +123,7 @@ class CardManager(
      * wallet balance signed by the issuer or additional issuer’s attestation data.
      * @param cardId CID, Unique Tangem card ID number.
      * @param issuerData Data provided by issuer.
-     * @param issuerDataSignature Issuer’s signature of [issuerData] with Issuer Data Private Key (which is kept on card).
+     * @param issuerDataSignature Issuer’s signature of [issuerData] with Issuer Data Private Key.
      * @param issuerDataCounter An optional counter that protect issuer data against replay attack.
      * @param callback is triggered on the completion of the [WriteIssuerDataCommand],
      * provides card response in the form of [WriteIssuerDataResponse].
@@ -113,13 +133,87 @@ class CardManager(
                         issuerDataSignature: ByteArray,
                         issuerDataCounter: Int? = null,
                         callback: (result: TaskEvent<WriteIssuerDataResponse>) -> Unit) {
-        val writeIssuerDataCommand = WriteIssuerDataCommand(
-                    cardId,
-                    issuerData,
-                    issuerDataSignature,
-                    issuerDataCounter)
-        val task = SingleCommandTask(writeIssuerDataCommand)
+        val task = WriteIssuerDataTask(
+                issuerData,
+                issuerDataSignature,
+                issuerDataCounter,
+                config.issuerPublicKey
+        )
         runTask(task, cardId, callback)
+    }
+
+    /**
+     * This task writes Issuer Extra Data field and its issuer’s signature.
+     * Issuer Extra Data is never changed or parsed from within the Tangem COS.
+     * The issuer defines purpose of use, format and payload of Issuer Data.
+     * For example, this field may contain a photo or biometric information for ID card products.
+     * Because of the large size of Issuer_Extra_Data, a series of these commands have to be executed
+     * to write entire Issuer_Extra_Data.
+     * @param cardId CID, Unique Tangem card ID number.
+     * @param issuerData Data provided by issuer.
+     * @param startingSignature Issuer’s signature with Issuer Data Private Key of [cardId],
+     * [issuerDataCounter] (if flags Protect_Issuer_Data_Against_Replay and
+     * Restrict_Overwrite_Issuer_Extra_Data are set in [SettingsMask]) and size of [issuerData].
+     * @param finalizingSignature Issuer’s signature with Issuer Data Private Key of [cardId],
+     * [issuerData] and [issuerDataCounter] (the latter one only if flags Protect_Issuer_Data_Against_Replay
+     * andRestrict_Overwrite_Issuer_Extra_Data are set in [SettingsMask]).
+     * @param issuerDataCounter An optional counter that protect issuer data against replay attack.
+     * @param callback is triggered on the completion of the [WriteIssuerDataCommand],
+     * provides card response in the form of [WriteIssuerDataResponse].
+     */
+    fun writeIssuerExtraData(cardId: String,
+                             issuerData: ByteArray,
+                             startingSignature: ByteArray,
+                             finalizingSignature: ByteArray,
+                             issuerDataCounter: Int? = null,
+                             callback: (result: TaskEvent<WriteIssuerDataResponse>) -> Unit) {
+        val task = WriteIssuerExtraDataTask(
+                issuerData,
+                startingSignature, finalizingSignature,
+                config.issuerPublicKey,
+                issuerDataCounter
+        )
+        runTask(task, cardId, callback)
+    }
+
+    /**
+     * This command write some of User_Data, User_ProtectedData, User_Counter and User_ProtectedCounter fields.
+     * User_Data and User_ProtectedData are never changed or parsed by the executable code the Tangem COS.
+     * The App defines purpose of use, format and it's payload. For example, this field may contain cashed information
+     * from blockchain to accelerate preparing new transaction.
+     * User_Counter and User_ProtectedCounter are counters, that initial values can be set by App and increased on every signing
+     * of new transaction (on SIGN command that calculate new signatures). The App defines purpose of use.
+     * For example, this fields may contain blockchain nonce value.
+     *
+     * Writing of User_Counter and User_Data protected only by PIN1.
+     * User_ProtectedCounter and User_ProtectedData additionaly need PIN2 to confirmation.
+     */
+    fun writeUserData(
+        cardId: String,
+        userData: ByteArray? = null,
+        userProtectedData: ByteArray? = null,
+        userCounter: Int? = null,
+        userProtectedCounter: Int? = null,
+        callback: (result: TaskEvent<WriteUserDataResponse>) -> Unit
+    ) {
+      val writeUserDataCommand = WriteUserDataCommand(userData, userProtectedData, userCounter, userProtectedCounter)
+      val task = SingleCommandTask(writeUserDataCommand)
+      runTask(task, cardId, callback)
+    }
+
+    /**
+     * This command returns two up to 512-byte User_Data, User_Protected_Data and two counters User_Counter and
+     * User_Protected_Counter fields.
+     * User_Data and User_ProtectedData are never changed or parsed by the executable code the Tangem COS.
+     * The App defines purpose of use, format and it's payload. For example, this field may contain cashed information
+     * from blockchain to accelerate preparing new transaction.
+     * User_Counter and User_ProtectedCounter are counters, that initial values can be set by App and increased on every signing
+     * of new transaction (on SIGN command that calculate new signatures). The App defines purpose of use.
+     * For example, this fields may contain blockchain nonce value.
+     */
+    fun readUserData(cardId: String, callback: (result: TaskEvent<ReadUserDataResponse>) -> Unit) {
+      val task = SingleCommandTask(ReadUserDataCommand())
+      runTask(task, cardId, callback)
     }
 
     /**
@@ -134,7 +228,7 @@ class CardManager(
      */
     fun createWallet(cardId: String,
                      callback: (result: TaskEvent<CreateWalletResponse>) -> Unit) {
-        val createWalletCommand = CreateWalletCommand(cardId)
+        val createWalletCommand = CreateWalletCommand()
         val task = SingleCommandTask(createWalletCommand)
         runTask(task, cardId, callback)
     }
@@ -148,7 +242,7 @@ class CardManager(
      */
     fun purgeWallet(cardId: String,
                     callback: (result: TaskEvent<PurgeWalletResponse>) -> Unit) {
-        val purgeWalletCommand = PurgeWalletCommand(cardId)
+        val purgeWalletCommand = PurgeWalletCommand()
         val task = SingleCommandTask(purgeWalletCommand)
         runTask(task, cardId, callback)
     }
@@ -156,14 +250,13 @@ class CardManager(
     /**
 
      */
-    fun <T> runTask(task: Task<T>, cardId: String? = null,
-                    callback: (result: TaskEvent<T>) -> Unit) {
+    fun <T> runTask(task: Task<T>, cardId: String? = null, callback: (result: TaskEvent<T>) -> Unit) {
         if (isBusy) {
             callback(TaskEvent.Completion(TaskError.Busy()))
             return
         }
 
-        val environment = fetchCardEnvironment(cardId)
+        val environment = prepareCardEnvironment(cardId)
         isBusy = true
 
         task.reader = reader
@@ -187,7 +280,21 @@ class CardManager(
         runTask(task, cardId, callback)
     }
 
-    private fun fetchCardEnvironment(cardId: String?): CardEnvironment {
-        return cardEnvironmentRepository[cardId] ?: CardEnvironment(cardId = cardId)
+    /**
+     * Allows to set a particular [TerminalKeysService] to retrieve terminal keys.
+     * Default implementation is provided in tangem-sdk module: [TerminalKeysStorage].
+     */
+    fun setTerminalKeysService(terminalKeysService: TerminalKeysService) {
+        this.terminalKeysService = terminalKeysService
     }
+
+    private fun prepareCardEnvironment(cardId: String?): CardEnvironment {
+        val terminalKeys = if (config.linkedTerminal) terminalKeysService?.getKeys() else null
+        return CardEnvironment(
+                cardId = cardId,
+                terminalKeys = terminalKeys
+        )
+    }
+
+    companion object
 }
