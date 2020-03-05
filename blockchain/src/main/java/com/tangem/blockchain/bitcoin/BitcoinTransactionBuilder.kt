@@ -2,7 +2,6 @@ package com.tangem.blockchain.bitcoin
 
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.extensions.Result
-import com.tangem.blockchain.common.extensions.toCanonicalised
 import org.bitcoinj.core.*
 import org.bitcoinj.crypto.TransactionSignature
 import org.bitcoinj.script.Script
