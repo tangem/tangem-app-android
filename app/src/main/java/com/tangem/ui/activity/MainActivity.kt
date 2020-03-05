@@ -32,8 +32,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     lateinit var viewModel: GlobalViewModel
     lateinit var nfcManager: NfcManager
 
-//    private var onNfcReaderCallback: NfcAdapter.ReaderCallback? = null
-
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action || NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action)) {
@@ -67,15 +65,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
         nfcManager = NfcManager(this, this)
         lifecycle.addObserver(NfcLifecycleObserver(nfcManager))
-
-//        // NFC
-//        val intent = intent
-//        if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action || NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action)) {
-//            val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
-//            if (tag != null && onNfcReaderCallback != null) {
-//                onNfcReaderCallback?.onTagDiscovered(tag)
-//            }
-//        }
 
         // check if root device
         val rootBeer = RootBeer(this)
