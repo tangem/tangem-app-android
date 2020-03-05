@@ -1,31 +1,33 @@
 apply plugin: "kotlin"
 apply plugin: 'org.jetbrains.dokka'
+apply from: '../dependencies.gradle'
+apply from: '../jitpack.gradle'
 
-group = 'com.github.TangemCash'
-version '0.1.0'
+group = "$jitpackSdk.group"
+version "$jitpackSdk.version"
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation "com.madgag.spongycastle:core:1.56.0.0"
-    implementation "com.madgag.spongycastle:prov:1.56.0.0"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$versions.kotlin"
+    implementation "com.madgag.spongycastle:core:1.58.0.0"
+    implementation "com.madgag.spongycastle:prov:1.58.0.0"
     implementation 'net.i2p.crypto:eddsa:0.3.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
     testImplementation "com.google.truth:truth:1.0"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:1.3.61"
 }
 
 sourceCompatibility = "8"
 targetCompatibility = "8"
 
 buildscript {
-    ext.kotlin_version = '1.3.50'
     ext.dokka_version = '0.10.0'
     repositories {
         mavenCentral()
         jcenter()
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:$dokka_version"
     }
 }
