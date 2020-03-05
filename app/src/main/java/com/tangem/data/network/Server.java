@@ -113,7 +113,7 @@ public class Server {
 
         public static class Method {
             static final String MAIN = URL_BLOCKCYPHER + V1_MAIN;
-            static final String ADDRESS = MAIN + "/addrs/{address}?unspentOnly=true&includeScript=true";
+            static final String ADDRESS = MAIN + "/addrs/{address}?includeScript=true&limit=2000";
             static final String TXS = MAIN + "/txs/{txHash}?includeHex=true";
             static final String PUSH = MAIN + "/txs/push";
         }
@@ -123,7 +123,7 @@ public class Server {
         public static final String URL_BLOCKCHAININFO = ServerURL.API_BLOCKCHAIN_INFO;
 
         public static class Method {
-            static final String ADDRESS = URL_BLOCKCHAININFO + "rawaddr/{address}?limit=5";
+            static final String ADDRESS = URL_BLOCKCHAININFO + "rawaddr/{address}";
             static final String UTXO = URL_BLOCKCHAININFO + "unspent";
 //            static final String TX = URL_BLOCKCHAININFO + "rawtx/{txHash}";
             static final String PUSH = URL_BLOCKCHAININFO + "pushtx";
@@ -137,6 +137,17 @@ public class Server {
             static final String BALANCE = URL_DUCATUS + "address/{address}/balance";
             static final String UTXO = URL_DUCATUS + "address/{address}/?unspent=true";
             static final String SEND = URL_DUCATUS + "tx/send";
+        }
+    }
+
+    public static class ApiBlockchair {
+        public static final String URL_BLOCKCHAIR = ServerURL.API_BLOCKCHAIR + "{blockchain}/";
+
+        public static class Method {
+            static final String ADDRESS = URL_BLOCKCHAIR + "dashboards/address/{address}";
+            static final String TRANSACTION = URL_BLOCKCHAIR + "dashboards/transaction/{transaction}";
+            static final String STATS = URL_BLOCKCHAIR + "stats";
+            static final String PUSH = URL_BLOCKCHAIR + "push/transaction";
         }
     }
 }
