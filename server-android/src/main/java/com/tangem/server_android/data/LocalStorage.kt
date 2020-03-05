@@ -47,7 +47,7 @@ class LocalStorage
             artworks = HashMap()
         }
 
-        if (artworks.count() < 32) {
+        if (artworks.count() < 39) {
 //          forceSave=true only on the last one
             putResourceArtworkToCatalog(R.drawable.card_default, false)
             putResourceArtworkToCatalog(R.drawable.card_default_nft, false)
@@ -78,6 +78,13 @@ class LocalStorage
             putResourceArtworkToCatalog(R.drawable.card_ru043, false)
             putResourceArtworkToCatalog(R.drawable.card_tg044, false)
             putResourceArtworkToCatalog(R.drawable.card_tg046, false)
+            putResourceArtworkToCatalog(R.drawable.card_tg054, false)
+            putResourceArtworkToCatalog(R.drawable.card_tg055, false)
+            putResourceArtworkToCatalog(R.drawable.card_tg057, false)
+            putResourceArtworkToCatalog(R.drawable.card_tg060, false)
+            putResourceArtworkToCatalog(R.drawable.card_tg061, false)
+            putResourceArtworkToCatalog(R.drawable.card_tg062, false)
+            putResourceArtworkToCatalog(R.drawable.card_tg063, false)
             putResourceArtworkToCatalog(R.drawable.card_tgslix, false)
             putResourceArtworkToCatalog(R.drawable.card_bc00, false)
             putResourceArtworkToCatalog(R.drawable.card_ff32, true)
@@ -274,6 +281,15 @@ class LocalStorage
             card.batch == "0029" -> R.drawable.card_ru041
             card.batch == "0031" -> R.drawable.card_ru042
             card.batch == "0034" -> R.drawable.card_tg046
+            card.batch == "0041" -> R.drawable.card_tg054
+            card.batch == "0042" -> R.drawable.card_tg055
+            card.batch == "0046" -> R.drawable.card_tg054
+            card.batch == "0047" -> R.drawable.card_tg055
+            card.batch == "0045" -> R.drawable.card_tg057
+            card.batch == "0049" -> R.drawable.card_tg060
+            card.batch == "0050" -> R.drawable.card_tg061
+            card.batch == "0051" -> R.drawable.card_tg062
+            card.batch == "0052" -> R.drawable.card_tg063
             card.batch == "FF32" -> R.drawable.card_ff32
 
             else -> null
