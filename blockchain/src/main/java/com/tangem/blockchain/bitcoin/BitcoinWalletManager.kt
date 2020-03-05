@@ -15,7 +15,7 @@ import java.math.BigDecimal
 class BitcoinWalletManager(
         private val cardId: String,
         private val walletPublicKey: ByteArray,
-        walletConfig: WalletConfig,
+        override var wallet: CurrencyWallet,
         isTestNet: Boolean = false
 ) : WalletManager,
         TransactionSender,
@@ -23,10 +23,12 @@ class BitcoinWalletManager(
 
     override val blockchain = if (isTestNet) Blockchain.BitcoinTestnet else Blockchain.Bitcoin
     private val address = blockchain.makeAddress(walletPublicKey)
-    private val currencyWallet = CurrencyWallet(walletConfig, address)
-    override var wallet: Wallet = currencyWallet
     private val transactionBuilder = BitcoinTransactionBuilder(isTestNet)
     private val networkManager = BitcoinNetworkManager(isTestNet)
+
+    init {
+        wallet.balances[AmountType.Coin] = Amount(null, blockchain)
+    }
 
     override suspend fun update() {
         val response = networkManager.getInfo(address)
@@ -38,23 +40,24 @@ class BitcoinWalletManager(
 
     private fun updateWallet(response: BitcoinAddressResponse) {
         Log.d(this::class.java.simpleName, "Balance is ${response.balance}")
-        currencyWallet.balances[AmountType.Coin]?.value = response.balance
+        wallet.balances[AmountType.Coin]?.value = response.balance
         transactionBuilder.unspentOutputs = response.unspentTransactions
         if (response.hasUnconfirmed) {
-            if (currencyWallet.pendingTransactions.isEmpty()) {
-                currencyWallet.pendingTransactions.add(TransactionData(
+            if (wallet.pendingTransactions.isEmpty()) {
+                wallet.pendingTransactions.add(TransactionData(
                         Amount(blockchain.currency, decimals = blockchain.decimals),
                         null,
                         "unknown",
-                        currencyWallet.address))
+                        wallet.address))
             }
         } else {
-            currencyWallet.pendingTransactions.clear()
+            wallet.pendingTransactions.clear()
         }
     }
 
     private fun updateError(error: Throwable?) {
         Log.e(this::class.java.simpleName, error?.message ?: "")
+        if (error != null) throw error
     }
 
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
@@ -73,7 +76,7 @@ class BitcoinWalletManager(
         }
     }
 
-    override suspend fun getFee(amount: Amount, source: String, destination: String): Result<List<Amount>> {
+    override suspend fun getFee(amount: Amount, destination: String): Result<List<Amount>> {
         when (val result = networkManager.getFee()) {
             is Result.Failure -> return result
             is Result.Success -> {
