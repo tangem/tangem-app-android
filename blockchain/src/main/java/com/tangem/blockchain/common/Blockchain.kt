@@ -2,13 +2,15 @@ package com.tangem.blockchain.common
 
 import com.tangem.blockchain.bitcoin.BitcoinAddressFactory
 import com.tangem.blockchain.bitcoin.BitcoinAddressValidator
-import com.tangem.blockchain.ethereum.EthereumAddressFactory
-import com.tangem.blockchain.ethereum.EthereumAddressValidator
 import com.tangem.blockchain.cardano.CardanoAddressFactory
 import com.tangem.blockchain.cardano.CardanoAddressValidator
+import com.tangem.blockchain.ethereum.EthereumAddressFactory
+import com.tangem.blockchain.ethereum.EthereumAddressValidator
+
 import com.tangem.blockchain.stellar.StellarAddressFactory
 import com.tangem.blockchain.xrp.XrpAddressFactory
 import com.tangem.blockchain.xrp.XrpAddressValidator
+
 import java.math.BigDecimal
 
 enum class Blockchain(
