@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'com.github.dcendents.android-maven'
 apply from: '../dependencies.gradle'
 apply from: '../jitpack.gradle'
 
@@ -9,7 +10,7 @@ version "$jitpackSdk.version"
 
 android {
     compileSdkVersion 29
-    buildToolsVersion "29.0.0"
+    buildToolsVersion "29.0.2"
 
 
     defaultConfig {
