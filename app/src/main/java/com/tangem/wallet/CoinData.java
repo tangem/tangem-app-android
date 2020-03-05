@@ -54,6 +54,10 @@ public abstract class CoinData {
             rate = B.getFloat("rate");
         if (B.containsKey("rateAlter"))
             rateAlter = B.getFloat("rateAlter");
+
+        if (B.containsKey("sentTransactionsCount")) {
+            sentTransactionsCount = B.getInt("sentTransactionsCount");
+        }
     }
 
     public void saveToBundle(Bundle B) {
@@ -70,6 +74,8 @@ public abstract class CoinData {
 
             B.putBoolean("balanceReceived", balanceReceived);
             B.putString("validationNodeDescription", validationNodeDescription);
+
+            B.putInt("sentTransactionsCount", sentTransactionsCount);
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());
         }
@@ -83,8 +89,8 @@ public abstract class CoinData {
     }
 
     public static CoinData fromBundle(Blockchain blockchain, Bundle bundle) {
-        CoinEngine engine= CoinEngineFactory.INSTANCE.create(blockchain);
-        if( engine==null ) return null;
+        CoinEngine engine = CoinEngineFactory.INSTANCE.create(blockchain);
+        if (engine == null) return null;
         CoinData result = engine.createCoinData();
         result.loadFromBundle(bundle);
         return result;
@@ -143,11 +149,12 @@ public abstract class CoinData {
         setIsBalanceEqual(false);
         setBalanceReceived(false);
         setValidationNodeDescription("");
-        minFee=null;
-        maxFee=null;
-        normalFee=null;
-        rate=0f;
-        rateAlter=0f;
+        minFee = null;
+        maxFee = null;
+        normalFee = null;
+        rate = 0f;
+        rateAlter = 0f;
+        sentTransactionsCount = 0;
     }
 
 //    private AtomicInteger failedBalanceRequestCounter;
@@ -191,4 +198,18 @@ public abstract class CoinData {
     public CoinEngine.Amount minFee = null;
     public CoinEngine.Amount normalFee = null;
     public CoinEngine.Amount maxFee = null;
+
+    private int sentTransactionsCount = 0;
+
+    public int getSentTransactionsCount() {
+        return sentTransactionsCount;
+    }
+
+    public void setSentTransactionsCount(int sentTransactionsCount) {
+        this.sentTransactionsCount = sentTransactionsCount;
+    }
+
+    public void incSentTransactionsCount() {
+        sentTransactionsCount++;
+    }
 }
