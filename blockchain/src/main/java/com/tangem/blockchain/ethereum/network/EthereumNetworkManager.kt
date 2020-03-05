@@ -12,7 +12,6 @@ import kotlinx.coroutines.coroutineScope
 import org.kethereum.ETH_IN_WEI
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.math.RoundingMode
 
 
 class EthereumNetworkManager {
