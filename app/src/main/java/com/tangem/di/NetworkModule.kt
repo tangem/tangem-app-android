@@ -147,6 +147,19 @@ internal class NetworkModule {
         return builder.build()
     }
 
+    @Singleton
+    @Provides
+    @Named(Server.ApiBlockchair.URL_BLOCKCHAIR)
+    fun provideRetrofitBlockchair(): Retrofit {
+        val builder = Retrofit.Builder()
+                .baseUrl(Server.ApiBlockchair.URL_BLOCKCHAIR)
+                .addConverterFactory(GsonConverterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+        if (BuildConfig.DEBUG)
+            builder.client(createOkHttpClient())
+        return builder.build()
+    }
+
     private fun createOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder().addInterceptor(createHttpLoggingInterceptor()).build()
     }
