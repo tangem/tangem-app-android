@@ -5,8 +5,12 @@ import android.text.InputFilter;
 import android.util.Log;
 
 import com.tangem.App;
-import com.tangem.data.network.ElectrumRequest;
-import com.tangem.data.network.ServerApiElectrum;
+import com.tangem.data.network.ServerApiBlockchair;
+import com.tangem.data.network.model.BlockchairAddressData;
+import com.tangem.data.network.model.BlockchairAddressResponse;
+import com.tangem.data.network.model.BlockchairStatsResponse;
+import com.tangem.data.network.model.BlockchairTransactionResponse;
+import com.tangem.data.network.model.BlockchairUnspentOutput;
 import com.tangem.tangem_card.data.TangemCard;
 import com.tangem.tangem_card.reader.CardProtocol;
 import com.tangem.tangem_card.tasks.SignTask;
@@ -26,10 +30,6 @@ import com.tangem.wallet.UnspentOutputInfo;
 import com.tangem.wallet.btc.BtcData;
 import com.tangem.wallet.btc.Unspents;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -40,6 +40,11 @@ import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import io.reactivex.CompletableObserver;
+import io.reactivex.SingleObserver;
+import io.reactivex.observers.DisposableCompletableObserver;
+import io.reactivex.observers.DisposableSingleObserver;
 
 public class BtcCashEngine extends CoinEngine {
 
@@ -59,7 +64,6 @@ public class BtcCashEngine extends CoinEngine {
     }
 
     public BtcCashEngine() {
-
     }
 
     private static int getDecimals() {
@@ -73,7 +77,7 @@ public class BtcCashEngine extends CoinEngine {
     @Override
     public boolean awaitingConfirmation() {
         if (coinData == null) return false;
-        return coinData.getBalanceUnconfirmed() != 0 || App.pendingTransactionsStorage.hasTransactions(ctx.getCard());
+        return coinData.getBalanceUnconfirmed() != 0 || coinData.isHasUnconfirmed() || App.pendingTransactionsStorage.hasTransactions(ctx.getCard());
     }
 
     @Override
@@ -127,50 +131,6 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public boolean validateAddress(String address) {
-//        if (address == null || address.isEmpty()) {
-//            return false;
-//        }
-//
-//        if (address.length() < 25) {
-//            return false;
-//        }
-//
-//        if (address.length() > 35) {
-//            return false;
-//        }
-//
-//        if (!address.startsWith("1") && !address.startsWith("2") && !address.startsWith("3") && !address.startsWith("n") && !address.startsWith("m")) {
-//            return false;
-//        }
-//
-//        byte[] decAddress = Base58.decodeBase58(address);
-//
-//        if (decAddress == null || decAddress.length == 0) {
-//            return false;
-//        }
-//
-//        byte[] rip = new byte[21];
-//        for (int i = 0; i < 21; ++i) {
-//            rip[i] = decAddress[i];
-//        }
-//
-//        byte[] kcv = CryptoUtil.doubleSha256(rip);
-//
-//        for (int i = 0; i < 4; ++i) {
-//            if (kcv[i] != decAddress[21 + i])
-//                return false;
-//        }
-//
-//        if (ctx.getBlockchain() != Blockchain.BitcoinTestNet && ctx.getBlockchain() != Blockchain.Bitcoin) {
-//            return false;
-//        }
-//
-//        if (ctx.getBlockchain() == Blockchain.BitcoinTestNet && (address.startsWith("1") || address.startsWith("3"))) {
-//            return false;
-//        }
-//
-//        return true;
-
         return CashAddr.isValidCashAddress(address);
     }
 
@@ -181,7 +141,7 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public Uri getWalletExplorerUri() {
-        return Uri.parse("https://bch.btc.com/" + ctx.getCoinData().getWallet());
+        return Uri.parse("https://explorer.bitcoin.com/bch/address/" + ctx.getCoinData().getWallet());
     }
 
     @Override
@@ -241,15 +201,7 @@ public class BtcCashEngine extends CoinEngine {
             return false;
         }
 
-        // Workaround before new back-end
-//        if (card.getRemainingSignatures() == card.getMaxSignatures()) {
-//            firstLine = "Verified balance";
-//            secondLine = "Balance confirmed in blockchain. ";
-//            secondLine += "Verified note identity. ";
-//            return;
-//        }
-
-        if (coinData.getBalanceUnconfirmed() != 0) {
+        if (coinData.getBalanceUnconfirmed() != 0 || coinData.isHasUnconfirmed()) {
             balanceValidator.setScore(0);
             balanceValidator.setFirstLine(R.string.balance_validator_first_line_transaction_in_progress);
             balanceValidator.setSecondLine(R.string.balance_validator_second_line_wait_for_confirmation);
@@ -265,37 +217,6 @@ public class BtcCashEngine extends CoinEngine {
                 balanceValidator.setSecondLine(R.string.empty_string);
             }
         }
-
-        // rule 4 TODO: need to check SignedHashed against number of outputs in blockchain
-//        if((card.getRemainingSignatures() != card.getMaxSignatures()) && card.getBalance() != 0)
-//        {
-//            score = 80;
-//            firstLine = "Unguaranteed balance";
-//            secondLine = "Potential unsent transaction. Redeem immediately if accept. ";
-//            return;
-//        }
-
-//        if ((ctx.getCard().getOfflineBalance() != null) && !coinData.isBalanceReceived() && ctx.getCard().getRemainingSignatures() == ctx.getCard().getMaxSignatures()) {
-//            balanceValidator.setScore(80);
-//            balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_offline);
-//            balanceValidator.setSecondLine(R.string.balance_validator_second_line_internet_to_get_balance);
-//        }
-
-//            if(card.getFailedBalanceRequestCounter()!=0) {
-//                score -= 5 * card.getFailedBalanceRequestCounter();
-//                secondLine += "Not all nodes have returned balance. Swipe down or tap again. ";
-//                if(score <= 0)
-//                    return;
-//            }
-
-        //
-//            if(card.isBalanceReceived() && !card.isBalanceEqual()) {
-//                score = 0;
-//                firstLine = "Disputed balance";
-//                secondLine += " Cannot obtain trusted balance at the moment. Try to tap and check this banknote later.";
-//                return;
-//            }
-
         return true;
     }
 
@@ -441,19 +362,12 @@ public class BtcCashEngine extends CoinEngine {
         try {
             String wallet = calculateAddress(ctx.getCard().getWalletPublicKeyRar());
             ctx.getCoinData().setWallet(wallet);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             ctx.getCoinData().setWallet("ERROR");
             throw new CardProtocol.TangemException("Can't define wallet address");
         }
 
     }
-
-//    @Override
-//    public String getAmountDescription(TangemCard mCard, String amount) throws Exception {
-//        return mCard.getAmountDescription(Double.parseDouble(amount));
-//    }
 
 
     @Override
@@ -464,12 +378,10 @@ public class BtcCashEngine extends CoinEngine {
         String destLegacyAddress = convertToLegacyAddress(targetAddress);
         byte[] pbKey = ctx.getCard().getWalletPublicKeyRar(); //ALWAYS USING COMPRESS KEY
 
-        // Build script for our address
-        List<BtcData.UnspentTransaction> rawTxList = coinData.getUnspentTransactions();
-        byte[] outputScriptWeAreAbleToSpend = Transaction.Script.buildOutput(srcLegacyAddress).bytes;
-
-        // Collect unspent
-        ArrayList<UnspentOutputInfo> unspentOutputs = BCHUtils.getOutputs(rawTxList, outputScriptWeAreAbleToSpend);
+        final ArrayList<UnspentOutputInfo> unspentOutputs = new ArrayList<>();
+        for (BtcData.UnspentTransaction utxo : coinData.getUnspentTransactions()) {
+            unspentOutputs.add(new UnspentOutputInfo(BTCUtils.fromHex(utxo.txID), new Transaction.Script(BTCUtils.fromHex(utxo.script)), utxo.amount, utxo.outputN, -1, utxo.txID, null));
+        }
 
         long fullAmount = 0;
         for (int i = 0; i < unspentOutputs.size(); ++i) {
@@ -513,7 +425,8 @@ public class BtcCashEngine extends CoinEngine {
             @Override
             public byte[][] getHashesToSign() throws Exception {
                 byte[][] dataForSign = new byte[unspentOutputs.size()][];
-                if (txForSign.length > 10) throw new Exception("To much hashes in one transaction!");
+                if (txForSign.length > 10)
+                    throw new Exception("To much hashes in one transaction!");
                 for (int i = 0; i < unspentOutputs.size(); ++i) {
                     dataForSign[i] = bodyDoubleHash[i];
                 }
@@ -562,115 +475,99 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) throws Exception {
-        final ServerApiElectrum serverApiElectrum = new ServerApiElectrum();
+        final ServerApiBlockchair serverApiBlockchair = new ServerApiBlockchair(ctx.getBlockchain());
 
-        ServerApiElectrum.ResponseListener electrumBodyListener = new ServerApiElectrum.ResponseListener() {
+        SingleObserver<BlockchairAddressResponse> addressObserver = new DisposableSingleObserver<BlockchairAddressResponse>() {
             @Override
-            public void onSuccess(ElectrumRequest electrumRequest) {
-                if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetBalance)) {
-                    try {
-                        Long confBalance = electrumRequest.getResult().getLong("confirmed");
-                        Long unconfirmedBalance = electrumRequest.getResult().getLong("unconfirmed");
-                        coinData.setBalanceReceived(true);
-                        coinData.setBalanceConfirmed(confBalance);
-                        coinData.setBalanceUnconfirmed(unconfirmedBalance);
-                        coinData.setValidationNodeDescription(serverApiElectrum.getValidationNodeDescription());
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                        Log.e(TAG, "FAIL METHOD_GetBalance JSONException");
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Log.e(TAG, "FAIL METHOD_GetBalance Exception");
-                    }
-                }
+            public void onSuccess(BlockchairAddressResponse addressResponse) {
+                try {
+                    BlockchairAddressData addressData = addressResponse.getData().get(coinData.getWallet());
 
-                if (electrumRequest.isMethod(ElectrumRequest.METHOD_ListUnspent)) {
-                    try {
-                        String walletAddress = electrumRequest.getParams().getString(0);
-                        JSONArray jsUnspentArray = electrumRequest.getResultArray();
-                        try {
-                            coinData.getUnspentTransactions().clear();
-                            for (int i = 0; i < jsUnspentArray.length(); i++) {
-                                JSONObject jsUnspent = jsUnspentArray.getJSONObject(i);
-                                BtcData.UnspentTransaction trUnspent = new BtcData.UnspentTransaction();
-                                trUnspent.txID = jsUnspent.getString("tx_hash");
-                                trUnspent.amount = jsUnspent.getLong("value");
-                                trUnspent.outputN = jsUnspent.getInt("height");
-                                coinData.getUnspentTransactions().add(trUnspent);
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            Log.e(TAG, "FAIL METHOD_ListUnspent JSONException");
+                    coinData.setBalanceConfirmed(addressData.getAddress().getBalance());
+                    coinData.setBalanceUnconfirmed(0L);
+                    coinData.setBalanceReceived(true);
+                    coinData.setValidationNodeDescription(serverApiBlockchair.getUrl());
+                    coinData.setSentTransactionsCount(addressData.getAddress().getOutputCount() - addressData.getAddress().getUnspentOutputCount());
+
+                    for (BlockchairUnspentOutput utxo : addressData.getUnspentOutputs()) {
+                        if (utxo.getBlock() != -1) {
+                            BtcData.UnspentTransaction unspentTx = new BtcData.UnspentTransaction();
+                            unspentTx.txID = utxo.getTransactionHash();
+                            unspentTx.amount = utxo.getAmount();
+                            unspentTx.outputN = utxo.getIndex();
+                            coinData.getUnspentTransactions().add(unspentTx);
+                        } else {
+                            coinData.setHasUnconfirmed(true);
                         }
-
-                        for (int i = 0; i < jsUnspentArray.length(); i++) {
-                            JSONObject jsUnspent = jsUnspentArray.getJSONObject(i);
-                            Integer height = jsUnspent.getInt("height");
-                            String hash = jsUnspent.getString("tx_hash");
-                            if (height != -1) {
-                                if (blockchainRequestsCallbacks.allowAdvance()) {
-                                    serverApiElectrum.requestData(ctx, ElectrumRequest.getTransaction(walletAddress, hash));
-                                } else {
-                                    ctx.setError("Terminated by user");
-                                }
-                            }
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
                     }
-                }
 
-                if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetTransaction)) {
-                    try {
-                        String txHash = electrumRequest.txHash;
-                        String raw = electrumRequest.getResultString();
-                        for (BtcData.UnspentTransaction tx : coinData.getUnspentTransactions()) {
-                            if (tx.txID.equals(txHash))
-                                tx.script = raw;
+                    if (addressData.getAddress().getBalance() != 0) {
+                        blockchainRequestsCallbacks.onComplete(true);
+                    } else { //check if there is an unconfirmed tx, which spent all funds
+                        if (addressData.getTransactions().isEmpty()) {
+                            blockchainRequestsCallbacks.onComplete(true);
+                        } else {
+                            requestIsTransactionConfirmed(addressData.getTransactions().get(0), blockchainRequestsCallbacks);
                         }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
                     }
-                }
-
-                if (serverApiElectrum.isRequestsSequenceCompleted()) {
-                    blockchainRequestsCallbacks.onComplete(!ctx.hasError());
-                }else{
-                    blockchainRequestsCallbacks.onProgress();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.e(TAG, "FAIL getAddress Exception");
+                    ctx.setError(e.getMessage());
+                    blockchainRequestsCallbacks.onComplete(false);
                 }
             }
 
             @Override
-            public void onFail(ElectrumRequest electrumRequest) {
-                Log.i(TAG, "onFail: "+electrumRequest.getMethod()+" "+electrumRequest.getError());
-                ctx.setError(electrumRequest.getError());
-                if (serverApiElectrum.isRequestsSequenceCompleted()) {
-                    blockchainRequestsCallbacks.onComplete(false);//serverApiElectrum.isErrorOccurred(), serverApiElectrum.getError());
-                }else{
-                    blockchainRequestsCallbacks.onProgress();
-                }
+            public void onError(Throwable e) {
+                e.printStackTrace();
+                Log.e(TAG, "FAIL getAddress Exception");
+                ctx.setError(e.getMessage());
+                blockchainRequestsCallbacks.onComplete(false);
             }
         };
 
-        serverApiElectrum.setResponseListener(electrumBodyListener);
+        serverApiBlockchair.getAddress(coinData.getWallet(), addressObserver);
+    }
 
-        serverApiElectrum.requestData(ctx, ElectrumRequest.checkBalance(convertToLegacyAddress(coinData.getWallet())));
-        serverApiElectrum.requestData(ctx, ElectrumRequest.listUnspent(convertToLegacyAddress(coinData.getWallet())));
+    private void requestIsTransactionConfirmed(String transaction, BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
+        final ServerApiBlockchair serverApiBlockchair = new ServerApiBlockchair(ctx.getBlockchain());
+
+        SingleObserver<BlockchairTransactionResponse> transactionObserver = new DisposableSingleObserver<BlockchairTransactionResponse>() {
+            @Override
+            public void onSuccess(BlockchairTransactionResponse transactionResponse) {
+                if (transactionResponse.getData().get(transaction).getTransaction().getBlock() == -1) {
+                    coinData.setHasUnconfirmed(true);
+                }
+                blockchainRequestsCallbacks.onComplete(true);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                e.printStackTrace();
+                Log.e(TAG, "FAIL getTransaction Exception");
+                ctx.setError(e.getMessage());
+                blockchainRequestsCallbacks.onComplete(false);
+            }
+        };
+
+        serverApiBlockchair.getTransaction(transaction, transactionObserver);
     }
 
     private Integer calculateEstimatedTransactionSize(String outputAddress, String outAmount) {
         try {
-            SignTask.TransactionToSign ps= constructTransaction(new Amount(outAmount, getBalanceCurrency()),new Amount("0.00",getFeeCurrency()), true, outputAddress );
+            SignTask.TransactionToSign ps = constructTransaction(new Amount(outAmount, getBalanceCurrency()), new Amount("0.00", getFeeCurrency()), true, outputAddress);
             OnNeedSendTransaction onNeedSendTransactionBackup = onNeedSendTransaction;
-            onNeedSendTransaction =(tx)->{}; // empty function to bypass exception
+            onNeedSendTransaction = (tx) -> {
+            }; // empty function to bypass exception
 
-            byte[][] hashesToSign=ps.getHashesToSign();
+            byte[][] hashesToSign = ps.getHashesToSign();
             byte[] signFromCard = new byte[64 * hashesToSign.length];
             Arrays.fill(signFromCard, (byte) 0x01);
-            byte[] txForSend=ps.onSignCompleted(signFromCard);
+            byte[] txForSend = ps.onSignCompleted(signFromCard);
             onNeedSendTransaction = onNeedSendTransactionBackup;
-            Log.e(TAG,"txForSend.length="+String.valueOf(txForSend.length));
-            return txForSend.length +1;
+            Log.e(TAG, "txForSend.length=" + String.valueOf(txForSend.length));
+            return txForSend.length + 1;
         } catch (Exception e) {
             e.printStackTrace();
             Log.e(TAG, "Can't calculate transaction size -> use default!");
@@ -684,104 +581,64 @@ public class BtcCashEngine extends CoinEngine {
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) throws Exception {
         final int calcSize = calculateEstimatedTransactionSize(targetAddress, amount.toValueString());
         Log.e(TAG, String.format("Estimated tx size %d", calcSize));
-        coinData.minFee=null;
-        coinData.maxFee=null;
-        coinData.normalFee=null;
+        coinData.minFee = null;
+        coinData.maxFee = null;
+        coinData.normalFee = null;
 
-        final ServerApiElectrum serverApiElectrum = new ServerApiElectrum();
+        final ServerApiBlockchair serverApiBlockchair = new ServerApiBlockchair(ctx.getBlockchain());
 
-        final ServerApiElectrum.ResponseListener electrumListener  = new ServerApiElectrum.ResponseListener() {
+        SingleObserver<BlockchairStatsResponse> statsObserver = new DisposableSingleObserver<BlockchairStatsResponse>() {
             @Override
-            public void onSuccess(ElectrumRequest electrumRequest) {
-                BigDecimal fee;
-                if (electrumRequest.isMethod(ElectrumRequest.METHOD_GetFee)) {
-                    try {
-                        fee = new BigDecimal(electrumRequest.getResultString()); //fee per KB
-
-                        if (fee.equals(BigDecimal.ZERO)) {
-                            serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
-                        }
-
-//                        if (calcSize != 0) {
-                            fee = fee.multiply(new BigDecimal(calcSize)).divide(new BigDecimal(1024)); // (per KB -> per byte)*size
-//                        } else {
-//                            serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
-//                        }
-
-                        //compare fee to usual relay fee
-                        if (fee.compareTo(relayFee) < 0) {
-                            fee = relayFee;
-                        }
-                        fee = fee.setScale(8, RoundingMode.DOWN);
-
-                        CoinEngine.Amount feeAmount = new CoinEngine.Amount(fee,  ctx.getBlockchain().getCurrency());
-                        coinData.minFee = feeAmount;
-                        coinData.normalFee = feeAmount;
-                        coinData.maxFee = feeAmount;
-//                        if (coinData.minFee != null && coinData.normalFee != null && coinData.maxFee != null) {
-                            blockchainRequestsCallbacks.onComplete(true);
-//                        } else {
-//                            blockchainRequestsCallbacks.onProgress();
-//                        }
-
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+            public void onSuccess(BlockchairStatsResponse blockchairStatsResponse) {
+                try {
+                    int feeSatoshi = blockchairStatsResponse.getData().getFeePerByte() * calcSize;
+                    BigDecimal fee = BigDecimal.valueOf(feeSatoshi).movePointLeft(getDecimals());
+                    if (fee.compareTo(relayFee) < 0) {
+                        fee = relayFee;
                     }
+                    Amount feeAmount = new Amount(fee.setScale(getDecimals(), RoundingMode.DOWN), getFeeCurrency());
+                    coinData.minFee = feeAmount;
+                    coinData.normalFee = feeAmount;
+                    coinData.maxFee = feeAmount;
+                    blockchainRequestsCallbacks.onComplete(true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.e(TAG, "FAIL getStats Exception");
+                    ctx.setError(e.getMessage());
+                    blockchainRequestsCallbacks.onComplete(false);
                 }
             }
 
             @Override
-            public void onFail(ElectrumRequest electrumRequest) {
-                ctx.setError(electrumRequest.getError());
+            public void onError(Throwable e) {
+                e.printStackTrace();
+                Log.e(TAG, "FAIL getStats Exception");
+                ctx.setError(e.getMessage());
                 blockchainRequestsCallbacks.onComplete(false);
             }
         };
-        serverApiElectrum.setResponseListener(electrumListener);
 
-        serverApiElectrum.requestData(ctx, ElectrumRequest.getFee());
+        serverApiBlockchair.getStats(statsObserver);
     }
 
     @Override
     public void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) throws Exception {
-        final ServerApiElectrum serverApiElectrum = new ServerApiElectrum();
-        final String txStr = BTCUtils.toHex(txForSend);
+        final ServerApiBlockchair serverApiBlockchair = new ServerApiBlockchair(ctx.getBlockchain());
 
-        ServerApiElectrum.ResponseListener electrumBodyListener = new ServerApiElectrum.ResponseListener() {
+        CompletableObserver sendObserver = new DisposableCompletableObserver() {
             @Override
-            public void onSuccess(ElectrumRequest electrumRequest) {
-                if (electrumRequest.isMethod(ElectrumRequest.METHOD_SendTransaction)) {
-                    try {
-                        String resultString = electrumRequest.getResultString();
-                        if (resultString == null || resultString.isEmpty()) {
-                            ctx.setError("Rejected by node: " + electrumRequest.getError());
-                            blockchainRequestsCallbacks.onComplete(false);
-                        }else {
-                            ctx.setError(null);
-                            blockchainRequestsCallbacks.onComplete(true);
-                        }
-                    } catch (Exception e) {
-                        if (e.getMessage() != null) {
-                            ctx.setError(e.getMessage());
-                            blockchainRequestsCallbacks.onComplete(false);
-                        } else {
-                            ctx.setError(e.getClass().getName());
-                            blockchainRequestsCallbacks.onComplete(false);
-                        }
-                    }
-                }
+            public void onComplete() {
+                blockchainRequestsCallbacks.onComplete(true);
             }
 
             @Override
-            public void onFail(ElectrumRequest electrumRequest) {
-                ctx.setError(electrumRequest.getError());
+            public void onError(Throwable e) {
+                ctx.setError(e.getMessage());
                 blockchainRequestsCallbacks.onComplete(false);
             }
         };
-        serverApiElectrum.setResponseListener(electrumBodyListener);
 
-
-        serverApiElectrum.requestData(ctx, ElectrumRequest.broadcast(ctx.getCoinData().getWallet(), txStr));
-
+        serverApiBlockchair.sendTransaction(Util.byteArrayToHexString(txForSend), sendObserver);
     }
 
     @Override
