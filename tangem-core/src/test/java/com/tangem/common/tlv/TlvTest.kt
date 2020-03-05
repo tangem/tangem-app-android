@@ -17,7 +17,7 @@ class TlvTest {
                 -10, -111, 34, -34, 67, -13, 95, 5, 122, -104, -115, -106, 25, -10, -45, 19, -124,
                 -123, -55, -94, 3)
 
-        assertThat(tlvs.toBytes())
+        assertThat(tlvs.serialize())
                 .isEqualTo(expected)
     }
 
@@ -34,7 +34,7 @@ class TlvTest {
                 -55, -94, 3, 1, 8, -53, 34, 0, 0, 0, 2, 115, 116, 22, 16, -82, -78, -31, 34, 66, -19,
                 -86, -1, 26, 8, 100, -126, -74, 20, -28, 83)
 
-        assertThat(tlvs.toBytes())
+        assertThat(tlvs.serialize())
                 .isEqualTo(expected)
     }
 
@@ -44,14 +44,14 @@ class TlvTest {
                 -10, -111, 34, -34, 67, -13, 95, 5, 122, -104, -115, -106, 25, -10, -45, 19, -124,
                 -123, -55, -94, 3)
 
-        val tlvs = Tlv.tlvListFromBytes(bytes)
+        val tlvs = Tlv.deserialize(bytes)
 
         assertThat(tlvs)
                 .isNotNull()
         assertThat(tlvs)
                 .isNotEmpty()
 
-        val pin = tlvs!!.find { it.tag == TlvTag.Pin  }?.value
+        val pin = tlvs!!.find { it.tag == TlvTag.Pin }?.value
         val pinExpected = "000000".calculateSha256()
 
         assertThat(pin)
@@ -65,14 +65,14 @@ class TlvTest {
                 -55, -94, 3, 1, 8, -53, 34, 0, 0, 0, 2, 115, 116, 22, 16, -82, -78, -31, 34, 66, -19,
                 -86, -1, 26, 8, 100, -126, -74, 20, -28, 83)
 
-        val tlvs = Tlv.tlvListFromBytes(bytes)
+        val tlvs = Tlv.deserialize(bytes)
 
         assertThat(tlvs)
                 .isNotNull()
         assertThat(tlvs)
                 .isNotEmpty()
 
-        val pin = tlvs!!.find { it.tag == TlvTag.Pin  }?.value
+        val pin = tlvs!!.find { it.tag == TlvTag.Pin }?.value
         val pinExpected = "000000".calculateSha256()
         assertThat(pin)
                 .isEqualTo(pinExpected)
@@ -91,13 +91,21 @@ class TlvTest {
     @Test
     fun `Bytes to TLVs, wrong values`() {
         val bytes = byteArrayOf(0)
-        val tlvs = Tlv.tlvListFromBytes(bytes)
-       assertThat(tlvs)
-               .isNull()
+        val tlvs = Tlv.deserialize(bytes)
+        assertThat(tlvs)
+                .isNull()
 
         val bytes1 = byteArrayOf(0, 0, 0, 0, 0, 0, 0)
-        val tlvs1 = Tlv.tlvListFromBytes(bytes1)
+        val tlvs1 = Tlv.deserialize(bytes1)
         assertThat(tlvs1)
                 .isNull()
+    }
+
+    @Test
+    fun `parse Slix tag response`() {
+        val response = "03ff010f91010b550474616e67656d2e636f6d140f11616e64726f69642e636f6d3a706b67636f6d2e74616e67656d2e77616c6c65745411c974616e67656d2e636f6d3a77616c6c657490000c618102ffff8a0102820407e40109830b54414e47454d2053444b008403584c4d86400e71c1f060387029688254320b90abeae471bcafbbe8ea3880903bdb8d1cc389d032b982e1ffd7ef49e66f1780123b763dd2f3a9a9494eb0fad4ae8cf306672c60207c967a51077c14fc49d867f23b8d0eaf60cad479a56587e894571b7fb33690176140345fbe53f5be0ec871e91c317cde2bd0396d47e4b945c138c153b0271f636a73cf531df1bc54ac4fcdbce42f81b40d58e0265d34e28121a4c50fdfe329a97f6000fe000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        val tlvs = Tlv.deserialize(response.hexToBytes(), true)
+        assertThat(tlvs)
+                .isNotEmpty()
     }
 }
