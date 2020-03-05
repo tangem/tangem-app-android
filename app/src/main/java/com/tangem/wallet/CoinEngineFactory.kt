@@ -5,6 +5,7 @@ import com.tangem.data.Blockchain
 import com.tangem.wallet.bch.BtcCashEngine
 import com.tangem.wallet.binance.BinanceEngine
 import com.tangem.wallet.btc.BtcEngine
+import com.tangem.wallet.btcmultisig.BtcMultisigEngine
 import com.tangem.wallet.cardano.CardanoData
 import com.tangem.wallet.cardano.CardanoEngine
 import com.tangem.wallet.ducatus.DucatusEngine
@@ -56,6 +57,7 @@ object CoinEngineFactory {
             Blockchain.Eos -> EosEngine()
             Blockchain.Ducatus -> DucatusEngine()
             Blockchain.Tezos -> TezosEngine()
+            Blockchain.BitcoinDual -> BtcMultisigEngine()
             else -> null
         }
     }
@@ -101,6 +103,8 @@ object CoinEngineFactory {
                 DucatusEngine(context)
             else if (Blockchain.Tezos == context.blockchain)
                 TezosEngine(context)
+            else if (Blockchain.BitcoinDual == context.blockchain)
+                BtcMultisigEngine(context)
             else
                 return null
         } catch (e: Exception) {
