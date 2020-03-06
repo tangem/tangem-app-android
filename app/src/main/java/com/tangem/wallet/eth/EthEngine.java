@@ -466,7 +466,7 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public void requestBalanceAndUnspentTransactions(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
-        final ServerApiInfura serverApiInfura = new ServerApiInfura();
+        final ServerApiInfura serverApiInfura = new ServerApiInfura(ctx.getBlockchain());
         final ServerApiBlockcypher serverApiBlockcypher = new ServerApiBlockcypher();
 
         ServerApiInfura.ResponseListener responseListener = new ServerApiInfura.ResponseListener() {
@@ -561,11 +561,21 @@ public class EthEngine extends CoinEngine {
 
             public void onSuccess(String method, BlockcypherFee blockcypherFee) {
                 Log.e(TAG, "Wrong response type for requestBalanceAndUnspentTransactions");
+                if (serverApiInfura.isRequestsSequenceCompleted()&& serverApiBlockcypher.isRequestsSequenceCompleted()) {
+                    blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                } else {
+                    blockchainRequestsCallbacks.onProgress();
+                }
             }
 
             @Override
             public void onFail(String method, String message) {
                 Log.i(TAG, "onFail: " + method + " " + message);
+                if (serverApiInfura.isRequestsSequenceCompleted()&& serverApiBlockcypher.isRequestsSequenceCompleted()) {
+                    blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                } else {
+                    blockchainRequestsCallbacks.onProgress();
+                }
             }
         };
         serverApiBlockcypher.setResponseListener(blockcypherListener);
@@ -579,7 +589,7 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
-        ServerApiInfura serverApiInfura = new ServerApiInfura();
+        ServerApiInfura serverApiInfura = new ServerApiInfura(ctx.getBlockchain());
         // request requestData eth gasPrice listener
         ServerApiInfura.ResponseListener responseListener = new ServerApiInfura.ResponseListener() {
             @Override
@@ -629,7 +639,7 @@ public class EthEngine extends CoinEngine {
 
         String txStr = String.format("0x%s", BTCUtils.toHex(txForSend));
 
-        ServerApiInfura serverApiInfura = new ServerApiInfura();
+        ServerApiInfura serverApiInfura = new ServerApiInfura(ctx.getBlockchain());
         // request requestData eth gasPrice listener
         ServerApiInfura.ResponseListener responseListener = new ServerApiInfura.ResponseListener() {
             @Override
