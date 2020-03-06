@@ -47,7 +47,7 @@ class LocalStorage
             artworks = HashMap()
         }
 
-        if (artworks.count() < 39) {
+        if (artworks.count() < 43) {
 //          forceSave=true only on the last one
             putResourceArtworkToCatalog(R.drawable.card_default, false)
             putResourceArtworkToCatalog(R.drawable.card_default_nft, false)
@@ -78,9 +78,13 @@ class LocalStorage
             putResourceArtworkToCatalog(R.drawable.card_ru043, false)
             putResourceArtworkToCatalog(R.drawable.card_tg044, false)
             putResourceArtworkToCatalog(R.drawable.card_tg046, false)
+            putResourceArtworkToCatalog(R.drawable.card_tg049, false)
+            putResourceArtworkToCatalog(R.drawable.card_tg051, false)
+            putResourceArtworkToCatalog(R.drawable.card_tg052, false)
             putResourceArtworkToCatalog(R.drawable.card_tg054, false)
             putResourceArtworkToCatalog(R.drawable.card_tg055, false)
             putResourceArtworkToCatalog(R.drawable.card_tg057, false)
+            putResourceArtworkToCatalog(R.drawable.card_tg058, false)
             putResourceArtworkToCatalog(R.drawable.card_tg060, false)
             putResourceArtworkToCatalog(R.drawable.card_tg061, false)
             putResourceArtworkToCatalog(R.drawable.card_tg062, false)
@@ -281,8 +285,12 @@ class LocalStorage
             card.batch == "0029" -> R.drawable.card_ru041
             card.batch == "0031" -> R.drawable.card_ru042
             card.batch == "0034" -> R.drawable.card_tg046
+            card.batch == "0037" -> R.drawable.card_tg049
+            card.batch == "0038" -> R.drawable.card_tg051
+            card.batch == "0039" -> R.drawable.card_tg052
             card.batch == "0041" -> R.drawable.card_tg054
             card.batch == "0042" -> R.drawable.card_tg055
+            card.batch == "0044" -> R.drawable.card_tg058
             card.batch == "0046" -> R.drawable.card_tg054
             card.batch == "0047" -> R.drawable.card_tg055
             card.batch == "0045" -> R.drawable.card_tg057
