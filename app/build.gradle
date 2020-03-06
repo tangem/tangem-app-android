@@ -57,12 +57,6 @@ android {
             applicationId "com.tangem.wallet"
             signingConfig signingConfigs.debug
         }
-        tangemCardano {
-            versionCode 1
-            versionName "0.1.0"
-            applicationId "com.tangem.cardano"
-            signingConfig signingConfigs.debug
-        }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
