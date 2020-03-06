@@ -20,9 +20,7 @@ platform :android do
   desc "Runs all the tests"
   lane :test do
     gradle(
-	  task: "test",
-	  flavor: "tangemAccess",
-	  build_type: "DebugUnitTest")
+	  task: "test")
   end
 
   desc "Build a signed release APK"
