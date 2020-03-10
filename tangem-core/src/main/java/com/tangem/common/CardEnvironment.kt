@@ -10,6 +10,7 @@ data class CardEnvironment(
         val pin2: String = DEFAULT_PIN2,
         val cardId: String? = null,
         val terminalKeys: KeyPair? = null,
+        val encryptionMode: EncryptionMode = EncryptionMode.NONE,
         val encryptionKey: ByteArray? = null,
         val cvc: ByteArray? = null
 ) {
