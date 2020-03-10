@@ -3,14 +3,17 @@ package com.tangem.tasks
 import com.tangem.CardManagerDelegate
 import com.tangem.CardReader
 import com.tangem.Log
-import com.tangem.commands.Card
-import com.tangem.commands.CommandResponse
-import com.tangem.commands.CommandSerializer
-import com.tangem.commands.ReadCommand
+import com.tangem.commands.*
 import com.tangem.common.CardEnvironment
 import com.tangem.common.CompletionResult
+import com.tangem.common.EncryptionMode
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.StatusWord
+import com.tangem.common.extensions.calculateSha256
+import com.tangem.crypto.EncryptionHelper
+import com.tangem.crypto.FastEncryptionHelper
+import com.tangem.crypto.StrongEncryptionHelper
+import com.tangem.crypto.pbkdf2Hash
 
 /**
  * An error class that represent typical errors that may occur when performing Tangem SDK tasks.
@@ -85,6 +88,7 @@ abstract class Task<T> {
     var reader: CardReader? = null
     var performPreflightRead: Boolean = true
     var securityDelayDuration: Int = 0
+    private var openSessionRequired = false
 
     /**
      * This method should be called to run the [Task] and perform all its operations.
@@ -137,8 +141,43 @@ abstract class Task<T> {
 
         Log.i(this::class.simpleName!!, "Nfc command ${command::class.simpleName!!} is initiated")
 
-        val commandApdu = command.serialize(cardEnvironment)
-        sendRequest(command, commandApdu, cardEnvironment, callback)
+        if (cardEnvironment.encryptionKey != null && !openSessionRequired) {
+            val commandApdu = command.serialize(cardEnvironment)
+            sendRequest(command, commandApdu, cardEnvironment, callback)
+            return
+        }
+
+        when (cardEnvironment.encryptionMode) {
+            EncryptionMode.NONE -> {
+                val commandApdu = command.serialize(cardEnvironment)
+                sendRequest(command, commandApdu, cardEnvironment, callback)
+            }
+            EncryptionMode.FAST, EncryptionMode.STRONG -> {
+                val encryptionHelper: EncryptionHelper =
+                        if (cardEnvironment.encryptionMode == EncryptionMode.STRONG) {
+                            StrongEncryptionHelper()
+                        } else {
+                            FastEncryptionHelper()
+                        }
+                val openSessionCommand = OpenSessionCommand(encryptionHelper.keyA)
+                val openSessionApdu = openSessionCommand.serialize(cardEnvironment)
+                sendRequest(openSessionCommand, openSessionApdu, cardEnvironment) { result ->
+                    when (result) {
+                        is CompletionResult.Success -> {
+                            val uid = result.data.uid
+                            val protocolKey = cardEnvironment.pin1.calculateSha256().pbkdf2Hash(uid, 50)
+                            val secret = encryptionHelper.generateSecret(result.data.sessionKeyB)
+                            val sessionKey = (secret + protocolKey).calculateSha256()
+
+                            val newEnvironment = cardEnvironment.copy(encryptionKey = sessionKey)
+                            openSessionRequired = false
+                            sendCommand(command, newEnvironment, callback)
+                        }
+                        is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
+                    }
+                }
+            }
+        }
     }
 
     private fun <T : CommandResponse> sendRequest(command: CommandSerializer<T>,
@@ -171,9 +210,25 @@ abstract class Task<T> {
                         StatusWord.InvalidState -> callback(CompletionResult.Failure(TaskError.InvalidState()))
 
                         StatusWord.InsNotSupported -> callback(CompletionResult.Failure(TaskError.InsNotSupported()))
-                        StatusWord.NeedEncryption -> callback(CompletionResult.Failure(TaskError.NeedEncryption()))
+                        StatusWord.NeedEncryption -> {
+                            openSessionRequired = true
+                            val newEnvironment = when (cardEnvironment.encryptionMode) {
+                                EncryptionMode.NONE -> {
+                                    cardEnvironment.copy(encryptionMode = EncryptionMode.FAST)
+                                }
+                                EncryptionMode.FAST -> {
+                                    cardEnvironment.copy(encryptionMode = EncryptionMode.STRONG)
+                                }
+                                EncryptionMode.STRONG -> {
+                                    Log.e(this::class.simpleName!!, "Encryption doesn't work")
+                                    callback(CompletionResult.Failure(TaskError.NeedEncryption()))
+                                    return@transceiveApdu
+                                }
+                            }
+                            sendCommand(command, newEnvironment, callback)
+                        }
                         StatusWord.NeedPause -> {
-                            // When NeedPause is returned from the card whenever security delay is triggered.
+                            // NeedPause is returned from the card whenever security delay is triggered.
                             val remainingTime = command.deserializeSecurityDelay(responseApdu, cardEnvironment)
                             if (remainingTime != null) delegate?.onSecurityDelay(remainingTime, securityDelayDuration)
                             Log.i(this::class.simpleName!!, "Nfc command ${command::class.simpleName!!} triggered security delay of $remainingTime milliseconds")
@@ -201,7 +256,6 @@ abstract class Task<T> {
                     callback(TaskEvent.Completion(readResult.error))
                 }
                 is CompletionResult.Success -> {
-
                     val receivedCardId = readResult.data.cardId
                     securityDelayDuration = readResult.data.pauseBeforePin2 ?: 0
 
@@ -215,10 +269,7 @@ abstract class Task<T> {
                     onRun(newEnvironment, readResult.data, callback)
                 }
             }
-
-
         }
-
     }
 }
 
