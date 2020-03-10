@@ -1,3 +1,7 @@
 <resources>
-    <string name="app_name">TangemTest</string>
+    <string name="app_name">Tangem Demo</string>
+
+    <string name="fg_name_entry_point">@string/app_name</string>
+    <string name="action_card_scan">Read card</string>
+    <string name="action_card_sign">Sign card</string>
 </resources>
