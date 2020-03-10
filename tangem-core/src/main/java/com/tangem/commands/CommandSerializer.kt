@@ -38,7 +38,7 @@ abstract class CommandSerializer<T : CommandResponse> {
      * @return Remaining security delay in milliseconds.
      */
     fun deserializeSecurityDelay(responseApdu: ResponseApdu, cardEnvironment: CardEnvironment): Int? {
-        val tlv = responseApdu.getTlvData(cardEnvironment.encryptionKey)
+        val tlv = responseApdu.getTlvData()
         return tlv?.find { it.tag == TlvTag.Pause }?.value?.toInt()
     }
 }
