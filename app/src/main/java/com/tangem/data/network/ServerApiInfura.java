@@ -5,6 +5,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.tangem.App;
+import com.tangem.data.Blockchain;
 import com.tangem.data.network.model.InfuraBody;
 import com.tangem.data.network.model.InfuraResponse;
 
@@ -34,6 +35,16 @@ public class ServerApiInfura {
 
     private int requestsCount=0;
 
+    private InfuraApi infuraApi = App.Companion.getNetworkComponent().getRetrofitInfura().create(InfuraApi.class);
+
+    public ServerApiInfura() {}
+
+    public ServerApiInfura(Blockchain blockchain) {
+        if (blockchain == Blockchain.EthereumTestNet) {
+            infuraApi = App.Companion.getNetworkComponent().getRetrofitInfuraTestnet().create(InfuraApi.class);
+        }
+    }
+
     public boolean isRequestsSequenceCompleted() {
         Log.i(TAG, String.format("isRequestsSequenceCompleted: %s (%d requests left)", String.valueOf(requestsCount <= 0), requestsCount));
         return requestsCount <= 0;
@@ -53,7 +64,7 @@ public class ServerApiInfura {
 
     public void requestData(String method, int id, String wallet, String contract, String tx) {
         requestsCount++;
-        InfuraApi infuraApi = App.Companion.getNetworkComponent().getRetrofitInfura().create(InfuraApi.class);
+
 
         InfuraBody infuraBody;
         switch (method) {
