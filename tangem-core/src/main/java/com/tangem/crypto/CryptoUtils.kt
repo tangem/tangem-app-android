@@ -2,8 +2,12 @@ package com.tangem.crypto
 
 import com.tangem.commands.EllipticCurve
 import net.i2p.crypto.eddsa.EdDSASecurityProvider
+import java.security.PublicKey
 import java.security.SecureRandom
 import java.security.Security
+import javax.crypto.Cipher
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
 
 
 object CryptoUtils {
@@ -62,6 +66,16 @@ object CryptoUtils {
             EllipticCurve.Ed25519 -> Ed25519.generatePublicKey(privateKeyArray)
         }
     }
+
+    fun loadPublicKey(
+            publicKey: ByteArray,
+            curve: EllipticCurve = EllipticCurve.Secp256k1
+    ): PublicKey {
+        return when (curve) {
+            EllipticCurve.Secp256k1 -> Secp256k1.loadPublicKey(publicKey)
+            EllipticCurve.Ed25519 -> Ed25519.loadPublicKey(publicKey)
+        }
+    }
 }
 
 /**
@@ -78,5 +92,29 @@ fun ByteArray.sign(privateKeyArray: ByteArray, curve: EllipticCurve = EllipticCu
         EllipticCurve.Ed25519 -> Ed25519.sign(this, privateKeyArray)
     }
 }
+
+fun ByteArray.encrypt(key: ByteArray, usePkcs7: Boolean = true): ByteArray {
+    val spec = if (usePkcs7) ENCRYPTION_SPEC_PKCS7 else ENCRYPTION_SPEC_NO_PADDING
+    val secretKeySpec = SecretKeySpec(key, spec)
+    val cipher = Cipher.getInstance(spec, "SC")
+    cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, IvParameterSpec(ByteArray(16)))
+    return cipher.doFinal(this)
+}
+
+fun ByteArray.decrypt(key: ByteArray, usePkcs7: Boolean = true): ByteArray {
+    val spec = if (usePkcs7) ENCRYPTION_SPEC_PKCS7 else ENCRYPTION_SPEC_NO_PADDING
+    val secretKeySpec = SecretKeySpec(key, spec)
+    val cipher = Cipher.getInstance(spec)
+    cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, IvParameterSpec(ByteArray(16)))
+    return cipher.doFinal(this.copyOfRange(0, this.size))
+}
+
+fun ByteArray.pbkdf2Hash(salt: ByteArray, iterations: Int): ByteArray {
+    return Pbkdf2().deriveKey(this, salt, iterations)
+}
+
+private const val ENCRYPTION_SPEC_PKCS7 = "AES/CBC/PKCS7PADDING"
+private const val ENCRYPTION_SPEC_NO_PADDING = "AES/CBC/NOPADDING"
+
 
 
