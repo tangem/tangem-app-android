@@ -310,11 +310,14 @@ class ReadCommand : CommandSerializer<Card>() {
          */
         tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
         tlvBuilder.append(TlvTag.TerminalPublicKey, cardEnvironment.terminalKeys?.publicKey)
-        return CommandApdu(Instruction.Read, tlvBuilder.serialize())
+        return CommandApdu(
+                Instruction.Read, tlvBuilder.serialize(),
+                cardEnvironment.encryptionMode, cardEnvironment.encryptionKey
+        )
     }
 
     override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): Card? {
-        val tlvData = responseApdu.getTlvData() ?: return null
+        val tlvData = responseApdu.getTlvData(cardEnvironment.encryptionKey) ?: return null
 
         return try {
             val tlvMapper = TlvMapper(tlvData)
