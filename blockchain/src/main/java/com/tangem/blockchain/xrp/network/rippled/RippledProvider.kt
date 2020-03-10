@@ -8,7 +8,6 @@ import com.tangem.blockchain.xrp.network.XrpFeeResponse
 import com.tangem.blockchain.xrp.network.XrpInfoResponse
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import java.math.BigDecimal
 
 class RippledProvider(private val api: RippledApi) {
     private val decimals = Blockchain.XRP.decimals.toInt()
