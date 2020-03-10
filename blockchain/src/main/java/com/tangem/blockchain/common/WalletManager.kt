@@ -2,12 +2,12 @@ package com.tangem.blockchain.common
 
 import com.tangem.blockchain.common.extensions.Result
 import com.tangem.blockchain.common.extensions.SimpleResult
+import com.tangem.blockchain.wallets.CurrencyWallet
 import com.tangem.commands.SignResponse
 import com.tangem.tasks.TaskEvent
-import kotlinx.coroutines.flow.Flow
 
 interface WalletManager {
-    var wallet: Wallet
+    var wallet: CurrencyWallet
     val blockchain: Blockchain
 
     suspend fun update()
@@ -22,5 +22,5 @@ interface TransactionSigner {
 }
 
 interface FeeProvider {
-    suspend fun getFee(amount: Amount, source: String, destination: String): Result<List<Amount>>
+    suspend fun getFee(amount: Amount, destination: String): Result<List<Amount>>
 }
