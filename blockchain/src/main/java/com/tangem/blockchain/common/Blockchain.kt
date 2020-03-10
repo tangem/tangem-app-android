@@ -2,13 +2,15 @@ package com.tangem.blockchain.common
 
 import com.tangem.blockchain.bitcoin.BitcoinAddressFactory
 import com.tangem.blockchain.bitcoin.BitcoinAddressValidator
-import com.tangem.blockchain.ethereum.EthereumAddressFactory
-import com.tangem.blockchain.ethereum.EthereumAddressValidator
 import com.tangem.blockchain.cardano.CardanoAddressFactory
 import com.tangem.blockchain.cardano.CardanoAddressValidator
+import com.tangem.blockchain.ethereum.EthereumAddressFactory
+import com.tangem.blockchain.ethereum.EthereumAddressValidator
+
 import com.tangem.blockchain.stellar.StellarAddressFactory
 import com.tangem.blockchain.xrp.XrpAddressFactory
 import com.tangem.blockchain.xrp.XrpAddressValidator
+
 import java.math.BigDecimal
 
 enum class Blockchain(
@@ -24,7 +26,7 @@ enum class Blockchain(
     Ethereum("ETH", "ETH", 18, "Ethereum", 0),
     Rootstock("", "", 18, "", 0),
     Cardano("CARDANO", "ADA", 6, "Cardano", 0),
-    XRP("", "XRP", 6, "XRP Ledger", 0),
+    XRP("XRP", "XRP", 6, "XRP Ledger", 0),
     Binance("", "", 8, "", 0),
     Stellar("XLM", "XLM", 7, "Stellar", 0);
 
