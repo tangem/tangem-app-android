@@ -1,6 +1,5 @@
 package com.tangem.blockchain.xrp.network
 
-import com.tangem.blockchain.bitcoin.network.BitcoinFee
 import com.tangem.blockchain.common.extensions.Result
 import com.tangem.blockchain.common.extensions.SimpleResult
 import com.tangem.blockchain.common.network.API_RIPPLED
