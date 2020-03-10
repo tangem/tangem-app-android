@@ -1,6 +1,8 @@
 package com.tangem.blockchain.ethereum
 
+import android.util.Log
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.extensions.Result
 import com.tangem.blockchain.common.extensions.SimpleResult
 import com.tangem.blockchain.ethereum.network.EthereumNetworkManager
@@ -12,7 +14,7 @@ import org.kethereum.DEFAULT_GAS_LIMIT
 import org.kethereum.crypto.api.ec.ECDSASignature
 import org.kethereum.crypto.determineRecId
 import org.kethereum.crypto.impl.ec.canonicalise
-import org.kethereum.functions.encodeRLP
+import org.kethereum.extensions.transactions.encodeRLP
 import org.kethereum.keccakshortcut.keccak
 import org.kethereum.model.*
 import java.math.BigDecimal
@@ -22,22 +24,32 @@ class EthereumWalletManager(
         private val cardId: String,
         private val walletPublicKey: ByteArray,
         chain: Chain,
-        walletConfig: WalletConfig
+        token: Token? = null,
+        override var wallet: CurrencyWallet
 ) : WalletManager,
         TransactionSender,
         FeeProvider {
 
     override val blockchain: Blockchain = Blockchain.Ethereum
     private val address = blockchain.makeAddress(walletPublicKey)
-    private val currencyWallet = CurrencyWallet(walletConfig, address)
-    override var wallet: Wallet = currencyWallet
     private val builder = EthereumTransactionBuilder(chain)
     private val networkManager = EthereumNetworkManager()
     private var pendingTxCount = -1L
     private var txCount = -1L
 
+    init {
+        if (token != null) wallet.balances[AmountType.Token] =
+                Amount(
+                        token.symbol,
+                        null,
+                        token.contractAddress,
+                        token.decimals,
+                        AmountType.Token)
+        wallet.balances[AmountType.Coin] = Amount(null, blockchain)
+    }
+
     override suspend fun update() {
-        val result = networkManager.getInfo(address, currencyWallet.balances[AmountType.Token]?.address)
+        val result = networkManager.getInfo(address, wallet.balances[AmountType.Token]?.address)
         when (result) {
             is Result.Failure -> updateError(result.error)
             is Result.Success -> updateWallet(result.data)
@@ -45,23 +57,24 @@ class EthereumWalletManager(
     }
 
     private fun updateWallet(data: EthereumResponse) {
-        currencyWallet.balances[AmountType.Coin]?.value = data.balance
-        currencyWallet.balances[AmountType.Token]?.value = data.tokenBalance
+        wallet.balances[AmountType.Coin]?.value = data.balance
+        wallet.balances[AmountType.Token]?.value = data.tokenBalance
         txCount = data.txCount
         pendingTxCount = data.pendingTxCount
         if (txCount == pendingTxCount) {
-            currencyWallet.pendingTransactions.forEach { it.status = TransactionStatus.Confirmed }
-        } else if (currencyWallet.pendingTransactions.isEmpty()) {
-            currencyWallet.pendingTransactions.add(TransactionData(
+            wallet.pendingTransactions.forEach { it.status = TransactionStatus.Confirmed }
+        } else if (wallet.pendingTransactions.isEmpty()) {
+            wallet.pendingTransactions.add(TransactionData(
                     Amount(blockchain.currency, decimals = blockchain.decimals),
                     null,
                     "unknown",
-                    currencyWallet.address))
+                    wallet.address))
         }
     }
 
     private fun updateError(error: Throwable?) {
-
+        Log.e(this::class.java.simpleName, error?.message ?: "")
+        if (error != null) throw error
     }
 
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
@@ -76,7 +89,7 @@ class EthereumWalletManager(
         }
     }
 
-    override suspend fun getFee(amount: Amount, source: String, destination: String): Result<List<Amount>> {
+    override suspend fun getFee(amount: Amount, destination: String): Result<List<Amount>> {
         val result = networkManager.getFee(getGasLimit(amount).value)
         when (result) {
             is Result.Success -> {
