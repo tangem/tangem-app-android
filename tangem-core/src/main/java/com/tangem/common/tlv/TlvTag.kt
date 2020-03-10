@@ -51,6 +51,7 @@ enum class TlvTag(val code: Int) {
 
     SessionKeyA(0x1A),
     SessionKeyB(0x1B),
+    Uid(0x0B),
     Pause(0x1C),
 
     ManufactureId(0x20),
@@ -65,7 +66,6 @@ enum class TlvTag(val code: Int) {
     Size(0x25),
     Mode(0x23),
     Offset(0x24),
-
 
     IsActivated(0x3A),
     ActivationSeed(0x3B),
@@ -94,7 +94,6 @@ enum class TlvTag(val code: Int) {
 
     ProductMask(0x8A),
     PaymentFlowVersion(0x54),
-
 
     TokenSymbol(0xA0),
     TokenContractAddress(0xA1),
