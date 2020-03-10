@@ -28,7 +28,15 @@ public class Server {
         public static final String URL_INFURA = ServerURL.API_INFURA;
 
         public static class Method {
-            static final String MAIN = URL_INFURA + "v3/613a0b14833145968b1f656240c7d245";
+            public static final String MAIN = "v3/613a0b14833145968b1f656240c7d245";
+        }
+    }
+
+    public static class ApiInfuraTestnet {
+        public static final String URL_INFURA_TESTNET = ServerURL.API_INFURA_TESTNET;
+
+        public static class Method {
+            public static final String MAIN = "v3/613a0b14833145968b1f656240c7d245";
         }
     }
 
