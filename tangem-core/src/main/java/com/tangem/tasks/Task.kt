@@ -88,7 +88,6 @@ abstract class Task<T> {
     var reader: CardReader? = null
     var performPreflightRead: Boolean = true
     var securityDelayDuration: Int = 0
-    private var openSessionRequired = false
 
     /**
      * This method should be called to run the [Task] and perform all its operations.
@@ -141,18 +140,17 @@ abstract class Task<T> {
 
         Log.i(this::class.simpleName!!, "Nfc command ${command::class.simpleName!!} is initiated")
 
-        if (cardEnvironment.encryptionKey != null && !openSessionRequired) {
-            val commandApdu = command.serialize(cardEnvironment)
-            sendRequest(command, commandApdu, cardEnvironment, callback)
-            return
-        }
-
         when (cardEnvironment.encryptionMode) {
             EncryptionMode.NONE -> {
                 val commandApdu = command.serialize(cardEnvironment)
                 sendRequest(command, commandApdu, cardEnvironment, callback)
             }
             EncryptionMode.FAST, EncryptionMode.STRONG -> {
+                if (cardEnvironment.encryptionKey != null ) {
+                    val commandApdu = command.serialize(cardEnvironment)
+                    sendRequest(command, commandApdu, cardEnvironment, callback)
+                    return
+                }
                 val encryptionHelper: EncryptionHelper =
                         if (cardEnvironment.encryptionMode == EncryptionMode.STRONG) {
                             StrongEncryptionHelper()
@@ -168,10 +166,9 @@ abstract class Task<T> {
                             val protocolKey = cardEnvironment.pin1.calculateSha256().pbkdf2Hash(uid, 50)
                             val secret = encryptionHelper.generateSecret(result.data.sessionKeyB)
                             val sessionKey = (secret + protocolKey).calculateSha256()
+                            cardEnvironment.encryptionKey = sessionKey
 
-                            val newEnvironment = cardEnvironment.copy(encryptionKey = sessionKey)
-                            openSessionRequired = false
-                            sendCommand(command, newEnvironment, callback)
+                            sendCommand(command, cardEnvironment, callback)
                         }
                         is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
                     }
@@ -211,13 +208,14 @@ abstract class Task<T> {
 
                         StatusWord.InsNotSupported -> callback(CompletionResult.Failure(TaskError.InsNotSupported()))
                         StatusWord.NeedEncryption -> {
-                            openSessionRequired = true
-                            val newEnvironment = when (cardEnvironment.encryptionMode) {
+                            when (cardEnvironment.encryptionMode) {
                                 EncryptionMode.NONE -> {
-                                    cardEnvironment.copy(encryptionMode = EncryptionMode.FAST)
+                                    cardEnvironment.encryptionKey = null
+                                    cardEnvironment.encryptionMode = EncryptionMode.FAST
                                 }
                                 EncryptionMode.FAST -> {
-                                    cardEnvironment.copy(encryptionMode = EncryptionMode.STRONG)
+                                    cardEnvironment.encryptionKey = null
+                                    cardEnvironment.encryptionMode = EncryptionMode.STRONG
                                 }
                                 EncryptionMode.STRONG -> {
                                     Log.e(this::class.simpleName!!, "Encryption doesn't work")
@@ -225,7 +223,7 @@ abstract class Task<T> {
                                     return@transceiveApdu
                                 }
                             }
-                            sendCommand(command, newEnvironment, callback)
+                            sendCommand(command, cardEnvironment, callback)
                         }
                         StatusWord.NeedPause -> {
                             // NeedPause is returned from the card whenever security delay is triggered.
