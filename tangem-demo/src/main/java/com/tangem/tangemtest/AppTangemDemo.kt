@@ -1,14 +1,21 @@
 package com.tangem.tangemtest
 
 import android.app.Application
-import com.tangem.tangemtest.card_use_cases.CardContext
-import com.tangem.tangemtest.commons.DiManager
+import com.tangem.tangemtest.commons.TangemLogger
+import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 
 /**
 [REDACTED_AUTHOR]
  */
-class AppTangemDemo : Application(), DiManager {
-    private val cardContext: CardContext = CardContext()
+class AppTangemDemo : Application() {
 
-    override fun getCardContext(): CardContext = cardContext
+    override fun onCreate() {
+        super.onCreate()
+
+        setLogger()
+    }
+
+    private fun setLogger() {
+        Log.setLogger(TangemLogger())
+    }
 }
