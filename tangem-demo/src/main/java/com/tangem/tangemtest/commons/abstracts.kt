@@ -6,7 +6,3 @@ package com.tangem.tangemtest.commons
 interface LayoutHolder {
     fun getLayoutId(): Int
 }
-
-interface Bindable<T> {
-    fun bind(data: T)
-}
