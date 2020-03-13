@@ -7,14 +7,13 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.tangem.tangemtest.R
-import com.tangem.tangemtest.card_use_cases.CardContext
-import com.tangem.tangemtest.card_use_cases.actions.Action
-import com.tangem.tangemtest.commons.NavigateAction
+import com.tangem.tangemtest.commons.Action
+import com.tangem.tangemtest.commons.NavigateOptions
 import com.tangem.tangemtest.commons.getDefaultNavigationOptions
-import com.tangem.tangemtest.commons.getDiManager
 import kotlinx.android.synthetic.main.fg_entry_point.*
 
 /**
@@ -31,32 +30,41 @@ class EntryPointFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        val activity = activity ?: throw Exception("Fragment isn't associated with activity ")
-
-        val cardContext = getDiManager().getCardContext().init(activity)
-        initRecyclerView(cardContext)
+        initRecyclerView()
     }
 
-    private fun initRecyclerView(cardContext: CardContext) {
+    private fun initRecyclerView() {
+        val layoutManager = LinearLayoutManager(activity)
         rvActions = rv_actions
-        rvActions.layoutManager = LinearLayoutManager(activity)
-
-        val adapter = RvActionsAdapter(cardContext) { position, destinationId -> navigate(destinationId as Int) }
-        adapter.setItems(mutableListOf(
-                NavigateAction(Action.Scan(), R.id.nav_scan),
-                NavigateAction(Action.Sign(), R.id.nav_sign)
-        ))
-        rvActions.adapter = adapter
+        rvActions.layoutManager = layoutManager
+        rvActions.addItemDecoration(DividerItemDecoration(activity, layoutManager.orientation))
+        rvActions.adapter = RvActionsAdapter { type, position, data -> navigate(data.destinationId) }
     }
 
     override fun onResume() {
         super.onResume()
+        val adapter: RvActionsAdapter = rvActions.adapter as? RvActionsAdapter ?: return
 
-        rvActions.adapter?.notifyDataSetChanged()
+        adapter.setItemList(getNavigateOptions())
+        adapter.notifyDataSetChanged()
     }
 
     private fun navigate(destinationId: Int) {
         navController.navigate(destinationId, null, getDefaultNavigationOptions())
+    }
+
+    private fun getNavigateOptions(): MutableList<NavigateOptions> {
+        return mutableListOf(
+                NavigateOptions(Action.Scan, R.id.action_nav_entry_point_to_nav_scan),
+                NavigateOptions(Action.Sign, R.id.action_nav_entry_point_to_nav_sign),
+                NavigateOptions(Action.CreateWallet, R.id.action_nav_entry_point_to_nav_wallet_create),
+                NavigateOptions(Action.PurgeWallet, R.id.action_nav_entry_point_to_nav_wallet_purge),
+                NavigateOptions(Action.ReadIssuerData, R.id.action_nav_entry_point_to_nav_issuer_read_data),
+                NavigateOptions(Action.WriteIssuerData, R.id.action_nav_entry_point_to_nav_issuer_write_data),
+                NavigateOptions(Action.ReadIssuerExData, R.id.action_nav_entry_point_to_nav_issuer_read_ex_data),
+                NavigateOptions(Action.WriteIssuerExData, R.id.action_nav_entry_point_to_nav_issuer_write_ex_data),
+                NavigateOptions(Action.ReadUserData, R.id.action_nav_entry_point_to_nav_user_read_data),
+                NavigateOptions(Action.WriteUserData, R.id.action_nav_entry_point_to_nav_user_write_data)
+        )
     }
 }
