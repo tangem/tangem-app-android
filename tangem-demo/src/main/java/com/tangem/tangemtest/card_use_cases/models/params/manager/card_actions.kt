@@ -8,7 +8,12 @@ import com.tangem.tangemtest.card_use_cases.models.params.manager.modifiers.Para
 import com.tangem.tasks.TaskEvent
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
-
+/**
+[REDACTED_AUTHOR]
+ *
+ * The Card Action class family is designed for calling Card Manager functions
+ * and then processing the response. It also allows you to extract the main action as a lambda expression
+ */
 data class AttrForAction(
         val cardManager: CardManager,
         val paramsList: List<IncomingParameter>,
