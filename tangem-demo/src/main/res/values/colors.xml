@@ -4,5 +4,5 @@
     <color name="colorPrimaryDark">#027AFF</color>
     <color name="colorAccent">#027AFF</color>
 
-    <color name="delimiter">#000000</color>
+    <color name="delimiter">#26000000</color>
 </resources>
