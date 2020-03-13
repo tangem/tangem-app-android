@@ -8,14 +8,16 @@ import com.tangem.tasks.TaskEvent
 
 /**
 [REDACTED_AUTHOR]
+ *
+ * ParamsManager monitors parameter changes and runs the CardManager command
  */
-
-class IncomingParameter(val tlvTag: TlvTag, var data: Any? = null)
 
 typealias ActionResponse = TaskEvent<*>
 typealias AffectedList = List<IncomingParameter>
 typealias AffectedParamsCallback = (AffectedList) -> Unit
 typealias ActionCallback = (ActionResponse, AffectedList) -> Unit
+
+class IncomingParameter(val tlvTag: TlvTag, var data: Any? = null)
 
 interface ParamsManager {
 
