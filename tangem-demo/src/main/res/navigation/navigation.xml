@@ -8,51 +8,99 @@
         android:id="@+id/nav_entry_point"
         android:name="com.tangem.tangemtest._main.entry_point.EntryPointFragment"
         android:label="@string/fg_name_entry_point"
-        tools:layout="@layout/fg_entry_point" />
+        tools:layout="@layout/fg_entry_point">
+
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_issuer_read_ex_data"
+            app:destination="@id/nav_issuer_read_ex_data" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_issuer_read_data"
+            app:destination="@id/nav_issuer_read_data" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_issuer_write_data"
+            app:destination="@id/nav_issuer_write_data" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_issuer_write_ex_data"
+            app:destination="@id/nav_issuer_write_ex_data" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_scan"
+            app:destination="@id/nav_scan" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_sign"
+            app:destination="@id/nav_sign" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_user_read_data"
+            app:destination="@id/nav_user_read_data" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_user_write_data"
+            app:destination="@id/nav_user_write_data" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_wallet_create"
+            app:destination="@id/nav_wallet_create" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_wallet_purge"
+            app:destination="@id/nav_wallet_purge" />
+    </fragment>
 
     <fragment
         android:id="@+id/nav_scan"
-        android:name="com.tangem.tangemtest.card_use_cases.actions.ScanActionFragment"
+        android:name="com.tangem.tangemtest.card_use_cases.ui.ScanActionFragment"
         android:label="@string/action_card_scan"
-        tools:layout="@layout/fg_card_scan" />
+        tools:layout="@layout/fg_action_card_scan" />
 
     <fragment
         android:id="@+id/nav_sign"
-        android:name="com.tangem.tangemtest.card_use_cases.actions.SignActionFragment"
-        android:label="@string/action_card_scan"
-        tools:layout="@layout/fg_card_sign" />
+        android:name="com.tangem.tangemtest.card_use_cases.ui.SignActionFragment"
+        android:label="@string/action_card_sign"
+        tools:layout="@layout/fg_action_card_sign" />
 
-    <!--    <fragment-->
-    <!--            android:id="@+id/flow_step_one_dest"-->
-    <!--            android:name="com.example.android.codelabs.navigation.FlowStepFragment"-->
-    <!--            tools:layout="@layout/flow_step_one_fragment">-->
-    <!--        <argument-->
-    <!--                android:name="flowStepNumber"-->
-    <!--                android:defaultValue="1"-->
-    <!--                app:argType="integer" />-->
 
-    <!--        <action-->
-    <!--                android:id="@+id/next_action"-->
-    <!--                app:destination="@+id/flow_step_two_dest" />-->
-    <!--    </fragment>-->
+    <fragment
+        android:id="@+id/nav_issuer_read_data"
+        android:name="com.tangem.tangemtest.card_use_cases.ui.IssuerReadDataActionFragment"
+        android:label="@string/action_issuer_read_data"
+        tools:layout="@layout/fg_action_issuer_read_data" />
 
-    <!--    <fragment-->
-    <!--            android:id="@+id/settings_dest"-->
-    <!--            android:name="com.example.android.codelabs.navigation.SettingsFragment"-->
-    <!--            android:label="@string/settings"-->
-    <!--            tools:layout="@layout/settings_fragment" />-->
+    <fragment
+        android:id="@+id/nav_issuer_write_data"
+        android:name="com.tangem.tangemtest.card_use_cases.ui.IssuerWriteDataActionFragment"
+        android:label="@string/action_issuer_write_data"
+        tools:layout="@layout/fg_action_issuer_write_data" />
 
-    <!--    <fragment-->
-    <!--            android:id="@+id/deeplink_dest"-->
-    <!--            android:name="com.example.android.codelabs.navigation.DeepLinkFragment"-->
-    <!--            android:label="@string/deeplink"-->
-    <!--            tools:layout="@layout/deeplink_fragment">-->
+    <fragment
+        android:id="@+id/nav_issuer_read_ex_data"
+        android:name="com.tangem.tangemtest.card_use_cases.ui.IssuerReadExDataActionFragment"
+        android:label="@string/action_issuer_read_ex_data"
+        tools:layout="@layout/fg_action_issuer_read_ex_data" />
 
-    <!--        <argument-->
-    <!--                android:name="myarg"-->
-    <!--                android:defaultValue="Android!" />-->
+    <fragment
+        android:id="@+id/nav_issuer_write_ex_data"
+        android:name="com.tangem.tangemtest.card_use_cases.ui.IssuerWriteExDataActionFragment"
+        android:label="@string/action_issuer_write_ex_data"
+        tools:layout="@layout/fg_action_issuer_write_ex_data" />
 
-    <!--        <deepLink app:uri="www.example.com/{myarg}" />-->
+    <fragment
+        android:id="@+id/nav_user_read_data"
+        android:name="com.tangem.tangemtest.card_use_cases.ui.UserReadDataActionFragment"
+        android:label="@string/action_user_read_data"
+        tools:layout="@layout/fg_action_user_read_data" />
 
-    <!--    </fragment>-->
+    <fragment
+        android:id="@+id/nav_user_write_data"
+        android:name="com.tangem.tangemtest.card_use_cases.ui.UserWriteDataActionFragment"
+        android:label="@string/action_user_write_data"
+        tools:layout="@layout/fg_action_user_write_data" />
+
+    <fragment
+        android:id="@+id/nav_wallet_create"
+        android:name="com.tangem.tangemtest.card_use_cases.ui.WalletCreateActionFragment"
+        android:label="@string/action_wallet_create"
+        tools:layout="@layout/fg_action_wallet_create" />
+
+    <fragment
+        android:id="@+id/nav_wallet_purge"
+        android:name="com.tangem.tangemtest.card_use_cases.ui.WalletPurgeActionFragment"
+        android:label="@string/action_wallet_purge"
+        tools:layout="@layout/fg_action_wallet_purge" />
+
 </navigation>
