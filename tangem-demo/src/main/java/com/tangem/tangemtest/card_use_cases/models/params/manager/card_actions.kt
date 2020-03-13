@@ -11,9 +11,8 @@ import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 /**
 * [REDACTED_AUTHOR]
  *
- * Семейство классов CardAction предназначены для вызова функций CardManager и
- * последующей обработкой ответа. Так же позволяет извлечь основное действие в качестве
- * lambda выражения
+ * The Card Action class family is designed for calling Card Manager functions
+ * and then processing the response. It also allows you to extract the main action as a lambda expression
  */
 data class AttrForAction(
         val cardManager: CardManager,
