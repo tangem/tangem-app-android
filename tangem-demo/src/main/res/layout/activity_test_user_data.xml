@@ -93,7 +93,7 @@
 
     <include
       android:id="@+id/m_delimiter_h"
-      layout="@layout/m_delimiter_h"
+      layout="@layout/m_divider_h"
       android:layout_width="0dp"
       android:layout_height="@dimen/delimiter_size"
       android:layout_marginTop="16dp"
