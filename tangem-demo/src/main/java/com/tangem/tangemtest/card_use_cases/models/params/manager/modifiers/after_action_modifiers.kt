@@ -6,7 +6,13 @@ import com.tangem.tangemtest.card_use_cases.models.params.manager.ParamsManager
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskEvent
 
-
+/**
+[REDACTED_AUTHOR]
+ *
+ * The After Action Modification class family is intended for modifying parameters (if necessary)
+ * after calling CardManager.anyAction.
+ * Returns a list of parameters that have been modified
+ */
 interface AfterActionModification {
     fun modify(taskEvent: TaskEvent<*>, paramsList: List<IncomingParameter>): List<IncomingParameter>
 }
