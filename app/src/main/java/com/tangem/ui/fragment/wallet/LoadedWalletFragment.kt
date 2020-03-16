@@ -307,7 +307,10 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         viewModel.getRateInfo().observe(this, Observer<Float> { rate ->
             ctx.coinData.rate = rate
             ctx.coinData.rateAlter = rate
+            requestCounter--
+            updateViews()
         })
+        requestCounter++
         viewModel.requestRateInfo(ctx)
     }
 
@@ -717,8 +720,10 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
 
         requestBalanceAndUnspentTransactions()
 
-        if (::viewModel.isInitialized)
+        if (::viewModel.isInitialized) {
+            requestCounter++
             viewModel.requestRateInfo(ctx)
+        }
 
         if (requestCounter == 0) {
             // if no connection and no requests posted
