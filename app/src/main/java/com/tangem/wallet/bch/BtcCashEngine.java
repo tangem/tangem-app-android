@@ -141,7 +141,7 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public Uri getWalletExplorerUri() {
-        return Uri.parse("https://explorer.bitcoin.com/bch/address/" + ctx.getCoinData().getWallet());
+        return Uri.parse("https://api.blockchair.com/bitcoin-cash/dashboards/address/" + ctx.getCoinData().getWallet());
     }
 
     @Override
