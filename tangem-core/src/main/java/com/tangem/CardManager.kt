@@ -69,18 +69,7 @@ class CardManager(
      */
     fun sign(hashes: Array<ByteArray>, cardId: String,
              callback: (result: TaskEvent<SignResponse>) -> Unit) {
-        val signCommand: SignCommand
-        try {
-            signCommand = SignCommand(hashes)
-        } catch (error: Exception) {
-            if (error is TaskError) {
-                callback(TaskEvent.Completion(error))
-            } else {
-                Log.e(this::class.simpleName!!, error.message ?: "")
-                callback(TaskEvent.Completion(TaskError.UnknownError()))
-            }
-            return
-        }
+        val signCommand = SignCommand(hashes)
         val task = SingleCommandTask(signCommand)
         runTask(task, cardId, callback)
     }

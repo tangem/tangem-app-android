@@ -6,6 +6,7 @@ import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.*
 import kotlin.experimental.and
+import kotlin.experimental.xor
 
 /**
  * Extension functions for [ByteArray].
@@ -53,4 +54,21 @@ fun ByteArray.toCompressedPublicKey(): ByteArray {
     } else {
         this
     }
+}
+
+fun ByteArray.calculateCrc16(): ByteArray {
+    var chBlock: Byte
+    // STEP 1	Initialize the CRC-16 value
+    var wCRC = 0x6363 // ITU-V.41
+    var i = 0
+    // STEP 2	Update data and Calucuate their CRC
+    do {
+        chBlock = this.get(i++)
+        chBlock = chBlock xor (wCRC and 0x00FF).toByte()
+        val chBlockInt = (chBlock.toInt() xor (chBlock.toInt() shl 4))
+        wCRC = wCRC shr 8 xor (chBlockInt and 0xFF shl 8) and 0xFFFF xor (chBlockInt and 0xFF shl 3 and 0xFFFF) xor (chBlockInt and 0xFF shr 4 and 0xFFFF)
+        // (wCRC>>8)^((int)chBlock<<8)^((int) chBlock<<3)^((int)chBlock>>4);
+    } while (i < this.size)
+
+    return byteArrayOf((wCRC and 0xFF).toByte(), (wCRC and 0xFFFF shr 8).toByte())
 }
