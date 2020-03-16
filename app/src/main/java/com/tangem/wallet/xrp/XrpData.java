@@ -17,7 +17,7 @@ public class XrpData extends CoinData {
 
     private Long reserve = 20000000L;
 
-    private Boolean accountNotFound = false;
+    private Boolean accountNotFound, targetAccountCreated = false;
 
     @Override
     public void loadFromBundle(Bundle B) {
@@ -32,7 +32,9 @@ public class XrpData extends CoinData {
         if (B.containsKey("Reserve")) reserve = B.getLong("Reserve");
         else reserve = 20000000L;
         if (B.containsKey("AccoundNotFound")) accountNotFound = B.getBoolean("AccoundNotFound");
-        else reserve = 20000000L;
+        else accountNotFound = false;
+        if (B.containsKey("TargetAccountCreated")) targetAccountCreated = B.getBoolean("TargetAccountCreated");
+        else targetAccountCreated = false;
     }
 
     @Override
@@ -44,6 +46,7 @@ public class XrpData extends CoinData {
             if (sequence != null) B.putLong("Sequence", sequence);
             if (reserve != null) B.putLong("Reserve", reserve);
             if (accountNotFound != null) B.putBoolean("AccoundNotFound", accountNotFound);
+            if (targetAccountCreated != null) B.putBoolean("TargetAccountCreated", targetAccountCreated);
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());
         }
@@ -57,6 +60,7 @@ public class XrpData extends CoinData {
         sequence = null;
         reserve = 20000000L;
         accountNotFound = false;
+        targetAccountCreated = false;
     }
 
     // balanceUnconfirmed is just the latest balance, it equals balanceConfirmed if no unconfirmed transaction present
@@ -105,6 +109,14 @@ public class XrpData extends CoinData {
         this.accountNotFound = accountFound;
     }
 
+    public Boolean isTargetAccountCreated() {
+        return targetAccountCreated;
+    }
+
+    public void setTargetAccountCreated(boolean targetAccountCreated) {
+        this.targetAccountCreated = targetAccountCreated;
+    }
+
     public boolean hasBalanceInfo() {
         return balanceConfirmed != null || balanceUnconfirmed != null;
     }
@@ -112,5 +124,4 @@ public class XrpData extends CoinData {
     public boolean hasUnconfirmed() {
         return !balanceConfirmed.equals(balanceUnconfirmed);
     }
-
 }
