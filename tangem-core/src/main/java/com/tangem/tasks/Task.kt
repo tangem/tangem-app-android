@@ -16,44 +16,128 @@ import com.tangem.common.apdu.StatusWord
  * An error class that represent typical errors that may occur when performing Tangem SDK tasks.
  * Errors are propagated back to the caller in callbacks.
  */
-sealed class TaskError(val code: Int): Exception() {
+sealed class TaskError(val code: Int) : Exception() {
 
     //Errors in serializing APDU
-    class SerializeCommandError: TaskError(1001)
-    class EncodingError: TaskError(1002)
-    class MissingTag: TaskError(1003)
-    class WrongType: TaskError(1004)
-    class ConvertError: TaskError(1005)
+    /**
+     * This error is returned when there [CommandSerializer] cannot deserialize [com.tangem.common.tlv.Tlv]
+     * (this error is a wrapper around internal [com.tangem.common.tlv.TlvMapper] errors).
+     */
+    class SerializeCommandError : TaskError(1001)
 
-    //Card errors
-    class UnknownStatus: TaskError(2001)
-    class ErrorProcessingCommand: TaskError(2002)
-    class MissingPreflightRead: TaskError(2003)
-    class InvalidState: TaskError(2004)
-    class InsNotSupported: TaskError(2005)
-    class InvalidParams: TaskError(2006)
-    class NeedEncryption: TaskError(2007)
+    class EncodingError : TaskError(1002)
+    class MissingTag : TaskError(1003)
+    class WrongType : TaskError(1004)
+    class ConvertError : TaskError(1005)
+
+    /**
+     * This error is returned when unknown [StatusWord] is received from a card.
+     */
+    class UnknownStatus : TaskError(2001)
+
+    /**
+     * This error is returned when a card's reply is [StatusWord.ErrorProcessingCommand].
+     * The card sends this status in case of internal card error.
+     */
+    class ErrorProcessingCommand : TaskError(2002)
+
+    /**
+     * This error is returned when a task (such as [ScanTask]) requires that [ReadCommand]
+     * is executed before performing other commands.
+     */
+    class MissingPreflightRead : TaskError(2003)
+
+    /**
+     * This error is returned when a card's reply is [StatusWord.InvalidState].
+     * The card sends this status when command can not be executed in the current state of a card.
+     */
+    class InvalidState : TaskError(2004)
+
+    /**
+     * This error is returned when a card's reply is [StatusWord.InsNotSupported].
+     * The card sends this status when the card cannot process the [com.tangem.common.apdu.Instruction].
+     */
+    class InsNotSupported : TaskError(2005)
+
+    /**
+     * This error is returned when a card's reply is [StatusWord.InvalidParams].
+     * The card sends this status when there are wrong or not sufficient parameters in TLV request,
+     * or wrong PIN1/PIN2.
+     * The error may be caused, for example, by wrong parameters of the [Task], [CommandSerializer],
+     * mapping or serialization errors.
+     */
+    class InvalidParams : TaskError(2006)
+
+    /**
+     * This error is returned when a card's reply is [StatusWord.NeedEncryption]
+     * and the encryption was not established by TangemSdk.
+     */
+    class NeedEncryption : TaskError(2007)
 
     //Scan errors
-    class VerificationFailed: TaskError(3000)
-    class CardError: TaskError(3001)
-    class WrongCard: TaskError(3002)
-    class TooMuchHashesInOneTransaction: TaskError(3003)
-    class EmptyHashes: TaskError(3004)
-    class HashSizeMustBeEqual: TaskError(3005)
+    /**
+     * This error is returned when a [Task] checks unsuccessfully either
+     * a card's ability to sign with its private key, or the validity of issuer data.
+     */
+    class VerificationFailed : TaskError(3000)
 
-    class Busy: TaskError(4000)
-    class UserCancelled: TaskError(4001)
-    class UnsupportedDevice: TaskError(4002)
+    /**
+     * This error is returned when a [ScanTask] returns a [Card] without some of the essential fields.
+     */
+    class CardError : TaskError(3001)
 
-    //NFC error
-    class NfcReaderError: TaskError(5002)
-    class TagLost: TaskError(5003)
+    /**
+     * This error is returned when a [Task] expects a user to use a particular card,
+     * and a user tries to use a different card.
+     */
+    class WrongCard : TaskError(3002)
 
-    class UnknownError: TaskError(6000)
+    /**
+     * Tangem cards can sign currently up to 10 hashes during one [com.tangem.commands.SignCommand].
+     * This error is returned when a [com.tangem.commands.SignCommand] receives more than 10 hashes to sign.
+     */
+    class TooMuchHashesInOneTransaction : TaskError(3003)
+
+    /**
+     * This error is returned when a [com.tangem.commands.SignCommand]
+     * receives only empty hashes for signature.
+     */
+    class EmptyHashes : TaskError(3004)
+
+    /**
+     * This error is returned when a [com.tangem.commands.SignCommand]
+     * receives hashes of different lengths for signature.
+     */
+    class HashSizeMustBeEqual : TaskError(3005)
+
+    /**
+     * This error is returned when [com.tangem.CardManager] was called with a new [Task],
+     * while a previous [Task] is still in progress.
+     */
+    class Busy : TaskError(4000)
+
+    /**
+     * This error is returned when a user manually closes NFC Reading Bottom Sheet Dialog.
+     */
+    class UserCancelled : TaskError(4001)
+
+    //NFC errors
+    class NfcReaderError : TaskError(5002)
+
+    /**
+     * This error is returned when Android  NFC reader loses a tag
+     * (e.g. a user detaches card from the phone's NFC module) while the NFC session is in progress.
+     */
+    class TagLost : TaskError(5003)
+
+    class UnknownError : TaskError(6000)
 
     //Issuer Data Errors
-    class MissingCounter: TaskError(7001)
+    /**
+     * This error is returned when [ReadIssuerDataTask] or [ReadIssuerExtraDataTask] expects a counter
+     * (when the card's requires it), but the counter is missing.
+     */
+    class MissingCounter : TaskError(7001)
 }
 
 /**
