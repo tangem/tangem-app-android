@@ -124,6 +124,16 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
             val tag = arguments!!.getParcelable<Tag>(NfcAdapter.EXTRA_TAG)
             if (tag != null) onTagDiscovered(tag)
         }
+
+        viewModel = ViewModelProviders.of(this).get(LoadedWalletViewModel::class.java)
+
+        // set rate info to CoinData
+        viewModel.getRateInfo().observe(this, Observer<Float> { rate ->
+            ctx.coinData.rate = rate
+            ctx.coinData.rateAlter = rate
+            updateViews()
+        })
+        viewModel.requestRateInfo(ctx)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -297,21 +307,6 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         serverApiTangem.setArtworkListener(artworkListener)
         refresh()
         startVerify(lastTag)
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProviders.of(this).get(LoadedWalletViewModel::class.java)
-
-        // set rate info to CoinData
-        viewModel.getRateInfo().observe(this, Observer<Float> { rate ->
-            ctx.coinData.rate = rate
-            ctx.coinData.rateAlter = rate
-            requestCounter--
-            updateViews()
-        })
-        requestCounter++
-        viewModel.requestRateInfo(ctx)
     }
 
     override fun onPause() {
@@ -720,10 +715,8 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
 
         requestBalanceAndUnspentTransactions()
 
-        if (::viewModel.isInitialized) {
-            requestCounter++
+        if (::viewModel.isInitialized)
             viewModel.requestRateInfo(ctx)
-        }
 
         if (requestCounter == 0) {
             // if no connection and no requests posted
