@@ -1,6 +1,9 @@
 package com.tangem.common.apdu
 
 import com.tangem.common.EncryptionMode
+import com.tangem.common.extensions.calculateCrc16
+import com.tangem.common.extensions.toByteArray
+import com.tangem.crypto.encrypt
 import java.io.ByteArrayOutputStream
 
 /**
@@ -8,21 +11,19 @@ import java.io.ByteArrayOutputStream
  * to a raw data that can be sent to the card.
  *
  * @property ins Instruction code that determines the type of request for the card.
- * @property tlvList A list of TLVs that are to be sent to the card
+ * @property tlvs Tlvs encoded to a [ByteArray] that are to be sent to the card.
  */
 class CommandApdu(
 
         private val ins: Int,
         private val tlvs: ByteArray,
 
-        private val cla: Byte = ISO_CLA,
-        private val p1: Byte = 0x00,
-        private val p2: Byte = 0x00,
-
         private val le: Int = 0x00,
 
         private val encryptionMode: EncryptionMode = EncryptionMode.NONE,
-        private val encryptionKey: ByteArray? = null) {
+        private val encryptionKey: ByteArray? = null,
+
+        private val cla: Int = ISO_CLA) {
 
     constructor(
             instruction: Instruction,
@@ -36,6 +37,19 @@ class CommandApdu(
             encryptionKey = encryptionKey
     )
 
+    private val p1: Int
+    private val p2: Int
+
+    init {
+        if (ins == Instruction.OpenSession.code) {
+            p1 = 0x00
+            p2 = encryptionMode.code.toInt()
+        } else {
+            p1 = encryptionMode.code.toInt()
+            p2 = 0x00
+        }
+    }
+
 
     /**
      * Request converted to a raw data
@@ -48,33 +62,37 @@ class CommandApdu(
 
 
     private fun toBytes(): ByteArray {
-
-        val lc = tlvs.size
+        val data = if (encryptionKey != null) tlvs.encrypt() else tlvs
 
         val byteStream = ByteArrayOutputStream()
-        byteStream.write(cla.toInt())
+        byteStream.write(cla)
         byteStream.write(ins)
-        byteStream.write(p1.toInt())
-        byteStream.write(p2.toInt())
-        if (lc != 0) {
-            writeLength(byteStream, lc)
-            byteStream.write(tlvs)
+        byteStream.write(p1)
+        byteStream.write(p2)
+        if (data.isNotEmpty()) {
+            byteStream.writeLength(data.size)
+            byteStream.write(data)
         }
         return byteStream.toByteArray()
     }
 
-    private fun writeLength(stream: ByteArrayOutputStream, lc: Int) {
-        stream.write(0)
-        stream.write(lc shr 8)
-        stream.write(lc and 0xFF)
+    private fun ByteArrayOutputStream.writeLength(lc: Int) {
+        this.write(0)
+        this.write(lc shr 8)
+        this.write(lc and 0xFF)
     }
 
 
-    private fun encrypt() {
-        TODO("not implemented")
-    }
+    private fun ByteArray.encrypt(): ByteArray {
+            val crc: ByteArray = tlvs.calculateCrc16()
+            val stream = ByteArrayOutputStream()
+            stream.write(this.size.toByteArray(2))
+            stream.write(crc)
+            stream.write(this)
+            return stream.toByteArray().encrypt(encryptionKey!!)
+        }
 
     companion object {
-        const val ISO_CLA = 0x00.toByte()
+        const val ISO_CLA = 0x00
     }
 }
