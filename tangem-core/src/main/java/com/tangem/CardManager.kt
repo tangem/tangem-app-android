@@ -5,7 +5,6 @@ import com.tangem.common.CardEnvironment
 import com.tangem.common.TerminalKeysService
 import com.tangem.crypto.CryptoUtils
 import com.tangem.tasks.*
-import java.util.concurrent.Executors
 
 /**
  * The main interface of Tangem SDK that allows your app to communicate with Tangem cards.
@@ -24,7 +23,6 @@ class CardManager(
 
     private var terminalKeysService: TerminalKeysService? = null
     private var isBusy = false
-    private val cardManagerExecutor = Executors.newSingleThreadExecutor()
 
     init {
         CryptoUtils.initCrypto()
@@ -69,18 +67,7 @@ class CardManager(
      */
     fun sign(hashes: Array<ByteArray>, cardId: String,
              callback: (result: TaskEvent<SignResponse>) -> Unit) {
-        val signCommand: SignCommand
-        try {
-            signCommand = SignCommand(hashes)
-        } catch (error: Exception) {
-            if (error is TaskError) {
-                callback(TaskEvent.Completion(error))
-            } else {
-                Log.e(this::class.simpleName!!, error.message ?: "")
-                callback(TaskEvent.Completion(TaskError.UnknownError()))
-            }
-            return
-        }
+        val signCommand = SignCommand(hashes)
         val task = SingleCommandTask(signCommand)
         runTask(task, cardId, callback)
     }
@@ -262,7 +249,7 @@ class CardManager(
         task.reader = reader
         task.delegate = cardManagerDelegate
 
-        cardManagerExecutor.execute {
+        Thread().run {
             task.run(environment) { taskEvent ->
                 if (taskEvent is TaskEvent.Completion) isBusy = false
                 callback(taskEvent)
