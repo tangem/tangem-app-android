@@ -47,11 +47,14 @@ class WriteUserDataCommand(private val userData: ByteArray? = null, private val 
     if (userProtectedCounter != null || userProtectedData != null)
       builder.append(TlvTag.Pin2, cardEnvironment.pin2)
 
-    return CommandApdu(Instruction.WriteUserData, builder.serialize())
+    return CommandApdu(
+            Instruction.WriteUserData, builder.serialize(),
+            cardEnvironment.encryptionMode, cardEnvironment.encryptionKey
+    )
   }
 
   override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): WriteUserDataResponse? {
-    val tlvData = responseApdu.getTlvData() ?: return null
+    val tlvData = responseApdu.getTlvData(cardEnvironment.encryptionKey) ?: return null
 
     return try {
       WriteUserDataResponse(TlvMapper(tlvData).map(TlvTag.CardId))
