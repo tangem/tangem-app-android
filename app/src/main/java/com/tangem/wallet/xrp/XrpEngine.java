@@ -148,7 +148,7 @@ public class XrpEngine extends CoinEngine {
     }
 
     public Uri getShareWalletUri() {
-        return Uri.parse("ripple:" + ctx.getCoinData().getWallet());
+        return Uri.parse(ctx.getCoinData().getWallet());
     }
 
     @Override
