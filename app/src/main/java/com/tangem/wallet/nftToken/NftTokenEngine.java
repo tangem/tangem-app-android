@@ -189,7 +189,7 @@ public class NftTokenEngine extends CoinEngine {
 
     @Override
     public Uri getShareWalletUri() {
-        return Uri.parse("ethereum:" + ctx.getCoinData().getWallet());
+        return Uri.parse(ctx.getCoinData().getWallet());
     }
 
     @Override
