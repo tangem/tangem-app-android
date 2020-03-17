@@ -24,7 +24,7 @@ object Ed25519 {
         return signatureInstance.verify(signature)
     }
 
-    private fun loadPublicKey(publicKeyArray: ByteArray): PublicKey {
+    internal fun loadPublicKey(publicKeyArray: ByteArray): PublicKey {
         val spec = EdDSANamedCurveTable.getByName(EdDSANamedCurveTable.ED_25519)
         val pubKey = EdDSAPublicKeySpec(publicKeyArray, spec)
         return EdDSAPublicKey(pubKey)

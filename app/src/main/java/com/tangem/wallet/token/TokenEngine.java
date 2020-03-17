@@ -305,9 +305,9 @@ public class TokenEngine extends CoinEngine {
     @Override
     public Uri getShareWalletUri() {
         if (ctx.getCard().getDenomination() != null) {
-            return Uri.parse("ethereum:" + ctx.getCoinData().getWallet());// + "?value=" + mCard.getDenomination() +"e18");
+            return Uri.parse(ctx.getCoinData().getWallet());// + "?value=" + mCard.getDenomination() +"e18");
         } else {
-            return Uri.parse("ethereum:" + ctx.getCoinData().getWallet());
+            return Uri.parse(ctx.getCoinData().getWallet());
         }
     }
 
