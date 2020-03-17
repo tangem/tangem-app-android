@@ -13,10 +13,10 @@ import com.tangem.tangemtest.card_use_cases.models.params.manager.ParamsManager
 import com.tangem.tangemtest.card_use_cases.models.params.manager.ParamsManagerFactory
 import com.tangem.tangemtest.commons.Action
 import com.tangem.tangemtest.commons.performAction
-import com.tangem.tangemtest.commons.postUI
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskError
 import com.tangem.tasks.TaskEvent
+import ru.dev.gbixahue.eu4d.lib.android.global.threading.postUI
 
 /**
 [REDACTED_AUTHOR]
