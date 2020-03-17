@@ -297,16 +297,15 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         serverApiTangem.setArtworkListener(artworkListener)
         refresh()
         startVerify(lastTag)
-    }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+
         viewModel = ViewModelProviders.of(this).get(LoadedWalletViewModel::class.java)
 
         // set rate info to CoinData
         viewModel.getRateInfo().observe(this, Observer<Float> { rate ->
             ctx.coinData.rate = rate
             ctx.coinData.rateAlter = rate
+            updateViews()
         })
         viewModel.requestRateInfo(ctx)
     }
