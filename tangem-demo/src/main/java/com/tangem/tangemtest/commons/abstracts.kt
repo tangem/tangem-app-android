@@ -3,6 +3,6 @@ package com.tangem.tangemtest.commons
 /**
 [REDACTED_AUTHOR]
  */
-interface LayoutHolder {
-    fun getLayoutId(): Int
+interface OnBackPressHandler {
+    fun onBackPressed(): Boolean
 }
