@@ -150,12 +150,13 @@ public class Server {
 
     public static class ApiBlockchair {
         public static final String URL_BLOCKCHAIR = ServerURL.API_BLOCKCHAIR + "{blockchain}/";
+        private static final String API_KEY = "?key=A___0Shpsu4KagE7oSabrw20DfXAqWlT";
 
         public static class Method {
-            static final String ADDRESS = URL_BLOCKCHAIR + "dashboards/address/{address}";
-            static final String TRANSACTION = URL_BLOCKCHAIR + "dashboards/transaction/{transaction}";
-            static final String STATS = URL_BLOCKCHAIR + "stats";
-            static final String PUSH = URL_BLOCKCHAIR + "push/transaction";
+            static final String ADDRESS = URL_BLOCKCHAIR + "dashboards/address/{address}" + API_KEY;
+            static final String TRANSACTION = URL_BLOCKCHAIR + "dashboards/transaction/{transaction}" + API_KEY;
+            static final String STATS = URL_BLOCKCHAIR + "stats" + API_KEY;
+            static final String PUSH = URL_BLOCKCHAIR + "push/transaction" + API_KEY;
         }
     }
 }
