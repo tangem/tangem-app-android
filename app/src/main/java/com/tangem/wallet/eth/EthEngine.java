@@ -231,7 +231,7 @@ public class EthEngine extends CoinEngine {
 //        if (ctx.getCard().getDenomination() != null) {
 //            return Uri.parse("ethereum:" + ctx.getCoinData().getWallet());// + "?value=" + mCard.getDenomination() +"e18");
         if (ctx.getBlockchain() == Blockchain.Ethereum) {
-            return Uri.parse("ethereum:" + ctx.getCoinData().getWallet());
+            return Uri.parse(ctx.getCoinData().getWallet());
         } else {
             return Uri.parse(ctx.getCoinData().getWallet());
         }
