@@ -45,11 +45,14 @@ class WriteIssuerDataCommand(
         tlvBuilder.append(TlvTag.IssuerDataSignature, issuerDataSignature)
         tlvBuilder.append(TlvTag.IssuerDataCounter, issuerDataCounter)
 
-        return CommandApdu(Instruction.WriteIssuerData, tlvBuilder.serialize())
+        return CommandApdu(
+                Instruction.WriteIssuerData, tlvBuilder.serialize(),
+                cardEnvironment.encryptionMode, cardEnvironment.encryptionKey
+        )
     }
 
     override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): WriteIssuerDataResponse? {
-        val tlvData = responseApdu.getTlvData() ?: return null
+        val tlvData = responseApdu.getTlvData(cardEnvironment.encryptionKey) ?: return null
 
         return try {
             val mapper = TlvMapper(tlvData)
