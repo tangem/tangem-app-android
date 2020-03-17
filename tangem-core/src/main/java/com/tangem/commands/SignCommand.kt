@@ -4,9 +4,6 @@ import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
-import com.tangem.common.extensions.calculateSha256
-import com.tangem.common.extensions.hexToBytes
-import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
@@ -60,7 +57,10 @@ class SignCommand(private val hashes: Array<ByteArray>)
         tlvBuilder.append(TlvTag.Cvc, cardEnvironment.cvc)
 
         addTerminalSignature(cardEnvironment, tlvBuilder)
-        return CommandApdu(Instruction.Sign, tlvBuilder.serialize())
+        return CommandApdu(
+                Instruction.Sign, tlvBuilder.serialize(),
+                cardEnvironment.encryptionMode, cardEnvironment.encryptionKey
+        )
     }
 
     /**
@@ -79,7 +79,7 @@ class SignCommand(private val hashes: Array<ByteArray>)
     }
 
     override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): SignResponse? {
-        val tlvData = responseApdu.getTlvData() ?: return null
+        val tlvData = responseApdu.getTlvData(cardEnvironment.encryptionKey) ?: return null
 
         val tlvMapper = TlvMapper(tlvData)
         return SignResponse(
