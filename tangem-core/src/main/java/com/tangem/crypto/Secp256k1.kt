@@ -29,7 +29,7 @@ object Secp256k1 {
         return signatureInstance.verify(sigDer)
     }
 
-    private fun loadPublicKey(publicKeyArray: ByteArray): PublicKey {
+    internal fun loadPublicKey(publicKeyArray: ByteArray): PublicKey {
 
         val spec = ECNamedCurveTable.getParameterSpec("secp256k1")
         val factory = KeyFactory.getInstance("EC", "SC")

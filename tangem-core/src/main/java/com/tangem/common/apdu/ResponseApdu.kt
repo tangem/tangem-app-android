@@ -1,6 +1,9 @@
 package com.tangem.common.apdu
 
+import com.tangem.common.extensions.calculateCrc16
 import com.tangem.common.tlv.Tlv
+import com.tangem.crypto.decrypt
+import java.io.ByteArrayInputStream
 
 /**
  * Stores response data from the card and parses it to [Tlv] and [StatusWord].
@@ -25,15 +28,39 @@ class ResponseApdu(private val data: ByteArray) {
      * (Encryption / decryption functionality is not implemented yet.)
      */
     fun getTlvData(encryptionKey: ByteArray? = null): List<Tlv>? {
-        return when {
-            data.size <= 2 -> null
-            else -> Tlv.deserialize(data.copyOf(data.size - 2))
+        return if (data.size <= 2) {
+            null
+        } else {
+            val responseData = data.copyOf(data.size - 2)
+            return if (encryptionKey != null) {
+                if (data.size >= 18) {
+                    val decryptedData = decrypt(responseData, encryptionKey)
+                    Tlv.deserialize(decryptedData)
+                } else {
+                    null
+                }
+            } else {
+                Tlv.deserialize(responseData)
+            }
         }
     }
 
+    private fun decrypt(responseData: ByteArray, encryptionKey: ByteArray): ByteArray {
+        val decryptedData: ByteArray = responseData.decrypt(encryptionKey)
 
-    private fun decrypt(encryptionKey: ByteArray) {
-        TODO("not implemented")
+        val inputStream = ByteArrayInputStream(decryptedData)
+        val baLength = ByteArray(2)
+        inputStream.read(baLength)
+        val length = (baLength[0].toInt() and 0xFF) * 256 + (baLength[1].toInt() and 0xFF)
+        if (length > decryptedData.size - 4) throw Exception("Can't decrypt - data size invalid")
+        val baCRC = ByteArray(2)
+        inputStream.read(baCRC)
+        val answerData = ByteArray(length)
+        inputStream.read(answerData)
+        val crc: ByteArray = answerData.calculateCrc16()
+        if (!baCRC.contentEquals(crc)) throw Exception("Can't decrypt - crc invalid")
+
+        return answerData
     }
 
 }
