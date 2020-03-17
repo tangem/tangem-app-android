@@ -4,9 +4,6 @@ import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
-import com.tangem.common.extensions.calculateSha256
-import com.tangem.common.extensions.hexToBytes
-import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
@@ -46,11 +43,14 @@ class CreateWalletCommand : CommandSerializer<CreateWalletResponse>() {
         tlvBuilder.append(TlvTag.CardId, cardEnvironment.cardId)
         tlvBuilder.append(TlvTag.Pin2, cardEnvironment.pin2)
         tlvBuilder.append(TlvTag.Cvc, cardEnvironment.cvc)
-        return CommandApdu(Instruction.CreateWallet, tlvBuilder.serialize())
+        return CommandApdu(
+                Instruction.CreateWallet, tlvBuilder.serialize(),
+                cardEnvironment.encryptionMode, cardEnvironment.encryptionKey
+        )
     }
 
     override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): CreateWalletResponse? {
-        val tlvData = responseApdu.getTlvData() ?: return null
+        val tlvData = responseApdu.getTlvData(cardEnvironment.encryptionKey) ?: return null
 
         return try {
             val mapper = TlvMapper(tlvData)
