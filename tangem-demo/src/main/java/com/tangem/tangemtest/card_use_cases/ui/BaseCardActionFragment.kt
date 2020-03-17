@@ -16,8 +16,8 @@ import com.tangem.tangemtest.R
 import com.tangem.tangemtest.card_use_cases.ui.widgets.ParameterWidget
 import com.tangem.tangemtest.card_use_cases.view_models.ParamsViewModel
 import com.tangem.tangemtest.commons.Action
-import com.tangem.tangemtest.commons.LayoutHolder
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
+import ru.dev.gbixahue.eu4d.lib.kotlin.common.LayoutHolder
 
 /**
 [REDACTED_AUTHOR]
