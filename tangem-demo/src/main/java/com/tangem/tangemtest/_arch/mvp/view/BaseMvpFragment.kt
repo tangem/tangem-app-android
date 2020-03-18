@@ -18,7 +18,7 @@ abstract class BaseMvpFragment : Fragment(), MvpView, OnBackPressHandler {
     protected lateinit var mainView: View
     protected var presenter: MvpPresenter<in MvpView>? = null
 
-    protected abstract fun getMvpPresenter(): MvpPresenter<in MvpView>?
+    protected abstract fun getMvpPresenter(): MvpPresenter<in MvpView>
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
