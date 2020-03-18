@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.tangem.tangemtest.R
-import com.tangem.tangemtest.commons.Action
+import com.tangem.tangemtest.commons.ActionType
 import com.tangem.tangemtest.commons.NavigateOptions
 import com.tangem.tangemtest.commons.getDefaultNavigationOptions
 import kotlinx.android.synthetic.main.fg_entry_point.*
@@ -55,16 +55,16 @@ class EntryPointFragment : Fragment() {
 
     private fun getNavigateOptions(): MutableList<NavigateOptions> {
         return mutableListOf(
-                NavigateOptions(Action.Scan, R.id.action_nav_entry_point_to_nav_scan),
-                NavigateOptions(Action.Sign, R.id.action_nav_entry_point_to_nav_sign),
-                NavigateOptions(Action.CreateWallet, R.id.action_nav_entry_point_to_nav_wallet_create),
-                NavigateOptions(Action.PurgeWallet, R.id.action_nav_entry_point_to_nav_wallet_purge),
-                NavigateOptions(Action.ReadIssuerData, R.id.action_nav_entry_point_to_nav_issuer_read_data),
-                NavigateOptions(Action.WriteIssuerData, R.id.action_nav_entry_point_to_nav_issuer_write_data),
-                NavigateOptions(Action.ReadIssuerExData, R.id.action_nav_entry_point_to_nav_issuer_read_ex_data),
-                NavigateOptions(Action.WriteIssuerExData, R.id.action_nav_entry_point_to_nav_issuer_write_ex_data),
-                NavigateOptions(Action.ReadUserData, R.id.action_nav_entry_point_to_nav_user_read_data),
-                NavigateOptions(Action.WriteUserData, R.id.action_nav_entry_point_to_nav_user_write_data)
+                NavigateOptions(ActionType.Scan, R.id.action_nav_entry_point_to_nav_scan),
+                NavigateOptions(ActionType.Sign, R.id.action_nav_entry_point_to_nav_sign),
+                NavigateOptions(ActionType.CreateWallet, R.id.action_nav_entry_point_to_nav_wallet_create),
+                NavigateOptions(ActionType.PurgeWallet, R.id.action_nav_entry_point_to_nav_wallet_purge),
+                NavigateOptions(ActionType.ReadIssuerData, R.id.action_nav_entry_point_to_nav_issuer_read_data),
+                NavigateOptions(ActionType.WriteIssuerData, R.id.action_nav_entry_point_to_nav_issuer_write_data),
+                NavigateOptions(ActionType.ReadIssuerExData, R.id.action_nav_entry_point_to_nav_issuer_read_ex_data),
+                NavigateOptions(ActionType.WriteIssuerExData, R.id.action_nav_entry_point_to_nav_issuer_write_ex_data),
+                NavigateOptions(ActionType.ReadUserData, R.id.action_nav_entry_point_to_nav_user_read_data),
+                NavigateOptions(ActionType.WriteUserData, R.id.action_nav_entry_point_to_nav_user_write_data)
         )
     }
 }
