@@ -12,10 +12,15 @@ import androidx.lifecycle.Observer
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
+import com.tangem.CardManager
+import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tangemtest.R
+import com.tangem.tangemtest.card_use_cases.models.params.manager.ParamsManager
+import com.tangem.tangemtest.card_use_cases.models.params.manager.ParamsManagerFactory
 import com.tangem.tangemtest.card_use_cases.ui.widgets.ParameterWidget
+import com.tangem.tangemtest.card_use_cases.view_models.ActionViewModelFactory
 import com.tangem.tangemtest.card_use_cases.view_models.ParamsViewModel
-import com.tangem.tangemtest.commons.Action
+import com.tangem.tangemtest.commons.ActionType
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.LayoutHolder
 
@@ -24,33 +29,21 @@ import ru.dev.gbixahue.eu4d.lib.kotlin.common.LayoutHolder
  */
 abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
 
-    protected lateinit var mainView: View
+    protected val mainView: View by lazy { view!! }
     protected val incomingParamsContainer: ViewGroup by lazy {
         mainView.findViewById<LinearLayout>(R.id.ll_incoming_params_container)
     }
+    protected val viewModel: ParamsViewModel by viewModels { ActionViewModelFactory(paramsManager) }
 
-    protected val viewModel: ParamsViewModel by viewModels()
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        Log.d(this, "onCreateView")
-        mainView = inflater.inflate(getLayoutId(), container, false)
-        return mainView
-    }
+    private val paramsManager: ParamsManager by lazy { ParamsManagerFactory.createFactory().get(getAction())!! }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         Log.d(this, "onViewCreated")
-        val activity = activity ?: return
 
-        try {
-            viewModel.init(activity, getAction())
-            initFab()
-            val widgetList = createWidgets()
-            subscribeToViewModelChanges(widgetList)
-        } catch (e: Exception) {
-            Log.e(this, e)
-            showSnackbarMessage(e.toString())
-        }
+        viewModel.setCardManager(CardManager.init(requireActivity()))
+        initFab()
+        createWidgets { subscribeToViewModelChanges(it) }
     }
 
     private fun initFab() {
@@ -61,28 +54,30 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
         fab.setOnClickListener { viewModel.invokeMainAction() }
     }
 
-    private fun createWidgets(): MutableList<ParameterWidget> {
+    private fun createWidgets(callback: (List<ParameterWidget>) -> Unit) {
         Log.d(this, "createWidgets")
-
-        val widgetList = mutableListOf<ParameterWidget>()
-        viewModel.getInitialParams()?.forEach { param ->
-            val widget = ParameterWidget(inflateParamView(incomingParamsContainer), param)
-            widget.onParameterValueChanged = { viewModel.userChangedParameter(it) }
-            widget.onParameterAction = viewModel.getParameterAction(param.tlvTag)
-            widgetList.add(widget)
-        }
-        return widgetList
+        viewModel.ldParams.observe(viewLifecycleOwner, Observer { paramsList ->
+            val widgetList = mutableListOf<ParameterWidget>()
+            paramsList.forEach { param ->
+                val widget = ParameterWidget(inflateParamView(incomingParamsContainer), param)
+                widget.onValueChanged = { tag, value -> viewModel.userChangedParameter(tag, value) }
+                widget.onActionBtnClickListener = viewModel.getParameterAction(param.tlvTag)
+                widgetList.add(widget)
+            }
+            callback(widgetList)
+        })
     }
 
-    private fun subscribeToViewModelChanges(widgetList: MutableList<ParameterWidget>) {
+    private fun subscribeToViewModelChanges(widgetList: List<ParameterWidget>) {
         Log.d(this, "subscribeToViewModelChanges")
 
+        val tvResponse by lazy { mainView.findViewById<TextView>(R.id.tv_action_response_json) }
         viewModel.ldResponse.observe(viewLifecycleOwner, Observer {
             Log.d(this, "action response: ${if (it.length > 50) it.substring(0..50) else it}")
-            mainView.findViewById<TextView>(R.id.tv_action_response_json).text = it
+            tvResponse.text = it
         })
-        viewModel.ldError.observe(viewLifecycleOwner, Observer { showSnackbarMessage(it) })
-        viewModel.ldIncomingParameter.observe(viewLifecycleOwner, Observer { param ->
+        viewModel.seError.observe(viewLifecycleOwner, Observer { showSnackbarMessage(it) })
+        viewModel.seIncomingParameter.observe(viewLifecycleOwner, Observer { param ->
             Log.d(this, "parameter changed from VM - name: ${param.tlvTag.name}, value:${param.data}")
             widgetList.firstOrNull { it.tlvTag == param.tlvTag }?.changeParamValue(param.data)
         })
@@ -100,5 +95,5 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
         return view
     }
 
-    abstract fun getAction(): Action
+    abstract fun getAction(): ActionType
 }
