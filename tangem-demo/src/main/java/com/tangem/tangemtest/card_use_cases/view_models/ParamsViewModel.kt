@@ -1,65 +1,57 @@
 package com.tangem.tangemtest.card_use_cases.view_models
 
 import androidx.annotation.UiThread
-import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.google.gson.GsonBuilder
+import com.tangem.CardManager
+import com.tangem.commands.Card
 import com.tangem.common.tlv.TlvTag
-import com.tangem.tangemtest.card_use_cases.models.CardContext
+import com.tangem.tangemtest._arch.SingleLiveEvent
 import com.tangem.tangemtest.card_use_cases.models.params.manager.IncomingParameter
 import com.tangem.tangemtest.card_use_cases.models.params.manager.ParamsManager
-import com.tangem.tangemtest.card_use_cases.models.params.manager.ParamsManagerFactory
-import com.tangem.tangemtest.commons.Action
 import com.tangem.tangemtest.commons.performAction
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskError
 import com.tangem.tasks.TaskEvent
-import ru.dev.gbixahue.eu4d.lib.android.global.threading.postUI
 
 /**
 [REDACTED_AUTHOR]
  */
-class ParamsViewModel : ViewModel() {
-    val ldResponse: MutableLiveData<String> = MutableLiveData()
-    val ldError: MutableLiveData<String> = MutableLiveData()
-    val ldIncomingParameter: MutableLiveData<IncomingParameter> = MutableLiveData()
 
-    lateinit var ldCardContext: MutableLiveData<CardContext>
-        private set
+class ActionViewModelFactory(private val manager: ParamsManager) : ViewModelProvider.NewInstanceFactory() {
+    override fun <T : ViewModel?> create(modelClass: Class<T>): T = ParamsViewModel(manager) as T
+}
 
-    private lateinit var ldParamsManager: LiveData<ParamsManager>
-    private lateinit var notifier: Notifier
+class ParamsViewModel(val paramsManager: ParamsManager) : ViewModel() {
 
-    // call before any subscriptions
-    fun init(context: FragmentActivity, action: Action) {
-        if (::ldCardContext.isInitialized && ::ldParamsManager.isInitialized) return
+    val ldCard = MutableLiveData<Card>()
+    val ldIsVerified = MutableLiveData<Boolean>()
+    val ldResponse = MutableLiveData<String>()
+    val ldParams = MutableLiveData(paramsManager.getParams())
 
-        val factory = ParamsManagerFactory.createFactory()
-        val manager = factory.get(action) ?: throw NotImplementedError(
-                "ParamsManager for the ${context.getString(action.resName)} not implemented yet")
+    val seError: MutableLiveData<String> = SingleLiveEvent()
+    val seIncomingParameter: MutableLiveData<IncomingParameter> = SingleLiveEvent()
 
-        ldParamsManager = MutableLiveData(manager)
-        ldCardContext = MutableLiveData(CardContext().init(context))
-        notifier = Notifier(this)
+    private val notifier: Notifier = Notifier(this)
+    private lateinit var cardManager: CardManager
+
+    fun setCardManager(cardManager: CardManager) {
+        this.cardManager = cardManager
     }
 
-    fun getInitialParams(): List<IncomingParameter>? {
-        return ldParamsManager.value?.getParams()
-    }
-
-    fun userChangedParameter(param: IncomingParameter) {
-        parameterChanged(param.tlvTag, param.data)
+    fun userChangedParameter(tlvTag: TlvTag, value: Any?) {
+        parameterChanged(tlvTag, value)
     }
 
     private fun parameterChanged(tlvTag: TlvTag, value: Any?) {
-        ldParamsManager.value?.parameterChanged(tlvTag, value) { notifier.notifyParameterChanges(it) }
+        paramsManager.parameterChanged(tlvTag, value) { notifier.notifyParameterChanges(it) }
     }
 
     //invokes Scan, Sign etc...
     fun invokeMainAction() {
-        performAction(ldParamsManager.value, ldCardContext.value?.cardManager) { paramsManager, cardManager ->
+        performAction(paramsManager, cardManager) { paramsManager, cardManager ->
             paramsManager.invokeMainAction(cardManager) { response, listOfChangedParams ->
                 notifier.handleActionResult(response, listOfChangedParams)
             }
@@ -67,8 +59,6 @@ class ParamsViewModel : ViewModel() {
     }
 
     fun getParameterAction(tag: TlvTag): (() -> Unit)? {
-        val paramsManager = ldParamsManager.value ?: return null
-        val cardManager = ldCardContext.value?.cardManager ?: return null
         val parameterFunction = paramsManager.getActionByTag(tag, cardManager) ?: return null
 
         return {
@@ -85,57 +75,46 @@ internal class Notifier(private val vm: ParamsViewModel) {
     private var notShowedError: TaskError? = null
 
     fun handleActionResult(response: TaskEvent<*>, list: List<IncomingParameter>) {
-        postUI { notifyParameterChanges(list) }
+        notifyParameterChanges(list)
         handleResponse(response)
     }
 
     @UiThread
     fun notifyParameterChanges(list: List<IncomingParameter>) {
-        list.forEach { vm.ldIncomingParameter.value = it }
+        list.forEach { vm.seIncomingParameter.postValue(it) }
     }
 
     fun handleResponse(response: TaskEvent<*>) {
         val taskEvent = response as? TaskEvent<*> ?: return
 
-        postUI {
-            when (taskEvent) {
-                is TaskEvent.Completion -> handleCompletionEvent(taskEvent)
-                is TaskEvent.Event -> handleDataEvent(taskEvent.data)
-            }
+        when (taskEvent) {
+            is TaskEvent.Completion -> handleCompletionEvent(taskEvent)
+            is TaskEvent.Event -> handleDataEvent(taskEvent.data)
         }
     }
 
-    @UiThread
     private fun handleDataEvent(event: Any?) {
         when (event) {
             is ScanEvent.OnReadEvent -> {
-                val cardContext = vm.ldCardContext.value ?: return
-
-                cardContext.card = event.card
-                vm.ldCardContext.value = cardContext
-                vm.ldResponse.value = gsonConverter.toJson(event)
+                vm.ldCard.postValue(event.card)
+                vm.ldResponse.postValue(gsonConverter.toJson(event))
             }
             is ScanEvent.OnVerifyEvent -> {
-                val cardContext = vm.ldCardContext.value ?: return
-
-                cardContext.isVerified = true
-                vm.ldCardContext.value = cardContext
-
+                vm.ldIsVerified.postValue(true)
             }
-            else -> vm.ldResponse.value = gsonConverter.toJson(event)
+            else -> vm.ldResponse.postValue(gsonConverter.toJson(event))
         }
 
     }
 
-    @UiThread
     private fun handleCompletionEvent(taskEvent: TaskEvent.Completion<*>) {
         val error: TaskError = taskEvent.error ?: return
         when (error) {
             is TaskError.UserCancelled -> {
                 if (notShowedError == null) {
-                    vm.ldError.value = "User was cancelled"
+                    vm.seError.postValue("User was cancelled")
                 } else {
-                    vm.ldError.value = "Error description not implemented. Code: ${notShowedError!!.code}"
+                    vm.seError.postValue("Error description not implemented. Code: ${notShowedError!!.code}")
                     notShowedError = null
                 }
             }

@@ -20,9 +20,9 @@ fun getDefaultNavigationOptions(): NavOptions {
     }
 }
 
-data class NavigateOptions(val name: Action, val destinationId: Int)
+data class NavigateOptions(val name: ActionType, val destinationId: Int)
 
-enum class Action(@StringRes val resName: Int) {
+enum class ActionType(@StringRes val resName: Int) {
     Scan(R.string.action_card_scan),
     Sign(R.string.action_card_sign),
     CreateWallet(R.string.action_wallet_create),
