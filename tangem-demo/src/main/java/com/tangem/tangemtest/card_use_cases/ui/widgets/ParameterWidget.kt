@@ -12,60 +12,61 @@ import androidx.transition.TransitionManager
 import com.tangem.common.tlv.TlvTag
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest.card_use_cases.models.params.manager.IncomingParameter
-import com.tangem.tangemtest.commons.Action
+import com.tangem.tangemtest.commons.ActionType
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
 /**
 [REDACTED_AUTHOR]
  */
-class ParameterWidget(parent: View, private val model: IncomingParameter) {
+class ParameterWidget(parent: View, model: IncomingParameter) {
+
+    val tlvTag: TlvTag = model.tlvTag
+
+    var onValueChanged: ((TlvTag, Any?) -> Unit)? = null
+    var onActionBtnClickListener: (() -> Unit)? = null
+        set(value) {
+            field = value
+            toggleActionBtnVisibility()
+        }
 
     private val tvName: TextView = parent.findViewById(R.id.tv_param_name)
     private val etValue: EditText = parent.findViewById(R.id.tv_param_value)
     private val btnAction: Button = parent.findViewById(R.id.btn_action)
     private val valueWatcher: TextWatcher by lazy { getWatcher() }
 
-    val tlvTag: TlvTag = model.tlvTag
-
-    private var parameterActionStorage: (() -> Unit)? = null
-    var onParameterAction: (() -> Unit)? = null
-        set(value) {
-            TransitionManager.beginDelayedTransition(etValue.parent as ViewGroup, AutoTransition())
-            if (value != null) {
-                parameterActionStorage = value
-                setActionButtonTitle()
-                btnAction.visibility = View.VISIBLE
-            } else {
-                btnAction.visibility = View.GONE
-            }
-            field = value
-        }
-
-    var onParameterValueChanged: ((IncomingParameter) -> Unit)? = null
+    private var actionBtnVisibilityState: Int = btnAction.visibility
+    private var value: Any? = model.data
 
     init {
         tvName.text = model.tlvTag.name
+        etValue.setText(stringOf(model.data))
         etValue.addTextChangedListener(valueWatcher)
-        btnAction.setOnClickListener { onParameterAction?.invoke() }
+        btnAction.setOnClickListener { onActionBtnClickListener?.invoke() }
+        btnAction.text = btnAction.context.getString(getActionResName())
+        toggleActionBtnVisibility()
     }
 
-    private fun setActionButtonTitle() {
-        val action = when (model.tlvTag) {
-            TlvTag.CardId -> Action.Scan
-            else -> Action.Unknown
+    fun changeParamValue(data: Any?, silent: Boolean = true) {
+        Log.d(this, "changeParamValue: tag: $tlvTag, value: $data")
+        value = data
+        toggleActionBtnVisibility()
+        if (silent) {
+            etValue.removeTextChangedListener(valueWatcher)
+            etValue.setText(stringOf(value))
+            etValue.addTextChangedListener(valueWatcher)
+        } else {
+            etValue.setText(stringOf(value))
         }
-        btnAction.setText(action.resName)
     }
 
     private fun getWatcher(): TextWatcher {
         return object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                val newValue = stringOf(s)
-                onParameterAction = if (newValue.isEmpty() && onParameterAction == null) parameterActionStorage
-                else null
-                model.data = newValue
-                onParameterValueChanged?.invoke(model)
+            override fun afterTextChanged(editable: Editable?) {
+                Log.d(this, "afterTextChanged $editable")
+                value = if (editable.isNullOrEmpty()) null else editable.toString()
+                toggleActionBtnVisibility()
+                onValueChanged?.invoke(tlvTag, value)
             }
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -74,15 +75,27 @@ class ParameterWidget(parent: View, private val model: IncomingParameter) {
         }
     }
 
-    fun changeParamValue(data: Any?, silent: Boolean = true) {
-        Log.d(this, "changeParamValue: tag: $tlvTag, value: $data")
-        if (silent) {
-            etValue.removeTextChangedListener(valueWatcher)
-            etValue.setText(stringOf(data))
-            etValue.addTextChangedListener(valueWatcher)
-        } else {
-            etValue.setText(stringOf(data))
+    private fun getActionResName(): Int {
+        val action = when (tlvTag) {
+            TlvTag.CardId -> ActionType.Scan
+            else -> ActionType.Unknown
         }
-        onParameterAction = null
+        return action.resName
+    }
+
+    private fun toggleActionBtnVisibility() {
+        fun switchVisibilityState(newState: Int) {
+            actionBtnVisibilityState = newState
+            TransitionManager.beginDelayedTransition(etValue.parent as ViewGroup, AutoTransition())
+            btnAction.visibility = actionBtnVisibilityState
+        }
+        when {
+            onActionBtnClickListener == null -> {
+                if (actionBtnVisibilityState == View.GONE) return
+                switchVisibilityState(View.GONE)
+            }
+            value == null && actionBtnVisibilityState != View.VISIBLE -> switchVisibilityState(View.VISIBLE)
+            value != null && actionBtnVisibilityState != View.GONE -> switchVisibilityState(View.GONE)
+        }
     }
 }
