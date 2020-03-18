@@ -55,10 +55,10 @@ class SignAction : BaseCardAction() {
     }
 
     override fun getActionByTag(tag: TlvTag, attrs: AttrForAction): ((ActionCallback) -> Unit)? {
-        if (tag != TlvTag.CardId) return null
-        val pCardId = ParamsManager.findParameter(tag, attrs.paramsList) ?: return null
-
-        return if (pCardId.data == null) { callback -> ScanAction().executeMainAction(attrs, callback) } else null
+        return when (tag) {
+            TlvTag.CardId -> { callback -> ScanAction().executeMainAction(attrs, callback) }
+            else -> null
+        }
     }
 
     private fun findHashes(): Array<ByteArray> {
