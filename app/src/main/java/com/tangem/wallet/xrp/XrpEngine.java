@@ -342,20 +342,22 @@ public class XrpEngine extends CoinEngine {
     public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         checkBlockchainDataExists();
 
-        Amount reserve = convertToAmount(coinData.getReserveInInternalUnits());
-        if (!coinData.isTargetAccountCreated() && amountValue.compareTo(reserve) < 0) {
-            throw new Exception("Target account is not created. Amount should be " + reserve.toDescriptionString(getDecimals()) + " or more");
-        }
-
         String amount, fee;
 
         if (IncFee) {
             amount = convertToInternalAmount(amountValue).subtract(convertToInternalAmount(feeValue)).setScale(0).toPlainString();
         } else {
-            amount = Long.toString(convertToInternalAmount(amountValue).longValueExact());
+            amount = Long.toString(convertToInternalAmount(amountValue).longValue());
         }
 
         fee = Long.toString(convertToInternalAmount(feeValue).longValueExact());
+
+        if (!coinData.isTargetAccountCreated() &&
+                Long.valueOf(amount).compareTo(coinData.getReserveInInternalUnits().longValue()) < 0
+        ) {
+            String reserveDescription = convertToAmount(coinData.getReserveInInternalUnits()).toDescriptionString(getDecimals());
+            throw new Exception("Target account is not created. Amount should be " + reserveDescription + " or more");
+        }
 
         XrpPayment payment = new XrpPayment();
 
