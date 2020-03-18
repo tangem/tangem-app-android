@@ -356,7 +356,7 @@ public class XrpEngine extends CoinEngine {
                 Long.valueOf(amount).compareTo(coinData.getReserveInInternalUnits().longValue()) < 0
         ) {
             String reserveDescription = convertToAmount(coinData.getReserveInInternalUnits()).toDescriptionString(getDecimals());
-            throw new Exception("Target account is not created. Amount should be " + reserveDescription + " or more");
+            throw new IllegalArgumentException("Target account is not created. Send " + reserveDescription + " or more to create");
         }
 
         XrpPayment payment = new XrpPayment();
