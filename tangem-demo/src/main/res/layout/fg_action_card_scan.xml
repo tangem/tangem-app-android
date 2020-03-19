@@ -22,7 +22,11 @@
 
             </LinearLayout>
 
-            <include layout="@layout/w_action_response_json" />
+            <include
+                layout="@layout/w_action_response_json"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="@dimen/def_indent" />
 
         </LinearLayout>
 
