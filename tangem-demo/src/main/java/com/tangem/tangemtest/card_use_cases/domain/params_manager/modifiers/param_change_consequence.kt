@@ -1,7 +1,7 @@
-package com.tangem.tangemtest.card_use_cases.models.params.manager.modifiers
+package com.tangem.tangemtest.card_use_cases.domain.params_manager.modifiers
 
 import com.tangem.common.tlv.TlvTag
-import com.tangem.tangemtest.card_use_cases.models.params.manager.IncomingParameter
+import com.tangem.tangemtest.card_use_cases.domain.params_manager.IncomingParameter
 
 /**
 [REDACTED_AUTHOR]
