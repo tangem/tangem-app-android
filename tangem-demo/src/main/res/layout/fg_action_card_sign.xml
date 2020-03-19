@@ -22,23 +22,19 @@
 
             </LinearLayout>
 
-            <include
-                layout="@layout/w_action_response_json"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_margin="@dimen/def_indent" />
+            <include layout="@layout/w_action_response_json" />
 
         </LinearLayout>
 
     </ScrollView>
 
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_action"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="@dimen/def_indent"
         android:layout_marginBottom="@dimen/def_double_indent"
-        android:text="any action" />
+        android:src="@drawable/ic_nfc" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
