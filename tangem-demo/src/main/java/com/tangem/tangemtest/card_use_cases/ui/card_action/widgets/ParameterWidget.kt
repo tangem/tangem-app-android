@@ -1,4 +1,4 @@
-package com.tangem.tangemtest.card_use_cases.ui.widgets
+package com.tangem.tangemtest.card_use_cases.ui.card_action.widgets
 
 import android.text.Editable
 import android.text.TextWatcher
