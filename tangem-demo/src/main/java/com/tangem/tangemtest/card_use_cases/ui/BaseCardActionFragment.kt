@@ -15,8 +15,8 @@ import com.google.android.material.snackbar.Snackbar
 import com.tangem.CardManager
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tangemtest.R
-import com.tangem.tangemtest.card_use_cases.models.params.manager.ParamsManager
-import com.tangem.tangemtest.card_use_cases.models.params.manager.ParamsManagerFactory
+import com.tangem.tangemtest.card_use_cases.domain.params_manager.ParamsManager
+import com.tangem.tangemtest.card_use_cases.domain.params_manager.ParamsManagerFactory
 import com.tangem.tangemtest.card_use_cases.ui.widgets.ParameterWidget
 import com.tangem.tangemtest.card_use_cases.view_models.ActionViewModelFactory
 import com.tangem.tangemtest.card_use_cases.view_models.ParamsViewModel
@@ -29,13 +29,19 @@ import ru.dev.gbixahue.eu4d.lib.kotlin.common.LayoutHolder
  */
 abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
 
-    protected val mainView: View by lazy { view!! }
     protected val incomingParamsContainer: ViewGroup by lazy {
         mainView.findViewById<LinearLayout>(R.id.ll_incoming_params_container)
     }
     protected val viewModel: ParamsViewModel by viewModels { ActionViewModelFactory(paramsManager) }
+    protected lateinit var mainView: View
 
     private val paramsManager: ParamsManager by lazy { ParamsManagerFactory.createFactory().get(getAction())!! }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        Log.d(this, "onCreateView")
+        mainView = inflater.inflate(getLayoutId(), container, false)
+        return mainView
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -87,12 +93,12 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
         Snackbar.make(mainView, message, BaseTransientBottomBar.LENGTH_SHORT).show()
     }
 
-    private fun inflateParamView(where: ViewGroup): View {
+    private fun inflateParamView(where: ViewGroup): ViewGroup {
         val inflater = LayoutInflater.from(where.context)
         val view = inflater.inflate(R.layout.w_card_incoming_param, where, false)
         where.addView(view)
         inflater.inflate(R.layout.m_divider_h, where, true)
-        return view
+        return view as ViewGroup
     }
 
     abstract fun getAction(): ActionType

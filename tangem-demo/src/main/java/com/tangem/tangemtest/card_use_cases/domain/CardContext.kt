@@ -1,4 +1,4 @@
-package com.tangem.tangemtest.card_use_cases.models
+package com.tangem.tangemtest.card_use_cases.domain
 
 import androidx.fragment.app.FragmentActivity
 import com.tangem.CardManager
