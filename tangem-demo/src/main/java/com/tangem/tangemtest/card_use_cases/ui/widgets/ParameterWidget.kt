@@ -5,13 +5,13 @@ import android.text.TextWatcher
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
 import androidx.transition.AutoTransition
 import androidx.transition.TransitionManager
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import com.tangem.common.tlv.TlvTag
 import com.tangem.tangemtest.R
-import com.tangem.tangemtest.card_use_cases.models.params.manager.IncomingParameter
+import com.tangem.tangemtest.card_use_cases.domain.params_manager.IncomingParameter
 import com.tangem.tangemtest.commons.ActionType
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
@@ -19,7 +19,7 @@ import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 /**
 [REDACTED_AUTHOR]
  */
-class ParameterWidget(parent: View, model: IncomingParameter) {
+class ParameterWidget(private val parent: ViewGroup, model: IncomingParameter) {
 
     val tlvTag: TlvTag = model.tlvTag
 
@@ -30,8 +30,8 @@ class ParameterWidget(parent: View, model: IncomingParameter) {
             toggleActionBtnVisibility()
         }
 
-    private val tvName: TextView = parent.findViewById(R.id.tv_param_name)
-    private val etValue: EditText = parent.findViewById(R.id.tv_param_value)
+    private val tilValue: TextInputLayout = parent.findViewById(R.id.til_param)
+    private val etValue: TextInputEditText = parent.findViewById(R.id.et_param)
     private val btnAction: Button = parent.findViewById(R.id.btn_action)
     private val valueWatcher: TextWatcher by lazy { getWatcher() }
 
@@ -39,7 +39,7 @@ class ParameterWidget(parent: View, model: IncomingParameter) {
     private var value: Any? = model.data
 
     init {
-        tvName.text = model.tlvTag.name
+        tilValue.hint = model.tlvTag.name
         etValue.setText(stringOf(model.data))
         etValue.addTextChangedListener(valueWatcher)
         btnAction.setOnClickListener { onActionBtnClickListener?.invoke() }
@@ -86,7 +86,7 @@ class ParameterWidget(parent: View, model: IncomingParameter) {
     private fun toggleActionBtnVisibility() {
         fun switchVisibilityState(newState: Int) {
             actionBtnVisibilityState = newState
-            TransitionManager.beginDelayedTransition(etValue.parent as ViewGroup, AutoTransition())
+            TransitionManager.beginDelayedTransition(parent, AutoTransition())
             btnAction.visibility = actionBtnVisibilityState
         }
         when {
