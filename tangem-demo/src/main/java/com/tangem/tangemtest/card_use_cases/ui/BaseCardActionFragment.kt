@@ -9,7 +9,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.CardManager
@@ -21,6 +21,7 @@ import com.tangem.tangemtest.card_use_cases.ui.widgets.ParameterWidget
 import com.tangem.tangemtest.card_use_cases.view_models.ActionViewModelFactory
 import com.tangem.tangemtest.card_use_cases.view_models.ParamsViewModel
 import com.tangem.tangemtest.commons.ActionType
+import ru.dev.gbixahue.eu4d.lib.android._android.views.find
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.LayoutHolder
 
@@ -54,10 +55,7 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
 
     private fun initFab() {
         Log.d(this, "initFab")
-        val fab = mainView.findViewById<ExtendedFloatingActionButton>(R.id.fab_action) ?: return
-
-        fab.setText(getAction().resName)
-        fab.setOnClickListener { viewModel.invokeMainAction() }
+        mainView.find<FloatingActionButton>(R.id.fab_action)?.setOnClickListener { viewModel.invokeMainAction() }
     }
 
     private fun createWidgets(callback: (List<ParameterWidget>) -> Unit) {
@@ -97,7 +95,6 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
         val inflater = LayoutInflater.from(where.context)
         val view = inflater.inflate(R.layout.w_card_incoming_param, where, false)
         where.addView(view)
-        inflater.inflate(R.layout.m_divider_h, where, true)
         return view as ViewGroup
     }
 
