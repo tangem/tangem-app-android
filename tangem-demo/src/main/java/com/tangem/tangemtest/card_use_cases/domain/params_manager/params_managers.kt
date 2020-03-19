@@ -1,9 +1,12 @@
-package com.tangem.tangemtest.card_use_cases.models.params.manager
+package com.tangem.tangemtest.card_use_cases.domain.params_manager
 
 import com.tangem.CardManager
 import com.tangem.common.tlv.TlvTag
-import com.tangem.tangemtest.card_use_cases.models.params.manager.ParamsManager.Companion.findParameter
-import com.tangem.tangemtest.card_use_cases.models.params.manager.modifiers.ParamsChangeConsequence
+import com.tangem.tangemtest.card_use_cases.domain.card_action.AttrForAction
+import com.tangem.tangemtest.card_use_cases.domain.card_action.CardAction
+import com.tangem.tangemtest.card_use_cases.domain.card_action.ScanAction
+import com.tangem.tangemtest.card_use_cases.domain.card_action.SignAction
+import com.tangem.tangemtest.card_use_cases.domain.params_manager.modifiers.ParamsChangeConsequence
 import com.tangem.tasks.TaskEvent
 
 /**
@@ -26,10 +29,10 @@ interface ParamsManager {
     fun invokeMainAction(cardManager: CardManager, callback: ActionCallback)
     fun getActionByTag(tag: TlvTag, cardManager: CardManager): ((ActionCallback) -> Unit)?
 
-    companion object {
-        fun findParameter(tlvTag: TlvTag, paramsList: List<IncomingParameter>)
-                : IncomingParameter? = paramsList.firstOrNull { it.tlvTag == tlvTag }
-    }
+}
+
+fun List<IncomingParameter>.findParameter(tag: TlvTag): IncomingParameter? {
+    return firstOrNull { it.tlvTag == tag }
 }
 
 abstract class BaseParamsManager(protected val action: CardAction) : ParamsManager {
@@ -40,7 +43,7 @@ abstract class BaseParamsManager(protected val action: CardAction) : ParamsManag
 
     override fun parameterChanged(tag: TlvTag, value: Any?, callback: AffectedParamsCallback?) {
         if (paramsList.isEmpty()) return
-        val foundParam = findParameter(tag, paramsList) ?: return
+        val foundParam = paramsList.findParameter(tag) ?: return
 
         foundParam.data = value
         applyChangesByAffectedParams(foundParam, callback)
@@ -75,7 +78,7 @@ class SignParamsManager : BaseParamsManager(SignAction()) {
     override fun createParamsList(): List<IncomingParameter> {
         return listOf(
                 IncomingParameter(TlvTag.CardId, null),
-                IncomingParameter(TlvTag.TransactionOutHash, "")
+                IncomingParameter(TlvTag.TransactionOutHash, "Data used for hashing")
         )
     }
 
