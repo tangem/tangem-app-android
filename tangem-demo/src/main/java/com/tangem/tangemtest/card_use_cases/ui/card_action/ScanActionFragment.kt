@@ -1,4 +1,4 @@
-package com.tangem.tangemtest.card_use_cases.ui
+package com.tangem.tangemtest.card_use_cases.ui.card_action
 
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest.commons.ActionType
