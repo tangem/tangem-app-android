@@ -7,13 +7,14 @@
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/til_param"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginStart="@dimen/def_indent"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="@dimen/def_indent"
+        app:boxBackgroundColor="@android:color/transparent"
+        app:endIconMode="clear_text"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/btn_action"
         app:layout_constraintStart_toStartOf="parent"
@@ -22,7 +23,10 @@
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_param"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:gravity="start|bottom"
+            android:paddingBottom="4dp" />
+
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button
