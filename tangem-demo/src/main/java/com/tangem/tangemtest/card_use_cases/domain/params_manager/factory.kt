@@ -1,4 +1,4 @@
-package com.tangem.tangemtest.card_use_cases.models.params.manager
+package com.tangem.tangemtest.card_use_cases.domain.params_manager
 
 import com.tangem.tangemtest.commons.ActionType
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.BaseTypedHolder

@@ -1,10 +1,13 @@
-package com.tangem.tangemtest.card_use_cases.models.params.manager
+package com.tangem.tangemtest.card_use_cases.domain.card_action
 
 import com.tangem.CardManager
 import com.tangem.common.tlv.TlvTag
-import com.tangem.tangemtest.card_use_cases.models.params.manager.modifiers.AfterActionModification
-import com.tangem.tangemtest.card_use_cases.models.params.manager.modifiers.AfterScanModifier
-import com.tangem.tangemtest.card_use_cases.models.params.manager.modifiers.ParamsChangeConsequence
+import com.tangem.tangemtest.card_use_cases.domain.params_manager.ActionCallback
+import com.tangem.tangemtest.card_use_cases.domain.params_manager.IncomingParameter
+import com.tangem.tangemtest.card_use_cases.domain.params_manager.findParameter
+import com.tangem.tangemtest.card_use_cases.domain.params_manager.modifiers.AfterActionModification
+import com.tangem.tangemtest.card_use_cases.domain.params_manager.modifiers.AfterScanModifier
+import com.tangem.tangemtest.card_use_cases.domain.params_manager.modifiers.ParamsChangeConsequence
 import com.tangem.tasks.TaskEvent
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
@@ -49,9 +52,12 @@ class ScanAction : BaseCardAction() {
 
 class SignAction : BaseCardAction() {
     override fun executeMainAction(attrs: AttrForAction, callback: ActionCallback) {
-        val hashes = findHashes()
-        val cardId = ParamsManager.findParameter(TlvTag.CardId, attrs.paramsList)?.data
-        attrs.cardManager.sign(hashes, stringOf(cardId)) { handleResponse(it, null, attrs, callback) }
+        val dataForHashing = attrs.paramsList.findParameter(TlvTag.TransactionOutHash) ?: return
+
+        val arHashes = createHashes(stringOf(dataForHashing.data))
+        val cardId = attrs.paramsList.findParameter(TlvTag.CardId)?.data ?: return
+
+        attrs.cardManager.sign(arHashes, stringOf(cardId)) { handleResponse(it, null, attrs, callback) }
     }
 
     override fun getActionByTag(tag: TlvTag, attrs: AttrForAction): ((ActionCallback) -> Unit)? {
@@ -61,9 +67,7 @@ class SignAction : BaseCardAction() {
         }
     }
 
-    private fun findHashes(): Array<ByteArray> {
-        val hash1 = ByteArray(32) { 1 }
-        val hash2 = ByteArray(32) { 2 }
-        return arrayOf(hash1, hash2)
+    private fun createHashes(value: String): Array<ByteArray> {
+        return arrayOf(value.toByteArray())
     }
 }
