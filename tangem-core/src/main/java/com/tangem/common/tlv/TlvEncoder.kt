@@ -6,6 +6,7 @@ import com.tangem.commands.common.IssuerDataMode
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toByteArray
+import com.tangem.common.extensions.toHexString
 import com.tangem.tasks.TaskError
 import java.util.*
 
@@ -32,11 +33,11 @@ class TlvEncoder {
         return when (tag.valueType()) {
             TlvValueType.HexString -> {
                 typeCheck<T, String>(tag)
-                return if (tag == TlvTag.Pin || tag == TlvTag.Pin2) {
-                    (value as String).calculateSha256()
-                } else {
-                    (value as String).hexToBytes()
-                }
+                (value as String).hexToBytes()
+            }
+            TlvValueType.HexStringToHash -> {
+                typeCheck<T, String>(tag)
+                (value as String).calculateSha256()
             }
             TlvValueType.Utf8String -> {
                 typeCheck<T, String>(tag)
@@ -52,8 +53,8 @@ class TlvEncoder {
             }
             TlvValueType.BoolValue -> {
                 typeCheck<T, Boolean>(tag)
-                Log.e(this::class.simpleName!!, "Unsupported operation: Boolean to ByteArray for tag $tag")
-                throw TaskError.ConvertError()
+                val booleanValue = value as Boolean
+                if (booleanValue) byteArrayOf(1) else byteArrayOf(0)
             }
             TlvValueType.ByteArray -> {
                 typeCheck<T, ByteArray>(tag)
@@ -61,7 +62,7 @@ class TlvEncoder {
             }
             TlvValueType.EllipticCurve -> {
                 typeCheck<T, EllipticCurve>(tag)
-                (value as EllipticCurve).curve.plus("\\0").toByteArray()
+                (value as EllipticCurve).curve.toByteArray()
             }
             TlvValueType.DateTime -> {
                 typeCheck<T, Date>(tag)
@@ -69,7 +70,7 @@ class TlvEncoder {
                 val year = calendar.get(Calendar.YEAR)
                 val month = calendar.get(Calendar.MONTH) + 1
                 val day = calendar.get(Calendar.DAY_OF_MONTH)
-                return year.toByteArray() + month.toByteArray() + day.toByteArray()
+                return year.toByteArray(2) + month.toByte() + day.toByte()
             }
             TlvValueType.ProductMask -> {
                 typeCheck<T, ProductMask>(tag)
@@ -79,7 +80,8 @@ class TlvEncoder {
             }
             TlvValueType.SettingsMask -> {
                 typeCheck<T, SettingsMask>(tag)
-                (value as SettingsMask).rawValue.toByteArray(2)
+                val rawValue = (value as SettingsMask).rawValue
+                rawValue.toByteArray(determineByteArraySize(rawValue))
             }
             TlvValueType.CardStatus -> {
                 typeCheck<T, CardStatus>(tag)
@@ -87,13 +89,18 @@ class TlvEncoder {
             }
             TlvValueType.SigningMethod -> {
                 typeCheck<T, SigningMethod>(tag)
-                (value as SigningMethod).rawValue.toByteArray()
+                byteArrayOf((value as SigningMethod).rawValue.toByte())
             }
             TlvValueType.IssuerDataMode -> {
                 typeCheck<T, IssuerDataMode>(tag)
                 byteArrayOf((value as IssuerDataMode).code)
             }
         }
+    }
+
+    private fun determineByteArraySize(value: Int): Int {
+        val mask = 0xFFFF0000.toInt()
+        return if ((value and mask) != 0) 4 else 2
     }
 
     private inline fun <reified T, reified ExpectedT> typeCheck(tag: TlvTag) {
