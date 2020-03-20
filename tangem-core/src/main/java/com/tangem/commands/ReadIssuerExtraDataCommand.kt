@@ -33,7 +33,7 @@ class ReadIssuerExtraDataResponse(
          * Issuer’s signature of [issuerData] with Issuer Data Private Key (which is kept on card).
          * Issuer’s signature of SHA256-hashed [cardId] concatenated with [issuerData]:
          * SHA256([cardId] | [issuerData]).
-         * When flag [SettingsMask.protectIssuerDataAgainstReplay] set in [SettingsMask] then signature of
+         * When flag [Settings.ProtectIssuerDataAgainstReplay] set in [SettingsMask] then signature of
          * SHA256-hashed CID Issuer_Data concatenated with and [issuerDataCounter]:
          * SHA256([cardId] | [issuerData] | [issuerDataCounter]).
          */
@@ -41,7 +41,7 @@ class ReadIssuerExtraDataResponse(
 
         /**
          * An optional counter that protect issuer data against replay attack.
-         * When flag [SettingsMask.protectIssuerDataAgainstReplay] set in [SettingsMask]
+         * When flag [Settings.ProtectIssuerDataAgainstReplay] set in [SettingsMask]
          * then this value is mandatory and must increase on each execution of [WriteIssuerDataCommand].
          */
         val issuerDataCounter: Int?
