@@ -1,6 +1,10 @@
 package com.tangem
 
 import com.tangem.commands.*
+import com.tangem.commands.personalization.CardConfig
+import com.tangem.commands.personalization.DepersonalizeCommand
+import com.tangem.commands.personalization.DepersonalizeResponse
+import com.tangem.commands.personalization.PersonalizeCommand
 import com.tangem.common.CardEnvironment
 import com.tangem.common.TerminalKeysService
 import com.tangem.crypto.CryptoUtils
@@ -176,16 +180,16 @@ class CardManager(
      * User_ProtectedCounter and User_ProtectedData additionaly need PIN2 to confirmation.
      */
     fun writeUserData(
-        cardId: String,
-        userData: ByteArray? = null,
-        userProtectedData: ByteArray? = null,
-        userCounter: Int? = null,
-        userProtectedCounter: Int? = null,
-        callback: (result: TaskEvent<WriteUserDataResponse>) -> Unit
+            cardId: String,
+            userData: ByteArray? = null,
+            userProtectedData: ByteArray? = null,
+            userCounter: Int? = null,
+            userProtectedCounter: Int? = null,
+            callback: (result: TaskEvent<WriteUserDataResponse>) -> Unit
     ) {
-      val writeUserDataCommand = WriteUserDataCommand(userData, userProtectedData, userCounter, userProtectedCounter)
-      val task = SingleCommandTask(writeUserDataCommand)
-      runTask(task, cardId, callback)
+        val writeUserDataCommand = WriteUserDataCommand(userData, userProtectedData, userCounter, userProtectedCounter)
+        val task = SingleCommandTask(writeUserDataCommand)
+        runTask(task, cardId, callback)
     }
 
     /**
@@ -199,8 +203,8 @@ class CardManager(
      * For example, this fields may contain blockchain nonce value.
      */
     fun readUserData(cardId: String, callback: (result: TaskEvent<ReadUserDataResponse>) -> Unit) {
-      val task = SingleCommandTask(ReadUserDataCommand())
-      runTask(task, cardId, callback)
+        val task = SingleCommandTask(ReadUserDataCommand())
+        runTask(task, cardId, callback)
     }
 
     /**
@@ -232,6 +236,39 @@ class CardManager(
         val purgeWalletCommand = PurgeWalletCommand()
         val task = SingleCommandTask(purgeWalletCommand)
         runTask(task, cardId, callback)
+    }
+
+    /**
+     * Command available on SDK cards only
+     *
+     * This command resets card to initial state,
+     * erasing all data written during personalization and usage.
+     * @param cardId CID, Unique Tangem card ID number.
+     */
+    fun depersonalize(cardId: String,
+                      callback: (result: TaskEvent<DepersonalizeResponse>) -> Unit) {
+        val depersonalizeCommand = DepersonalizeCommand()
+        val task = SingleCommandTask(depersonalizeCommand)
+        runTask(task, cardId, callback)
+    }
+
+    /**
+     * Command available on SDK cards only
+     *
+     * Personalization is an initialization procedure, required before starting using a card.
+     * During this procedure a card setting is set up.
+     * During this procedure all data exchange is encrypted.
+     * @param config is a configuration file with all the card settings that are written on the card
+     * during personalization.
+     * @param cardId this parameter will set up CID, Unique Tangem card ID.
+     */
+    fun personalize(config: CardConfig,
+                    cardId: String,
+                    callback: (result: TaskEvent<Card>) -> Unit) {
+        val personalizationCommand = PersonalizeCommand(config, cardId)
+        val task = SingleCommandTask(personalizationCommand)
+        task.performPreflightRead = false
+        runTask(task, callback = callback)
     }
 
     /**
