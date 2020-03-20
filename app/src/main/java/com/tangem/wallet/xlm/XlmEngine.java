@@ -361,10 +361,14 @@ public class XlmEngine extends CoinEngine {
         }
 
         Operation operation;
-        if (coinData.isTargetAccountCreated())
+        if (coinData.isTargetAccountCreated()) {
             operation = new PaymentOperation.Builder(KeyPair.fromAccountId(targetAddress), new AssetTypeNative(), amountValue.toValueString()).build();
-        else
+        } else {
+            if (amountValue.compareTo(coinData.getReserve()) < 0) {
+                throw new IllegalArgumentException("Target account is not created. Send " + coinData.getReserve().toDescriptionString(getDecimals()) + " or more to create");
+            }
             operation = new CreateAccountOperation.Builder(KeyPair.fromAccountId(targetAddress), amountValue.toValueString()).build();
+        }
 
         TransactionEx transaction = TransactionEx.buildEx(120, coinData.getAccountResponse(), operation);
 
@@ -432,7 +436,7 @@ public class XlmEngine extends CoinEngine {
                 if (request.errorResponse != null && request.errorResponse.getCode() == 404) {
                     coinData.setTargetAccountCreated(false);
 
-                    if (amount.compareTo(coinData.getReserve()) >= 0) { //TODO: take fee inclusion in account, now 1 XLM with fee included will fail after transaction is sent
+                    if (amount.compareTo(coinData.getReserve()) >= 0) {
                         blockchainRequestsCallbacks.onComplete(true);
                     } else {
                         ctx.setError(R.string.confirm_transaction_error_not_enough_xlm_for_create);
