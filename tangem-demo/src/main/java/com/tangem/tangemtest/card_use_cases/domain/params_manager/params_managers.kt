@@ -2,10 +2,7 @@ package com.tangem.tangemtest.card_use_cases.domain.params_manager
 
 import com.tangem.CardManager
 import com.tangem.common.tlv.TlvTag
-import com.tangem.tangemtest.card_use_cases.domain.card_action.AttrForAction
-import com.tangem.tangemtest.card_use_cases.domain.card_action.CardAction
-import com.tangem.tangemtest.card_use_cases.domain.card_action.ScanAction
-import com.tangem.tangemtest.card_use_cases.domain.card_action.SignAction
+import com.tangem.tangemtest.card_use_cases.domain.card_action.*
 import com.tangem.tangemtest.card_use_cases.domain.params_manager.modifiers.ParamsChangeConsequence
 import com.tangem.tasks.TaskEvent
 
@@ -51,6 +48,8 @@ abstract class BaseParamsManager(protected val action: CardAction) : ParamsManag
 
     override fun getParams(): MutableList<IncomingParameter> = paramsList.toMutableList()
 
+    override fun getActionByTag(tag: TlvTag, cardManager: CardManager): ((ActionCallback) -> Unit)? = null
+
     // Use it if current parameter needs to be affect any other parameters
     protected open fun applyChangesByAffectedParams(param: IncomingParameter, callback: AffectedParamsCallback?) {
         getChangeConsequence()?.affectChanges(param, paramsList)?.let { callback?.invoke(it) }
@@ -70,8 +69,6 @@ class ScanParamsManager : BaseParamsManager(ScanAction()) {
     override fun invokeMainAction(cardManager: CardManager, callback: ActionCallback) {
         action.executeMainAction(getAttrsForAction(cardManager), callback)
     }
-
-    override fun getActionByTag(tag: TlvTag, cardManager: CardManager): ((ActionCallback) -> Unit)? = null
 }
 
 class SignParamsManager : BaseParamsManager(SignAction()) {
@@ -88,5 +85,15 @@ class SignParamsManager : BaseParamsManager(SignAction()) {
 
     override fun getActionByTag(tag: TlvTag, cardManager: CardManager): ((ActionCallback) -> Unit)? {
         return action.getActionByTag(tag, getAttrsForAction(cardManager))
+    }
+}
+
+class PersonalizeParamsManager : BaseParamsManager(PersonalizeAction()) {
+    override fun createParamsList(): List<IncomingParameter> {
+        return listOf()
+    }
+
+    override fun invokeMainAction(cardManager: CardManager, callback: ActionCallback) {
+
     }
 }
