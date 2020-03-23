@@ -265,6 +265,10 @@ class CardManager(
     fun personalize(config: CardConfig,
                     cardId: String,
                     callback: (result: TaskEvent<Card>) -> Unit) {
+        if (this.config.issuer == null) {
+            callback(TaskEvent.Completion(TaskError.IssuerIsRequired()))
+            return
+        }
         val personalizationCommand = PersonalizeCommand(config, cardId)
         val task = SingleCommandTask(personalizationCommand)
         task.performPreflightRead = false
@@ -316,7 +320,10 @@ class CardManager(
         val terminalKeys = if (config.linkedTerminal) terminalKeysService?.getKeys() else null
         return CardEnvironment(
                 cardId = cardId,
-                terminalKeys = terminalKeys
+                terminalKeys = terminalKeys,
+                manufacturerKeyPair = config.manufacturerKeyPair,
+                acquirerKeyPair = config.acquirerKeyPair,
+                issuer = config.issuer
         )
     }
 
