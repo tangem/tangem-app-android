@@ -2,6 +2,7 @@ package com.tangem.crypto
 
 import com.tangem.commands.EllipticCurve
 import net.i2p.crypto.eddsa.EdDSASecurityProvider
+import org.spongycastle.jce.provider.BouncyCastleProvider
 import java.security.PublicKey
 import java.security.SecureRandom
 import java.security.Security
@@ -13,7 +14,7 @@ import javax.crypto.spec.SecretKeySpec
 object CryptoUtils {
 
     fun initCrypto() {
-        Security.insertProviderAt(org.spongycastle.jce.provider.BouncyCastleProvider(), 1)
+        Security.insertProviderAt(BouncyCastleProvider(), 1)
         Security.addProvider(EdDSASecurityProvider())
     }
 
