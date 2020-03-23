@@ -7,6 +7,12 @@
   <dimen name="def_indent">16dp</dimen>
   <dimen name="def_double_indent">32dp</dimen>
 
+  <dimen name="unit_widget_min_height">52dp</dimen>
+  <dimen name="unit_widget_text_size_block">20sp</dimen>
+  <dimen name="unit_widget_text_size">16sp</dimen>
+  <dimen name="unit_widget_text_size_hint">12sp</dimen>
+  <dimen name="unit_widget_text_size_description">14sp</dimen>
+
   <dimen name="indent_card_incoming_param_name_h">@dimen/def_indent</dimen>
   <dimen name="indent_card_incoming_param_name_v">@dimen/def_indent</dimen>
 
