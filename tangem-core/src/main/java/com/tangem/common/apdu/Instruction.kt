@@ -6,6 +6,7 @@ package com.tangem.common.apdu
  */
 enum class Instruction(var code: Int) {
     Unknown(0x00),
+    Personalize(0xF1),
     Read(0xF2),
     VerifyCard(0xF3),
     ValidateCard(0xF4),
@@ -20,7 +21,8 @@ enum class Instruction(var code: Int) {
     Activate(0xFE),
     OpenSession(0xFF),
     WriteUserData(0xE0),
-    ReadUserData(0xE1);
+    ReadUserData(0xE1),
+    Depersonalize(0xE3);
 
 
     companion object {
