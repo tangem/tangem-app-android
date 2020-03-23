@@ -71,3 +71,9 @@ class SignAction : BaseCardAction() {
         return arrayOf(value.toByteArray())
     }
 }
+
+class PersonalizeAction : BaseCardAction() {
+    override fun executeMainAction(attrs: AttrForAction, callback: ActionCallback) {
+        TODO("Not yet implemented")
+    }
+}
