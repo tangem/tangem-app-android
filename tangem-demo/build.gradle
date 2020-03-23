@@ -51,5 +51,5 @@ dependencies {
     implementation "androidx.viewpager2:viewpager2:1.0.0"
 
     implementation 'com.google.code.gson:gson:2.8.6'
-    implementation 'com.github.gbIxaHue:eu4d:0.3.4'
+    implementation 'com.github.gbIxaHue:eu4d:0.3.6'
 }
