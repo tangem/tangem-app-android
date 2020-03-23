@@ -3,9 +3,7 @@ package com.tangem.commands.personalization
 import com.tangem.commands.Card
 import com.tangem.commands.CardData
 import com.tangem.commands.CommandSerializer
-import com.tangem.commands.personalization.entities.Acquirer
 import com.tangem.commands.personalization.entities.Issuer
-import com.tangem.commands.personalization.entities.Manufacturer
 import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
@@ -32,9 +30,15 @@ import com.tangem.tasks.TaskError
 class PersonalizeCommand(private val config: CardConfig, private val cardId: String) : CommandSerializer<Card>() {
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
+        if (cardEnvironment.issuer == null || cardEnvironment.manufacturerKeyPair == null) {
+            throw TaskError.SerializeCommandError()
+        }
         return CommandApdu(
                 Instruction.Personalize,
-                serializePersonalizationData(cardId, config),
+                serializePersonalizationData(
+                        cardId, config,
+                        cardEnvironment.issuer, cardEnvironment.manufacturerKeyPair.privateKey,
+                        cardEnvironment.acquirerKeyPair?.publicKey),
                 encryptionKey = devPersonalizationKey
         )
     }
@@ -95,7 +99,10 @@ class PersonalizeCommand(private val config: CardConfig, private val cardId: Str
         )
     }
 
-    private fun serializePersonalizationData(cardId: String, config: CardConfig): ByteArray {
+    private fun serializePersonalizationData(cardId: String, config: CardConfig,
+                                             issuer: Issuer, manufacturerPrivateKey: ByteArray,
+                                             acquirePublicKey: ByteArray?
+    ): ByteArray {
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.CardId, cardId)
 
@@ -113,24 +120,27 @@ class PersonalizeCommand(private val config: CardConfig, private val cardId: Str
         tlvBuilder.append(TlvTag.NewPin2, config.pin2)
         tlvBuilder.append(TlvTag.NewPin3, config.pin3)
         tlvBuilder.append(TlvTag.CrExKey, config.hexCrExKey)
-        tlvBuilder.append(TlvTag.IssuerDataPublicKey, Issuer.dataPublicKey)
-        tlvBuilder.append(TlvTag.IssuerTransactionPublicKey, Issuer.transactionPublicKey)
+        tlvBuilder.append(TlvTag.IssuerDataPublicKey, issuer.dataKeyPair.publicKey)
+        tlvBuilder.append(TlvTag.IssuerTransactionPublicKey, issuer.transactionKeyPair.publicKey)
 
-        tlvBuilder.append(TlvTag.AcquirerPublicKey, Acquirer.publicKey)
+        tlvBuilder.append(TlvTag.AcquirerPublicKey, acquirePublicKey)
 
-        tlvBuilder.append(TlvTag.CardData, serializeCardData(cardId, config.cardData))
-
+        tlvBuilder.append(
+                TlvTag.CardData, serializeCardData(cardId, config.cardData, issuer, manufacturerPrivateKey)
+        )
         return tlvBuilder.serialize()
     }
 
-    private fun serializeCardData(cardId: String, cardData: CardData): ByteArray {
+    private fun serializeCardData(
+            cardId: String, cardData: CardData,
+            issuer: Issuer, manufacturerPrivateKey: ByteArray): ByteArray {
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Batch, cardData.batchId)
         tlvBuilder.append(TlvTag.ProductMask, cardData.productMask)
 
         tlvBuilder.append(TlvTag.ManufactureDateTime, cardData.manufactureDateTime)
 
-        tlvBuilder.append(TlvTag.IssuerId, Issuer.id)
+        tlvBuilder.append(TlvTag.IssuerId, issuer.id)
 
         tlvBuilder.append(TlvTag.BlockchainId, cardData.blockchainName)
 
@@ -139,9 +149,9 @@ class PersonalizeCommand(private val config: CardConfig, private val cardId: Str
             tlvBuilder.append(TlvTag.TokenContractAddress, cardData.tokenContractAddress)
             tlvBuilder.append(TlvTag.TokenDecimal, cardData.tokenDecimal)
         }
-
-        tlvBuilder.append(TlvTag.CardIdManufacturerSignature, cardId.hexToBytes().sign(Manufacturer.devPrivateKey))
-
+        tlvBuilder.append(
+                TlvTag.CardIdManufacturerSignature, cardId.hexToBytes().sign(manufacturerPrivateKey)
+        )
         return tlvBuilder.serialize()
     }
 
