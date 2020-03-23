@@ -13,6 +13,7 @@ class ParamsManagerFactory : BaseTypedHolder<ActionType, ParamsManager>() {
             return ParamsManagerFactory().apply {
                 register(ActionType.Scan, ScanParamsManager())
                 register(ActionType.Sign, SignParamsManager())
+                register(ActionType.Personalize, PersonalizeParamsManager())
             }
         }
     }
