@@ -5,7 +5,6 @@ import android.content.Context
 import com.tangem.commands.*
 import com.tangem.commands.personalization.CardConfig
 import com.tangem.commands.personalization.NdefRecord
-import com.tangem.commands.personalization.entities.Issuer
 import java.util.*
 
 fun CardConfig.Companion.init(application: Application): CardConfig {
@@ -48,7 +47,7 @@ fun CardConfig.Companion.init(application: Application): CardConfig {
             tokenSymbol = tokenSymbol,
             tokenContractAddress = tokenContractAddress,
             tokenDecimal = tokenDecimal,
-            issuerName = Issuer.id,
+            issuerName = null,
             manufactureDateTime = Calendar.getInstance().time,
             manufacturerSignature = null)
 
@@ -120,9 +119,6 @@ fun CardConfig.Companion.init(application: Application): CardConfig {
             pin2 = preferences.getString("personalization_pin2", "000") ?: "000",
             pin3 = preferences.getString("personalization_pin3", "123") ?: "123",
             hexCrExKey = preferences.getString("personalization_CrEx_Key", "00112233445566778899AABBCCDDEEFFFFEEDDCCBBAA998877665544332211000000111122223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFF"),
-
-            issuerName = Issuer.id,
-            acquirerName = "TANGEM SDK",
 
             ndefRecords = ndefs
     )
