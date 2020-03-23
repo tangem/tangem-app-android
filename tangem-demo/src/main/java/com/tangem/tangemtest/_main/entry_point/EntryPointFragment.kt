@@ -10,11 +10,13 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest.commons.ActionType
 import com.tangem.tangemtest.commons.NavigateOptions
 import com.tangem.tangemtest.commons.getDefaultNavigationOptions
 import kotlinx.android.synthetic.main.fg_entry_point.*
+import ru.dev.gbixahue.eu4d.lib.android._android.views.find
 
 /**
 [REDACTED_AUTHOR]
@@ -31,6 +33,13 @@ class EntryPointFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initRecyclerView()
+        initPersonalizeNagivation()
+    }
+
+    private fun initPersonalizeNagivation() {
+        view?.find<ExtendedFloatingActionButton>(R.id.fab_personalize)?.setOnClickListener {
+            navigate(R.id.action_nav_entry_point_to_nav_personalize)
+        }
     }
 
     private fun initRecyclerView() {
