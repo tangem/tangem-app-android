@@ -135,12 +135,18 @@ sealed class TaskError(val code: Int) : Exception() {
 
     class UnknownError : TaskError(6000)
 
-    //Issuer Data Errors
+    //Specific Command Errors
     /**
      * This error is returned when [ReadIssuerDataTask] or [ReadIssuerExtraDataTask] expects a counter
      * (when the card's requires it), but the counter is missing.
      */
     class MissingCounter : TaskError(7001)
+
+    /**
+     * This error is returned when [com.tangem.commands.personalization.PersonalizeCommand] is attempted
+     * without [com.tangem.commands.personalization.entities.Issuer] being set in the [com.tangem.Config].
+     */
+    class IssuerIsRequired : TaskError(7002)
 }
 
 /**
