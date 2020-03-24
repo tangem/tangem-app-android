@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
+import android.widget.LinearLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
@@ -24,7 +24,7 @@ import java.nio.charset.Charset
 class PersonalizeFragment : Fragment() {
 
     protected val blockContainer: ViewGroup by lazy {
-        mainView.findViewById<FrameLayout>(R.id.ll_container)
+        mainView.findViewById<LinearLayout>(R.id.ll_container)
     }
     protected val viewModel: PersonalizeViewModel by viewModels { PersonalizeViewModelFactory(getPersonalizeJson()) }
     protected lateinit var mainView: View
@@ -38,8 +38,9 @@ class PersonalizeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel.ldBlockList.observe(viewLifecycleOwner, Observer {
-            WidgetBuilder().build(it, blockContainer)
+        viewModel.ldBlockList.observe(viewLifecycleOwner, Observer { blocList ->
+            blocList.forEach { WidgetBuilder().build(it, blockContainer) }
+
         })
     }
 
