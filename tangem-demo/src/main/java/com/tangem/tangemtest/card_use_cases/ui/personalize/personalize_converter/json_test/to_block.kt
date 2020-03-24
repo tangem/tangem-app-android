@@ -1,160 +1,170 @@
 package com.tangem.tangemtest.card_use_cases.ui.personalize.personalize_converter.json_test
 
-import com.tangem.tangemtest.R
-import com.tangem.tangemtest._arch.structure.base.Block
+import com.tangem.tangemtest._arch.structure.base.*
 import com.tangem.tangemtest._arch.structure.impl.*
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.Converter
 
-class JsonToBlockConverter : Converter<TestJsonDto, Block> {
+class JsonToBlockConverter : Converter<TestJsonDto, List<Block>> {
 
-    override fun convert(from: TestJsonDto): Block {
-        val initialBlock = LinearBlock()
-        initialBlock.addItem(cardNumber(from))
-        initialBlock.addItem(common(from))
-        initialBlock.addItem(signingMethod(from))
-        initialBlock.addItem(signHashExProperties(from))
-        initialBlock.addItem(denomination(from))
-        initialBlock.addItem(token(from))
-        initialBlock.addItem(productMask(from))
-        initialBlock.addItem(settingsMask(from))
-        initialBlock.addItem(settingsMaskProtocolEnc(from))
-        initialBlock.addItem(cardNumber(from))
-        initialBlock.addItem(settingsMaskNdef(from))
-        initialBlock.addItem(pins(from))
-        addPayload(initialBlock, from)
-        return initialBlock
+    override fun convert(from: TestJsonDto): List<Block> {
+        val blocList = mutableListOf<Block>()
+        blocList.add(cardNumber(from))
+        blocList.add(common(from))
+        blocList.add(signingMethod(from))
+        blocList.add(signHashExProperties(from))
+        blocList.add(denomination(from))
+        blocList.add(token(from))
+        blocList.add(productMask(from))
+        blocList.add(settingsMask(from))
+        blocList.add(settingsMaskProtocolEnc(from))
+        blocList.add(settingsMaskNdef(from))
+        blocList.add(pins(from))
+        val payloadBlock = LinearBlock(Additional.JSON_TAILS)
+        addPayload(payloadBlock, from)
+        blocList.add(payloadBlock)
+        return blocList
     }
 
     private fun cardNumber(from: TestJsonDto): Block {
-        val block = LinearBlock()
-        block.addItem(TextUnit().resName(R.string.pers_block_card_number))
-        block.addItem(EditTextUnit(from.series).resName(R.string.pers_item_series))
-        block.addItem(NumberUnit(from.startNumber).resName(R.string.pers_item_number))
+        val block = LinearBlock(BlockId.CARD_NUMBER)
+        block.addItem(TextUnit(BlockId.CARD_NUMBER))
+        block.addItem(EditTextUnit(CardNumber.SERIES, from.series))
+        block.addItem(NumberUnit(CardNumber.NUMBER, from.startNumber))
         return block
     }
 
     private fun common(from: TestJsonDto): Block {
-        val block = LinearBlock()
-        block.addItem(TextUnit().resName(R.string.pers_block_common))
-        block.addItem(ListUnit(Helper.listOfCurves(), from.curveID).resName(R.string.pers_item_curve))
-        block.addItem(ListUnit(Helper.listOfBlockchain(), from.blockchain.name).resName(R.string.pers_item_blockchain))
-        block.addItem(EditTextUnit(from.blockchain.customName).resName(R.string.pers_item_custom_blockchain))
-        block.addItem(NumberUnit(from.MaxSignatures).resName(R.string.pers_item_max_signatures))
-        block.addItem(BoolUnit(from.createWalletB).resName(R.string.action_wallet_create))
+        val block = LinearBlock(BlockId.COMMON)
+        block.addItem(TextUnit(BlockId.COMMON))
+        block.addItem(ListUnit(Common.CURVE, Helper.listOfCurves(), from.curveID))
+        block.addItem(ListUnit(Common.BLOCKCHAIN, Helper.listOfBlockchain(), from.blockchain.name))
+        block.addItem(EditTextUnit(Common.BLOCKCHAIN_CUSTOM, from.blockchain.customName))
+        block.addItem(NumberUnit(Common.MAX_SIGNATURES, from.MaxSignatures))
+        block.addItem(BoolUnit(Common.CREATE_WALLET, from.createWalletB))
         return block
     }
 
     private fun signingMethod(from: TestJsonDto): Block {
-        val block = LinearBlock()
-        block.addItem(TextUnit().resName(R.string.pers_block_signing_method))
-        block.addItem(BoolUnit(from.SigningMethod0).resName(R.string.pers_item_sign_tx_hashes))
-        block.addItem(BoolUnit(from.SigningMethod1).resName(R.string.pers_item_sign_raw_tx))
-        block.addItem(BoolUnit(from.SigningMethod2).resName(R.string.pers_item_sign_validated_tx_hashes))
-        block.addItem(BoolUnit(from.SigningMethod3).resName(R.string.pers_item_sign_validated_raw_tx))
-        block.addItem(BoolUnit(from.SigningMethod4).resName(R.string.pers_item_sign_validated_tx_hashes_with_iss_data))
-        block.addItem(BoolUnit(from.SigningMethod5).resName(R.string.pers_item_sign_validated_raw_tx_with_iss_data))
-        block.addItem(BoolUnit(from.SigningMethod6).resName(R.string.pers_item_sign_hash_ex))
+        val block = LinearBlock(BlockId.SIGNING_METHOD)
+        block.addItem(TextUnit(BlockId.SIGNING_METHOD))
+        block.addItem(BoolUnit(SigningMethod.SIGN_TX, from.SigningMethod0))
+        block.addItem(BoolUnit(SigningMethod.SIGN_TX_RAW, from.SigningMethod1))
+        block.addItem(BoolUnit(SigningMethod.SIGN_VALIDATED_TX, from.SigningMethod2))
+        block.addItem(BoolUnit(SigningMethod.SIGN_VALIDATED_TX_RAW, from.SigningMethod3))
+        block.addItem(BoolUnit(SigningMethod.SIGN_VALIDATED_TX_ISSUER, from.SigningMethod4))
+        block.addItem(BoolUnit(SigningMethod.SIGN_VALIDATED_TX_RAW_ISSUER, from.SigningMethod5))
+        block.addItem(BoolUnit(SigningMethod.SIGN_EXTERNAL, from.SigningMethod6))
         return block
     }
 
     private fun signHashExProperties(from: TestJsonDto): Block {
-        val block = LinearBlock()
-        block.addItem(TextUnit().resName(R.string.pers_block_sign_hash_ex_prop))
-        block.addItem(NumberUnit(from.pinLessFloorLimit).resName(R.string.pers_item_pin_less_floor_limit))
-        block.addItem(EditTextUnit(from.hexCrExKey).resName(R.string.pers_item_cr_ex_key))
-        block.addItem(BoolUnit(from.requireTerminalCertSignature).resName(R.string.pers_item_require_terminal_cert_sig))
-        block.addItem(BoolUnit(from.requireTerminalTxSignature).resName(R.string.pers_item_require_terminal_tx_sig))
-        block.addItem(BoolUnit(from.checkPIN3onCard).resName(R.string.pers_item_check_pin3_on_card))
+        val block = LinearBlock(BlockId.SIGN_HASH_EX_PROP)
+        block.addItem(TextUnit(BlockId.SIGN_HASH_EX_PROP))
+        block.addItem(NumberUnit(SignHashExProp.PIN_LESS_FLOOR_LIMIT, from.pinLessFloorLimit))
+        block.addItem(EditTextUnit(SignHashExProp.CRYPTO_EXTRACT_KEY, from.hexCrExKey))
+        block.addItem(BoolUnit(SignHashExProp.REQUIRE_TERMINAL_CERT_SIG, from.requireTerminalCertSignature))
+        block.addItem(BoolUnit(SignHashExProp.REQUIRE_TERMINAL_TX_SIG, from.requireTerminalTxSignature))
+        block.addItem(BoolUnit(SignHashExProp.CHECK_PIN3, from.checkPIN3onCard))
         return block
     }
 
     private fun denomination(from: TestJsonDto): Block {
-        val block = LinearBlock()
-        block.addItem(TextUnit().resName(R.string.pers_block_denomination))
-        block.addItem(BoolUnit(from.writeOnPersonalization).resName(R.string.pers_item_write_on_personalize))
-        block.addItem(NumberUnit(from.denomination).resName(R.string.pers_item_denomination))
+        val block = LinearBlock(BlockId.DENOMINATION)
+        block.addItem(TextUnit(BlockId.DENOMINATION))
+        block.addItem(BoolUnit(Denomination.WRITE_ON_PERSONALIZE, from.writeOnPersonalization))
+        block.addItem(NumberUnit(Denomination.DENOMINATION, from.denomination))
         return block
     }
 
     private fun token(from: TestJsonDto): Block {
-        val block = LinearBlock()
-        block.addItem(TextUnit().resName(R.string.pers_block_token))
-        block.addItem(BoolUnit(from.itsToken).resName(R.string.pers_item_its_token))
-        block.addItem(EditTextUnit(from.symbol).resName(R.string.pers_item_symbol))
-        block.addItem(EditTextUnit(from.contractAddress).resName(R.string.pers_item_contract_address))
-        block.addItem(NumberUnit(from.decimal).resName(R.string.pers_item_decimal))
+        val block = LinearBlock(BlockId.TOKEN)
+        block.addItem(TextUnit(BlockId.TOKEN))
+        block.addItem(BoolUnit(Token.ITS_TOKEN, from.itsToken))
+        block.addItem(EditTextUnit(Token.SYMBOL, from.symbol))
+        block.addItem(EditTextUnit(Token.CONTRACT_ADDRESS, from.contractAddress))
+        block.addItem(NumberUnit(Token.DECIMAL, from.decimal))
         return block
     }
 
     private fun productMask(from: TestJsonDto): Block {
-        val block = LinearBlock()
-        block.addItem(TextUnit().resName(R.string.pers_block_product_mask))
-        block.addItem(BoolUnit(from.cardData.product_note).resName(R.string.pers_item_note))
-        block.addItem(BoolUnit(from.cardData.product_tag).resName(R.string.pers_item_tag))
-        block.addItem(BoolUnit(from.cardData.product_id_card).resName(R.string.pers_item_id_card))
+        val block = LinearBlock(BlockId.PROD_MASK)
+        block.addItem(TextUnit(BlockId.PROD_MASK))
+        block.addItem(BoolUnit(ProductMask.NOTE, from.cardData.product_note))
+        block.addItem(BoolUnit(ProductMask.TAG, from.cardData.product_tag))
+        block.addItem(BoolUnit(ProductMask.ID_CARD, from.cardData.product_id_card))
         return block
     }
 
     private fun settingsMask(from: TestJsonDto): Block {
-        val block = LinearBlock()
-        block.addItem(TextUnit().resName(R.string.pers_block_settings_mask))
-        block.addItem(BoolUnit(from.isReusable).resName(R.string.pers_item_is_reusable))
-        block.addItem(BoolUnit(from.useActivation).resName(R.string.pers_item_need_activation))
-        block.addItem(BoolUnit(from.forbidPurgeWallet).resName(R.string.pers_item_forbid_purge))
-        block.addItem(BoolUnit(from.allowSelectBlockchain).resName(R.string.pers_item_allow_select_blockchain))
-        block.addItem(BoolUnit(from.useBlock).resName(R.string.pers_item_use_block))
-        block.addItem(BoolUnit(from.useOneCommandAtTime).resName(R.string.pers_item_one_apdu_at_once))
-        block.addItem(BoolUnit(from.useCVC).resName(R.string.pers_item_use_cvc))
-        block.addItem(BoolUnit(from.allowSwapPIN).resName(R.string.pers_item_allow_swap_pin))
-        block.addItem(BoolUnit(from.allowSwapPIN2).resName(R.string.pers_item_allow_swap_pin2))
-        block.addItem(BoolUnit(from.forbidDefaultPIN).resName(R.string.pers_item_forbid_default_pin))
-        block.addItem(BoolUnit(from.smartSecurityDelay).resName(R.string.pers_item_smart_security_delay))
-        block.addItem(BoolUnit(from.protectIssuerDataAgainstReplay).resName(R.string.pers_item_protect_issuer_data_against_replay))
-        block.addItem(BoolUnit(from.skipSecurityDelayIfValidatedByIssuer).resName(R.string.pers_item_skip_security_delay_if_validated))
-        block.addItem(BoolUnit(from.skipCheckPIN2andCVCIfValidatedByIssuer).resName(R.string.pers_item_skip_pin2_and_cvc_if_validated))
-        block.addItem(BoolUnit(from.skipSecurityDelayIfValidatedByLinkedTerminal).resName(R.string.pers_item_skip_security_delay_on_linked_terminal))
-        block.addItem(BoolUnit(from.restrictOverwriteIssuerDataEx).resName(R.string.pers_item_restrict_overwrite_ex_issuer_data))
+        val block = LinearBlock(BlockId.SETTINGS_MASK)
+        block.addItem(TextUnit(BlockId.SETTINGS_MASK))
+        block.addItem(BoolUnit(SettingsMask.IS_REUSABLE, from.isReusable))
+        block.addItem(BoolUnit(SettingsMask.NEED_ACTIVATION, from.useActivation))
+        block.addItem(BoolUnit(SettingsMask.FORBID_PURGE, from.forbidPurgeWallet))
+        block.addItem(BoolUnit(SettingsMask.ALLOW_SELECT_BLOCKCHAIN, from.allowSelectBlockchain))
+        block.addItem(BoolUnit(SettingsMask.USE_BLOCK, from.useBlock))
+        block.addItem(BoolUnit(SettingsMask.ONE_APDU, from.useOneCommandAtTime))
+        block.addItem(BoolUnit(SettingsMask.USE_CVC, from.useCVC))
+        block.addItem(BoolUnit(SettingsMask.ALLOW_SWAP_PIN, from.allowSwapPIN))
+        block.addItem(BoolUnit(SettingsMask.ALLOW_SWAP_PIN2, from.allowSwapPIN2))
+        block.addItem(BoolUnit(SettingsMask.FORBID_DEFAULT_PIN, from.forbidDefaultPIN))
+        block.addItem(BoolUnit(SettingsMask.SMART_SECURITY_DELAY, from.smartSecurityDelay))
+        block.addItem(BoolUnit(SettingsMask.PROTECT_ISSUER_DATA_AGAINST_REPLAY, from.protectIssuerDataAgainstReplay))
+        block.addItem(BoolUnit(SettingsMask.SKIP_SECURITY_DELAY_IF_VALIDATED, from.skipSecurityDelayIfValidatedByIssuer))
+        block.addItem(BoolUnit(SettingsMask.SKIP_PIN2_CVC_IF_VALIDATED, from.skipCheckPIN2andCVCIfValidatedByIssuer))
+        block.addItem(BoolUnit(SettingsMask.SKIP_SECURITY_DELAY_ON_LINKED_TERMINAL, from.skipSecurityDelayIfValidatedByLinkedTerminal))
+        block.addItem(BoolUnit(SettingsMask.RESTRICT_OVERWRITE_EXTRA_ISSUER_DATA, from.restrictOverwriteIssuerDataEx))
         return block
     }
 
     private fun settingsMaskProtocolEnc(from: TestJsonDto): Block {
-        val block = LinearBlock()
-        block.addItem(TextUnit().resName(R.string.pers_block_settings_mask_protocol_enc))
-        block.addItem(BoolUnit(from.protocolAllowUnencrypted).resName(R.string.pers_item_allow_unencrypted))
-        block.addItem(BoolUnit(false).resName(R.string.pers_item_allow_fast_encryption))
+        val block = LinearBlock(BlockId.SETTINGS_MASK_PROTOCOL_ENC)
+        block.addItem(TextUnit(BlockId.SETTINGS_MASK_PROTOCOL_ENC))
+        block.addItem(BoolUnit(SettingsMaskProtocolEnc.ALLOW_UNENCRYPTED, from.protocolAllowUnencrypted))
+        block.addItem(BoolUnit(SettingsMaskProtocolEnc.ALLOW_FAST_ENCRYPTION, false))
         return block
     }
 
     private fun settingsMaskNdef(from: TestJsonDto): Block {
-        val block = LinearBlock()
-        block.addItem(TextUnit().resName(R.string.pers_block_settings_mask_ndef))
-        block.addItem(BoolUnit(from.useNDEF).resName(R.string.pers_item_use_ndef))
-        block.addItem(BoolUnit(from.useDynamicNDEF).resName(R.string.pers_item_dynamic_ndef))
-        block.addItem(BoolUnit(from.disablePrecomputedNDEF).resName(R.string.pers_item_disable_precomputed_ndef))
-        block.addItem(ListUnit(Helper.aarList(), from.NDEF[0].type).resName(R.string.pers_item_aar))
-//        block.addItem(TextItem(R.string.pers_item_custom_aar_package_name, from.ndef[0].value))
+        val block = LinearBlock(BlockId.SETTINGS_MASK_NDEF)
+        block.addItem(TextUnit(BlockId.SETTINGS_MASK_NDEF))
+        block.addItem(BoolUnit(SettingsMaskNdef.USE_NDEF, from.useNDEF))
+        block.addItem(BoolUnit(SettingsMaskNdef.DYNAMIC_NDEF, from.useDynamicNDEF))
+        block.addItem(BoolUnit(SettingsMaskNdef.DISABLE_PRECOMPUTED_NDEF, from.disablePrecomputedNDEF))
+        block.addItem(ListUnit(SettingsMaskNdef.AAR, Helper.aarList(), from.NDEF[0].type))
         return block
     }
 
     private fun pins(from: TestJsonDto): Block {
-        val block = LinearBlock()
-        block.addItem(TextUnit().resName(R.string.pers_block_pins))
-        block.addItem(EditTextUnit(from.PIN).resName(R.string.pers_item_pin))
-        block.addItem(EditTextUnit(from.PIN2).resName(R.string.pers_item_pin2))
-        block.addItem(EditTextUnit(from.PIN3).resName(R.string.pers_item_pin3))
-        block.addItem(EditTextUnit(from.CVC).resName(R.string.pers_item_cvc))
-        block.addItem(ListUnit(Helper.pauseBeforePin(), from.pauseBeforePIN2).resName(R.string.pers_item_pause_before_pin2))
+        val block = LinearBlock(BlockId.PINS)
+        block.addItem(TextUnit(BlockId.PINS))
+        block.addItem(EditTextUnit(Pins.PIN, from.PIN))
+        block.addItem(EditTextUnit(Pins.PIN2, from.PIN2))
+        block.addItem(EditTextUnit(Pins.PIN3, from.PIN3))
+        block.addItem(EditTextUnit(Pins.CVC, from.CVC))
+        block.addItem(ListUnit(Pins.PAUSE_BEFORE_PIN2, Helper.pauseBeforePin(), from.pauseBeforePIN2))
         return block
     }
 
     private fun addPayload(block: Block, from: TestJsonDto) {
-        block.payload["count"] = from.count
-        block.payload["numberFormat"] = from.numberFormat
-        block.payload["issuerData"] = from.issuerData
-        block.payload["releaseVersion"] = from.releaseVersion
-        block.payload["issuerName"] = from.issuerName
+        block.payload[Additional.JSON_INCOMING.name] = from
+        block.payload[Additional.JSON_TAILS.name] = JsonTails(
+                from.count,
+                from.numberFormat,
+                from.issuerData,
+                from.releaseVersion,
+                from.issuerName
+        )
     }
 }
+
+class JsonTails(
+        val count: Int,
+        val numberFormat: String,
+        val issuerData: Any?,
+        val releaseVersion: Boolean,
+        val issuerName: String
+)
 
 internal class Helper {
     companion object {

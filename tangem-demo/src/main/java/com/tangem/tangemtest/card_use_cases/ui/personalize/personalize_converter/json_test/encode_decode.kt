@@ -13,9 +13,9 @@ interface EncodeDecode<A, B> {
 class JsonBlockEnDe(
         private val jsonToBlock: JsonToBlockConverter,
         private val blockToJson: BlockToJsonConverter
-) : EncodeDecode<TestJsonDto, Block> {
+) : EncodeDecode<TestJsonDto, List<Block>> {
 
-    override fun encode(from: Block): TestJsonDto = blockToJson.convert(from)
+    override fun encode(from: List<Block>): TestJsonDto = blockToJson.convert(from)
 
-    override fun decode(from: TestJsonDto): Block = jsonToBlock.convert(from)
+    override fun decode(from: TestJsonDto): List<Block> = jsonToBlock.convert(from)
 }
