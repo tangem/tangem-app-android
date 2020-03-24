@@ -8,8 +8,8 @@ import androidx.transition.AutoTransition
 import androidx.transition.TransitionManager
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.base.DataUnit
+import com.tangem.tangemtest.card_use_cases.ui.personalize.InfoHolder
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.LayoutHolder
-import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
 /**
 [REDACTED_AUTHOR]
@@ -48,17 +48,12 @@ abstract class BaseParamWidget<D>(
     override fun toggleDescriptionVisibility() {
         val tvDescription = view.findViewById<TextView>(R.id.tv_description) ?: return
 
-        tvDescription.text = getDescription()
+        getResDescription()?.let { tvDescription.setText(it) }
         TransitionManager.beginDelayedTransition(tvDescription.parent as ViewGroup, AutoTransition())
         tvDescription.visibility = unit.viewModel?.viewState?.descriptionVisibility ?: View.GONE
     }
 }
 
-fun UnitWidget<*>.getResNameId(): Int {
-    val id = unit.payload["resName"] ?: R.string.unknown
-    return id as Int
-}
+fun UnitWidget<*>.getResNameId(): Int = InfoHolder.getInfo(unit.id).resName
 
-fun UnitWidget<*>.getDescription(): String {
-    return stringOf(unit.payload["description"], isNull = "not found")
-}
+fun UnitWidget<*>.getResDescription(): Int? = InfoHolder.getInfo(unit.id).resDescription
