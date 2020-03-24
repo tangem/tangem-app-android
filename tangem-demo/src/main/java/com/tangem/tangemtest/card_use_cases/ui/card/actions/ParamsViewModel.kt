@@ -1,4 +1,4 @@
-package com.tangem.tangemtest.card_use_cases.view_models
+package com.tangem.tangemtest.card_use_cases.ui.card.actions
 
 import androidx.annotation.UiThread
 import androidx.lifecycle.MutableLiveData
