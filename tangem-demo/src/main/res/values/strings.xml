@@ -84,4 +84,6 @@
     <string name="pers_item_pin3">PIN3</string>
     <string name="pers_item_cvc">CVC</string>
     <string name="pers_item_pause_before_pin2">Pause before PIN2</string>
+
+    <string name="info_">Some very useful description</string>
 </resources>
