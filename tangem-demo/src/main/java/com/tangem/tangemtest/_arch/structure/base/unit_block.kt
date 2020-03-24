@@ -22,7 +22,7 @@ open class ListUnitBlock(
 ) : BaseBlock(), ItemListHolder<Unit> {
 
     override fun setItems(list: MutableList<Unit>) {
-        ULog.d(this, "setUnits: $id, ${list.size}")
+        ULog.d(this, "setItems into: $id, count: ${list.size}")
         unitList.clear()
         unitList.addAll(list)
         unitList.forEach { it.parent = this }
@@ -30,25 +30,24 @@ open class ListUnitBlock(
     }
 
     override fun getItems(): MutableList<Unit> {
-        ULog.d(this, "getUnits: $id, ${unitList.size}")
         return unitList
     }
 
     override fun addItem(item: Unit) {
-        ULog.d(this, "addUnit: $id, ${unitList.size}")
+        ULog.d(this, "addIte into: $id, who: ${item.id}")
         item.parent = this
         unitList.add(item)
         blockModified?.invoke()
     }
 
     override fun removeItem(item: Unit) {
-        ULog.d(this, "removeUnit $item")
+        ULog.d(this, "removeItem from: $id, which: ${item.id}")
         unitList.remove(item)
         blockModified?.invoke()
     }
 
     override fun clear() {
-        ULog.d(this, "clear")
+        ULog.d(this, "clear $id")
         unitList.clear()
         blockModified?.invoke()
     }
