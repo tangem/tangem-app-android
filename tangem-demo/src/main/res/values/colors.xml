@@ -5,4 +5,10 @@
     <color name="colorAccent">#027AFF</color>
 
     <color name="delimiter">#26000000</color>
+
+    <color name="switchTrack">#C6C6C6</color>
+    <color name="switchTrackActive">#FFE391</color>
+    <color name="switchThumb">#FFFFFF</color>
+    <color name="switchThumbActive">#FFA100</color>
+
 </resources>
