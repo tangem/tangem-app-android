@@ -1,6 +1,7 @@
-package com.tangem.tangemtest.card_use_cases.ui.card_action
+package com.tangem.tangemtest.card_use_cases.ui.card.actions
 
 import com.tangem.tangemtest.R
+import com.tangem.tangemtest.card_use_cases.ui.card.BaseCardActionFragment
 import com.tangem.tangemtest.commons.ActionType
 
 /**
