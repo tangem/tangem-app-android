@@ -20,6 +20,10 @@ class TextWidget(parent: ViewGroup, private val textUnit: TextUnit) : BaseParamW
     private val tvName = view.findViewById<TextView>(R.id.tv_name)
 
     init {
+        bindData()
+    }
+
+    private fun bindData() {
         tvName.setText(getResNameId())
     }
 
@@ -32,6 +36,10 @@ class EditTextWidget(parent: ViewGroup, private val editTextUnit: EditTextUnit) 
     private val etItem = view.findViewById<TextInputEditText>(R.id.et_item)
 
     init {
+        bindData()
+    }
+
+    private fun bindData() {
         tilItem.hint = tilItem.context.getString(getResNameId())
         etItem.setText(editTextUnit.viewModel?.data)
         etItem.afterTextChanged { editTextUnit.viewModel?.updateData(it) }
@@ -46,6 +54,10 @@ class NumberWidget(parent: ViewGroup, private val numberUnit: NumberUnit) : Base
     private val etItem = view.findViewById<TextInputEditText>(R.id.et_item)
 
     init {
+        bindData()
+    }
+
+    private fun bindData() {
         tilItem.hint = tilItem.context.getString(getResNameId())
         etItem.setText(stringOf(numberUnit.viewModel?.data))
         etItem.afterTextChanged { numberUnit.viewModel?.updateData(getIntValue(it)) }
@@ -63,6 +75,10 @@ class SwitchWidget(parent: ViewGroup, private val boolUnit: BoolUnit) : BasePara
     private val switchItem = view.findViewById<Switch>(R.id.sw_item)
 
     init {
+        bindData()
+    }
+
+    private fun bindData() {
         switchItem.setText(getResNameId())
         switchItem.isChecked = boolUnit.viewModel?.data ?: false
         switchItem.setOnCheckedChangeListener { view, isChecked -> boolUnit.viewModel?.updateData(isChecked) }
@@ -78,6 +94,10 @@ class SpinnerWidget(parent: ViewGroup, private val listUnit: ListUnit) : BasePar
     private val spAdapter = SpItemAdapter(listUnit.viewModel?.data?.itemList)
 
     init {
+        bindData()
+    }
+
+    private fun bindData() {
         val name = view.findViewById<TextView>(R.id.tv_name)
         name.setText(getResNameId())
         spItem.adapter = spAdapter
