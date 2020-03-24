@@ -1,4 +1,4 @@
-package com.tangem.tangemtest.card_use_cases.ui.card_action
+package com.tangem.tangemtest.card_use_cases.ui.card
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -17,9 +17,9 @@ import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest.card_use_cases.domain.params_manager.ParamsManager
 import com.tangem.tangemtest.card_use_cases.domain.params_manager.ParamsManagerFactory
-import com.tangem.tangemtest.card_use_cases.ui.card_action.widgets.ParameterWidget
-import com.tangem.tangemtest.card_use_cases.view_models.ActionViewModelFactory
-import com.tangem.tangemtest.card_use_cases.view_models.ParamsViewModel
+import com.tangem.tangemtest.card_use_cases.ui.card.actions.ActionViewModelFactory
+import com.tangem.tangemtest.card_use_cases.ui.card.actions.ParamsViewModel
+import com.tangem.tangemtest.card_use_cases.ui.card.actions.widgets.ParameterWidget
 import com.tangem.tangemtest.commons.ActionType
 import ru.dev.gbixahue.eu4d.lib.android._android.views.find
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
