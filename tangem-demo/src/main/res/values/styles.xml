@@ -8,19 +8,9 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-
-    <style name="TvParamNameStyle" parent="@style/Widget.AppCompat.TextView">
-        <item name="android:layout_marginStart">@dimen/indent_card_incoming_param_name_h</item>
-        <item name="android:layout_marginEnd">@dimen/indent_card_incoming_param_name_h</item>
-        <item name="android:layout_marginTop">@dimen/indent_card_incoming_param_name_v</item>
-        <item name="android:layout_marginBottom">@dimen/indent_card_incoming_param_name_v</item>
-    </style>
-
-    <style name="EtParamValueStyle" parent="@style/Widget.AppCompat.EditText">
-        <item name="android:layout_marginStart">@dimen/indent_card_incoming_param_value_h</item>
-        <item name="android:layout_marginEnd">@dimen/indent_card_incoming_param_value_h</item>
-        <item name="android:layout_marginTop">@dimen/indent_card_incoming_param_value_v</item>
-        <item name="android:layout_marginBottom">@dimen/indent_card_incoming_param_value_v</item>
+    <style name="SwitchCompatTheme" parent="Widget.MaterialComponents.CompoundButton.Switch">
+        <item name="thumbTint">@color/menu_switch_color_thumb</item>
+        <item name="trackTint">@color/menu_switch_color_track</item>
     </style>
 
 </resources>
