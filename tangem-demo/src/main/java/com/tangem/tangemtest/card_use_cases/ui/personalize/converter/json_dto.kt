@@ -1,4 +1,4 @@
-package com.tangem.tangemtest.card_use_cases.ui.personalize.personalize_converter.json_test
+package com.tangem.tangemtest.card_use_cases.ui.personalize.converter
 
 class TestJsonDto {
 
