@@ -10,10 +10,5 @@ class NumberUnit(override val id: Id, value: Number? = null) : DataUnit<Number>(
 class BoolUnit(override val id: Id, value: Boolean? = null) : DataUnit<Boolean>(BoolViewModel(value))
 
 class ListUnit(override val id: Id, value: List<KeyValue>, selectedValue: Any)
-    : DataUnit<ModelHelper>(ListViewModel(ModelHelper(selectedValue, value))
+    : DataUnit<ListValueWrapper>(ListViewModel(ListValueWrapper(selectedValue, value))
 )
-
-fun DataUnit<*>.resName(resId: Int): DataUnit<*> {
-    payload["resName"] = resId
-    return this
-}
