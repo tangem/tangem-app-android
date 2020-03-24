@@ -5,18 +5,19 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.tangem.tangemtest.R
+import com.tangem.tangemtest._main.MainViewModel
 import com.tangem.tangemtest.commons.ActionType
 import com.tangem.tangemtest.commons.NavigateOptions
 import com.tangem.tangemtest.commons.getDefaultNavigationOptions
 import kotlinx.android.synthetic.main.fg_entry_point.*
-import ru.dev.gbixahue.eu4d.lib.android._android.views.find
 
 /**
 [REDACTED_AUTHOR]
@@ -26,6 +27,8 @@ class EntryPointFragment : Fragment() {
     private val navController: NavController by lazy { findNavController() }
     private lateinit var rvActions: RecyclerView
 
+    private val mainActivityVM: MainViewModel by activityViewModels()
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fg_entry_point, container, false)
     }
@@ -33,13 +36,10 @@ class EntryPointFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initRecyclerView()
-        initPersonalizeNagivation()
-    }
 
-    private fun initPersonalizeNagivation() {
-        view?.find<ExtendedFloatingActionButton>(R.id.fab_personalize)?.setOnClickListener {
-            navigate(R.id.action_nav_entry_point_to_nav_personalize)
-        }
+        mainActivityVM.ldDescriptionSwitch.observe(viewLifecycleOwner, Observer {
+            // do some thing
+        })
     }
 
     private fun initRecyclerView() {
@@ -66,6 +66,7 @@ class EntryPointFragment : Fragment() {
         return mutableListOf(
                 NavigateOptions(ActionType.Scan, R.id.action_nav_entry_point_to_nav_scan),
                 NavigateOptions(ActionType.Sign, R.id.action_nav_entry_point_to_nav_sign),
+                NavigateOptions(ActionType.Personalize, R.id.action_nav_entry_point_to_nav_personalize),
                 NavigateOptions(ActionType.CreateWallet, R.id.action_nav_entry_point_to_nav_wallet_create),
                 NavigateOptions(ActionType.PurgeWallet, R.id.action_nav_entry_point_to_nav_wallet_purge),
                 NavigateOptions(ActionType.ReadIssuerData, R.id.action_nav_entry_point_to_nav_issuer_read_data),
