@@ -19,9 +19,9 @@ class PersonalizeViewModelFactory(private val jsonPersonalizeString: String) : V
 
 class PersonalizeViewModel(private val jsonPersonalizeString: String) : ViewModel() {
 
-    val ldBlockList: MutableLiveData<Block> by lazy { MutableLiveData(readJson()) }
+    val ldBlockList: MutableLiveData<List<Block>> by lazy { MutableLiveData(readJson()) }
 
-    private fun readJson(): Block {
+    private fun readJson(): List<Block> {
         val enDe = JsonBlockEnDe(JsonToBlockConverter(), BlockToJsonConverter())
         val jsonDto = Gson().fromJson(jsonPersonalizeString, TestJsonDto::class.java)
         return enDe.decode(jsonDto)

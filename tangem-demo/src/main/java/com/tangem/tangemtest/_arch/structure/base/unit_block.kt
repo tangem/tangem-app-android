@@ -17,10 +17,12 @@ abstract class BaseBlock : Block {
     override var blockModified: BlockModified? = null
 }
 
-open class ListUnitBlock : BaseBlock(), ItemListHolder<Unit> {
+open class ListUnitBlock(
+        override val id: Id
+) : BaseBlock(), ItemListHolder<Unit> {
 
     override fun setItems(list: MutableList<Unit>) {
-        ULog.d(this, "setUnits: ${list.size}")
+        ULog.d(this, "setUnits: $id, ${list.size}")
         unitList.clear()
         unitList.addAll(list)
         unitList.forEach { it.parent = this }
@@ -28,12 +30,12 @@ open class ListUnitBlock : BaseBlock(), ItemListHolder<Unit> {
     }
 
     override fun getItems(): MutableList<Unit> {
-        ULog.d(this, "getUnits: ${unitList.size}")
+        ULog.d(this, "getUnits: $id, ${unitList.size}")
         return unitList
     }
 
     override fun addItem(item: Unit) {
-        ULog.d(this, "addUnit: ${unitList.size}")
+        ULog.d(this, "addUnit: $id, ${unitList.size}")
         item.parent = this
         unitList.add(item)
         blockModified?.invoke()
