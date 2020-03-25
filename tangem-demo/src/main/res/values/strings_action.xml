@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="action_card_scan">Scan</string>
+    <string name="action_card_sign">Sign</string>
+    <string name="action_personalize">Personalize</string>
+    <string name="action_depersonalize">Depersonalize</string>
+    <string name="action_wallet_create">Create wallet</string>
+    <string name="action_wallet_purge">Purge wallet</string>
+    <string name="action_issuer_read_data">Read issuer data</string>
+    <string name="action_issuer_write_data">Write issuer data</string>
+    <string name="action_issuer_read_ex_data">Read issuer extra data</string>
+    <string name="action_issuer_write_ex_data">Write issuer extra data</string>
+    <string name="action_user_read_data">Read user data</string>
+    <string name="action_user_write_data">Write user data</string>
+
+    <string name="info_action_card_scan">SomeDescription</string>
+    <string name="info_action_card_sign">SomeDescription</string>
+    <string name="info_action_personalize">SomeDescription</string>
+    <string name="info_action_depersonalize">SomeDescription</string>
+    <string name="info_action_wallet_create">SomeDescription</string>
+    <string name="info_action_wallet_purge">SomeDescription</string>
+    <string name="info_action_issuer_read_data">SomeDescription</string>
+    <string name="info_action_issuer_write_data">SomeDescription</string>
+    <string name="info_action_issuer_read_ex_data">SomeDescription</string>
+    <string name="info_action_issuer_write_ex_data">SomeDescription</string>
+    <string name="info_action_user_read_data">SomeDescription</string>
+    <string name="info_action_user_write_data">SomeDescription</string>
+
+</resources>
