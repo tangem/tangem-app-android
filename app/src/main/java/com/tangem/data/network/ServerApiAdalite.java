@@ -189,7 +189,7 @@ public class ServerApiAdalite {
     }
 
     private void retryRequest(String method, String wallet, String tx) {
-        currentURL = adaliteURL2;
+//        currentURL = adaliteURL2;
         requestData(method, wallet, tx, true);
     }
 }
