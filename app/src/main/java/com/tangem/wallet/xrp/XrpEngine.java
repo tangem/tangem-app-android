@@ -148,7 +148,7 @@ public class XrpEngine extends CoinEngine {
     }
 
     public Uri getShareWalletUri() {
-        return Uri.parse("ripple:" + ctx.getCoinData().getWallet());
+        return Uri.parse(ctx.getCoinData().getWallet());
     }
 
     @Override
@@ -347,10 +347,17 @@ public class XrpEngine extends CoinEngine {
         if (IncFee) {
             amount = convertToInternalAmount(amountValue).subtract(convertToInternalAmount(feeValue)).setScale(0).toPlainString();
         } else {
-            amount = Long.toString(convertToInternalAmount(amountValue).longValueExact());
+            amount = Long.toString(convertToInternalAmount(amountValue).longValue());
         }
 
         fee = Long.toString(convertToInternalAmount(feeValue).longValueExact());
+
+        if (!coinData.isTargetAccountCreated() &&
+                Long.valueOf(amount).compareTo(coinData.getReserveInInternalUnits().longValue()) < 0
+        ) {
+            String reserveDescription = convertToAmount(coinData.getReserveInInternalUnits()).toDescriptionString(getDecimals());
+            throw new IllegalArgumentException("Target account is not created. Send " + reserveDescription + " or more to create");
+        }
 
         XrpPayment payment = new XrpPayment();
 
@@ -522,19 +529,50 @@ public class XrpEngine extends CoinEngine {
         ServerApiRipple.ResponseListener rippleListener = new ServerApiRipple.ResponseListener() {
             @Override
             public void onSuccess(String method, RippleResponse rippleResponse) {
-                try {
-                    InternalAmount minFee = new InternalAmount(Long.valueOf(rippleResponse.getResult().getDrops().getMinimum_fee()), "Drops");
-                    InternalAmount normalFee = new InternalAmount(Long.valueOf(rippleResponse.getResult().getDrops().getOpen_ledger_fee()), "Drops");
-                    InternalAmount maxFee = new InternalAmount(Long.valueOf(rippleResponse.getResult().getDrops().getMedian_fee()), "Drops");
+                Log.i(TAG, "onSuccess: " + method);
+                switch (method) {
+                    case ServerApiRipple.RIPPLE_ACCOUNT_INFO: {
+                        try {
+                            if (rippleResponse.getResult().getError_code().equals(19)) { // "Account not found"
+                                coinData.setTargetAccountCreated(false);
+                            } else {
+                                coinData.setTargetAccountCreated(true);
+                            }
+                        } catch (Exception e) {
+                            coinData.setTargetAccountCreated(true); //expected behaviour, if account exists, there should be no error code -> null pointer
+                        }
 
-                    coinData.minFee = convertToAmount(minFee);
-                    coinData.normalFee = convertToAmount(normalFee);
-                    coinData.maxFee = convertToAmount(maxFee);
+                        if (serverApiRipple.isRequestsSequenceCompleted()) {
+                            blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                        } else {
+                            blockchainRequestsCallbacks.onProgress();
+                        }
+                    }
+                    break;
 
-                    blockchainRequestsCallbacks.onComplete(true);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Log.e(TAG, "FAIL RIPPLE_FEE Exception");
+                    case ServerApiRipple.RIPPLE_FEE: {
+                        try {
+                            InternalAmount minFee = new InternalAmount(Long.valueOf(rippleResponse.getResult().getDrops().getMinimum_fee()), "Drops");
+                            InternalAmount normalFee = new InternalAmount(Long.valueOf(rippleResponse.getResult().getDrops().getOpen_ledger_fee()), "Drops");
+                            InternalAmount maxFee = new InternalAmount(Long.valueOf(rippleResponse.getResult().getDrops().getMedian_fee()), "Drops");
+
+                            coinData.minFee = convertToAmount(minFee);
+                            coinData.normalFee = convertToAmount(normalFee);
+                            coinData.maxFee = convertToAmount(maxFee);
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Log.e(TAG, "FAIL RIPPLE_FEE Exception");
+                            ctx.setError(e.getMessage());
+                        }
+
+                        if (serverApiRipple.isRequestsSequenceCompleted()) {
+                            blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                        } else {
+                            blockchainRequestsCallbacks.onProgress();
+                        }
+                    }
+                    break;
                 }
             }
 
@@ -548,6 +586,7 @@ public class XrpEngine extends CoinEngine {
 
         serverApiRipple.setResponseListener(rippleListener);
 
+        serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, targetAddress, "");
         serverApiRipple.requestData(ServerApiRipple.RIPPLE_FEE, "", "");
     }
 
