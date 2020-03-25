@@ -16,9 +16,9 @@ import androidx.transition.AutoTransition
 import androidx.transition.TransitionManager
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._main.MainViewModel
-import com.tangem.tangemtest.cardUseCase.resources.ActionType
-import com.tangem.tangemtest.cardUseCase.resources.MainResourceHolder
-import com.tangem.tangemtest.commons.getDefaultNavigationOptions
+import com.tangem.tangemtest.ucase.getDefaultNavigationOptions
+import com.tangem.tangemtest.ucase.resources.ActionType
+import com.tangem.tangemtest.ucase.resources.MainResourceHolder
 import kotlinx.android.synthetic.main.fg_entry_point.*
 
 /**
