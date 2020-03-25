@@ -114,7 +114,7 @@ internal class Notifier(private val vm: ParamsViewModel) {
                 if (notShowedError == null) {
                     vm.seError.postValue("User was cancelled")
                 } else {
-                    vm.seError.postValue("Error description not implemented. Code: ${notShowedError!!.code}")
+                    vm.seError.postValue("${notShowedError!!::class.simpleName}")
                     notShowedError = null
                 }
             }

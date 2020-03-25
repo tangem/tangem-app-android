@@ -67,6 +67,7 @@ class EntryPointFragment : Fragment() {
                 NavigateOptions(ActionType.Scan, R.id.action_nav_entry_point_to_nav_scan),
                 NavigateOptions(ActionType.Sign, R.id.action_nav_entry_point_to_nav_sign),
                 NavigateOptions(ActionType.Personalize, R.id.action_nav_entry_point_to_nav_personalize),
+                NavigateOptions(ActionType.Depersonalize, R.id.action_nav_entry_point_to_nav_depersonalize),
                 NavigateOptions(ActionType.CreateWallet, R.id.action_nav_entry_point_to_nav_wallet_create),
                 NavigateOptions(ActionType.PurgeWallet, R.id.action_nav_entry_point_to_nav_wallet_purge),
                 NavigateOptions(ActionType.ReadIssuerData, R.id.action_nav_entry_point_to_nav_issuer_read_data),
