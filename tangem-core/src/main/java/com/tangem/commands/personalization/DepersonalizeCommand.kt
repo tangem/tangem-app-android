@@ -20,8 +20,7 @@ class DepersonalizeCommand : CommandSerializer<DepersonalizeResponse>() {
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
         return CommandApdu(
-                Instruction.Depersonalize, byteArrayOf(),
-                cardEnvironment.encryptionMode, cardEnvironment.encryptionKey
+                Instruction.Depersonalize, byteArrayOf()
         )
     }
 
