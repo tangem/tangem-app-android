@@ -3,6 +3,7 @@ package com.tangem.wallet;
 import android.net.Uri;
 import android.text.InputFilter;
 
+import com.tangem.data.Blockchain;
 import com.tangem.tangem_card.reader.CardProtocol;
 import com.tangem.tangem_card.tasks.SignTask;
 
@@ -194,6 +195,13 @@ public abstract class CoinEngine {
     public abstract Uri getWalletExplorerUri();
 
     public abstract Uri getShareWalletUri();
+
+    public Uri getShareWalletUriEx(){
+        if (ctx.getBlockchain() == Blockchain.BitcoinCash)
+            return getShareWalletUri();
+        else
+            return Uri.parse(ctx.getBlockchain().name().toLowerCase() + ":" + getShareWalletUri().toString());
+    }
 
     public abstract boolean checkNewTransactionAmount(Amount amount);
 
