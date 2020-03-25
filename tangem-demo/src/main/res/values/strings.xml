@@ -5,6 +5,7 @@
     <string name="action_card_scan">Scan</string>
     <string name="action_card_sign">Sign</string>
     <string name="action_personalize">Personalize</string>
+    <string name="action_depersonalize">Depersonalize</string>
     <string name="action_wallet_create">Create wallet</string>
     <string name="action_wallet_purge">Purge wallet</string>
     <string name="action_issuer_read_data">Read issuer data</string>
