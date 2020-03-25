@@ -14,6 +14,7 @@ class ParamsManagerFactory : BaseTypedHolder<ActionType, ParamsManager>() {
                 register(ActionType.Scan, ScanParamsManager())
                 register(ActionType.Sign, SignParamsManager())
                 register(ActionType.Personalize, PersonalizeParamsManager())
+                register(ActionType.Depersonalize, DepersonalizeParamsManager())
             }
         }
     }
