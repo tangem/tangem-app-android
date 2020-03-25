@@ -27,7 +27,6 @@ import com.tangem.wallet.EthTransaction;
 import com.tangem.wallet.Keccak256;
 import com.tangem.wallet.R;
 import com.tangem.wallet.TangemContext;
-import com.tangem.wallet.eth.EthData;
 
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.SignatureDecodeException;
@@ -185,9 +184,9 @@ public class EthIdEngine extends CoinEngine {
     @Override
     public Uri getShareWalletUri() {
         if (ctx.getCard().getDenomination() != null) {
-            return Uri.parse("ethereum:" + ctx.getCoinData().getWallet());// + "?value=" + mCard.getDenomination() +"e18");
+            return Uri.parse(ctx.getCoinData().getWallet());// + "?value=" + mCard.getDenomination() +"e18");
         } else {
-            return Uri.parse("ethereum:" + ctx.getCoinData().getWallet());
+            return Uri.parse(ctx.getCoinData().getWallet());
         }
     }
 
