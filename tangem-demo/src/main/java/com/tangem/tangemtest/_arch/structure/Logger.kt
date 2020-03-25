@@ -1,4 +1,4 @@
-package com.tangem.tangemtest._arch.structure.base
+package com.tangem.tangemtest._arch.structure
 
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Logger
 import ru.dev.gbixahue.eu4d.lib.android.global.log.TagLogger
@@ -8,12 +8,12 @@ import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 /**
 [REDACTED_AUTHOR]
  */
-object ULog {
+object ILog {
 
     private var logger: Logger? = null
 
     fun setLogger(logger: Logger) {
-        ULog.logger = logger
+        ILog.logger = logger
     }
 
     fun d(from: Any, msg: Any?, value: Any? = null) {
@@ -29,7 +29,7 @@ object ULog {
     }
 }
 
-class UnitLogger : TagLogger("UNIT") {
+class ItemLogger : TagLogger("ITEM") {
     init {
         msProfiler = SimpleLogProfiler()
     }
