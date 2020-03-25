@@ -18,10 +18,10 @@ import com.tangem.tangemtest.R
 import com.tangem.tangemtest._main.MainViewModel
 import com.tangem.tangemtest.card_use_cases.domain.params_manager.ParamsManager
 import com.tangem.tangemtest.card_use_cases.domain.params_manager.ParamsManagerFactory
+import com.tangem.tangemtest.card_use_cases.resources.ActionType
 import com.tangem.tangemtest.card_use_cases.ui.card.actions.ActionViewModelFactory
 import com.tangem.tangemtest.card_use_cases.ui.card.actions.ParamsViewModel
 import com.tangem.tangemtest.card_use_cases.ui.personalize.widgets.WidgetBuilder
-import com.tangem.tangemtest.commons.ActionType
 import kotlinx.android.synthetic.main.fg_personalize.*
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 import java.io.IOException
