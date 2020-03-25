@@ -1,7 +1,7 @@
 package com.tangem.tasks
 
 import com.tangem.commands.Card
-import com.tangem.commands.SettingsMask
+import com.tangem.commands.Settings
 import com.tangem.commands.WriteIssuerDataCommand
 import com.tangem.commands.WriteIssuerDataResponse
 import com.tangem.commands.common.IssuerDataToVerify
@@ -55,7 +55,7 @@ class WriteIssuerDataTask(
             if (isCounterRequired()) issuerDataCounter != null else true
 
     private fun isCounterRequired(): Boolean =
-            card.settingsMask?.contains(SettingsMask.protectIssuerDataAgainstReplay) != false
+            card.settingsMask?.contains(Settings.ProtectIssuerDataAgainstReplay) != false
 
     private fun verifySignature(command: WriteIssuerDataCommand, cardId: String): Boolean {
         return command.verify(
