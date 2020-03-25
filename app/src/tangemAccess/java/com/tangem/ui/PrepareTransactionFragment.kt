@@ -13,6 +13,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import com.tangem.Constant
+import com.tangem.data.Blockchain
 import com.tangem.ui.activity.MainActivity
 import com.tangem.ui.fragment.BaseFragment
 import com.tangem.ui.fragment.qr.CameraPermissionManager
@@ -151,6 +152,9 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
 //                            etAmount?.setText(amount)
 //                            rgIncFee.check(R.id.rbFeeOut)
 //                        }
+                    } else if (ctx.blockchain == Blockchain.Ripple && schemeSplit[0] == "ripple") {
+                        val uri = Uri.parse(schemeSplit[1])
+                        etWallet?.setText(uri.path)
                     } else {
                         etWallet?.setText(code)
                     }
