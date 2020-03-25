@@ -14,11 +14,16 @@ class AppTangemDemo : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        AppTangemDemo.appInstance = this
         setupLoggers()
     }
 
     private fun setupLoggers() {
         Log.setLogger(TangemLogger())
         ULog.setLogger(UnitLogger())
+    }
+
+    companion object {
+        lateinit var appInstance: AppTangemDemo
     }
 }

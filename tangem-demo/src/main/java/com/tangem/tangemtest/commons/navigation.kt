@@ -34,5 +34,6 @@ enum class ActionType(@StringRes val resName: Int) {
     ReadUserData(R.string.action_user_read_data),
     WriteUserData(R.string.action_user_write_data),
     Personalize(R.string.personalize),
+    Depersonalize(R.string.depersonalize),
     Unknown(R.string.unknown),
 }
