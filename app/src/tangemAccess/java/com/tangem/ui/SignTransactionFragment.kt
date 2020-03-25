@@ -34,6 +34,7 @@ import com.tangem.wallet.TangemContext
 import kotlinx.android.synthetic.main.layout_progress_horizontal.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
 import kotlinx.android.synthetic.tangemAccess.fragment_sign_transaction.*
+import java.lang.IllegalArgumentException
 
 
 class SignTransactionFragment : BaseFragment(), NavigationResultListener,
@@ -148,6 +149,10 @@ class SignTransactionFragment : BaseFragment(), NavigationResultListener,
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+        } catch(e: IllegalArgumentException) {
+            val data = Bundle()
+            data.putString(Constant.EXTRA_MESSAGE, e.message)
+            navigateBackWithResult(Activity.RESULT_CANCELED, data, R.id.loadedWalletFragment)
         } catch (e: Exception) {
             e.printStackTrace()
         }
