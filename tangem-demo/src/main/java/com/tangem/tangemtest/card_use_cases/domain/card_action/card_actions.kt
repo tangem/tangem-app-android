@@ -1,13 +1,17 @@
 package com.tangem.tangemtest.card_use_cases.domain.card_action
 
 import com.tangem.CardManager
+import com.tangem.commands.personalization.CardConfig
 import com.tangem.common.tlv.TlvTag
+import com.tangem.tangemtest.AppTangemDemo
 import com.tangem.tangemtest.card_use_cases.domain.params_manager.ActionCallback
 import com.tangem.tangemtest.card_use_cases.domain.params_manager.IncomingParameter
 import com.tangem.tangemtest.card_use_cases.domain.params_manager.findParameter
 import com.tangem.tangemtest.card_use_cases.domain.params_manager.modifiers.AfterActionModification
 import com.tangem.tangemtest.card_use_cases.domain.params_manager.modifiers.AfterScanModifier
 import com.tangem.tangemtest.card_use_cases.domain.params_manager.modifiers.ParamsChangeConsequence
+import com.tangem.tangemtest.extensions.init
+import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskEvent
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
@@ -74,6 +78,51 @@ class SignAction : BaseCardAction() {
 
 class PersonalizeAction : BaseCardAction() {
     override fun executeMainAction(attrs: AttrForAction, callback: ActionCallback) {
-        TODO("Not yet implemented")
+        ScanAction().executeMainAction(attrs) { response, b ->
+            when(response){
+                is TaskEvent.Event -> {
+                    val taskEvent = response as TaskEvent.Event
+                    val cardId = handleDataEvent(taskEvent.data)
+                    if (cardId == null) {
+                        handleResponse(response, null, attrs, callback)
+                        return@executeMainAction
+                    }
+
+                    attrs.cardManager.personalize(CardConfig.init(AppTangemDemo.appInstance), cardId) {
+                        handleResponse(it, null, attrs, callback)
+                    }
+                }
+                is TaskEvent.Completion -> {
+                    handleResponse(response, null, attrs, callback)
+                }
+            }
+
+
+        }
+    }
+
+    private fun handleDataEvent(event: Any?): String? {
+        return when (event) {
+            is ScanEvent.OnReadEvent -> {
+                event.card.cardId
+            }
+            else -> null
+        }
+
+    }
+}
+
+class DepesonalizeAction : BaseCardAction() {
+    override fun executeMainAction(attrs: AttrForAction, callback: ActionCallback) {
+        val cardId = attrs.paramsList.findParameter(TlvTag.CardId)?.data as? String ?: return
+
+        attrs.cardManager.depersonalize(cardId) { handleResponse(it, null, attrs, callback) }
+    }
+
+    override fun getActionByTag(tag: TlvTag, attrs: AttrForAction): ((ActionCallback) -> Unit)? {
+        return when (tag) {
+            TlvTag.CardId -> { callback -> ScanAction().executeMainAction(attrs, callback) }
+            else -> null
+        }
     }
 }
