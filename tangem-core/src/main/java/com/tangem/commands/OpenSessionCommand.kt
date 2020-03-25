@@ -14,7 +14,12 @@ class OpenSessionResponse(
         val uid: ByteArray
 ) : CommandResponse
 
+/**
+ * In case of encrypted communication, App should setup a session before calling any further command.
+ * [OpenSessionCommand] generates secret session_key that is used by both host and card
+ * to encrypt and decrypt commands’ payload.
 
+ */
 class OpenSessionCommand(private val sessionKeyA: ByteArray) : CommandSerializer<OpenSessionResponse>() {
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
