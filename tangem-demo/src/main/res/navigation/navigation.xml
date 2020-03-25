@@ -51,73 +51,73 @@
 
     <fragment
         android:id="@+id/nav_scan"
-        android:name="com.tangem.tangemtest.cardUseCase.ui.card.actions.ScanActionFragment"
+        android:name="com.tangem.tangemtest.ucase.variants.scan.ui.ScanActionFragment"
         android:label="@string/action_card_scan"
         tools:layout="@layout/fg_action_card_scan" />
 
     <fragment
         android:id="@+id/nav_sign"
-        android:name="com.tangem.tangemtest.cardUseCase.ui.card.actions.SignActionFragment"
+        android:name="com.tangem.tangemtest.ucase.variants.sign.ui.SignActionFragment"
         android:label="@string/action_card_sign"
         tools:layout="@layout/fg_action_card_sign" />
 
     <fragment
         android:id="@+id/nav_personalize"
-        android:name="com.tangem.tangemtest.cardUseCase.ui.personalize.PersonalizeFragment"
+        android:name="com.tangem.tangemtest.ucase.variants.personalize.ui.PersonalizeFragment"
         android:label="@string/action_personalize"
         tools:layout="@layout/fg_personalize" />
 
     <fragment
         android:id="@+id/nav_depersonalize"
-        android:name="com.tangem.tangemtest.cardUseCase.ui.card.actions.DepesonalizeActionFragment"
+        android:name="com.tangem.tangemtest.ucase.variants.depersonalize.ui.DepesonalizeActionFragment"
         android:label="@string/action_depersonalize"
         tools:layout="@layout/fg_depersonalize" />
 
     <fragment
         android:id="@+id/nav_issuer_read_data"
-        android:name="com.tangem.tangemtest.cardUseCase.ui.IssuerReadDataActionFragment"
+        android:name="com.tangem.tangemtest.ucase.ui.IssuerReadDataActionFragment"
         android:label="@string/action_issuer_read_data"
         tools:layout="@layout/fg_action_issuer_read_data" />
 
     <fragment
         android:id="@+id/nav_issuer_write_data"
-        android:name="com.tangem.tangemtest.cardUseCase.ui.IssuerWriteDataActionFragment"
+        android:name="com.tangem.tangemtest.ucase.ui.IssuerWriteDataActionFragment"
         android:label="@string/action_issuer_write_data"
         tools:layout="@layout/fg_action_issuer_write_data" />
 
     <fragment
         android:id="@+id/nav_issuer_read_ex_data"
-        android:name="com.tangem.tangemtest.cardUseCase.ui.IssuerReadExDataActionFragment"
+        android:name="com.tangem.tangemtest.ucase.ui.IssuerReadExDataActionFragment"
         android:label="@string/action_issuer_read_ex_data"
         tools:layout="@layout/fg_action_issuer_read_ex_data" />
 
     <fragment
         android:id="@+id/nav_issuer_write_ex_data"
-        android:name="com.tangem.tangemtest.cardUseCase.ui.IssuerWriteExDataActionFragment"
+        android:name="com.tangem.tangemtest.ucase.ui.IssuerWriteExDataActionFragment"
         android:label="@string/action_issuer_write_ex_data"
         tools:layout="@layout/fg_action_issuer_write_ex_data" />
 
     <fragment
         android:id="@+id/nav_user_read_data"
-        android:name="com.tangem.tangemtest.cardUseCase.ui.UserReadDataActionFragment"
+        android:name="com.tangem.tangemtest.ucase.ui.UserReadDataActionFragment"
         android:label="@string/action_user_read_data"
         tools:layout="@layout/fg_action_user_read_data" />
 
     <fragment
         android:id="@+id/nav_user_write_data"
-        android:name="com.tangem.tangemtest.cardUseCase.ui.UserWriteDataActionFragment"
+        android:name="com.tangem.tangemtest.ucase.ui.UserWriteDataActionFragment"
         android:label="@string/action_user_write_data"
         tools:layout="@layout/fg_action_user_write_data" />
 
     <fragment
         android:id="@+id/nav_wallet_create"
-        android:name="com.tangem.tangemtest.cardUseCase.ui.WalletCreateActionFragment"
+        android:name="com.tangem.tangemtest.ucase.ui.WalletCreateActionFragment"
         android:label="@string/action_wallet_create"
         tools:layout="@layout/fg_action_wallet_create" />
 
     <fragment
         android:id="@+id/nav_wallet_purge"
-        android:name="com.tangem.tangemtest.cardUseCase.ui.WalletPurgeActionFragment"
+        android:name="com.tangem.tangemtest.ucase.ui.WalletPurgeActionFragment"
         android:label="@string/action_wallet_purge"
         tools:layout="@layout/fg_action_wallet_purge" />
 
