@@ -43,6 +43,9 @@
         <action
             android:id="@+id/action_nav_entry_point_to_nav_personalize"
             app:destination="@id/nav_personalize" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_depersonalize"
+            app:destination="@id/nav_depersonalize" />
 
     </fragment>
 
@@ -61,8 +64,14 @@
     <fragment
         android:id="@+id/nav_personalize"
         android:name="com.tangem.tangemtest.card_use_cases.ui.personalize.PersonalizeFragment"
-        android:label="@string/action_issuer_read_data"
+        android:label="@string/action_personalize"
         tools:layout="@layout/fg_personalize" />
+
+    <fragment
+        android:id="@+id/nav_depersonalize"
+        android:name="com.tangem.tangemtest.card_use_cases.ui.card.actions.DepesonalizeActionFragment"
+        android:label="@string/action_depersonalize"
+        tools:layout="@layout/fg_depersonalize" />
 
     <fragment
         android:id="@+id/nav_issuer_read_data"
