@@ -1,11 +1,11 @@
 package com.tangem.tangemtest.card_use_cases.resources
 
-import com.tangem.tangemtest._arch.structure.base.Id
+import com.tangem.tangemtest._arch.structure.Id
 
 /**
 [REDACTED_AUTHOR]
  */
-enum class ActionType: Id {
+enum class ActionType : Id {
     Scan,
     Sign,
     CreateWallet,
