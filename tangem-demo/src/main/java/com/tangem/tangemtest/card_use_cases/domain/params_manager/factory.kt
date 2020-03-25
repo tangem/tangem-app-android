@@ -1,6 +1,6 @@
 package com.tangem.tangemtest.card_use_cases.domain.params_manager
 
-import com.tangem.tangemtest.commons.ActionType
+import com.tangem.tangemtest.card_use_cases.resources.ActionType
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.BaseTypedHolder
 
 /**
