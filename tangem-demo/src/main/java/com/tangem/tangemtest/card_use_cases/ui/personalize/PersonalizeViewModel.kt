@@ -5,12 +5,12 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.google.gson.Gson
-import com.tangem.tangemtest._arch.structure.base.Block
-import com.tangem.tangemtest._arch.structure.base.DataUnit
+import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
+import com.tangem.tangemtest._arch.structure.abstraction.Block
 import com.tangem.tangemtest.card_use_cases.ui.personalize.converter.BlockToJsonConverter
 import com.tangem.tangemtest.card_use_cases.ui.personalize.converter.JsonBlockEnDe
 import com.tangem.tangemtest.card_use_cases.ui.personalize.converter.JsonToBlockConverter
-import com.tangem.tangemtest.card_use_cases.ui.personalize.converter.TestJsonDto
+import com.tangem.tangemtest.card_use_cases.ui.personalize.dto.TestJsonDto
 
 /**
 [REDACTED_AUTHOR]
@@ -31,9 +31,9 @@ class PersonalizeViewModel(private val jsonPersonalizeString: String) : ViewMode
 
     fun toggleDescriptionVisibility(state: Boolean) {
         ldBlockList.value?.forEach { block ->
-            block.unitList.forEach { unit ->
-                val vm = unit as? DataUnit<*> ?: return@forEach
-                vm.viewModel?.viewState?.descriptionVisibility = if (state) View.VISIBLE else View.GONE
+            block.itemList.forEach { item ->
+                val vm = item as? BaseItem<*> ?: return@forEach
+                vm.viewModel.viewState.descriptionVisibility = if (state) View.VISIBLE else View.GONE
             }
         }
     }
