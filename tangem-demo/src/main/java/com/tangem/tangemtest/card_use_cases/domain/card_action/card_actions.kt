@@ -79,7 +79,7 @@ class SignAction : BaseCardAction() {
 class PersonalizeAction : BaseCardAction() {
     override fun executeMainAction(attrs: AttrForAction, callback: ActionCallback) {
         ScanAction().executeMainAction(attrs) { response, b ->
-            when(response){
+            when (response) {
                 is TaskEvent.Event -> {
                     val taskEvent = response as TaskEvent.Event
                     val cardId = handleDataEvent(taskEvent.data)
