@@ -40,7 +40,7 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
     }
 
     private fun showReadingDialog(activity: FragmentActivity, cardId: String?) {
-        val dialogView = activity.getLayoutInflater().inflate(R.layout.nfc_bottom_sheet, null)
+        val dialogView = activity.layoutInflater.inflate(R.layout.nfc_bottom_sheet, null)
         readingDialog = BottomSheetDialog(activity)
         readingDialog?.setContentView(dialogView)
         readingDialog?.dismissWithAnimation = true
