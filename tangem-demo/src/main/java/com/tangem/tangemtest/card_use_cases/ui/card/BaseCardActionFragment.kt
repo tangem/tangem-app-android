@@ -17,10 +17,11 @@ import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest.card_use_cases.domain.params_manager.ParamsManager
 import com.tangem.tangemtest.card_use_cases.domain.params_manager.ParamsManagerFactory
+import com.tangem.tangemtest.card_use_cases.resources.ActionType
+import com.tangem.tangemtest.card_use_cases.resources.MainResourceHolder
 import com.tangem.tangemtest.card_use_cases.ui.card.actions.ActionViewModelFactory
 import com.tangem.tangemtest.card_use_cases.ui.card.actions.ParamsViewModel
 import com.tangem.tangemtest.card_use_cases.ui.card.actions.widgets.ParameterWidget
-import com.tangem.tangemtest.commons.ActionType
 import ru.dev.gbixahue.eu4d.lib.android._android.views.find
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.LayoutHolder
@@ -63,7 +64,7 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
         viewModel.ldParams.observe(viewLifecycleOwner, Observer { paramsList ->
             val widgetList = mutableListOf<ParameterWidget>()
             paramsList.forEach { param ->
-                val widget = ParameterWidget(inflateParamView(incomingParamsContainer), param)
+                val widget = ParameterWidget(inflateParamView(incomingParamsContainer), MainResourceHolder, param)
                 widget.onValueChanged = { tag, value -> viewModel.userChangedParameter(tag, value) }
                 widget.onActionBtnClickListener = viewModel.getParameterAction(param.tlvTag)
                 widgetList.add(widget)
