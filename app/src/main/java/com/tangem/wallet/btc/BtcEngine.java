@@ -219,9 +219,9 @@ public class BtcEngine extends CoinEngine {
     @Override
     public Uri getShareWalletUri() {
         if (ctx.getCard().getDenomination() != null && !ctx.getCard().getDenominationText().equals("0.00")) {
-            return Uri.parse("bitcoin:" + ctx.getCoinData().getWallet() + "?amount=" + convertToAmount(convertToInternalAmount(ctx.getCard().getDenomination())).toValueString(8));
+            return Uri.parse(ctx.getCoinData().getWallet() + "?amount=" + convertToAmount(convertToInternalAmount(ctx.getCard().getDenomination())).toValueString(8));
         } else {
-            return Uri.parse("bitcoin:" + ctx.getCoinData().getWallet());
+            return Uri.parse(ctx.getCoinData().getWallet());
         }
     }
 
