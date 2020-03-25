@@ -1,10 +1,10 @@
-package com.tangem.tangemtest._arch.structure.base
+package com.tangem.tangemtest._arch.structure
 
 /**
 [REDACTED_AUTHOR]
  */
 interface DataHolder<D> {
-    var viewModel: D?
+    var viewModel: D
 }
 
 interface Payload {
