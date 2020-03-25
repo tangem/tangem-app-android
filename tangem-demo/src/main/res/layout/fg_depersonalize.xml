@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/coordinator_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -11,10 +10,19 @@
         android:layout_height="match_parent">
 
         <LinearLayout
-            android:id="@+id/ll_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/ll_incoming_params_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+            </LinearLayout>
+
+            <include layout="@layout/w_action_response_json" />
 
         </LinearLayout>
 
@@ -24,10 +32,9 @@
         android:id="@+id/fab_action"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
         android:layout_marginEnd="@dimen/def_indent"
         android:layout_marginBottom="@dimen/def_double_indent"
-        android:src="@drawable/ic_nfc"
-        app:layout_anchor="@id/scroll_view"
-        app:layout_anchorGravity="bottom|end" />
+        android:src="@drawable/ic_nfc" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
