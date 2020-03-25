@@ -98,7 +98,7 @@ class PersonalizeParamsManager : BaseParamsManager(PersonalizeAction()) {
     }
 }
 
-class DepersonalizeParamsManager: BaseParamsManager(DepesonalizeAction()){
+class DepersonalizeParamsManager : BaseParamsManager(DepesonalizeAction()) {
     override fun createParamsList(): List<IncomingParameter> {
         return listOf(IncomingParameter(TlvTag.CardId, null))
     }
