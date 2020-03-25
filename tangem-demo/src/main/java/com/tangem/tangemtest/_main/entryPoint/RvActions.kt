@@ -6,9 +6,9 @@ import android.widget.TextView
 import androidx.annotation.StringRes
 import androidx.recyclerview.widget.RecyclerView
 import com.tangem.tangemtest.R
-import com.tangem.tangemtest.cardUseCase.resources.ActionRes
-import com.tangem.tangemtest.cardUseCase.resources.ActionType
-import com.tangem.tangemtest.cardUseCase.resources.MainResourceHolder
+import com.tangem.tangemtest.ucase.resources.ActionRes
+import com.tangem.tangemtest.ucase.resources.ActionType
+import com.tangem.tangemtest.ucase.resources.MainResourceHolder
 import ru.dev.gbixahue.eu4d.lib.android._android.views.inflate
 import ru.dev.gbixahue.eu4d.lib.android._android.views.recycler_view.RvBaseAdapter
 import ru.dev.gbixahue.eu4d.lib.android._android.views.recycler_view.RvBaseVH
