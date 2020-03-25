@@ -12,14 +12,20 @@ import com.google.android.material.textfield.TextInputLayout
 import com.tangem.common.tlv.TlvTag
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest.card_use_cases.domain.params_manager.IncomingParameter
-import com.tangem.tangemtest.commons.ActionType
+import com.tangem.tangemtest.card_use_cases.resources.ActionType
+import com.tangem.tangemtest.card_use_cases.resources.MainResourceHolder
+import com.tangem.tangemtest.card_use_cases.resources.Resources
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
 /**
 [REDACTED_AUTHOR]
  */
-class ParameterWidget(private val parent: ViewGroup, model: IncomingParameter) {
+class ParameterWidget(
+        private val parent: ViewGroup,
+        private val resHolder: MainResourceHolder,
+        model: IncomingParameter
+) {
 
     val tlvTag: TlvTag = model.tlvTag
 
@@ -43,7 +49,7 @@ class ParameterWidget(private val parent: ViewGroup, model: IncomingParameter) {
         etValue.setText(stringOf(model.data))
         etValue.addTextChangedListener(valueWatcher)
         btnAction.setOnClickListener { onActionBtnClickListener?.invoke() }
-        btnAction.text = btnAction.context.getString(getActionResName())
+        btnAction.text = btnAction.context.getString(getResName(tlvTag))
         toggleActionBtnVisibility()
     }
 
@@ -75,12 +81,12 @@ class ParameterWidget(private val parent: ViewGroup, model: IncomingParameter) {
         }
     }
 
-    private fun getActionResName(): Int {
-        val action = when (tlvTag) {
+    private fun getResName(tag: TlvTag): Int {
+        val action = when (tag) {
             TlvTag.CardId -> ActionType.Scan
             else -> ActionType.Unknown
         }
-        return action.resName
+        return resHolder.safeGet<Resources>(action).resName
     }
 
     private fun toggleActionBtnVisibility() {
