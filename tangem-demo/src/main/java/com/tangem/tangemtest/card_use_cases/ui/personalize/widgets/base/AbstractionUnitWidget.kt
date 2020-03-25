@@ -5,7 +5,8 @@ import android.view.View
 import android.view.ViewGroup
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.base.DataUnit
-import com.tangem.tangemtest.card_use_cases.ui.personalize.PersonalizeResources
+import com.tangem.tangemtest.card_use_cases.resources.MainResourceHolder
+import com.tangem.tangemtest.card_use_cases.resources.Resources
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.LayoutHolder
 
 /**
@@ -31,6 +32,6 @@ abstract class BaseViewWidget(parent: ViewGroup) : ViewWidget {
     }
 }
 
-fun UnitWidget<*>.getResNameId(): Int = PersonalizeResources.get(unit.id).resName
+fun UnitWidget<*>.getResNameId(): Int = MainResourceHolder.safeGet<Resources>(unit.id).resName
 
-fun UnitWidget<*>.getResDescription(): Int? = PersonalizeResources.get(unit.id).resDescription
+fun UnitWidget<*>.getResDescription(): Int? = MainResourceHolder.safeGet<Resources>(unit.id).resDescription
