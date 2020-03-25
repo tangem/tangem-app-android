@@ -12,10 +12,12 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.transition.AutoTransition
+import androidx.transition.TransitionManager
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._main.MainViewModel
-import com.tangem.tangemtest.commons.ActionType
-import com.tangem.tangemtest.commons.NavigateOptions
+import com.tangem.tangemtest.card_use_cases.resources.ActionType
+import com.tangem.tangemtest.card_use_cases.resources.MainResourceHolder
 import com.tangem.tangemtest.commons.getDefaultNavigationOptions
 import kotlinx.android.synthetic.main.fg_entry_point.*
 
@@ -36,10 +38,6 @@ class EntryPointFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initRecyclerView()
-
-        mainActivityVM.ldDescriptionSwitch.observe(viewLifecycleOwner, Observer {
-            // do some thing
-        })
     }
 
     private fun initRecyclerView() {
@@ -47,7 +45,15 @@ class EntryPointFragment : Fragment() {
         rvActions = rv_actions
         rvActions.layoutManager = layoutManager
         rvActions.addItemDecoration(DividerItemDecoration(activity, layoutManager.orientation))
-        rvActions.adapter = RvActionsAdapter { type, position, data -> navigate(data.destinationId) }
+
+        val vhDataWrapper = VhExDataWrapper(MainResourceHolder, false)
+
+        rvActions.adapter = RvActionsAdapter(vhDataWrapper) { type, position, data -> navigate(data) }
+        mainActivityVM.ldDescriptionSwitch.observe(viewLifecycleOwner, Observer {
+            vhDataWrapper.descriptionIsVisible = it
+            TransitionManager.beginDelayedTransition(rvActions as ViewGroup, AutoTransition())
+            rvActions.adapter?.notifyDataSetChanged()
+        })
     }
 
     override fun onResume() {
@@ -62,20 +68,20 @@ class EntryPointFragment : Fragment() {
         navController.navigate(destinationId, null, getDefaultNavigationOptions())
     }
 
-    private fun getNavigateOptions(): MutableList<NavigateOptions> {
+    private fun getNavigateOptions(): MutableList<ActionType> {
         return mutableListOf(
-                NavigateOptions(ActionType.Scan, R.id.action_nav_entry_point_to_nav_scan),
-                NavigateOptions(ActionType.Sign, R.id.action_nav_entry_point_to_nav_sign),
-                NavigateOptions(ActionType.Personalize, R.id.action_nav_entry_point_to_nav_personalize),
-                NavigateOptions(ActionType.Depersonalize, R.id.action_nav_entry_point_to_nav_depersonalize),
-                NavigateOptions(ActionType.CreateWallet, R.id.action_nav_entry_point_to_nav_wallet_create),
-                NavigateOptions(ActionType.PurgeWallet, R.id.action_nav_entry_point_to_nav_wallet_purge),
-                NavigateOptions(ActionType.ReadIssuerData, R.id.action_nav_entry_point_to_nav_issuer_read_data),
-                NavigateOptions(ActionType.WriteIssuerData, R.id.action_nav_entry_point_to_nav_issuer_write_data),
-                NavigateOptions(ActionType.ReadIssuerExData, R.id.action_nav_entry_point_to_nav_issuer_read_ex_data),
-                NavigateOptions(ActionType.WriteIssuerExData, R.id.action_nav_entry_point_to_nav_issuer_write_ex_data),
-                NavigateOptions(ActionType.ReadUserData, R.id.action_nav_entry_point_to_nav_user_read_data),
-                NavigateOptions(ActionType.WriteUserData, R.id.action_nav_entry_point_to_nav_user_write_data)
+                ActionType.Scan,
+                ActionType.Sign,
+                ActionType.Personalize,
+                ActionType.Depersonalize
+//                ActionType.CreateWallet,
+//                ActionType.PurgeWallet,
+//                ActionType.ReadIssuerData,
+//                ActionType.WriteIssuerData,
+//                ActionType.ReadIssuerExData,
+//                ActionType.WriteIssuerExData,
+//                ActionType.ReadUserData,
+//                ActionType.WriteUserData
         )
     }
 }
