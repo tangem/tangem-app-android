@@ -1,30 +1,69 @@
 package com.tangem.tangemtest._main.entry_point
 
 import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
+import androidx.annotation.StringRes
+import androidx.recyclerview.widget.RecyclerView
 import com.tangem.tangemtest.R
-import com.tangem.tangemtest.commons.NavigateOptions
-import ru.dev.gbixahue.eu4d.lib.android._android.views.recycler_view.RvAdapter
+import com.tangem.tangemtest.card_use_cases.resources.ActionRes
+import com.tangem.tangemtest.card_use_cases.resources.ActionType
+import com.tangem.tangemtest.card_use_cases.resources.MainResourceHolder
+import ru.dev.gbixahue.eu4d.lib.android._android.views.inflate
+import ru.dev.gbixahue.eu4d.lib.android._android.views.recycler_view.RvBaseAdapter
+import ru.dev.gbixahue.eu4d.lib.android._android.views.recycler_view.RvBaseVH
 import ru.dev.gbixahue.eu4d.lib.android._android.views.recycler_view.RvCallback
-import ru.dev.gbixahue.eu4d.lib.android._android.views.recycler_view.RvVH
 
 /**
 [REDACTED_AUTHOR]
  */
-class RvActionsAdapter(callback: RvCallback<NavigateOptions>) : RvAdapter<RvActionsVH, NavigateOptions>(callback) {
+class RvActionsAdapter(
+        private val wrapper: VhExDataWrapper,
+        private val callback: RvCallback<Int>
+) : RvBaseAdapter<RvActionsVH, ActionType>() {
 
-    override fun createViewHolder(view: View, listener: RvCallback<NavigateOptions>?): RvActionsVH {
-        return RvActionsVH(view, listener)
+    override fun onBindViewHolder(holder: RvActionsVH, position: Int) {
+        holder.bindData(itemList[position])
     }
 
-    override fun getLayoutId(): Int = R.layout.vh_actions
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RvActionsVH {
+        val view = parent.inflate<View>(R.layout.vh_actions, false)
+        return RvActionsVH(view, wrapper, callback)
+    }
+
 }
 
-class RvActionsVH(itemView: View, callback: RvCallback<NavigateOptions>?) : RvVH<NavigateOptions>(itemView, callback) {
-    private val tvAction = itemView.findViewById<TextView>(R.id.tv_title)
+class VhExDataWrapper(
+        val resHolder: MainResourceHolder,
+        var descriptionIsVisible: Boolean
+)
 
-    override fun onDataBound(data: NavigateOptions) {
-        tvAction.text = tvAction.context.getString(data.name.resName)
-        itemView.setOnClickListener { invokeCallback() }
+class RvActionsVH(
+        itemView: View,
+        private val wrapper: VhExDataWrapper,
+        private val callback: RvCallback<Int>?
+) : RvBaseVH<ActionType>(itemView) {
+
+    private val tvAction = itemView.findViewById<TextView>(R.id.tv_title)
+    private val containerDescription = itemView.findViewById<ViewGroup>(R.id.container_description)
+    private val tvDescription = itemView.findViewById<TextView>(R.id.tv_description)
+
+    override fun bindData(data: ActionType) {
+        val res: ActionRes = wrapper.resHolder.safeGet(data)
+        tvAction.text = getString(res.resName)
+        tvDescription.text = getString(res.resDescription)
+
+        itemView.setOnClickListener {
+            res.resNavigation?.let { callback?.invoke(itemViewType, adapterPosition, it) }
+        }
+
+        containerDescription.visibility = if (wrapper.descriptionIsVisible) View.VISIBLE else View.GONE
     }
+
+    override fun onDataBound(data: ActionType) {}
+}
+
+fun RecyclerView.ViewHolder.getString(@StringRes id: Int?, ifNull: String = ""): String {
+    val reqId = id ?: return ifNull
+    return itemView.context.getString(reqId)
 }
