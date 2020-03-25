@@ -1,13 +1,16 @@
-package com.tangem.tangemtest._arch.structure.base
+package com.tangem.tangemtest._arch.structure.abstraction
+
+import com.tangem.tangemtest._arch.structure.ILog
+import com.tangem.tangemtest._arch.structure.Payload
 
 
 /**
 [REDACTED_AUTHOR]
  */
-typealias ValueChange<V> = (V?) -> kotlin.Unit
-typealias SafeValueChange<V> = (V) -> kotlin.Unit
+typealias ValueChange<V> = (V?) -> Unit
+typealias SafeValueChange<V> = (V) -> Unit
 
-interface UnitViewModel<D> : Payload {
+interface ItemViewModel<D> : Payload {
     val viewState: ViewState
     var data: D?
     var onDataUpdated: ValueChange<D>?
@@ -15,7 +18,7 @@ interface UnitViewModel<D> : Payload {
     fun updateDataByView(data: D?)
 }
 
-open class BaseUnitViewModel<D> : UnitViewModel<D> {
+open class BaseItemViewModel<D> : ItemViewModel<D> {
 
     override val viewState: ViewState = ViewState()
     override val payload: MutableMap<String, Any?> = mutableMapOf()
@@ -28,13 +31,13 @@ open class BaseUnitViewModel<D> : UnitViewModel<D> {
     override var onDataUpdated: ValueChange<D>? = null
 
     protected open fun handleDataUpdates(value: D?): Boolean {
-        ULog.d(this, "handleDateUpdates: $value")
+        ILog.d(this, "handleDateUpdates: $value")
         onDataUpdated?.invoke(value)
         return true
     }
 
     override fun updateDataByView(data: D?) {
-        ULog.d(this, "data changed: $data")
+        ILog.d(this, "data changed: $data")
         val callback = onDataUpdated
         onDataUpdated = null
         this.data = data
