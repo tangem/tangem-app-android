@@ -1,7 +1,7 @@
 package com.tangem.tangemtest.card_use_cases.resources
 
 import com.tangem.tangemtest.R
-import com.tangem.tangemtest._arch.structure.base.Id
+import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest.card_use_cases.resources.initializers.ActionResources
 import com.tangem.tangemtest.card_use_cases.resources.initializers.PersonalizeResources
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.BaseTypedHolder
