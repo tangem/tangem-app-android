@@ -2,6 +2,7 @@
 <resources>
 
     <string name="personalize">Personalize</string>
+    <string name="depersonalize">Depersonalize</string>
     <string name="pers_block_card_number">Card number</string>
     <string name="pers_block_common">Common</string>
     <string name="pers_block_signing_method">Signing method</string>
