@@ -1,7 +1,7 @@
 package com.tangem.tangemtest.card_use_cases.resources.initializers
 
 import com.tangem.tangemtest.R
-import com.tangem.tangemtest._arch.structure.base.Id
+import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest.card_use_cases.resources.ActionRes
 import com.tangem.tangemtest.card_use_cases.resources.ActionType
 import com.tangem.tangemtest.card_use_cases.resources.ResourceHolder
