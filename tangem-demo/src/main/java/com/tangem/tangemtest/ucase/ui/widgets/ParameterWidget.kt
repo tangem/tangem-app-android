@@ -14,6 +14,7 @@ import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._arch.structure.abstraction.Item
+import com.tangem.tangemtest.ucase.resources.ActionType
 import com.tangem.tangemtest.ucase.resources.MainResourceHolder
 import com.tangem.tangemtest.ucase.resources.Resources
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
@@ -53,7 +54,7 @@ class ParameterWidget(
         etValue.setText(stringOf(dataItem.viewModel.data))
         etValue.addTextChangedListener(valueWatcher)
         btnAction.setOnClickListener { onActionBtnClickListener?.invoke() }
-        btnAction.setText(getResNameId())
+        btnAction.setText(getResNameId(ActionType.Scan))
         toggleActionBtnVisibility()
         initDescriptionWidget()
     }
@@ -112,6 +113,6 @@ class ParameterWidget(
     }
 }
 
-fun ParameterWidget.getResNameId(): Int = MainResourceHolder.safeGet<Resources>(id).resName
+fun ParameterWidget.getResNameId(id: Id? = null): Int = MainResourceHolder.safeGet<Resources>(id?: this.id).resName
 
 fun ParameterWidget.getResDescription(): Int? = MainResourceHolder.safeGet<Resources>(id).resDescription
