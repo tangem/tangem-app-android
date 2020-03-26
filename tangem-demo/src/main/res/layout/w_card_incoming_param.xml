@@ -9,16 +9,16 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/def_indent"
+        android:paddingEnd="@dimen/def_indent">
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_param"
             style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/def_indent"
             android:layout_marginTop="4dp"
-            android:layout_marginEnd="@dimen/def_indent"
             android:layout_weight="1"
             app:boxBackgroundColor="@android:color/transparent"
             app:endIconMode="clear_text">
@@ -28,7 +28,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="start|bottom"
-                android:paddingBottom="4dp" />
+                android:paddingStart="0dp"
+                android:paddingEnd="@dimen/def_double_indent"
+                android:paddingBottom="4dp"
+                android:textSize="@dimen/unit_widget_text_size" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -37,7 +40,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:layout_marginEnd="@dimen/def_indent"
             android:visibility="gone"
             tools:text="Action"
             tools:visibility="visible" />
