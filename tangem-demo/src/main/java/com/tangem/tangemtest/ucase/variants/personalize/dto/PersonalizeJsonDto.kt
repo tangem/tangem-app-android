@@ -1,5 +1,8 @@
 package com.tangem.tangemtest.ucase.variants.personalize.dto
 
+/**
+[REDACTED_AUTHOR]
+ */
 class TestJsonDto {
 
     // Card number
