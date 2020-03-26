@@ -1,20 +1,22 @@
 {
-  "releaseVersion": false,
+  "issuerData": null,
   "issuerName": "TANGEM SDK",
   "series": "DB",
-  "startNumber": 300000000,
-  "count": 20,
   "numberFormat": "",
   "PIN": "000000",
   "PIN2": "000",
   "PIN3": "",
   "hexCrExKey": "",
   "CVC": "000",
-  "pauseBeforePIN2": 15000,
-  "smartSecurityDelay": true,
   "curveID": "ed25519",
+  "ndef": "com.tangem.wallet",
+  "startNumber": 300000000,
+  "count": 20,
   "SigningMethod": 0,
   "MaxSignatures": 1000000,
+  "pauseBeforePIN2": 15000,
+  "smartSecurityDelay": true,
+  "releaseVersion": false,
   "isReusable": true,
   "allowSwapPIN": false,
   "allowSwapPIN2": true,
@@ -38,18 +40,13 @@
   "requireTerminalTxSignature": false,
   "requireTerminalCertSignature": false,
   "checkPIN3onCard": false,
-  "ndef": {
-    "type": "AAR",
-    "value": "com.tangem.wallet"
-  },
   "cardData": {
     "date": "2020-02-17",
     "batch": "FF87",
-    "blockchain": "IROHA",
+    "blockchain": "XLM",
     "product_note": true,
     "product_tag": false,
     "product_id_card": false
   },
-  "createWallet": 1,
-  "issuerData": null
+  "createWallet": true
 }
