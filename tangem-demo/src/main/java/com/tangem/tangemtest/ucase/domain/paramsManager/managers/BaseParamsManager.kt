@@ -7,6 +7,9 @@ import com.tangem.tangemtest.ucase.domain.actions.CardAction
 import com.tangem.tangemtest.ucase.domain.paramsManager.*
 import com.tangem.tangemtest.ucase.domain.paramsManager.triggers.changeConsequence.ParamsChangeConsequence
 
+/**
+[REDACTED_AUTHOR]
+ */
 abstract class BaseParamsManager(protected val action: CardAction) : ParamsManager {
 
     protected val paramsList: List<IncomingParameter> by lazy { createParamsList() }
