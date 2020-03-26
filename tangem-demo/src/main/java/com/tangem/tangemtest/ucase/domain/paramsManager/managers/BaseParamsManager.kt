@@ -1,10 +1,14 @@
 package com.tangem.tangemtest.ucase.domain.paramsManager.managers
 
 import com.tangem.CardManager
-import com.tangem.common.tlv.TlvTag
+import com.tangem.tangemtest._arch.structure.Id
+import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest.ucase.domain.actions.AttrForAction
 import com.tangem.tangemtest.ucase.domain.actions.CardAction
-import com.tangem.tangemtest.ucase.domain.paramsManager.*
+import com.tangem.tangemtest.ucase.domain.paramsManager.ActionCallback
+import com.tangem.tangemtest.ucase.domain.paramsManager.AffectedParamsCallback
+import com.tangem.tangemtest.ucase.domain.paramsManager.ParamsManager
+import com.tangem.tangemtest.ucase.domain.paramsManager.findDataParameter
 import com.tangem.tangemtest.ucase.domain.paramsManager.triggers.changeConsequence.ParamsChangeConsequence
 
 /**
@@ -12,24 +16,24 @@ import com.tangem.tangemtest.ucase.domain.paramsManager.triggers.changeConsequen
  */
 abstract class BaseParamsManager(protected val action: CardAction) : ParamsManager {
 
-    protected val paramsList: List<IncomingParameter> by lazy { createParamsList() }
+    protected val paramsList: List<Item> by lazy { createParamsList() }
 
-    abstract fun createParamsList(): List<IncomingParameter>
+    abstract fun createParamsList(): List<Item>
 
-    override fun parameterChanged(tag: TlvTag, value: Any?, callback: AffectedParamsCallback?) {
+    override fun parameterChanged(id: Id, value: Any?, callback: AffectedParamsCallback?) {
         if (paramsList.isEmpty()) return
-        val foundParam = paramsList.findParameter(tag) ?: return
+        val foundParam = paramsList.findDataParameter(id) ?: return
 
-        foundParam.data = value
+        foundParam.viewModel.data = value
         applyChangesByAffectedParams(foundParam, callback)
     }
 
-    override fun getParams(): MutableList<IncomingParameter> = paramsList.toMutableList()
+    override fun getParams(): MutableList<Item> = paramsList.toMutableList()
 
-    override fun getActionByTag(tag: TlvTag, cardManager: CardManager): ((ActionCallback) -> Unit)? = null
+    override fun getActionByTag(id: Id, cardManager: CardManager): ((ActionCallback) -> Unit)? = null
 
     // Use it if current parameter needs to be affect any other parameters
-    protected open fun applyChangesByAffectedParams(param: IncomingParameter, callback: AffectedParamsCallback?) {
+    protected open fun applyChangesByAffectedParams(param: Item, callback: AffectedParamsCallback?) {
         getChangeConsequence()?.affectChanges(param, paramsList)?.let { callback?.invoke(it) }
     }
 
