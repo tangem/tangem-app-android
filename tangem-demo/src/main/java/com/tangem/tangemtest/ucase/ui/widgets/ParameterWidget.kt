@@ -5,14 +5,15 @@ import android.text.TextWatcher
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.TextView
 import androidx.transition.AutoTransition
 import androidx.transition.TransitionManager
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import com.tangem.common.tlv.TlvTag
 import com.tangem.tangemtest.R
-import com.tangem.tangemtest.ucase.domain.paramsManager.IncomingParameter
-import com.tangem.tangemtest.ucase.resources.ActionType
+import com.tangem.tangemtest._arch.structure.Id
+import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
+import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest.ucase.resources.MainResourceHolder
 import com.tangem.tangemtest.ucase.resources.Resources
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
@@ -23,13 +24,13 @@ import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
  */
 class ParameterWidget(
         private val parent: ViewGroup,
-        private val resHolder: MainResourceHolder,
-        model: IncomingParameter
+        item: Item
 ) {
 
-    val tlvTag: TlvTag = model.tlvTag
+    val id: Id = item.id
+    val dataItem: BaseItem<Any> = item as BaseItem<Any>
 
-    var onValueChanged: ((TlvTag, Any?) -> Unit)? = null
+    var onValueChanged: ((Id, Any?) -> Unit)? = null
     var onActionBtnClickListener: (() -> Unit)? = null
         set(value) {
             field = value
@@ -41,20 +42,24 @@ class ParameterWidget(
     private val btnAction: Button = parent.findViewById(R.id.btn_action)
     private val valueWatcher: TextWatcher by lazy { getWatcher() }
 
+    private val descriptionContainer: ViewGroup by lazy { parent.findViewById<ViewGroup>(R.id.container_description) }
+    private val tvDescription: TextView? by lazy { descriptionContainer.findViewById<TextView>(R.id.tv_description) }
+
     private var actionBtnVisibilityState: Int = btnAction.visibility
-    private var value: Any? = model.data
+    private var value: Any? = dataItem.viewModel.data
 
     init {
-        tilValue.hint = model.tlvTag.name
-        etValue.setText(stringOf(model.data))
+        tilValue.hint = tilValue.context.getString(getResNameId())
+        etValue.setText(stringOf(dataItem.viewModel.data))
         etValue.addTextChangedListener(valueWatcher)
         btnAction.setOnClickListener { onActionBtnClickListener?.invoke() }
-        btnAction.text = btnAction.context.getString(getResName(tlvTag))
+        btnAction.setText(getResNameId())
         toggleActionBtnVisibility()
+        initDescriptionWidget()
     }
 
     fun changeParamValue(data: Any?, silent: Boolean = true) {
-        Log.d(this, "changeParamValue: tag: $tlvTag, value: $data")
+        Log.d(this, "changeParamValue: tag: $id, value: $data")
         value = data
         toggleActionBtnVisibility()
         if (silent) {
@@ -66,27 +71,24 @@ class ParameterWidget(
         }
     }
 
+    fun toggleDescriptionVisibility(state: Boolean) {
+        TransitionManager.beginDelayedTransition(parent.parent as ViewGroup, AutoTransition())
+        descriptionContainer.visibility = if (state) View.VISIBLE else View.GONE
+    }
+
     private fun getWatcher(): TextWatcher {
         return object : TextWatcher {
             override fun afterTextChanged(editable: Editable?) {
                 Log.d(this, "afterTextChanged $editable")
                 value = if (editable.isNullOrEmpty()) null else editable.toString()
                 toggleActionBtnVisibility()
-                onValueChanged?.invoke(tlvTag, value)
+                onValueChanged?.invoke(id, value)
             }
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         }
-    }
-
-    private fun getResName(tag: TlvTag): Int {
-        val action = when (tag) {
-            TlvTag.CardId -> ActionType.Scan
-            else -> ActionType.Unknown
-        }
-        return resHolder.safeGet<Resources>(action).resName
     }
 
     private fun toggleActionBtnVisibility() {
@@ -104,4 +106,12 @@ class ParameterWidget(
             value != null && actionBtnVisibilityState != View.GONE -> switchVisibilityState(View.GONE)
         }
     }
+
+    private fun initDescriptionWidget() {
+        getResDescription()?.let { tvDescription?.setText(it) }
+    }
 }
+
+fun ParameterWidget.getResNameId(): Int = MainResourceHolder.safeGet<Resources>(id).resName
+
+fun ParameterWidget.getResDescription(): Int? = MainResourceHolder.safeGet<Resources>(id).resDescription
