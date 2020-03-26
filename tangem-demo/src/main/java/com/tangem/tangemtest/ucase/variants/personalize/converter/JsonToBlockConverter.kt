@@ -4,18 +4,18 @@ import com.tangem.tangemtest._arch.structure.*
 import com.tangem.tangemtest._arch.structure.abstraction.Block
 import com.tangem.tangemtest._arch.structure.abstraction.ListItemBlock
 import com.tangem.tangemtest._arch.structure.impl.*
-import com.tangem.tangemtest.ucase.variants.personalize.dto.TestJsonDto
+import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizeConfig
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.Converter
 
 /**
 [REDACTED_AUTHOR]
  */
-class JsonToBlockConverter(
-        private val valuesHolder: IdToJsonValues
-) : Converter<TestJsonDto, List<Block>> {
+class JsonToBlockConverter : Converter<PersonalizeConfig, List<Block>> {
 
-    override fun convert(from: TestJsonDto): List<Block> {
-        valuesHolder.init(from)
+    private val associations: IdToValueAssociations = IdToValueAssociations()
+
+    override fun convert(from: PersonalizeConfig): List<Block> {
+        associations.init(from)
         val blocList = mutableListOf<Block>()
         blocList.add(cardNumber())
         blocList.add(common())
@@ -164,25 +164,18 @@ class JsonToBlockConverter(
         return ListItemBlock(id).apply { createItem(this, id) }
     }
 
-    private fun addPayload(block: Block, from: TestJsonDto) {
+    private fun addPayload(block: Block, from: PersonalizeConfig) {
         block.payload[Additional.JSON_INCOMING.name] = from
-        block.payload[Additional.JSON_TAILS.name] = JsonTails(
-                from.count,
-                from.numberFormat,
-                from.issuerData,
-                from.releaseVersion,
-                from.issuerName
-        )
     }
 
     private fun createItem(block: ListItemBlock, id: Id) {
-        val holder = valuesHolder.get(id) ?: return
+        val holder = associations.get(id) ?: return
         val item = when {
-            IdItemHelper.blockIdList.contains(id) -> TextItem(id, holder.value as? String)
-            IdItemHelper.listItemList.contains(id) -> ListItem(id, holder.list as List<KeyValue>, holder.value)
-            IdItemHelper.boolList.contains(id) -> BoolItem(id, holder.value as? Boolean)
-            IdItemHelper.editTextList.contains(id) -> EditTextItem(id, holder.value as? String)
-            IdItemHelper.numberList.contains(id) -> NumberItem(id, holder.value as? Number)
+            IdItemHelper.blockIdList.contains(id) -> TextItem(id, holder.get() as? String)
+            IdItemHelper.listItemList.contains(id) -> ListItem(id, holder.list as List<KeyValue>, holder.get())
+            IdItemHelper.boolList.contains(id) -> BoolItem(id, holder.get() as? Boolean)
+            IdItemHelper.editTextList.contains(id) -> EditTextItem(id, holder.get() as? String)
+            IdItemHelper.numberList.contains(id) -> NumberItem(id, holder.get() as? Number)
             else -> ListItemBlock(Additional.UNDEFINED)
         }
         block.addItem(item)
