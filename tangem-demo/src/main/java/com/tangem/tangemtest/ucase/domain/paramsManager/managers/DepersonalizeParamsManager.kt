@@ -6,6 +6,9 @@ import com.tangem.tangemtest.ucase.domain.actions.DepesonalizeAction
 import com.tangem.tangemtest.ucase.domain.paramsManager.ActionCallback
 import com.tangem.tangemtest.ucase.domain.paramsManager.IncomingParameter
 
+/**
+[REDACTED_AUTHOR]
+ */
 class DepersonalizeParamsManager : BaseParamsManager(DepesonalizeAction()) {
     override fun createParamsList(): List<IncomingParameter> {
         return listOf(IncomingParameter(TlvTag.CardId, null))
