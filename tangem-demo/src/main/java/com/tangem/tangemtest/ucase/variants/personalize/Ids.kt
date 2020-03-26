@@ -60,7 +60,7 @@ enum class Denomination : BlockItem {
     Denomination,
 }
 
-enum class Token : Id {
+enum class Token : BlockItem {
     ItsToken,
     Symbol,
     ContractAddress,
