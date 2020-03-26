@@ -1,9 +1,9 @@
 package com.tangem.tangemtest.ucase.domain.actions
 
 import com.tangem.CardManager
-import com.tangem.common.tlv.TlvTag
+import com.tangem.tangemtest._arch.structure.Id
+import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest.ucase.domain.paramsManager.ActionCallback
-import com.tangem.tangemtest.ucase.domain.paramsManager.IncomingParameter
 import com.tangem.tangemtest.ucase.domain.paramsManager.triggers.afterAction.AfterActionModification
 import com.tangem.tangemtest.ucase.domain.paramsManager.triggers.changeConsequence.ParamsChangeConsequence
 import com.tangem.tasks.TaskEvent
@@ -16,13 +16,13 @@ import com.tangem.tasks.TaskEvent
  */
 data class AttrForAction(
         val cardManager: CardManager,
-        val paramsList: List<IncomingParameter>,
+        val paramsList: List<Item>,
         val consequence: ParamsChangeConsequence?
 )
 
 interface CardAction {
     fun executeMainAction(attrs: AttrForAction, callback: ActionCallback)
-    fun getActionByTag(tag: TlvTag, attrs: AttrForAction): ((ActionCallback) -> Unit)? = null
+    fun getActionByTag(id: Id, attrs: AttrForAction): ((ActionCallback) -> Unit)? = null
 }
 
 abstract class BaseCardAction : CardAction {
@@ -32,7 +32,7 @@ abstract class BaseCardAction : CardAction {
             attrs: AttrForAction,
             callback: ActionCallback
     ) {
-        val allModifiedParams = mutableListOf<IncomingParameter>()
+        val allModifiedParams = mutableListOf<Item>()
         modifier?.modify(taskEvent, attrs.paramsList)?.forEach { parameter ->
             allModifiedParams.add(parameter)
             attrs.consequence?.affectChanges(parameter, attrs.paramsList)?.let { allModifiedParams.addAll(it) }
