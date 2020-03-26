@@ -7,7 +7,7 @@ import com.tangem.tangemtest._arch.structure.abstraction.BaseItemViewModel
  */
 open class TransitiveViewModel<D>(value: D?) : BaseItemViewModel<D>() {
     init {
-        data = value
+        defaultData = value
     }
 }
 
@@ -21,8 +21,7 @@ class ListViewModel(value: ListValueWrapper? = null) : TransitiveViewModel<ListV
         val newValue = value ?: return false
         if (newValue.selectedItem == data?.selectedItem) return false
 
-        onDataUpdated?.invoke(value)
-        return true
+        return super.handleDataUpdates(value)
     }
 }
 
