@@ -1,19 +1,21 @@
 package com.tangem.tangemtest.ucase.domain.paramsManager.managers
 
 import com.tangem.CardManager
-import com.tangem.common.tlv.TlvTag
+import com.tangem.tangemtest._arch.structure.Id
+import com.tangem.tangemtest._arch.structure.abstraction.Item
+import com.tangem.tangemtest._arch.structure.impl.EditTextItem
 import com.tangem.tangemtest.ucase.domain.actions.SignAction
 import com.tangem.tangemtest.ucase.domain.paramsManager.ActionCallback
-import com.tangem.tangemtest.ucase.domain.paramsManager.IncomingParameter
+import com.tangem.tangemtest.ucase.variants.TlvId
 
 /**
 [REDACTED_AUTHOR]
  */
 class SignParamsManager : BaseParamsManager(SignAction()) {
-    override fun createParamsList(): List<IncomingParameter> {
+    override fun createParamsList(): List<Item> {
         return listOf(
-                IncomingParameter(TlvTag.CardId, null),
-                IncomingParameter(TlvTag.TransactionOutHash, "Data used for hashing")
+                EditTextItem(TlvId.CardId, null),
+                EditTextItem(TlvId.TransactionOutHash, "Data used for hashing")
         )
     }
 
@@ -21,7 +23,7 @@ class SignParamsManager : BaseParamsManager(SignAction()) {
         action.executeMainAction(getAttrsForAction(cardManager), callback)
     }
 
-    override fun getActionByTag(tag: TlvTag, cardManager: CardManager): ((ActionCallback) -> Unit)? {
-        return action.getActionByTag(tag, getAttrsForAction(cardManager))
+    override fun getActionByTag(id: Id, cardManager: CardManager): ((ActionCallback) -> Unit)? {
+        return action.getActionByTag(id, getAttrsForAction(cardManager))
     }
 }
