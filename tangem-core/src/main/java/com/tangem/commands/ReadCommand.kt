@@ -32,6 +32,49 @@ data class SigningMethod(val rawValue: Int) {
         const val signHashValidatedByIssuerAndWriteIssuerData = 4
         const val signRawValidatedByIssuerAndWriteIssuerData = 5
         const val signPos = 6
+
+        fun build(
+                signHash: Boolean = false,
+                signRaw: Boolean = false,
+                signHashValidatedByIssuer: Boolean = false,
+                signRawValidatedByIssuer: Boolean = false,
+                signHashValidatedByIssuerAndWriteIssuerData: Boolean = false,
+                signRawValidatedByIssuerAndWriteIssuerData: Boolean = false,
+                signPos: Boolean = false
+
+        ): SigningMethod {
+            fun Boolean.toInt() = if (this) 1 else 0
+
+            val signingMethodsCount = 0 +
+                    signHash.toInt() +
+                    signRaw.toInt() +
+                    signHashValidatedByIssuer.toInt() +
+                    signRawValidatedByIssuer.toInt() +
+                    signHashValidatedByIssuerAndWriteIssuerData.toInt() +
+                    signRawValidatedByIssuerAndWriteIssuerData.toInt() +
+                    signPos.toInt()
+
+            var signingMethod: Int = 0
+            if (signingMethodsCount == 1) {
+                if (signHash) signingMethod += SigningMethod.signHash
+                if (signRaw) signingMethod += SigningMethod.signRaw
+                if (signHashValidatedByIssuer) signingMethod += SigningMethod.signHashValidatedByIssuer
+                if (signRawValidatedByIssuer) signingMethod += SigningMethod.signRawValidatedByIssuer
+                if (signHashValidatedByIssuerAndWriteIssuerData) signingMethod += SigningMethod.signHashValidatedByIssuerAndWriteIssuerData
+                if (signRawValidatedByIssuerAndWriteIssuerData) signingMethod += SigningMethod.signRawValidatedByIssuerAndWriteIssuerData
+                if (signPos) signingMethod += SigningMethod.signPos
+            } else if (signingMethodsCount > 1) {
+                signingMethod = 0x80
+                if (signHash) signingMethod += 0x01
+                if (signRaw) signingMethod += 0x01 shl SigningMethod.signRaw
+                if (signHashValidatedByIssuer) signingMethod += 0x01 shl SigningMethod.signHashValidatedByIssuer
+                if (signRawValidatedByIssuer) signingMethod += 0x01 shl SigningMethod.signRawValidatedByIssuer
+                if (signHashValidatedByIssuerAndWriteIssuerData) signingMethod += 0x01 shl SigningMethod.signHashValidatedByIssuerAndWriteIssuerData
+                if (signRawValidatedByIssuerAndWriteIssuerData) signingMethod += 0x01 shl SigningMethod.signRawValidatedByIssuerAndWriteIssuerData
+                if (signPos) signingMethod += 0x01 shl SigningMethod.signPos
+            }
+        return SigningMethod(signingMethod)
+        }
     }
 }
 
@@ -79,43 +122,74 @@ data class ProductMask(val rawValue: Int) {
     }
 }
 
+class ProductMaskBuilder() {
+
+    private var productMaskValue = 0
+
+    fun add(productCode: Int) {
+        productMaskValue = productMaskValue or productCode
+    }
+
+    fun build() = ProductMask(productMaskValue)
+
+}
+
 /**
  * Stores and maps Tangem card settings.
  *
  * @property rawValue Card settings in a form of flags,
- * while flags definitions and values are in [SettingsMask.Companion] as constants.
+ * while flags definitions and possible values are in [Settings].
  */
 data class SettingsMask(val rawValue: Int) {
+    fun contains(settings: Settings): Boolean = (rawValue and settings.code) != 0
+}
 
-    fun contains(value: Int): Boolean = (rawValue and value) != 0
+enum class Settings(val code: Int) {
+    IsReusable(0x0001),
+    UseActivation(0x0002),
+    ForbidPurgeWallet(0x0004),
+    UseBlock(0x0008),
 
-    companion object {
-        const val isReusable = 0x0001
-        const val useActivation = 0x0002
-        const val forbidPurgeWallet = 0x0004
-        const val useBlock = 0x0008
+    AllowSwapPIN(0x0010),
+    AllowSwapPIN2(0x0020),
+    UseCVC(0x0040),
+    ForbidDefaultPIN(0x0080),
 
-        const val allowSwapPIN = 0x0010
-        const val allowSwapPIN2 = 0x0020
-        const val useCVC = 0x0040
-        const val forbidDefaultPIN = 0x0080
+    UseOneCommandAtTime(0x0100),
+    UseNdef(0x0200),
+    UseDynamicNdef(0x0400),
+    SmartSecurityDelay(0x0800),
 
-        const val useOneCommandAtTime = 0x0100
-        const val useNdef = 0x0200
-        const val useDynamicNdef = 0x0400
-        const val smartSecurityDelay = 0x0800
+    ProtocolAllowUnencrypted(0x1000),
+    ProtocolAllowStaticEncryption(0x2000),
 
-        const val protocolAllowUnencrypted = 0x1000
-        const val protocolAllowStaticEncryption = 0x2000
+    ProtectIssuerDataAgainstReplay(0x4000),
+    RestrictOverwriteIssuerDataEx(0x00100000),
 
-        const val protectIssuerDataAgainstReplay = 0x4000
+    AllowSelectBlockchain(0x8000),
 
-        const val allowSelectBlockchain = 0x8000
+    DisablePrecomputedNdef(0x00010000),
 
-        const val disablePrecomputedNdef = 0x00010000
+    SkipSecurityDelayIfValidatedByLinkedTerminal(0x00080000),
+    SkipCheckPin2andCvcIfValidatedByIssuer(0x00040000),
+    SkipSecurityDelayIfValidatedByIssuer(0x00020000),
 
-        const val skipSecurityDelayIfValidatedByLinkedTerminal = 0x00080000
+    RequireTermTxSignature(0x01000000),
+    RequireTermCertSignature(0x02000000),
+    CheckPIN3onCard(0x04000000)
+}
+
+
+class SettingsMaskBuilder() {
+
+    private var settingsMaskValue = 0
+
+    fun add(settings: Settings) {
+        settingsMaskValue = settingsMaskValue or settings.code
     }
+
+    fun build() = SettingsMask(settingsMaskValue)
+
 }
 
 /**
@@ -310,11 +384,14 @@ class ReadCommand : CommandSerializer<Card>() {
          */
         tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
         tlvBuilder.append(TlvTag.TerminalPublicKey, cardEnvironment.terminalKeys?.publicKey)
-        return CommandApdu(Instruction.Read, tlvBuilder.serialize())
+        return CommandApdu(
+                Instruction.Read, tlvBuilder.serialize(),
+                cardEnvironment.encryptionMode, cardEnvironment.encryptionKey
+        )
     }
 
     override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): Card? {
-        val tlvData = responseApdu.getTlvData() ?: return null
+        val tlvData = responseApdu.getTlvData(cardEnvironment.encryptionKey) ?: return null
 
         return try {
             val tlvMapper = TlvMapper(tlvData)
