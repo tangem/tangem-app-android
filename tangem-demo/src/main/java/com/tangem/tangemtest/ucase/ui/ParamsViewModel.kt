@@ -7,10 +7,10 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.gson.GsonBuilder
 import com.tangem.CardManager
 import com.tangem.commands.Card
-import com.tangem.common.tlv.TlvTag
 import com.tangem.tangemtest._arch.SingleLiveEvent
+import com.tangem.tangemtest._arch.structure.Id
+import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest.commons.performAction
-import com.tangem.tangemtest.ucase.domain.paramsManager.IncomingParameter
 import com.tangem.tangemtest.ucase.domain.paramsManager.ParamsManager
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskError
@@ -31,7 +31,7 @@ class ParamsViewModel(val paramsManager: ParamsManager) : ViewModel() {
     val ldParams = MutableLiveData(paramsManager.getParams())
 
     val seError: MutableLiveData<String> = SingleLiveEvent()
-    val seIncomingParameter: MutableLiveData<IncomingParameter> = SingleLiveEvent()
+    val seIncomingParameter: MutableLiveData<Item> = SingleLiveEvent()
 
     private val notifier: Notifier = Notifier(this)
     private lateinit var cardManager: CardManager
@@ -40,12 +40,12 @@ class ParamsViewModel(val paramsManager: ParamsManager) : ViewModel() {
         this.cardManager = cardManager
     }
 
-    fun userChangedParameter(tlvTag: TlvTag, value: Any?) {
-        parameterChanged(tlvTag, value)
+    fun userChangedParameter(id: Id, value: Any?) {
+        parameterChanged(id, value)
     }
 
-    private fun parameterChanged(tlvTag: TlvTag, value: Any?) {
-        paramsManager.parameterChanged(tlvTag, value) { notifier.notifyParameterChanges(it) }
+    private fun parameterChanged(id: Id, value: Any?) {
+        paramsManager.parameterChanged(id, value) { notifier.notifyParameterChanges(it) }
     }
 
     //invokes Scan, Sign etc...
@@ -57,8 +57,8 @@ class ParamsViewModel(val paramsManager: ParamsManager) : ViewModel() {
         }
     }
 
-    fun getParameterAction(tag: TlvTag): (() -> Unit)? {
-        val parameterFunction = paramsManager.getActionByTag(tag, cardManager) ?: return null
+    fun getParameterAction(id: Id): (() -> Unit)? {
+        val parameterFunction = paramsManager.getActionByTag(id, cardManager) ?: return null
 
         return {
             parameterFunction { response, listOfChangedParams ->
@@ -73,13 +73,13 @@ internal class Notifier(private val vm: ParamsViewModel) {
     private val gsonConverter = GsonBuilder().setPrettyPrinting().create()
     private var notShowedError: TaskError? = null
 
-    fun handleActionResult(response: TaskEvent<*>, list: List<IncomingParameter>) {
+    fun handleActionResult(response: TaskEvent<*>, list: List<Item>) {
         notifyParameterChanges(list)
         handleResponse(response)
     }
 
     @UiThread
-    fun notifyParameterChanges(list: List<IncomingParameter>) {
+    fun notifyParameterChanges(list: List<Item>) {
         list.forEach { vm.seIncomingParameter.postValue(it) }
     }
 
