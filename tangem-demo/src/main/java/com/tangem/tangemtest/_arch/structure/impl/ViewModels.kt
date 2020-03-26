@@ -27,4 +27,4 @@ class ListViewModel(value: ListValueWrapper? = null) : TransitiveViewModel<ListV
 }
 
 class KeyValue(val key: String, val value: Any)
-class ListValueWrapper(var selectedItem: Any, val itemList: List<KeyValue>)
+class ListValueWrapper(var selectedItem: Any?, val itemList: List<KeyValue>)

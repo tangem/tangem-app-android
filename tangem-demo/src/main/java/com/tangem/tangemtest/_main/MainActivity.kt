@@ -16,7 +16,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import com.tangem.tangemtest.R
 
 /**
- * A simple activity demonstrating use of a NavHostFragment with a navigation drawer.
+[REDACTED_AUTHOR]
  */
 class MainActivity : AppCompatActivity() {
 
