@@ -1,7 +1,7 @@
 package com.tangem.tangemtest.ucase.domain.paramsManager.triggers.changeConsequence
 
-import com.tangem.common.tlv.TlvTag
-import com.tangem.tangemtest.ucase.domain.paramsManager.IncomingParameter
+import com.tangem.tangemtest._arch.structure.abstraction.Item
+import com.tangem.tangemtest.ucase.variants.TlvId
 
 /**
 [REDACTED_AUTHOR]
@@ -10,15 +10,15 @@ import com.tangem.tangemtest.ucase.domain.paramsManager.IncomingParameter
  * of the incoming parameter
  */
 interface ParamsChangeConsequence {
-    fun affectChanges(changedParameter: IncomingParameter, paramsList: List<IncomingParameter>): List<IncomingParameter>
+    fun affectChanges(changedParameter: Item, paramsList: List<Item>): List<Item>
 }
 
 class ExampleConsequenceForCardId : ParamsChangeConsequence {
-    override fun affectChanges(changedParameter: IncomingParameter, paramsList: List<IncomingParameter>): List<IncomingParameter> {
-        if (changedParameter.tlvTag != TlvTag.CardId) return listOf()
+    override fun affectChanges(changedParameter: Item, paramsList: List<Item>): List<Item> {
+        if (changedParameter.id != TlvId.CardId) return listOf()
 
-        val affectedList = paramsList.filter { it.tlvTag != changedParameter.tlvTag }
-        affectedList.forEach { it.data = changedParameter.data.hashCode() }
+        val affectedList = paramsList.filter { it.id != changedParameter.id }
+//        affectedList.forEach { it.viewModel.data = changedParameter.viewModel.data?.hashCode() }
         return affectedList
     }
 }
