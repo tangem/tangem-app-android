@@ -4,6 +4,9 @@ import com.tangem.common.tlv.TlvTag
 import com.tangem.tangemtest.ucase.domain.paramsManager.ActionCallback
 import com.tangem.tangemtest.ucase.domain.paramsManager.findParameter
 
+/**
+[REDACTED_AUTHOR]
+ */
 class DepesonalizeAction : BaseCardAction() {
     override fun executeMainAction(attrs: AttrForAction, callback: ActionCallback) {
         val cardId = attrs.paramsList.findParameter(TlvTag.CardId)?.data as? String ?: return
