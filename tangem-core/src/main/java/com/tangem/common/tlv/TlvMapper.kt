@@ -54,7 +54,7 @@ class TlvMapper(val tlvList: List<Tlv>) {
                 }
 
         return when (tag.valueType()) {
-            TlvValueType.HexString -> {
+            TlvValueType.HexString, TlvValueType.HexStringToHash -> {
                 typeCheck<T, String>(tag)
                 tlvValue.toHexString() as T
             }
