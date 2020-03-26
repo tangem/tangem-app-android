@@ -7,7 +7,6 @@ import com.tangem.tangemtest.R
 /**
 [REDACTED_AUTHOR]
  */
-
 fun getDefaultNavigationOptions(): NavOptions {
     return navOptions {
         anim {
