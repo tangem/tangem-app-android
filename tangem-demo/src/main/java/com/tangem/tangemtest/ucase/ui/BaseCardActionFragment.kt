@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -15,10 +16,11 @@ import com.google.android.material.snackbar.Snackbar
 import com.tangem.CardManager
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tangemtest.R
+import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
+import com.tangem.tangemtest._main.MainViewModel
 import com.tangem.tangemtest.ucase.domain.paramsManager.ParamsManager
 import com.tangem.tangemtest.ucase.domain.paramsManager.ParamsManagerFactory
 import com.tangem.tangemtest.ucase.resources.ActionType
-import com.tangem.tangemtest.ucase.resources.MainResourceHolder
 import com.tangem.tangemtest.ucase.ui.widgets.ParameterWidget
 import ru.dev.gbixahue.eu4d.lib.android._android.views.find
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
@@ -62,9 +64,9 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
         viewModel.ldParams.observe(viewLifecycleOwner, Observer { paramsList ->
             val widgetList = mutableListOf<ParameterWidget>()
             paramsList.forEach { param ->
-                val widget = ParameterWidget(inflateParamView(incomingParamsContainer), MainResourceHolder, param)
-                widget.onValueChanged = { tag, value -> viewModel.userChangedParameter(tag, value) }
-                widget.onActionBtnClickListener = viewModel.getParameterAction(param.tlvTag)
+                val widget = ParameterWidget(inflateParamView(incomingParamsContainer), param)
+                widget.onValueChanged = { id, value -> viewModel.userChangedParameter(id, value) }
+                widget.onActionBtnClickListener = viewModel.getParameterAction(param.id)
                 widgetList.add(widget)
             }
             callback(widgetList)
@@ -81,8 +83,13 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
         })
         viewModel.seError.observe(viewLifecycleOwner, Observer { showSnackbarMessage(it) })
         viewModel.seIncomingParameter.observe(viewLifecycleOwner, Observer { param ->
-            Log.d(this, "parameter changed from VM - name: ${param.tlvTag.name}, value:${param.data}")
-            widgetList.firstOrNull { it.tlvTag == param.tlvTag }?.changeParamValue(param.data)
+            val dataItem = param as? BaseItem<Any?> ?: return@Observer
+            Log.d(this, "parameter changed from VM - name: ${dataItem.id}, value:${dataItem.viewModel.data}")
+            widgetList.firstOrNull { it.id == param.id }?.changeParamValue(param.viewModel.data)
+        })
+        val mainActViewModel by activityViewModels<MainViewModel>()
+        mainActViewModel.ldDescriptionSwitch.observe(viewLifecycleOwner, Observer { isEnabled ->
+            widgetList.forEach { it.toggleDescriptionVisibility(isEnabled) }
         })
     }
 
