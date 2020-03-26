@@ -161,7 +161,7 @@ class JsonToBlockConverter : Converter<PersonalizeConfig, List<Block>> {
     }
 
     private fun createBlock(id: Id): ListItemBlock {
-        return ListItemBlock(id).apply { createItem(this, id) }
+        return ListItemBlock(id).apply { addItem(TextItem(id)) }
     }
 
     private fun addPayload(block: Block, from: PersonalizeConfig) {
