@@ -1,8 +1,9 @@
 package com.tangem.tangemtest.ucase.domain.actions
 
-import com.tangem.common.tlv.TlvTag
+import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest.ucase.domain.paramsManager.ActionCallback
-import com.tangem.tangemtest.ucase.domain.paramsManager.findParameter
+import com.tangem.tangemtest.ucase.domain.paramsManager.findDataParameter
+import com.tangem.tangemtest.ucase.variants.TlvId
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
 /**
@@ -10,17 +11,17 @@ import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
  */
 class SignAction : BaseCardAction() {
     override fun executeMainAction(attrs: AttrForAction, callback: ActionCallback) {
-        val dataForHashing = attrs.paramsList.findParameter(TlvTag.TransactionOutHash) ?: return
+        val dataForHashing = attrs.paramsList.findDataParameter(TlvId.TransactionOutHash) ?: return
 
-        val arHashes = createHashes(stringOf(dataForHashing.data))
-        val cardId = attrs.paramsList.findParameter(TlvTag.CardId)?.data ?: return
+        val arHashes = createHashes(stringOf(dataForHashing.viewModel.data))
+        val cardId = attrs.paramsList.findDataParameter(TlvId.CardId)?.viewModel?.data ?: return
 
         attrs.cardManager.sign(arHashes, stringOf(cardId)) { handleResponse(it, null, attrs, callback) }
     }
 
-    override fun getActionByTag(tag: TlvTag, attrs: AttrForAction): ((ActionCallback) -> Unit)? {
-        return when (tag) {
-            TlvTag.CardId -> { callback -> ScanAction().executeMainAction(attrs, callback) }
+    override fun getActionByTag(id: Id, attrs: AttrForAction): ((ActionCallback) -> Unit)? {
+        return when (id) {
+            TlvId.CardId -> { callback -> ScanAction().executeMainAction(attrs, callback) }
             else -> null
         }
     }
