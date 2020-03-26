@@ -8,10 +8,9 @@ import com.google.gson.Gson
 import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._arch.structure.abstraction.Block
 import com.tangem.tangemtest.ucase.variants.personalize.converter.BlockToJsonConverter
-import com.tangem.tangemtest.ucase.variants.personalize.converter.IdToJsonValues
-import com.tangem.tangemtest.ucase.variants.personalize.converter.JsonBlockEnDe
 import com.tangem.tangemtest.ucase.variants.personalize.converter.JsonToBlockConverter
-import com.tangem.tangemtest.ucase.variants.personalize.dto.TestJsonDto
+import com.tangem.tangemtest.ucase.variants.personalize.converter.ValueMapper
+import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizeConfig
 
 /**
 [REDACTED_AUTHOR]
@@ -22,13 +21,18 @@ class PersonalizeViewModelFactory(private val jsonPersonalizeString: String) : V
 
 class PersonalizeViewModel(private val jsonPersonalizeString: String) : ViewModel() {
 
-    val ldBlockList: MutableLiveData<List<Block>> by lazy { MutableLiveData(readJson()) }
+    val ldBlockList: MutableLiveData<List<Block>> by lazy { MutableLiveData(initBlockList()) }
 
-    private fun readJson(): List<Block> {
-        val idToJsonValues = IdToJsonValues()
-        val enDe = JsonBlockEnDe(JsonToBlockConverter(idToJsonValues), BlockToJsonConverter())
-        val jsonDto = Gson().fromJson(jsonPersonalizeString, TestJsonDto::class.java)
-        return enDe.decode(jsonDto)
+    private fun initBlockList(): List<Block> = parseJsonToBlockList(jsonPersonalizeString)
+
+    fun parseJsonToBlockList(jsonString: String): List<Block> {
+        val config = Gson().fromJson(jsonString, PersonalizeConfig::class.java)
+        return JsonToBlockConverter().convert(config)
+    }
+
+    fun prepareJson(blocList: List<Block>): String {
+        val jsonDto = BlockToJsonConverter(ValueMapper(), PersonalizeConfig()).convert(blocList)
+        return Gson().toJson(jsonDto)
     }
 
     fun toggleDescriptionVisibility(state: Boolean) {
