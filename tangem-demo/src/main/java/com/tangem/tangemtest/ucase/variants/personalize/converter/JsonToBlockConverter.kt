@@ -1,9 +1,11 @@
 package com.tangem.tangemtest.ucase.variants.personalize.converter
 
-import com.tangem.tangemtest._arch.structure.*
+import com.tangem.tangemtest._arch.structure.Additional
+import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.abstraction.Block
 import com.tangem.tangemtest._arch.structure.abstraction.ListItemBlock
 import com.tangem.tangemtest._arch.structure.impl.*
+import com.tangem.tangemtest.ucase.variants.personalize.*
 import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizeConfig
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.Converter
 
@@ -35,127 +37,127 @@ class JsonToBlockConverter : Converter<PersonalizeConfig, List<Block>> {
     }
 
     private fun cardNumber(): Block {
-        val block = createBlock(BlockId.CARD_NUMBER)
+        val block = createBlock(BlockId.CardNumber)
         mutableListOf(
-                CardNumber.SERIES,
-                CardNumber.NUMBER
+                CardNumber.Series,
+                CardNumber.Number
         ).forEach { createItem(block, it as Id) }
         return block
     }
 
     private fun common(): Block {
-        val block = createBlock(BlockId.COMMON)
+        val block = createBlock(BlockId.Common)
         mutableListOf(
-                Common.CURVE,
-                Common.BLOCKCHAIN,
-                Common.BLOCKCHAIN_CUSTOM,
-                Common.MAX_SIGNATURES,
-                Common.CREATE_WALLET
+                Common.Curve,
+                Common.Blockchain,
+                Common.BlockchainCustom,
+                Common.MaxSignatures,
+                Common.CreateWallet
         ).forEach { createItem(block, it) }
         return block
     }
 
     private fun signingMethod(): Block {
-        val block = createBlock(BlockId.SIGNING_METHOD)
+        val block = createBlock(BlockId.SigningMethod)
         mutableListOf(
-                SigningMethod.SIGN_TX,
-                SigningMethod.SIGN_TX_RAW,
-                SigningMethod.SIGN_VALIDATED_TX,
-                SigningMethod.SIGN_VALIDATED_TX_RAW,
-                SigningMethod.SIGN_VALIDATED_TX_ISSUER,
-                SigningMethod.SIGN_VALIDATED_TX_RAW_ISSUER,
-                SigningMethod.SIGN_EXTERNAL
+                SigningMethod.SignTx,
+                SigningMethod.SignTxRaw,
+                SigningMethod.SignValidatedTx,
+                SigningMethod.SignValidatedTxRaw,
+                SigningMethod.SignValidatedTxIssuer,
+                SigningMethod.SignValidatedTxRawIssuer,
+                SigningMethod.SignExternal
         ).forEach { createItem(block, it) }
         return block
     }
 
     private fun signHashExProperties(): Block {
-        val block = createBlock(BlockId.SIGN_HASH_EX_PROP)
+        val block = createBlock(BlockId.SignHashExProp)
         mutableListOf(
-                SignHashExProp.PIN_LESS_FLOOR_LIMIT,
-                SignHashExProp.CRYPTO_EXTRACT_KEY,
-                SignHashExProp.REQUIRE_TERMINAL_CERT_SIG,
-                SignHashExProp.REQUIRE_TERMINAL_TX_SIG,
-                SignHashExProp.CHECK_PIN3
+                SignHashExProp.PinLessFloorLimit,
+                SignHashExProp.CryptoExKey,
+                SignHashExProp.RequireTerminalCertSig,
+                SignHashExProp.RequireTerminalTxSig,
+                SignHashExProp.CheckPin3
         ).forEach { createItem(block, it) }
         return block
     }
 
     private fun denomination(): Block {
-        val block = createBlock(BlockId.DENOMINATION)
+        val block = createBlock(BlockId.Denomination)
         mutableListOf(
-                Denomination.WRITE_ON_PERSONALIZE,
-                Denomination.DENOMINATION
+                Denomination.WriteOnPersonalize,
+                Denomination.Denomination
         ).forEach { createItem(block, it) }
         return block
     }
 
     private fun token(): Block {
-        val block = createBlock(BlockId.TOKEN)
+        val block = createBlock(BlockId.Token)
         mutableListOf(
-                Token.ITS_TOKEN,
-                Token.SYMBOL,
-                Token.CONTRACT_ADDRESS,
-                Token.DECIMAL
+                Token.ItsToken,
+                Token.Symbol,
+                Token.ContractAddress,
+                Token.Decimal
         ).forEach { createItem(block, it) }
         return block
     }
 
     private fun productMask(): Block {
-        val block = createBlock(BlockId.PROD_MASK)
+        val block = createBlock(BlockId.ProdMask)
         mutableListOf(
-                ProductMask.NOTE,
-                ProductMask.TAG,
-                ProductMask.ID_CARD
+                ProductMask.Note,
+                ProductMask.Tag,
+                ProductMask.CardId
         ).forEach { createItem(block, it) }
         return block
     }
 
     private fun settingsMask(): Block {
-        val block = createBlock(BlockId.SETTINGS_MASK)
+        val block = createBlock(BlockId.SettingsMask)
         mutableListOf(
-                SettingsMask.IS_REUSABLE,
-                SettingsMask.NEED_ACTIVATION,
-                SettingsMask.FORBID_PURGE,
-                SettingsMask.ALLOW_SELECT_BLOCKCHAIN,
-                SettingsMask.USE_BLOCK,
-                SettingsMask.ONE_APDU,
-                SettingsMask.USE_CVC,
-                SettingsMask.ALLOW_SWAP_PIN,
-                SettingsMask.ALLOW_SWAP_PIN2,
-                SettingsMask.FORBID_DEFAULT_PIN,
-                SettingsMask.SMART_SECURITY_DELAY,
-                SettingsMask.PROTECT_ISSUER_DATA_AGAINST_REPLAY,
-                SettingsMask.SKIP_SECURITY_DELAY_IF_VALIDATED,
-                SettingsMask.SKIP_PIN2_CVC_IF_VALIDATED,
-                SettingsMask.SKIP_SECURITY_DELAY_ON_LINKED_TERMINAL,
-                SettingsMask.RESTRICT_OVERWRITE_EXTRA_ISSUER_DATA
+                SettingsMask.IsReusable,
+                SettingsMask.NeedActivation,
+                SettingsMask.ForbidPurge,
+                SettingsMask.AllowSelectBlockchain,
+                SettingsMask.UseBlock,
+                SettingsMask.OneApdu,
+                SettingsMask.UseCvc,
+                SettingsMask.AllowSwapPin,
+                SettingsMask.AllowSwapPin2,
+                SettingsMask.ForbidDefaultPin,
+                SettingsMask.SmartSecurityDelay,
+                SettingsMask.ProtectIssuerDataAgainstReplay,
+                SettingsMask.SkipSecurityDelayIfValidated,
+                SettingsMask.SkipPin2CvcIfValidated,
+                SettingsMask.SkipSecurityDelayOnLinkedTerminal,
+                SettingsMask.RestrictOverwriteExtraIssuerData
         ).forEach { createItem(block, it) }
         return block
     }
 
     private fun settingsMaskProtocolEnc(): Block {
-        val block = createBlock(BlockId.SETTINGS_MASK_PROTOCOL_ENC)
+        val block = createBlock(BlockId.SettingsMaskProtocolEnc)
         mutableListOf(
-                SettingsMaskProtocolEnc.ALLOW_UNENCRYPTED,
-                SettingsMaskProtocolEnc.ALLOW_FAST_ENCRYPTION).forEach { createItem(block, it) }
+                SettingsMaskProtocolEnc.AllowUnencrypted,
+                SettingsMaskProtocolEnc.AlloFastEncryption).forEach { createItem(block, it) }
         return block
     }
 
     private fun settingsMaskNdef(): Block {
-        val block = createBlock(BlockId.SETTINGS_MASK_NDEF)
+        val block = createBlock(BlockId.SettingsMaskNdef)
         mutableListOf(
-                SettingsMaskNdef.USE_NDEF,
-                SettingsMaskNdef.DYNAMIC_NDEF,
-                SettingsMaskNdef.DISABLE_PRECOMPUTED_NDEF,
+                SettingsMaskNdef.UseNdef,
+                SettingsMaskNdef.DynamicNdef,
+                SettingsMaskNdef.DisablePrecomputedNdef,
                 SettingsMaskNdef.AAR
         ).forEach { createItem(block, it) }
         return block
     }
 
     private fun pins(): Block {
-        val block = createBlock(BlockId.PINS)
-        mutableListOf(Pins.PIN, Pins.PIN2, Pins.PIN3, Pins.CVC, Pins.PAUSE_BEFORE_PIN2)
+        val block = createBlock(BlockId.Pins)
+        mutableListOf(Pins.Pin, Pins.Pin2, Pins.Pin3, Pins.Cvc, Pins.PauseBeforePin2)
                 .forEach { createItem(block, it) }
         return block
     }
@@ -184,36 +186,36 @@ class JsonToBlockConverter : Converter<PersonalizeConfig, List<Block>> {
 
 class IdItemHelper {
     companion object {
-        val blockIdList = mutableListOf<BlockId>(
-                BlockId.CARD_NUMBER, BlockId.COMMON, BlockId.SIGNING_METHOD, BlockId.SIGN_HASH_EX_PROP, BlockId.DENOMINATION,
-                BlockId.TOKEN, BlockId.PROD_MASK, BlockId.SETTINGS_MASK, BlockId.SETTINGS_MASK_PROTOCOL_ENC,
-                BlockId.SETTINGS_MASK_NDEF, BlockId.PINS
+        val blockIdList = mutableListOf<com.tangem.tangemtest.ucase.variants.personalize.BlockId>(
+                BlockId.CardNumber, BlockId.Common, BlockId.SigningMethod, BlockId.SignHashExProp, BlockId.Denomination,
+                BlockId.Token, BlockId.ProdMask, BlockId.SettingsMask, BlockId.SettingsMaskProtocolEnc,
+                BlockId.SettingsMaskNdef, BlockId.Pins
         )
 
-        val listItemList = mutableListOf(Common.CURVE, Common.BLOCKCHAIN, SettingsMaskNdef.AAR, Pins.PAUSE_BEFORE_PIN2)
+        val listItemList = mutableListOf(Common.Curve, Common.Blockchain, SettingsMaskNdef.AAR, Pins.PauseBeforePin2)
 
         val boolList = mutableListOf(
-                Common.CREATE_WALLET, SigningMethod.SIGN_TX, SigningMethod.SIGN_TX_RAW, SigningMethod.SIGN_VALIDATED_TX,
-                SigningMethod.SIGN_VALIDATED_TX_RAW, SigningMethod.SIGN_VALIDATED_TX_ISSUER,
-                SigningMethod.SIGN_VALIDATED_TX_RAW_ISSUER, SigningMethod.SIGN_EXTERNAL, SignHashExProp.REQUIRE_TERMINAL_CERT_SIG,
-                SignHashExProp.REQUIRE_TERMINAL_TX_SIG, SignHashExProp.CHECK_PIN3, Denomination.WRITE_ON_PERSONALIZE, Token.ITS_TOKEN,
-                ProductMask.NOTE, ProductMask.TAG, ProductMask.ID_CARD, SettingsMask.IS_REUSABLE, SettingsMask.NEED_ACTIVATION,
-                SettingsMask.FORBID_PURGE, SettingsMask.ALLOW_SELECT_BLOCKCHAIN, SettingsMask.USE_BLOCK, SettingsMask.ONE_APDU,
-                SettingsMask.USE_CVC, SettingsMask.ALLOW_SWAP_PIN, SettingsMask.ALLOW_SWAP_PIN2, SettingsMask.FORBID_DEFAULT_PIN,
-                SettingsMask.SMART_SECURITY_DELAY, SettingsMask.PROTECT_ISSUER_DATA_AGAINST_REPLAY,
-                SettingsMask.SKIP_SECURITY_DELAY_IF_VALIDATED, SettingsMask.SKIP_PIN2_CVC_IF_VALIDATED,
-                SettingsMask.SKIP_SECURITY_DELAY_ON_LINKED_TERMINAL, SettingsMask.RESTRICT_OVERWRITE_EXTRA_ISSUER_DATA,
-                SettingsMaskProtocolEnc.ALLOW_UNENCRYPTED, SettingsMaskProtocolEnc.ALLOW_FAST_ENCRYPTION,
-                SettingsMaskNdef.USE_NDEF, SettingsMaskNdef.DYNAMIC_NDEF, SettingsMaskNdef.DISABLE_PRECOMPUTED_NDEF
+                Common.CreateWallet, SigningMethod.SignTx, SigningMethod.SignTxRaw, SigningMethod.SignValidatedTx,
+                SigningMethod.SignValidatedTxRaw, SigningMethod.SignValidatedTxIssuer,
+                SigningMethod.SignValidatedTxRawIssuer, SigningMethod.SignExternal, SignHashExProp.RequireTerminalCertSig,
+                SignHashExProp.RequireTerminalTxSig, SignHashExProp.CheckPin3, Denomination.WriteOnPersonalize, Token.ItsToken,
+                ProductMask.Note, ProductMask.Tag, ProductMask.CardId, SettingsMask.IsReusable, SettingsMask.NeedActivation,
+                SettingsMask.ForbidPurge, SettingsMask.AllowSelectBlockchain, SettingsMask.UseBlock, SettingsMask.OneApdu,
+                SettingsMask.UseCvc, SettingsMask.AllowSwapPin, SettingsMask.AllowSwapPin2, SettingsMask.ForbidDefaultPin,
+                SettingsMask.SmartSecurityDelay, SettingsMask.ProtectIssuerDataAgainstReplay,
+                SettingsMask.SkipSecurityDelayIfValidated, SettingsMask.SkipPin2CvcIfValidated,
+                SettingsMask.SkipSecurityDelayOnLinkedTerminal, SettingsMask.RestrictOverwriteExtraIssuerData,
+                SettingsMaskProtocolEnc.AllowUnencrypted, SettingsMaskProtocolEnc.AlloFastEncryption,
+                SettingsMaskNdef.UseNdef, SettingsMaskNdef.DynamicNdef, SettingsMaskNdef.DisablePrecomputedNdef
         )
 
         val editTextList = mutableListOf(
-                CardNumber.SERIES, Common.BLOCKCHAIN_CUSTOM, SignHashExProp.CRYPTO_EXTRACT_KEY, Token.SYMBOL,
-                Token.CONTRACT_ADDRESS, Pins.PIN, Pins.PIN2, Pins.PIN3, Pins.CVC
+                CardNumber.Series, Common.BlockchainCustom, SignHashExProp.CryptoExKey, Token.Symbol,
+                Token.ContractAddress, Pins.Pin, Pins.Pin2, Pins.Pin3, Pins.Cvc
         )
 
         val numberList = mutableListOf(
-                CardNumber.NUMBER, Common.MAX_SIGNATURES, SignHashExProp.PIN_LESS_FLOOR_LIMIT, Denomination.DENOMINATION, Token.DECIMAL
+                CardNumber.Number, Common.MaxSignatures, SignHashExProp.PinLessFloorLimit, Denomination.Denomination, Token.Decimal
         )
     }
 }
