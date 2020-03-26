@@ -28,7 +28,7 @@ class ReadIssuerDataResponse(
          * Issuer’s signature of [issuerData] with Issuer Data Private Key (which is kept on card).
          * Issuer’s signature of SHA256-hashed [cardId] concatenated with [issuerData]:
          * SHA256([cardId] | [issuerData]).
-         * When flag [SettingsMask.protectIssuerDataAgainstReplay] set in [SettingsMask] then signature of
+         * When flag [Settings.ProtectIssuerDataAgainstReplay] set in [SettingsMask] then signature of
          * SHA256-hashed CID Issuer_Data concatenated with and [issuerDataCounter]:
          * SHA256([cardId] | [issuerData] | [issuerDataCounter]).
          */
@@ -36,7 +36,7 @@ class ReadIssuerDataResponse(
 
         /**
          * An optional counter that protect issuer data against replay attack.
-         * When flag [SettingsMask.protectIssuerDataAgainstReplay] set in [SettingsMask]
+         * When flag [Settings.ProtectIssuerDataAgainstReplay] set in [SettingsMask]
          * then this value is mandatory and must increase on each execution of [WriteIssuerDataCommand].
          */
         val issuerDataCounter: Int?
@@ -60,11 +60,14 @@ class ReadIssuerDataCommand(
         tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
         tlvBuilder.append(TlvTag.CardId, cardEnvironment.cardId)
         tlvBuilder.append(TlvTag.Mode, IssuerDataMode.ReadData)
-        return CommandApdu(Instruction.ReadIssuerData, tlvBuilder.serialize())
+        return CommandApdu(
+                Instruction.ReadIssuerData, tlvBuilder.serialize(),
+                cardEnvironment.encryptionMode, cardEnvironment.encryptionKey
+        )
     }
 
     override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): ReadIssuerDataResponse? {
-        val tlvData = responseApdu.getTlvData() ?: return null
+        val tlvData = responseApdu.getTlvData(cardEnvironment.encryptionKey) ?: return null
 
         return try {
             val mapper = TlvMapper(tlvData)
