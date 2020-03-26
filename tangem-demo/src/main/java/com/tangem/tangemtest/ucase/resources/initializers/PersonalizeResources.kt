@@ -6,6 +6,9 @@ import com.tangem.tangemtest.ucase.resources.ResourceHolder
 import com.tangem.tangemtest.ucase.resources.Resources
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.TypedHolder
 
+/**
+[REDACTED_AUTHOR]
+ */
 class PersonalizeResources() {
     fun init(holder: ResourceHolder<Id>) {
         initBlock(holder)
