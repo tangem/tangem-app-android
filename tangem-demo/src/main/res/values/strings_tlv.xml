@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="tlv_card_id">Card Id</string>
+    <string name="tlv_transaction_out_hash">Transaction out hash</string>
+
+    <string name="info_tlv_card_id">SomeTlvDescription</string>
+    <string name="info_tlv_transaction_out_hash">SomeTlvDescription</string>
+</resources>
