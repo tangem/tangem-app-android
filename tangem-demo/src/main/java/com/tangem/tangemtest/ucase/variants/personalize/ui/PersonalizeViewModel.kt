@@ -8,6 +8,7 @@ import com.google.gson.Gson
 import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._arch.structure.abstraction.Block
 import com.tangem.tangemtest.ucase.variants.personalize.converter.BlockToJsonConverter
+import com.tangem.tangemtest.ucase.variants.personalize.converter.IdToJsonValues
 import com.tangem.tangemtest.ucase.variants.personalize.converter.JsonBlockEnDe
 import com.tangem.tangemtest.ucase.variants.personalize.converter.JsonToBlockConverter
 import com.tangem.tangemtest.ucase.variants.personalize.dto.TestJsonDto
@@ -24,7 +25,8 @@ class PersonalizeViewModel(private val jsonPersonalizeString: String) : ViewMode
     val ldBlockList: MutableLiveData<List<Block>> by lazy { MutableLiveData(readJson()) }
 
     private fun readJson(): List<Block> {
-        val enDe = JsonBlockEnDe(JsonToBlockConverter(), BlockToJsonConverter())
+        val idToJsonValues = IdToJsonValues()
+        val enDe = JsonBlockEnDe(JsonToBlockConverter(idToJsonValues), BlockToJsonConverter())
         val jsonDto = Gson().fromJson(jsonPersonalizeString, TestJsonDto::class.java)
         return enDe.decode(jsonDto)
     }
