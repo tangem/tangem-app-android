@@ -163,7 +163,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
                 when (items[which]) {
                     getString(R.string.loaded_wallet_load_via_app) -> {
                         try {
-                            val intent = Intent(Intent.ACTION_VIEW, engine.shareWalletUri)
+                            val intent = Intent(Intent.ACTION_VIEW, engine.shareWalletUriEx)
                             intent.addCategory(Intent.CATEGORY_DEFAULT)
                             startActivity(intent)
                         } catch (e: ActivityNotFoundException) {
@@ -176,7 +176,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
                     }
 
                     getString(R.string.loaded_wallet_load_via_qr) -> {
-                        ShowQRCodeDialog.show(activity as AppCompatActivity?, engine.shareWalletUri.toString())
+                        ShowQRCodeDialog.show(activity as AppCompatActivity?, engine.shareWalletUriEx.toString())
                     }
 
                     getString(R.string.loaded_wallet_load_via_cryptonit) -> {
@@ -297,16 +297,15 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         serverApiTangem.setArtworkListener(artworkListener)
         refresh()
         startVerify(lastTag)
-    }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+
         viewModel = ViewModelProviders.of(this).get(LoadedWalletViewModel::class.java)
 
         // set rate info to CoinData
         viewModel.getRateInfo().observe(this, Observer<Float> { rate ->
             ctx.coinData.rate = rate
             ctx.coinData.rateAlter = rate
+            updateViews()
         })
         viewModel.requestRateInfo(ctx)
     }
@@ -886,8 +885,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
 
     private fun doShareWallet(useURI: Boolean) {
         if (useURI) {
-            val engine = CoinEngineFactory.create(ctx)
-            val txtShare = engine?.shareWalletUri.toString()
+            val txtShare = ctx.coinData.wallet
             val intent = Intent(Intent.ACTION_SEND)
             intent.type = Constant.INTENT_TYPE_TEXT_PLAIN
             intent.putExtra(Intent.EXTRA_SUBJECT, Constant.WALLET_ADDRESS)
