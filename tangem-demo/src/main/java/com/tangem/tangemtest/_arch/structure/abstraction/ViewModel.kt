@@ -10,7 +10,7 @@ import com.tangem.tangemtest._arch.structure.Payload
 typealias ValueChange<V> = (V?) -> Unit
 typealias SafeValueChange<V> = (V) -> Unit
 
-interface ItemViewModel<D> : Payload {
+interface ItemViewModel<D: Any?> : Payload {
     val viewState: ViewState
     var data: D?
     var defaultData: D?
