@@ -2,26 +2,33 @@ package com.tangem.tangemtest.ucase.variants.personalize.converter
 
 import com.tangem.tangemtest._arch.structure.*
 import com.tangem.tangemtest._arch.structure.impl.KeyValue
-import com.tangem.tangemtest.ucase.variants.personalize.dto.TestJsonDto
+import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizeConfig
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.BaseTypedHolder
 
 /**
 [REDACTED_AUTHOR]
  */
 class Value(
-        val value: Any? = null,
+        private var value: Any? = null,
         val list: List<KeyValue>? = mutableListOf()
-)
+) {
+    fun get(): Any? = value
+    fun set(newValue: Any?) {
+        value = newValue
+    }
+}
 
-class IdToJsonValues : BaseTypedHolder<Id, Value>() {
-    fun init(from: TestJsonDto) {
+class IdToValueAssociations : BaseTypedHolder<Id, Value>() {
+
+    // All registered association values can't be objects
+    fun init(from: PersonalizeConfig) {
         register(CardNumber.SERIES, Value(from.series))
         register(CardNumber.NUMBER, Value(from.startNumber))
         register(Common.CURVE, Value(from.curveID, Helper.listOfCurves()))
-        register(Common.BLOCKCHAIN, Value(from.blockchain.name, Helper.listOfBlockchain()))
-        register(Common.BLOCKCHAIN_CUSTOM, Value(from.blockchain.customName))
+        register(Common.BLOCKCHAIN, Value(from.blockchain, Helper.listOfBlockchain()))
+        register(Common.BLOCKCHAIN_CUSTOM, Value(""))
         register(Common.MAX_SIGNATURES, Value(from.MaxSignatures))
-        register(Common.CREATE_WALLET, Value(from.createWalletB))
+        register(Common.CREATE_WALLET, Value(from.createWallet))
         register(SigningMethod.SIGN_TX, Value(from.SigningMethod0))
         register(SigningMethod.SIGN_TX_RAW, Value(from.SigningMethod1))
         register(SigningMethod.SIGN_VALIDATED_TX, Value(from.SigningMethod2))
@@ -64,7 +71,7 @@ class IdToJsonValues : BaseTypedHolder<Id, Value>() {
         register(SettingsMaskNdef.USE_NDEF, Value(from.useNDEF))
         register(SettingsMaskNdef.DYNAMIC_NDEF, Value(from.useDynamicNDEF))
         register(SettingsMaskNdef.DISABLE_PRECOMPUTED_NDEF, Value(from.disablePrecomputedNDEF))
-        register(SettingsMaskNdef.AAR, Value(from.NDEF[0].type, Helper.aarList()))
+        register(SettingsMaskNdef.AAR, Value(from.NDEF, Helper.aarList()))
         register(Pins.PIN, Value(from.PIN))
         register(Pins.PIN2, Value(from.PIN2))
         register(Pins.PIN3, Value(from.PIN3))
@@ -111,13 +118,13 @@ internal class Helper {
 
         fun pauseBeforePin(): List<KeyValue> {
             return mutableListOf(
-                    KeyValue("immediately", 0),
-                    KeyValue("2 seconds", 2000),
-                    KeyValue("5 seconds", 5000),
-                    KeyValue("15 seconds", 15000),
-                    KeyValue("30 seconds", 30000),
-                    KeyValue("1 minute", 60000),
-                    KeyValue("2 minute", 120000)
+                    KeyValue("immediately", 0L),
+                    KeyValue("2 seconds", 2000L),
+                    KeyValue("5 seconds", 5000L),
+                    KeyValue("15 seconds", 15000L),
+                    KeyValue("30 seconds", 30000L),
+                    KeyValue("1 minute", 60000L),
+                    KeyValue("2 minute", 120000L)
             )
         }
     }
