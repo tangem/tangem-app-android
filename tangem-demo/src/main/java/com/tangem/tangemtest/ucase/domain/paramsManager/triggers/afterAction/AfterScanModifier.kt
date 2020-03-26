@@ -6,6 +6,9 @@ import com.tangem.tangemtest.ucase.domain.paramsManager.findParameter
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskEvent
 
+/**
+[REDACTED_AUTHOR]
+ */
 class AfterScanModifier : AfterActionModification {
     override fun modify(taskEvent: TaskEvent<*>, paramsList: List<IncomingParameter>): List<IncomingParameter> {
         val parameter = paramsList.findParameter(TlvTag.CardId) ?: return listOf()
