@@ -14,6 +14,9 @@ import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.abstraction.g
 import ru.dev.gbixahue.eu4d.lib.android._android.views.inflate
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
+/**
+[REDACTED_AUTHOR]
+ */
 class SpinnerWidget(parent: ViewGroup, data: ListItem) : DescriptionWidget<ListValueWrapper>(parent, data) {
     override fun getLayoutId(): Int = R.layout.w_personalize_item_spinner
 
