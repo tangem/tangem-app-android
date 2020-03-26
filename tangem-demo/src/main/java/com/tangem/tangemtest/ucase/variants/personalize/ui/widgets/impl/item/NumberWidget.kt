@@ -39,8 +39,8 @@ class NumberWidget(parent: ViewGroup, data: NumberItem) : DescriptionWidget<Numb
         }
     }
 
-    private fun getIntValue(value: String): Number? {
-        return if (value.isEmpty()) null else value.toInt()
+    private fun getIntValue(value: String): Long {
+        return if (value.isEmpty()) 0L else value.toLong()
     }
 
 }
