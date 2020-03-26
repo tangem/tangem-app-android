@@ -10,6 +10,9 @@ import com.tangem.tangemtest._arch.structure.impl.EditTextItem
 import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.abstraction.getResNameId
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
+/**
+[REDACTED_AUTHOR]
+ */
 class EditTextWidget(parent: ViewGroup, data: EditTextItem) : DescriptionWidget<String>(parent, data) {
     override fun getLayoutId(): Int = R.layout.w_personalize_item_edit_text
 
