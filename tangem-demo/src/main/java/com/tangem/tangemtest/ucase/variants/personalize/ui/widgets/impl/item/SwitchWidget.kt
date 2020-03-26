@@ -7,6 +7,9 @@ import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.impl.BoolItem
 import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.abstraction.getResNameId
 
+/**
+[REDACTED_AUTHOR]
+ */
 class SwitchWidget(parent: ViewGroup, data: BoolItem) : DescriptionWidget<Boolean>(parent, data) {
     override fun getLayoutId(): Int = R.layout.w_personalize_item_switch
 
