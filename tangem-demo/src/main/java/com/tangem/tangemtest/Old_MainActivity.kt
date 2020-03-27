@@ -6,7 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.tangem.CardManager
 import com.tangem.commands.personalization.CardConfig
 import com.tangem.tangem_sdk_new.extensions.init
-import com.tangem.tangemtest.extensions.init
+import com.tangem.tangemtest.extensions.create
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskError
 import com.tangem.tasks.TaskEvent
@@ -155,7 +155,7 @@ class Old_MainActivity : AppCompatActivity() {
         btn_read_write_user_data?.setOnClickListener { startActivity(Intent(this, TestUserDataActivity::class.java)) }
         btn_personalize?.setOnClickListener { _ ->
             cardManager.personalize(
-                    CardConfig.init(application), "BB00000000000395"
+                    CardConfig.create(application), "BB00000000000395"
             ) {
                 when (it) {
                     is TaskEvent.Completion -> {
