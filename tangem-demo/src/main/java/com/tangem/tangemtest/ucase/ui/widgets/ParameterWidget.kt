@@ -113,6 +113,7 @@ class ParameterWidget(
     }
 }
 
-fun ParameterWidget.getResNameId(id: Id? = null): Int = MainResourceHolder.safeGet<Resources>(id?: this.id).resName
+fun ParameterWidget.getResNameId(id: Id? = null): Int = MainResourceHolder.safeGet<Resources>(id
+        ?: this.id).resName
 
 fun ParameterWidget.getResDescription(): Int? = MainResourceHolder.safeGet<Resources>(id).resDescription
