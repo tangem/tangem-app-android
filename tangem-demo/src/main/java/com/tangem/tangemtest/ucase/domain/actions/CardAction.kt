@@ -2,6 +2,7 @@ package com.tangem.tangemtest.ucase.domain.actions
 
 import com.tangem.CardManager
 import com.tangem.tangemtest._arch.structure.Id
+import com.tangem.tangemtest._arch.structure.Payload
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest.ucase.domain.paramsManager.ActionCallback
 import com.tangem.tangemtest.ucase.domain.paramsManager.triggers.afterAction.AfterActionModification
@@ -17,6 +18,7 @@ import com.tangem.tasks.TaskEvent
 data class AttrForAction(
         val cardManager: CardManager,
         val paramsList: List<Item>,
+        val payload: Payload,
         val consequence: ParamsChangeConsequence?
 )
 

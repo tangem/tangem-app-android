@@ -5,11 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.google.gson.Gson
+import com.tangem.commands.personalization.CardConfig
 import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._arch.structure.abstraction.Block
-import com.tangem.tangemtest.ucase.variants.personalize.converter.BlockToJsonConverter
-import com.tangem.tangemtest.ucase.variants.personalize.converter.JsonToBlockConverter
-import com.tangem.tangemtest.ucase.variants.personalize.converter.ValueMapper
+import com.tangem.tangemtest.ucase.variants.personalize.converter.PersonalizeConfigConverter
 import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizeConfig
 
 /**
@@ -27,12 +26,19 @@ class PersonalizeViewModel(private val jsonPersonalizeString: String) : ViewMode
 
     fun parseJsonToBlockList(jsonString: String): List<Block> {
         val config = Gson().fromJson(jsonString, PersonalizeConfig::class.java)
-        return JsonToBlockConverter().convert(config)
+        return PersonalizeConfigConverter().toBlock(config)
     }
 
-    fun prepareJson(blocList: List<Block>): String {
-        val jsonDto = BlockToJsonConverter(ValueMapper(), PersonalizeConfig()).convert(blocList)
-        return Gson().toJson(jsonDto)
+    fun createConfig(blocList: List<Block>): PersonalizeConfig {
+        return PersonalizeConfigConverter().toConfig(blocList, PersonalizeConfig())
+    }
+
+    fun createCardConfig(config: PersonalizeConfig): CardConfig {
+        return PersonalizeConfigConverter().createCardConfig(config)
+    }
+
+    fun convertToJson(config: PersonalizeConfig): String {
+        return Gson().toJson(config)
     }
 
     fun toggleDescriptionVisibility(state: Boolean) {
