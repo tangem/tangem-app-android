@@ -18,11 +18,11 @@ class ValueMapper {
     private val updatedByItemList: IdToValueAssociations = IdToValueAssociations()
 
 
-    fun mapOnObject(itemList: List<Item>, defaultValues: PersonalizeConfig): PersonalizeConfig {
-        default.init(defaultValues)
-        updatedByItemList.init(defaultValues)
+    fun mapOnObject(itemList: List<Item>, defaultConfig: PersonalizeConfig): PersonalizeConfig {
+        default.init(defaultConfig)
+        updatedByItemList.init(defaultConfig)
         startMapping(itemList)
-        return createJson(defaultValues)
+        return createJson(defaultConfig)
     }
 
     private fun startMapping(itemList: List<Item>) {
@@ -74,7 +74,7 @@ class ValueMapper {
         export.forbidPurgeWallet = getTyped(SettingsMask.ForbidPurge, defaultConfig.forbidPurgeWallet)
         export.allowSelectBlockchain = getTyped(SettingsMask.AllowSelectBlockchain, defaultConfig.allowSelectBlockchain)
         export.useBlock = getTyped(SettingsMask.UseBlock, defaultConfig.useBlock)
-        export.useOneCommandAtTime = getTyped(SettingsMask.OneApdu, defaultConfig.useOneCommandAtTime)
+        export.oneApdu = getTyped(SettingsMask.OneApdu, defaultConfig.oneApdu)
         export.useCVC = getTyped(SettingsMask.UseCvc, defaultConfig.useCVC)
         export.allowSwapPIN = getTyped(SettingsMask.AllowSwapPin, defaultConfig.allowSwapPIN)
         export.allowSwapPIN2 = getTyped(SettingsMask.AllowSwapPin2, defaultConfig.allowSwapPIN2)
@@ -90,7 +90,8 @@ class ValueMapper {
         export.useNDEF = getTyped(SettingsMaskNdef.UseNdef, defaultConfig.useNDEF)
         export.useDynamicNDEF = getTyped(SettingsMaskNdef.DynamicNdef, defaultConfig.useDynamicNDEF)
         export.disablePrecomputedNDEF = getTyped(SettingsMaskNdef.DisablePrecomputedNdef, defaultConfig.disablePrecomputedNDEF)
-        export.NDEF = getTyped(SettingsMaskNdef.AAR, defaultConfig.NDEF)
+        export.aar = getTyped(SettingsMaskNdef.Aar, defaultConfig.aar)
+        export.aarCustom = getTyped(SettingsMaskNdef.AarCustom, defaultConfig.aarCustom)
         export.PIN = getTyped(Pins.Pin, defaultConfig.PIN)
         export.PIN2 = getTyped(Pins.Pin2, defaultConfig.PIN2)
         export.PIN3 = getTyped(Pins.Pin3, defaultConfig.PIN3)
