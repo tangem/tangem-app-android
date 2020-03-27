@@ -1,5 +1,10 @@
 package com.tangem.tangemtest.ucase.variants.personalize.converter
 
+import com.tangem.commands.CardData
+import com.tangem.commands.EllipticCurve
+import com.tangem.commands.ProductMaskBuilder
+import com.tangem.commands.personalization.CardConfig
+import com.tangem.commands.personalization.NdefRecord
 import com.tangem.tangemtest._arch.structure.Additional
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.abstraction.Block
@@ -7,16 +12,17 @@ import com.tangem.tangemtest._arch.structure.abstraction.ListItemBlock
 import com.tangem.tangemtest._arch.structure.impl.*
 import com.tangem.tangemtest.ucase.variants.personalize.*
 import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizeConfig
-import ru.dev.gbixahue.eu4d.lib.kotlin.common.Converter
+import java.util.*
 
 /**
 [REDACTED_AUTHOR]
  */
-class JsonToBlockConverter : Converter<PersonalizeConfig, List<Block>> {
+class PersonalizeConfigConverter {
 
     private val associations: IdToValueAssociations = IdToValueAssociations()
+    private val valueMapper = ValueMapper()
 
-    override fun convert(from: PersonalizeConfig): List<Block> {
+    fun toBlock(from: PersonalizeConfig): List<Block> {
         associations.init(from)
         val blocList = mutableListOf<Block>()
         blocList.add(cardNumber())
@@ -150,7 +156,8 @@ class JsonToBlockConverter : Converter<PersonalizeConfig, List<Block>> {
                 SettingsMaskNdef.UseNdef,
                 SettingsMaskNdef.DynamicNdef,
                 SettingsMaskNdef.DisablePrecomputedNdef,
-                SettingsMaskNdef.AAR
+                SettingsMaskNdef.Aar,
+                SettingsMaskNdef.AarCustom
         ).forEach { createItem(block, it) }
         return block
     }
@@ -182,6 +189,103 @@ class JsonToBlockConverter : Converter<PersonalizeConfig, List<Block>> {
         }
         block.addItem(item)
     }
+
+    fun toConfig(blockList: List<Block>, defaultConfig: PersonalizeConfig): PersonalizeConfig {
+        return valueMapper.mapOnObject(blockList, defaultConfig)
+    }
+
+    fun createCardConfig(applyConfig: PersonalizeConfig): CardConfig {
+        val signingMethod = com.tangem.commands.SigningMethod.build(
+                signHash = applyConfig.SigningMethod0,
+                signRaw = applyConfig.SigningMethod1,
+                signHashValidatedByIssuer = applyConfig.SigningMethod2,
+                signRawValidatedByIssuer = applyConfig.SigningMethod3,
+                signHashValidatedByIssuerAndWriteIssuerData = applyConfig.SigningMethod4,
+                signRawValidatedByIssuerAndWriteIssuerData = applyConfig.SigningMethod5,
+                signPos = applyConfig.SigningMethod6
+        )
+
+        val isNote = applyConfig.cardData.product_note
+        val isTag = applyConfig.cardData.product_tag
+        val isIdCard = applyConfig.cardData.product_id_card
+
+        val productMaskBuilder = ProductMaskBuilder()
+        if (isNote) productMaskBuilder.add(com.tangem.commands.ProductMask.note)
+        if (isTag) productMaskBuilder.add(com.tangem.commands.ProductMask.tag)
+        if (isIdCard) productMaskBuilder.add(com.tangem.commands.ProductMask.idCard)
+        val productMask = productMaskBuilder.build()
+
+        var tokenSymbol: String? = null
+        var tokenContractAddress: String? = null
+        var tokenDecimal: Int? = null
+        if (applyConfig.itsToken) {
+            tokenSymbol = applyConfig.symbol
+            tokenContractAddress = applyConfig.contractAddress
+            tokenDecimal = applyConfig.decimal.toInt()
+        }
+
+        val cardData = CardData(
+                blockchainName = applyConfig.blockchain,
+                batchId = applyConfig.series,
+                productMask = productMask,
+                tokenSymbol = tokenSymbol,
+                tokenContractAddress = tokenContractAddress,
+                tokenDecimal = tokenDecimal,
+                issuerName = null,
+                manufactureDateTime = Calendar.getInstance().time,
+                manufacturerSignature = null)
+
+
+        val ndefs = mutableListOf<NdefRecord>()
+        when (applyConfig.aar) {
+            "None" -> null
+            "--- CUSTOM ---" -> NdefRecord(NdefRecord.Type.AAR, applyConfig.aarCustom)
+            else -> NdefRecord(NdefRecord.Type.AAR, applyConfig.aar)
+        }?.let { ndefs.add(it) }
+
+        return CardConfig(
+                cardData = cardData,
+                curveID = EllipticCurve.byName(applyConfig.curveID) ?: EllipticCurve.Secp256k1,
+                signingMethod = signingMethod,
+                createWallet = applyConfig.createWallet,
+                maxSignatures = applyConfig.MaxSignatures.toInt(),
+                isReusable = applyConfig.isReusable,
+                protocolAllowUnencrypted = applyConfig.protocolAllowUnencrypted,
+                protocolAllowStaticEncryption = applyConfig.protocolAllowStaticEncryption,
+                useActivation = applyConfig.useActivation,
+
+                useOneCommandAtTime = applyConfig.oneApdu,
+                useCvc = applyConfig.useCVC,
+                useBlock = applyConfig.useBlock,
+                allowSwapPin = applyConfig.allowSwapPIN,
+                allowSwapPin2 = applyConfig.allowSwapPIN2,
+                useNdef = applyConfig.useNDEF,
+                useDynamicNdef = applyConfig.useDynamicNDEF,
+                protectIssuerDataAgainstReplay = applyConfig.protectIssuerDataAgainstReplay,
+                forbidDefaultPin = applyConfig.forbidDefaultPIN,
+                smartSecurityDelay = applyConfig.smartSecurityDelay,
+                pauseBeforePin2 = applyConfig.pauseBeforePIN2.toInt(),
+                allowSelectBlockchain = applyConfig.allowSelectBlockchain,
+                forbidPurgeWallet = applyConfig.forbidPurgeWallet,
+                disablePrecomputedNdef = applyConfig.disablePrecomputedNDEF,
+                skipSecurityDelayIfValidatedByIssuer = applyConfig.skipSecurityDelayIfValidatedByIssuer,
+                skipCheckPIN2andCVCIfValidatedByIssuer = applyConfig.skipCheckPIN2andCVCIfValidatedByIssuer,
+
+                skipSecurityDelayIfValidatedByLinkedTerminal = applyConfig.skipSecurityDelayIfValidatedByLinkedTerminal,
+                restrictOverwriteIssuerDataEx = applyConfig.restrictOverwriteIssuerDataEx,
+
+                requireTerminalTxSignature = applyConfig.requireTerminalTxSignature,
+                requireTerminalCertSignature = applyConfig.requireTerminalCertSignature,
+                checkPin3onCard = applyConfig.checkPIN3onCard,
+
+                cvc = applyConfig.CVC,
+                pin = applyConfig.PIN,
+                pin2 = applyConfig.PIN2,
+                pin3 = applyConfig.PIN3,
+                hexCrExKey = applyConfig.hexCrExKey,
+                ndefRecords = ndefs
+        )
+    }
 }
 
 class IdItemHelper {
@@ -192,7 +296,7 @@ class IdItemHelper {
                 BlockId.SettingsMaskNdef, BlockId.Pins
         )
 
-        val listItemList = mutableListOf(Common.Curve, Common.Blockchain, SettingsMaskNdef.AAR, Pins.PauseBeforePin2)
+        val listItemList = mutableListOf(Common.Curve, Common.Blockchain, SettingsMaskNdef.Aar, Pins.PauseBeforePin2)
 
         val boolList = mutableListOf(
                 Common.CreateWallet, SigningMethod.SignTx, SigningMethod.SignTxRaw, SigningMethod.SignValidatedTx,
@@ -211,7 +315,7 @@ class IdItemHelper {
 
         val editTextList = mutableListOf(
                 CardNumber.Series, Common.BlockchainCustom, SignHashExProp.CryptoExKey, Token.Symbol,
-                Token.ContractAddress, Pins.Pin, Pins.Pin2, Pins.Pin3, Pins.Cvc
+                Token.ContractAddress, Pins.Pin, Pins.Pin2, Pins.Pin3, Pins.Cvc, SettingsMaskNdef.AarCustom
         )
 
         val numberList = mutableListOf(
