@@ -29,7 +29,7 @@ class PersonalizeConfig {
 
     // Sign hash external properties
     var pinLessFloorLimit: Long = 0
-    var hexCrExKey = ""
+    var hexCrExKey = "00112233445566778899AABBCCDDEEFFFFEEDDCCBBAA998877665544332211000000111122223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFF"
     var requireTerminalTxSignature = false
     var requireTerminalCertSignature = false
     var checkPIN3onCard = false
@@ -56,7 +56,7 @@ class PersonalizeConfig {
     var forbidPurgeWallet = false
     var allowSelectBlockchain = false
     var useBlock = false
-    var useOneCommandAtTime = false
+    var oneApdu = false
     var useCVC = false
     var allowSwapPIN = false
     var allowSwapPIN2 = true
@@ -78,7 +78,8 @@ class PersonalizeConfig {
     var useNDEF = true
     var useDynamicNDEF = true
     var disablePrecomputedNDEF = false
-    var NDEF = "com.tangem.wallet"
+    var aar = "com.tangem.wallet"
+    var aarCustom = ""
 
 
     // Pins

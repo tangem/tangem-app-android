@@ -7,7 +7,7 @@ import com.tangem.commands.personalization.CardConfig
 import com.tangem.commands.personalization.NdefRecord
 import java.util.*
 
-fun CardConfig.Companion.init(application: Application): CardConfig {
+fun CardConfig.Companion.create(application: Application): CardConfig {
 
     val preferences = application.getSharedPreferences("prefs", Context.MODE_PRIVATE)
 
