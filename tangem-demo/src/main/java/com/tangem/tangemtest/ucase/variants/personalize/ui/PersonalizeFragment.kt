@@ -15,7 +15,9 @@ import com.google.android.material.snackbar.Snackbar
 import com.tangem.CardManager
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tangemtest.R
+import com.tangem.tangemtest._arch.structure.abstraction.Block
 import com.tangem.tangemtest._main.MainViewModel
+import com.tangem.tangemtest.ucase.domain.actions.PersonalizeAction
 import com.tangem.tangemtest.ucase.domain.paramsManager.ParamsManager
 import com.tangem.tangemtest.ucase.domain.paramsManager.ParamsManagerFactory
 import com.tangem.tangemtest.ucase.resources.ActionType
@@ -53,8 +55,11 @@ class PersonalizeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        personalizeVM.ldBlockList.observe(viewLifecycleOwner, Observer { blocList ->
-            blocList.forEach { WidgetBuilder().build(it, blockContainer) }
+        val blockList = mutableListOf<Block>()
+        personalizeVM.ldBlockList.observe(viewLifecycleOwner, Observer { list ->
+            blockList.clear()
+            blockList.addAll(list)
+            blockList.forEach { WidgetBuilder().build(it, blockContainer) }
         })
         mainActivityVM.ldDescriptionSwitch.observe(viewLifecycleOwner, Observer {
             personalizeVM.toggleDescriptionVisibility(it)
@@ -66,7 +71,11 @@ class PersonalizeFragment : Fragment() {
             showSnackbarMessage(it)
         })
         paramsVM.seError.observe(viewLifecycleOwner, Observer { showSnackbarMessage(it) })
-        fab_action?.setOnClickListener { paramsVM.invokeMainAction() }
+
+        fab_action?.setOnClickListener {
+            val cardConfig = personalizeVM.createCardConfig(personalizeVM.createConfig(blockList))
+            paramsVM.invokeMainAction(mutableMapOf(PersonalizeAction.cardConfig to cardConfig))
+        }
     }
 
     protected fun showSnackbarMessage(message: String) {
