@@ -2,6 +2,8 @@ package com.tangem.tangemtest.ucase.domain.paramsManager
 
 import com.tangem.CardManager
 import com.tangem.tangemtest._arch.structure.Id
+import com.tangem.tangemtest._arch.structure.Payload
+import com.tangem.tangemtest._arch.structure.PayloadHolder
 import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tasks.TaskEvent
@@ -14,13 +16,13 @@ typealias ActionCallback = (ActionResponse, AffectedList) -> Unit
 /**
 [REDACTED_AUTHOR]
  */
-interface ParamsManager {
+interface ParamsManager : PayloadHolder {
 
     fun parameterChanged(id: Id, value: Any?, callback: AffectedParamsCallback? = null)
     fun getParams(): List<Item>
     fun invokeMainAction(cardManager: CardManager, callback: ActionCallback)
     fun getActionByTag(id: Id, cardManager: CardManager): ((ActionCallback) -> Unit)?
-
+    fun attachPayload(payload: Payload)
 }
 
 
