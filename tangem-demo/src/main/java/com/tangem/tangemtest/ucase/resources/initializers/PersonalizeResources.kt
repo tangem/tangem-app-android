@@ -117,7 +117,7 @@ class PersonalizeResources() {
         holder.register(SettingsMaskNdef.UseNdef, Resources(R.string.pers_item_use_ndef, R.string.info_pers_item_use_ndef))
         holder.register(SettingsMaskNdef.DynamicNdef, Resources(R.string.pers_item_dynamic_ndef, R.string.info_pers_item_dynamic_ndef))
         holder.register(SettingsMaskNdef.DisablePrecomputedNdef, Resources(R.string.pers_item_disable_precomputed_ndef, R.string.info_pers_item_disable_precomputed_ndef))
-        holder.register(SettingsMaskNdef.AAR, Resources(R.string.pers_item_aar, R.string.info_pers_item_aar))
+        holder.register(SettingsMaskNdef.Aar, Resources(R.string.pers_item_aar, R.string.info_pers_item_aar))
     }
 
     private fun initPins(holder: TypedHolder<Id, Resources>) {

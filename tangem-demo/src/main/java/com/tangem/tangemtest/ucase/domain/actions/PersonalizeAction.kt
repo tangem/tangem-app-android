@@ -1,8 +1,6 @@
 package com.tangem.tangemtest.ucase.domain.actions
 
 import com.tangem.commands.personalization.CardConfig
-import com.tangem.tangemtest.AppTangemDemo
-import com.tangem.tangemtest.extensions.init
 import com.tangem.tangemtest.ucase.domain.paramsManager.ActionCallback
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskEvent
@@ -21,8 +19,10 @@ class PersonalizeAction : BaseCardAction() {
                         handleResponse(response, null, attrs, callback)
                         return@executeMainAction
                     }
+                    val cardConfig = attrs.payload.remove(cardConfig) as? CardConfig
+                            ?: throw IllegalArgumentException("CardConfig must be in the payloads of the ParamsManager")
 
-                    attrs.cardManager.personalize(CardConfig.init(AppTangemDemo.appInstance), cardId) {
+                    attrs.cardManager.personalize(cardConfig, cardId) {
                         handleResponse(it, null, attrs, callback)
                     }
                 }
@@ -43,5 +43,9 @@ class PersonalizeAction : BaseCardAction() {
             else -> null
         }
 
+    }
+
+    companion object {
+        val cardConfig = "cardConfig"
     }
 }

@@ -2,6 +2,7 @@ package com.tangem.tangemtest._arch.structure.abstraction
 
 import com.tangem.tangemtest._arch.structure.ILog
 import com.tangem.tangemtest._arch.structure.Payload
+import com.tangem.tangemtest._arch.structure.PayloadHolder
 
 
 /**
@@ -10,7 +11,7 @@ import com.tangem.tangemtest._arch.structure.Payload
 typealias ValueChange<V> = (V?) -> Unit
 typealias SafeValueChange<V> = (V) -> Unit
 
-interface ItemViewModel<D: Any?> : Payload {
+interface ItemViewModel<D : Any?> : PayloadHolder {
     val viewState: ViewState
     var data: D?
     var defaultData: D?
@@ -22,7 +23,7 @@ interface ItemViewModel<D: Any?> : Payload {
 open class BaseItemViewModel<D> : ItemViewModel<D> {
 
     override val viewState: ViewState = ViewState()
-    override val payload: MutableMap<String, Any?> = mutableMapOf()
+    override val payload: Payload = mutableMapOf()
 
     // Don't update it directly from a View. Use for it updateDataByView()
     override var data: D? = null

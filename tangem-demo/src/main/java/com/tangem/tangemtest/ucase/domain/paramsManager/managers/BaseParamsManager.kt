@@ -2,6 +2,7 @@ package com.tangem.tangemtest.ucase.domain.paramsManager.managers
 
 import com.tangem.CardManager
 import com.tangem.tangemtest._arch.structure.Id
+import com.tangem.tangemtest._arch.structure.Payload
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest.ucase.domain.actions.AttrForAction
 import com.tangem.tangemtest.ucase.domain.actions.CardAction
@@ -16,6 +17,7 @@ import com.tangem.tangemtest.ucase.domain.paramsManager.triggers.changeConsequen
  */
 abstract class BaseParamsManager(protected val action: CardAction) : ParamsManager {
 
+    override val payload: MutableMap<String, Any?> = mutableMapOf()
     protected val paramsList: List<Item> by lazy { createParamsList() }
 
     abstract fun createParamsList(): List<Item>
@@ -32,6 +34,10 @@ abstract class BaseParamsManager(protected val action: CardAction) : ParamsManag
 
     override fun getActionByTag(id: Id, cardManager: CardManager): ((ActionCallback) -> Unit)? = null
 
+    override fun attachPayload(payload: Payload) {
+        payload.forEach { this.payload[it.key] = it.value }
+    }
+
     // Use it if current parameter needs to be affect any other parameters
     protected open fun applyChangesByAffectedParams(param: Item, callback: AffectedParamsCallback?) {
         getChangeConsequence()?.affectChanges(param, paramsList)?.let { callback?.invoke(it) }
@@ -40,5 +46,5 @@ abstract class BaseParamsManager(protected val action: CardAction) : ParamsManag
     protected open fun getChangeConsequence(): ParamsChangeConsequence? = null
 
     protected fun getAttrsForAction(cardManager: CardManager)
-            : AttrForAction = AttrForAction(cardManager, paramsList, getChangeConsequence())
+            : AttrForAction = AttrForAction(cardManager, paramsList, payload, getChangeConsequence())
 }

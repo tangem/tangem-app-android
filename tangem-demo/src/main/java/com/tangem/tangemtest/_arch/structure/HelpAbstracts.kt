@@ -7,8 +7,10 @@ interface DataHolder<D> {
     var viewModel: D
 }
 
-interface Payload {
-    val payload: MutableMap<String, Any?>
+typealias Payload = MutableMap<String, Any?>
+
+interface PayloadHolder {
+    val payload: Payload
 }
 
 interface ItemListHolder<I> {
