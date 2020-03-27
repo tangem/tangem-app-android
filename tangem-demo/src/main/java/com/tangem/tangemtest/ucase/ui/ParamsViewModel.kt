@@ -49,7 +49,8 @@ class ParamsViewModel(val paramsManager: ParamsManager) : ViewModel() {
     }
 
     //invokes Scan, Sign etc...
-    fun invokeMainAction() {
+    fun invokeMainAction(payload: MutableMap<String, Any?> = mutableMapOf()) {
+        paramsManager.attachPayload(payload)
         performAction(paramsManager, cardManager) { paramsManager, cardManager ->
             paramsManager.invokeMainAction(cardManager) { response, listOfChangedParams ->
                 notifier.handleActionResult(response, listOfChangedParams)
@@ -107,17 +108,26 @@ internal class Notifier(private val vm: ParamsViewModel) {
     }
 
     private fun handleCompletionEvent(taskEvent: TaskEvent.Completion<*>) {
-        val error: TaskError = taskEvent.error ?: return
-        when (error) {
-            is TaskError.UserCancelled -> {
-                if (notShowedError == null) {
-                    vm.seError.postValue("User was cancelled")
-                } else {
-                    vm.seError.postValue("${notShowedError!!::class.simpleName}")
-                    notShowedError = null
-                }
+        if (taskEvent.error == null) {
+            if (notShowedError == null) {
+                vm.seError.postValue("User was cancelled")
+            } else {
+                vm.seError.postValue("${notShowedError!!::class.simpleName}")
+                notShowedError = null
             }
-            else -> notShowedError = error
+        } else {
+            when (taskEvent.error) {
+                is TaskError.UserCancelled -> {
+                    if (notShowedError == null) {
+                        vm.seError.postValue("User was cancelled")
+                    } else {
+                        vm.seError.postValue("${notShowedError!!::class.simpleName}")
+                        notShowedError = null
+                    }
+                }
+                else -> notShowedError = taskEvent.error
+            }
         }
+
     }
 }
