@@ -56,7 +56,7 @@ class IdToValueAssociations : BaseTypedHolder<Id, Value>() {
         register(SettingsMask.ForbidPurge, Value(from.forbidPurgeWallet))
         register(SettingsMask.AllowSelectBlockchain, Value(from.allowSelectBlockchain))
         register(SettingsMask.UseBlock, Value(from.useBlock))
-        register(SettingsMask.OneApdu, Value(from.useOneCommandAtTime))
+        register(SettingsMask.OneApdu, Value(from.oneApdu))
         register(SettingsMask.UseCvc, Value(from.useCVC))
         register(SettingsMask.AllowSwapPin, Value(from.allowSwapPIN))
         register(SettingsMask.AllowSwapPin2, Value(from.allowSwapPIN2))
@@ -72,7 +72,8 @@ class IdToValueAssociations : BaseTypedHolder<Id, Value>() {
         register(SettingsMaskNdef.UseNdef, Value(from.useNDEF))
         register(SettingsMaskNdef.DynamicNdef, Value(from.useDynamicNDEF))
         register(SettingsMaskNdef.DisablePrecomputedNdef, Value(from.disablePrecomputedNDEF))
-        register(SettingsMaskNdef.AAR, Value(from.NDEF, Helper.aarList()))
+        register(SettingsMaskNdef.Aar, Value(from.aar, Helper.aarList()))
+        register(SettingsMaskNdef.AarCustom, Value(from.aar))
         register(Pins.Pin, Value(from.PIN))
         register(Pins.Pin2, Value(from.PIN2))
         register(Pins.Pin3, Value(from.PIN3))
@@ -111,8 +112,8 @@ internal class Helper {
         fun aarList(): List<KeyValue> {
             return mutableListOf(
                     KeyValue("--- CUSTOM ---", ""),
-                    KeyValue("Release APP", "com.some.release"),
-                    KeyValue("Debug APP", "com.some.debug"),
+                    KeyValue("Release APP", "com.tangem.wallet"),
+                    KeyValue("Debug APP", "com.tangem.wallet.debug"),
                     KeyValue("None", "")
             )
         }
