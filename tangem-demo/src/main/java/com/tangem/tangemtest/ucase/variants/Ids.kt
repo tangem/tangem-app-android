@@ -5,7 +5,7 @@ import com.tangem.tangemtest._arch.structure.Id
 /**
 [REDACTED_AUTHOR]
  */
-enum class TlvId: Id {
+enum class TlvId : Id {
     CardId,
     TransactionOutHash,
 }
