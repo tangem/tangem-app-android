@@ -6,19 +6,19 @@ package com.tangem.tangemtest.ucase.variants.personalize.dto
 class PersonalizeConfig {
 
     // Card number
-    var series = "DB"
+    var series = "BB"
     var startNumber: Long = 300000000000
 
 
     // Common
     var curveID = "ed25519"
-    var blockchain = "btc"
-    var blockchainCustom = "custom"
-    var MaxSignatures: Long = 1000000
-    var createWallet = true
+    var blockchain = "BTC"
+    var blockchainCustom = ""
+    var MaxSignatures: Long = 100
+    var createWallet = false
 
     // Signing method
-    var SigningMethod0 = false
+    var SigningMethod0 = true
     var SigningMethod1 = false
     var SigningMethod2 = false
     var SigningMethod3 = false
@@ -28,23 +28,23 @@ class PersonalizeConfig {
 
 
     // Sign hash external properties
-    var pinLessFloorLimit: Long = 0
+    var pinLessFloorLimit: Long = 100000
     var hexCrExKey = "00112233445566778899AABBCCDDEEFFFFEEDDCCBBAA998877665544332211000000111122223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFF"
     var requireTerminalTxSignature = false
     var requireTerminalCertSignature = false
-    var checkPIN3onCard = false
+    var checkPIN3onCard = true
 
 
     // Denomination
     var writeOnPersonalization = false
-    var denomination: Long = 0
+    var denomination: Long = 1000000
 
 
     // Token
-    var itsToken = true
-    var symbol = "token symbol"
-    var contractAddress = "contact adress"
-    var decimal: Long = 1
+    var itsToken = false
+    var symbol = ""
+    var contractAddress = ""
+    var decimal: Long = 0
 
 
     var cardData = CardData()
@@ -58,13 +58,13 @@ class PersonalizeConfig {
     var useBlock = false
     var oneApdu = false
     var useCVC = false
-    var allowSwapPIN = false
+    var allowSwapPIN = true
     var allowSwapPIN2 = true
     var forbidDefaultPIN = false
-    var smartSecurityDelay = true
+    var smartSecurityDelay = false
     var protectIssuerDataAgainstReplay = true
-    var skipSecurityDelayIfValidatedByIssuer = false
-    var skipCheckPIN2andCVCIfValidatedByIssuer = false
+    var skipSecurityDelayIfValidatedByIssuer = true
+    var skipCheckPIN2andCVCIfValidatedByIssuer = true
     var skipSecurityDelayIfValidatedByLinkedTerminal = true
     var restrictOverwriteIssuerDataEx = false
 
