@@ -15,3 +15,5 @@ class BoolItem(override val id: Id, value: Boolean? = null) : BaseItem<Boolean>(
 class ListItem(override val id: Id, value: List<KeyValue>, selectedValue: Any?)
     : BaseItem<ListValueWrapper>(ListViewModel(ListValueWrapper(selectedValue, value))
 )
+
+inline fun<reified T> BaseItem<T>.getData(): T? = viewModel.data
