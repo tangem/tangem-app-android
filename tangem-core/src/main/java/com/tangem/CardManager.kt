@@ -272,7 +272,7 @@ class CardManager(
         val personalizationCommand = PersonalizeCommand(config, cardId)
         val task = SingleCommandTask(personalizationCommand)
         task.performPreflightRead = false
-        runTask(task, callback = callback)
+        runTask(task, cardId, callback = callback)
     }
 
     /**
