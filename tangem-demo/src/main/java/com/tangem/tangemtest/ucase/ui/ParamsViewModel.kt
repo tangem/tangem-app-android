@@ -15,6 +15,7 @@ import com.tangem.tangemtest.ucase.domain.paramsManager.ParamsManager
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskError
 import com.tangem.tasks.TaskEvent
+import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 
 /**
 [REDACTED_AUTHOR]
@@ -109,13 +110,13 @@ internal class Notifier(private val vm: ParamsViewModel) {
 
     private fun handleCompletionEvent(taskEvent: TaskEvent.Completion<*>) {
         if (taskEvent.error == null) {
-            if (notShowedError == null) {
-                vm.seError.postValue("User was cancelled")
-            } else {
+            Log.d(this, "error = null")
+            if (notShowedError != null) {
                 vm.seError.postValue("${notShowedError!!::class.simpleName}")
                 notShowedError = null
             }
         } else {
+            Log.d(this, "error = ${taskEvent.error}")
             when (taskEvent.error) {
                 is TaskError.UserCancelled -> {
                     if (notShowedError == null) {
