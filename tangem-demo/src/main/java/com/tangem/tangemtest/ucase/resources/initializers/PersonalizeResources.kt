@@ -68,7 +68,7 @@ class PersonalizeResources() {
         holder.register(SignHashExProp.CryptoExKey, Resources(R.string.pers_item_cr_ex_key, R.string.info_pers_item_cr_ex_key))
         holder.register(SignHashExProp.RequireTerminalCertSig, Resources(R.string.pers_item_require_terminal_cert_sig, R.string.info_pers_item_require_terminal_cert_sig))
         holder.register(SignHashExProp.RequireTerminalTxSig, Resources(R.string.pers_item_require_terminal_tx_sig, R.string.info_pers_item_require_terminal_tx_sig))
-        holder.register(SignHashExProp.CheckPin3, Resources(R.string.pers_item_pin3, R.string.info_pers_item_pin3))
+        holder.register(SignHashExProp.CheckPin3, Resources(R.string.pers_item_check_pin3_on_card, R.string.info_pers_item_check_pin3_on_card))
     }
 
     private fun initDenomination(holder: TypedHolder<Id, Resources>) {
