@@ -10,24 +10,24 @@ import com.tangem.tasks.TaskEvent
  */
 class PersonalizeAction : BaseCardAction() {
     override fun executeMainAction(attrs: AttrForAction, callback: ActionCallback) {
+        var cardId: String? = null
         ScanAction().executeMainAction(attrs) { response, b ->
             when (response) {
                 is TaskEvent.Event -> {
                     val taskEvent = response as TaskEvent.Event
-                    val cardId = handleDataEvent(taskEvent.data)
+                    cardId = handleDataEvent(taskEvent.data)
                     if (cardId == null) {
                         handleResponse(response, null, attrs, callback)
                         return@executeMainAction
                     }
+                }
+                is TaskEvent.Completion -> {
                     val cardConfig = attrs.payload.remove(cardConfig) as? CardConfig
                             ?: throw IllegalArgumentException("CardConfig must be in the payloads of the ParamsManager")
 
-                    attrs.cardManager.personalize(cardConfig, cardId) {
+                    attrs.cardManager.personalize(cardConfig, cardId!!) {
                         handleResponse(it, null, attrs, callback)
                     }
-                }
-                is TaskEvent.Completion -> {
-                    handleResponse(response, null, attrs, callback)
                 }
             }
 
