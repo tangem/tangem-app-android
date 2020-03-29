@@ -14,18 +14,17 @@ import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizeConfig
 /**
 [REDACTED_AUTHOR]
  */
-class PersonalizeViewModelFactory(private val jsonPersonalizeString: String) : ViewModelProvider.NewInstanceFactory() {
-    override fun <T : ViewModel?> create(modelClass: Class<T>): T = PersonalizeViewModel(jsonPersonalizeString) as T
+class PersonalizeViewModelFactory(private val config: PersonalizeConfig) : ViewModelProvider.NewInstanceFactory() {
+    override fun <T : ViewModel?> create(modelClass: Class<T>): T = PersonalizeViewModel(config) as T
 }
 
-class PersonalizeViewModel(private val jsonPersonalizeString: String) : ViewModel() {
+class PersonalizeViewModel(private val config: PersonalizeConfig) : ViewModel() {
 
     val ldBlockList: MutableLiveData<List<Block>> by lazy { MutableLiveData(initBlockList()) }
 
-    private fun initBlockList(): List<Block> = parseJsonToBlockList(jsonPersonalizeString)
+    private fun initBlockList(): List<Block> = createBlocksFromConfig(config)
 
-    fun parseJsonToBlockList(jsonString: String): List<Block> {
-        val config = Gson().fromJson(jsonString, PersonalizeConfig::class.java)
+    fun createBlocksFromConfig(config: PersonalizeConfig): List<Block> {
         return PersonalizeConfigConverter().toBlock(config)
     }
 
