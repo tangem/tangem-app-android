@@ -4,9 +4,13 @@ import androidx.annotation.UiThread
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.JsonPrimitive
+import com.google.gson.JsonSerializer
 import com.tangem.CardManager
 import com.tangem.commands.Card
+import com.tangem.common.extensions.toHexString
 import com.tangem.tangemtest._arch.SingleLiveEvent
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.abstraction.Item
@@ -72,7 +76,17 @@ class ParamsViewModel(val paramsManager: ParamsManager) : ViewModel() {
 
 internal class Notifier(private val vm: ParamsViewModel) {
 
-    private val gsonConverter = GsonBuilder().setPrettyPrinting().create()
+    private val gsonConverter: Gson by lazy { createGson() }
+
+    private fun createGson(): Gson {
+        val builder = GsonBuilder()
+        builder.registerTypeAdapter(ByteArray::class.java, JsonSerializer<ByteArray> { src, typeOfSrc, context ->
+            JsonPrimitive(src.toHexString())
+        })
+        builder.setPrettyPrinting()
+        return builder.create()
+    }
+
     private var notShowedError: TaskError? = null
 
     fun handleActionResult(response: TaskEvent<*>, list: List<Item>) {
@@ -105,7 +119,6 @@ internal class Notifier(private val vm: ParamsViewModel) {
             }
             else -> vm.ldResponse.postValue(gsonConverter.toJson(event))
         }
-
     }
 
     private fun handleCompletionEvent(taskEvent: TaskEvent.Completion<*>) {
@@ -129,6 +142,5 @@ internal class Notifier(private val vm: ParamsViewModel) {
                 else -> notShowedError = taskEvent.error
             }
         }
-
     }
 }
