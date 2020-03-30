@@ -4,6 +4,7 @@ import com.tangem.commands.Card
 import com.tangem.commands.CardData
 import com.tangem.commands.CommandSerializer
 import com.tangem.commands.personalization.entities.Issuer
+import com.tangem.commands.personalization.util.CardIdCreator
 import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
@@ -27,7 +28,7 @@ import com.tangem.tasks.TaskError
  * during personalization.
  * @param cardId this parameter will set up CID, Unique Tangem card ID.
  */
-class PersonalizeCommand(private val config: CardConfig, private val cardId: String) : CommandSerializer<Card>() {
+class PersonalizeCommand(private val config: CardConfig) : CommandSerializer<Card>() {
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
         if (cardEnvironment.issuer == null || cardEnvironment.manufacturerKeyPair == null) {
@@ -36,9 +37,8 @@ class PersonalizeCommand(private val config: CardConfig, private val cardId: Str
         return CommandApdu(
                 Instruction.Personalize,
                 serializePersonalizationData(
-                        cardId, config,
-                        cardEnvironment.issuer, cardEnvironment.manufacturerKeyPair.privateKey,
-                        cardEnvironment.acquirerKeyPair?.publicKey),
+                        config, cardEnvironment.issuer,
+                        cardEnvironment.manufacturerKeyPair.privateKey, cardEnvironment.acquirerKeyPair?.publicKey),
                 encryptionKey = devPersonalizationKey
         )
     }
@@ -99,13 +99,14 @@ class PersonalizeCommand(private val config: CardConfig, private val cardId: Str
         )
     }
 
-    private fun serializePersonalizationData(cardId: String, config: CardConfig,
-                                             issuer: Issuer, manufacturerPrivateKey: ByteArray,
+    private fun serializePersonalizationData(config: CardConfig, issuer: Issuer,
+                                             manufacturerPrivateKey: ByteArray,
                                              acquirePublicKey: ByteArray?
     ): ByteArray {
+        val cardId = CardIdCreator.create(config.series, config.startNumber)
+                ?: throw TaskError.SerializeCommandError()
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.CardId, cardId)
-
         tlvBuilder.append(TlvTag.CurveId, config.curveID)
         tlvBuilder.append(TlvTag.MaxSignatures, config.maxSignatures)
         tlvBuilder.append(TlvTag.SigningMethod, config.signingMethod)
