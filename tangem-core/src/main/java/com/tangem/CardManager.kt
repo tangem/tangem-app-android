@@ -5,6 +5,9 @@ import com.tangem.commands.personalization.CardConfig
 import com.tangem.commands.personalization.DepersonalizeCommand
 import com.tangem.commands.personalization.DepersonalizeResponse
 import com.tangem.commands.personalization.PersonalizeCommand
+import com.tangem.commands.personalization.entities.Acquirer
+import com.tangem.commands.personalization.entities.Issuer
+import com.tangem.commands.personalization.entities.Manufacturer
 import com.tangem.common.CardEnvironment
 import com.tangem.common.TerminalKeysService
 import com.tangem.crypto.CryptoUtils
@@ -261,15 +264,16 @@ class CardManager(
      * @param config is a configuration file with all the card settings that are written on the card
      * during personalization.
      * @param cardId this parameter will set up CID, Unique Tangem card ID.
+     * @param issuer Issuer is a third-party team or company wishing to use Tangem cards.
+     * @param manufacturer Tangem Card Manufacturer.
+     * @param acquirer Acquirer is a trusted third-party company that operates proprietary
+     * (non-EMV) POS terminal infrastructure and transaction processing back-end.
      */
     fun personalize(config: CardConfig,
                     cardId: String,
+                    issuer: Issuer, manufacturer: Manufacturer, acquirer: Acquirer? = null,
                     callback: (result: TaskEvent<Card>) -> Unit) {
-        if (this.config.issuer == null) {
-            callback(TaskEvent.Completion(TaskError.IssuerIsRequired()))
-            return
-        }
-        val personalizationCommand = PersonalizeCommand(config, cardId)
+        val personalizationCommand = PersonalizeCommand(config, cardId, issuer, manufacturer, acquirer)
         val task = SingleCommandTask(personalizationCommand)
         task.performPreflightRead = false
         runTask(task, callback = callback)
@@ -320,10 +324,7 @@ class CardManager(
         val terminalKeys = if (config.linkedTerminal) terminalKeysService?.getKeys() else null
         return CardEnvironment(
                 cardId = cardId,
-                terminalKeys = terminalKeys,
-                manufacturerKeyPair = config.manufacturerKeyPair,
-                acquirerKeyPair = config.acquirerKeyPair,
-                issuer = config.issuer
+                terminalKeys = terminalKeys
         )
     }
 
