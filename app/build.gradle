@@ -30,24 +30,17 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.debug
-            buildConfigField 'boolean', 'CRASHLYTICS', 'Boolean.parseBoolean("false")'
-            ext.enableCrashlytics = false
         }
         debug {
             debuggable true
             minifyEnabled false
             applicationIdSuffix ".dev"
             signingConfig signingConfigs.debug
-            buildConfigField 'boolean', 'CRASHLYTICS', 'Boolean.parseBoolean("false")'
-            ext.enableCrashlytics = false
         }
         debug_beta {
             initWith debug
             versionNameSuffix "-beta"
             applicationIdSuffix ".debug"
-            buildConfigField 'boolean', 'CRASHLYTICS', 'Boolean.parseBoolean("true")'
-            manifestPlaceholders = [fabric_api_key: properties.hasProperty('fabric_api_key')
-                    ? project.property('fabric_api_key') : '000']
         }
     }
     flavorDimensions ""
@@ -76,7 +69,6 @@ android {
 
 repositories {
     maven { url "https://jitpack.io" }
-    maven { url 'https://maven.fabric.io/public' }
 }
 configurations {
     all*.exclude group: 'com.google.guava', module: 'listenablefuture'
