@@ -1,7 +1,5 @@
 package com.tangem.common
 
-import com.tangem.commands.personalization.entities.Issuer
-
 
 /**
  * Contains data relating to a Tangem card. It is used in constructing all the commands,
@@ -14,10 +12,7 @@ data class CardEnvironment(
         val terminalKeys: KeyPair? = null,
         var encryptionMode: EncryptionMode = EncryptionMode.NONE,
         var encryptionKey: ByteArray? = null,
-        val cvc: ByteArray? = null,
-        val manufacturerKeyPair: KeyPair? = null,
-        val acquirerKeyPair: KeyPair? = null,
-        val issuer: Issuer? = null
+        val cvc: ByteArray? = null
 ) {
 
     companion object {
