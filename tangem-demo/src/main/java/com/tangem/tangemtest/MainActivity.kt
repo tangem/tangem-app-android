@@ -154,9 +154,7 @@ class MainActivity : AppCompatActivity() {
         }
         btn_read_write_user_data?.setOnClickListener { startActivity(Intent(this, TestUserDataActivity::class.java)) }
         btn_personalize?.setOnClickListener { _ ->
-            cardManager.personalize(
-                    CardConfig.init(application), "BB00000000000395"
-            ) {
+            cardManager.personalize(CardConfig.init(application)) {
                 when (it) {
                     is TaskEvent.Completion -> {
                         if (it.error != null) runOnUiThread { tv_card_cid?.text = it.error!!::class.simpleName }
