@@ -86,8 +86,8 @@ internal class Helper {
     companion object {
         fun listOfCurves(): List<KeyValue> {
             return mutableListOf(
-                    KeyValue("secp256k1", "secp256k1"),
-                    KeyValue("ed25519", "ed25519")
+                    KeyValue("Secp256k1", "Secp256k1"),
+                    KeyValue("Ed25519", "Ed25519")
             )
         }
 
