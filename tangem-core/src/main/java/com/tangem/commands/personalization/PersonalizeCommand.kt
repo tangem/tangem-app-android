@@ -3,7 +3,9 @@ package com.tangem.commands.personalization
 import com.tangem.commands.Card
 import com.tangem.commands.CardData
 import com.tangem.commands.CommandSerializer
+import com.tangem.commands.personalization.entities.Acquirer
 import com.tangem.commands.personalization.entities.Issuer
+import com.tangem.commands.personalization.entities.Manufacturer
 import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
@@ -23,22 +25,25 @@ import com.tangem.tasks.TaskError
  * Personalization is an initialization procedure, required before starting using a card.
  * During this procedure a card setting is set up.
  * During this procedure all data exchange is encrypted.
- * @param config is a configuration file with all the card settings that are written on the card
+ * @property config is a configuration file with all the card settings that are written on the card
  * during personalization.
- * @param cardId this parameter will set up CID, Unique Tangem card ID.
+ * @property cardId this parameter will set up CID, Unique Tangem card ID.
+ * @property issuer Issuer is a third-party team or company wishing to use Tangem cards.
+ * @property manufacturer Tangem Card Manufacturer.
+ * @property acquirer Acquirer is a trusted third-party company that operates proprietary
+ * (non-EMV) POS terminal infrastructure and transaction processing back-end.
  */
-class PersonalizeCommand(private val config: CardConfig, private val cardId: String) : CommandSerializer<Card>() {
+class PersonalizeCommand(
+        private val config: CardConfig, private val cardId: String,
+        private val issuer: Issuer, private val manufacturer: Manufacturer,
+        private val acquirer: Acquirer? = null
+) : CommandSerializer<Card>() {
 
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
-        if (cardEnvironment.issuer == null || cardEnvironment.manufacturerKeyPair == null) {
-            throw TaskError.SerializeCommandError()
-        }
         return CommandApdu(
                 Instruction.Personalize,
                 serializePersonalizationData(
-                        cardId, config,
-                        cardEnvironment.issuer, cardEnvironment.manufacturerKeyPair.privateKey,
-                        cardEnvironment.acquirerKeyPair?.publicKey),
+                        cardId, config),
                 encryptionKey = devPersonalizationKey
         )
     }
@@ -99,10 +104,7 @@ class PersonalizeCommand(private val config: CardConfig, private val cardId: Str
         )
     }
 
-    private fun serializePersonalizationData(cardId: String, config: CardConfig,
-                                             issuer: Issuer, manufacturerPrivateKey: ByteArray,
-                                             acquirePublicKey: ByteArray?
-    ): ByteArray {
+    private fun serializePersonalizationData(cardId: String, config: CardConfig): ByteArray {
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.CardId, cardId)
 
@@ -123,17 +125,13 @@ class PersonalizeCommand(private val config: CardConfig, private val cardId: Str
         tlvBuilder.append(TlvTag.IssuerDataPublicKey, issuer.dataKeyPair.publicKey)
         tlvBuilder.append(TlvTag.IssuerTransactionPublicKey, issuer.transactionKeyPair.publicKey)
 
-        tlvBuilder.append(TlvTag.AcquirerPublicKey, acquirePublicKey)
+        tlvBuilder.append(TlvTag.AcquirerPublicKey, acquirer?.keyPair?.publicKey)
 
-        tlvBuilder.append(
-                TlvTag.CardData, serializeCardData(cardId, config.cardData, issuer, manufacturerPrivateKey)
-        )
+        tlvBuilder.append(TlvTag.CardData, serializeCardData(cardId, config.cardData))
         return tlvBuilder.serialize()
     }
 
-    private fun serializeCardData(
-            cardId: String, cardData: CardData,
-            issuer: Issuer, manufacturerPrivateKey: ByteArray): ByteArray {
+    private fun serializeCardData(cardId: String, cardData: CardData): ByteArray {
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Batch, cardData.batchId)
         tlvBuilder.append(TlvTag.ProductMask, cardData.productMask)
@@ -150,7 +148,8 @@ class PersonalizeCommand(private val config: CardConfig, private val cardId: Str
             tlvBuilder.append(TlvTag.TokenDecimal, cardData.tokenDecimal)
         }
         tlvBuilder.append(
-                TlvTag.CardIdManufacturerSignature, cardId.hexToBytes().sign(manufacturerPrivateKey)
+                TlvTag.CardIdManufacturerSignature,
+                cardId.hexToBytes().sign(manufacturer.keyPair.privateKey)
         )
         return tlvBuilder.serialize()
     }
