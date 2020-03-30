@@ -226,7 +226,7 @@ class PersonalizeConfigConverter {
 
         val cardData = CardData(
                 blockchainName = applyConfig.blockchain,
-                batchId = applyConfig.series,
+                batchId = applyConfig.cardData.batch,
                 productMask = productMask,
                 tokenSymbol = tokenSymbol,
                 tokenContractAddress = tokenContractAddress,
@@ -245,9 +245,9 @@ class PersonalizeConfigConverter {
 
         return CardConfig(
                 "Tangem",
-                "MyHomeLts",
-                "HS",
-                0,
+                "Tangem Test",
+                applyConfig.series,
+                applyConfig.startNumber,
                 1000,
                 applyConfig.PIN,
                 applyConfig.PIN2,
