@@ -262,14 +262,12 @@ class CardManager(
      * during personalization.
      * @param cardId this parameter will set up CID, Unique Tangem card ID.
      */
-    fun personalize(config: CardConfig,
-                    cardId: String,
-                    callback: (result: TaskEvent<Card>) -> Unit) {
+    fun personalize(config: CardConfig, callback: (result: TaskEvent<Card>) -> Unit) {
         if (this.config.issuer == null) {
             callback(TaskEvent.Completion(TaskError.IssuerIsRequired()))
             return
         }
-        val personalizationCommand = PersonalizeCommand(config, cardId)
+        val personalizationCommand = PersonalizeCommand(config)
         val task = SingleCommandTask(personalizationCommand)
         task.performPreflightRead = false
         runTask(task, callback = callback)
