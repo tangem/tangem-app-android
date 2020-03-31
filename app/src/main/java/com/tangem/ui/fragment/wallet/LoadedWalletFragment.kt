@@ -18,8 +18,10 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Blockchain
@@ -47,6 +49,8 @@ import com.tangem.ui.fragment.BaseFragment
 import com.tangem.ui.fragment.pin.PinRequestFragment
 import com.tangem.ui.fragment.pin.PinSwapFragment
 import com.tangem.ui.navigation.NavigationResultListener
+import com.tangem.util.AnalyticsEvent
+import com.tangem.util.AnalyticsParam
 import com.tangem.util.LOG
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.*
@@ -128,6 +132,15 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+
+        val params = bundleOf(
+                AnalyticsParam.BLOCKCHAIN.param to ctx.blockchainName,
+                AnalyticsParam.BATCH_ID.param to ctx.card.batch,
+                AnalyticsParam.FIRMWARE.param to ctx.card.firmwareVersion
+        )
+        FirebaseAnalytics.getInstance(requireActivity())
+                .logEvent(AnalyticsEvent.CARD_IS_SCANNED.event, params)
 
         mpSecondScanSound = MediaPlayer.create(activity, R.raw.scan_card_sound)
 
