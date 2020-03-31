@@ -28,6 +28,7 @@
     <string name="settings_title">Settings</string>
     <string name="settings_category_сommon">Common</string>
     <string name="settings_option_manual_editing_fee">Manual editing Fee</string>
+    <string name="settings_option_analytics">Collect basic analytics</string>
     <string name="settings_option_encryption_modes">Encryption modes</string>
     <string-array name="settings_encryption_modes_entries">
         <item>None</item>
