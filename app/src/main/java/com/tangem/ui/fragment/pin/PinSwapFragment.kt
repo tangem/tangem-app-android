@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.tangem_card.data.TangemCard
@@ -112,6 +113,7 @@ class PinSwapFragment : BaseFragment(), NfcAdapter.ReaderCallback, CardProtocol.
         swapPinTask = null
 
         if (cardProtocol != null) {
+            cardProtocol.error?.let { FirebaseCrashlytics.getInstance().recordException(it) }
             when {
                 cardProtocol.error == null -> progressBar!!.post {
                     progressBar!!.progress = 100
