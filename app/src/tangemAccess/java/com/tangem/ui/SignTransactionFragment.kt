@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.App
 import com.tangem.Constant
@@ -27,6 +28,8 @@ import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
 import com.tangem.ui.dialog.WaitSecurityDelayDialog
 import com.tangem.ui.fragment.BaseFragment
 import com.tangem.ui.navigation.NavigationResultListener
+import com.tangem.util.Analytics
+import com.tangem.util.AnalyticsEvent
 import com.tangem.util.LOG
 import com.tangem.wallet.CoinEngine
 import com.tangem.wallet.CoinEngineFactory
@@ -88,6 +91,9 @@ class SignTransactionFragment : BaseFragment(), NavigationResultListener,
         tvCardID.text = ctx.card!!.cidDescription
         progressBar.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
         progressBar.visibility = View.INVISIBLE
+
+        FirebaseAnalytics.getInstance(requireActivity())
+                .logEvent(AnalyticsEvent.READY_TO_SIGN.event, Analytics.setCardData(ctx))
     }
 
     override fun onPause() {
@@ -175,6 +181,10 @@ class SignTransactionFragment : BaseFragment(), NavigationResultListener,
         signTransactionTask = null
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
+
+                FirebaseAnalytics.getInstance(requireActivity())
+                        .logEvent(AnalyticsEvent.SIGNED.event, Analytics.setCardData(ctx))
+
                 rlProgressBar?.post { rlProgressBar?.visibility = View.GONE }
 
                 progressBar?.post {
