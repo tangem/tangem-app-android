@@ -3,6 +3,7 @@ package com.tangem.data.dp
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.preference.PreferenceManager
 import com.orhanobut.hawk.Hawk
 import com.tangem.Constant
 import com.tangem.tangem_card.reader.CardCrypto
@@ -10,6 +11,7 @@ import com.tangem.tangem_card.reader.CardCrypto
 class PrefsManager {
     companion object {
         const val PREF_NAME = "tangem_access"
+
         @SuppressLint("StaticFieldLeak")
         private var instance: PrefsManager? = null
 
@@ -39,6 +41,11 @@ class PrefsManager {
 
     fun clearLastWalletAddress() {
         Hawk.delete(Constant.PREF_LAST_WALLET_ADDRESS)
+    }
+
+    fun getSettingsBoolean(key: Int, default: Boolean): Boolean {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(context.getString(key), default)
     }
 
     fun appendCid(newCid: String) {
