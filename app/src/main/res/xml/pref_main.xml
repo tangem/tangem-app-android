@@ -4,10 +4,15 @@
         android:key="@string/pref_category_common"
         android:title="@string/settings_category_сommon">
 
-        <CheckBoxPreference
+        <SwitchPreference
             android:defaultValue="false"
             android:key="@string/pref_manual_editing_fee"
             android:title="@string/settings_option_manual_editing_fee" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="@string/pref_analytics"
+            android:title="@string/settings_option_analytics" />
 
         <Preference
             android:key="@string/pref_select_nodes"
