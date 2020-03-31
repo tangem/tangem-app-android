@@ -3,15 +3,7 @@ package com.tangem.commands.personalization.entities
 import com.tangem.commands.Settings
 import com.tangem.commands.SettingsMask
 import com.tangem.commands.SettingsMaskBuilder
-import com.tangem.commands.personalization.NdefEncoder
-import com.tangem.common.extensions.hexToBytes
-import com.tangem.common.tlv.TlvBuilder
-import com.tangem.common.tlv.TlvTag
-import com.tangem.crypto.sign
 
-/**
-[REDACTED_AUTHOR]
- */
 internal fun CardConfig.createSettingsMask(): SettingsMask {
     val builder = SettingsMaskBuilder()
 
@@ -86,28 +78,4 @@ internal fun CardConfig.createCardId(): String? {
     }
     val lunh = (10 - sum % 10) % 10
     return cardId.substring(0, 15) + String.format("%d", lunh)
-}
-
-internal fun CardConfig.serializeNdef(ndefRecords: List<NdefRecord>): ByteArray {
-    return NdefEncoder(ndefRecords, useDynamicNdef).encode()
-}
-
-internal fun CardConfig.serializeCardData(cardId: String, issuer: Issuer, manufacturer: Manufacturer): ByteArray {
-    val tlvBuilder = TlvBuilder()
-    tlvBuilder.append(TlvTag.Batch, cardData.batchId)
-    tlvBuilder.append(TlvTag.ProductMask, cardData.productMask)
-    tlvBuilder.append(TlvTag.ManufactureDateTime, cardData.manufactureDateTime)
-    tlvBuilder.append(TlvTag.IssuerId, issuer.id)
-    tlvBuilder.append(TlvTag.BlockchainId, cardData.blockchainName)
-
-    if (cardData.tokenSymbol != null) {
-        tlvBuilder.append(TlvTag.TokenSymbol, cardData.tokenSymbol)
-        tlvBuilder.append(TlvTag.TokenContractAddress, cardData.tokenContractAddress)
-        tlvBuilder.append(TlvTag.TokenDecimal, cardData.tokenDecimal)
-    }
-    tlvBuilder.append(
-            TlvTag.CardIdManufacturerSignature,
-            cardId.hexToBytes().sign(manufacturer.keyPair.privateKey)
-    )
-    return tlvBuilder.serialize()
 }
