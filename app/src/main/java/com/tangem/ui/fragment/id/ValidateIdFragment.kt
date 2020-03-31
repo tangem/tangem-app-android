@@ -11,12 +11,12 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.tangem_card.data.TangemCard
 import com.tangem.tangem_card.reader.CardProtocol
 import com.tangem.tangem_card.tasks.OneTouchSignTask
-import com.tangem.tangem_card.tasks.SignTask
 import com.tangem.tangem_card.util.Util
 import com.tangem.tangem_sdk.android.data.PINStorage
 import com.tangem.tangem_sdk.android.nfc.NfcDeviceAntennaLocation
@@ -24,7 +24,6 @@ import com.tangem.tangem_sdk.android.reader.NfcReader
 import com.tangem.tangem_sdk.data.EXTRA_TANGEM_CARD
 import com.tangem.tangem_sdk.data.EXTRA_TANGEM_CARD_UID
 import com.tangem.tangem_sdk.data.asBundle
-import com.tangem.ui.SignTransactionFragment
 import com.tangem.ui.activity.MainActivity
 import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
 import com.tangem.ui.dialog.WaitSecurityDelayDialog
@@ -223,6 +222,7 @@ class ValidateIdFragment : BaseFragment(), NavigationResultListener,
 
                 mpFinishSignSound.start()
             } else {
+                FirebaseCrashlytics.getInstance().recordException(cardProtocol.error)
                 lastReadSuccess = false
                 if (cardProtocol.error.javaClass == CardProtocol.TangemException_InvalidPIN::class.java) {
                     progressBar?.post {
