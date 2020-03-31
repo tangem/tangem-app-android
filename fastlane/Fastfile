@@ -61,12 +61,12 @@ platform :android do
         })
   end
 
-  desc "Submit a new Beta Build to Crashlytics Beta"
+  desc "Submit a new Beta Build to Firebase App Distribution"
   lane :beta do |options|
-    crashlytics(
-      api_token: options[:api_token],
-      build_secret: options[:build_secret],
-      apk_path: options[:apk_path])
+       firebase_app_distribution(
+            app: options[:app_id],
+            apk_path: options[:apk_path],
+            groups: options[:groups])
   end
 
 end
