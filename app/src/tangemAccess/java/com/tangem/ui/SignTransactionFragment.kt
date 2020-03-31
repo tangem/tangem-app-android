@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.tangem_card.reader.CardProtocol
@@ -34,7 +35,6 @@ import com.tangem.wallet.TangemContext
 import kotlinx.android.synthetic.main.layout_progress_horizontal.*
 import kotlinx.android.synthetic.main.layout_touch_card.*
 import kotlinx.android.synthetic.tangemAccess.fragment_sign_transaction.*
-import java.lang.IllegalArgumentException
 
 
 class SignTransactionFragment : BaseFragment(), NavigationResultListener,
@@ -185,6 +185,7 @@ class SignTransactionFragment : BaseFragment(), NavigationResultListener,
                 mpFinishSignSound.start()
             } else {
                 lastReadSuccess = false
+                FirebaseCrashlytics.getInstance().recordException(cardProtocol.error)
                 if (cardProtocol.error.javaClass == CardProtocol.TangemException_InvalidPIN::class.java) {
                     progressBar?.post {
                         progressBar?.progress = 100
