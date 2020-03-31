@@ -5,17 +5,14 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonPrimitive
-import com.google.gson.JsonSerializer
 import com.tangem.CardManager
 import com.tangem.commands.Card
-import com.tangem.common.extensions.toHexString
 import com.tangem.tangemtest._arch.SingleLiveEvent
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest.commons.performAction
 import com.tangem.tangemtest.ucase.domain.paramsManager.ParamsManager
+import com.tangem.tangemtest.ucase.domain.responses.GsonInitializer
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskError
 import com.tangem.tasks.TaskEvent
@@ -76,18 +73,8 @@ class ParamsViewModel(val paramsManager: ParamsManager) : ViewModel() {
 
 internal class Notifier(private val vm: ParamsViewModel) {
 
-    private val gsonConverter: Gson by lazy { createGson() }
-
-    private fun createGson(): Gson {
-        val builder = GsonBuilder()
-        builder.registerTypeAdapter(ByteArray::class.java, JsonSerializer<ByteArray> { src, typeOfSrc, context ->
-            JsonPrimitive(src.toHexString())
-        })
-        builder.setPrettyPrinting()
-        return builder.create()
-    }
-
     private var notShowedError: TaskError? = null
+    private val gson: Gson = GsonInitializer().gson
 
     fun handleActionResult(response: TaskEvent<*>, list: List<Item>) {
         notifyParameterChanges(list)
@@ -112,12 +99,12 @@ internal class Notifier(private val vm: ParamsViewModel) {
         when (event) {
             is ScanEvent.OnReadEvent -> {
                 vm.ldCard.postValue(event.card)
-                vm.ldResponse.postValue(gsonConverter.toJson(event))
+                vm.ldResponse.postValue(gson.toJson(event))
             }
             is ScanEvent.OnVerifyEvent -> {
                 vm.ldIsVerified.postValue(true)
             }
-            else -> vm.ldResponse.postValue(gsonConverter.toJson(event))
+            else -> vm.ldResponse.postValue(gson.toJson(event))
         }
     }
 
