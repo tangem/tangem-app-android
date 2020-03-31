@@ -1,11 +1,11 @@
 package com.tangem
 
 import com.tangem.commands.*
-import com.tangem.commands.personalization.CardConfig
 import com.tangem.commands.personalization.DepersonalizeCommand
 import com.tangem.commands.personalization.DepersonalizeResponse
 import com.tangem.commands.personalization.PersonalizeCommand
 import com.tangem.commands.personalization.entities.Acquirer
+import com.tangem.commands.personalization.entities.CardConfig
 import com.tangem.commands.personalization.entities.Issuer
 import com.tangem.commands.personalization.entities.Manufacturer
 import com.tangem.common.CardEnvironment
