@@ -7,10 +7,6 @@
     <application
         tools:ignore="GoogleAppIndexingWarning">
 
-        <meta-data
-            android:name="io.fabric.ApiKey"
-            android:value="${fabric_api_key}" />
-
         <provider
             android:name="com.tangem.data.LogFileProvider"
             android:authorities="@string/log_file_provider_authorities"
