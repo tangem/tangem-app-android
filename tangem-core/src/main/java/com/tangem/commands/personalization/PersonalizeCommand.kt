@@ -6,7 +6,6 @@ import com.tangem.commands.CommandSerializer
 import com.tangem.commands.personalization.entities.Acquirer
 import com.tangem.commands.personalization.entities.Issuer
 import com.tangem.commands.personalization.entities.Manufacturer
-import com.tangem.commands.personalization.entities.Manufacturer
 import com.tangem.commands.personalization.util.CardIdCreator
 import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
