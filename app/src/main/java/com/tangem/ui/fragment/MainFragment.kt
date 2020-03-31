@@ -20,6 +20,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModelProviders
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Blockchain
@@ -315,6 +316,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                 }
 
             } else {
+                FirebaseCrashlytics.getInstance().recordException(cardProtocol.error)
                 // remove last UIDs because of error and no card read
                 rlProgressBar.post {
                     context?.let { Toast.makeText(it, R.string.general_notification_scan_again, Toast.LENGTH_SHORT).show() }
