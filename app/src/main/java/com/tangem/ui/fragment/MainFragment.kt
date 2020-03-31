@@ -20,6 +20,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModelProviders
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.App
 import com.tangem.Constant
@@ -47,9 +48,7 @@ import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
 import com.tangem.ui.dialog.WaitSecurityDelayDialog
 import com.tangem.ui.fragment.pin.PinRequestFragment
 import com.tangem.ui.navigation.NavigationResultListener
-import com.tangem.util.CommonUtil
-import com.tangem.util.LOG
-import com.tangem.util.UtilHelper
+import com.tangem.util.*
 import com.tangem.util.extensions.colorFrom
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.CoinEngineFactory
@@ -118,6 +117,9 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
 
 
         setCardStoreLink()
+
+        FirebaseAnalytics.getInstance(requireActivity())
+                .logEvent(AnalyticsEvent.READY_TO_SCAN.event, bundleOf())
     }
 
     private fun setCardStoreLink() {
@@ -270,6 +272,9 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                     card.terminalPublicKey = terminalKeys[Constant.TERMINAL_PUBLIC_KEY]
 
                     val ctx = TangemContext(card)
+
+                    FirebaseAnalytics.getInstance(requireActivity())
+                            .logEvent(AnalyticsEvent.CARD_IS_SCANNED.event, Analytics.setCardData(ctx))
 
                     when {
                         card.status == TangemCard.Status.Loaded -> lastTag?.let {
