@@ -175,7 +175,7 @@ class PersonalizeConfigConverter {
     }
 
     private fun addPayload(block: Block, from: PersonalizeConfig) {
-        block.payload[PayloadKey.IncominJson] = from
+        block.payload[PayloadKey.incomingJson] = from
     }
 
     private fun createItem(block: ListItemBlock, id: Id) {
