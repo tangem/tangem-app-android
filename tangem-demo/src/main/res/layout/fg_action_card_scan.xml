@@ -28,6 +28,15 @@
 
     </ScrollView>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:layout_margin="@dimen/def_double_indent"
+        android:text="@string/empty_screen_stub" />
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_action"
         android:layout_width="wrap_content"
