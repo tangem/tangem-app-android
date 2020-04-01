@@ -10,6 +10,7 @@ import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.abstraction.Block
 import com.tangem.tangemtest._arch.structure.abstraction.ListItemBlock
 import com.tangem.tangemtest._arch.structure.impl.*
+import com.tangem.tangemtest.ucase.domain.paramsManager.PayloadKey
 import com.tangem.tangemtest.ucase.variants.personalize.*
 import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizeConfig
 import java.util.*
@@ -174,7 +175,7 @@ class PersonalizeConfigConverter {
     }
 
     private fun addPayload(block: Block, from: PersonalizeConfig) {
-        block.payload[Additional.JSON_INCOMING.name] = from
+        block.payload[PayloadKey.IncominJson] = from
     }
 
     private fun createItem(block: ListItemBlock, id: Id) {
