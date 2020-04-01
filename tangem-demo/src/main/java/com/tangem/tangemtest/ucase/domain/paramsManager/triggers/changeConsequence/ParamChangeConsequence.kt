@@ -27,7 +27,7 @@ class SignScanConsequence: ItemsChangeConsequence {
 
         val hashItem = itemList.findDataItem(TlvId.TransactionOutHash) ?: return null
         val affectedItems = mutableListOf(hashItem)
-        val card = payload.remove(PayloadKey.Card) as Card?
+        val card = payload.remove(PayloadKey.card) as Card?
         if (card == null) {
             hashItem.restoreDefaultData()
         } else {
