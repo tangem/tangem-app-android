@@ -7,6 +7,6 @@
     <string name="unknown">unknown</string>
     <string name="switch_description">Docs</string>
 
-    <string name="card_error_not_personalized">The card not personalized</string>
+    <string name="card_error_not_personalized">Your card hasn\'t been personalized yet. You need to run personalize command first.</string>
 
 </resources>
