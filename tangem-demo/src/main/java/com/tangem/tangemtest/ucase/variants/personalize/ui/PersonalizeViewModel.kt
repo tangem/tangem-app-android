@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.google.gson.Gson
-import com.tangem.commands.personalization.CardConfig
+import com.tangem.commands.personalization.entities.CardConfig
 import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._arch.structure.abstraction.Block
 import com.tangem.tangemtest.ucase.variants.personalize.converter.PersonalizeConfigConverter
