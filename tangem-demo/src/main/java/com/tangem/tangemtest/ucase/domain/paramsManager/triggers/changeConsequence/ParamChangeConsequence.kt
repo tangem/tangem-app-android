@@ -8,7 +8,9 @@ import com.tangem.tangemtest._arch.structure.PayloadHolder
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest.ucase.domain.paramsManager.PayloadKey
 import com.tangem.tangemtest.ucase.domain.paramsManager.findDataItem
+import com.tangem.tangemtest.ucase.tunnel.ActionView
 import com.tangem.tangemtest.ucase.variants.TlvId
+import ru.dev.gbixahue.eu4d.lib.android.global.threading.postUI
 
 /**
 [REDACTED_AUTHOR]
@@ -30,6 +32,7 @@ class SignScanConsequence: ItemsChangeConsequence {
         val card = payload.remove(PayloadKey.card) as Card?
         if (card == null) {
             hashItem.restoreDefaultData()
+            postUI { (payload.get(PayloadKey.actionView) as? ActionView)?.showActionFab(false) }
         } else {
             val dataForHashing = hashItem.getData() as? String ?: "Any data mother...s"
             val hashedData = when(card.curve) {
