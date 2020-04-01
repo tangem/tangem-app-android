@@ -7,4 +7,6 @@
     <string name="unknown">unknown</string>
     <string name="switch_description">Docs</string>
 
+    <string name="card_error_not_personalized">The card not personalized</string>
+
 </resources>
