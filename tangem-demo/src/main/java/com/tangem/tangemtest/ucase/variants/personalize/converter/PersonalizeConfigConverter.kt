@@ -3,8 +3,8 @@ package com.tangem.tangemtest.ucase.variants.personalize.converter
 import com.tangem.commands.CardData
 import com.tangem.commands.EllipticCurve
 import com.tangem.commands.ProductMaskBuilder
-import com.tangem.commands.personalization.CardConfig
-import com.tangem.commands.personalization.NdefRecord
+import com.tangem.commands.personalization.entities.CardConfig
+import com.tangem.commands.personalization.entities.NdefRecord
 import com.tangem.tangemtest._arch.structure.Additional
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.abstraction.Block
