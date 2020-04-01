@@ -82,10 +82,13 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
             tvResponse.text = it
         })
         viewModel.seError.observe(viewLifecycleOwner, Observer { showSnackbarMessage(it) })
-        viewModel.seIncomingParameter.observe(viewLifecycleOwner, Observer { param ->
-            val dataItem = param as? BaseItem<Any?> ?: return@Observer
-            Log.d(this, "parameter changed from VM - name: ${dataItem.id}, value:${dataItem.viewModel.data}")
-            widgetList.firstOrNull { it.id == param.id }?.changeParamValue(param.viewModel.data)
+        viewModel.changedParameters.observe(viewLifecycleOwner, Observer { itemList ->
+            itemList.forEach { item ->
+                Log.d(this, "parameter changed from VM - name: ${item.id}")
+                val dataItem = item as? BaseItem<Any?> ?: return@Observer
+                Log.d(this, "parameter changed from VM - name: ${dataItem.id}, value:${dataItem.viewModel.data}")
+                widgetList.firstOrNull { it.id == item.id }?.changeParamValue(item.viewModel.data)
+            }
         })
         val mainActViewModel by activityViewModels<MainViewModel>()
         mainActViewModel.ldDescriptionSwitch.observe(viewLifecycleOwner, Observer { isEnabled ->
