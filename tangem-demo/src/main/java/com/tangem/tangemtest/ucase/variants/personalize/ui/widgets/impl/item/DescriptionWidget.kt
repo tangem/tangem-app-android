@@ -27,11 +27,16 @@ abstract class DescriptionWidget<D>(
     }
 
     private fun initDescriptionWidget() {
-        getResDescription()?.let { tvDescription?.setText(it) }
         dataItem.viewModel.viewState.onDescriptionVisibilityChanged = { changeDescriptionVisibility(it) }
     }
 
     protected fun changeDescriptionVisibility(state: Int) {
+        val tv = tvDescription ?: return
+        val descriptionId = getResDescription() ?: return
+        val description = tv.context.getString(descriptionId)
+        if (description.isEmpty()) return
+
+        tv.text = description
         TransitionManager.beginDelayedTransition(view.parent as ViewGroup, AutoTransition())
         descriptionContainer.visibility = state
     }
