@@ -1,5 +1,7 @@
 package com.tangem.tangemtest.ucase.variants.scan.ui
 
+import android.os.Bundle
+import android.view.View
 import android.widget.TextView
 import androidx.lifecycle.Observer
 import com.tangem.tangemtest.R
@@ -17,10 +19,16 @@ class ScanActionFragment : BaseCardActionFragment() {
 
     override fun getAction(): ActionType = ActionType.Scan
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        showActionFab(true)
+    }
+
     override fun listenResponse() {
         val tvStub = mainView.findViewById<TextView>(R.id.tv_screen_stub)
         val tvResponse by lazy { mainView.findViewById<TextView>(R.id.tv_action_response_json) }
-        viewModel.ldResponse.observe(viewLifecycleOwner, Observer {
+        paramsVM.ldReadResponse.observe(viewLifecycleOwner, Observer {
             Log.d(this, "action response: ${if (it.length > 50) it.substring(0..50) else it}")
             tvStub.show(false)
             tvResponse.text = it
