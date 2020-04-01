@@ -12,10 +12,7 @@ import androidx.lifecycle.Observer
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.CardManager
-import com.tangem.tangem_sdk_new.DefaultCardManagerDelegate
-import com.tangem.tangem_sdk_new.NfcLifecycleObserver
-import com.tangem.tangem_sdk_new.TerminalKeysStorage
-import com.tangem.tangem_sdk_new.nfc.NfcManager
+import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.abstraction.Block
 import com.tangem.tangemtest._main.MainViewModel
@@ -25,7 +22,6 @@ import com.tangem.tangemtest.ucase.domain.paramsManager.ParamsManagerFactory
 import com.tangem.tangemtest.ucase.resources.ActionType
 import com.tangem.tangemtest.ucase.ui.ActionViewModelFactory
 import com.tangem.tangemtest.ucase.ui.ParamsViewModel
-import com.tangem.tangemtest.ucase.variants.personalize.dto.CardManagerConfig
 import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizeConfig
 import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.WidgetBuilder
 import kotlinx.android.synthetic.main.fg_personalize.*
@@ -56,8 +52,6 @@ class PersonalizeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val cardManager = initCardManager() ?: return
-
         val blockList = mutableListOf<Block>()
         personalizeVM.ldBlockList.observe(viewLifecycleOwner, Observer { list ->
             blockList.clear()
@@ -68,6 +62,7 @@ class PersonalizeFragment : Fragment() {
             personalizeVM.toggleDescriptionVisibility(it)
         })
 
+        val cardManager = CardManager.init(requireActivity())
         paramsVM.setCardManager(cardManager)
         paramsVM.ldResponse.observe(viewLifecycleOwner, Observer {
             Log.d(this, "action response: ${if (it.length > 50) it.substring(0..50) else it}")
@@ -81,19 +76,19 @@ class PersonalizeFragment : Fragment() {
         }
     }
 
-    private fun initCardManager(): CardManager? {
-        val activity = activity ?: return null
-        val nfcManager = NfcManager().apply {
-            this.setCurrentActivity(activity)
-            activity.lifecycle.addObserver(NfcLifecycleObserver(this))
-        }
-        val cardManagerDelegate = DefaultCardManagerDelegate(nfcManager.reader).apply {
-            this.activity = activity
-        }
-        return CardManager(nfcManager.reader, cardManagerDelegate, CardManagerConfig.default()).apply {
-            this.setTerminalKeysService(TerminalKeysStorage(activity.application))
-        }
-    }
+//    private fun initCardManager(): CardManager? {
+//        val activity = activity ?: return null
+//        val nfcManager = NfcManager().apply {
+//            this.setCurrentActivity(activity)
+//            activity.lifecycle.addObserver(NfcLifecycleObserver(this))
+//        }
+//        val cardManagerDelegate = DefaultCardManagerDelegate(nfcManager.reader).apply {
+//            this.activity = activity
+//        }
+//        return CardManager(nfcManager.reader, cardManagerDelegate, DefaultPersonalizeParams.default()).apply {
+//            this.setTerminalKeysService(TerminalKeysStorage(activity.application))
+//        }
+//    }
 
     protected fun showSnackbarMessage(message: String) {
         Snackbar.make(mainView, message, BaseTransientBottomBar.LENGTH_SHORT).show()
