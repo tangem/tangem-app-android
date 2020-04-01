@@ -30,9 +30,10 @@ interface ItemsManager : PayloadHolder {
 
 interface PayloadKey {
     companion object {
-        val CardConfig: String = "cardConfig"
-        val IncominJson: String = "incomingJson"
-        val Card = "card"
+        val cardConfig: String = "cardConfig"
+        val incomingJson: String = "incomingJson"
+        val card = "card"
+        val actionView = "actionView"
     }
 }
 
