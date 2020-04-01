@@ -35,7 +35,7 @@ Build debug and release APKs
 ```
 fastlane android beta
 ```
-Submit a new Beta Build to Crashlytics Beta
+Submit a new Beta Build to Firebase App Distribution
 
 ----
 
