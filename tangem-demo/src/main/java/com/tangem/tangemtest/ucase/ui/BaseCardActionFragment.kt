@@ -16,26 +16,31 @@ import com.google.android.material.snackbar.Snackbar
 import com.tangem.CardManager
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tangemtest.R
+import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._main.MainViewModel
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.paramsManager.ParamsManagerFactory
+import com.tangem.tangemtest.ucase.domain.paramsManager.PayloadKey
 import com.tangem.tangemtest.ucase.resources.ActionType
+import com.tangem.tangemtest.ucase.tunnel.ActionView
+import com.tangem.tangemtest.ucase.tunnel.CardError
 import com.tangem.tangemtest.ucase.ui.widgets.ParameterWidget
-import ru.dev.gbixahue.eu4d.lib.android._android.views.find
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.LayoutHolder
 
 /**
 [REDACTED_AUTHOR]
  */
-abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
+abstract class BaseCardActionFragment : Fragment(), LayoutHolder, ActionView {
 
     protected val incomingParamsContainer: ViewGroup by lazy {
         mainView.findViewById<LinearLayout>(R.id.ll_incoming_params_container)
     }
-    protected val viewModel: ParamsViewModel by viewModels { ActionViewModelFactory(itemsManager) }
     protected lateinit var mainView: View
+    protected val actionFab: FloatingActionButton by lazy { mainView.findViewById<FloatingActionButton>(R.id.fab_action) }
+
+    protected val paramsVM: ParamsViewModel by viewModels { ActionViewModelFactory(itemsManager) }
     protected val widgetList = mutableListOf<ParameterWidget>()
 
     private val itemsManager: ItemsManager by lazy { ParamsManagerFactory.createFactory().get(getAction())!! }
@@ -50,23 +55,26 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
         super.onViewCreated(view, savedInstanceState)
         Log.d(this, "onViewCreated")
 
-        viewModel.setCardManager(CardManager.init(requireActivity()))
+        viewLifecycleOwner.lifecycle.addObserver(paramsVM)
+        paramsVM.setCardManager(CardManager.init(requireActivity()))
+        paramsVM.attachToPayload(mutableMapOf(PayloadKey.actionView to this as ActionView))
         initFab()
+        showActionFab(false)
         createWidgets { subscribeToViewModelChanges() }
     }
 
     private fun initFab() {
         Log.d(this, "initFab")
-        mainView.find<FloatingActionButton>(R.id.fab_action)?.setOnClickListener { viewModel.invokeMainAction() }
+        actionFab.setOnClickListener { paramsVM.invokeMainAction() }
     }
 
     private fun createWidgets(widgetCreatedCallback: () -> Unit) {
         Log.d(this, "createWidgets")
-        viewModel.ldParams.observe(viewLifecycleOwner, Observer { itemList ->
+        paramsVM.ldParams.observe(viewLifecycleOwner, Observer { itemList ->
             itemList.forEach { param ->
                 val widget = ParameterWidget(inflateParamView(incomingParamsContainer), param)
-                widget.onValueChanged = { id, value -> viewModel.userChangedItem(id, value) }
-                widget.onActionBtnClickListener = viewModel.getItemAction(param.id)
+                widget.onValueChanged = { id, value -> paramsVM.userChangedItem(id, value) }
+                widget.onActionBtnClickListener = paramsVM.getItemAction(param.id)
                 widgetList.add(widget)
             }
             widgetCreatedCallback()
@@ -83,18 +91,18 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
 
     protected open fun listenResponse() {
         val tvResponse by lazy { mainView.findViewById<TextView>(R.id.tv_action_response_json) }
-        viewModel.ldResponse.observe(viewLifecycleOwner, Observer {
+        paramsVM.ldResponse.observe(viewLifecycleOwner, Observer {
             Log.d(this, "action response: ${if (it.length > 50) it.substring(0..50) else it}")
             tvResponse.text = it
         })
     }
 
     protected open fun listenError() {
-        viewModel.seError.observe(viewLifecycleOwner, Observer { showSnackbarMessage(it) })
+        paramsVM.seError.observe(viewLifecycleOwner, Observer { showSnackbar(it) })
     }
 
     protected open fun listenChangedItems() {
-        viewModel.seChangedItems.observe(viewLifecycleOwner, Observer { itemList ->
+        paramsVM.seChangedItems.observe(viewLifecycleOwner, Observer { itemList ->
             itemList.forEach { item ->
                 Log.d(this, "item changed from VM - name: ${item.id}")
                 val dataItem = item as? BaseItem<Any?> ?: return@Observer
@@ -111,15 +119,27 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
         })
     }
 
-    protected fun showSnackbarMessage(message: String) {
-        Snackbar.make(mainView, message, BaseTransientBottomBar.LENGTH_SHORT).show()
-    }
-
     private fun inflateParamView(where: ViewGroup): ViewGroup {
         val inflater = LayoutInflater.from(where.context)
         val view = inflater.inflate(R.layout.w_card_incoming_param, where, false)
         where.addView(view)
         return view as ViewGroup
+    }
+
+    override fun showActionFab(enable: Boolean) {
+        if (enable) actionFab.show() else actionFab.hide()
+    }
+
+    override fun showSnackbar(id: Id) {
+//        MainResourceHolder.safeGet<>()
+        when (id) {
+            CardError.NotPersonalized -> showSnackbar(requireContext().getString(R.string.card_error_not_personalized))
+            else -> showSnackbar(requireContext().getString(R.string.unknown))
+        }
+    }
+
+    override fun showSnackbar(message: String) {
+        Snackbar.make(mainView, message, BaseTransientBottomBar.LENGTH_SHORT).show()
     }
 
     abstract fun getAction(): ActionType
