@@ -69,6 +69,11 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
         super.onViewCreated(view, savedInstanceState)
         updateViews()
 
+        val card = ctx.card
+        if (!card.allowSwapPIN() && !card.allowSwapPIN2() && card.forbidPurgeWallet()) {
+            fabMenu.hide()
+        }
+
         // set listeners
         fabMenu.setOnClickListener { showMenu(fabMenu) }
 
