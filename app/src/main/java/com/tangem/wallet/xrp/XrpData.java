@@ -122,6 +122,6 @@ public class XrpData extends CoinData {
     }
 
     public boolean hasUnconfirmed() {
-        return !balanceConfirmed.equals(balanceUnconfirmed);
+        return hasBalanceInfo() && !balanceConfirmed.equals(balanceUnconfirmed);
     }
 }
