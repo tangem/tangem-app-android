@@ -36,6 +36,7 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
     }
     protected val viewModel: ParamsViewModel by viewModels { ActionViewModelFactory(itemsManager) }
     protected lateinit var mainView: View
+    protected val widgetList = mutableListOf<ParameterWidget>()
 
     private val itemsManager: ItemsManager by lazy { ParamsManagerFactory.createFactory().get(getAction())!! }
 
@@ -51,7 +52,7 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
 
         viewModel.setCardManager(CardManager.init(requireActivity()))
         initFab()
-        createWidgets { subscribeToViewModelChanges(it) }
+        createWidgets { subscribeToViewModelChanges() }
     }
 
     private fun initFab() {
@@ -59,29 +60,40 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
         mainView.find<FloatingActionButton>(R.id.fab_action)?.setOnClickListener { viewModel.invokeMainAction() }
     }
 
-    private fun createWidgets(callback: (List<ParameterWidget>) -> Unit) {
+    private fun createWidgets(widgetCreatedCallback: () -> Unit) {
         Log.d(this, "createWidgets")
         viewModel.ldParams.observe(viewLifecycleOwner, Observer { itemList ->
-            val widgetList = mutableListOf<ParameterWidget>()
             itemList.forEach { param ->
                 val widget = ParameterWidget(inflateParamView(incomingParamsContainer), param)
                 widget.onValueChanged = { id, value -> viewModel.userChangedItem(id, value) }
                 widget.onActionBtnClickListener = viewModel.getItemAction(param.id)
                 widgetList.add(widget)
             }
-            callback(widgetList)
+            widgetCreatedCallback()
         })
     }
 
-    private fun subscribeToViewModelChanges(widgetList: List<ParameterWidget>) {
+    private fun subscribeToViewModelChanges() {
         Log.d(this, "subscribeToViewModelChanges")
+        listenResponse()
+        listenError()
+        listenChangedItems()
+        listenDescriptionSwitchChanges()
+    }
 
+    protected open fun listenResponse() {
         val tvResponse by lazy { mainView.findViewById<TextView>(R.id.tv_action_response_json) }
         viewModel.ldResponse.observe(viewLifecycleOwner, Observer {
             Log.d(this, "action response: ${if (it.length > 50) it.substring(0..50) else it}")
             tvResponse.text = it
         })
+    }
+
+    protected open fun listenError() {
         viewModel.seError.observe(viewLifecycleOwner, Observer { showSnackbarMessage(it) })
+    }
+
+    protected open fun listenChangedItems() {
         viewModel.seChangedItems.observe(viewLifecycleOwner, Observer { itemList ->
             itemList.forEach { item ->
                 Log.d(this, "item changed from VM - name: ${item.id}")
@@ -90,6 +102,9 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
                 widgetList.firstOrNull { it.id == item.id }?.changeParamValue(item.viewModel.data)
             }
         })
+    }
+
+    protected open fun listenDescriptionSwitchChanges() {
         val mainActViewModel by activityViewModels<MainViewModel>()
         mainActViewModel.ldDescriptionSwitch.observe(viewLifecycleOwner, Observer { isEnabled ->
             widgetList.forEach { it.toggleDescriptionVisibility(isEnabled) }
