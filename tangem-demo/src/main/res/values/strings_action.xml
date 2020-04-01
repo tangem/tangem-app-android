@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="action_card_scan">Scan</string>
+    <string name="action_card_scan">Read Card</string>
     <string name="action_card_sign">Sign</string>
     <string name="action_personalize">Personalize</string>
     <string name="action_depersonalize">Depersonalize</string>
@@ -13,11 +13,12 @@
     <string name="action_issuer_write_ex_data">Write issuer extra data</string>
     <string name="action_user_read_data">Read user data</string>
     <string name="action_user_write_data">Write user data</string>
-
-    <string name="info_action_card_scan">SomeDescription</string>
-    <string name="info_action_card_sign">SomeDescription</string>
-    <string name="info_action_personalize">SomeDescription</string>
-    <string name="info_action_depersonalize">SomeDescription</string>
+    ​
+    <string name="info_action_card_scan">This command returns all data about the card and the wallet, including unique card number (CID) that has to be submitted while calling all other commands</string>
+    <string name="info_action_card_sign">Depending on Signing_Method parameter defined during personalization, this command signs data using Wallet_PrivateKey</string>
+    <string name="info_action_personalize">Personalization is an initialization procedure, required before start using a card. During this procedure all card setting are performed. During this procedure all data exchange are encrypted because it\'s usually done at the third-party factory.</string>
+    <string name="info_action_depersonalize">This command reset card to initial state - erase all data, writed during previous personalization and previous usage.
+        \nCommand available on SDK cards only</string>
     <string name="info_action_wallet_create">SomeDescription</string>
     <string name="info_action_wallet_purge">SomeDescription</string>
     <string name="info_action_issuer_read_data">SomeDescription</string>
