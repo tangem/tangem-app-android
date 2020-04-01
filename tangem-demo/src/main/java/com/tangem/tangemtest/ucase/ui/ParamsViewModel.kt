@@ -88,7 +88,7 @@ internal class Notifier(private val vm: ParamsViewModel) {
     private val gson: Gson = GsonInitializer().gson
 
     fun handleActionResult(response: TaskEvent<*>, list: List<Item>) {
-        notifyItemsChanged(list)
+        if (list.isNotEmpty()) notifyItemsChanged(list)
         handleResponse(response)
     }
 

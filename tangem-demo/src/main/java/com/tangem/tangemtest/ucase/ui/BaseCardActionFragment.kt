@@ -126,8 +126,8 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder, ActionView {
         return view as ViewGroup
     }
 
-    override fun showActionFab(enable: Boolean) {
-        if (enable) actionFab.show() else actionFab.hide()
+    override fun showActionFab(show: Boolean) {
+        if (show) actionFab.show() else actionFab.hide()
     }
 
     override fun showSnackbar(id: Id) {
