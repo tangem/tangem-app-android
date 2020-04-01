@@ -35,7 +35,7 @@ class SignScanConsequence: ItemsChangeConsequence {
             val hashedData = when(card.curve) {
                 EllipticCurve.Secp256k1 -> dataForHashing.calculateSha256()
                 EllipticCurve.Ed25519 -> dataForHashing.calculateSha512()
-                else -> throw Exception("Can't calculate hash of a data with unknown card curve")
+                else -> return null
             }
             hashItem.setData(hashedData)
         }
