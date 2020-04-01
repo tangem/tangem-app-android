@@ -11,16 +11,16 @@ import com.tangem.tangemtest.ucase.variants.TlvId
 /**
 * [REDACTED_AUTHOR]
  */
-class DepersonalizeParamsManager : BaseParamsManager(DepesonalizeAction()) {
-    override fun createParamsList(): List<Item> {
+class DepersonalizeItemsManager : BaseItemsManager(DepesonalizeAction()) {
+    override fun createItemsList(): List<Item> {
         return listOf(EditTextItem(TlvId.CardId, null))
     }
 
     override fun invokeMainAction(cardManager: CardManager, callback: ActionCallback) {
-        action.executeMainAction(getAttrsForAction(cardManager), callback)
+        action.executeMainAction(this, getAttrsForAction(cardManager), callback)
     }
 
     override fun getActionByTag(id: Id, cardManager: CardManager): ((ActionCallback) -> Unit)? {
-        return action.getActionByTag(id, getAttrsForAction(cardManager))
+        return action.getActionByTag(this, id, getAttrsForAction(cardManager))
     }
 }

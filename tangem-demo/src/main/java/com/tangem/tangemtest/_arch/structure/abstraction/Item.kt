@@ -18,4 +18,14 @@ abstract class BaseItem<D>(
 ) : Item, DataHolder<ItemViewModel<D>> {
     override var parent: Item? = null
     override val payload: Payload = mutableMapOf()
+
+    fun getData(): D? = viewModel.data
+
+    fun setData(value: D?) {
+        viewModel.data = value
+    }
+
+    fun restoreDefaultData(){
+        setData(viewModel.defaultData)
+    }
 }
