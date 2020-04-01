@@ -9,10 +9,6 @@ import com.tangem.common.tlv.TlvMapper
 import com.tangem.common.tlv.TlvTag
 import com.tangem.tasks.TaskError
 
-/**
-[REDACTED_AUTHOR]
- */
-
 class WriteUserDataResponse(
     /**
      * CID, Unique Tangem card ID number.
