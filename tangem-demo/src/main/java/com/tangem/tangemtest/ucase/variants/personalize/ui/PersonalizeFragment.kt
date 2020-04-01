@@ -72,7 +72,8 @@ class PersonalizeFragment : Fragment() {
 
         fab_action?.setOnClickListener {
             val cardConfig = personalizeVM.createCardConfig(personalizeVM.createConfig(blockList))
-            paramsVM.invokeMainAction(mutableMapOf(PayloadKey.CardConfig to cardConfig))
+            paramsVM.attachToPayload(mutableMapOf(PayloadKey.cardConfig to cardConfig))
+            paramsVM.invokeMainAction()
         }
     }
 
