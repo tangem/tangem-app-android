@@ -11,7 +11,7 @@ import com.tangem.tangemtest.ucase.variants.personalize.dto.DefaultPersonalizePa
  */
 class PersonalizeAction : BaseAction() {
     override fun executeMainAction(payload: PayloadHolder, attrs: AttrForAction, callback: ActionCallback) {
-        val cardConfig = attrs.payload.remove(PayloadKey.CardConfig) as? CardConfig
+        val cardConfig = attrs.payload.remove(PayloadKey.cardConfig) as? CardConfig
                 ?: throw IllegalArgumentException("CardConfig must be in the payloads of the ParamsManager")
 
         val issuer = DefaultPersonalizeParams.issuer()
