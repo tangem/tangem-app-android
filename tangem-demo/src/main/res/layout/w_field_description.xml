@@ -9,6 +9,6 @@
         android:id="@+id/tv_description"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/colorPrimary" />
+        android:textColor="@color/field_description" />
 
 </FrameLayout>
