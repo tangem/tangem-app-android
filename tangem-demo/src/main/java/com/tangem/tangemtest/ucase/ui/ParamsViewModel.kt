@@ -11,7 +11,7 @@ import com.tangem.tangemtest._arch.SingleLiveEvent
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest.commons.performAction
-import com.tangem.tangemtest.ucase.domain.paramsManager.ParamsManager
+import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.responses.GsonInitializer
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskError
@@ -21,19 +21,19 @@ import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 /**
 [REDACTED_AUTHOR]
  */
-class ActionViewModelFactory(private val manager: ParamsManager) : ViewModelProvider.NewInstanceFactory() {
+class ActionViewModelFactory(private val manager: ItemsManager) : ViewModelProvider.NewInstanceFactory() {
     override fun <T : ViewModel?> create(modelClass: Class<T>): T = ParamsViewModel(manager) as T
 }
 
-class ParamsViewModel(val paramsManager: ParamsManager) : ViewModel() {
+class ParamsViewModel(val itemsManager: ItemsManager) : ViewModel() {
 
     val ldCard = MutableLiveData<Card>()
     val ldIsVerified = MutableLiveData<Boolean>()
     val ldResponse = MutableLiveData<String>()
-    val ldParams = MutableLiveData(paramsManager.getParams())
+    val ldParams = MutableLiveData(itemsManager.getItems())
 
     val seError: MutableLiveData<String> = SingleLiveEvent()
-    val changedParameters: MutableLiveData<List<Item>> = SingleLiveEvent()
+    val seChangedItems: MutableLiveData<List<Item>> = SingleLiveEvent()
 
     private val notifier: Notifier = Notifier(this)
     private lateinit var cardManager: CardManager
@@ -42,29 +42,29 @@ class ParamsViewModel(val paramsManager: ParamsManager) : ViewModel() {
         this.cardManager = cardManager
     }
 
-    fun userChangedParameter(id: Id, value: Any?) {
-        parameterChanged(id, value)
+    fun userChangedItem(id: Id, value: Any?) {
+        itemChanged(id, value)
     }
 
-    private fun parameterChanged(id: Id, value: Any?) {
-        paramsManager.parameterChanged(id, value) { notifier.notifyParameterChanges(it) }
+    private fun itemChanged(id: Id, value: Any?) {
+        itemsManager.itemChanged(id, value) { notifier.notifyItemsChanged(it) }
     }
 
     //invokes Scan, Sign etc...
     fun invokeMainAction(payload: MutableMap<String, Any?> = mutableMapOf()) {
-        paramsManager.attachPayload(payload)
-        performAction(paramsManager, cardManager) { paramsManager, cardManager ->
+        itemsManager.attachPayload(payload)
+        performAction(itemsManager, cardManager) { paramsManager, cardManager ->
             paramsManager.invokeMainAction(cardManager) { response, listOfChangedParams ->
                 notifier.handleActionResult(response, listOfChangedParams)
             }
         }
     }
 
-    fun getParameterAction(id: Id): (() -> Unit)? {
-        val parameterFunction = paramsManager.getActionByTag(id, cardManager) ?: return null
+    fun getItemAction(id: Id): (() -> Unit)? {
+        val itemFunction = itemsManager.getActionByTag(id, cardManager) ?: return null
 
         return {
-            parameterFunction { response, listOfChangedParams ->
+            itemFunction { response, listOfChangedParams ->
                 notifier.handleActionResult(response, listOfChangedParams)
             }
         }
@@ -77,13 +77,13 @@ internal class Notifier(private val vm: ParamsViewModel) {
     private val gson: Gson = GsonInitializer().gson
 
     fun handleActionResult(response: TaskEvent<*>, list: List<Item>) {
-        notifyParameterChanges(list)
+        notifyItemsChanged(list)
         handleResponse(response)
     }
 
     @UiThread
-    fun notifyParameterChanges(list: List<Item>) {
-        vm.changedParameters.postValue(list)
+    fun notifyItemsChanged(list: List<Item>) {
+        vm.seChangedItems.postValue(list)
     }
 
     fun handleResponse(response: TaskEvent<*>) {

@@ -18,7 +18,7 @@ import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._main.MainViewModel
-import com.tangem.tangemtest.ucase.domain.paramsManager.ParamsManager
+import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.paramsManager.ParamsManagerFactory
 import com.tangem.tangemtest.ucase.resources.ActionType
 import com.tangem.tangemtest.ucase.ui.widgets.ParameterWidget
@@ -34,10 +34,10 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
     protected val incomingParamsContainer: ViewGroup by lazy {
         mainView.findViewById<LinearLayout>(R.id.ll_incoming_params_container)
     }
-    protected val viewModel: ParamsViewModel by viewModels { ActionViewModelFactory(paramsManager) }
+    protected val viewModel: ParamsViewModel by viewModels { ActionViewModelFactory(itemsManager) }
     protected lateinit var mainView: View
 
-    private val paramsManager: ParamsManager by lazy { ParamsManagerFactory.createFactory().get(getAction())!! }
+    private val itemsManager: ItemsManager by lazy { ParamsManagerFactory.createFactory().get(getAction())!! }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         Log.d(this, "onCreateView")
@@ -61,12 +61,12 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
 
     private fun createWidgets(callback: (List<ParameterWidget>) -> Unit) {
         Log.d(this, "createWidgets")
-        viewModel.ldParams.observe(viewLifecycleOwner, Observer { paramsList ->
+        viewModel.ldParams.observe(viewLifecycleOwner, Observer { itemList ->
             val widgetList = mutableListOf<ParameterWidget>()
-            paramsList.forEach { param ->
+            itemList.forEach { param ->
                 val widget = ParameterWidget(inflateParamView(incomingParamsContainer), param)
-                widget.onValueChanged = { id, value -> viewModel.userChangedParameter(id, value) }
-                widget.onActionBtnClickListener = viewModel.getParameterAction(param.id)
+                widget.onValueChanged = { id, value -> viewModel.userChangedItem(id, value) }
+                widget.onActionBtnClickListener = viewModel.getItemAction(param.id)
                 widgetList.add(widget)
             }
             callback(widgetList)
@@ -82,11 +82,11 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder {
             tvResponse.text = it
         })
         viewModel.seError.observe(viewLifecycleOwner, Observer { showSnackbarMessage(it) })
-        viewModel.changedParameters.observe(viewLifecycleOwner, Observer { itemList ->
+        viewModel.seChangedItems.observe(viewLifecycleOwner, Observer { itemList ->
             itemList.forEach { item ->
-                Log.d(this, "parameter changed from VM - name: ${item.id}")
+                Log.d(this, "item changed from VM - name: ${item.id}")
                 val dataItem = item as? BaseItem<Any?> ?: return@Observer
-                Log.d(this, "parameter changed from VM - name: ${dataItem.id}, value:${dataItem.viewModel.data}")
+                Log.d(this, "item changed from VM - name: ${dataItem.id}, value:${dataItem.viewModel.data}")
                 widgetList.firstOrNull { it.id == item.id }?.changeParamValue(item.viewModel.data)
             }
         })
