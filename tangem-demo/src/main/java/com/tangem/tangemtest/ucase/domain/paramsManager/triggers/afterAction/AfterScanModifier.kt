@@ -19,22 +19,24 @@ import ru.dev.gbixahue.eu4d.lib.android.global.threading.postUI
 class AfterScanModifier : AfterActionModification {
     override fun modify(payload: PayloadHolder, taskEvent: TaskEvent<*>, itemList: List<Item>): List<Item> {
         val foundItem = itemList.findDataItem(TlvId.CardId) ?: return listOf()
+        val card = smartCast(taskEvent)?.card ?: return listOf()
+        val actionView = payload.get(PayloadKey.actionView) as? ActionView ?: return listOf()
 
-        return if (taskEvent is TaskEvent.Event && taskEvent.data is ScanEvent.OnReadEvent) {
-            val card = (taskEvent.data as ScanEvent.OnReadEvent).card
-            val actionView = payload.remove(PayloadKey.actionView) as? ActionView ?: return listOf()
-
-            if (isPersonalized(card)) {
-                actionView.showSnackbar(CardError.NotPersonalized)
-                return listOf()
-            }
-
+        return if (isNotPersonalized(card)) {
+            actionView.showSnackbar(CardError.NotPersonalized)
+            postUI { actionView.showActionFab(false) }
+            listOf()
+        } else {
             payload.set(PayloadKey.card, card)
             foundItem.setData(card.cardId)
             postUI { actionView.showActionFab(true) }
             listOf(foundItem)
-        } else listOf()
+        }
     }
 
-    private fun isPersonalized(card: Card): Boolean = card.status == CardStatus.NotPersonalized
+    private fun smartCast(taskEvent: TaskEvent<*>): ScanEvent.OnReadEvent? {
+        return (taskEvent as? TaskEvent.Event)?.data as? ScanEvent.OnReadEvent
+    }
+
+    private fun isNotPersonalized(card: Card): Boolean = card.status == CardStatus.NotPersonalized
 }
