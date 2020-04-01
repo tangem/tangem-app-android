@@ -33,7 +33,7 @@ class ParamsViewModel(val paramsManager: ParamsManager) : ViewModel() {
     val ldParams = MutableLiveData(paramsManager.getParams())
 
     val seError: MutableLiveData<String> = SingleLiveEvent()
-    val seIncomingParameter: MutableLiveData<Item> = SingleLiveEvent()
+    val changedParameters: MutableLiveData<List<Item>> = SingleLiveEvent()
 
     private val notifier: Notifier = Notifier(this)
     private lateinit var cardManager: CardManager
@@ -83,7 +83,7 @@ internal class Notifier(private val vm: ParamsViewModel) {
 
     @UiThread
     fun notifyParameterChanges(list: List<Item>) {
-        list.forEach { vm.seIncomingParameter.postValue(it) }
+        vm.changedParameters.postValue(list)
     }
 
     fun handleResponse(response: TaskEvent<*>) {
