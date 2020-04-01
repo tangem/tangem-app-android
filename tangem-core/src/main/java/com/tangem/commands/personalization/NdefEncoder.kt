@@ -1,5 +1,6 @@
 package com.tangem.commands.personalization
 
+import com.tangem.commands.personalization.entities.NdefRecord
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 
