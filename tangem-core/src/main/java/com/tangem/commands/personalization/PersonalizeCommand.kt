@@ -3,9 +3,7 @@ package com.tangem.commands.personalization
 import com.tangem.commands.Card
 import com.tangem.commands.CardData
 import com.tangem.commands.CommandSerializer
-import com.tangem.commands.personalization.entities.Acquirer
-import com.tangem.commands.personalization.entities.Issuer
-import com.tangem.commands.personalization.entities.Manufacturer
+import com.tangem.commands.personalization.entities.*
 import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
@@ -27,14 +25,13 @@ import com.tangem.tasks.TaskError
  * During this procedure all data exchange is encrypted.
  * @property config is a configuration file with all the card settings that are written on the card
  * during personalization.
- * @property cardId this parameter will set up CID, Unique Tangem card ID.
  * @property issuer Issuer is a third-party team or company wishing to use Tangem cards.
  * @property manufacturer Tangem Card Manufacturer.
  * @property acquirer Acquirer is a trusted third-party company that operates proprietary
  * (non-EMV) POS terminal infrastructure and transaction processing back-end.
  */
 class PersonalizeCommand(
-        private val config: CardConfig, private val cardId: String,
+        private val config: CardConfig,
         private val issuer: Issuer, private val manufacturer: Manufacturer,
         private val acquirer: Acquirer? = null
 ) : CommandSerializer<Card>() {
@@ -42,8 +39,7 @@ class PersonalizeCommand(
     override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
         return CommandApdu(
                 Instruction.Personalize,
-                serializePersonalizationData(
-                        cardId, config),
+                serializePersonalizationData(config),
                 encryptionKey = devPersonalizationKey
         )
     }
@@ -104,17 +100,19 @@ class PersonalizeCommand(
         )
     }
 
-    private fun serializePersonalizationData(cardId: String, config: CardConfig): ByteArray {
+    private fun serializePersonalizationData(config: CardConfig): ByteArray {
+        val cardId = config.createCardId() ?: throw TaskError.SerializeCommandError()
+
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.CardId, cardId)
-
         tlvBuilder.append(TlvTag.CurveId, config.curveID)
         tlvBuilder.append(TlvTag.MaxSignatures, config.maxSignatures)
         tlvBuilder.append(TlvTag.SigningMethod, config.signingMethod)
-        tlvBuilder.append(TlvTag.SettingsMask, config.getSettingsMask())
+        tlvBuilder.append(TlvTag.SettingsMask, config.createSettingsMask())
         tlvBuilder.append(TlvTag.PauseBeforePin2, config.pauseBeforePin2 / 10)
         tlvBuilder.append(TlvTag.Cvc, config.cvc.toByteArray())
-        if (!config.ndefRecords.isNullOrEmpty()) tlvBuilder.append(TlvTag.NdefData, serializeNdef(config.ndefRecords))
+        if (!config.ndefRecords.isNullOrEmpty())
+            tlvBuilder.append(TlvTag.NdefData, serializeNdef(config))
 
         tlvBuilder.append(TlvTag.CreateWalletAtPersonalize, config.createWallet)
 
@@ -131,15 +129,16 @@ class PersonalizeCommand(
         return tlvBuilder.serialize()
     }
 
+    private fun serializeNdef(config: CardConfig): ByteArray {
+        return NdefEncoder(config.ndefRecords, config.useDynamicNdef).encode()
+    }
+
     private fun serializeCardData(cardId: String, cardData: CardData): ByteArray {
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Batch, cardData.batchId)
         tlvBuilder.append(TlvTag.ProductMask, cardData.productMask)
-
         tlvBuilder.append(TlvTag.ManufactureDateTime, cardData.manufactureDateTime)
-
         tlvBuilder.append(TlvTag.IssuerId, issuer.id)
-
         tlvBuilder.append(TlvTag.BlockchainId, cardData.blockchainName)
 
         if (cardData.tokenSymbol != null) {
@@ -152,10 +151,6 @@ class PersonalizeCommand(
                 cardId.hexToBytes().sign(manufacturer.keyPair.privateKey)
         )
         return tlvBuilder.serialize()
-    }
-
-    private fun serializeNdef(ndefRecords: List<NdefRecord>): ByteArray {
-        return NdefEncoder(ndefRecords, config.useDynamicNdef).encode()
     }
 
     companion object {
