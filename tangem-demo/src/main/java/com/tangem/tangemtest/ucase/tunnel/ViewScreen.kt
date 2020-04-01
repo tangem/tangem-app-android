@@ -10,5 +10,5 @@ interface SnackbarHolder {
 }
 
 interface ActionView : ViewScreen, SnackbarHolder {
-    fun showActionFab(enable: Boolean)
+    fun showActionFab(show: Boolean)
 }
