@@ -1,5 +1,6 @@
 package com.tangem.tangemtest.ucase.variants.personalize.converter
 
+import com.tangem.commands.EllipticCurve
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.impl.KeyValue
 import com.tangem.tangemtest.ucase.variants.personalize.*
@@ -85,10 +86,7 @@ class IdToValueAssociations : BaseTypedHolder<Id, Value>() {
 internal class Helper {
     companion object {
         fun listOfCurves(): List<KeyValue> {
-            return mutableListOf(
-                    KeyValue("Secp256k1", "Secp256k1"),
-                    KeyValue("Ed25519", "Ed25519")
-            )
+            return EllipticCurve.values().map { KeyValue(it.name, it.curve) }
         }
 
         fun listOfBlockchain(): List<KeyValue> {
