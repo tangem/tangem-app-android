@@ -3,10 +3,11 @@ package com.tangem.tangemtest.ucase.domain.actions
 import com.tangem.CardManager
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.Payload
+import com.tangem.tangemtest._arch.structure.PayloadHolder
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest.ucase.domain.paramsManager.ActionCallback
 import com.tangem.tangemtest.ucase.domain.paramsManager.triggers.afterAction.AfterActionModification
-import com.tangem.tangemtest.ucase.domain.paramsManager.triggers.changeConsequence.ParamsChangeConsequence
+import com.tangem.tangemtest.ucase.domain.paramsManager.triggers.changeConsequence.ItemsChangeConsequence
 import com.tangem.tasks.TaskEvent
 
 /**
@@ -17,28 +18,29 @@ import com.tangem.tasks.TaskEvent
  */
 data class AttrForAction(
         val cardManager: CardManager,
-        val paramsList: List<Item>,
+        val itemList: List<Item>,
         val payload: Payload,
-        val consequence: ParamsChangeConsequence?
+        val consequence: ItemsChangeConsequence?
 )
 
-interface CardAction {
-    fun executeMainAction(attrs: AttrForAction, callback: ActionCallback)
-    fun getActionByTag(id: Id, attrs: AttrForAction): ((ActionCallback) -> Unit)? = null
+interface Action {
+    fun executeMainAction(payload: PayloadHolder, attrs: AttrForAction, callback: ActionCallback)
+    fun getActionByTag(payload: PayloadHolder, id: Id, attrs: AttrForAction): ((ActionCallback) -> Unit)? = null
 }
 
-abstract class BaseCardAction : CardAction {
-    protected open fun handleResponse(
+abstract class BaseAction : Action {
+    protected open fun handleResult(
+            payload: PayloadHolder,
             taskEvent: TaskEvent<*>,
             modifier: AfterActionModification?,
             attrs: AttrForAction,
             callback: ActionCallback
     ) {
-        val allModifiedParams = mutableListOf<Item>()
-        modifier?.modify(taskEvent, attrs.paramsList)?.forEach { parameter ->
-            allModifiedParams.add(parameter)
-            attrs.consequence?.affectChanges(parameter, attrs.paramsList)?.let { allModifiedParams.addAll(it) }
+        val modifiedItems = mutableListOf<Item>()
+        modifier?.modify(payload, taskEvent, attrs.itemList)?.forEach { item ->
+            modifiedItems.add(item)
+            attrs.consequence?.affectChanges(payload, item, attrs.itemList)?.let { modifiedItems.addAll(it) }
         }
-        callback(taskEvent, allModifiedParams)
+        callback(taskEvent, modifiedItems)
     }
 }
