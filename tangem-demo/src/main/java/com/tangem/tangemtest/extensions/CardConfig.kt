@@ -3,8 +3,8 @@ package com.tangem.tangemtest.extensions
 import android.app.Application
 import android.content.Context
 import com.tangem.commands.*
-import com.tangem.commands.personalization.CardConfig
-import com.tangem.commands.personalization.NdefRecord
+import com.tangem.commands.personalization.entities.CardConfig
+import com.tangem.commands.personalization.entities.NdefRecord
 import java.util.*
 
 fun CardConfig.Companion.init(application: Application): CardConfig {
