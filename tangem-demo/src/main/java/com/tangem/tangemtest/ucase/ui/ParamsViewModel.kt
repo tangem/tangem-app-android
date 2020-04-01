@@ -120,7 +120,7 @@ internal class Notifier(private val vm: ParamsViewModel) {
             when (taskEvent.error) {
                 is TaskError.UserCancelled -> {
                     if (notShowedError == null) {
-                        vm.seError.postValue("User was cancelled")
+                        vm.seError.postValue("User canceled the action")
                     } else {
                         vm.seError.postValue("${notShowedError!!::class.simpleName}")
                         notShowedError = null
