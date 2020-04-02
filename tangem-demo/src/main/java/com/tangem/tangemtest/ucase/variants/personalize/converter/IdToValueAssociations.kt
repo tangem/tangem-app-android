@@ -92,7 +92,7 @@ internal class Helper {
 
         fun listOfBlockchain(): List<KeyValue> {
             return mutableListOf(
-                    KeyValue("--- CUSTOM ---", "BTC/test"),
+                    KeyValue("--- CUSTOM ---", ""),
                     KeyValue("BTC", "BTC"),
                     KeyValue("BTC/test", "BTC/test"),
                     KeyValue("ETH", "ETH"),
