@@ -13,4 +13,11 @@
         <item name="trackTint">@color/menu_switch_color_track</item>
     </style>
 
+    <style name="ItemWidgetContainer" >
+        <item name="android:paddingStart">@dimen/def_indent</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingEnd">@dimen/def_indent</item>
+        <item name="android:paddingBottom">13dp</item>
+    </style>
+
 </resources>
