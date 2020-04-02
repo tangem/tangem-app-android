@@ -70,7 +70,7 @@ class IdToValueAssociations : BaseTypedHolder<Id, Value>() {
         register(SettingsMask.SkipSecurityDelayOnLinkedTerminal, Value(from.skipSecurityDelayIfValidatedByLinkedTerminal))
         register(SettingsMask.RestrictOverwriteExtraIssuerData, Value(from.restrictOverwriteIssuerDataEx))
         register(SettingsMaskProtocolEnc.AllowUnencrypted, Value(from.protocolAllowUnencrypted))
-        register(SettingsMaskProtocolEnc.AlloFastEncryption, Value(false))
+        register(SettingsMaskProtocolEnc.AllowStaticEncryption, Value(from.protocolAllowStaticEncryption))
         register(SettingsMaskNdef.UseNdef, Value(from.useNDEF))
         register(SettingsMaskNdef.DynamicNdef, Value(from.useDynamicNDEF))
         register(SettingsMaskNdef.DisablePrecomputedNdef, Value(from.disablePrecomputedNDEF))
