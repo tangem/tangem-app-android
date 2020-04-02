@@ -95,7 +95,7 @@ enum class SettingsMask : BlockItem {
 
 enum class SettingsMaskProtocolEnc : BlockItem {
     AllowUnencrypted,
-    AlloFastEncryption
+    AllowStaticEncryption
 }
 
 enum class SettingsMaskNdef : BlockItem {
