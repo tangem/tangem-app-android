@@ -76,13 +76,13 @@ class SendTransactionFragment : BaseFragment(), NfcAdapter.ReaderCallback {
     }
 
     private fun finishWithSuccess() {
-        val transactionFinishWithSuccess = TransactionFinishWithSuccess()
-        EventBus.getDefault().post(transactionFinishWithSuccess)
-
         activity?.let {
             val params = bundleOf(AnalyticsParam.BLOCKCHAIN.param to ctx.blockchainName)
             FirebaseAnalytics.getInstance(it).logEvent(AnalyticsEvent.TRANSACTION_IS_SENT.event, params)
         }
+
+        val transactionFinishWithSuccess = TransactionFinishWithSuccess()
+        EventBus.getDefault().post(transactionFinishWithSuccess)
 
         val data = Bundle()
         data.putString(Constant.EXTRA_MESSAGE, getString(R.string.send_transaction_success))
