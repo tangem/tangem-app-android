@@ -104,7 +104,10 @@ internal class Helper {
                     KeyValue("XLM/test", "XLM/test"),
                     KeyValue("RSK", "RSK"),
                     KeyValue("XPR", "XPR"),
-                    KeyValue("CARDANO", "CARDANO")
+                    KeyValue("CARDANO", "CARDANO"),
+                    KeyValue("BNB", "BNB"),
+                    KeyValue("XTZ", "XTZ"),
+                    KeyValue("DUC", "DUC")
             )
         }
 
