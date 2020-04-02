@@ -26,6 +26,7 @@ class IdToValueAssociations : BaseTypedHolder<Id, Value>() {
     fun init(from: PersonalizeConfig) {
         register(CardNumber.Series, Value(from.series))
         register(CardNumber.Number, Value(from.startNumber))
+        register(CardNumber.BatchId, Value(from.batchId))
         register(Common.Curve, Value(from.curveID, Helper.listOfCurves()))
         register(Common.Blockchain, Value(from.blockchain, Helper.listOfBlockchain()))
         register(Common.BlockchainCustom, Value(""))

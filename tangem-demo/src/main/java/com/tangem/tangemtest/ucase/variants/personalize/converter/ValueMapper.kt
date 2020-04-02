@@ -43,6 +43,7 @@ class ValueMapper {
         val export = PersonalizeConfig()
         export.series = getTyped(CardNumber.Series, defaultConfig.series)
         export.startNumber = getTyped(CardNumber.Number, defaultConfig.startNumber)
+        export.batchId = getTyped(CardNumber.BatchId, defaultConfig.batchId)
         export.curveID = getTyped(Common.Curve, defaultConfig.curveID)
         export.blockchain = getTyped(Common.Blockchain, defaultConfig.blockchain)
         export.blockchainCustom = getTyped(Common.BlockchainCustom, defaultConfig.blockchainCustom)
