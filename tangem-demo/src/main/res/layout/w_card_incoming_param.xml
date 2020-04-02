@@ -31,7 +31,7 @@
                 android:paddingStart="0dp"
                 android:paddingEnd="@dimen/def_double_indent"
                 android:paddingBottom="4dp"
-                android:textSize="@dimen/unit_widget_text_size" />
+                android:textSize="@dimen/iw_text_size" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
