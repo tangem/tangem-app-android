@@ -226,8 +226,9 @@ class PersonalizeConfigConverter {
             tokenDecimal = applyConfig.decimal.toInt()
         }
 
+        val blockchain = if (applyConfig.blockchain.isNotEmpty()) applyConfig.blockchain else applyConfig.blockchainCustom
         val cardData = CardData(
-                blockchainName = applyConfig.blockchain,
+                blockchainName = blockchain,
                 batchId = applyConfig.batchId,
                 productMask = productMask,
                 tokenSymbol = tokenSymbol,
