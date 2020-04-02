@@ -148,7 +148,8 @@ class PersonalizeConfigConverter {
         val block = createBlock(BlockId.SettingsMaskProtocolEnc)
         mutableListOf(
                 SettingsMaskProtocolEnc.AllowUnencrypted,
-                SettingsMaskProtocolEnc.AlloFastEncryption).forEach { createItem(block, it) }
+                SettingsMaskProtocolEnc.AllowStaticEncryption
+        ).forEach { createItem(block, it) }
         return block
     }
 
@@ -313,7 +314,7 @@ class IdItemHelper {
                 SettingsMask.SmartSecurityDelay, SettingsMask.ProtectIssuerDataAgainstReplay,
                 SettingsMask.SkipSecurityDelayIfValidated, SettingsMask.SkipPin2CvcIfValidated,
                 SettingsMask.SkipSecurityDelayOnLinkedTerminal, SettingsMask.RestrictOverwriteExtraIssuerData,
-                SettingsMaskProtocolEnc.AllowUnencrypted, SettingsMaskProtocolEnc.AlloFastEncryption,
+                SettingsMaskProtocolEnc.AllowUnencrypted, SettingsMaskProtocolEnc.AllowStaticEncryption,
                 SettingsMaskNdef.UseNdef, SettingsMaskNdef.DynamicNdef, SettingsMaskNdef.DisablePrecomputedNdef
         )
 
