@@ -43,6 +43,7 @@ class PersonalizeResources() {
     private fun initCardNumber(holder: TypedHolder<Id, Resources>) {
         holder.register(CardNumber.Series, Resources(R.string.pers_item_series, R.string.info_pers_item_series))
         holder.register(CardNumber.Number, Resources(R.string.pers_item_number, R.string.info_pers_item_number))
+        holder.register(CardNumber.BatchId, Resources(R.string.pers_item_batch_id, R.string.info_pers_item_batch_id))
     }
 
     private fun initCommon(holder: TypedHolder<Id, Resources>) {
