@@ -13,7 +13,7 @@ class PersonalizeConfig {
 
     // Common
     var curveID = "ed25519"
-    var blockchain = "BTC"
+    var blockchain = "BTC/test"
     var blockchainCustom = ""
     var MaxSignatures: Long = 100
     var createWallet = false
