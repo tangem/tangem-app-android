@@ -1,41 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingStart="@dimen/def_indent"
-    android:paddingEnd="@dimen/def_indent">
+    android:minHeight="@dimen/iw_layout_frame_min_height">
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/til_item"
-        style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        app:boxBackgroundColor="@android:color/transparent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_item"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="start|bottom"
-            android:paddingStart="0dp"
-            android:paddingEnd="@dimen/def_double_indent"
-            android:paddingBottom="4dp"
-            android:textSize="@dimen/unit_widget_text_size" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <include
-        layout="@layout/w_field_description"
+    <LinearLayout
+        style="@style/ItemWidgetContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/til_item"
-        tools:visibility="visible" />
+        android:layout_gravity="center_vertical"
+        android:orientation="vertical">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_item"
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:boxBackgroundColor="@android:color/transparent"
+            tools:hint="Field name">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_item"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="start|bottom"
+                android:paddingStart="0dp"
+                android:paddingEnd="@dimen/def_double_indent"
+                android:paddingBottom="4dp"
+                android:textSize="@dimen/iw_text_size"
+                tools:text="Some text field" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <include layout="@layout/w_field_description"/>
+
+    </LinearLayout>
+
+    <include
+        layout="@layout/m_divider_h"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_gravity="bottom" />
+
+</FrameLayout>
