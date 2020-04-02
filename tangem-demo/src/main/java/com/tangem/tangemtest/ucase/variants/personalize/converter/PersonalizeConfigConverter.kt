@@ -47,7 +47,8 @@ class PersonalizeConfigConverter {
         val block = createBlock(BlockId.CardNumber)
         mutableListOf(
                 CardNumber.Series,
-                CardNumber.Number
+                CardNumber.Number,
+                CardNumber.BatchId
         ).forEach { createItem(block, it as Id) }
         return block
     }
@@ -227,7 +228,7 @@ class PersonalizeConfigConverter {
 
         val cardData = CardData(
                 blockchainName = applyConfig.blockchain,
-                batchId = applyConfig.cardData.batch,
+                batchId = applyConfig.batchId,
                 productMask = productMask,
                 tokenSymbol = tokenSymbol,
                 tokenContractAddress = tokenContractAddress,
@@ -316,7 +317,7 @@ class IdItemHelper {
         )
 
         val editTextList = mutableListOf(
-                CardNumber.Series, Common.BlockchainCustom, SignHashExProp.CryptoExKey, Token.Symbol,
+                CardNumber.Series, CardNumber.BatchId, Common.BlockchainCustom, SignHashExProp.CryptoExKey, Token.Symbol,
                 Token.ContractAddress, Pins.Pin, Pins.Pin2, Pins.Pin3, Pins.Cvc, SettingsMaskNdef.AarCustom
         )
 
