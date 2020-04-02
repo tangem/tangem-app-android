@@ -27,6 +27,7 @@ enum class BlockId : PersonalizeId {
 enum class CardNumber : BlockItem {
     Series,
     Number,
+    BatchId,
 }
 
 enum class Common : BlockItem {
