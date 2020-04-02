@@ -111,7 +111,7 @@ class PersonalizeResources() {
 
     private fun initSettingsMaskProtocolEnc(holder: TypedHolder<Id, Resources>) {
         holder.register(SettingsMaskProtocolEnc.AllowUnencrypted, Resources(R.string.pers_item_allow_unencrypted, R.string.info_pers_item_allow_unencrypted))
-        holder.register(SettingsMaskProtocolEnc.AlloFastEncryption, Resources(R.string.pers_item_allow_fast_encryption, R.string.info_pers_item_allow_fast_encryption))
+        holder.register(SettingsMaskProtocolEnc.AllowStaticEncryption, Resources(R.string.pers_item_allow_fast_encryption, R.string.info_pers_item_allow_fast_encryption))
     }
 
     private fun initSettingsMaskNde(holder: TypedHolder<Id, Resources>) {
