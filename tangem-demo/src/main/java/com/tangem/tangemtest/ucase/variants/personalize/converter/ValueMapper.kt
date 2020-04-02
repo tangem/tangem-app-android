@@ -22,7 +22,7 @@ class ValueMapper {
         default.init(defaultConfig)
         updatedByItemList.init(defaultConfig)
         startMapping(itemList)
-        return createJson(defaultConfig)
+        return createConfig()
     }
 
     private fun startMapping(itemList: List<Item>) {
@@ -39,7 +39,7 @@ class ValueMapper {
         }
     }
 
-    private fun createJson(defaultConfig: PersonalizeConfig): PersonalizeConfig {
+    private fun createConfig(): PersonalizeConfig {
         val export = PersonalizeConfig()
         export.series = getTyped(CardNumber.Series)
         export.startNumber = getTyped(CardNumber.Number)
