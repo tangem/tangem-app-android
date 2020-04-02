@@ -8,6 +8,7 @@ class PersonalizeConfig {
     // Card number
     var series = "BB"
     var startNumber: Long = 300000000000
+    var batchId = "ffff"
 
 
     // Common
