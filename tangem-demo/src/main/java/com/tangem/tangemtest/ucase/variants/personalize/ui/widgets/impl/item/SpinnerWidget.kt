@@ -17,20 +17,20 @@ import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 /**
 [REDACTED_AUTHOR]
  */
-class SpinnerWidget(parent: ViewGroup, data: ListItem) : DescriptionWidget<ListValueWrapper>(parent, data) {
+class SpinnerWidget(parent: ViewGroup, listItem: ListItem) : DescriptionWidget<ListValueWrapper>(parent, listItem) {
     override fun getLayoutId(): Int = R.layout.w_personalize_item_spinner
 
+    private val data: ListValueWrapper = listItem.getData()!!
+
     private val spItem = view.findViewById<Spinner>(R.id.sp_item)
-    private val spAdapter = SpItemAdapter(dataItem.viewModel.data?.itemList)
+    private val spAdapter = SpItemAdapter(data.itemList)
 
     private val onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
         override fun onNothingSelected(parent: AdapterView<*>?) {}
 
         override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-            val vmData = dataItem.viewModel.data ?: return
-
-            vmData.selectedItem = vmData.itemList[position]
-            dataItem.viewModel.updateDataByView(vmData)
+            data.selectedItem = data.itemList[position]
+            dataItem.viewModel.updateDataByView(data)
         }
     }
 
@@ -38,6 +38,9 @@ class SpinnerWidget(parent: ViewGroup, data: ListItem) : DescriptionWidget<ListV
         val name = view.findViewById<TextView>(R.id.tv_name)
         name.setText(getResNameId())
         spItem.adapter = spAdapter
+        spAdapter.getItemPosition(stringOf(data.selectedItem))?.let {
+            spItem.setSelection(it)
+        }
         spItem.onItemSelectedListener = onItemSelectedListener
         dataItem.viewModel.onDataUpdated = {
             it?.apply {
@@ -81,4 +84,9 @@ class SpItemAdapter(list: List<KeyValue>?) : BaseAdapter() {
     override fun getItemId(position: Int): Long = position.toLong()
 
     override fun getCount(): Int = itemList.size
+
+    fun getItemPosition(item: String): Int? {
+        val kv = itemList.firstOrNull { it.value == item } ?: return null
+        return itemList.indexOf(kv)
+    }
 }
