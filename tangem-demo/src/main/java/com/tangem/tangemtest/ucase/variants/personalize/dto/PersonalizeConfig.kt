@@ -72,7 +72,6 @@ class PersonalizeConfig {
 
     // Settings mask - protocol encryption
     var protocolAllowUnencrypted = true
-    var allowFastEncryption = false
     var protocolAllowStaticEncryption = true
 
 
