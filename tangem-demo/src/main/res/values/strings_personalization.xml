@@ -56,7 +56,7 @@
     <string name="pers_item_forbid_default_pin">Forbid default PIN</string>
     <string name="pers_item_smart_security_delay">Smart Security Delay</string>
     <string name="pers_item_protect_issuer_data_against_replay">Protect issuer data against replay</string>
-    <string name="pers_item_skip_security_delay_if_validated">Security delay if validated</string>
+    <string name="pers_item_skip_security_delay_if_validated">Skip security delay if validated</string>
     <string name="pers_item_skip_pin2_and_cvc_if_validated">Skip PIN2 and CVC if validated</string>
     <string name="pers_item_skip_security_delay_on_linked_terminal">Skip security delay on linked terminal</string>
     <string name="pers_item_restrict_overwrite_ex_issuer_data">Restrict overwrite extra issuer data</string>
