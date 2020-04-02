@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.tangem_card.reader.CardProtocol
@@ -190,6 +191,7 @@ class WriteIdFragment : BaseFragment(), NavigationResultListener,
 
             } else {
                 lastReadSuccess = false
+                FirebaseCrashlytics.getInstance().recordException(cardProtocol.error)
                 if (cardProtocol.error.javaClass == CardProtocol.TangemException_InvalidPIN::class.java) {
                     progressBar?.post {
                         progressBar?.progress = 100
