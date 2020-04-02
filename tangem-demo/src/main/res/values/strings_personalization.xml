@@ -17,6 +17,7 @@
     ​
     <string name="pers_item_series">Series</string>
     <string name="pers_item_number">Number</string>
+    <string name="pers_item_batch_id">Batch ID</string>
     <string name="pers_item_curve">Curve</string>
     <string name="pers_item_blockchain">Blockchain</string>
     <string name="pers_item_custom_blockchain">Custom blockchain</string>
@@ -86,6 +87,7 @@
     ​
     <string name="info_pers_item_series"></string>
     <string name="info_pers_item_number"></string>
+    <string name="info_pers_item_batch_id"></string>
     <string name="info_pers_item_curve">Elliptic curve used for all wallet key operations. Supported curves: ‘secp256k1’, ‘ed25519’.</string>
     <string name="info_pers_item_blockchain">Name of the blockchain. It\'s just a textfield in the card. It\'s needed for host app to tell what blockchain should it use. </string>
     <string name="info_pers_item_custom_blockchain">You can use this field, to create something special</string>
