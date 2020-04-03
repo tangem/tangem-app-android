@@ -4,14 +4,14 @@ import com.tangem.CardManager
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest._arch.structure.impl.EditTextItem
-import com.tangem.tangemtest.ucase.domain.actions.DepesonalizeAction
+import com.tangem.tangemtest.ucase.domain.actions.DepersonalizeAction
 import com.tangem.tangemtest.ucase.domain.paramsManager.ActionCallback
 import com.tangem.tangemtest.ucase.variants.TlvId
 
 /**
 [REDACTED_AUTHOR]
  */
-class DepersonalizeItemsManager : BaseItemsManager(DepesonalizeAction()) {
+class DepersonalizeItemsManager : BaseItemsManager(DepersonalizeAction()) {
     override fun createItemsList(): List<Item> {
         return listOf(EditTextItem(TlvId.CardId, null))
     }
