@@ -337,6 +337,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
     @Subscribe
     fun onTransactionFinishWithSuccess(transactionFinishWithSuccess: TransactionFinishWithSuccess) {
         refreshAction = Runnable { refresh() }
+        ctx.card.remainingSignatures -= 1
         srl?.postDelayed(refreshAction, 10000)
     }
 
@@ -478,6 +479,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
 
             Constant.REQUEST_CODE_SEND_TRANSACTION, Constant.REQUEST_CODE_RECEIVE_TRANSACTION -> {
                 if (resultCode == Activity.RESULT_OK) {
+//                    ctx.card.remainingSignatures = ctx.card.remainingSignatures - 1
                     ctx.coinData?.clearInfo()
                     srl?.postDelayed({ this.refresh() }, 5000)
                     srl?.isRefreshing = true
