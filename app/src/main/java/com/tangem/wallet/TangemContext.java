@@ -4,10 +4,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.tangem.Constant;
 import com.tangem.data.Blockchain;
 import com.tangem.tangem_card.data.TangemCard;
 import com.tangem.tangem_sdk.data.TangemCardExtensionsKt;
+import com.tangem.util.AnalyticsParam;
 
 public class TangemContext {
     //    public static final String EXTRA_BLOCKCHAIN_DATA = "BLOCKCHAIN_DATA";
@@ -58,7 +60,7 @@ public class TangemContext {
     public String getBlockchainName() {
         Blockchain blockchain = getBlockchain();
         if (blockchain == Blockchain.Token || blockchain == Blockchain.RootstockToken) {
-            return card.getTokenSymbol()+ "<br><small><small> " + getBlockchain().getOfficialName() + " smart contract token</small></small>";
+            return card.getTokenSymbol() + "<br><small><small> " + getBlockchain().getOfficialName() + " smart contract token</small></small>";
         }
         if (blockchain == Blockchain.NftToken) {
             return card.getTokenSymbol().substring(4) + "<br><small><small> " + getBlockchain().getOfficialName() + " non-fungible token</small></small>";
@@ -67,7 +69,7 @@ public class TangemContext {
             return card.getTokenSymbol() + "<br><small><small> " + getBlockchain().getOfficialName() + " asset</small></small>";
         }
         if (blockchain == Blockchain.StellarTag) {
-            return "TANGEM TAG<br><small><small> "+ getBlockchain().getOfficialName() + " non-fungible token </small></small>";
+            return "TANGEM TAG<br><small><small> " + getBlockchain().getOfficialName() + " non-fungible token </small></small>";
         }
         return blockchain.getOfficialName();
     }
@@ -97,6 +99,11 @@ public class TangemContext {
     }
 
     public void setError(String error) {
+        if (error != null) {
+            FirebaseCrashlytics crashlytics = FirebaseCrashlytics.getInstance();
+            crashlytics.setCustomKey(AnalyticsParam.BLOCKCHAIN.getParam(), getBlockchainName());
+            crashlytics.recordException(new Exception(error));
+        }
         this.error = error;
     }
 
