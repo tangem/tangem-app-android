@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.core.os.bundleOf
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.tangem_card.reader.CardProtocol
@@ -151,6 +152,7 @@ class PurgeFragment : BaseFragment(), NfcAdapter.ReaderCallback, CardProtocol.No
                     navigateToDestination(R.id.action_purgeFragment_to_mainFragment)
                 }
             } else {
+                FirebaseCrashlytics.getInstance().recordException(cardProtocol.error)
                 if (cardProtocol.error is CardProtocol.TangemException_InvalidPIN) {
                     progressBar?.post {
                         progressBar?.progress = 100
