@@ -14,7 +14,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.tangem.CardManager
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tangemtest.R
-import com.tangem.tangemtest._arch.structure.abstraction.Block
+import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest._main.MainViewModel
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.paramsManager.ParamsManagerFactory
@@ -52,7 +52,7 @@ class PersonalizeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val blockList = mutableListOf<Block>()
+        val blockList = mutableListOf<Item>()
         personalizeVM.ldBlockList.observe(viewLifecycleOwner, Observer { list ->
             blockList.clear()
             blockList.addAll(list)
