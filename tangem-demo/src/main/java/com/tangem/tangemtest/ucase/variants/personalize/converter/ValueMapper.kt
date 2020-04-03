@@ -86,7 +86,7 @@ class ValueMapper {
         export.skipSecurityDelayIfValidatedByLinkedTerminal = getTyped(SettingsMask.SkipSecurityDelayOnLinkedTerminal)
         export.restrictOverwriteIssuerDataEx = getTyped(SettingsMask.RestrictOverwriteExtraIssuerData)
         export.protocolAllowUnencrypted = getTyped(SettingsMaskProtocolEnc.AllowUnencrypted)
-        export.allowFastEncryption = getTyped(SettingsMaskProtocolEnc.AlloFastEncryption)
+        export.protocolAllowStaticEncryption = getTyped(SettingsMaskProtocolEnc.AllowStaticEncryption)
         export.useNDEF = getTyped(SettingsMaskNdef.UseNdef)
         export.useDynamicNDEF = getTyped(SettingsMaskNdef.DynamicNdef)
         export.disablePrecomputedNDEF = getTyped(SettingsMaskNdef.DisablePrecomputedNdef)
