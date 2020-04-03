@@ -6,11 +6,15 @@ import android.nfc.Tag
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.core.os.bundleOf
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.tangem_card.util.Util
 import com.tangem.ui.activity.MainActivity
 import com.tangem.ui.event.TransactionFinishWithSuccess
+import com.tangem.util.AnalyticsEvent
+import com.tangem.util.AnalyticsParam
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.CoinEngine
 import com.tangem.wallet.CoinEngineFactory
@@ -40,7 +44,7 @@ class SendTransactionFragment : BaseFragment(), NfcAdapter.ReaderCallback {
                         if (success) {
                             App.pendingTransactionsStorage.putTransaction(ctx.card, Util.bytesToHex(tx), engine.pendingTransactionTimeoutInSeconds())
                             finishWithSuccess()
-                        }else
+                        } else
                             finishWithError(ctx.error)
                     }
 
@@ -72,6 +76,11 @@ class SendTransactionFragment : BaseFragment(), NfcAdapter.ReaderCallback {
     }
 
     private fun finishWithSuccess() {
+        activity?.let {
+            val params = bundleOf(AnalyticsParam.BLOCKCHAIN.param to ctx.blockchainName)
+            FirebaseAnalytics.getInstance(it).logEvent(AnalyticsEvent.TRANSACTION_IS_SENT.event, params)
+        }
+
         val transactionFinishWithSuccess = TransactionFinishWithSuccess()
         EventBus.getDefault().post(transactionFinishWithSuccess)
 
