@@ -8,7 +8,9 @@ import com.google.gson.Gson
 import com.tangem.commands.personalization.entities.CardConfig
 import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._arch.structure.abstraction.Block
+import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest.ucase.variants.personalize.converter.PersonalizeConfigConverter
+import com.tangem.tangemtest.ucase.variants.personalize.converter.fromTo.PersonalizeConfigToCardConfig
 import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizeConfig
 
 /**
@@ -20,20 +22,21 @@ class PersonalizeViewModelFactory(private val config: PersonalizeConfig) : ViewM
 
 class PersonalizeViewModel(private val config: PersonalizeConfig) : ViewModel() {
 
-    val ldBlockList: MutableLiveData<List<Block>> by lazy { MutableLiveData(initBlockList()) }
+    val ldBlockList: MutableLiveData<List<Item>> by lazy { MutableLiveData(initBlockList()) }
+    private val configConverter = PersonalizeConfigConverter()
 
-    private fun initBlockList(): List<Block> = createBlocksFromConfig(config)
+    private fun initBlockList(): List<Item> = createBlocksFromConfig(config)
 
-    fun createBlocksFromConfig(config: PersonalizeConfig): List<Block> {
-        return PersonalizeConfigConverter().toBlock(config)
+    fun createBlocksFromConfig(config: PersonalizeConfig): List<Item> {
+        return configConverter.convert(config)
     }
 
-    fun createConfig(blocList: List<Block>): PersonalizeConfig {
-        return PersonalizeConfigConverter().toConfig(blocList, PersonalizeConfig())
+    fun createConfig(blocList: List<Item>): PersonalizeConfig {
+        return configConverter.convert(blocList, PersonalizeConfig())
     }
 
     fun createCardConfig(config: PersonalizeConfig): CardConfig {
-        return PersonalizeConfigConverter().createCardConfig(config)
+        return PersonalizeConfigToCardConfig().convert(config)
     }
 
     fun convertToJson(config: PersonalizeConfig): String {
@@ -41,11 +44,19 @@ class PersonalizeViewModel(private val config: PersonalizeConfig) : ViewModel() 
     }
 
     fun toggleDescriptionVisibility(state: Boolean) {
-        ldBlockList.value?.forEach { block ->
-            block.itemList.forEach { item ->
-                val vm = item as? BaseItem<*> ?: return@forEach
-                vm.viewModel.viewState.descriptionVisibility = if (state) View.VISIBLE else View.GONE
+        ldBlockList.value?.forEach { item ->
+            when(item) {
+                is BaseItem<*> -> {
+                    item.viewModel.viewState.descriptionVisibility = if (state) View.VISIBLE else View.GONE
+                }
+                is Block -> {
+                    item.itemList.forEach { blockItem ->
+                        val vm = blockItem as? BaseItem<*> ?: return@forEach
+                        vm.viewModel.viewState.descriptionVisibility = if (state) View.VISIBLE else View.GONE
+                    }
+                }
             }
+
         }
     }
 }
