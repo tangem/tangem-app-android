@@ -11,18 +11,18 @@ public enum Blockchain {
     BitcoinTestNet("BTC/test", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin_testnet, "Bitcoin Testnet"),
     BitcoinDual("BTC/dual", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin, "Bitcoin"),
     Ethereum("ETH", "ETH", 1.0, R.drawable.ic_logo_ethereum, "Ethereum"),
-    EthereumId("ETH/ID", "ETH", 1.0, R.drawable.ic_logo_ethereum, "Ethereum ID"),
+    EthereumId("ETH/ID", "ETH", 1.0, R.drawable.ic_logo_ethereum, "Ethereum"),
     EthereumTestNet("ETH/test", "ETH", 1.0, R.drawable.ic_logo_ethereum_testnet, "Ethereum Testnet"),
-    Token("Token", "ETH", 1.0, R.drawable.ic_logo_bat_token, "Ethereum"),
-    NftToken("NftToken", "", 1.0, R.drawable.tangem2, "Ethereum"),
+    Token("Token", "ETH", 1.0, R.drawable.ic_logo_ethereum, "Ethereum"),
+    NftToken("NftToken", "", 1.0, R.drawable.ic_logo_ethereum, "Ethereum"),
     BitcoinCash("BCH", "BCH", 100000000.0, R.drawable.ic_logo_bitcoin_cash, "Bitcoin Cash"),
-    Litecoin("LTC", "LTC", 100000000.0, R.drawable.tangem2, "Litecoin"),
+    Litecoin("LTC", "LTC", 100000000.0, R.drawable.ic_logo_litecoin, "Litecoin"),
     Rootstock("RSK", "RBTC", 1.0, R.drawable.tangem2, "RSK"),
     RootstockToken("RskToken", "RBTC", 1.0, R.drawable.tangem2, "RSK"),
     Cardano("CARDANO", "ADA", 1000000.0, R.drawable.tangem2, "Cardano"),
-    Ripple ("XRP", "XRP", 1000000.0, R.drawable.tangem2, "XRP"),
-    Binance("BINANCE", "BNB", 100000000.0, R.drawable.tangem2, "Binance"),
-    BinanceTestNet("BINANCE/test", "BNB", 100000000.0, R.drawable.tangem2, "Binance Testnet"),
+    Ripple ("XRP", "XRP", 1000000.0, R.drawable.ic_logo_xrp, "XRP"),
+    Binance("BINANCE", "BNB", 100000000.0, R.drawable.ic_logo_binance, "Binance"),
+    BinanceTestNet("BINANCE/test", "BNB", 100000000.0, R.drawable.ic_logo_binance, "Binance Testnet"),
     Matic("MATIC", "MTX", 1.0, R.drawable.tangem2, "Matic"),
     MaticTestNet("MATIC/test", "MTX", 1.0, R.drawable.tangem2, "Matic Testnet"),
     Stellar("XLM", "XLM", 10000000.0, R.drawable.ic_logo_stellar, "Stellar"),
@@ -31,7 +31,7 @@ public enum Blockchain {
     StellarTag("XLM-Tag", "XLM", 1000000.0, R.drawable.ic_logo_stellar, "Stellar"),
     Eos("EOS", "EOS", 10000.0, R.drawable.tangem2, "EOS"),
     Ducatus("DUC", "DUC", 100000000.0, R.drawable.tangem2, "Ducatus"),
-    Tezos("TEZOS", "XTZ", 10000000.0, R.drawable.tangem2, "Tezos");
+    Tezos("TEZOS", "XTZ", 10000000.0, R.drawable.ic_logo_tezos, "Tezos");
 
     Blockchain(String ID, String currency, double multiplier, int imageResource, String officialName) {
         mID = ID;
