@@ -7,10 +7,7 @@ import com.tangem.commands.personalization.entities.CardConfig
 import com.tangem.commands.personalization.entities.NdefRecord
 import com.tangem.tangemtest._arch.structure.Additional
 import com.tangem.tangemtest._arch.structure.Id
-import com.tangem.tangemtest._arch.structure.abstraction.Block
-import com.tangem.tangemtest._arch.structure.abstraction.Item
-import com.tangem.tangemtest._arch.structure.abstraction.ListItemBlock
-import com.tangem.tangemtest._arch.structure.abstraction.ModelToItems
+import com.tangem.tangemtest._arch.structure.abstraction.*
 import com.tangem.tangemtest._arch.structure.impl.*
 import com.tangem.tangemtest.ucase.domain.paramsManager.PayloadKey
 import com.tangem.tangemtest.ucase.variants.personalize.*
@@ -24,11 +21,11 @@ import java.util.*
  */
 class PersonalizeConfigToItem : ModelToItems<PersonalizeConfig> {
     private val valuesHolder = PersonalizeConfigValuesHolder()
-    private val idIdentification = ItemTypes()
+    private val itemTypes = ItemTypes()
 
     override fun convert(from: PersonalizeConfig): List<Item> {
         valuesHolder.init(from)
-        val blocList = mutableListOf<Block>()
+        val blocList = mutableListOf<Item>()
         blocList.add(cardNumber())
         blocList.add(common())
         blocList.add(signingMethod())
@@ -43,6 +40,11 @@ class PersonalizeConfigToItem : ModelToItems<PersonalizeConfig> {
         val payloadBlock = ListItemBlock(Additional.JSON_TAILS)
         addPayload(payloadBlock, from)
         blocList.add(payloadBlock)
+        blocList.iterate {
+            if (itemTypes.hiddenList.contains(it.id)) {
+                (it as BaseItem<*>)?.viewModel.viewState.isHiddenField = true
+            }
+        }
         return blocList
     }
 
@@ -186,11 +188,11 @@ class PersonalizeConfigToItem : ModelToItems<PersonalizeConfig> {
     private fun createItem(block: ListItemBlock, id: Id) {
         val holder = valuesHolder.get(id) ?: return
         val item = when {
-            idIdentification.blockIdList.contains(id) -> TextItem(id, holder.get() as? String)
-            idIdentification.listItemList.contains(id) -> ListItem(id, holder.list as List<KeyValue>, holder.get())
-            idIdentification.boolList.contains(id) -> BoolItem(id, holder.get() as? Boolean)
-            idIdentification.editTextList.contains(id) -> EditTextItem(id, holder.get() as? String)
-            idIdentification.numberList.contains(id) -> NumberItem(id, holder.get() as? Number)
+            itemTypes.blockIdList.contains(id) -> TextItem(id, holder.get() as? String)
+            itemTypes.listItemList.contains(id) -> ListItem(id, holder.list as List<KeyValue>, holder.get())
+            itemTypes.boolList.contains(id) -> BoolItem(id, holder.get() as? Boolean)
+            itemTypes.editTextList.contains(id) -> EditTextItem(id, holder.get() as? String)
+            itemTypes.numberList.contains(id) -> NumberItem(id, holder.get() as? Number)
             else -> ListItemBlock(Additional.UNDEFINED)
         }
         block.addItem(item)
