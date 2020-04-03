@@ -12,6 +12,12 @@ fun String.calculateSha256(): ByteArray {
     return sha256.digest(data)
 }
 
+fun String.calculateSha512(): ByteArray {
+    val sha = MessageDigest.getInstance("SHA-512")
+    val data = this.toByteArray(Charset.forName("UTF-8"))
+    return sha.digest(data)
+}
+
 fun String.hexToBytes(): ByteArray {
     return ByteArray(this.length / 2)
     { i ->
