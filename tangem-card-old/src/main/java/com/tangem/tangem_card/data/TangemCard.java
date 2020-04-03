@@ -8,7 +8,6 @@ import com.tangem.tangem_card.reader.TLVList;
 import com.tangem.tangem_card.util.Util;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
 
@@ -357,6 +356,11 @@ public class TangemCard {
     public Boolean allowSwapPIN2() {
         if (settingsMask == null) return null;
         return (settingsMask & SettingsMask.AllowSwapPIN2) != 0;
+    }
+
+    public Boolean forbidPurgeWallet() {
+        if (settingsMask == null) return null;
+        return (settingsMask & SettingsMask.ForbidPurgeWallet) != 0;
     }
 
     public Boolean needCVC() {
