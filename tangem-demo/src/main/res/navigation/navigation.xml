@@ -69,7 +69,7 @@
 
     <fragment
         android:id="@+id/nav_depersonalize"
-        android:name="com.tangem.tangemtest.ucase.variants.depersonalize.ui.DepesonalizeActionFragment"
+        android:name="com.tangem.tangemtest.ucase.variants.depersonalize.ui.DepersonalizeActionFragment"
         android:label="@string/action_depersonalize"
         tools:layout="@layout/fg_depersonalize" />
 
