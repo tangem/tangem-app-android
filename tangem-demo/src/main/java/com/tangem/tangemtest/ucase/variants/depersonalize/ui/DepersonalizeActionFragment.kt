@@ -7,7 +7,7 @@ import com.tangem.tangemtest.ucase.ui.BaseCardActionFragment
 /**
 [REDACTED_AUTHOR]
  */
-class DepesonalizeActionFragment : BaseCardActionFragment() {
+class DepersonalizeActionFragment : BaseCardActionFragment() {
 
     override fun getLayoutId(): Int = R.layout.fg_depersonalize
 
