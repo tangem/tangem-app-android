@@ -5,6 +5,13 @@ import com.tangem.tangemtest._arch.structure.Id
 /**
 [REDACTED_AUTHOR]
  */
-enum class CardError : Id {
-    NotPersonalized
+interface Errors: Id
+
+enum class CardError : Errors {
+    NotPersonalized,
+}
+
+enum class ItemError: Errors {
+    BadSeries,
+    BadCardNumber,
 }
