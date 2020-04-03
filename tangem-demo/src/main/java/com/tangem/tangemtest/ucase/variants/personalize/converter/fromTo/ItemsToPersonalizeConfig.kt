@@ -1,45 +1,44 @@
-package com.tangem.tangemtest.ucase.variants.personalize.converter
+package com.tangem.tangemtest.ucase.variants.personalize.converter.fromTo
 
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._arch.structure.abstraction.Block
 import com.tangem.tangemtest._arch.structure.abstraction.Item
+import com.tangem.tangemtest._arch.structure.abstraction.ItemsToModel
 import com.tangem.tangemtest._arch.structure.impl.KeyValue
 import com.tangem.tangemtest._arch.structure.impl.ListValueWrapper
 import com.tangem.tangemtest.ucase.variants.personalize.*
+import com.tangem.tangemtest.ucase.variants.personalize.converter.PersonalizeConfigValuesHolder
 import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizeConfig
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 
 /**
 [REDACTED_AUTHOR]
  */
-class ValueMapper {
-    private val default: IdToValueAssociations = IdToValueAssociations()
-    private val updatedByItemList: IdToValueAssociations = IdToValueAssociations()
+class ItemsToPersonalizeConfig : ItemsToModel<PersonalizeConfig> {
+    protected val valuesHolder = PersonalizeConfigValuesHolder()
 
-
-    fun mapOnObject(itemList: List<Item>, defaultConfig: PersonalizeConfig): PersonalizeConfig {
-        default.init(defaultConfig)
-        updatedByItemList.init(defaultConfig)
-        startMapping(itemList)
-        return createConfig()
+    override fun convert(from: List<Item>, default: PersonalizeConfig): PersonalizeConfig {
+        valuesHolder.init(default)
+        mapListItems(from)
+        return createModel()
     }
 
-    private fun startMapping(itemList: List<Item>) {
-        itemList.forEach { item -> mapItem(item) }
+    private fun mapListItems(itemList: List<Item>) {
+        itemList.forEach { item -> mapItemToHolder(item) }
     }
 
-    private fun mapItem(item: Item) {
+    private fun mapItemToHolder(item: Item) {
         when (item) {
-            is Block -> startMapping(item.itemList)
+            is Block -> mapListItems(item.itemList)
             is BaseItem<*> -> {
-                val value = updatedByItemList.get(item.id) ?: return
-                value.set(item.viewModel.data)
+                val defValue = valuesHolder.get(item.id) ?: return
+                defValue.set(item.viewModel.data)
             }
         }
     }
 
-    private fun createConfig(): PersonalizeConfig {
+    private fun createModel(): PersonalizeConfig {
         val export = PersonalizeConfig()
         export.series = getTyped(CardNumber.Series)
         export.startNumber = getTyped(CardNumber.Number)
@@ -101,12 +100,12 @@ class ValueMapper {
     }
 
     private inline fun <reified Type> getTyped(id: Id): Type {
-        return getTypedBy<Type>(updatedByItemList, id) ?: getTypedBy<Type>(default, id)!!
+        return getTypedBy<Type>(valuesHolder, id)!!
     }
 
-    private inline fun <reified Type> getTypedBy(associations: IdToValueAssociations, id: Id): Type? {
+    private inline fun <reified Type> getTypedBy(holder: PersonalizeConfigValuesHolder, id: Id): Type? {
         Log.d(this, "getTyped for id: $id")
-        var typedValue = associations.get(id)?.get()
+        var typedValue = holder.get(id)?.get()
 
         typedValue = when (typedValue) {
             is ListValueWrapper -> (typedValue.selectedItem as KeyValue).value as Type
