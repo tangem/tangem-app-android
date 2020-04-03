@@ -35,4 +35,12 @@ class ItemTypes {
     val numberList = mutableListOf(
             CardNumber.Number, Common.MaxSignatures, SignHashExProp.PinLessFloorLimit, Denomination.Denomination, Token.Decimal
     )
+
+    val hiddenList = mutableListOf(
+            CardNumber.Series, CardNumber.BatchId, Pins.Pin3, SigningMethod.SignExternal,
+            SignHashExProp.CryptoExKey, SignHashExProp.CheckPin3, SettingsMask.OneApdu,
+            SettingsMask.UseBlock, SettingsMask.ProtectIssuerDataAgainstReplay,
+            SignHashExProp.RequireTerminalCertSig, SignHashExProp.RequireTerminalTxSig
+    )
+
 }
