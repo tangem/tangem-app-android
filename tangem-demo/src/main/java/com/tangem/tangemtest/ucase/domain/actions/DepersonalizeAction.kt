@@ -9,7 +9,7 @@ import com.tangem.tangemtest.ucase.variants.TlvId
 /**
 [REDACTED_AUTHOR]
  */
-class DepesonalizeAction : BaseAction() {
+class DepersonalizeAction : BaseAction() {
     override fun executeMainAction(payload: PayloadHolder, attrs: AttrForAction, callback: ActionCallback) {
         val item = attrs.itemList.findDataItem(TlvId.CardId) ?: return
         val cardId = item.viewModel.data as? String ?: return
