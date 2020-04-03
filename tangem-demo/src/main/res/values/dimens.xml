@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-  <dimen name="delimiter_size">1dp</dimen>
+    <dimen name="delimiter_size">1dp</dimen>
+
+    <dimen name="def_half_indent">8dp</dimen>
+    <dimen name="def_indent">16dp</dimen>
+    <dimen name="def_double_indent">32dp</dimen>
 
 </resources>
