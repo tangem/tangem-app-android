@@ -5,12 +5,13 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.CardManager
 import com.tangem.tangem_sdk_new.extensions.init
+import com.tangem.tangemtest.extensions.create
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskError
 import com.tangem.tasks.TaskEvent
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.old_activity_main.*
 
-class MainActivity : AppCompatActivity() {
+class Old_MainActivity : AppCompatActivity() {
 
     private lateinit var cardManager: CardManager
     private lateinit var cardId: String
@@ -20,7 +21,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.old_activity_main)
 
         cardManager = CardManager.init(this)
 
