@@ -1,5 +1,8 @@
 package com.tangem.common
 
+import com.tangem.commands.EllipticCurve
+import com.tangem.crypto.CryptoUtils.generatePublicKey
+
 
 /**
  * Contains data relating to a Tangem card. It is used in constructing all the commands,
@@ -27,4 +30,8 @@ enum class EncryptionMode(val code: Byte) {
     STRONG(0x2)
 }
 
-class KeyPair(val publicKey: ByteArray, val privateKey: ByteArray)
+class KeyPair(val publicKey: ByteArray, val privateKey: ByteArray) {
+
+    constructor(privateKey: ByteArray, curve: EllipticCurve = EllipticCurve.Secp256k1) :
+            this(generatePublicKey(privateKey, curve), privateKey)
+}
