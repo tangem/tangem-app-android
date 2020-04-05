@@ -1,6 +1,7 @@
 package com.tangem.common
 
-import com.tangem.commands.personalization.entities.Issuer
+import com.tangem.commands.EllipticCurve
+import com.tangem.crypto.CryptoUtils.generatePublicKey
 
 
 /**
@@ -14,10 +15,7 @@ data class CardEnvironment(
         val terminalKeys: KeyPair? = null,
         var encryptionMode: EncryptionMode = EncryptionMode.NONE,
         var encryptionKey: ByteArray? = null,
-        val cvc: ByteArray? = null,
-        val manufacturerKeyPair: KeyPair? = null,
-        val acquirerKeyPair: KeyPair? = null,
-        val issuer: Issuer? = null
+        val cvc: ByteArray? = null
 ) {
 
     companion object {
@@ -32,4 +30,8 @@ enum class EncryptionMode(val code: Byte) {
     STRONG(0x2)
 }
 
-class KeyPair(val publicKey: ByteArray, val privateKey: ByteArray)
+class KeyPair(val publicKey: ByteArray, val privateKey: ByteArray) {
+
+    constructor(privateKey: ByteArray, curve: EllipticCurve = EllipticCurve.Secp256k1) :
+            this(generatePublicKey(privateKey, curve), privateKey)
+}
