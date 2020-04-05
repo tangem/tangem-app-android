@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="@dimen/iw_layout_frame_min_height">
+
+    <LinearLayout
+        style="@style/ItemWidgetContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:orientation="vertical"
+        android:paddingTop="12dp">
+
+        <TextView
+            android:id="@+id/tv_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/iw_text_size_spinner_hint"
+            tools:text="Field name" />
+
+        <androidx.appcompat.widget.AppCompatSpinner
+            android:id="@+id/sp_item"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="-0dp" />
+
+        <FrameLayout
+            android:id="@+id/m_delimiter_h"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/delimiter_size"
+            android:background="@color/edit_text_underline" />
+
+        <include layout="@layout/w_field_description"/>
+
+    </LinearLayout>
+
+    <include
+        layout="@layout/m_divider_h"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_gravity="bottom" />
+
+</FrameLayout>
