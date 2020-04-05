@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  android:id="@+id/m_delimiter_h"
-  android:layout_width="match_parent"
-  android:layout_height="@dimen/delimiter_size"
-  android:background="@color/delimiter"
-  android:orientation="vertical" />
