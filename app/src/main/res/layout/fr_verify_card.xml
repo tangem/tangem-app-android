@@ -160,32 +160,6 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="@dimen/verify_card_left_col_width"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="20dp"
-                        android:fontFamily="@font/maax"
-                        android:text="@string/details_is_card_reusable"
-                        android:textSize="@dimen/text_size_1_small" />
-
-                    <TextView
-                        android:id="@+id/tvReusable"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/maax"
-                        android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/text_size_1_small"
-                        android:textStyle="normal|bold"
-                        tools:text="Reusable" />
-
-                </LinearLayout>
-
-
-                <LinearLayout
                     android:id="@+id/llLinkedCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -285,32 +259,6 @@
                         android:textColor="@color/primary_dark"
                         android:textSize="@dimen/text_size_1_small"
                         android:textStyle="normal|bold" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="@dimen/verify_card_left_col_width"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="20dp"
-                        android:fontFamily="@font/maax"
-                        android:text="@string/details_features"
-                        android:textSize="@dimen/text_size_1_small" />
-
-                    <TextView
-                        android:id="@+id/tvFeatures"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/maax"
-                        android:textColor="@color/primary_dark"
-                        android:textSize="@dimen/text_size_2_small"
-                        android:textStyle="normal|bold"
-                        tools:text="Allows change PIN1 and PIN2 \n Dynamic NDEF" />
 
                 </LinearLayout>
 
@@ -585,33 +533,12 @@
         app:layout_constraintRight_toRightOf="parent">
 
         <ImageView
-            android:id="@+id/imgPIN"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_alignParentStart="false"
-            android:layout_alignParentEnd="false"
-            android:layout_alignParentBottom="true"
-            android:layout_toStartOf="@+id/imgPIN2orSecurityDelay"
-            android:src="@drawable/unlock_pin1" />
-
-        <ImageView
-            android:id="@+id/imgPIN2orSecurityDelay"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_alignParentStart="false"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:src="@drawable/unlock_pin2" />
-
-        <ImageView
             android:id="@+id/imgDeveloperVersion"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_alignParentStart="true"
             android:layout_alignParentBottom="true"
-            android:layout_marginStart="4dp"
+            android:layout_marginStart="10dp"
             android:src="@drawable/ic_developer_version" />
 
     </RelativeLayout>
