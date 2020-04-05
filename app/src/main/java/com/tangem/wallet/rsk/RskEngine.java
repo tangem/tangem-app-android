@@ -85,8 +85,9 @@ public class RskEngine extends EthEngine {
                         nonce = nonce.substring(2);
                         BigInteger count = new BigInteger(nonce, 16);
                         coinData.setConfirmedTXCount(count);
-
-
+                        if (serverApiRootstock.isRequestsSequenceCompleted()) {
+                            serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
+                        }
 //                        Log.i("$TAG eth_getTransCount", nonce)
                     }
                     break;
@@ -96,7 +97,9 @@ public class RskEngine extends EthEngine {
                         pending = pending.substring(2);
                         BigInteger count = new BigInteger(pending, 16);
                         coinData.setUnconfirmedTXCount(count);
-
+                        if (serverApiRootstock.isRequestsSequenceCompleted()) {
+                            serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
+                        }
 //                        Log.i("$TAG eth_getPendingTxCount", pending)
                     }
                     break;
@@ -122,7 +125,6 @@ public class RskEngine extends EthEngine {
         };
         serverApiRootstock.setResponseListener(responseListener);
 
-        serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
         serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_GET_TRANSACTION_COUNT, 67, coinData.getWallet(), "", "");
         serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_GET_PENDING_COUNT, 67, coinData.getWallet(), "", "");
     }
