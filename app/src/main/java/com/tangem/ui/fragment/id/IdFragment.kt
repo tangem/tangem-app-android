@@ -12,6 +12,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Blockchain
@@ -26,7 +27,6 @@ import com.tangem.ui.activity.MainActivity
 import com.tangem.ui.dialog.NoExtendedLengthSupportDialog
 import com.tangem.ui.dialog.WaitSecurityDelayDialog
 import com.tangem.ui.fragment.BaseFragment
-import com.tangem.ui.fragment.wallet.LoadedWalletViewModel
 import com.tangem.util.LOG
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.*
@@ -232,6 +232,7 @@ class IdFragment : BaseFragment(), NfcAdapter.ReaderCallback,
                 }
             } else {
                 // remove last UIDs because of error and no card read
+                FirebaseCrashlytics.getInstance().recordException(cardProtocol.error)
                 rlProgressBar?.post {
                     lastReadSuccess = false
                     if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported)

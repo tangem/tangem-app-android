@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     private fun navigateSafelyToMainFragment() {
         try {
-            findNavController(R.id.nav_host_fragment).navigate(R.id.main)
+            findNavController(R.id.nav_host_fragment).popBackStack()
         } catch (e: IllegalArgumentException) {
             Log.w(this::class.java.simpleName, e.message)
         } catch (e: IllegalStateException) {
