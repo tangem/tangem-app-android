@@ -67,6 +67,7 @@ class PersonalizeConfigValuesHolder : BaseTypedHolder<Id, Value>() {
         register(SettingsMaskNdef.DisablePrecomputedNdef, Value(default.disablePrecomputedNDEF))
         register(SettingsMaskNdef.Aar, Value(default.aar, Helper.aarList()))
         register(SettingsMaskNdef.AarCustom, Value(default.aar))
+        register(SettingsMaskNdef.Uri, Value(default.uri))
         register(Pins.Pin, Value(default.PIN))
         register(Pins.Pin2, Value(default.PIN2))
         register(Pins.Pin3, Value(default.PIN3))
