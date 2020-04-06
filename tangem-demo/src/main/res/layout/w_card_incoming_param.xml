@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/def_indent"
+        android:paddingEnd="@dimen/def_indent">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_param"
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_weight="1"
+            app:boxBackgroundColor="@android:color/transparent"
+            app:endIconMode="clear_text">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_param"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="start|bottom"
+                android:paddingStart="0dp"
+                android:paddingEnd="@dimen/def_double_indent"
+                android:paddingBottom="4dp"
+                android:textSize="@dimen/iw_text_size" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/btn_action"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:visibility="gone"
+            tools:text="Action"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+    <include
+        layout="@layout/w_field_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/def_indent"
+        android:layout_marginEnd="@dimen/def_indent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/til_item"
+        tools:visibility="visible" />
+
+</LinearLayout>
