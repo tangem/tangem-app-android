@@ -6,6 +6,7 @@ interface ViewScreen
 
 interface SnackbarHolder {
     fun showSnackbar(message: String)
+    fun showSnackbar(id: Int)
     fun showSnackbar(id: Id)
 }
 
