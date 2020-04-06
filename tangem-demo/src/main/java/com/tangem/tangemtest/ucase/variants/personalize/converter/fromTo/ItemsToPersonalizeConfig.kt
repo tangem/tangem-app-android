@@ -67,8 +67,8 @@ class ItemsToPersonalizeConfig : ItemsToModel<PersonalizeConfig> {
         export.decimal = getTyped(Token.Decimal)
         export.cardData = export.cardData.apply { this.product_note = getTyped(ProductMask.Note) }
         export.cardData = export.cardData.apply { this.product_tag = getTyped(ProductMask.Tag) }
-        export.cardData = export.cardData.apply { this.product_id_card = getTyped(ProductMask.CardId) }
-        export.cardData = export.cardData.apply { this.product_id_issuer = getTyped(ProductMask.IssuerId) }
+        export.cardData = export.cardData.apply { this.product_id_card = getTyped(ProductMask.IdCard) }
+        export.cardData = export.cardData.apply { this.product_id_issuer = getTyped(ProductMask.IdIssuer) }
         export.isReusable = getTyped(SettingsMask.IsReusable)
         export.useActivation = getTyped(SettingsMask.NeedActivation)
         export.forbidPurgeWallet = getTyped(SettingsMask.ForbidPurge)
