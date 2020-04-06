@@ -8,11 +8,12 @@ class PersonalizeConfig {
     // Card number
     var series = "BB"
     var startNumber: Long = 300000000000
+    var batchId = "ffff"
 
 
     // Common
     var curveID = "ed25519"
-    var blockchain = "BTC"
+    var blockchain = "BTC/test"
     var blockchainCustom = ""
     var MaxSignatures: Long = 100
     var createWallet = false
@@ -71,7 +72,6 @@ class PersonalizeConfig {
 
     // Settings mask - protocol encryption
     var protocolAllowUnencrypted = true
-    var allowFastEncryption = false
     var protocolAllowStaticEncryption = true
 
 
@@ -105,4 +105,5 @@ class CardData {
     var product_note = true
     var product_tag = false
     var product_id_card = false
+    var product_id_issuer = false
 }
