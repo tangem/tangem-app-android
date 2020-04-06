@@ -61,6 +61,8 @@ open class BaseItemViewModel<D> : ItemViewModel<D> {
 }
 
 class ViewState {
+    var isHiddenField = false
+
     var descriptionVisibility: Int = 0x00000008
         set(value) {
             field = value
