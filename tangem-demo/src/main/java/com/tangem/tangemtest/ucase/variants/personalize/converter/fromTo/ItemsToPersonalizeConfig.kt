@@ -92,6 +92,7 @@ class ItemsToPersonalizeConfig : ItemsToModel<PersonalizeConfig> {
         export.disablePrecomputedNDEF = getTyped(SettingsMaskNdef.DisablePrecomputedNdef)
         export.aar = getTyped(SettingsMaskNdef.Aar)
         export.aarCustom = getTyped(SettingsMaskNdef.AarCustom)
+        export.uri = getTyped(SettingsMaskNdef.Uri)
         export.PIN = getTyped(Pins.Pin)
         export.PIN2 = getTyped(Pins.Pin2)
         export.PIN3 = getTyped(Pins.Pin3)
