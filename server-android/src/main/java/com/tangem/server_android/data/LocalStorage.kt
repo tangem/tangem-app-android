@@ -228,6 +228,12 @@ class LocalStorage
 
     fun getCardArtworkBitmap(card: TangemCard): Bitmap {
         // special cases (first series of cards, hardcode CID->artwork), on new series batch<->artwork
+
+        if (card.isIDIssuer) {
+            val artworkId = context.resources.getResourceEntryName(R.drawable.card_default)
+            return getArtworkBitmap(artworkId) ?: return getDefaultArtworkBitmap(card)
+        }
+
         val hexCID = Util.bytesToHex(card.cid)
         val artworkResourceId: Int? = when {
             hexCID in "AA01000000000000".."AA01000000004999" -> R.drawable.card_ru006
