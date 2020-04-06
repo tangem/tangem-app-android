@@ -30,6 +30,12 @@ abstract class BaseWidget<D>(
 ) : ViewWidget, DataWidget<D> {
 
     override val view: View = inflate(getLayoutId(), parent)
+
+    init {
+        if (dataItem.viewModel.viewState.isHiddenField) {
+            view.visibility = View.GONE
+        }
+    }
 }
 
 abstract class BaseBlockWidget(parent: ViewGroup) : BlockViewWidget {
