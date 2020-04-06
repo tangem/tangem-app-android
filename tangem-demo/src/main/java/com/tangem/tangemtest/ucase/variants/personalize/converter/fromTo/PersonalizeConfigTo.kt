@@ -122,7 +122,7 @@ class PersonalizeConfigToItem : ModelToItems<PersonalizeConfig> {
                 ProductMask.Note,
                 ProductMask.Tag,
                 ProductMask.IdCard,
-                ProductMask.IdIssuer
+                ProductMask.IdIssuerCard
         ).forEach { createItem(block, it) }
         return block
     }
