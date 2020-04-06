@@ -31,7 +31,8 @@ public enum Blockchain {
     StellarTag("XLM-Tag", "XLM", 1000000.0, R.drawable.ic_logo_stellar, "Stellar"),
     Eos("EOS", "EOS", 10000.0, R.drawable.tangem2, "EOS"),
     Ducatus("DUC", "DUC", 100000000.0, R.drawable.tangem2, "Ducatus"),
-    Tezos("TEZOS", "XTZ", 10000000.0, R.drawable.ic_logo_tezos, "Tezos");
+    Tezos("TEZOS", "XTZ", 10000000.0, R.drawable.ic_logo_tezos, "Tezos"),
+    FlowDemo("FLOW/demo", "", 1.0, R.drawable.tangem2, "Flow demo");
 
     Blockchain(String ID, String currency, double multiplier, int imageResource, String officialName) {
         mID = ID;
