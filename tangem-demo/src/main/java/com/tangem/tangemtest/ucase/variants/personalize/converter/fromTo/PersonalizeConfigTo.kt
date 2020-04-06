@@ -121,8 +121,8 @@ class PersonalizeConfigToItem : ModelToItems<PersonalizeConfig> {
         mutableListOf(
                 ProductMask.Note,
                 ProductMask.Tag,
-                ProductMask.CardId,
-                ProductMask.IssuerId
+                ProductMask.IdCard,
+                ProductMask.IdIssuer
         ).forEach { createItem(block, it) }
         return block
     }
