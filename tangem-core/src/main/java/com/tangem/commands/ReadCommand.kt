@@ -119,6 +119,7 @@ data class ProductMask(val rawValue: Int) {
         const val note = 0x01
         const val tag = 0x02
         const val idCard = 0x04
+        const val idIssuer = 0x08
     }
 }
 
