@@ -44,6 +44,7 @@
     <string name="pers_item_note">Note</string>
     <string name="pers_item_tag">Tag</string>
     <string name="pers_item_id_card">ID card</string>
+    <string name="pers_item_id_issuer_card">ID Issuer</string>
     <string name="pers_item_is_reusable">Is reusable</string>
     <string name="pers_item_need_activation">Need activation</string>
     <string name="pers_item_forbid_purge">Forbid purge</string>
@@ -115,6 +116,7 @@
     <string name="info_pers_item_note">Self-custodial wallet or note</string>
     <string name="info_pers_item_tag">Anti-counterfeit tag</string>
     <string name="info_pers_item_id_card">Personal ID card</string>
+    <string name="info_pers_item_id_issuer_card"></string>
     <string name="info_pers_item_is_reusable">Defines what happens when user calls PURGE_WALLET command:
         \nOff - Card will switch to Purged state
         \nOn - Card will switch to Empty state and let create a new wallet again
