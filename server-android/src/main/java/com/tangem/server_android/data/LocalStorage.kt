@@ -230,7 +230,7 @@ class LocalStorage
         // special cases (first series of cards, hardcode CID->artwork), on new series batch<->artwork
 
         if (card.isIDIssuer) {
-            val artworkId = context.resources.getResourceEntryName(R.drawable.card_default)
+            val artworkId = context.resources.getResourceEntryName(R.drawable.card_id_issuer)
             return getArtworkBitmap(artworkId) ?: return getDefaultArtworkBitmap(card)
         }
 
