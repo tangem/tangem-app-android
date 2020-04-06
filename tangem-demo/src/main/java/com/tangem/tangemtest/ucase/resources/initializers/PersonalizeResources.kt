@@ -22,7 +22,7 @@ class PersonalizeResources() {
         initProductMask(holder)
         initSettingsMask(holder)
         initSettingsMaskProtocolEnc(holder)
-        initSettingsMaskNde(holder)
+        initSettingsMaskNdef(holder)
         initPins(holder)
     }
 
@@ -115,11 +115,13 @@ class PersonalizeResources() {
         holder.register(SettingsMaskProtocolEnc.AllowStaticEncryption, Resources(R.string.pers_item_allow_fast_encryption, R.string.info_pers_item_allow_fast_encryption))
     }
 
-    private fun initSettingsMaskNde(holder: TypedHolder<Id, Resources>) {
+    private fun initSettingsMaskNdef(holder: TypedHolder<Id, Resources>) {
         holder.register(SettingsMaskNdef.UseNdef, Resources(R.string.pers_item_use_ndef, R.string.info_pers_item_use_ndef))
         holder.register(SettingsMaskNdef.DynamicNdef, Resources(R.string.pers_item_dynamic_ndef, R.string.info_pers_item_dynamic_ndef))
         holder.register(SettingsMaskNdef.DisablePrecomputedNdef, Resources(R.string.pers_item_disable_precomputed_ndef, R.string.info_pers_item_disable_precomputed_ndef))
         holder.register(SettingsMaskNdef.Aar, Resources(R.string.pers_item_aar, R.string.info_pers_item_aar))
+        holder.register(SettingsMaskNdef.AarCustom, Resources(R.string.pers_item_custom_aar_package_name, R.string.info_pers_item_custom_aar_package_name))
+        holder.register(SettingsMaskNdef.Uri, Resources(R.string.pers_item_uri, R.string.info_pers_item_uri))
     }
 
     private fun initPins(holder: TypedHolder<Id, Resources>) {
