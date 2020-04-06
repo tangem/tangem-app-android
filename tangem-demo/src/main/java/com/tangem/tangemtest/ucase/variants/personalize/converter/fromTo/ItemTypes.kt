@@ -17,7 +17,7 @@ class ItemTypes {
             SigningMethod.SignValidatedTxRaw, SigningMethod.SignValidatedTxIssuer,
             SigningMethod.SignValidatedTxRawIssuer, SigningMethod.SignExternal, SignHashExProp.RequireTerminalCertSig,
             SignHashExProp.RequireTerminalTxSig, SignHashExProp.CheckPin3, Denomination.WriteOnPersonalize, Token.ItsToken,
-            ProductMask.Note, ProductMask.Tag, ProductMask.CardId, ProductMask.IssuerId,SettingsMask.IsReusable, SettingsMask.NeedActivation,
+            ProductMask.Note, ProductMask.Tag, ProductMask.IdCard, ProductMask.IdIssuer,SettingsMask.IsReusable, SettingsMask.NeedActivation,
             SettingsMask.ForbidPurge, SettingsMask.AllowSelectBlockchain, SettingsMask.UseBlock, SettingsMask.OneApdu,
             SettingsMask.UseCvc, SettingsMask.AllowSwapPin, SettingsMask.AllowSwapPin2, SettingsMask.ForbidDefaultPin,
             SettingsMask.SmartSecurityDelay, SettingsMask.ProtectIssuerDataAgainstReplay,
