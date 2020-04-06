@@ -634,6 +634,15 @@ public class TangemCard {
         }
     }
 
+    public boolean isIDIssuer() {
+        try {
+            return (productMask & ProductMask.IdIssuer) != 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public TLVList tlvIDCardData = null;
 
     public void setTlvIdCardData(TLVList tlvIDCardData) {
