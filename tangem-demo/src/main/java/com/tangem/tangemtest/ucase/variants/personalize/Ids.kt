@@ -71,8 +71,8 @@ enum class Token : BlockItem {
 enum class ProductMask : BlockItem {
     Note,
     Tag,
-    CardId,
-    IssuerId
+    IdCard,
+    IdIssuerCard
 }
 
 enum class SettingsMask : BlockItem {
