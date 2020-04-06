@@ -109,8 +109,8 @@ public class XlmAssetEngine extends CoinEngine {
     @Override
     public boolean isBalanceNotZero() {
         if (coinData == null) return false;
-        return (coinData.getXlmBalance() != null && coinData.getXlmBalance().notZero() &&
-                coinData.getAssetBalance() != null && coinData.getAssetBalance().notZero());
+        return (coinData.getXlmBalance() != null && coinData.getXlmBalance().notZero()) ||
+                (coinData.getAssetBalance() != null && coinData.getAssetBalance().notZero());
     }
 
     @Override
