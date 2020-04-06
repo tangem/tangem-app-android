@@ -105,4 +105,5 @@ class CardData {
     var product_note = true
     var product_tag = false
     var product_id_card = false
+    var product_id_issuer = false
 }
