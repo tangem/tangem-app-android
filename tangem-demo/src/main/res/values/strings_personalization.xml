@@ -68,6 +68,7 @@
     <string name="pers_item_disable_precomputed_ndef">Disable precomputed NDEF</string>
     <string name="pers_item_aar">AAR</string>
     <string name="pers_item_custom_aar_package_name">Custom AAR package name</string>
+    <string name="pers_item_uri">Url</string>
     <string name="pers_item_pin">PIN</string>
     <string name="pers_item_pin2">PIN2</string>
     <string name="pers_item_pin3">PIN3</string>
@@ -155,6 +156,7 @@
     </string>
     <string name="info_pers_item_aar">Android Application Record. Android Application ID, Package name of Android apllication. Android OS will open this app or send user to Google Play page if it\'s not installed. If this field is empty, Android OS will try to open URI from URI field.</string>
     <string name="info_pers_item_custom_aar_package_name"></string>
+    <string name="info_pers_item_uri"></string>
     <string name="info_pers_item_pin">PIN1 code to access the card. Default unhashed value: ‘000000’.</string>
     <string name="info_pers_item_pin2">PIN2 code to confirm transaction signatures and swap PIN operations. Default unhashed value: ‘000’.</string>
     <string name="info_pers_item_pin3">PIN3 code to confirm POS transaction with amount that exceed pin-less floor limit.</string>
