@@ -72,7 +72,7 @@ enum class ProductMask : BlockItem {
     Note,
     Tag,
     IdCard,
-    IdIssuer
+    IdIssuerCard
 }
 
 enum class SettingsMask : BlockItem {
