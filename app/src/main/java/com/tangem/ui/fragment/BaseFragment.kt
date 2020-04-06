@@ -58,11 +58,17 @@ abstract class BaseFragment : Fragment() {
         Log.d("LIFECYCLE", "onDestroy: ${this::class.java.simpleName}")
     }
 
-    protected fun navigateUp(@IdRes destination: Int = DESTINATION_NOT_SET): Boolean {
-        return if (destination == DESTINATION_NOT_SET) {
-            findNavController(this).popBackStack()
-        } else {
-            findNavController(this).popBackStack(destination, false)
+    protected fun navigateUp(@IdRes destination: Int = DESTINATION_NOT_SET) {
+        try {
+            if (destination == DESTINATION_NOT_SET) {
+                findNavController(this).popBackStack()
+            } else {
+                findNavController(this).popBackStack(destination, false)
+            }
+        } catch (e: IllegalArgumentException) {
+            Log.w(this::class.java.simpleName, e.message)
+        } catch (e: IllegalStateException) {
+            Log.w(this::class.java.simpleName, e.message)
         }
     }
 
@@ -84,7 +90,7 @@ abstract class BaseFragment : Fragment() {
     }
 
     protected fun navigateBackWithResult(resultCode: Int, data: Bundle? = null,
-                                         @IdRes destination: Int = DESTINATION_NOT_SET): Boolean {
+                                         @IdRes destination: Int = DESTINATION_NOT_SET) {
         (requireActivity() as MainActivity).viewModel.navigationResult =
                 NavigationResult(requestCode, resultCode, data)
         return navigateUp(destination)
