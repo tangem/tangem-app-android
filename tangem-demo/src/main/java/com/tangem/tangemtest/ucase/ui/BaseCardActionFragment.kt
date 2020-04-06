@@ -133,9 +133,13 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder, ActionView {
     override fun showSnackbar(id: Id) {
 //        MainResourceHolder.safeGet<>()
         when (id) {
-            CardError.NotPersonalized -> showSnackbar(requireContext().getString(R.string.card_error_not_personalized))
+            CardError.NotPersonalized -> showSnackbar(R.string.card_error_not_personalized)
             else -> showSnackbar(requireContext().getString(R.string.unknown))
         }
+    }
+
+    override fun showSnackbar(id: Int) {
+        showSnackbar(requireContext().getString(id))
     }
 
     override fun showSnackbar(message: String) {
