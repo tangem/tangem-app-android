@@ -27,6 +27,7 @@ enum class BlockId : PersonalizeId {
 enum class CardNumber : BlockItem {
     Series,
     Number,
+    BatchId,
 }
 
 enum class Common : BlockItem {
@@ -94,7 +95,7 @@ enum class SettingsMask : BlockItem {
 
 enum class SettingsMaskProtocolEnc : BlockItem {
     AllowUnencrypted,
-    AlloFastEncryption
+    AllowStaticEncryption
 }
 
 enum class SettingsMaskNdef : BlockItem {
