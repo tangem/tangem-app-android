@@ -9,7 +9,6 @@ import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.App
@@ -49,7 +48,6 @@ class WriteIdFragment : BaseFragment(), NavigationResultListener,
     private lateinit var ctx: TangemContext
     private lateinit var tx: ByteArray
     private lateinit var mpFinishSignSound: MediaPlayer
-    private var toast: Toast? = null
 
     private var idWasWritten = false
 
@@ -94,7 +92,6 @@ class WriteIdFragment : BaseFragment(), NavigationResultListener,
 
     override fun onStop() {
         writeIDCardTask?.cancel(true)
-        toast?.cancel()
         super.onStop()
     }
 
@@ -174,7 +171,6 @@ class WriteIdFragment : BaseFragment(), NavigationResultListener,
                                 if (success) {
                                     navigateUp(R.id.main)
                                 } else {
-                                    toast?.cancel()
                                     navigateUp(R.id.issueNewIdFragment)
                                 }
                             }
@@ -231,8 +227,10 @@ class WriteIdFragment : BaseFragment(), NavigationResultListener,
                             }
                         } else {
                            if (!idWasWritten) {
-                               toast = Toast.makeText(context, R.string.general_notification_scan_again, Toast.LENGTH_SHORT)
-                               toast?.show()
+                               (activity as MainActivity).toastHelper.showSingleToast(
+                                       context,
+                                       getString(R.string.general_notification_scan_again)
+                               )
                            }
                         }
                         progressBar?.progress = 100

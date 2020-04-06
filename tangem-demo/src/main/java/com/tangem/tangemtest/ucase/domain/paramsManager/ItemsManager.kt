@@ -4,7 +4,6 @@ import com.tangem.CardManager
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.Payload
 import com.tangem.tangemtest._arch.structure.PayloadHolder
-import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest.ucase.domain.paramsManager.triggers.changeConsequence.ItemsChangeConsequence
 import com.tangem.tasks.TaskEvent
@@ -34,15 +33,6 @@ interface PayloadKey {
         val incomingJson: String = "incomingJson"
         val card = "card"
         val actionView = "actionView"
+        val itemList = "itemList"
     }
-}
-
-fun List<Item>.findItem(id: Id): Item? {
-    return firstOrNull { it.id == id }
-}
-
-fun List<Item>.findDataItem(id: Id): BaseItem<Any?>? {
-    val item = firstOrNull { it.id == id }
-    return if (item is BaseItem<*>) item as BaseItem<Any?>
-    else null
 }

@@ -17,6 +17,7 @@
     ​
     <string name="pers_item_series">Series</string>
     <string name="pers_item_number">Number</string>
+    <string name="pers_item_batch_id">Batch ID</string>
     <string name="pers_item_curve">Curve</string>
     <string name="pers_item_blockchain">Blockchain</string>
     <string name="pers_item_custom_blockchain">Custom blockchain</string>
@@ -43,6 +44,7 @@
     <string name="pers_item_note">Note</string>
     <string name="pers_item_tag">Tag</string>
     <string name="pers_item_id_card">ID card</string>
+    <string name="pers_item_id_issuer_card">ID Issuer</string>
     <string name="pers_item_is_reusable">Is reusable</string>
     <string name="pers_item_need_activation">Need activation</string>
     <string name="pers_item_forbid_purge">Forbid purge</string>
@@ -55,7 +57,7 @@
     <string name="pers_item_forbid_default_pin">Forbid default PIN</string>
     <string name="pers_item_smart_security_delay">Smart Security Delay</string>
     <string name="pers_item_protect_issuer_data_against_replay">Protect issuer data against replay</string>
-    <string name="pers_item_skip_security_delay_if_validated">Security delay if validated</string>
+    <string name="pers_item_skip_security_delay_if_validated">Skip security delay if validated</string>
     <string name="pers_item_skip_pin2_and_cvc_if_validated">Skip PIN2 and CVC if validated</string>
     <string name="pers_item_skip_security_delay_on_linked_terminal">Skip security delay on linked terminal</string>
     <string name="pers_item_restrict_overwrite_ex_issuer_data">Restrict overwrite extra issuer data</string>
@@ -86,6 +88,7 @@
     ​
     <string name="info_pers_item_series"></string>
     <string name="info_pers_item_number"></string>
+    <string name="info_pers_item_batch_id"></string>
     <string name="info_pers_item_curve">Elliptic curve used for all wallet key operations. Supported curves: ‘secp256k1’, ‘ed25519’.</string>
     <string name="info_pers_item_blockchain">Name of the blockchain. It\'s just a textfield in the card. It\'s needed for host app to tell what blockchain should it use. </string>
     <string name="info_pers_item_custom_blockchain">You can use this field, to create something special</string>
@@ -113,6 +116,7 @@
     <string name="info_pers_item_note">Self-custodial wallet or note</string>
     <string name="info_pers_item_tag">Anti-counterfeit tag</string>
     <string name="info_pers_item_id_card">Personal ID card</string>
+    <string name="info_pers_item_id_issuer_card"></string>
     <string name="info_pers_item_is_reusable">Defines what happens when user calls PURGE_WALLET command:
         \nOff - Card will switch to Purged state
         \nOn - Card will switch to Empty state and let create a new wallet again
