@@ -121,7 +121,8 @@ class PersonalizeConfigToItem : ModelToItems<PersonalizeConfig> {
         mutableListOf(
                 ProductMask.Note,
                 ProductMask.Tag,
-                ProductMask.CardId
+                ProductMask.IdCard,
+                ProductMask.IdIssuerCard
         ).forEach { createItem(block, it) }
         return block
     }
@@ -215,11 +216,13 @@ class PersonalizeConfigToCardConfig : Converter<PersonalizeConfig, CardConfig> {
         val isNote = from.cardData.product_note
         val isTag = from.cardData.product_tag
         val isIdCard = from.cardData.product_id_card
+        val isIdIssuer = from.cardData.product_id_issuer
 
         val productMaskBuilder = ProductMaskBuilder()
         if (isNote) productMaskBuilder.add(com.tangem.commands.ProductMask.note)
         if (isTag) productMaskBuilder.add(com.tangem.commands.ProductMask.tag)
         if (isIdCard) productMaskBuilder.add(com.tangem.commands.ProductMask.idCard)
+        if (isIdIssuer) productMaskBuilder.add(com.tangem.commands.ProductMask.idIssuer)
         val productMask = productMaskBuilder.build()
 
         var tokenSymbol: String? = null
