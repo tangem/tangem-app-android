@@ -9,7 +9,6 @@ import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.App
@@ -87,11 +86,6 @@ class ValidateIdFragment : BaseFragment(), NavigationResultListener,
     override fun onPause() {
         signTransactionTask?.cancel(true)
         super.onPause()
-    }
-
-    override fun onStop() {
-        signTransactionTask?.cancel(true)
-        super.onStop()
     }
 
     override fun onNavigationResult(requestCode: String, resultCode: Int, data: Bundle?) {
@@ -262,7 +256,10 @@ class ValidateIdFragment : BaseFragment(), NavigationResultListener,
                                 NoExtendedLengthSupportDialog().show(requireFragmentManager(), NoExtendedLengthSupportDialog.TAG)
                             }
                         } else {
-                            Toast.makeText(context, R.string.general_notification_scan_again, Toast.LENGTH_LONG).show()
+                            (activity as MainActivity).toastHelper.showSingleToast(
+                                    context,
+                                    getString(R.string.general_notification_scan_again)
+                            )
                         }
                         progressBar?.progress = 100
                         progressBar?.progressTintList = ColorStateList.valueOf(Color.RED)
