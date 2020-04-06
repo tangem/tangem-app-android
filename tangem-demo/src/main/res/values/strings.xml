@@ -8,6 +8,8 @@
     <string name="switch_description">Docs</string>
 
     <string name="card_error_not_personalized">Your card hasn\'t been personalized yet. You need to run personalize command first.</string>
+    <string name="card_error_bad_series">Wrong Series</string>
+    <string name="card_error_bad_series_number">Wrong Series and Number</string>
 
     <string name="stub">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit</string>
 <!--    <string name="stub">Sed ut perspiciatis unde omnis iste natus</string>-->
