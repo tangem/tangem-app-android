@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="personalize">Personalize</string>
+    <string name="depersonalize">Depersonalize</string>
+    <string name="pers_block_card_number">Card number</string>
+    <string name="pers_block_common">Common</string>
+    <string name="pers_block_signing_method">Signing method</string>
+    <string name="pers_block_sign_hash_ex_prop">Sign hash external properties</string>
+    <string name="pers_block_denomination">Denomination</string>
+    <string name="pers_block_token">Token</string>
+    <string name="pers_block_product_mask">Product mask</string>
+    <string name="pers_block_settings_mask">Settings mask</string>
+    <string name="pers_block_settings_mask_protocol_enc">Settings mask protocol encryption</string>
+    <string name="pers_block_settings_mask_ndef">Settings mask ndef</string>
+    <string name="pers_block_pins">Pins</string>
+    ​
+    <string name="pers_item_series">Series</string>
+    <string name="pers_item_number">Number</string>
+    <string name="pers_item_batch_id">Batch ID</string>
+    <string name="pers_item_curve">Curve</string>
+    <string name="pers_item_blockchain">Blockchain</string>
+    <string name="pers_item_custom_blockchain">Custom blockchain</string>
+    <string name="pers_item_max_signatures">Max signatures</string>
+    <string name="pers_item_create_wallet">Create wallet</string>
+    <string name="pers_item_sign_tx_hashes">Sign TX hashes (0)</string>
+    <string name="pers_item_sign_raw_tx">Sign raw TX (1)</string>
+    <string name="pers_item_sign_validated_tx_hashes">Sign validated TX hashes (2)</string>
+    <string name="pers_item_sign_validated_raw_tx">Sign validated raw TX (3)</string>
+    <string name="pers_item_sign_validated_tx_hashes_with_iss_data">Sign validated TX hashes with issuer data (4)</string>
+    <string name="pers_item_sign_validated_raw_tx_with_iss_data">Sign validated raw TX with issuer data (5)</string>
+    <string name="pers_item_sign_hash_ex">Sign hash external (6)</string>
+    <string name="pers_item_pin_less_floor_limit">Pin-less floor limit</string>
+    <string name="pers_item_cr_ex_key">Cr(ypto)Ex(tract) key</string>
+    <string name="pers_item_require_terminal_cert_sig">Require terminal Cert signature</string>
+    <string name="pers_item_require_terminal_tx_sig">Require terminal TX signature</string>
+    <string name="pers_item_check_pin3_on_card">Check PIN3 on card</string>
+    <string name="pers_item_write_on_personalize">Write on personalize</string>
+    <string name="pers_item_denomination">Denomination</string>
+    <string name="pers_item_its_token">It\'s token</string>
+    <string name="pers_item_symbol">Symbol</string>
+    <string name="pers_item_contract_address">Contract address</string>
+    <string name="pers_item_decimal">Decimal</string>
+    <string name="pers_item_note">Note</string>
+    <string name="pers_item_tag">Tag</string>
+    <string name="pers_item_id_card">ID card</string>
+    <string name="pers_item_is_reusable">Is reusable</string>
+    <string name="pers_item_need_activation">Need activation</string>
+    <string name="pers_item_forbid_purge">Forbid purge</string>
+    <string name="pers_item_allow_select_blockchain">Allow select blockchain</string>
+    <string name="pers_item_use_block">Use block</string>
+    <string name="pers_item_one_apdu_at_once">One session – one command</string>
+    <string name="pers_item_use_cvc">Use CVC</string>
+    <string name="pers_item_allow_swap_pin">Allow swap PIN</string>
+    <string name="pers_item_allow_swap_pin2">Allow swap PIN2</string>
+    <string name="pers_item_forbid_default_pin">Forbid default PIN</string>
+    <string name="pers_item_smart_security_delay">Smart Security Delay</string>
+    <string name="pers_item_protect_issuer_data_against_replay">Protect issuer data against replay</string>
+    <string name="pers_item_skip_security_delay_if_validated">Skip security delay if validated</string>
+    <string name="pers_item_skip_pin2_and_cvc_if_validated">Skip PIN2 and CVC if validated</string>
+    <string name="pers_item_skip_security_delay_on_linked_terminal">Skip security delay on linked terminal</string>
+    <string name="pers_item_restrict_overwrite_ex_issuer_data">Restrict overwrite extra issuer data</string>
+    <string name="pers_item_allow_unencrypted">Allow unencrypted</string>
+    <string name="pers_item_allow_fast_encryption">Allow \'FAST\' encryption</string>
+    <string name="pers_item_use_ndef">Use NDEF</string>
+    <string name="pers_item_dynamic_ndef">Dynamic NDEF</string>
+    <string name="pers_item_disable_precomputed_ndef">Disable precomputed NDEF</string>
+    <string name="pers_item_aar">AAR</string>
+    <string name="pers_item_custom_aar_package_name">Custom AAR package name</string>
+    <string name="pers_item_pin">PIN</string>
+    <string name="pers_item_pin2">PIN2</string>
+    <string name="pers_item_pin3">PIN3</string>
+    <string name="pers_item_cvc">CVC</string>
+    <string name="pers_item_pause_before_pin2">Pause before PIN2</string>
+    ​
+    <string name="info_pers_block_card_number">Unique Tangem card ID number. It will be generated automatically with Series and Number.</string>
+    <string name="info_pers_block_common"></string>
+    <string name="info_pers_block_signing_method">Depending on these parameters, SIGN command signs following data using Wallet_PrivateKey: array of transaction hashes, single raw transaction. In case the card issuer supports 2FA, the card will firstly verify issuer’s signature of transaction hash before signing transaction hash using Wallet_PrivateKey. In case the card issuer requires the card to store additional data (e.g. wallet balance, SPV proof, timestamps, etc. – see details in Security section), COS will verify issuer’s signature of hash of concatenated transaction hashes and Issuer_Data hash, and issuer’s signature of Issuer_Data hash, and then proceed to signing transaction hash using Wallet_PrivateKey.</string>
+    <string name="info_pers_block_sign_hash_ex_prop"></string>
+    <string name="info_pers_block_denomination"></string>
+    <string name="info_pers_block_token">These fields can be used by the host application to provide additional infromation about tokens stored within the wallet of the card.</string>
+    <string name="info_pers_block_product_mask">These fields can be used by the host application to provide additional infromation about product type.</string>
+    <string name="info_pers_block_settings_mask"></string>
+    <string name="info_pers_block_settings_mask_protocol_enc">Card Operation System supports three options of communication</string>
+    <string name="info_pers_block_settings_mask_ndef"></string>
+    <string name="info_pers_block_pins"></string>
+    ​
+    <string name="info_pers_item_series"></string>
+    <string name="info_pers_item_number"></string>
+    <string name="info_pers_item_batch_id"></string>
+    <string name="info_pers_item_curve">Elliptic curve used for all wallet key operations. Supported curves: ‘secp256k1’, ‘ed25519’.</string>
+    <string name="info_pers_item_blockchain">Name of the blockchain. It\'s just a textfield in the card. It\'s needed for host app to tell what blockchain should it use. </string>
+    <string name="info_pers_item_custom_blockchain">You can use this field, to create something special</string>
+    <string name="info_pers_item_max_signatures">Total number of signatures allowed for the wallet when the card was personalized</string>
+    <string name="info_pers_item_create_wallet">Off - don’t create wallet (user must be create wallet by himself with App)
+        \nOn - create wallet (after personalization wallet alredy will be created and card ready to use)</string>
+    <string name="info_pers_item_sign_tx_hashes">Allow card to sign hashed transaction</string>
+    <string name="info_pers_item_sign_raw_tx">Allow card to sign raw transaction. The raw transaction will be hashed by a hash function before signing.</string>
+    <string name="info_pers_item_sign_validated_tx_hashes">Allow card to sign hashed transaction, that was signed by issuer before</string>
+    <string name="info_pers_item_sign_validated_raw_tx">Allow card to sign raw transaction, that was signed by issuer before</string>
+    <string name="info_pers_item_sign_validated_tx_hashes_with_iss_data">Allow card to sign hashed transaction, that was signed by issuer before, and update issuer data at the same time</string>
+    <string name="info_pers_item_sign_validated_raw_tx_with_iss_data">Allow card to sign raw transaction, that was signed by issuer before, and update issuer data at the same time</string>
+    <string name="info_pers_item_sign_hash_ex">Allow card to sign POS transactions</string>
+    <string name="info_pers_item_pin_less_floor_limit"></string>
+    <string name="info_pers_item_cr_ex_key">Unique card secret key (shared with acquirers server)</string>
+    <string name="info_pers_item_require_terminal_cert_sig"></string>
+    <string name="info_pers_item_require_terminal_tx_sig"></string>
+    <string name="info_pers_item_check_pin3_on_card"></string>
+    <string name="info_pers_item_write_on_personalize"></string>
+    <string name="info_pers_item_denomination"></string>
+    <string name="info_pers_item_its_token"></string>
+    <string name="info_pers_item_symbol">Symbol of the token</string>
+    <string name="info_pers_item_contract_address">Token\'s Smart contract address</string>
+    <string name="info_pers_item_decimal">Number of decimals in token value</string>
+    <string name="info_pers_item_note">Self-custodial wallet or note</string>
+    <string name="info_pers_item_tag">Anti-counterfeit tag</string>
+    <string name="info_pers_item_id_card">Personal ID card</string>
+    <string name="info_pers_item_is_reusable">Defines what happens when user calls PURGE_WALLET command:
+        \nOff - Card will switch to Purged state
+        \nOn - Card will switch to Empty state and let create a new wallet again
+    </string>
+    <string name="info_pers_item_need_activation"></string>
+    <string name="info_pers_item_forbid_purge">If this option is turned on, card will reject PURGE_WALLET command</string>
+    <string name="info_pers_item_allow_select_blockchain">If this option is turned on, wallet elliptic curve and blockchain information can be changed on CREATE_WALLET command</string>
+    <string name="info_pers_item_use_block"></string>
+    <string name="info_pers_item_one_apdu_at_once">Card will execute only one command during one communication session, thus requiring user to physically take the card away from the host after each action (all commands except for READ_CARD)</string>
+    <string name="info_pers_item_use_cvc">All commands requiring PIN2 will also require additional CVC code printed on the card</string>
+    <string name="info_pers_item_allow_swap_pin">Is user allowed to change PIN1 with SET_PIN command</string>
+    <string name="info_pers_item_allow_swap_pin2">Is user allowed to change PIN2 with SET_PIN command</string>
+    <string name="info_pers_item_forbid_default_pin">SET_PIN commands will not change PIN1 to default value (‘000000’)</string>
+    <string name="info_pers_item_smart_security_delay">Security delay Pause_Before_PIN2 will not be applied if PIN2 is not default</string>
+    <string name="info_pers_item_protect_issuer_data_against_replay">Off – No replay protection on write issuer data
+        \nOn – Enable replay protection on write issuer data (card will require additional Issuer_Data_Counter incremented on each write)
+    </string>
+    <string name="info_pers_item_skip_security_delay_if_validated">Off – Enforce security delay in SIGN command if the issuer validates the transaction (for signing methods 2, 3, 4 and 5)
+        \nOn – Skip security delay in SIGN command if the issuer validates the transaction (for signing methods 2, 3, 4 and 5)
+    </string>
+    <string name="info_pers_item_skip_pin2_and_cvc_if_validated">Off – Require and check PIN2 and CVC in SIGN command if the issuer validates the transaction (for signing method 2, 3, 4 and 5)
+        \nOn – Skip checking PIN2 and CVC in SIGN command if the issuer validates the transaction (for signing method 2, 3, 4 and 5)
+    </string>
+    <string name="info_pers_item_skip_security_delay_on_linked_terminal">App can optionally generate ECDSA key pair Terminal_PrivateKey / Terminal_PublicKey. And then submit Terminal_PublicKey to the card in any SIGN command. Once SIGN is successfully executed by COS, including PIN2 verification and/or completion of security delay, the submitted Terminal_PublicKey key is stored by COS. After that, the App instance is deemed trusted by COS and COS will allow skipping security delay for subsequent SIGN operations thus improving convenience without sacrificing security.</string>
+    <string name="info_pers_item_restrict_overwrite_ex_issuer_data">Prohibit overwriting Issuer_Extra_Data</string>
+    <string name="info_pers_item_allow_unencrypted">Allow plain data packets with non-encrypted Payload:
+        \nThis option is not recommended for large-scale commercial projects, because it potentially exposes the card to eavesdropping and replay attacks. </string>
+    <string name="info_pers_item_allow_fast_encryption">Allow Fast symmetric encryption with mutual challenges</string>
+    <string name="info_pers_item_use_ndef">Whether the card should emulate NDEF. In default configuration, two NDEF records are loaded during personalization: (1) Tangem web site address, (2) name of Android App package in Google Play Store.</string>
+    <string name="info_pers_item_dynamic_ndef">Tangem card supports a special wallet validation mechanism for smartphones that can only read NDEF tags
+        \nOff – Disable dynamic generation of NDEF for iOS
+        \nOn – Enable dynamic NDEF for iOS
+    </string>
+    <string name="info_pers_item_disable_precomputed_ndef">Off – Enable precomputed dynamic NDEF to work around iPhone 7+ NFC bug
+        \nOn – Disable precomputed dynamic NDEF
+    </string>
+    <string name="info_pers_item_aar">Android Application Record. Android Application ID, Package name of Android apllication. Android OS will open this app or send user to Google Play page if it\'s not installed. If this field is empty, Android OS will try to open URI from URI field.</string>
+    <string name="info_pers_item_custom_aar_package_name"></string>
+    <string name="info_pers_item_pin">PIN1 code to access the card. Default unhashed value: ‘000000’.</string>
+    <string name="info_pers_item_pin2">PIN2 code to confirm transaction signatures and swap PIN operations. Default unhashed value: ‘000’.</string>
+    <string name="info_pers_item_pin3">PIN3 code to confirm POS transaction with amount that exceed pin-less floor limit.</string>
+    <string name="info_pers_item_cvc">3-digit code, that can be printed on the card</string>
+    <string name="info_pers_item_pause_before_pin2">Delay in seconds before COS executes commands protected by PIN2</string>
+
+</resources>
