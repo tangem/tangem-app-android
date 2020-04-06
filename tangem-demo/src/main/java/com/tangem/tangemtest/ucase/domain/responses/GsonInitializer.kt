@@ -7,6 +7,8 @@ import com.tangem.commands.SettingsMask
 import com.tangem.commands.SigningMethod
 import com.tangem.common.extensions.toHexString
 import java.lang.reflect.Type
+import java.text.DateFormat
+import java.util.*
 
 /**
 [REDACTED_AUTHOR]
@@ -20,6 +22,7 @@ class GsonInitializer {
             registerTypeAdapter(SigningMethod::class.java, SigningMethodTypeAdapter())
             registerTypeAdapter(SettingsMask::class.java, SettingsMaskTypeAdapter())
             registerTypeAdapter(ProductMask::class.java, ProductMaskTypeAdapter())
+            registerTypeAdapter(Date::class.java, DateTypeAdapter())
         }
         builder.setPrettyPrinting()
         return builder.create()
@@ -51,5 +54,12 @@ class ProductMaskTypeAdapter : JsonSerializer<ProductMask> {
 class SigningMethodTypeAdapter : JsonSerializer<SigningMethod> {
     override fun serialize(src: SigningMethod, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         return JsonPrimitive(src.rawValue.toString())
+    }
+}
+
+class DateTypeAdapter: JsonSerializer<Date> {
+    override fun serialize(src: Date, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+        val formatter = DateFormat.getDateInstance(DateFormat.DEFAULT, Locale("en_US"))
+        return JsonPrimitive(formatter.format(src).toString())
     }
 }
