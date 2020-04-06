@@ -88,6 +88,7 @@ class PersonalizeResources() {
         holder.register(ProductMask.Note, Resources(R.string.pers_item_note, R.string.info_pers_item_note))
         holder.register(ProductMask.Tag, Resources(R.string.pers_item_tag, R.string.info_pers_item_tag))
         holder.register(ProductMask.CardId, Resources(R.string.pers_item_id_card, R.string.info_pers_item_id_card))
+        holder.register(ProductMask.IssuerId, Resources(R.string.pers_item_id_issuer, R.string.info_pers_item_id_issuer))
     }
 
     private fun initSettingsMask(holder: TypedHolder<Id, Resources>) {
