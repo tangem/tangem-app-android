@@ -43,7 +43,7 @@ class PersonalizeConfigValuesHolder : BaseTypedHolder<Id, Value>() {
         register(ProductMask.Note, Value(default.cardData.product_note))
         register(ProductMask.Tag, Value(default.cardData.product_tag))
         register(ProductMask.IdCard, Value(default.cardData.product_id_card))
-        register(ProductMask.IdIssuer, Value(default.cardData.product_id_issuer))
+        register(ProductMask.IdIssuerCard, Value(default.cardData.product_id_issuer))
         register(SettingsMask.IsReusable, Value(default.isReusable))
         register(SettingsMask.NeedActivation, Value(default.useActivation))
         register(SettingsMask.ForbidPurge, Value(default.forbidPurgeWallet))
