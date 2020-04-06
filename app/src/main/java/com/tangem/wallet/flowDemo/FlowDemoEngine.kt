@@ -7,14 +7,11 @@ import com.tangem.tangem_card.reader.CardProtocol.TangemException
 import com.tangem.tangem_card.tasks.SignTask
 import com.tangem.tangem_card.util.Util
 import com.tangem.wallet.*
-import com.tangem.wallet.binance.client.domain.Account
 import com.tangem.wallet.flowDemo.proto.Observation
 import com.tangem.wallet.flowDemo.proto.ObserveServiceGrpc
 import io.grpc.ManagedChannelBuilder
-import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.functions.Function
 import io.reactivex.observers.DisposableSingleObserver
 import io.reactivex.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
@@ -246,5 +243,9 @@ class FlowDemoEngine : CoinEngine {
 
     override fun createCoinData(): CoinData {
         return FlowDemoData()
+    }
+
+    override fun isNftToken(): Boolean {
+        return true
     }
 }
