@@ -1,11 +1,23 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="SwitchCompatTheme" parent="Widget.MaterialComponents.CompoundButton.Switch">
+        <item name="thumbTint">@color/menu_switch_color_thumb</item>
+        <item name="trackTint">@color/menu_switch_color_track</item>
+    </style>
+
+    <style name="ItemWidgetContainer" >
+        <item name="android:paddingStart">@dimen/def_indent</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingEnd">@dimen/def_indent</item>
+        <item name="android:paddingBottom">13dp</item>
     </style>
 
 </resources>
