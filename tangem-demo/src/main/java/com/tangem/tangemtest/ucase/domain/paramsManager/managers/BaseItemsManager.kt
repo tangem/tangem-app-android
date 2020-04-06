@@ -4,12 +4,12 @@ import com.tangem.CardManager
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.Payload
 import com.tangem.tangemtest._arch.structure.abstraction.Item
+import com.tangem.tangemtest._arch.structure.abstraction.findDataItem
 import com.tangem.tangemtest.ucase.domain.actions.Action
 import com.tangem.tangemtest.ucase.domain.actions.AttrForAction
 import com.tangem.tangemtest.ucase.domain.paramsManager.ActionCallback
 import com.tangem.tangemtest.ucase.domain.paramsManager.AffectedItemsCallback
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
-import com.tangem.tangemtest.ucase.domain.paramsManager.findDataItem
 import com.tangem.tangemtest.ucase.domain.paramsManager.triggers.changeConsequence.ItemsChangeConsequence
 
 /**
