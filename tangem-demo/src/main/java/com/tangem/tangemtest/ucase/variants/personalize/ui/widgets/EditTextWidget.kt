@@ -1,4 +1,4 @@
-package com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.impl.item
+package com.tangem.tangemtest.ucase.variants.personalize.ui.widgets
 
 import android.text.Editable
 import android.text.TextWatcher
@@ -7,7 +7,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.impl.EditTextItem
-import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.abstraction.getResNameId
+import com.tangem.tangemtest._arch.widget.abstraction.getResNameId
 import ru.dev.gbixahue.eu4d.lib.android._android.views.moveCursorToEnd
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 

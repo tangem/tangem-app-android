@@ -4,6 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     app:startDestination="@+id/nav_entry_point">
 
+    <action
+        android:id="@+id/action_nav_card_action_to_response_screen"
+        app:destination="@+id/nav_card_response" />
+
     <fragment
         android:id="@+id/nav_entry_point"
         android:name="com.tangem.tangemtest._main.entryPoint.ActionListFragment"
@@ -120,5 +124,11 @@
         android:name="com.tangem.tangemtest.ucase.ui.WalletPurgeActionFragment"
         android:label="@string/action_wallet_purge"
         tools:layout="@layout/fg_action_wallet_purge" />
+
+    <fragment
+        android:id="@+id/nav_card_response"
+        android:name="com.tangem.tangemtest.ucase.ui.BaseCardResponseFragment"
+        android:label="@string/unknown"
+        tools:layout="@layout/fg_card_response" />
 
 </navigation>
