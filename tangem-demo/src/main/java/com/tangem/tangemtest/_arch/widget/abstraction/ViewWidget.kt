@@ -1,4 +1,4 @@
-package com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.abstraction
+package com.tangem.tangemtest._arch.widget.abstraction
 
 import android.view.LayoutInflater
 import android.view.View

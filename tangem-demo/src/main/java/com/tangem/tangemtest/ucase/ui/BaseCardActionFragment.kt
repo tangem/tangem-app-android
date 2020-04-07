@@ -5,14 +5,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import android.widget.TextView
-import androidx.fragment.app.Fragment
+import androidx.core.os.bundleOf
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.snackbar.BaseTransientBottomBar
-import com.google.android.material.snackbar.Snackbar
 import com.tangem.CardManager
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tangemtest.R
@@ -26,30 +23,24 @@ import com.tangem.tangemtest.ucase.resources.ActionType
 import com.tangem.tangemtest.ucase.tunnel.ActionView
 import com.tangem.tangemtest.ucase.tunnel.CardError
 import com.tangem.tangemtest.ucase.ui.widgets.ParameterWidget
+import ru.dev.gbixahue.eu4d.lib.android._android.views.enable
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.LayoutHolder
 
 /**
 [REDACTED_AUTHOR]
  */
-abstract class BaseCardActionFragment : Fragment(), LayoutHolder, ActionView {
+abstract class BaseCardActionFragment : BaseFragment(), LayoutHolder, ActionView {
 
     protected val incomingParamsContainer: ViewGroup by lazy {
         mainView.findViewById<LinearLayout>(R.id.ll_incoming_params_container)
     }
-    protected lateinit var mainView: View
     protected val actionFab: FloatingActionButton by lazy { mainView.findViewById<FloatingActionButton>(R.id.fab_action) }
 
     protected val paramsVM: ParamsViewModel by viewModels { ActionViewModelFactory(itemsManager) }
     protected val widgetList = mutableListOf<ParameterWidget>()
 
     private val itemsManager: ItemsManager by lazy { ParamsManagerFactory.createFactory().get(getAction())!! }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        Log.d(this, "onCreateView")
-        mainView = inflater.inflate(getLayoutId(), container, false)
-        return mainView
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -59,18 +50,17 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder, ActionView {
         paramsVM.setCardManager(CardManager.init(requireActivity()))
         paramsVM.attachToPayload(mutableMapOf(PayloadKey.actionView to this as ActionView))
         initFab()
-        showActionFab(false)
         createWidgets { subscribeToViewModelChanges() }
     }
 
     private fun initFab() {
-        Log.d(this, "initFab")
+        enableActionFab(false)
         actionFab.setOnClickListener { paramsVM.invokeMainAction() }
     }
 
     private fun createWidgets(widgetCreatedCallback: () -> Unit) {
         Log.d(this, "createWidgets")
-        paramsVM.ldParams.observe(viewLifecycleOwner, Observer { itemList ->
+        paramsVM.ldItemList.observe(viewLifecycleOwner, Observer { itemList ->
             itemList.forEach { param ->
                 val widget = ParameterWidget(inflateParamView(incomingParamsContainer), param)
                 widget.onValueChanged = { id, value -> paramsVM.userChangedItem(id, value) }
@@ -83,17 +73,19 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder, ActionView {
 
     private fun subscribeToViewModelChanges() {
         Log.d(this, "subscribeToViewModelChanges")
+        listenReadResponse()
         listenResponse()
         listenError()
         listenChangedItems()
         listenDescriptionSwitchChanges()
     }
 
+    protected open fun listenReadResponse() {}
+
     protected open fun listenResponse() {
-        val tvResponse by lazy { mainView.findViewById<TextView>(R.id.tv_action_response_json) }
-        paramsVM.ldResponse.observe(viewLifecycleOwner, Observer {
-            Log.d(this, "action response: ${if (it.length > 50) it.substring(0..50) else it}")
-            tvResponse.text = it
+        paramsVM.seResponse.observe(viewLifecycleOwner, Observer {
+            navigateTo(R.id.action_nav_card_action_to_response_screen,
+                    bundleOf(Pair(BaseCardResponseFragment.response, it)))
         })
     }
 
@@ -126,8 +118,8 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder, ActionView {
         return view as ViewGroup
     }
 
-    override fun showActionFab(show: Boolean) {
-        if (show) actionFab.show() else actionFab.hide()
+    override fun enableActionFab(enable: Boolean) {
+        actionFab.enable(enable)
     }
 
     override fun showSnackbar(id: Id) {
@@ -136,14 +128,6 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder, ActionView {
             CardError.NotPersonalized -> showSnackbar(R.string.card_error_not_personalized)
             else -> showSnackbar(requireContext().getString(R.string.unknown))
         }
-    }
-
-    override fun showSnackbar(id: Int) {
-        showSnackbar(requireContext().getString(id))
-    }
-
-    override fun showSnackbar(message: String) {
-        Snackbar.make(mainView, message, BaseTransientBottomBar.LENGTH_SHORT).show()
     }
 
     abstract fun getAction(): ActionType
