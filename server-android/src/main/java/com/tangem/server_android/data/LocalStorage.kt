@@ -47,10 +47,11 @@ class LocalStorage
             artworks = HashMap()
         }
 
-        if (artworks.count() < 43) {
+        if (artworks.count() < 44) {
 //          forceSave=true only on the last one
             putResourceArtworkToCatalog(R.drawable.card_default, false)
             putResourceArtworkToCatalog(R.drawable.card_default_nft, false)
+            putResourceArtworkToCatalog(R.drawable.card_id_issuer, false)
             putResourceArtworkToCatalog(R.drawable.card_ru006, false)
             putResourceArtworkToCatalog(R.drawable.card_ru007, false)
             putResourceArtworkToCatalog(R.drawable.card_ru011, false)
