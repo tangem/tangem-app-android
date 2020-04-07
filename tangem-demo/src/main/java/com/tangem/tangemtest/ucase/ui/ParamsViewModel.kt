@@ -4,7 +4,6 @@ import androidx.annotation.UiThread
 import androidx.lifecycle.*
 import com.google.gson.Gson
 import com.tangem.CardManager
-import com.tangem.commands.Card
 import com.tangem.tangemtest._arch.SingleLiveEvent
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.Payload
@@ -27,12 +26,10 @@ class ActionViewModelFactory(private val manager: ItemsManager) : ViewModelProvi
 
 class ParamsViewModel(private val itemsManager: ItemsManager) : ViewModel(), LifecycleObserver {
 
-    val ldCard = MutableLiveData<Card>()
-    val ldIsVerified = MutableLiveData<Boolean>()
-    val ldResponse = MutableLiveData<String>()
-    val ldReadResponse = MutableLiveData<String>()
-    val ldParams = MutableLiveData(itemsManager.getItems())
+    val seReadResponse = SingleLiveEvent<String>()
+    val seResponse = SingleLiveEvent<String>()
 
+    val ldItemList = MutableLiveData(itemsManager.getItems())
     val seError: MutableLiveData<String> = SingleLiveEvent()
     val seChangedItems: MutableLiveData<List<Item>> = SingleLiveEvent()
 
@@ -109,13 +106,13 @@ internal class Notifier(private val vm: ParamsViewModel) {
     private fun handleDataEvent(event: Any?) {
         when (event) {
             is ScanEvent.OnReadEvent -> {
-                vm.ldCard.postValue(event.card)
-                vm.ldReadResponse.postValue(gson.toJson(event))
+//                vm.ldCard.postValue(event.card)
+                vm.seReadResponse.postValue(gson.toJson(event))
             }
             is ScanEvent.OnVerifyEvent -> {
-                vm.ldIsVerified.postValue(true)
+//                vm.ldIsVerified.postValue(true)
             }
-            else -> vm.ldResponse.postValue(gson.toJson(event))
+            else -> vm.seResponse.postValue(gson.toJson(event))
         }
     }
 
