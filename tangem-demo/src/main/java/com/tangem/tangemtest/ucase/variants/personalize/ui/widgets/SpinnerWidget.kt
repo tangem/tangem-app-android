@@ -29,7 +29,7 @@ class SpinnerWidget(parent: ViewGroup, listItem: ListItem) : DescriptionWidget<L
         override fun onNothingSelected(parent: AdapterView<*>?) {}
 
         override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-            data.selectedItem = data.itemList[position]
+            data.selectedItem = data.itemList[position].value
             dataItem.viewModel.updateDataByView(data)
         }
     }
