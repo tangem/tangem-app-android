@@ -22,19 +22,19 @@ class PersonalizeFragment : BaseCardActionFragment() {
     override fun getLayoutId(): Int = R.layout.fg_personalize
 
     override fun initFab() {
-        actionFab.setOnClickListener { paramsVM.invokeMainAction() }
+        actionFab.setOnClickListener { actionVM.invokeMainAction() }
     }
 
     override fun createWidgets(widgetCreatedCallback: () -> Unit) {
         Log.d(this, "createWidgets")
         val itemList = mutableListOf<Item>()
 
-        paramsVM.ldItemList.observe(viewLifecycleOwner, Observer { list ->
+        actionVM.ldItemList.observe(viewLifecycleOwner, Observer { list ->
             Log.d(this, "ldBlockList size: ${list.size}")
             itemList.clear()
             itemList.addAll(list)
             itemList.forEach { WidgetBuilder(PersonalizeItemBuilder()).build(it, itemContainer) }
-            paramsVM.attachToPayload(mutableMapOf(
+            actionVM.attachToPayload(mutableMapOf(
                     PayloadKey.actionView to this as ActionView,
                     PayloadKey.itemList to itemList
             ))
@@ -50,7 +50,7 @@ class PersonalizeFragment : BaseCardActionFragment() {
     }
 
     override fun listenEvent() {
-        paramsVM.seResponseEvent.observe(viewLifecycleOwner, Observer {
+        actionVM.seResponseEvent.observe(viewLifecycleOwner, Observer {
             mainActivityVM.changeResponseEvent(it)
             navigateTo(R.id.action_nav_card_action_to_response_screen)
         })
