@@ -1,11 +1,11 @@
-package com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.impl.block
+package com.tangem.tangemtest._arch.widget.impl
 
 import android.view.ViewGroup
 import com.tangem.tangemtest.R
-import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._arch.structure.abstraction.ItemViewModel
 import com.tangem.tangemtest._arch.structure.abstraction.ListItemBlock
-import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.abstraction.BaseBlockWidget
+import com.tangem.tangemtest._arch.structure.abstraction.iterate
+import com.tangem.tangemtest._arch.widget.abstraction.BaseBlockWidget
 
 /**
 [REDACTED_AUTHOR]
@@ -17,5 +17,11 @@ class LinearBlockWidget(
     override fun getLayoutId(): Int = R.layout.w_personilize_block
 
     override var viewModel: List<ItemViewModel<*>> = listOf()
-        get() = children.itemList.map { it as BaseItem<*> }.map { it.viewModel }
+        get() {
+            val vmList = mutableListOf<ItemViewModel<*>>()
+            children.itemList.iterate { item ->
+                (item as? ItemViewModel<*>)?.let { vmList.add(it) }
+            }
+            return vmList.toList()
+        }
 }
