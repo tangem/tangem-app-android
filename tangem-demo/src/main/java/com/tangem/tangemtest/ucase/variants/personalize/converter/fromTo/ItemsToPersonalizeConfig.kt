@@ -1,11 +1,7 @@
 package com.tangem.tangemtest.ucase.variants.personalize.converter.fromTo
 
 import com.tangem.tangemtest._arch.structure.Id
-import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
-import com.tangem.tangemtest._arch.structure.abstraction.Block
-import com.tangem.tangemtest._arch.structure.abstraction.Item
-import com.tangem.tangemtest._arch.structure.abstraction.ItemsToModel
-import com.tangem.tangemtest._arch.structure.impl.KeyValue
+import com.tangem.tangemtest._arch.structure.abstraction.*
 import com.tangem.tangemtest._arch.structure.impl.ListValueWrapper
 import com.tangem.tangemtest.ucase.variants.personalize.*
 import com.tangem.tangemtest.ucase.variants.personalize.converter.PersonalizeConfigValuesHolder
@@ -25,7 +21,7 @@ class ItemsToPersonalizeConfig : ItemsToModel<PersonalizeConfig> {
     }
 
     private fun mapListItems(itemList: List<Item>) {
-        itemList.forEach { item -> mapItemToHolder(item) }
+        itemList.iterate { item -> mapItemToHolder(item) }
     }
 
     private fun mapItemToHolder(item: Item) {
@@ -110,7 +106,7 @@ class ItemsToPersonalizeConfig : ItemsToModel<PersonalizeConfig> {
         var typedValue = holder.get(id)?.get()
 
         typedValue = when (typedValue) {
-            is ListValueWrapper -> (typedValue.selectedItem as KeyValue).value as Type
+            is ListValueWrapper -> typedValue.selectedItem as Type
             else -> typedValue as? Type ?: null
         }
         return typedValue
