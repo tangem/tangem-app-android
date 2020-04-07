@@ -1,4 +1,4 @@
-package com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.impl.item
+package com.tangem.tangemtest.ucase.variants.personalize.ui.widgets
 
 import android.view.View
 import android.view.ViewGroup
@@ -10,7 +10,7 @@ import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.impl.KeyValue
 import com.tangem.tangemtest._arch.structure.impl.ListItem
 import com.tangem.tangemtest._arch.structure.impl.ListValueWrapper
-import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.abstraction.getResNameId
+import com.tangem.tangemtest._arch.widget.abstraction.getResNameId
 import ru.dev.gbixahue.eu4d.lib.android._android.views.inflate
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
