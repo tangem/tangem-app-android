@@ -166,7 +166,8 @@ class PersonalizeConfigToItem : ModelToItems<PersonalizeConfig> {
                 SettingsMaskNdef.DynamicNdef,
                 SettingsMaskNdef.DisablePrecomputedNdef,
                 SettingsMaskNdef.Aar,
-                SettingsMaskNdef.AarCustom
+                SettingsMaskNdef.AarCustom,
+                SettingsMaskNdef.Uri
         ).forEach { createItem(block, it) }
         return block
     }
@@ -248,6 +249,9 @@ class PersonalizeConfigToCardConfig : Converter<PersonalizeConfig, CardConfig> {
 
 
         val ndefs = mutableListOf<NdefRecord>()
+        if (from.uri.isNotEmpty()) {
+            ndefs.add(NdefRecord(NdefRecord.Type.URI, from.uri))
+        }
         when (from.aar) {
             "None" -> null
             "--- CUSTOM ---" -> NdefRecord(NdefRecord.Type.AAR, from.aarCustom)
