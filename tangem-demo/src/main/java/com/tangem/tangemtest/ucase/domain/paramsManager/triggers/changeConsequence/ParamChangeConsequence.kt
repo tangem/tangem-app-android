@@ -22,7 +22,7 @@ interface ItemsChangeConsequence {
     fun affectChanges(payload: PayloadHolder, changedItem: Item, itemList: List<Item>): List<Item>?
 }
 
-class SignScanConsequence: ItemsChangeConsequence {
+class SignScanConsequence : ItemsChangeConsequence {
 
     override fun affectChanges(payload: PayloadHolder, changedItem: Item, itemList: List<Item>): List<Item>? {
         if (changedItem.id != TlvId.CardId) return null
@@ -35,7 +35,7 @@ class SignScanConsequence: ItemsChangeConsequence {
             postUI { (payload.get(PayloadKey.actionView) as? ActionView)?.enableActionFab(false) }
         } else {
             val dataForHashing = hashItem.getData() as? String ?: "Any data mother...s"
-            val hashedData = when(card.curve) {
+            val hashedData = when (card.curve) {
                 EllipticCurve.Secp256k1 -> dataForHashing.calculateSha256()
                 EllipticCurve.Ed25519 -> dataForHashing.calculateSha512()
                 else -> return null

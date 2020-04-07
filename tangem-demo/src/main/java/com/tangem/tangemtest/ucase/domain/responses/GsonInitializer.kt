@@ -57,7 +57,7 @@ class SigningMethodTypeAdapter : JsonSerializer<SigningMethod> {
     }
 }
 
-class DateTypeAdapter: JsonSerializer<Date> {
+class DateTypeAdapter : JsonSerializer<Date> {
     override fun serialize(src: Date, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         val formatter = DateFormat.getDateInstance(DateFormat.DEFAULT, Locale("en_US"))
         return JsonPrimitive(formatter.format(src).toString())
