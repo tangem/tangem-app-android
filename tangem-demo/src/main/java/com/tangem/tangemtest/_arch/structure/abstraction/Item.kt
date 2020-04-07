@@ -25,7 +25,7 @@ abstract class BaseItem<D>(
         viewModel.data = value
     }
 
-    fun restoreDefaultData(){
+    fun restoreDefaultData() {
         setData(viewModel.defaultData)
     }
 }
