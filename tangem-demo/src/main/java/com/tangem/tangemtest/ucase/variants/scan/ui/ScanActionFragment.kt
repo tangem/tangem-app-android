@@ -24,7 +24,7 @@ class ScanActionFragment : BaseCardActionFragment() {
     }
 
     override fun listenReadResponse() {
-        paramsVM.seReadResponse.observe(viewLifecycleOwner, Observer {
+        actionVM.seReadResponse.observe(viewLifecycleOwner, Observer {
             navigateTo(
                     R.id.action_nav_card_action_to_response_screen,
                     bundleOf(Pair(BaseCardResponseFragment.response, it))
