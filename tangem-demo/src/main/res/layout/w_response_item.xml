@@ -4,7 +4,10 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="@dimen/def_indent">
+    android:paddingStart="@dimen/def_indent"
+    android:paddingTop="6dp"
+    android:paddingEnd="@dimen/def_indent"
+    android:paddingBottom="6dp">
 
     <LinearLayout
         android:id="@+id/container_field"
