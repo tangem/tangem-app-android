@@ -2,13 +2,12 @@ package com.tangem.tangemtest.ucase.variants.scan.ui
 
 import android.os.Bundle
 import android.view.View
-import android.widget.TextView
+import androidx.core.os.bundleOf
 import androidx.lifecycle.Observer
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest.ucase.resources.ActionType
 import com.tangem.tangemtest.ucase.ui.BaseCardActionFragment
-import ru.dev.gbixahue.eu4d.lib.android._android.views.show
-import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
+import com.tangem.tangemtest.ucase.ui.BaseCardResponseFragment
 
 /**
 [REDACTED_AUTHOR]
@@ -21,17 +20,15 @@ class ScanActionFragment : BaseCardActionFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        showActionFab(true)
+        enableActionFab(true)
     }
 
-    override fun listenResponse() {
-        val tvStub = mainView.findViewById<TextView>(R.id.tv_screen_stub)
-        val tvResponse by lazy { mainView.findViewById<TextView>(R.id.tv_action_response_json) }
-        paramsVM.ldReadResponse.observe(viewLifecycleOwner, Observer {
-            Log.d(this, "action response: ${if (it.length > 50) it.substring(0..50) else it}")
-            tvStub.show(false)
-            tvResponse.text = it
+    override fun listenReadResponse() {
+        paramsVM.seReadResponse.observe(viewLifecycleOwner, Observer {
+            navigateTo(
+                    R.id.action_nav_card_action_to_response_screen,
+                    bundleOf(Pair(BaseCardResponseFragment.response, it))
+            )
         })
     }
 }
