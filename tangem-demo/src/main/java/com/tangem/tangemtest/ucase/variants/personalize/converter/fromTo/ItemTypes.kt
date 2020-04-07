@@ -17,7 +17,7 @@ class ItemTypes {
             SigningMethod.SignValidatedTxRaw, SigningMethod.SignValidatedTxIssuer,
             SigningMethod.SignValidatedTxRawIssuer, SigningMethod.SignExternal, SignHashExProp.RequireTerminalCertSig,
             SignHashExProp.RequireTerminalTxSig, SignHashExProp.CheckPin3, Denomination.WriteOnPersonalize, Token.ItsToken,
-            ProductMask.Note, ProductMask.Tag, ProductMask.IdCard, ProductMask.IdIssuerCard,SettingsMask.IsReusable, SettingsMask.NeedActivation,
+            ProductMask.Note, ProductMask.Tag, ProductMask.IdCard, ProductMask.IdIssuerCard, SettingsMask.IsReusable, SettingsMask.NeedActivation,
             SettingsMask.ForbidPurge, SettingsMask.AllowSelectBlockchain, SettingsMask.UseBlock, SettingsMask.OneApdu,
             SettingsMask.UseCvc, SettingsMask.AllowSwapPin, SettingsMask.AllowSwapPin2, SettingsMask.ForbidDefaultPin,
             SettingsMask.SmartSecurityDelay, SettingsMask.ProtectIssuerDataAgainstReplay,
@@ -29,7 +29,7 @@ class ItemTypes {
 
     val editTextList = mutableListOf(
             CardNumber.Series, CardNumber.BatchId, Common.BlockchainCustom, SignHashExProp.CryptoExKey, Token.Symbol,
-            Token.ContractAddress, Pins.Pin, Pins.Pin2, Pins.Pin3, Pins.Cvc, SettingsMaskNdef.AarCustom
+            Token.ContractAddress, Pins.Pin, Pins.Pin2, Pins.Pin3, Pins.Cvc, SettingsMaskNdef.AarCustom, SettingsMaskNdef.Uri
     )
 
     val numberList = mutableListOf(
