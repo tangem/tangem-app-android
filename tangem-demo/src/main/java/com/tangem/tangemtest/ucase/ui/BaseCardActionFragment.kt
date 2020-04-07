@@ -23,12 +23,11 @@ import com.tangem.tangemtest.ucase.tunnel.CardError
 import com.tangem.tangemtest.ucase.ui.widgets.ParameterWidget
 import ru.dev.gbixahue.eu4d.lib.android._android.views.enable
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
-import ru.dev.gbixahue.eu4d.lib.kotlin.common.LayoutHolder
 
 /**
 [REDACTED_AUTHOR]
  */
-abstract class BaseCardActionFragment : BaseFragment(), LayoutHolder, ActionView {
+abstract class BaseCardActionFragment : BaseFragment(), ActionView {
 
     protected val itemContainer: ViewGroup
         get() = mainView.findViewById(R.id.ll_container)
