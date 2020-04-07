@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.plusAssign
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
@@ -14,8 +15,8 @@ import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._main.MainViewModel
+import com.tangem.tangemtest.ucase.domain.paramsManager.ItemManagersStore
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
-import com.tangem.tangemtest.ucase.domain.paramsManager.ParamsManagerFactory
 import com.tangem.tangemtest.ucase.domain.paramsManager.PayloadKey
 import com.tangem.tangemtest.ucase.resources.ActionType
 import com.tangem.tangemtest.ucase.tunnel.ActionView
@@ -36,9 +37,12 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
         get() = mainView.findViewById(R.id.fab_action)
 
     protected val mainActivityVM by activityViewModels<MainViewModel>()
-    protected val paramsVM: ParamsViewModel by viewModels { ActionViewModelFactory(itemsManager) }
+    protected val actionVM: ActionViewModel by viewModels { ActionViewModelFactory(itemsManager) }
 
-    protected val itemsManager: ItemsManager by lazy { ParamsManagerFactory.createFactory().get(getAction())!! }
+    protected val itemsManager: ItemsManager by lazy {
+        Log.d(this, "create ItemManager")
+        ItemManagersStore.instance.get(getAction())!!
+    }
 
     private val paramsWidgetList = mutableListOf<ParameterWidget>()
 
@@ -46,9 +50,9 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
         super.onViewCreated(view, savedInstanceState)
         Log.d(this, "onViewCreated")
 
-        viewLifecycleOwner.lifecycle.addObserver(paramsVM)
-        paramsVM.setCardManager(CardManager.init(requireActivity()))
-        paramsVM.attachToPayload(mutableMapOf(PayloadKey.actionView to this as ActionView))
+        viewLifecycleOwner.lifecycle.addObserver(actionVM)
+        actionVM.setCardManager(CardManager.init(requireActivity()))
+        actionVM.attachToPayload(mutableMapOf(PayloadKey.actionView to this as ActionView))
 
         initFab()
         createWidgets { subscribeToViewModelChanges() }
@@ -56,16 +60,16 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
 
     protected open fun initFab() {
         enableActionFab(false)
-        actionFab.setOnClickListener { paramsVM.invokeMainAction() }
+        actionFab.setOnClickListener { actionVM.invokeMainAction() }
     }
 
     protected open fun createWidgets(widgetCreatedCallback: () -> Unit) {
         Log.d(this, "createWidgets")
-        paramsVM.ldItemList.observe(viewLifecycleOwner, Observer { itemList ->
+        actionVM.ldItemList.observe(viewLifecycleOwner, Observer { itemList ->
             itemList.forEach { param ->
                 val widget = ParameterWidget(inflateParamView(itemContainer), param)
-                widget.onValueChanged = { id, value -> paramsVM.userChangedItem(id, value) }
-                widget.onActionBtnClickListener = paramsVM.getItemAction(param.id)
+                widget.onValueChanged = { id, value -> actionVM.userChangedItem(id, value) }
+                widget.onActionBtnClickListener = actionVM.getItemAction(param.id)
                 paramsWidgetList.add(widget)
             }
             widgetCreatedCallback()
@@ -83,7 +87,7 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
     }
 
     protected open fun listenEvent() {
-        paramsVM.seResponseEvent.observe(viewLifecycleOwner, Observer {
+        actionVM.seResponseEvent.observe(viewLifecycleOwner, Observer {
             mainActivityVM.changeResponseEvent(it)
         })
     }
@@ -91,18 +95,18 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
     protected open fun listenReadResponse() {}
 
     protected open fun listenResponse() {
-        paramsVM.seResponse.observe(viewLifecycleOwner, Observer {
+        actionVM.seResponse.observe(viewLifecycleOwner, Observer {
             navigateTo(R.id.action_nav_card_action_to_response_screen)
         })
     }
 
     protected open fun listenError() {
-        paramsVM.seError.observe(viewLifecycleOwner, Observer { showSnackbar(it) })
+        actionVM.seError.observe(viewLifecycleOwner, Observer { showSnackbar(it) })
     }
 
     @Deprecated("Start to use itemViewModel")
     protected open fun listenChangedItems() {
-        paramsVM.seChangedItems.observe(viewLifecycleOwner, Observer { itemList ->
+        actionVM.seChangedItems.observe(viewLifecycleOwner, Observer { itemList ->
             itemList.forEach { item ->
                 Log.d(this, "item changed from VM - name: ${item.id}")
                 val dataItem = item as? BaseItem<Any?> ?: return@Observer
@@ -114,14 +118,14 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
 
     protected open fun listenDescriptionSwitchChanges() {
         mainActivityVM.ldDescriptionSwitch.observe(viewLifecycleOwner, Observer {
-            paramsVM.toggleDescriptionVisibility(it)
+            actionVM.toggleDescriptionVisibility(it)
         })
     }
 
     private fun inflateParamView(where: ViewGroup): ViewGroup {
         val inflater = LayoutInflater.from(where.context)
         val view = inflater.inflate(R.layout.w_card_incoming_param, where, false)
-        where.addView(view)
+        where.plusAssign(view)
         return view as ViewGroup
     }
 
