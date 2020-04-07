@@ -82,6 +82,7 @@ class PersonalizeConfig {
     var disablePrecomputedNDEF = false
     var aar = "com.tangem.wallet"
     var aarCustom = ""
+    var uri = "https://tangem.com"
 
 
     // Pins
