@@ -1,9 +1,9 @@
-package com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.impl
+package com.tangem.tangemtest._arch.widget.impl
 
 import android.view.ViewGroup
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.abstraction.ItemViewModel
-import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.abstraction.BaseBlockWidget
+import com.tangem.tangemtest._arch.widget.abstraction.BaseBlockWidget
 
 /**
 [REDACTED_AUTHOR]
