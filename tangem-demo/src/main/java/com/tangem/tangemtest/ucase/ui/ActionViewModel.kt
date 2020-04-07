@@ -24,10 +24,10 @@ import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 [REDACTED_AUTHOR]
  */
 class ActionViewModelFactory(private val manager: ItemsManager) : ViewModelProvider.NewInstanceFactory() {
-    override fun <T : ViewModel?> create(modelClass: Class<T>): T = ParamsViewModel(manager) as T
+    override fun <T : ViewModel?> create(modelClass: Class<T>): T = ActionViewModel(manager) as T
 }
 
-class ParamsViewModel(private val itemsManager: ItemsManager) : ViewModel(), LifecycleObserver {
+class ActionViewModel(private val itemsManager: ItemsManager) : ViewModel(), LifecycleObserver {
 
     val seResponseEvent = SingleLiveEvent<TaskEvent<*>>()
     val seReadResponse = SingleLiveEvent<String>()
@@ -44,6 +44,7 @@ class ParamsViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
         this.cardManager = cardManager
     }
 
+    @Deprecated("Events must be send directly from the Widget")
     fun userChangedItem(id: Id, value: Any?) {
         itemChanged(id, value)
     }
@@ -90,7 +91,7 @@ class ParamsViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
     }
 }
 
-internal class Notifier(private val vm: ParamsViewModel) {
+internal class Notifier(private val vm: ActionViewModel) {
 
     private var notShowedError: TaskError? = null
     private val gson: Gson = GsonInitializer().gson
