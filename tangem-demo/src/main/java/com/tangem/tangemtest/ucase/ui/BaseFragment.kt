@@ -10,6 +10,7 @@ import androidx.navigation.fragment.NavHostFragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.tangemtest.ucase.getDefaultNavigationOptions
 import com.tangem.tangemtest.ucase.tunnel.SnackbarHolder
+import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.LayoutHolder
 
 /**
@@ -25,6 +26,7 @@ abstract class BaseFragment : Fragment(), LayoutHolder, SnackbarHolder {
     }
 
     protected fun navigateTo(navigationId: Int, bundle: Bundle? = null, options: NavOptions? = getDefaultNavigationOptions()) {
+        Log.d(this, "navigateTo id: $navigationId")
         findNavController(this).navigate(navigationId, bundle, options)
     }
 
