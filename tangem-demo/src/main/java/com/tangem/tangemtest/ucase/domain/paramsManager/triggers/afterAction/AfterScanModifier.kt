@@ -24,12 +24,12 @@ class AfterScanModifier : AfterActionModification {
 
         return if (isNotPersonalized(card)) {
             actionView.showSnackbar(CardError.NotPersonalized)
-            postUI { actionView.showActionFab(false) }
+            postUI { actionView.enableActionFab(false) }
             listOf()
         } else {
             payload.set(PayloadKey.card, card)
             foundItem.setData(card.cardId)
-            postUI { actionView.showActionFab(true) }
+            postUI { actionView.enableActionFab(true) }
             listOf(foundItem)
         }
     }
