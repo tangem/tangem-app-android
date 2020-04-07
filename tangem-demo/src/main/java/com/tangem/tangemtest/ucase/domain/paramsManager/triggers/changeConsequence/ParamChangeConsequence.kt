@@ -32,7 +32,7 @@ class SignScanConsequence: ItemsChangeConsequence {
         val card = payload.remove(PayloadKey.card) as Card?
         if (card == null) {
             hashItem.restoreDefaultData()
-            postUI { (payload.get(PayloadKey.actionView) as? ActionView)?.showActionFab(false) }
+            postUI { (payload.get(PayloadKey.actionView) as? ActionView)?.enableActionFab(false) }
         } else {
             val dataForHashing = hashItem.getData() as? String ?: "Any data mother...s"
             val hashedData = when(card.curve) {
