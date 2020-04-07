@@ -1,11 +1,11 @@
-package com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.impl.item
+package com.tangem.tangemtest.ucase.variants.personalize.ui.widgets
 
 import android.view.ViewGroup
 import android.widget.CompoundButton
 import androidx.appcompat.widget.SwitchCompat
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.impl.BoolItem
-import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.abstraction.getResNameId
+import com.tangem.tangemtest._arch.widget.abstraction.getResNameId
 
 /**
 [REDACTED_AUTHOR]
