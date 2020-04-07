@@ -1,5 +1,6 @@
 package com.tangem.tangemtest.ucase.ui
 
+import android.view.View
 import androidx.annotation.UiThread
 import androidx.lifecycle.*
 import com.google.gson.Gson
@@ -7,7 +8,9 @@ import com.tangem.CardManager
 import com.tangem.tangemtest._arch.SingleLiveEvent
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.Payload
+import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._arch.structure.abstraction.Item
+import com.tangem.tangemtest._arch.structure.abstraction.iterate
 import com.tangem.tangemtest.commons.performAction
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.responses.GsonInitializer
@@ -26,6 +29,7 @@ class ActionViewModelFactory(private val manager: ItemsManager) : ViewModelProvi
 
 class ParamsViewModel(private val itemsManager: ItemsManager) : ViewModel(), LifecycleObserver {
 
+    val seResponseEvent = SingleLiveEvent<TaskEvent<*>>()
     val seReadResponse = SingleLiveEvent<String>()
     val seResponse = SingleLiveEvent<String>()
 
@@ -67,6 +71,13 @@ class ParamsViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
         }
     }
 
+    fun toggleDescriptionVisibility(state: Boolean) {
+        ldItemList.value?.iterate {
+            val baseItem = it as? BaseItem<*> ?: return@iterate
+            baseItem.viewModel.viewState.descriptionVisibility = if (state) View.VISIBLE else View.GONE
+        }
+    }
+
     fun attachToPayload(payload: Payload) {
         itemsManager.attachPayload(payload)
     }
@@ -99,18 +110,17 @@ internal class Notifier(private val vm: ParamsViewModel) {
 
         when (taskEvent) {
             is TaskEvent.Completion -> handleCompletionEvent(taskEvent)
-            is TaskEvent.Event -> handleDataEvent(taskEvent.data)
+            is TaskEvent.Event -> {
+                handleDataEvent(taskEvent.data)
+                vm.seResponseEvent.postValue(taskEvent)
+            }
         }
     }
 
     private fun handleDataEvent(event: Any?) {
         when (event) {
-            is ScanEvent.OnReadEvent -> {
-//                vm.ldCard.postValue(event.card)
-                vm.seReadResponse.postValue(gson.toJson(event))
-            }
+            is ScanEvent.OnReadEvent -> vm.seReadResponse.postValue(gson.toJson(event))
             is ScanEvent.OnVerifyEvent -> {
-//                vm.ldIsVerified.postValue(true)
             }
             else -> vm.seResponse.postValue(gson.toJson(event))
         }
