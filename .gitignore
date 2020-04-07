@@ -13,6 +13,7 @@ local.properties
 .idea/caches/
 .idea/libraries/
 .idea/*.xml
+.idea/codeStyles
 
 # OS-specific files
 .DS_Store
