@@ -1,4 +1,4 @@
-package com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.impl.item
+package com.tangem.tangemtest.ucase.variants.personalize.ui.widgets
 
 import android.view.ViewGroup
 import android.widget.TextView
@@ -6,8 +6,8 @@ import androidx.transition.AutoTransition
 import androidx.transition.TransitionManager
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
-import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.abstraction.BaseWidget
-import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.abstraction.getResDescription
+import com.tangem.tangemtest._arch.widget.abstraction.BaseWidget
+import com.tangem.tangemtest._arch.widget.abstraction.getResDescription
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 
 /**
