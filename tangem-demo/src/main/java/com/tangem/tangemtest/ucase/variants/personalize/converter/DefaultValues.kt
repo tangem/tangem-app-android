@@ -4,16 +4,16 @@ import com.tangem.commands.EllipticCurve
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.impl.KeyValue
 import com.tangem.tangemtest.ucase.variants.personalize.*
-import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizeConfig
+import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizationConfig
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.BaseTypedHolder
 
 /**
 [REDACTED_AUTHOR]
  */
-class PersonalizeConfigValuesHolder : BaseTypedHolder<Id, Value>() {
+class ConfigValuesHolder : BaseTypedHolder<Id, Value>() {
 
     // All registered association values can't be objects
-    fun init(default: PersonalizeConfig) {
+    fun init(default: PersonalizationConfig) {
         register(CardNumber.Series, Value(default.series))
         register(CardNumber.Number, Value(default.startNumber))
         register(CardNumber.BatchId, Value(default.batchId))
