@@ -46,15 +46,15 @@ import io.reactivex.observers.DisposableSingleObserver;
 
 public class DucatusEngine extends BtcEngine {
     private static final String TAG = DucatusEngine.class.getSimpleName();
-    public BtcData coinData = null;
+    public DucatusData coinData = null;
 
     public DucatusEngine(TangemContext context) throws Exception {
-        super(context);
+        this.ctx = context;
         if (context.getCoinData() == null) {
-            coinData = new BtcData();
+            coinData = new DucatusData();
             context.setCoinData(coinData);
-        } else if (context.getCoinData() instanceof BtcData) {
-            coinData = (BtcData) context.getCoinData();
+        } else if (context.getCoinData() instanceof DucatusData) {
+            coinData = (DucatusData) context.getCoinData();
         } else {
             throw new Exception("Invalid type of Blockchain data for DucatusEngine");
         }
@@ -380,7 +380,7 @@ public class DucatusEngine extends BtcEngine {
 
     @Override
     public CoinData createCoinData() {
-        return new BtcData();
+        return new DucatusData();
     }
 
     @Override
