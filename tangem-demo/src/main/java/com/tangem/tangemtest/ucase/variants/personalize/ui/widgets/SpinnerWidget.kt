@@ -10,7 +10,7 @@ import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.impl.KeyValue
 import com.tangem.tangemtest._arch.structure.impl.ListItem
 import com.tangem.tangemtest._arch.structure.impl.ListValueWrapper
-import com.tangem.tangemtest._arch.widget.abstraction.getResNameId
+import com.tangem.tangemtest._arch.widget.abstraction.getName
 import ru.dev.gbixahue.eu4d.lib.android._android.views.inflate
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
@@ -36,7 +36,7 @@ class SpinnerWidget(parent: ViewGroup, listItem: ListItem) : DescriptionWidget<L
 
     init {
         val name = view.findViewById<TextView>(R.id.tv_name)
-        name.setText(getResNameId())
+        name.text = getName()
         spItem.adapter = spAdapter
         spAdapter.getItemPosition(stringOf(data.selectedItem))?.let {
             spItem.setSelection(it)
