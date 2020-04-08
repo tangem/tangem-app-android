@@ -9,27 +9,27 @@ import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest._arch.widget.WidgetBuilder
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.paramsManager.PayloadKey
-import com.tangem.tangemtest.ucase.domain.paramsManager.managers.PersonalizeItemsManager
+import com.tangem.tangemtest.ucase.domain.paramsManager.managers.PersonalizationItemsManager
 import com.tangem.tangemtest.ucase.tunnel.ActionView
 import com.tangem.tangemtest.ucase.tunnel.CardError
 import com.tangem.tangemtest.ucase.tunnel.ItemError
 import com.tangem.tangemtest.ucase.ui.BaseCardActionFragment
 import com.tangem.tangemtest.ucase.variants.personalize.PersonalizationConfigStore
-import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.PersonalizeItemBuilder
+import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.PersonalizationItemBuilder
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 
 /**
 [REDACTED_AUTHOR]
  */
-class PersonalizeFragment : BaseCardActionFragment() {
+class PersonalizationFragment : BaseCardActionFragment() {
 
-    override val itemsManager: ItemsManager by lazy { PersonalizeItemsManager(PersonalizationConfigStore(requireContext())) }
+    override val itemsManager: ItemsManager by lazy { PersonalizationItemsManager(PersonalizationConfigStore(requireContext())) }
 
-    override fun getLayoutId(): Int = R.layout.fg_personalize
+    override fun getLayoutId(): Int = R.layout.fg_personalization
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        lifecycle.addObserver(itemsManager as PersonalizeItemsManager)
+        lifecycle.addObserver(itemsManager as PersonalizationItemsManager)
     }
 
     override fun initFab() {
@@ -44,7 +44,7 @@ class PersonalizeFragment : BaseCardActionFragment() {
             Log.d(this, "ldBlockList size: ${list.size}")
             itemList.clear()
             itemList.addAll(list)
-            itemList.forEach { WidgetBuilder(PersonalizeItemBuilder()).build(it, itemContainer) }
+            itemList.forEach { WidgetBuilder(PersonalizationItemBuilder()).build(it, itemContainer) }
             actionVM.attachToPayload(mutableMapOf(
                     PayloadKey.actionView to this as ActionView,
                     PayloadKey.itemList to itemList
