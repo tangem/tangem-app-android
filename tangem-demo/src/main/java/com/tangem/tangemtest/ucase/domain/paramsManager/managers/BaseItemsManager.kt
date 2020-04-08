@@ -31,7 +31,7 @@ abstract class BaseItemsManager(protected val action: Action) : ItemsManager {
         applyChangesByAffectedItems(foundItem, callback)
     }
 
-    override fun getItems(): MutableList<Item> = itemList.toMutableList()
+    override fun getItems(): List<Item> = itemList
 
     override fun getActionByTag(id: Id, cardManager: CardManager): ((ActionCallback) -> Unit)? = null
 
