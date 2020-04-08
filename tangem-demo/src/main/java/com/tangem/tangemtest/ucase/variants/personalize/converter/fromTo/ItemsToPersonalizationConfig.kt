@@ -4,17 +4,17 @@ import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.abstraction.*
 import com.tangem.tangemtest._arch.structure.impl.ListValueWrapper
 import com.tangem.tangemtest.ucase.variants.personalize.*
-import com.tangem.tangemtest.ucase.variants.personalize.converter.PersonalizeConfigValuesHolder
-import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizeConfig
+import com.tangem.tangemtest.ucase.variants.personalize.converter.ConfigValuesHolder
+import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizationConfig
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 
 /**
 [REDACTED_AUTHOR]
  */
-class ItemsToPersonalizeConfig : ItemsToModel<PersonalizeConfig> {
-    protected val valuesHolder = PersonalizeConfigValuesHolder()
+class ItemsToPersonalizationConfig : ItemsToModel<PersonalizationConfig> {
+    protected val valuesHolder = ConfigValuesHolder()
 
-    override fun convert(from: List<Item>, default: PersonalizeConfig): PersonalizeConfig {
+    override fun convert(from: List<Item>, default: PersonalizationConfig): PersonalizationConfig {
         valuesHolder.init(default)
         mapListItems(from)
         return createModel()
@@ -34,8 +34,8 @@ class ItemsToPersonalizeConfig : ItemsToModel<PersonalizeConfig> {
         }
     }
 
-    private fun createModel(): PersonalizeConfig {
-        val export = PersonalizeConfig()
+    private fun createModel(): PersonalizationConfig {
+        val export = PersonalizationConfig()
         export.series = getTyped(CardNumber.Series)
         export.startNumber = getTyped(CardNumber.Number)
         export.curveID = getTyped(Common.Curve)
@@ -101,7 +101,7 @@ class ItemsToPersonalizeConfig : ItemsToModel<PersonalizeConfig> {
         return getTypedBy<Type>(valuesHolder, id)!!
     }
 
-    private inline fun <reified Type> getTypedBy(holder: PersonalizeConfigValuesHolder, id: Id): Type? {
+    private inline fun <reified Type> getTypedBy(holder: ConfigValuesHolder, id: Id): Type? {
         Log.d(this, "getTyped for id: $id")
         var typedValue = holder.get(id)?.get()
 
