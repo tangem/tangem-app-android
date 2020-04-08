@@ -53,7 +53,7 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
                 if (!Analytics.isEnabled()) {
                     analytics.logEvent(AnalyticsEvent.ANALYTICS_TURNED_OFF.event, bundleOf())
                 }
-                analytics.setAnalyticsCollectionEnabled(Analytics.isEnabled())
+                analytics.setAnalyticsCollectionEnabled(Analytics.isEnabled() && !BuildConfig.DEBUG)
             }
             FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(Analytics.isEnabled())
 
