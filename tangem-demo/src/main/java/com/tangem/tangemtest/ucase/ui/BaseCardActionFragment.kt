@@ -34,6 +34,7 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
     protected abstract val itemsManager: ItemsManager
     protected val mainActivityVM by activityViewModels<MainViewModel>()
     protected val actionVM: ActionViewModel by viewModels { ActionViewModelFactory(itemsManager) }
+    protected val UNDEFINED = -1
 
     private val paramsWidgetList = mutableListOf<ParameterWidget>()
 
@@ -130,11 +131,12 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
         actionFab.enable(enable)
     }
 
-    override fun showSnackbar(id: Id) {
-//        MainResourceHolder.safeGet<>()
-        when (id) {
-            CardError.NotPersonalized -> showSnackbar(R.string.card_error_not_personalized)
-            else -> showSnackbar(requireContext().getString(R.string.unknown))
+    override fun showSnackbar(id: Id, additionalHandler: ((Id) -> Int)?) {
+        val resourceId = when (id) {
+            CardError.NotPersonalized -> R.string.card_error_not_personalized
+            else -> additionalHandler?.invoke(id) ?: UNDEFINED
         }
+
+        if (resourceId != UNDEFINED) showSnackbar(resourceId)
     }
 }
