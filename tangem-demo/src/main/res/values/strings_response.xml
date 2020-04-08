@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+
+    <!--  Field names - Response: Card  -->
+    <string name="response_card_cid">CID</string>
+    <string name="response_card_manufacturer_name">Manufacturer_Name</string>
+    <string name="response_card_status">Status</string>
+    <string name="response_card_firmware_version">Firmware_Version</string>
+    <string name="response_card_public_key">Card_PublicKey</string>
+    <string name="response_card_settings_mask">Settings_Mask</string>
+    <string name="response_card_is_reusable">Is_Reusable</string>
+    <string name="response_card_use_activation">Use_Activation</string>
+    <string name="response_card_purge_wallet">Prohibit_Purge_Wallet</string>
+    <string name="response_card_use_block">Use_Block</string>
+    <string name="response_card_allow_pin">Allow_SET_PIN1</string>
+    <string name="response_card_allow_pin2">Allow_SET_PIN2</string>
+    <string name="response_card_use_cvc">Use_CVC</string>
+    <string name="response_card_default_pin">Prohibit_Default_PIN1</string>
+    <string name="response_card_one_apdu_at_time">Use_One_CommandAtTime</string>
+    <string name="response_card_use_ndef">Use_NDEF</string>
+    <string name="response_card_use_dynamic_ndef">Use_Dynamic_NDEF</string>
+    <string name="response_card_smart_security_delay">Smart_Security_Delay</string>
+    <string name="response_card_allow_unencrypted">Allow_Unencrypted</string>
+    <string name="response_card_allow_fast_encryption">Allow_Fast_Encryption</string>
+    <string name="response_card_protect_issuer_data_against_replay">Protect_Issuer_Data_Against_Replay</string>
+    <string name="response_card_allow_select_blockchain">Allow_Select_Blockchain</string>
+    <string name="response_card_disable_precomputed_ndef">Disable_Precomputed_NDEF</string>
+    <string name="response_card_security_delay_if_validated">Skip_Security_Delay_If_Validated_By_Issuer</string>
+    <string name="response_card_skip_pin2_cvc_if_validated_by_issuer">Skip_Check_PIN2_and_CVC_If_Validated_By_Issuer</string>
+    <string name="response_card_skip_security_delay_if_validated_by_linked_terminal">Skip_Security_Delay_If_Validated_By_Linked_Terminal</string>
+    <string name="response_card_restrict_overwrite_issuer_ex_data">Restrict_Overwrite_Issuer_Extra_Data</string>
+    <string name="response_card_prohibit_overwriting_issuer_ex_data">1 – prohibit overwriting Issuer_Extra_Data</string>
+    <string name="response_card_require_terminal_tx_sig">Require_Term_Tx_Signature</string>
+    <string name="response_card_require_terminal_cert_sig">Require_Term_Cert_Signature</string>
+    <string name="response_card_check_pin3">Check_PIN3_on_Card</string>
+    <string name="response_card_card_data">Card_Data</string>
+    <string name="response_card_issuer_data_public_key">Issuer_Data_PublicKey</string>
+    <string name="response_card_curve">Curve_ID</string>
+    <string name="response_card_max_signatures">Max_Signatures</string>
+    <string name="response_card_signing_method">Signing_Method</string>
+    <string name="response_card_pause_before_pin2">Pause_Before_PIN2</string>
+    <string name="response_card_wallet_public_key">Wallet_PublicKey</string>
+    <string name="response_card_wallet_remaining_signatures">Wallet_Remaining_Signatures</string>
+    <string name="response_card_wallet_signed_hashes">Wallet_Signed_Hashes</string>
+    <string name="response_card_health">Health</string>
+    <string name="response_card_is_activated">Is_Activated</string>
+    <string name="response_card_activation_seed">Activation_Seed</string>
+    <string name="response_card_payment_flow_version">Payment_Flow_Version</string>
+    <string name="response_card_user_counter">User_Counter</string>
+    <string name="response_card_user_protected_counter">User_Protected_Counter</string>
+
+
+    <string name="info_response_card_cid">Unique Tangem card ID number</string>
+    <string name="info_response_card_manufacturer_name">Name of Tangem card manufacturer</string>
+    <string name="info_response_card_status">Current status of the card</string>
+    <string name="info_response_card_firmware_version">Version of Tangem COS</string>
+    <string name="info_response_card_public_key">Public key that is used to authenticate the card against manufacturer’s database. It is generated one time during card manufacturing. See Security section for more details.</string>
+    <string name="info_response_card_settings_mask">Card settings defined by personalization (bit mask: 0 – Enabled, 1 – Disabled):</string>
+    <string name="info_response_card_is_reusable">Defines what happens when user calls PURGE_WALLET command:
+    \n0 - Card will switch to Purged state
+    \n1 - Card will switch to Empty state and let create a new wallet again</string>
+    <string name="info_response_card_use_activation"></string>
+    <string name="info_response_card_purge_wallet">0 – Card will accept PURGE_WALLET command
+    \n1 – Card will reject PURGE_WALLET command</string>
+    <string name="info_response_card_use_block"></string>
+    <string name="info_response_card_allow_pin">Is user allowed to change PIN1 with SET_PIN command</string>
+    <string name="info_response_card_allow_pin2">Is user allowed to change PIN2 with SET_PIN command</string>
+    <string name="info_response_card_use_cvc">All commands requiring PIN2 will also require additional CVC code printed on the card</string>
+    <string name="info_response_card_default_pin">SET_PIN commands will not change PIN1 to default value (‘000000’).</string>
+    <string name="info_response_card_one_apdu_at_time">Card will execute only one command during one communication session, thus requiring user to physically take the card away from the host after each action (all commands except for READ_CARD).</string>
+    <string name="info_response_card_use_ndef">Whether the card should emulate NDEF. In default configuration, two NDEF records are loaded during personalization: (1) Tangem web site address, (2) name of Android App package in Google Play Store.</string>
+    <string name="info_response_card_use_dynamic_ndef">0 – Disable dynamic generation of NDEF for iOS. See Dynamic NDEF section for more details.
+    /n1 – Enable dynamic NDEF for iOS.</string>
+    <string name="info_response_card_smart_security_delay">Security delay Pause_Before_PIN2 will not be applied if PIN2 is not default.</string>
+    <string name="info_response_card_allow_unencrypted">Whether the card supports unencrypted NFC communication. See NFC communication section for more details.</string>
+    <string name="info_response_card_allow_fast_encryption">Whether the card supports fast encrypted NFC communication. See NFC communication section for more details.</string>
+    <string name="info_response_card_protect_issuer_data_against_replay">0 – No replay protection on write issuer data
+    /n1 – Enable replay protection on write issuer data (card will require additional Issuer_Data_Counter incremented on each write)</string>
+    <string name="info_response_card_allow_select_blockchain">0 – Wallet elliptic curve and blockchain information stored during PERSONALIZE command and never change
+    /n1 – Wallet elliptic curve and blockchain information can be changed on CREATE_WALLET command</string>
+    <string name="info_response_card_disable_precomputed_ndef">0 – Enable  precomputed dynamic NDEF to work around iPhone 7+ NFC bug.
+    /n1 – Disable precomputed dynamic NDEF. See Dynamic NDEF section for more details.</string>
+    <string name="info_response_card_security_delay_if_validated">0 – Enforce security delay in SIGN command if the issuer validates the transaction (for signing methods 2, 3, 4 and 5).
+    /n1 – Skip security delay in SIGN command if the issuer validates the transaction (for signing methods 2, 3, 4 and 5).</string>
+    <string name="info_response_card_skip_pin2_cvc_if_validated_by_issuer">0 – Require and check PIN2 and CVC in SIGN command if the issuer validates the transaction (for signing method 2, 3, 4 and 5).
+    /n1 – Skip checking PIN2 and CVC in SIGN command if the issuer validates the transaction (for signing method 2, 3, 4 and 5).</string>
+    <string name="info_response_card_skip_security_delay_if_validated_by_linked_terminal">1 - Store Terminal_PublicKey public key of linked terminal no each SIGN command, skip security delay if valid signature of transaction is made with Terminal_PrivateKey is provided in SIGN command</string>
+    <string name="info_response_card_restrict_overwrite_issuer_ex_data"></string>
+    <string name="info_info_response_card_prohibit_overwriting_issuer_ex_data"></string>
+    <string name="info_response_card_require_terminal_tx_sig">0 – Skip checking terminal’s signature when signing POS transaction
+    /n1 – Check terminal’s signature when signing POS transaction</string>
+    <string name="info_response_card_require_terminal_cert_sig">0 – Skip checking acquirer’s signature of terminal certificate when signing POS transaction
+    /n1 – Check acquirer’s signature of terminal certificate when signing POS transaction</string>
+    <string name="info_response_card_check_pin3">0 – Additionally encrypt POS transaction signature with key derived from PIN3 when the transaction amount exceeds PIN3 floor limit
+    /n1 – Require terminal to send PIN3 to card when the POS transaction amount exceeds PIN3_Floor_Limit</string>
+    <string name="info_response_card_card_data">Detailed information about card contents. Format is defined by the card issuer. Cards complaint with Tangem Wallet application should have TLV format described in Personalization section.</string>
+    <string name="info_response_card_issuer_data_public_key">Public key that is used by the card issuer to sign Issuer_Data field. See Security section for more details.</string>
+    <string name="info_response_card_curve">Explicit text name of the elliptic curve used for all wallet key operations.</string>
+    <string name="info_response_card_max_signatures">Total number of signatures allowed for the wallet when the card was personalized.</string>
+    <string name="info_response_card_signing_method">Defines what data should be submitted to SIGN command.</string>
+    <string name="info_response_card_pause_before_pin2">Delay in seconds before COS executes commands protected by PIN2.</string>
+    <string name="info_response_card_wallet_public_key">Public key of the blockchain wallet. Value returned only if the wallet has already been created by CREATE_WALLET command. See Security section for more details.</string>
+    <string name="info_response_card_wallet_remaining_signatures">Remaining number of SIGN operations before the wallet will stop signing transactions. Value returned only if the wallet has already been created by CREATE_WALLET command.</string>
+    <string name="info_response_card_wallet_signed_hashes">Total number of signed single hashes returned by the card in SIGN command responses since card personalization. Sums up array elements within all SIGN commands.</string>
+    <string name="info_response_card_health">Any non-zero value indicates that the card experiences some hardware problems. User should withdraw the value to other blockchain wallet as soon as possible.  Non-zero Health tag will also appear in responses of all other commands.</string>
+    <string name="info_response_card_is_activated">Whether the card requires issuer’s confirmation of activation.
+    /n0 – card will require issuer’s confirmation of activation,
+    /notherwise this field will not be returned (card is activated and operational).</string>
+    <string name="info_response_card_activation_seed">A random challenge generated by PERSONALIZE command that should be signed and returned to COS by the issuer to confirm the card has been activated. See ACTIVATE_CARD command for more details.
+    /nThis field will not be returned if the card is activated.</string>
+    <string name="info_response_card_payment_flow_version">Version of POS payment scheme supported by COS ([0x02,0x01] for version 2.30)
+    /nReturned only if SigningMethod ‘6’ enabling POS transactions is supported by card.</string>
+    <string name="info_response_card_user_counter">This value can be initialized by App and will be increased by COS with the execution of each SIGN command. For example, this field can store blockchain “nonce” for a quick one-touch transaction on POS terminals. Returned only if SigningMethod =6.</string>
+    <string name="info_response_card_user_protected_counter">This value can be initialized by App (with PIN2 confirmation) and will be increased by COS with the execution of each SIGN command. For example, this field can store blockchain “nonce” for a quick one-touch transaction on POS terminals. Returned only if SigningMethod =6.</string>
+
+
+    <!--  Field names - Response: Card.cardData  -->
+    <string name="response_card_card_data_batch_id">Batch_ID</string>
+    <string name="response_card_card_data_manufacture_date_time">Manufacture_Date_Time</string>
+    <string name="response_card_card_data_issuer_name">Issuer_Name</string>
+    <string name="response_card_card_data_blockchain_name">Blockchain_Name</string>
+    <string name="response_card_card_data_manufacturer_signature">Manufacturer_Signature</string>
+    <string name="response_card_card_data_product_mask">ProductMask</string>
+    <string name="response_card_card_data_token_symbol">tokenSymbol</string>
+    <string name="response_card_card_data_token_contract_address">tokenContractAddress</string>
+    <string name="response_card_card_data_token_decimal">tokenDecimal</string>
+
+    <string name="info_response_card_card_data_batch_id">Tangem internal manufacturing batch ID, should correspond with the data in Tangem’s card list (see Card attestation and UID and CID sections)</string>
+    <string name="info_response_card_card_data_manufacture_date_time">Timestamp of manufacturing should correspond with the data in Tangem’s card list (see Card attestation section).</string>
+    <string name="info_response_card_card_data_issuer_name">Name of the issuer</string>
+    <string name="info_response_card_card_data_blockchain_name">Name of the blockchain (once personalized, the target blockchain is fixed for the whole life cycle)</string>
+    <string name="info_response_card_card_data_manufacturer_signature">Signature of CID with the MANUFACTURER_PRIVATE_KEY</string>
+    <string name="info_response_card_card_data_product_mask">Mask of products enabled on card</string>
+    <string name="info_response_card_card_data_token_symbol"></string>
+    <string name="info_response_card_card_data_token_contract_address"></string>
+    <string name="info_response_card_card_data_token_decimal"></string>
+</resources>
