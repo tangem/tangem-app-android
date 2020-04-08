@@ -1,27 +1,38 @@
-package com.tangem.tangemtest.ucase.ui.widgets
+package com.tangem.tangemtest.ucase.variants.responses.ui.widget
 
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.impl.TextItem
-import com.tangem.tangemtest._arch.widget.abstraction.getResNameId
+import com.tangem.tangemtest._arch.widget.abstraction.getName
 import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.DescriptionWidget
 
 /**
 [REDACTED_AUTHOR]
  */
-class ResponseTextWidget(parent: ViewGroup, textItem: TextItem) : DescriptionWidget<String>(parent, textItem) {
+class ResponseTextWidget(parent: ViewGroup, private val textItem: TextItem) : DescriptionWidget<String>(parent, textItem) {
     override fun getLayoutId(): Int = R.layout.w_response_item
 
-    private val tvName: TextView by lazy { view.findViewById<TextView>(R.id.tv_name) }
-    private val tvValue: TextView by lazy { view.findViewById<TextView>(R.id.tv_value) }
+    private val tvName: TextView = view.findViewById(R.id.tv_name)
+    private val tvValue: TextView = view.findViewById(R.id.tv_value)
 
     init {
-        tvName.setText(getResNameId())
-        tvValue.text = dataItem.getData()
+        initWidgets()
+    }
+
+    private fun initWidgets() {
+        val data = textItem.getData()
+        if (data == null || data.isEmpty()) {
+            view.visibility = View.GONE
+            return
+        }
+
+        tvName.text = getName()
+        tvValue.text = data
 
         view.setOnClickListener {
             val clipboard = view.context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
