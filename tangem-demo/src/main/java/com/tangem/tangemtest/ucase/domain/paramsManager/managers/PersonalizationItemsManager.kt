@@ -6,17 +6,17 @@ import com.tangem.CardManager
 import com.tangem.tangemtest.commons.Store
 import com.tangem.tangemtest.ucase.domain.actions.PersonalizeAction
 import com.tangem.tangemtest.ucase.domain.paramsManager.ActionCallback
-import com.tangem.tangemtest.ucase.variants.personalize.converter.PersonalizeConfigConverter
-import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizeConfig
+import com.tangem.tangemtest.ucase.variants.personalize.converter.PersonalizationConfigConverter
+import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizationConfig
 
 /**
 [REDACTED_AUTHOR]
  */
-class PersonalizeItemsManager(
-        private val store: Store<PersonalizeConfig>
+class PersonalizationItemsManager(
+        private val store: Store<PersonalizationConfig>
 ) : BaseItemsManager(PersonalizeAction()) {
 
-    private val converter = PersonalizeConfigConverter()
+    private val converter = PersonalizationConfigConverter()
 
     init {
         val config = store.restore()
@@ -29,7 +29,7 @@ class PersonalizeItemsManager(
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     fun onDestroy() {
-        val config = converter.convert(itemList, PersonalizeConfig())
+        val config = converter.convert(itemList, PersonalizationConfig())
         store.save(config)
     }
 }

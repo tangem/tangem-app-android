@@ -3,7 +3,7 @@ package com.tangem.tangemtest.ucase.variants.personalize.dto
 /**
 [REDACTED_AUTHOR]
  */
-class PersonalizeConfig {
+class PersonalizationConfig {
 
     // Card number
     var series = "BB"
