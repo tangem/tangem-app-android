@@ -7,7 +7,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.impl.EditTextItem
-import com.tangem.tangemtest._arch.widget.abstraction.getResNameId
+import com.tangem.tangemtest._arch.widget.abstraction.getName
 import ru.dev.gbixahue.eu4d.lib.android._android.views.moveCursorToEnd
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
@@ -30,8 +30,8 @@ class EditTextWidget(parent: ViewGroup, data: EditTextItem) : DescriptionWidget<
     }
 
     init {
-        tilItem.hint = tilItem.context.getString(getResNameId())
-        etItem.setText(dataItem.viewModel.data)
+        tilItem.hint = getName()
+        etItem.setText(dataItem.getData())
         etItem.addTextChangedListener(watcher)
         dataItem.viewModel.onDataUpdated = { silentUpdate(it) }
     }
