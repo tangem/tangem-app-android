@@ -49,11 +49,11 @@ public class DucatusEngine extends BtcEngine {
     public DucatusData coinData = null;
 
     public DucatusEngine(TangemContext context) throws Exception {
-        super(context);
+        this.ctx = context;
         if (context.getCoinData() == null) {
             coinData = new DucatusData();
             context.setCoinData(coinData);
-        } else if (context.getCoinData() instanceof BtcData) {
+        } else if (context.getCoinData() instanceof DucatusData) {
             coinData = (DucatusData) context.getCoinData();
         } else {
             throw new Exception("Invalid type of Blockchain data for DucatusEngine");
