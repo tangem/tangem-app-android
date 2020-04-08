@@ -5,10 +5,12 @@ import android.view.View
 import android.view.ViewGroup
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.DataHolder
+import com.tangem.tangemtest._arch.structure.StringId
 import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._arch.structure.abstraction.ItemViewModel
 import com.tangem.tangemtest.ucase.resources.MainResourceHolder
 import com.tangem.tangemtest.ucase.resources.Resources
+import ru.dev.gbixahue.eu4d.lib.android._android.views.stringFrom
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.LayoutHolder
 
 /**
@@ -45,6 +47,11 @@ abstract class BaseBlockWidget(parent: ViewGroup) : BlockViewWidget {
 fun DataWidget<*>.getResNameId(): Int = MainResourceHolder.safeGet<Resources>(dataItem.id).resName
 
 fun DataWidget<*>.getResDescription(): Int? = MainResourceHolder.safeGet<Resources>(dataItem.id).resDescription
+
+fun DataWidget<*>.getName(): String {
+    val id = dataItem.id
+    return if (id is StringId) id.name else view.stringFrom(getResNameId())
+}
 
 internal fun inflate(id: Int, parent: ViewGroup): View {
     val layoutId = if (id <= 0) R.layout.w_empty else id
