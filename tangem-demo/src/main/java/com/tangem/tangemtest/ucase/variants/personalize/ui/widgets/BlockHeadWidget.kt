@@ -4,7 +4,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.impl.TextItem
-import com.tangem.tangemtest._arch.widget.abstraction.getResNameId
+import com.tangem.tangemtest._arch.widget.abstraction.getName
 
 /**
 [REDACTED_AUTHOR]
@@ -15,6 +15,6 @@ class BlockHeadWidget(parent: ViewGroup, data: TextItem) : DescriptionWidget<Str
     private val tvName = view.findViewById<TextView>(R.id.tv_name)
 
     init {
-        tvName?.setText(getResNameId())
+        tvName.text = getName()
     }
 }
