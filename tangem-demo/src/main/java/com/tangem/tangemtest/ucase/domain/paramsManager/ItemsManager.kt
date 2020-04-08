@@ -19,12 +19,12 @@ typealias ActionCallback = (ActionResponse, AffectedList) -> Unit
 interface ItemsManager : PayloadHolder {
 
     fun itemChanged(id: Id, value: Any?, callback: AffectedItemsCallback? = null)
+    fun setItems(items: List<Item>)
     fun getItems(): List<Item>
+    fun setItemChangeConsequences(consequence: ItemsChangeConsequence?)
     fun invokeMainAction(cardManager: CardManager, callback: ActionCallback)
     fun getActionByTag(id: Id, cardManager: CardManager): ((ActionCallback) -> Unit)?
     fun attachPayload(payload: Payload)
-
-    val consequence: ItemsChangeConsequence?
 }
 
 interface PayloadKey {
