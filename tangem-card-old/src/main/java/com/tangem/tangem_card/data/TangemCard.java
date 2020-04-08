@@ -8,7 +8,6 @@ import com.tangem.tangem_card.reader.TLVList;
 import com.tangem.tangem_card.util.Util;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
 
@@ -359,6 +358,11 @@ public class TangemCard {
         return (settingsMask & SettingsMask.AllowSwapPIN2) != 0;
     }
 
+    public Boolean forbidPurgeWallet() {
+        if (settingsMask == null) return null;
+        return (settingsMask & SettingsMask.ForbidPurgeWallet) != 0;
+    }
+
     public Boolean needCVC() {
         if (settingsMask == null) return null;
         return (settingsMask & SettingsMask.UseCVC) != 0;
@@ -624,6 +628,15 @@ public class TangemCard {
     public boolean isIDCard() {
         try {
             return (productMask & ProductMask.IdCard) != 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean isIDIssuer() {
+        try {
+            return (productMask & ProductMask.IdIssuer) != 0;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
