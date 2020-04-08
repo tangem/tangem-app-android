@@ -1,31 +1,26 @@
 package com.tangem.tangemtest.ucase.domain.paramsManager.managers
 
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import com.tangem.CardManager
-import com.tangem.tangemtest._arch.structure.abstraction.Item
+import com.tangem.tangemtest.commons.Store
 import com.tangem.tangemtest.ucase.domain.actions.PersonalizeAction
 import com.tangem.tangemtest.ucase.domain.paramsManager.ActionCallback
 import com.tangem.tangemtest.ucase.variants.personalize.converter.PersonalizeConfigConverter
 import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizeConfig
-import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 
 /**
 [REDACTED_AUTHOR]
  */
 class PersonalizeItemsManager(
         private val store: Store<PersonalizeConfig>
-) : BaseItemsManager(PersonalizeAction()), LifecycleObserver {
+) : BaseItemsManager(PersonalizeAction()) {
 
-    init {
-        Log.d(this, "new instance created")
-    }
     private val converter = PersonalizeConfigConverter()
 
-    override fun createItemsList(): List<Item> {
+    init {
         val config = store.restore()
-        return converter.convert(config)
+        setItems(converter.convert(config))
     }
 
     override fun invokeMainAction(cardManager: CardManager, callback: ActionCallback) {
@@ -37,9 +32,4 @@ class PersonalizeItemsManager(
         val config = converter.convert(itemList, PersonalizeConfig())
         store.save(config)
     }
-}
-
-interface Store<M> {
-    fun save(config: M)
-    fun restore(): M
 }
