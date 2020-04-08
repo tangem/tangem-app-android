@@ -8,7 +8,7 @@ import com.tangem.tangemtest.R
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.paramsManager.managers.ScanItemsManager
 import com.tangem.tangemtest.ucase.ui.BaseCardActionFragment
-import com.tangem.tangemtest.ucase.ui.response.BaseCardResponseFragment
+import com.tangem.tangemtest.ucase.variants.responses.ui.ResponseFragment
 
 /**
 [REDACTED_AUTHOR]
@@ -28,7 +28,7 @@ class ScanActionFragment : BaseCardActionFragment() {
         actionVM.seReadResponse.observe(viewLifecycleOwner, Observer {
             navigateTo(
                     R.id.action_nav_card_action_to_response_screen,
-                    bundleOf(Pair(BaseCardResponseFragment.response, it))
+                    bundleOf(Pair(ResponseFragment.response, it))
             )
         })
     }
