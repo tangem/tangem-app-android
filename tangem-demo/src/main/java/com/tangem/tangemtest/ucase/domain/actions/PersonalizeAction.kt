@@ -10,10 +10,10 @@ import com.tangem.tangemtest.ucase.domain.paramsManager.PayloadKey
 import com.tangem.tangemtest.ucase.tunnel.ActionView
 import com.tangem.tangemtest.ucase.tunnel.ItemError
 import com.tangem.tangemtest.ucase.variants.personalize.CardNumber
-import com.tangem.tangemtest.ucase.variants.personalize.converter.PersonalizeConfigConverter
+import com.tangem.tangemtest.ucase.variants.personalize.converter.PersonalizationConfigConverter
 import com.tangem.tangemtest.ucase.variants.personalize.converter.fromTo.PersonalizeConfigToCardConfig
-import com.tangem.tangemtest.ucase.variants.personalize.dto.DefaultPersonalizeParams
-import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizeConfig
+import com.tangem.tangemtest.ucase.variants.personalize.dto.DefaultPersonalizationParams
+import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizationConfig
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
 /**
@@ -33,11 +33,11 @@ class PersonalizeAction : BaseAction() {
             return
         }
 
-        val issuer = DefaultPersonalizeParams.issuer()
-        val acquirer = DefaultPersonalizeParams.acquirer()
-        val manufacturer = DefaultPersonalizeParams.manufacturer()
+        val issuer = DefaultPersonalizationParams.issuer()
+        val acquirer = DefaultPersonalizationParams.acquirer()
+        val manufacturer = DefaultPersonalizationParams.manufacturer()
 
-        val personalizeConfig = PersonalizeConfigConverter().convert(itemList, PersonalizeConfig())
+        val personalizeConfig = PersonalizationConfigConverter().convert(itemList, PersonalizationConfig())
         val cardConfig = PersonalizeConfigToCardConfig().convert(personalizeConfig)
 
         attrs.cardManager.personalize(cardConfig, issuer, manufacturer, acquirer) {
