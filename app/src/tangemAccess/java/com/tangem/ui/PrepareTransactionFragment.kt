@@ -54,8 +54,18 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
             rgIncFee.visibility = View.VISIBLE
         }
 
-        if (ctx.card!!.remainingSignatures < 2)
+        if (ctx.card!!.remainingSignatures < 2) {
             etAmount.isEnabled = false
+        }
+
+        if (ctx.card.remainingSignatures == 1) {
+            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle(R.string.prepare_transaction_warning_last_signature)
+                    .setMessage(R.string.prepare_transaction_warning_send_full_amount)
+                    .setPositiveButton(R.string.general_ok) { _, _ -> }
+                    .create()
+                    .show()
+        }
 
         tvCurrency.text = engine.balance.currency
         etAmount.setText(engine.balance.toValueString())
@@ -144,7 +154,7 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
             val schemeSplit = code!!.split(":")
             when (schemeSplit.size) {
                 2 -> {
-                    if (ctx.blockchain.officialName.toLowerCase(Locale.ROOT).replace("\\s","") == schemeSplit[0]) {
+                    if (ctx.blockchain.officialName.toLowerCase(Locale.ROOT).replace("\\s", "") == schemeSplit[0]) {
                         val uri = Uri.parse(schemeSplit[1])
                         etWallet?.setText(uri.path)
 //                        val amount = uri.getQueryParameter("amount") //TODO: enable after redesign
