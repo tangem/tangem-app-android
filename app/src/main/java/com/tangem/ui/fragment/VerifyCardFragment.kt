@@ -281,7 +281,7 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
 
             tvInputs.text = engine!!.unspentInputsDescription
 
-            ivBlockchain.setImageResource(Blockchain.getLogoImageResource(ctx.card!!.blockchainID, ctx.card!!.tokenSymbol))
+            ivBlockchain.setImageResource(ctx.blockchain.getLogoImageResource(ctx.card!!.tokenSymbol))
 
             var s = ""
             for (signingM in ctx.card!!.allowedSigningMethod) {
