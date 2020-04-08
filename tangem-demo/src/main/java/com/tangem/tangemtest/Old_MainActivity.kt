@@ -4,15 +4,14 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.CardManager
-import com.tangem.commands.personalization.CardConfig
 import com.tangem.tangem_sdk_new.extensions.init
-import com.tangem.tangemtest.extensions.init
+import com.tangem.tangemtest.extensions.create
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskError
 import com.tangem.tasks.TaskEvent
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.old_activity_main.*
 
-class MainActivity : AppCompatActivity() {
+class Old_MainActivity : AppCompatActivity() {
 
     private lateinit var cardManager: CardManager
     private lateinit var cardId: String
@@ -22,7 +21,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.old_activity_main)
 
         cardManager = CardManager.init(this)
 
@@ -153,30 +152,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
         btn_read_write_user_data?.setOnClickListener { startActivity(Intent(this, TestUserDataActivity::class.java)) }
-        btn_personalize?.setOnClickListener { _ ->
-            cardManager.personalize(
-                    CardConfig.init(application), "BB00000000000395"
-            ) {
-                when (it) {
-                    is TaskEvent.Completion -> {
-                        if (it.error != null) runOnUiThread { tv_card_cid?.text = it.error!!::class.simpleName }
-                    }
-                    is TaskEvent.Event -> runOnUiThread { tv_card_cid?.text = it.data.cardId }
-                }
-            }
-        }
-        btn_depersonalize?.setOnClickListener { _ ->
-            cardManager.depersonalize(cardId) {
-                when (it) {
-                    is TaskEvent.Completion -> {
-                        if (it.error != null) runOnUiThread { tv_card_cid?.text = it.error!!::class.simpleName }
-                    }
-                    is TaskEvent.Event -> runOnUiThread {
-                        tv_card_cid?.text = "Depersonalized: ${it.data.success.toString()}"
-                    }
-                }
-            }
-        }
     }
 
     private fun createSampleHashes(): Array<ByteArray> {
