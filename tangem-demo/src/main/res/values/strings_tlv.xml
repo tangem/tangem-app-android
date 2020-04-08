@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="tlv_card_id">Card Id (CID)</string>
+    <string name="tlv_transaction_out_hash">Hash to sign</string>
+    ​
+    <string name="info_tlv_card_id">Unique Tangem card ID number</string>
+    <string name="info_tlv_transaction_out_hash">Hashed transaction you want to be signed </string>
+
+</resources>

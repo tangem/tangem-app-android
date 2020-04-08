@@ -4,5 +4,15 @@
     <color name="colorPrimaryDark">#027AFF</color>
     <color name="colorAccent">#027AFF</color>
 
-    <color name="delimiter">#000000</color>
+    <color name="delimiter">#26000000</color>
+    <color name="edit_text_underline">#E6959595</color>
+
+    <color name="action_name">#2B2B2B</color>
+    <color name="field_description">#888888</color>
+
+    <color name="switchTrack">#C6C6C6</color>
+    <color name="switchTrackActive">#FFE391</color>
+    <color name="switchThumb">#FFFFFF</color>
+    <color name="switchThumbActive">#FFA100</color>
+
 </resources>

@@ -109,14 +109,14 @@ public class XlmAssetEngine extends CoinEngine {
     @Override
     public boolean isBalanceNotZero() {
         if (coinData == null) return false;
-        if (coinData.getXlmBalance() == null) return false;
-        return coinData.getXlmBalance().notZero();
+        return (coinData.getXlmBalance() != null && coinData.getXlmBalance().notZero()) ||
+                (coinData.getAssetBalance() != null && coinData.getAssetBalance().notZero());
     }
 
     @Override
     public boolean hasBalanceInfo() {
         if (coinData == null) return false;
-        return coinData.getXlmBalance() != null;
+        return (coinData.getXlmBalance() != null && coinData.getAssetBalance() != null) || (coinData.isError404());
     }
 
 
@@ -128,6 +128,8 @@ public class XlmAssetEngine extends CoinEngine {
             ctx.setMessage(R.string.general_wallet_empty);
         } else if (awaitingConfirmation()) {
             ctx.setMessage(R.string.loaded_wallet_message_wait);
+        } else if (coinData.getXlmBalance() == null || coinData.getXlmBalance().isZero()) {
+            ctx.setMessage(ctx.getString(R.string.confirm_transaction_error_not_enough_xlm_for_fee));
         } else {
             return true;
         }
@@ -259,7 +261,7 @@ public class XlmAssetEngine extends CoinEngine {
                 balanceValidator.setScore(100);
                 balanceValidator.setFirstLine(R.string.balance_validator_first_line_verified_balance);
                 balanceValidator.setSecondLine(R.string.balance_validator_second_line_confirmed_in_blockchain);
-                if (coinData.getXlmBalance().isZero()) {
+                if (!isBalanceNotZero()) {
                     balanceValidator.setFirstLine(R.string.balance_validator_first_line_empty_wallet);
                     balanceValidator.setSecondLine(R.string.empty_string);
                 }
