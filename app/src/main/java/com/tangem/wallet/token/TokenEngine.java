@@ -655,7 +655,6 @@ public class TokenEngine extends CoinEngine {
                         BigInteger l = new BigInteger(balanceCap, 16);
                         coinData.setBalanceReceived(true);
                         coinData.setBalanceAlterInInternalUnits(new CoinEngine.InternalAmount(l, "wei"));
-
 //                        Log.i("$TAG eth_get_balance", balanceCap)
                     }
                     break;
@@ -665,8 +664,10 @@ public class TokenEngine extends CoinEngine {
                         nonce = nonce.substring(2);
                         BigInteger count = new BigInteger(nonce, 16);
                         coinData.setConfirmedTXCount(count);
-
-
+                        if (serverApiInfura.isRequestsSequenceCompleted()) { //getting balances after checking for pending to avoid showing old balance as verified
+                            serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_CALL, 67, coinData.getWallet(), getContractAddress(ctx.getCard()), "");
+                            serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
+                        }
 //                        Log.i("$TAG eth_getTransCount", nonce)
                     }
                     break;
@@ -676,29 +677,21 @@ public class TokenEngine extends CoinEngine {
                         pending = pending.substring(2);
                         BigInteger count = new BigInteger(pending, 16);
                         coinData.setUnconfirmedTXCount(count);
-
+                        if (serverApiInfura.isRequestsSequenceCompleted()) { //getting balances after checking for pending to avoid showing old balance as verified
+                            serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_CALL, 67, coinData.getWallet(), getContractAddress(ctx.getCard()), "");
+                            serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
+                        }
 //                        Log.i("$TAG eth_getPendingTxCount", pending)
                     }
                     break;
 //
                     case ServerApiInfura.INFURA_ETH_CALL: {
                         try {
-
                             String balanceCap = infuraResponse.getResult();
                             balanceCap = balanceCap.substring(2);
                             BigInteger l = new BigInteger(balanceCap, 16);
                             coinData.setBalanceInInternalUnits(new CoinEngine.InternalAmount(l, ctx.getCard().tokenSymbol));
 //                              Log.i("$TAG eth_call", balanceCap)
-
-
-                            if (blockchainRequestsCallbacks.allowAdvance()) {
-                                serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
-                                serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT, 67, coinData.getWallet(), "", "");
-                                serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, 67, coinData.getWallet(), "", "");
-                            } else {
-                                ctx.setError("Terminated by user");
-                            }
-
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -706,7 +699,7 @@ public class TokenEngine extends CoinEngine {
                     break;
 
                 }
-                if (serverApiInfura.isRequestsSequenceCompleted()&& serverApiBlockcypher.isRequestsSequenceCompleted()) {
+                if (serverApiInfura.isRequestsSequenceCompleted() && serverApiBlockcypher.isRequestsSequenceCompleted()) {
                     blockchainRequestsCallbacks.onComplete(!ctx.hasError());
                 } else {
                     blockchainRequestsCallbacks.onProgress();
@@ -771,13 +764,13 @@ public class TokenEngine extends CoinEngine {
         serverApiBlockcypher.setResponseListener(blockcypherListener);
 
         if (validateAddress(getContractAddress(ctx.getCard()))) {
-            serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_CALL, 67, coinData.getWallet(), getContractAddress(ctx.getCard()), "");
+            serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT, 67, coinData.getWallet(), "", "");
+            serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, 67, coinData.getWallet(), "", "");
+            serverApiBlockcypher.requestData(ctx.getBlockchain().getID(), ServerApiBlockcypher.BLOCKCYPHER_ADDRESS, ctx.getCoinData().getWallet(), "");
         } else {
             ctx.setError("Smart contract address not defined");
             blockchainRequestsCallbacks.onComplete(false);
         }
-
-        serverApiBlockcypher.requestData(ctx.getBlockchain().getID(), ServerApiBlockcypher.BLOCKCYPHER_ADDRESS, ctx.getCoinData().getWallet(), "");
     }
 
     @Override
