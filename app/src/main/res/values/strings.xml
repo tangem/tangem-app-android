@@ -28,6 +28,7 @@
     <string name="settings_title">Settings</string>
     <string name="settings_category_сommon">Common</string>
     <string name="settings_option_manual_editing_fee">Manual editing Fee</string>
+    <string name="settings_option_analytics">Share anonymous data with developers</string>
     <string name="settings_option_encryption_modes">Encryption modes</string>
     <string-array name="settings_encryption_modes_entries">
         <item>None</item>
@@ -187,6 +188,9 @@
     <string name="prepare_transaction_error_incorrect_destination">Incorrect destination wallet address</string>
     <string name="prepare_transaction_error_same_address">Destination wallet address equal source address</string>
     <string name="prepare_transaction_error_amount_empty">Amount is empty</string>
+    <string name="prepare_transaction_warning_last_signature">Only one signature left</string>
+    <string name="prepare_transaction_warning_send_full_amount">You need to send all available funds in this transaction</string>
+
 
     <!-- ConfirmTransaction -->
     <string name="confirm_transaction_hint_target_address">target wallet address</string>
@@ -206,6 +210,7 @@
     <string name="confirm_transaction_error_cannot_calculate_fee">Cannot calculate fee! Wrong data received from the node</string>
     <string name="confirm_transaction_error_incoming_transaction_unconfirmed">Please wait for confirmation of incoming transaction</string>
     <string name="confirm_transaction_error_not_enough_eth_for_fee">Not enough ETH funds for fee</string>
+    <string name="confirm_transaction_error_not_enough_xlm_for_fee">Not enough XLM funds for fee</string>
     <string name="confirm_transaction_error_not_enough_rbtc_for_fee">Not enough RBTC funds for fee</string>
     <string name="confirm_transaction_error_not_enough_xlm_for_create">Target account is not created! Send 1+ XLM to create it</string>
     <string name="confirm_transaction_error_pin_2_is_required">PIN2 is required to sign the payment</string>
