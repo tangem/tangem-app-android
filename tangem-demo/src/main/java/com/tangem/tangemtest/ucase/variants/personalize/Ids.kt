@@ -6,11 +6,9 @@ import com.tangem.tangemtest._arch.structure.Id
 [REDACTED_AUTHOR]
  */
 
-interface PersonalizeId : Id
+interface PersonalizationId : Id
 
-interface BlockItem : PersonalizeId
-
-enum class BlockId : PersonalizeId {
+enum class BlockId : PersonalizationId {
     CardNumber,
     Common,
     SigningMethod,
@@ -24,13 +22,13 @@ enum class BlockId : PersonalizeId {
     Pins,
 }
 
-enum class CardNumber : BlockItem {
+enum class CardNumber : PersonalizationId {
     Series,
     Number,
     BatchId,
 }
 
-enum class Common : BlockItem {
+enum class Common : PersonalizationId {
     Curve,
     Blockchain,
     BlockchainCustom,
@@ -38,7 +36,7 @@ enum class Common : BlockItem {
     CreateWallet,
 }
 
-enum class SigningMethod : BlockItem {
+enum class SigningMethod : PersonalizationId {
     SignTx,
     SignTxRaw,
     SignValidatedTx,
@@ -48,7 +46,7 @@ enum class SigningMethod : BlockItem {
     SignExternal,
 }
 
-enum class SignHashExProp : BlockItem {
+enum class SignHashExProp : PersonalizationId {
     PinLessFloorLimit,
     CryptoExKey,
     RequireTerminalCertSig,
@@ -56,26 +54,26 @@ enum class SignHashExProp : BlockItem {
     CheckPin3,
 }
 
-enum class Denomination : BlockItem {
+enum class Denomination : PersonalizationId {
     WriteOnPersonalize,
     Denomination,
 }
 
-enum class Token : BlockItem {
+enum class Token : PersonalizationId {
     ItsToken,
     Symbol,
     ContractAddress,
     Decimal
 }
 
-enum class ProductMask : BlockItem {
+enum class ProductMask : PersonalizationId {
     Note,
     Tag,
     IdCard,
     IdIssuerCard
 }
 
-enum class SettingsMask : BlockItem {
+enum class SettingsMask : PersonalizationId {
     IsReusable,
     NeedActivation,
     ForbidPurge,
@@ -94,12 +92,12 @@ enum class SettingsMask : BlockItem {
     RestrictOverwriteExtraIssuerData,
 }
 
-enum class SettingsMaskProtocolEnc : BlockItem {
+enum class SettingsMaskProtocolEnc : PersonalizationId {
     AllowUnencrypted,
     AllowStaticEncryption
 }
 
-enum class SettingsMaskNdef : BlockItem {
+enum class SettingsMaskNdef : PersonalizationId {
     UseNdef,
     DynamicNdef,
     DisablePrecomputedNdef,
@@ -108,7 +106,7 @@ enum class SettingsMaskNdef : BlockItem {
     Uri,
 }
 
-enum class Pins : BlockItem {
+enum class Pins : PersonalizationId {
     Pin,
     Pin2,
     Pin3,
