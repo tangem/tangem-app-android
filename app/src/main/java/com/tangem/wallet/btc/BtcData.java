@@ -15,7 +15,7 @@ public class BtcData extends CoinData {
         super();
     }
 
-    private Long balanceConfirmed, balanceUnconfirmed;
+    protected Long balanceConfirmed, balanceUnconfirmed;
 
     private boolean useBlockcypher = false;
 
