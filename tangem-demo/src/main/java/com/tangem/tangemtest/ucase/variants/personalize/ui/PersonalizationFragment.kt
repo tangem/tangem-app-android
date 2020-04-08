@@ -11,7 +11,6 @@ import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.paramsManager.PayloadKey
 import com.tangem.tangemtest.ucase.domain.paramsManager.managers.PersonalizationItemsManager
 import com.tangem.tangemtest.ucase.tunnel.ActionView
-import com.tangem.tangemtest.ucase.tunnel.CardError
 import com.tangem.tangemtest.ucase.tunnel.ItemError
 import com.tangem.tangemtest.ucase.ui.BaseCardActionFragment
 import com.tangem.tangemtest.ucase.variants.personalize.PersonalizationConfigStore
@@ -67,12 +66,13 @@ class PersonalizationFragment : BaseCardActionFragment() {
         })
     }
 
-    override fun showSnackbar(id: Id) {
-        when (id) {
-            CardError.NotPersonalized -> showSnackbar(R.string.card_error_not_personalized)
-            ItemError.BadSeries -> showSnackbar(R.string.card_error_bad_series)
-            ItemError.BadCardNumber -> showSnackbar(R.string.card_error_bad_series_number)
-            else -> showSnackbar(requireContext().getString(R.string.unknown))
+    override fun showSnackbar(id: Id, additionalHandler: ((Id) -> Int)?) {
+        super.showSnackbar(id) {
+            when (id) {
+                ItemError.BadSeries -> R.string.card_error_bad_series
+                ItemError.BadCardNumber -> R.string.card_error_bad_series_number
+                else -> additionalHandler?.invoke(id) ?: UNDEFINED
+            }
         }
     }
 }
