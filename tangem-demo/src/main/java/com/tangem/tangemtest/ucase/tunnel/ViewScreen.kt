@@ -12,5 +12,5 @@ interface ViewScreen
 
 interface ActionView : ViewScreen, SnackbarHolder {
     fun enableActionFab(enable: Boolean)
-    fun showSnackbar(id: Id)
+    fun showSnackbar(id: Id, additionalHandler: ((Id) -> Int)? = null)
 }
