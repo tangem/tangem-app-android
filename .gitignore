@@ -15,6 +15,9 @@ local.properties
 .idea/*.xml
 .idea/codeStyles
 
+# LayoutInspector files
+.captures
+
 # OS-specific files
 .DS_Store
 .DS_Store?
