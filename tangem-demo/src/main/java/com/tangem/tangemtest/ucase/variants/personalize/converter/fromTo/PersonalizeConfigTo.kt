@@ -11,19 +11,19 @@ import com.tangem.tangemtest._arch.structure.abstraction.*
 import com.tangem.tangemtest._arch.structure.impl.*
 import com.tangem.tangemtest.ucase.domain.paramsManager.PayloadKey
 import com.tangem.tangemtest.ucase.variants.personalize.*
-import com.tangem.tangemtest.ucase.variants.personalize.converter.PersonalizeConfigValuesHolder
-import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizeConfig
+import com.tangem.tangemtest.ucase.variants.personalize.converter.ConfigValuesHolder
+import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizationConfig
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.Converter
 import java.util.*
 
 /**
 [REDACTED_AUTHOR]
  */
-class PersonalizeConfigToItem : ModelToItems<PersonalizeConfig> {
-    private val valuesHolder = PersonalizeConfigValuesHolder()
+class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
+    private val valuesHolder = ConfigValuesHolder()
     private val itemTypes = ItemTypes()
 
-    override fun convert(from: PersonalizeConfig): List<Item> {
+    override fun convert(from: PersonalizationConfig): List<Item> {
         valuesHolder.init(from)
         val blocList = mutableListOf<Item>()
         blocList.add(cardNumber())
@@ -183,7 +183,7 @@ class PersonalizeConfigToItem : ModelToItems<PersonalizeConfig> {
         return ListItemBlock(id).apply { addItem(TextItem(id)) }
     }
 
-    private fun addPayload(block: Block, from: PersonalizeConfig) {
+    private fun addPayload(block: Block, from: PersonalizationConfig) {
         block.payload[PayloadKey.incomingJson] = from
     }
 
@@ -201,9 +201,9 @@ class PersonalizeConfigToItem : ModelToItems<PersonalizeConfig> {
     }
 }
 
-class PersonalizeConfigToCardConfig : Converter<PersonalizeConfig, CardConfig> {
+class PersonalizeConfigToCardConfig : Converter<PersonalizationConfig, CardConfig> {
 
-    override fun convert(from: PersonalizeConfig): CardConfig {
+    override fun convert(from: PersonalizationConfig): CardConfig {
         val signingMethod = com.tangem.commands.SigningMethod.build(
                 signHash = from.SigningMethod0,
                 signRaw = from.SigningMethod1,
