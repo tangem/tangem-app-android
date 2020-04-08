@@ -69,6 +69,11 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
         super.onViewCreated(view, savedInstanceState)
         updateViews()
 
+        val card = ctx.card
+        if (!card.allowSwapPIN() && !card.allowSwapPIN2() && card.forbidPurgeWallet()) {
+            fabMenu.hide()
+        }
+
         // set listeners
         fabMenu.setOnClickListener { showMenu(fabMenu) }
 
@@ -276,12 +281,7 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
 
             tvInputs.text = engine!!.unspentInputsDescription
 
-            ivBlockchain.setImageResource(Blockchain.getLogoImageResource(ctx.card!!.blockchainID, ctx.card!!.tokenSymbol))
-
-            if (ctx.card!!.isReusable!!)
-                tvReusable.setText(R.string.details_reusable)
-            else
-                tvReusable.setText(R.string.details_one_off_card)
+            ivBlockchain.setImageResource(ctx.blockchain.getLogoImageResource(ctx.card!!.tokenSymbol))
 
             var s = ""
             for (signingM in ctx.card!!.allowedSigningMethod) {
@@ -328,69 +328,12 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
 
             tvFirmware.text = ctx.card!!.firmwareVersion
 
-            var features = ""
-
-            features += if (ctx.card!!.allowSwapPIN()!! && ctx.card!!.allowSwapPIN2()!!) {
-                getString(R.string.details_both_pins_can_be_changed)
-            } else if (ctx.card!!.allowSwapPIN()!!) {
-               getString(R.string.details_pin1_can_be_changed)
-            } else if (ctx.card!!.allowSwapPIN2()!!) {
-                getString(R.string.details_pin2_can_be_changed)
-            } else {
-                getString(R.string.details_both_pins_fixed)
-            }
-
-            if (ctx.card!!.needCVC()!!)
-                features += getString(R.string.details_required_cvc)
-
-
-            if (ctx.card!!.supportDynamicNDEF()!!) {
-                features += getString(R.string.details_dynamic_ndef)
-            } else if (ctx.card!!.supportNDEF()!!)
-                features += getString(R.string.details_ndef)
-
-            if (ctx.card!!.supportBlock()!!)
-                features += getString(R.string.details_blockable)
-
-            if (ctx.card!!.supportLinkingTerminal()) {
-                features += getString(R.string.details_linking_card_supported)
-                llLinkedCard.visibility = View.VISIBLE
-            }
-
-
-            if (ctx.card!!.supportOnlyOneCommandAtTime())
-                features += getString(R.string.details_atomic_commmands)
-
-            if (features.endsWith("\n"))
-                features = features.substring(0, features.length - 1)
-
-            tvFeatures.text = features
-
             val textIsLinked = if (ctx.card.terminalIsLinked) {
                 getString(R.string.details_linked_card_to_phone)
             } else {
                 getString(R.string.general_no)
             }
             tvIsLinked.text = textIsLinked
-
-            if (ctx.card!!.useDefaultPIN1()) {
-                imgPIN.setImageResource(R.drawable.unlock_pin1)
-                imgPIN.setOnClickListener { Toast.makeText(context, R.string.details_protected_by_default_pin_1, Toast.LENGTH_LONG).show() }
-            } else {
-                imgPIN.setImageResource(R.drawable.lock_pin1)
-                imgPIN.setOnClickListener { Toast.makeText(context, R.string.details_protected_by_user_pin_1, Toast.LENGTH_LONG).show() }
-            }
-
-            if (ctx.card!!.pauseBeforePIN2 > 0 && (ctx.card!!.useDefaultPIN2()!! || !ctx.card!!.useSmartSecurityDelay())) {
-                imgPIN2orSecurityDelay.setImageResource(R.drawable.timer)
-                imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, String.format(getString(R.string.details_security_delay), ctx.card!!.pauseBeforePIN2 / 1000.0), Toast.LENGTH_LONG).show() }
-            } else if (ctx.card!!.useDefaultPIN2()!!) {
-                imgPIN2orSecurityDelay.setImageResource(R.drawable.unlock_pin2)
-                imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, R.string.details_protected_by_default_pin_2, Toast.LENGTH_LONG).show() }
-            } else {
-                imgPIN2orSecurityDelay.setImageResource(R.drawable.lock_pin2)
-                imgPIN2orSecurityDelay.setOnClickListener { Toast.makeText(context, R.string.details_protected_by_user_pin_2, Toast.LENGTH_LONG).show() }
-            }
 
             if (ctx.card!!.useDevelopersFirmware()!!) {
                 imgDeveloperVersion.setImageResource(R.drawable.ic_developer_version)
