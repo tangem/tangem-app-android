@@ -109,7 +109,6 @@ public class MaticTokenEngine extends TokenEngine {
                         BigInteger l = new BigInteger(balanceCap, 16);
                         coinData.setBalanceReceived(true);
                         coinData.setBalanceAlterInInternalUnits(new CoinEngine.InternalAmount(l, "wei"));
-
 //                        Log.i("$TAG eth_get_balance", balanceCap)
                     }
                     break;
@@ -119,8 +118,10 @@ public class MaticTokenEngine extends TokenEngine {
                         nonce = nonce.substring(2);
                         BigInteger count = new BigInteger(nonce, 16);
                         coinData.setConfirmedTXCount(count);
-
-
+                        if (serverApiMatic.isRequestsSequenceCompleted()) { //getting balances after checking for pending to avoid showing old balance as verified
+                            serverApiMatic.requestData(ServerApiMatic.MATIC_ETH_CALL, 67, coinData.getWallet(), getContractAddress(ctx.getCard()), "");
+                            serverApiMatic.requestData(ServerApiMatic.MATIC_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
+                        }
 //                        Log.i("$TAG eth_getTransCount", nonce)
                     }
                     break;
@@ -130,7 +131,10 @@ public class MaticTokenEngine extends TokenEngine {
                         pending = pending.substring(2);
                         BigInteger count = new BigInteger(pending, 16);
                         coinData.setUnconfirmedTXCount(count);
-
+                        if (serverApiMatic.isRequestsSequenceCompleted()) { //getting balances after checking for pending to avoid showing old balance as verified
+                            serverApiMatic.requestData(ServerApiMatic.MATIC_ETH_CALL, 67, coinData.getWallet(), getContractAddress(ctx.getCard()), "");
+                            serverApiMatic.requestData(ServerApiMatic.MATIC_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
+                        }
 //                        Log.i("$TAG eth_getPendingTxCount", pending)
                     }
                     break;
@@ -143,16 +147,6 @@ public class MaticTokenEngine extends TokenEngine {
                             BigInteger l = new BigInteger(balanceCap, 16);
                             coinData.setBalanceInInternalUnits(new CoinEngine.InternalAmount(l, ctx.getCard().tokenSymbol));
 //                              Log.i("$TAG eth_call", balanceCap)
-
-
-                            if (blockchainRequestsCallbacks.allowAdvance()) {
-                                serverApiMatic.requestData(ServerApiMatic.MATIC_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
-                                serverApiMatic.requestData(ServerApiMatic.MATIC_ETH_GET_TRANSACTION_COUNT, 67, coinData.getWallet(), "", "");
-                                serverApiMatic.requestData(ServerApiMatic.MATIC_ETH_GET_PENDING_COUNT, 67, coinData.getWallet(), "", "");
-                            } else {
-                                ctx.setError("Terminated by user");
-                            }
-
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -181,7 +175,8 @@ public class MaticTokenEngine extends TokenEngine {
         serverApiMatic.setResponseListener(responseListener);
 
         if (validateAddress(getContractAddress(ctx.getCard()))) {
-            serverApiMatic.requestData(ServerApiMatic.MATIC_ETH_CALL, 67, coinData.getWallet(), getContractAddress(ctx.getCard()), "");
+            serverApiMatic.requestData(ServerApiMatic.MATIC_ETH_GET_TRANSACTION_COUNT, 67, coinData.getWallet(), "", "");
+            serverApiMatic.requestData(ServerApiMatic.MATIC_ETH_GET_PENDING_COUNT, 67, coinData.getWallet(), "", "");
         } else {
             ctx.setError("Smart contract address not defined");
             blockchainRequestsCallbacks.onComplete(false);
