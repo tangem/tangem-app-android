@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:startDestination="@+id/nav_entry_point">
+
+    <fragment
+        android:id="@+id/nav_entry_point"
+        android:name="com.tangem.tangemtest._main.entryPoint.ActionListFragment"
+        android:label="@string/fg_name_entry_point"
+        tools:layout="@layout/fg_entry_point">
+
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_issuer_read_ex_data"
+            app:destination="@id/nav_issuer_read_ex_data" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_issuer_read_data"
+            app:destination="@id/nav_issuer_read_data" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_issuer_write_data"
+            app:destination="@id/nav_issuer_write_data" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_issuer_write_ex_data"
+            app:destination="@id/nav_issuer_write_ex_data" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_scan"
+            app:destination="@id/nav_scan" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_sign"
+            app:destination="@id/nav_sign" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_user_read_data"
+            app:destination="@id/nav_user_read_data" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_user_write_data"
+            app:destination="@id/nav_user_write_data" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_wallet_create"
+            app:destination="@id/nav_wallet_create" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_wallet_purge"
+            app:destination="@id/nav_wallet_purge" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_personalize"
+            app:destination="@id/nav_personalize" />
+        <action
+            android:id="@+id/action_nav_entry_point_to_nav_depersonalize"
+            app:destination="@id/nav_depersonalize" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_scan"
+        android:name="com.tangem.tangemtest.ucase.variants.scan.ui.ScanActionFragment"
+        android:label="@string/action_card_scan"
+        tools:layout="@layout/fg_action_card_scan" />
+
+    <fragment
+        android:id="@+id/nav_sign"
+        android:name="com.tangem.tangemtest.ucase.variants.sign.ui.SignActionFragment"
+        android:label="@string/action_card_sign"
+        tools:layout="@layout/fg_action_card_sign" />
+
+    <fragment
+        android:id="@+id/nav_personalize"
+        android:name="com.tangem.tangemtest.ucase.variants.personalize.ui.PersonalizeFragment"
+        android:label="@string/action_personalize"
+        tools:layout="@layout/fg_personalize" />
+
+    <fragment
+        android:id="@+id/nav_depersonalize"
+        android:name="com.tangem.tangemtest.ucase.variants.depersonalize.ui.DepersonalizeActionFragment"
+        android:label="@string/action_depersonalize"
+        tools:layout="@layout/fg_depersonalize" />
+
+    <fragment
+        android:id="@+id/nav_issuer_read_data"
+        android:name="com.tangem.tangemtest.ucase.ui.IssuerReadDataActionFragment"
+        android:label="@string/action_issuer_read_data"
+        tools:layout="@layout/fg_action_issuer_read_data" />
+
+    <fragment
+        android:id="@+id/nav_issuer_write_data"
+        android:name="com.tangem.tangemtest.ucase.ui.IssuerWriteDataActionFragment"
+        android:label="@string/action_issuer_write_data"
+        tools:layout="@layout/fg_action_issuer_write_data" />
+
+    <fragment
+        android:id="@+id/nav_issuer_read_ex_data"
+        android:name="com.tangem.tangemtest.ucase.ui.IssuerReadExDataActionFragment"
+        android:label="@string/action_issuer_read_ex_data"
+        tools:layout="@layout/fg_action_issuer_read_ex_data" />
+
+    <fragment
+        android:id="@+id/nav_issuer_write_ex_data"
+        android:name="com.tangem.tangemtest.ucase.ui.IssuerWriteExDataActionFragment"
+        android:label="@string/action_issuer_write_ex_data"
+        tools:layout="@layout/fg_action_issuer_write_ex_data" />
+
+    <fragment
+        android:id="@+id/nav_user_read_data"
+        android:name="com.tangem.tangemtest.ucase.ui.UserReadDataActionFragment"
+        android:label="@string/action_user_read_data"
+        tools:layout="@layout/fg_action_user_read_data" />
+
+    <fragment
+        android:id="@+id/nav_user_write_data"
+        android:name="com.tangem.tangemtest.ucase.ui.UserWriteDataActionFragment"
+        android:label="@string/action_user_write_data"
+        tools:layout="@layout/fg_action_user_write_data" />
+
+    <fragment
+        android:id="@+id/nav_wallet_create"
+        android:name="com.tangem.tangemtest.ucase.ui.WalletCreateActionFragment"
+        android:label="@string/action_wallet_create"
+        tools:layout="@layout/fg_action_wallet_create" />
+
+    <fragment
+        android:id="@+id/nav_wallet_purge"
+        android:name="com.tangem.tangemtest.ucase.ui.WalletPurgeActionFragment"
+        android:label="@string/action_wallet_purge"
+        tools:layout="@layout/fg_action_wallet_purge" />
+
+</navigation>
