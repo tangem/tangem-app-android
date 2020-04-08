@@ -5,7 +5,8 @@ import android.view.View
 import androidx.core.os.bundleOf
 import androidx.lifecycle.Observer
 import com.tangem.tangemtest.R
-import com.tangem.tangemtest.ucase.resources.ActionType
+import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
+import com.tangem.tangemtest.ucase.domain.paramsManager.managers.ScanItemsManager
 import com.tangem.tangemtest.ucase.ui.BaseCardActionFragment
 import com.tangem.tangemtest.ucase.ui.response.BaseCardResponseFragment
 
@@ -14,9 +15,9 @@ import com.tangem.tangemtest.ucase.ui.response.BaseCardResponseFragment
  */
 class ScanActionFragment : BaseCardActionFragment() {
 
-    override fun getLayoutId(): Int = R.layout.fg_action_card_scan
+    override val itemsManager: ItemsManager by lazy { ScanItemsManager() }
 
-    override fun getAction(): ActionType = ActionType.Scan
+    override fun getLayoutId(): Int = R.layout.fg_action_card_scan
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
