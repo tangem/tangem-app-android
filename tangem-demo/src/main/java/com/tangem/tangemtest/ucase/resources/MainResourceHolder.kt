@@ -3,7 +3,7 @@ package com.tangem.tangemtest.ucase.resources
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest.ucase.resources.initializers.ActionResources
-import com.tangem.tangemtest.ucase.resources.initializers.PersonalizeResources
+import com.tangem.tangemtest.ucase.resources.initializers.PersonalizationResources
 import com.tangem.tangemtest.ucase.resources.initializers.ResponseResources
 import com.tangem.tangemtest.ucase.resources.initializers.TlvResources
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.BaseTypedHolder
@@ -15,7 +15,7 @@ open class ResourceHolder<T> : BaseTypedHolder<T, Resources>()
 
 object MainResourceHolder : ResourceHolder<Id>() {
     init {
-        PersonalizeResources().init(this)
+        PersonalizationResources().init(this)
         ActionResources().init(this)
         TlvResources().init(this)
         ResponseResources().init(this)

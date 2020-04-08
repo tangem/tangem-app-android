@@ -9,7 +9,7 @@ import com.tangem.tangemtest._arch.widget.abstraction.ViewWidget
 /**
 [REDACTED_AUTHOR]
  */
-class PersonalizeItemBuilder : ItemWidgetBuilder {
+class PersonalizationItemBuilder : ItemWidgetBuilder {
     override fun build(item: BaseItem<*>, parent: ViewGroup): ViewWidget? {
         return when (item) {
             is TextItem -> BlockHeadWidget(parent, item)
