@@ -4,6 +4,7 @@ import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest.ucase.resources.initializers.ActionResources
 import com.tangem.tangemtest.ucase.resources.initializers.PersonalizeResources
+import com.tangem.tangemtest.ucase.resources.initializers.ResponseResources
 import com.tangem.tangemtest.ucase.resources.initializers.TlvResources
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.BaseTypedHolder
 
@@ -17,6 +18,7 @@ object MainResourceHolder : ResourceHolder<Id>() {
         PersonalizeResources().init(this)
         ActionResources().init(this)
         TlvResources().init(this)
+        ResponseResources().init(this)
     }
 
     inline fun <reified Res : Resources> safeGet(id: Id): Res {
