@@ -1,16 +1,26 @@
 package com.tangem.tangemtest.ucase.variants.personalize.ui
 
+import android.content.Context
+import android.content.SharedPreferences
+import android.os.Bundle
+import android.view.View
+import androidx.core.content.edit
 import androidx.lifecycle.Observer
+import com.google.gson.Gson
+import com.tangem.tangemtest.AppTangemDemo
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest._arch.widget.WidgetBuilder
+import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.paramsManager.PayloadKey
-import com.tangem.tangemtest.ucase.resources.ActionType
+import com.tangem.tangemtest.ucase.domain.paramsManager.managers.PersonalizeItemsManager
+import com.tangem.tangemtest.ucase.domain.paramsManager.managers.Store
 import com.tangem.tangemtest.ucase.tunnel.ActionView
 import com.tangem.tangemtest.ucase.tunnel.CardError
 import com.tangem.tangemtest.ucase.tunnel.ItemError
 import com.tangem.tangemtest.ucase.ui.BaseCardActionFragment
+import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizeConfig
 import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.PersonalizeItemBuilder
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 
@@ -19,7 +29,14 @@ import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
  */
 class PersonalizeFragment : BaseCardActionFragment() {
 
+    override val itemsManager: ItemsManager by lazy { PersonalizeItemsManager(PersonalizationConfigStore(requireContext())) }
+
     override fun getLayoutId(): Int = R.layout.fg_personalize
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        lifecycle.addObserver(itemsManager as PersonalizeItemsManager)
+    }
 
     override fun initFab() {
         actionFab.setOnClickListener { actionVM.invokeMainAction() }
@@ -64,10 +81,24 @@ class PersonalizeFragment : BaseCardActionFragment() {
             else -> showSnackbar(requireContext().getString(R.string.unknown))
         }
     }
-
-    override fun getAction(): ActionType = ActionType.Personalize
 }
 
+class PersonalizationConfigStore(context: Context) : Store<PersonalizeConfig> {
+
+    private val key = "personalization_config"
+
+    private val sp: SharedPreferences = (context.applicationContext as AppTangemDemo).sharedPreferences()
+    private val gson: Gson = Gson()
+
+    override fun save(config: PersonalizeConfig) {
+        sp.edit(true) { putString(key, gson.toJson(config)) }
+    }
+
+    override fun restore(): PersonalizeConfig {
+        val json = sp.getString(key, gson.toJson(PersonalizeConfig()))
+        return gson.fromJson(json, PersonalizeConfig::class.java)
+    }
+}
 
 
 
