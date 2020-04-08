@@ -9,7 +9,7 @@ import com.tangem.common.KeyPair
 [REDACTED_AUTHOR]
  */
 
-interface DefaultPersonalizeParams {
+interface DefaultPersonalizationParams {
     companion object {
 
         fun issuer(): Issuer {
