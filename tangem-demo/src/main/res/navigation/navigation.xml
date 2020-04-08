@@ -127,7 +127,7 @@
 
     <fragment
         android:id="@+id/nav_card_response"
-        android:name="com.tangem.tangemtest.ucase.ui.response.BaseCardResponseFragment"
+        android:name="com.tangem.tangemtest.ucase.variants.responses.ui.ResponseFragment"
         android:label="@string/unknown"
         tools:layout="@layout/fg_card_response" />
 
