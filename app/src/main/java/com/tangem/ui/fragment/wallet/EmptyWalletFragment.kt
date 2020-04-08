@@ -13,6 +13,7 @@ import android.os.Bundle
 import android.text.Html
 import android.view.View
 import android.widget.Toast
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.tangem_card.data.TangemCard
@@ -181,6 +182,7 @@ class EmptyWalletFragment : BaseFragment(), NavigationResultListener,
                     this.cardProtocol = cardProtocol
                 }
             } else {
+                FirebaseCrashlytics.getInstance().recordException(cardProtocol.error)
                 // remove last UIDs because of error and no card read
                 progressBar?.post {
                     lastReadSuccess = false
