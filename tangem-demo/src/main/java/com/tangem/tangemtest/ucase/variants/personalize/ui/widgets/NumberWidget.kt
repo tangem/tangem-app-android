@@ -8,7 +8,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.impl.NumberItem
-import com.tangem.tangemtest._arch.widget.abstraction.getResNameId
+import com.tangem.tangemtest._arch.widget.abstraction.getName
 import com.tangem.tangemtest.ucase.variants.personalize.CardNumber
 import ru.dev.gbixahue.eu4d.lib.android._android.views.addInputFilter
 import ru.dev.gbixahue.eu4d.lib.android._android.views.moveCursorToEnd
@@ -33,12 +33,12 @@ class NumberWidget(parent: ViewGroup, data: NumberItem) : DescriptionWidget<Numb
     }
 
     init {
-        tilItem.hint = tilItem.context.getString(getResNameId())
+        tilItem.hint = getName()
 
         //TODO: remove from Widget
         if (dataItem.id == CardNumber.Number) etItem.addInputFilter(InputFilter.LengthFilter(13))
 
-        etItem.setText(stringOf(dataItem.viewModel.data))
+        etItem.setText(stringOf(dataItem.getData()))
         etItem.addTextChangedListener(watcher)
         dataItem.viewModel.onDataUpdated = { silentUpdate(it) }
     }
