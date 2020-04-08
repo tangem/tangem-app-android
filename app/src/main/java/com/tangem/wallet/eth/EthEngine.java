@@ -481,7 +481,6 @@ public class EthEngine extends CoinEngine {
                         BigInteger l = new BigInteger(balanceCap, 16);
                         coinData.setBalanceReceived(true);
                         coinData.setBalanceInInternalUnits(new CoinEngine.InternalAmount(l, "wei"));
-
 //                        Log.i("$TAG eth_get_balance", balanceCap)
                     }
                     break;
@@ -491,8 +490,9 @@ public class EthEngine extends CoinEngine {
                         nonce = nonce.substring(2);
                         BigInteger count = new BigInteger(nonce, 16);
                         coinData.setConfirmedTXCount(count);
-
-
+                        if (serverApiInfura.isRequestsSequenceCompleted()) { //getting balances after checking for pending to avoid showing old balance as verified
+                            serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
+                        }
 //                        Log.i("$TAG eth_getTransCount", nonce)
                     }
                     break;
@@ -502,7 +502,9 @@ public class EthEngine extends CoinEngine {
                         pending = pending.substring(2);
                         BigInteger count = new BigInteger(pending, 16);
                         coinData.setUnconfirmedTXCount(count);
-
+                        if (serverApiInfura.isRequestsSequenceCompleted()) { //getting balances after checking for pending to avoid showing old balance as verified
+                            serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
+                        }
 //                        Log.i("$TAG eth_getPendingTxCount", pending)
                     }
                     break;
@@ -582,7 +584,6 @@ public class EthEngine extends CoinEngine {
         };
         serverApiBlockcypher.setResponseListener(blockcypherListener);
 
-        serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_BALANCE, 67, coinData.getWallet(), "", "");
         serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT, 67, coinData.getWallet(), "", "");
         serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, 67, coinData.getWallet(), "", "");
 
