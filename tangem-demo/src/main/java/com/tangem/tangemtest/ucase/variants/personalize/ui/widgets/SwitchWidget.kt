@@ -5,7 +5,7 @@ import android.widget.CompoundButton
 import androidx.appcompat.widget.SwitchCompat
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.impl.BoolItem
-import com.tangem.tangemtest._arch.widget.abstraction.getResNameId
+import com.tangem.tangemtest._arch.widget.abstraction.getName
 
 /**
 [REDACTED_AUTHOR]
@@ -20,8 +20,8 @@ class SwitchWidget(parent: ViewGroup, data: BoolItem) : DescriptionWidget<Boolea
     }
 
     init {
-        switchItem.setText(getResNameId())
-        switchItem.isChecked = dataItem.viewModel.data ?: false
+        switchItem.text = getName()
+        switchItem.isChecked = dataItem.getData() ?: false
         switchItem.setOnCheckedChangeListener(changeListener)
         dataItem.viewModel.onDataUpdated = {
             switchItem.setOnCheckedChangeListener(null)

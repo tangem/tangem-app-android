@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Tangem Demo</string>
+    <string name="app_name">Tangem Development Kit</string>
 
     <string name="fg_name_entry_point">@string/app_name</string>
     <string name="current_card_id">"Current card ID: "</string>
