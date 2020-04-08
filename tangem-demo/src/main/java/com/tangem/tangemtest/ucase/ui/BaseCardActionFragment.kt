@@ -15,10 +15,8 @@ import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._main.MainViewModel
-import com.tangem.tangemtest.ucase.domain.paramsManager.ItemManagersStore
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.paramsManager.PayloadKey
-import com.tangem.tangemtest.ucase.resources.ActionType
 import com.tangem.tangemtest.ucase.tunnel.ActionView
 import com.tangem.tangemtest.ucase.tunnel.CardError
 import com.tangem.tangemtest.ucase.ui.widgets.ParameterWidget
@@ -30,19 +28,12 @@ import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
  */
 abstract class BaseCardActionFragment : BaseFragment(), ActionView {
 
-    protected val itemContainer: ViewGroup
-        get() = mainView.findViewById(R.id.ll_container)
+    protected lateinit var itemContainer: ViewGroup
+    protected lateinit var actionFab: FloatingActionButton
 
-    protected val actionFab: FloatingActionButton
-        get() = mainView.findViewById(R.id.fab_action)
-
+    protected abstract val itemsManager: ItemsManager
     protected val mainActivityVM by activityViewModels<MainViewModel>()
     protected val actionVM: ActionViewModel by viewModels { ActionViewModelFactory(itemsManager) }
-
-    protected val itemsManager: ItemsManager by lazy {
-        Log.d(this, "create ItemManager")
-        ItemManagersStore.instance.get(getAction())!!
-    }
 
     private val paramsWidgetList = mutableListOf<ParameterWidget>()
 
@@ -50,12 +41,18 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
         super.onViewCreated(view, savedInstanceState)
         Log.d(this, "onViewCreated")
 
+        bindViews()
         viewLifecycleOwner.lifecycle.addObserver(actionVM)
         actionVM.setCardManager(CardManager.init(requireActivity()))
         actionVM.attachToPayload(mutableMapOf(PayloadKey.actionView to this as ActionView))
 
         initFab()
         createWidgets { subscribeToViewModelChanges() }
+    }
+
+    protected open fun bindViews() {
+        itemContainer = mainView.findViewById(R.id.ll_container)
+        actionFab = mainView.findViewById(R.id.fab_action)
     }
 
     protected open fun initFab() {
@@ -140,6 +137,4 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
             else -> showSnackbar(requireContext().getString(R.string.unknown))
         }
     }
-
-    abstract fun getAction(): ActionType
 }
