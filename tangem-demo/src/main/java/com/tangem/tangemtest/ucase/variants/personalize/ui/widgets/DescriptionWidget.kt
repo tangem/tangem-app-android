@@ -30,7 +30,7 @@ abstract class DescriptionWidget<D>(
         dataItem.viewModel.viewState.onDescriptionVisibilityChanged = { changeDescriptionVisibility(it) }
     }
 
-    protected fun changeDescriptionVisibility(state: Int) {
+    protected open fun changeDescriptionVisibility(state: Int) {
         val tv = tvDescription ?: return
         val descriptionId = getResDescription() ?: return
         val description = tv.context.getString(descriptionId)
@@ -41,14 +41,3 @@ abstract class DescriptionWidget<D>(
         descriptionContainer.visibility = state
     }
 }
-
-
-
-
-
-
-
-
-
-
-
