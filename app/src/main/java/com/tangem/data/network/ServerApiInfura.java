@@ -42,6 +42,8 @@ public class ServerApiInfura {
     public ServerApiInfura(Blockchain blockchain) {
         if (blockchain == Blockchain.EthereumTestNet) {
             infuraApi = App.Companion.getNetworkComponent().getRetrofitInfuraTestnet().create(InfuraApi.class);
+        } else if (blockchain == Blockchain.TokenEmv) {
+            infuraApi = App.Companion.getNetworkComponent().getRetrofitInfuraRopsten().create(InfuraApi.class);
         }
     }
 
