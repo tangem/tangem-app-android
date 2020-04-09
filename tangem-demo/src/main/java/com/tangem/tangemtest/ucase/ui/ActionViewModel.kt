@@ -8,7 +8,6 @@ import com.tangem.CardManager
 import com.tangem.tangemtest._arch.SingleLiveEvent
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.Payload
-import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest._arch.structure.abstraction.iterate
 import com.tangem.tangemtest.commons.performAction
@@ -55,11 +54,11 @@ class ActionViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
 
     //invokes Scan, Sign etc...
     fun invokeMainAction() {
-        performAction(itemsManager, cardManager) { paramsManager, cardManager ->
+        performAction(itemsManager, cardManager, { paramsManager, cardManager ->
             paramsManager.invokeMainAction(cardManager) { response, listOfChangedParams ->
                 notifier.handleActionResult(response, listOfChangedParams)
             }
-        }
+        })
     }
 
     fun getItemAction(id: Id): (() -> Unit)? {
@@ -74,8 +73,7 @@ class ActionViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
 
     fun toggleDescriptionVisibility(state: Boolean) {
         ldItemList.value?.iterate {
-            val baseItem = it as? BaseItem<*> ?: return@iterate
-            baseItem.viewModel.viewState.descriptionVisibility = if (state) View.VISIBLE else View.GONE
+            it.viewModel.viewState.descriptionVisibility = if (state) View.VISIBLE else View.GONE
         }
     }
 
