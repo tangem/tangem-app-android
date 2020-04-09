@@ -2,11 +2,10 @@ package com.tangem.tangemtest._arch.widget
 
 import android.view.ViewGroup
 import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
-import com.tangem.tangemtest._arch.structure.abstraction.Block
 import com.tangem.tangemtest._arch.structure.abstraction.Item
-import com.tangem.tangemtest._arch.structure.abstraction.ListItemBlock
+import com.tangem.tangemtest._arch.structure.abstraction.ItemGroup
 import com.tangem.tangemtest._arch.widget.abstraction.ViewWidget
-import com.tangem.tangemtest._arch.widget.impl.LinearBlockWidget
+import com.tangem.tangemtest._arch.widget.impl.LinearGroupWidget
 import com.tangem.tangemtest._arch.widget.impl.StubWidget
 
 /**
@@ -18,20 +17,20 @@ class WidgetBuilder(
 
     fun build(item: Item, parent: ViewGroup): ViewWidget? {
         return when (item) {
-            is Block -> buildBlock(item, parent)
-            is BaseItem<*> -> itemBuilder.build(item, parent)
-            else -> StubWidget(parent)
+            is ItemGroup -> buildBlock(item, parent)
+            is BaseItem -> itemBuilder.build(item, parent)
+            else -> StubWidget(item.id, parent)
         }
     }
 
-    private fun buildBlock(block: Block, parent: ViewGroup): ViewWidget {
-        return when (block) {
-            is ListItemBlock -> {
-                val linearBlock = LinearBlockWidget(parent, block)
-                block.getItems().forEach { build(it, linearBlock.view as ViewGroup) }
+    private fun buildBlock(itemGroup: ItemGroup, parent: ViewGroup): ViewWidget {
+        return when (itemGroup) {
+            is ItemGroup -> {
+                val linearBlock = LinearGroupWidget(parent, itemGroup)
+                itemGroup.getItems().forEach { build(it, linearBlock.view as ViewGroup) }
                 linearBlock
             }
-            else -> StubWidget(parent)
+            else -> StubWidget(itemGroup.id, parent)
         }
     }
 }
