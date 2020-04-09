@@ -10,13 +10,13 @@ import com.tangem.tangemtest._arch.widget.abstraction.ViewWidget
 [REDACTED_AUTHOR]
  */
 class PersonalizationItemBuilder : ItemWidgetBuilder {
-    override fun build(item: BaseItem<*>, parent: ViewGroup): ViewWidget? {
+    override fun build(item: BaseItem, parent: ViewGroup): ViewWidget? {
         return when (item) {
-            is TextItem -> BlockHeadWidget(parent, item)
+            is TextItem -> GroupTitleWidget(parent, item)
             is EditTextItem -> EditTextWidget(parent, item)
             is NumberItem -> NumberWidget(parent, item)
             is BoolItem -> SwitchWidget(parent, item)
-            is ListItem -> SpinnerWidget(parent, item)
+            is SpinnerItem -> SpinnerWidget(parent, item)
             else -> null
         }
     }
