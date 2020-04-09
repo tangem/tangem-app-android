@@ -8,5 +8,5 @@ import com.tangem.tangemtest._arch.widget.abstraction.ViewWidget
 [REDACTED_AUTHOR]
  */
 interface ItemWidgetBuilder {
-    fun build(item: BaseItem<*>, parent: ViewGroup): ViewWidget?
+    fun build(item: BaseItem, parent: ViewGroup): ViewWidget?
 }
