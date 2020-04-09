@@ -10,7 +10,8 @@ import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
  */
 class MainViewModel : ViewModel() {
     val ldDescriptionSwitch = MutableLiveData<Boolean>(false)
-    val ldResponseEvent = MutableLiveData<TaskEvent<*>>()
+
+    var responseEvent: TaskEvent<*>? = null
 
     fun switchToggled(state: Boolean) {
         ldDescriptionSwitch.postValue(state)
@@ -20,6 +21,6 @@ class MainViewModel : ViewModel() {
         Log.d(this, "changeResponseEvent")
         val reqEvent = event ?: return
 
-        ldResponseEvent.value = reqEvent
+        responseEvent = reqEvent
     }
 }
