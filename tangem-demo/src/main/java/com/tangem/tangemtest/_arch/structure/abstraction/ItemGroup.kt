@@ -2,45 +2,47 @@ package com.tangem.tangemtest._arch.structure.abstraction
 
 import com.tangem.tangemtest._arch.structure.ILog
 import com.tangem.tangemtest._arch.structure.Id
-import com.tangem.tangemtest._arch.structure.ItemListHolder
 
 /**
 [REDACTED_AUTHOR]
  */
-interface Block : Item {
+interface ItemGroup : Item {
     val itemList: MutableList<Item>
+
+    fun setItems(list: MutableList<Item>)
+    fun getItems(): MutableList<Item>
+    fun addItem(item: Item)
+    fun removeItem(item: Item)
+    fun clear()
 }
 
-abstract class BaseBlock : Block {
+open class SimpleItemGroup(
+        override val id: Id,
+        override var viewModel: ItemViewModel = BaseItemViewModel()
+) : ItemGroup {
+
     override var parent: Item? = null
     override val itemList: MutableList<Item> = mutableListOf()
-    override val payload: MutableMap<String, Any?> = mutableMapOf()
-}
-
-open class ListItemBlock(
-        override val id: Id
-) : BaseBlock(), ItemListHolder<Item> {
 
     override fun setItems(list: MutableList<Item>) {
         ILog.d(this, "setItems into: $id, count: ${list.size}")
+        itemList.forEach { it.removed(this) }
         itemList.clear()
-        itemList.addAll(list)
-        itemList.forEach { it.parent = this }
+        list.forEach { addItem(it) }
     }
 
-    override fun getItems(): MutableList<Item> {
-        return itemList
-    }
+    override fun getItems(): MutableList<Item> = itemList
 
     override fun addItem(item: Item) {
         ILog.d(this, "addItem into: $id, who: ${item.id}")
-        item.parent = this
         itemList.add(item)
+        item.added(this)
     }
 
     override fun removeItem(item: Item) {
         ILog.d(this, "removeItem from: $id, which: ${item.id}")
         itemList.remove(item)
+        item.removed(this)
     }
 
     override fun clear() {
