@@ -5,11 +5,11 @@ import com.tangem.tangemtest._arch.structure.Id
 /**
 [REDACTED_AUTHOR]
  */
-fun List<Item>.findDataItem(id: Id): BaseItem<Any?>? {
-    var foundItem: BaseItem<Any?>? = null
+fun List<Item>.findItem(id: Id): Item? {
+    var foundItem: Item? = null
     iterate {
         if (it.id == id) {
-            foundItem = it as? BaseItem<Any?>
+            foundItem = it
             return@iterate
         }
     }
@@ -19,8 +19,8 @@ fun List<Item>.findDataItem(id: Id): BaseItem<Any?>? {
 fun List<Item>.iterate(func: (Item) -> Unit) {
     forEach {
         when (it) {
-            is BaseItem<*> -> func(it)
-            is Block -> it.itemList.iterate(func)
+            is BaseItem -> func(it)
+            is ItemGroup -> it.itemList.iterate(func)
         }
     }
 }
