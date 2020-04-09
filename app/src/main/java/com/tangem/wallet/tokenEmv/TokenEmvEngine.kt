@@ -4,7 +4,9 @@ import android.text.InputFilter
 import android.util.Log
 import com.google.gson.Gson
 import com.tangem.data.Blockchain
+import com.tangem.data.network.ServerApiInfura
 import com.tangem.data.network.ServerApiTokenEmv
+import com.tangem.data.network.model.InfuraResponse
 import com.tangem.data.network.model.TokenEmvTransferBody
 import com.tangem.tangem_card.data.TangemCard
 import com.tangem.tangem_card.reader.CardProtocol.TangemException
@@ -20,6 +22,7 @@ import org.apache.commons.lang3.SerializationUtils
 import org.bitcoinj.core.ECKey
 import org.kethereum.extensions.toBytesPadded
 import org.kethereum.extensions.toFixedLengthByteArray
+import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.*
 
@@ -30,11 +33,15 @@ class TokenEmvEngine : TokenEngine {
     private val TAG = TokenEmvEngine::class.java.simpleName
 
     private fun hasLinkedContract(): Boolean {
-        return ctx.card.issuerData != null && ctx.card.issuerData.size == 20
+        return ctx.card.issuerData != null && ctx.card.issuerData.size == 44
     }
 
     override fun getBlockchain(): Blockchain {
         return Blockchain.TokenEmv
+    }
+
+    override fun getChainIdNum(): Int {
+        return EthTransaction.ChainEnum.Mainnet.value
     }
 
     override fun getBalance(): Amount? {
@@ -89,7 +96,8 @@ class TokenEmvEngine : TokenEngine {
     override fun defineWallet() {
         try {
             if (hasLinkedContract()) {
-                ctx.coinData.wallet = String.format("0x%s", BTCUtils.toHex(ctx.card.issuerData))
+                val issuerData = ctx.card.issuerData
+                ctx.coinData.wallet = String(issuerData.copyOfRange(2, issuerData.size))
             } else {
                 ctx.coinData.wallet = calculateAddress(ctx.card.walletPublicKey)
             }
@@ -212,6 +220,79 @@ class TokenEmvEngine : TokenEngine {
         }
     }
 
+    override fun requestBalanceAndUnspentTransactions(blockchainRequestsCallbacks: BlockchainRequestsCallbacks) {
+        val serverApiInfura = ServerApiInfura(ctx.blockchain)
+
+        val responseListener: ServerApiInfura.ResponseListener = object : ServerApiInfura.ResponseListener {
+            override fun onSuccess(method: String, infuraResponse: InfuraResponse) {
+                when (method) {
+                    ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT -> {
+                        var nonce = infuraResponse.result
+                        nonce = nonce!!.substring(2)
+                        val count = BigInteger(nonce, 16)
+                        coinData.confirmedTXCount = count
+                        if (serverApiInfura.isRequestsSequenceCompleted) { //getting balances after checking for pending to avoid showing old balance as verified
+                            serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_CALL, 67, coinData.wallet, getContractAddress(ctx.card), "")
+                        }
+                    }
+                    ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT -> {
+                        var pending = infuraResponse.result
+                        pending = pending!!.substring(2)
+                        val count = BigInteger(pending, 16)
+                        coinData.unconfirmedTXCount = count
+                        if (serverApiInfura.isRequestsSequenceCompleted) { //getting balances after checking for pending to avoid showing old balance as verified
+                            serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_CALL, 67, coinData.wallet, getContractAddress(ctx.card), "")
+                        }
+                    }
+                    ServerApiInfura.INFURA_ETH_CALL -> {
+                        try {
+                            var balanceCap = infuraResponse.result
+                            balanceCap = balanceCap!!.substring(2)
+                            val l = BigInteger(balanceCap, 16)
+                            coinData.balanceInInternalUnits = InternalAmount(l, ctx.card.tokenSymbol)
+                            coinData.isBalanceReceived = true
+                            //                              Log.i("$TAG eth_call", balanceCap)
+                        } catch (e: java.lang.Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+                if (serverApiInfura.isRequestsSequenceCompleted) {
+                    blockchainRequestsCallbacks.onComplete(!ctx.hasError())
+                } else {
+                    blockchainRequestsCallbacks.onProgress()
+                }
+            }
+
+            override fun onFail(method: String, message: String) {
+                Log.e(TAG, "onFail: $method $message")
+                ctx.error = message
+                if (serverApiInfura.isRequestsSequenceCompleted) {
+                    blockchainRequestsCallbacks.onComplete(false)
+                } else {
+                    blockchainRequestsCallbacks.onProgress()
+                }
+            }
+        }
+
+        serverApiInfura.setResponseListener(responseListener)
+
+        if (validateAddress(getContractAddress(ctx.card))) {
+            serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_TRANSACTION_COUNT, 67, coinData.wallet, "", "")
+            serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, 67, coinData.wallet, "", "")
+        } else {
+            ctx.error = "Smart contract address not defined"
+            blockchainRequestsCallbacks.onComplete(false)
+        }
+    }
+
+    override fun requestFee(blockchainRequestsCallbacks: BlockchainRequestsCallbacks, targetAddress: String?, amount: Amount) {
+        val fee = Amount(BigDecimal.ONE, balanceCurrency)
+                    coinData.minFee = fee
+                    coinData.normalFee = fee
+                    coinData.maxFee = fee
+    }
+
     override fun requestSendTransaction(blockchainRequestsCallbacks: BlockchainRequestsCallbacks, txForSend: ByteArray?) {
         val jsonBody = SerializationUtils.deserialize<String>(txForSend)
         val tokenEmvTransferBody = Gson().fromJson(jsonBody, TokenEmvTransferBody::class.java)
@@ -227,6 +308,10 @@ class TokenEmvEngine : TokenEngine {
         }
 
         ServerApiTokenEmv().transfer(tokenEmvTransferBody, transferObserver)
+    }
+
+    override fun allowSelectFeeLevel(): Boolean {
+        return false
     }
 
     // TODO: move all below to the server
