@@ -20,6 +20,7 @@ import com.tangem.wallet.rsk.RskEngine
 import com.tangem.wallet.rsk.RskTokenEngine
 import com.tangem.wallet.token.TokenEngine
 import com.tangem.wallet.tezos.TezosEngine
+import com.tangem.wallet.tokenEmv.TokenEmvEngine
 import com.tangem.wallet.xlm.XlmAssetEngine
 import com.tangem.wallet.xlm.XlmEngine
 import com.tangem.wallet.xlmTag.XlmTagEngine
@@ -60,6 +61,7 @@ object CoinEngineFactory {
             Blockchain.Tezos -> TezosEngine()
             Blockchain.BitcoinDual -> BtcMultisigEngine()
             Blockchain.FlowDemo -> FlowDemoEngine()
+            Blockchain.TokenEmv -> TokenEmvEngine()
             else -> null
         }
     }
@@ -109,6 +111,8 @@ object CoinEngineFactory {
                 BtcMultisigEngine(context)
             else if (Blockchain.FlowDemo == context.blockchain)
                 FlowDemoEngine(context)
+            else if (Blockchain.TokenEmv == context.blockchain)
+                TokenEmvEngine(context)
             else
                 return null
         } catch (e: Exception) {
