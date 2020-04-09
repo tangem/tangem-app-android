@@ -7,14 +7,17 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.impl.EditTextItem
-import com.tangem.tangemtest._arch.widget.abstraction.getName
 import ru.dev.gbixahue.eu4d.lib.android._android.views.moveCursorToEnd
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
 /**
 [REDACTED_AUTHOR]
  */
-class EditTextWidget(parent: ViewGroup, data: EditTextItem) : DescriptionWidget<String>(parent, data) {
+class EditTextWidget(
+        parent: ViewGroup,
+        private val typedItem: EditTextItem
+) : DescriptionWidget(parent, typedItem) {
+
     override fun getLayoutId(): Int = R.layout.w_personalize_item_edit_text
 
     private val tilItem = view.findViewById<TextInputLayout>(R.id.til_item)
@@ -22,7 +25,7 @@ class EditTextWidget(parent: ViewGroup, data: EditTextItem) : DescriptionWidget<
 
     private val watcher = object : TextWatcher {
         override fun afterTextChanged(s: Editable?) {
-            dataItem.viewModel.updateDataByView(stringOf(s))
+            typedItem.viewModel.updateDataByView(stringOf(s))
         }
 
         override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -31,9 +34,9 @@ class EditTextWidget(parent: ViewGroup, data: EditTextItem) : DescriptionWidget<
 
     init {
         tilItem.hint = getName()
-        etItem.setText(dataItem.getData())
+        etItem.setText(typedItem.getTypedData())
         etItem.addTextChangedListener(watcher)
-        dataItem.viewModel.onDataUpdated = { silentUpdate(it) }
+        item.viewModel.onDataUpdated = { silentUpdate(it as? String) }
     }
 
     private fun silentUpdate(value: String?) {
