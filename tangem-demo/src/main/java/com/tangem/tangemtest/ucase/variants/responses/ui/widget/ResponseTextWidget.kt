@@ -1,13 +1,9 @@
 package com.tangem.tangemtest.ucase.variants.responses.ui.widget
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.view.ViewGroup
 import android.widget.TextView
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.impl.TextItem
-import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.DescriptionWidget
 
 /**
 [REDACTED_AUTHOR]
@@ -15,7 +11,7 @@ import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.DescriptionWi
 class ResponseTextWidget(
         parent: ViewGroup,
         private val typedItem: TextItem
-) : DescriptionWidget(parent, typedItem) {
+) : ResponseWidget(parent, typedItem) {
 
     override fun getLayoutId(): Int = R.layout.w_response_item
 
@@ -30,13 +26,5 @@ class ResponseTextWidget(
         val data = typedItem.getData() as? String
         tvName.text = getName()
         tvValue.text = data
-
-        view.setOnClickListener {
-            val clipboard = view.context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                    ?: return@setOnClickListener
-
-            val clip: ClipData = ClipData.newPlainText("FieldValue", "$data")
-            clipboard.setPrimaryClip(clip)
-        }
     }
 }
