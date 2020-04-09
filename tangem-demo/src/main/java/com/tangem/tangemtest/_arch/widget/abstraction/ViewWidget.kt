@@ -30,8 +30,8 @@ abstract class BaseViewWidget(
 ) : ViewWidget {
 
     override val view: View = inflate(getLayoutId(), parent)
-    private var defaultBackground: Drawable = view.background
 
+    private var defaultBackground: Drawable? = view.background
 
     init {
         if (item.viewModel.viewState.isHidden) {
