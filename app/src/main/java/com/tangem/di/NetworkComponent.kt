@@ -17,6 +17,9 @@ interface NetworkComponent {
     @get:Named(Server.ApiInfuraTestnet.URL_INFURA_TESTNET)
     val retrofitInfuraTestnet: Retrofit
 
+    @get:Named(Server.ApiInfuraRopsten.URL_INFURA_ROPSTEN)
+    val retrofitInfuraRopsten: Retrofit
+
     @get:Named(Server.ApiMaticTesnet.URL_MATIC_TESTNET)
     val retrofitMaticTesnet: Retrofit
 
