@@ -2,7 +2,7 @@ package com.tangem.tangemtest.ucase.variants.personalize.converter
 
 import com.tangem.commands.EllipticCurve
 import com.tangem.tangemtest._arch.structure.Id
-import com.tangem.tangemtest._arch.structure.impl.KeyValue
+import com.tangem.tangemtest._arch.structure.abstraction.KeyValue
 import com.tangem.tangemtest.ucase.variants.personalize.*
 import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizationConfig
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.BaseTypedHolder
