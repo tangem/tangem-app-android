@@ -110,7 +110,7 @@ public class EthTransaction {
         return kec.digest(plainMsg);
     }
 
-    public int BruteRecoveryID2(ECDSASignatureETH sig, byte[] messageHash, byte[] thisKey) {
+    public static int BruteRecoveryID2(ECDSASignatureETH sig, byte[] messageHash, byte[] thisKey) {
         Log.e("ETH_KZ", BTCUtils.toHex(thisKey));
         int recId = -1;
         for (int i = 0; i < 4; i++) {
