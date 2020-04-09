@@ -32,7 +32,8 @@ public enum Blockchain {
     Eos("EOS", "EOS", 10000.0, R.drawable.tangem2, "EOS"),
     Ducatus("DUC", "DUC", 100000000.0, R.drawable.tangem2, "Ducatus"),
     Tezos("TEZOS", "XTZ", 10000000.0, R.drawable.ic_logo_tezos, "Tezos"),
-    FlowDemo("FLOW/demo", "", 1.0, R.drawable.tangem2, "Flow demo");
+    FlowDemo("FLOW/demo", "", 1.0, R.drawable.tangem2, "Flow demo"),
+    TokenEmv("TTW", "ETH", 1.0, R.drawable.ic_logo_ethereum, "Ethereum");
 
     Blockchain(String ID, String currency, double multiplier, int imageResource, String officialName) {
         mID = ID;
