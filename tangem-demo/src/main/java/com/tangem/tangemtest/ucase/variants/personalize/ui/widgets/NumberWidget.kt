@@ -8,7 +8,6 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.impl.NumberItem
-import com.tangem.tangemtest._arch.widget.abstraction.getName
 import com.tangem.tangemtest.ucase.variants.personalize.CardNumber
 import ru.dev.gbixahue.eu4d.lib.android._android.views.addInputFilter
 import ru.dev.gbixahue.eu4d.lib.android._android.views.moveCursorToEnd
@@ -17,7 +16,11 @@ import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 /**
 [REDACTED_AUTHOR]
  */
-class NumberWidget(parent: ViewGroup, data: NumberItem) : DescriptionWidget<Number>(parent, data) {
+class NumberWidget(
+        parent: ViewGroup,
+        private val typedItem: NumberItem
+) : DescriptionWidget(parent, typedItem) {
+
     override fun getLayoutId(): Int = R.layout.w_personalize_item_number
 
     private val tilItem = view.findViewById<TextInputLayout>(R.id.til_item)
@@ -25,7 +28,7 @@ class NumberWidget(parent: ViewGroup, data: NumberItem) : DescriptionWidget<Numb
 
     private val watcher = object : TextWatcher {
         override fun afterTextChanged(s: Editable?) {
-            dataItem.viewModel.updateDataByView(getValue(stringOf(s)))
+            typedItem.viewModel.updateDataByView(getValue(stringOf(s)))
         }
 
         override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -36,11 +39,11 @@ class NumberWidget(parent: ViewGroup, data: NumberItem) : DescriptionWidget<Numb
         tilItem.hint = getName()
 
         //TODO: remove from Widget
-        if (dataItem.id == CardNumber.Number) etItem.addInputFilter(InputFilter.LengthFilter(13))
+        if (item.id == CardNumber.Number) etItem.addInputFilter(InputFilter.LengthFilter(13))
 
-        etItem.setText(stringOf(dataItem.getData()))
+        etItem.setText(stringOf(typedItem.getTypedData()))
         etItem.addTextChangedListener(watcher)
-        dataItem.viewModel.onDataUpdated = { silentUpdate(it) }
+        item.viewModel.onDataUpdated = { silentUpdate(it as? Number) }
     }
 
     private fun silentUpdate(value: Number?) {
@@ -53,5 +56,4 @@ class NumberWidget(parent: ViewGroup, data: NumberItem) : DescriptionWidget<Numb
     private fun getValue(value: String): Long {
         return if (value.isEmpty()) 0L else value.toLong()
     }
-
 }
