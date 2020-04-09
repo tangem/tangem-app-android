@@ -46,6 +46,18 @@ internal class NetworkModule {
 
     @Singleton
     @Provides
+    @Named(Server.ApiInfuraRopsten.URL_INFURA_ROPSTEN)
+    fun provideRetrofitInfuraRopsten(): Retrofit {
+        val builder = Retrofit.Builder()
+                .baseUrl(Server.ApiInfuraRopsten.URL_INFURA_ROPSTEN)
+                .addConverterFactory(GsonConverterFactory.create())
+        if (BuildConfig.DEBUG)
+            builder.client(createOkHttpClient())
+        return builder.build()
+    }
+
+    @Singleton
+    @Provides
     @Named(Server.ApiRootstock.URL_ROOTSTOCK)
     fun provideRetrofitRootstock(): Retrofit {
         val builder = Retrofit.Builder()
