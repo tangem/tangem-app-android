@@ -13,8 +13,10 @@ typealias SafeValueChange<V> = (V) -> Unit
 
 class KeyValue(val key: String, val value: Any)
 
-class ViewState {
-    var isHiddenField = false
+class ViewState(
+        var isHidden: Boolean = false,
+        var backgroundColor: Int? = -1
+) {
 
     var descriptionVisibility: Int = 0x00000008
         set(value) {
@@ -34,9 +36,11 @@ interface ItemViewModel : PayloadHolder {
     fun updateDataByView(data: Any?)
 }
 
-open class BaseItemViewModel(value: Any? = null) : ItemViewModel {
+open class BaseItemViewModel(
+        value: Any? = null,
+        override val viewState: ViewState = ViewState()
+) : ItemViewModel {
 
-    override val viewState: ViewState = ViewState()
     override val payload: Payload = mutableMapOf()
 
     // Don't update it directly from a View. Use for it updateDataByView()
@@ -75,6 +79,7 @@ open class BaseItemViewModel(value: Any? = null) : ItemViewModel {
 }
 
 class ListViewModel(
+        val itemList: List<KeyValue>,
         var selectedItem: Any?,
-        val itemList: List<KeyValue>
+        override val viewState: ViewState = ViewState()
 ) : BaseItemViewModel(selectedItem)
