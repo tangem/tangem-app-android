@@ -4,13 +4,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.tangem.tangemtest.R
-import com.tangem.tangemtest._arch.structure.DataHolder
 import com.tangem.tangemtest._arch.structure.StringId
-import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
-import com.tangem.tangemtest._arch.structure.abstraction.ItemViewModel
-import com.tangem.tangemtest.ucase.resources.MainResourceHolder
-import com.tangem.tangemtest.ucase.resources.Resources
-import ru.dev.gbixahue.eu4d.lib.android._android.views.stringFrom
+import com.tangem.tangemtest._arch.structure.StringResId
+import com.tangem.tangemtest._arch.structure.abstraction.Item
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.LayoutHolder
 
 /**
@@ -18,39 +14,31 @@ import ru.dev.gbixahue.eu4d.lib.kotlin.common.LayoutHolder
  */
 interface ViewWidget : LayoutHolder {
     val view: View
+    var item: Item
+
+    fun getName(): String
 }
 
-interface DataWidget<D> : ViewWidget {
-    var dataItem: BaseItem<D>
-}
-
-interface BlockViewWidget : ViewWidget, DataHolder<List<ItemViewModel<*>>>
-
-abstract class BaseWidget<D>(
+abstract class BaseViewWidget(
         parent: ViewGroup,
-        override var dataItem: BaseItem<D>
-) : ViewWidget, DataWidget<D> {
+        override var item: Item
+) : ViewWidget {
 
     override val view: View = inflate(getLayoutId(), parent)
 
     init {
-        if (dataItem.viewModel.viewState.isHiddenField) {
+        if (item.viewModel.viewState.isHiddenField) {
             view.visibility = View.GONE
         }
     }
-}
 
-abstract class BaseBlockWidget(parent: ViewGroup) : BlockViewWidget {
-    override val view: View = inflate(getLayoutId(), parent)
-}
-
-fun DataWidget<*>.getResNameId(): Int = MainResourceHolder.safeGet<Resources>(dataItem.id).resName
-
-fun DataWidget<*>.getResDescription(): Int? = MainResourceHolder.safeGet<Resources>(dataItem.id).resDescription
-
-fun DataWidget<*>.getName(): String {
-    val id = dataItem.id
-    return if (id is StringId) id.name else view.stringFrom(getResNameId())
+    override fun getName(): String {
+        return when (val id = item.id) {
+            is StringId -> id.value
+            is StringResId -> view.resources.getString(id.value)
+            else -> view.resources.getString(R.string.unknown)
+        }
+    }
 }
 
 internal fun inflate(id: Int, parent: ViewGroup): View {
