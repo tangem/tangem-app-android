@@ -1,25 +1,39 @@
 package com.tangem.tangemtest._arch.structure.impl
 
 import com.tangem.tangemtest._arch.structure.Id
-import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
-import com.tangem.tangemtest._arch.structure.abstraction.BaseItemViewModel
-import com.tangem.tangemtest._arch.structure.abstraction.KeyValue
-import com.tangem.tangemtest._arch.structure.abstraction.ListViewModel
+import com.tangem.tangemtest._arch.structure.abstraction.*
 
 /**
 [REDACTED_AUTHOR]
  */
 
-open class TypedItem<D>(id: Id, value: D? = null) : BaseItem(id, BaseItemViewModel(value)) {
+open class TypedItem<D>(id: Id, viewModel: ItemViewModel) : BaseItem(id, viewModel) {
     open fun getTypedData(): D? = viewModel.data as? D
 }
 
-class TextItem(id: Id, value: String? = null) : TypedItem<String>(id, value)
-class NumberItem(id: Id, value: Number? = null) : TypedItem<Number>(id, value)
-class BoolItem(id: Id, value: Boolean? = null) : TypedItem<Boolean>(id, value)
+class TextItem(id: Id, viewModel: ItemViewModel) : TypedItem<String>(id, viewModel) {
+    constructor(id: Id, value: String? = null, viewState: ViewState = ViewState())
+            : this(id, BaseItemViewModel(value, viewState))
+}
 
-class EditTextItem(id: Id, value: String? = null) : TypedItem<String>(id, value)
+class NumberItem(id: Id, viewModel: ItemViewModel) : TypedItem<Number>(id, viewModel) {
+    constructor(id: Id, value: Number? = null, viewState: ViewState = ViewState())
+            : this(id, BaseItemViewModel(value, viewState))
+}
 
-class SpinnerItem(id: Id, value: List<KeyValue>, selectedValue: Any?)
-    : TypedItem<ListViewModel>(id, ListViewModel(selectedValue, value)
-)
+class BoolItem(id: Id, viewModel: ItemViewModel) : TypedItem<Boolean>(id, viewModel) {
+    constructor(id: Id, value: Boolean? = null, viewState: ViewState = ViewState())
+            : this(id, BaseItemViewModel(value, viewState))
+}
+
+
+class EditTextItem(id: Id, viewModel: ItemViewModel) : TypedItem<String>(id, viewModel) {
+    constructor(id: Id, value: String? = null, viewState: ViewState = ViewState())
+            : this(id, BaseItemViewModel(value, viewState))
+}
+
+
+class SpinnerItem(id: Id, viewModel: ListViewModel) : TypedItem<ListViewModel>(id, viewModel) {
+    constructor(id: Id, list: List<KeyValue>, selectedValue: Any?, viewState: ViewState = ViewState())
+            : this(id, ListViewModel(list, selectedValue, viewState))
+}
