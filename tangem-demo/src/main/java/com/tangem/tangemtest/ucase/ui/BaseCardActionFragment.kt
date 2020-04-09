@@ -13,7 +13,6 @@ import com.tangem.CardManager
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
-import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._main.MainViewModel
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.paramsManager.PayloadKey
@@ -106,9 +105,7 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
     protected open fun listenChangedItems() {
         actionVM.seChangedItems.observe(viewLifecycleOwner, Observer { itemList ->
             itemList.forEach { item ->
-                Log.d(this, "item changed from VM - name: ${item.id}")
-                val dataItem = item as? BaseItem<Any?> ?: return@Observer
-                Log.d(this, "item changed from VM - name: ${dataItem.id}, value:${dataItem.viewModel.data}")
+                Log.d(this, "item changed from VM - name: ${item.id}, value:${item.viewModel.data}")
                 paramsWidgetList.firstOrNull { it.id == item.id }?.changeParamValue(item.viewModel.data)
             }
         })
