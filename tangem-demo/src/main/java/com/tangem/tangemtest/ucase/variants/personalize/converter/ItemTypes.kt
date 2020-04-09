@@ -1,4 +1,4 @@
-package com.tangem.tangemtest.ucase.variants.personalize.converter.fromTo
+package com.tangem.tangemtest.ucase.variants.personalize.converter
 
 import com.tangem.tangemtest.ucase.variants.personalize.*
 
