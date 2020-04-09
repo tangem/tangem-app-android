@@ -3,7 +3,6 @@ package com.tangem.tangemtest.ucase.variants.responses.ui.widget
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.tangem.tangemtest.R
@@ -29,11 +28,6 @@ class ResponseTextWidget(
 
     private fun initWidgets() {
         val data = typedItem.getData() as? String
-        if (data == null || data.isEmpty()) {
-            view.visibility = View.GONE
-            return
-        }
-
         tvName.text = getName()
         tvValue.text = data
 
