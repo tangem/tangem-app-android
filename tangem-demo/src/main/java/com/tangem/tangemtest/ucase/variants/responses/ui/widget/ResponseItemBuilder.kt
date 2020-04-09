@@ -11,7 +11,7 @@ import com.tangem.tangemtest._arch.widget.abstraction.ViewWidget
 [REDACTED_AUTHOR]
  */
 class ResponseItemBuilder : ItemWidgetBuilder {
-    override fun build(item: BaseItem<*>, parent: ViewGroup): ViewWidget? {
+    override fun build(item: BaseItem, parent: ViewGroup): ViewWidget? {
         return when (item) {
             is TextItem -> ResponseTextWidget(parent, item)
             is BoolItem -> CheckBoxWidget(parent, item)
