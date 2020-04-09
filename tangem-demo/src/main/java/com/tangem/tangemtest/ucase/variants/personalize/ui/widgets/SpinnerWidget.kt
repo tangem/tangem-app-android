@@ -7,20 +7,23 @@ import android.widget.BaseAdapter
 import android.widget.Spinner
 import android.widget.TextView
 import com.tangem.tangemtest.R
-import com.tangem.tangemtest._arch.structure.impl.KeyValue
-import com.tangem.tangemtest._arch.structure.impl.ListItem
-import com.tangem.tangemtest._arch.structure.impl.ListValueWrapper
-import com.tangem.tangemtest._arch.widget.abstraction.getName
+import com.tangem.tangemtest._arch.structure.abstraction.KeyValue
+import com.tangem.tangemtest._arch.structure.abstraction.ListViewModel
+import com.tangem.tangemtest._arch.structure.impl.SpinnerItem
 import ru.dev.gbixahue.eu4d.lib.android._android.views.inflate
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
 /**
 [REDACTED_AUTHOR]
  */
-class SpinnerWidget(parent: ViewGroup, listItem: ListItem) : DescriptionWidget<ListValueWrapper>(parent, listItem) {
+class SpinnerWidget(
+        parent: ViewGroup,
+        private val typedItem: SpinnerItem
+) : DescriptionWidget(parent, typedItem) {
+
     override fun getLayoutId(): Int = R.layout.w_personalize_item_spinner
 
-    private val data: ListValueWrapper = listItem.getData()!!
+    private val data: ListViewModel = typedItem.getTypedData()!!
 
     private val spItem = view.findViewById<Spinner>(R.id.sp_item)
     private val spAdapter = SpItemAdapter(data.itemList)
@@ -30,7 +33,7 @@ class SpinnerWidget(parent: ViewGroup, listItem: ListItem) : DescriptionWidget<L
 
         override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
             data.selectedItem = data.itemList[position].value
-            dataItem.viewModel.updateDataByView(data)
+            typedItem.viewModel.updateDataByView(data)
         }
     }
 
@@ -42,15 +45,14 @@ class SpinnerWidget(parent: ViewGroup, listItem: ListItem) : DescriptionWidget<L
             spItem.setSelection(it)
         }
         spItem.onItemSelectedListener = onItemSelectedListener
-        dataItem.viewModel.onDataUpdated = {
-            it?.apply {
-                spItem.onItemSelectedListener = null
-                this.itemList.firstOrNull { item -> item.value == selectedItem }?.let {
-                    val position = itemList.indexOf(it)
-                    spItem.setSelection(position)
-                }
-                spItem.onItemSelectedListener = onItemSelectedListener
+        typedItem.viewModel.onDataUpdated = {
+            val selectedItem = it as? String
+            spItem.onItemSelectedListener = null
+            data.itemList.firstOrNull { item -> item.value == selectedItem }?.let { keyValue ->
+                val position = data.itemList.indexOf(keyValue)
+                spItem.setSelection(position)
             }
+            spItem.onItemSelectedListener = onItemSelectedListener
         }
     }
 }
