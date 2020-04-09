@@ -40,6 +40,14 @@ public class Server {
         }
     }
 
+    public static class ApiInfuraRopsten {
+        public static final String URL_INFURA_ROPSTEN = ServerURL.API_INFURA_ROPSTEN;
+
+        public static class Method {
+            public static final String MAIN = "v3/613a0b14833145968b1f656240c7d245";
+        }
+    }
+
 
     public static class ApiSoChain {
         public static final String URL = ServerURL.API_SOCHAIN_V2;
