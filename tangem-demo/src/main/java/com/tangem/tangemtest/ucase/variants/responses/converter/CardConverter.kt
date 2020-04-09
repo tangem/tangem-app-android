@@ -1,14 +1,13 @@
 package com.tangem.tangemtest.ucase.variants.responses.converter
 
 import com.tangem.commands.Card
+import com.tangem.commands.CardData
 import com.tangem.commands.Settings
 import com.tangem.commands.SettingsMask
+import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.StringId
-import com.tangem.tangemtest._arch.structure.abstraction.Item
-import com.tangem.tangemtest._arch.structure.abstraction.ItemGroup
-import com.tangem.tangemtest._arch.structure.abstraction.ModelToItems
-import com.tangem.tangemtest._arch.structure.abstraction.SimpleItemGroup
+import com.tangem.tangemtest._arch.structure.abstraction.*
 import com.tangem.tangemtest._arch.structure.impl.BoolItem
 import com.tangem.tangemtest._arch.structure.impl.TextItem
 import com.tangem.tangemtest.ucase.variants.personalize.BlockId
@@ -26,9 +25,24 @@ class CardConverter : ModelToItems<Card> {
 //        itemList.add(TextItem(Additional.JSON_INCOMING, holder.gson.toJson(from)))
 
         itemList.add(simpleFields(from))
-        itemList.add(cardData(from))
+        itemList.add(cardData(from.cardData))
         itemList.add(settingsMask(from.settingsMask))
+        hideEmptyNullFields(itemList)
+
         return itemList
+    }
+
+    private fun hideEmptyNullFields(itemList: MutableList<Item>) {
+        itemList.iterate {
+            val data = it.getData<Any?>()
+            val isHidden = if (data == null) true
+            else when (data) {
+                is String -> data.isEmpty()
+                else -> false
+            }
+
+            if (isHidden) it.viewModel.viewState.isHidden = true
+        }
     }
 
     private fun simpleFields(from: Card): Item {
@@ -55,9 +69,11 @@ class CardConverter : ModelToItems<Card> {
         return group
     }
 
-    private fun cardData(from: Card): Item {
-        val group = createGroup(BlockId.Common)
-        val data = from.cardData ?: return group
+    private fun cardData(from: CardData?): Item {
+        val group = createGroup(BlockId.Common, R.color.group_card_data)
+        val data = from ?: return group
+
+//        group.addItem(TextItem(StringResId(R.string.response_card_card_data)))
         group.addItem(TextItem(CardDataId.batchId, data.batchId))
 //        Format: Year (2 bytes) | Month (1 byte) | Day (1 byte)
         group.addItem(TextItem(CardDataId.manufactureDateTime, stringOf(data.manufactureDateTime)))
@@ -73,12 +89,16 @@ class CardConverter : ModelToItems<Card> {
     }
 
     private fun settingsMask(from: SettingsMask?): Item {
-        val group = createGroup(CardId.settingsMask)
+        val group = createGroup(CardId.settingsMask, R.color.group_signing_method)
         val data = from ?: return group
 
+//        group.addItem(TextItem(StringResId(R.string.response_card_settings_mask)))
         Settings.values().forEach { group.addItem(BoolItem(StringId(it.name), data.contains(it))) }
         return group
     }
 
-    private fun createGroup(id: Id): ItemGroup = SimpleItemGroup(id).apply { addItem(TextItem(id)) }
+    private fun createGroup(id: Id, colorId: Int? = null): ItemGroup {
+        return if (colorId == null) SimpleItemGroup(id)
+        else SimpleItemGroup(id, BaseItemViewModel(viewState = ViewState(backgroundColor = colorId)))
+    }
 }
