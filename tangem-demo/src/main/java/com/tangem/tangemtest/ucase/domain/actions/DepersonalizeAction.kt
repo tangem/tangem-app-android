@@ -2,7 +2,7 @@ package com.tangem.tangemtest.ucase.domain.actions
 
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.PayloadHolder
-import com.tangem.tangemtest._arch.structure.abstraction.findDataItem
+import com.tangem.tangemtest._arch.structure.abstraction.findItem
 import com.tangem.tangemtest.ucase.domain.paramsManager.ActionCallback
 import com.tangem.tangemtest.ucase.variants.TlvId
 
@@ -11,7 +11,7 @@ import com.tangem.tangemtest.ucase.variants.TlvId
  */
 class DepersonalizeAction : BaseAction() {
     override fun executeMainAction(payload: PayloadHolder, attrs: AttrForAction, callback: ActionCallback) {
-        val item = attrs.itemList.findDataItem(TlvId.CardId) ?: return
+        val item = attrs.itemList.findItem(TlvId.CardId) ?: return
         val cardId = item.viewModel.data as? String ?: return
 
         attrs.cardManager.depersonalize(cardId) { handleResult(payload, it, null, attrs, callback) }
