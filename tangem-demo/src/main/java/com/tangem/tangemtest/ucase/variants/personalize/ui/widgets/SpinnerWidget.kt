@@ -18,41 +18,41 @@ import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
  */
 class SpinnerWidget(
         parent: ViewGroup,
-        private val typedItem: SpinnerItem
+        typedItem: SpinnerItem
 ) : DescriptionWidget(parent, typedItem) {
 
     override fun getLayoutId(): Int = R.layout.w_personalize_item_spinner
 
-    private val data: ListViewModel = typedItem.getTypedData()!!
+    private val viewModel: ListViewModel = typedItem.viewModel as ListViewModel
 
-    private val spItem = view.findViewById<Spinner>(R.id.sp_item)
-    private val spAdapter = SpItemAdapter(data.itemList)
+    private val spinner = view.findViewById<Spinner>(R.id.sp_item)
+    private val spAdapter = SpItemAdapter(viewModel.itemList)
 
     private val onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
         override fun onNothingSelected(parent: AdapterView<*>?) {}
 
         override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-            data.selectedItem = data.itemList[position].value
-            typedItem.viewModel.updateDataByView(data)
+            viewModel.selectedItem = viewModel.itemList[position].value
+            item.viewModel.updateDataByView(viewModel)
         }
     }
 
     init {
         val name = view.findViewById<TextView>(R.id.tv_name)
         name.text = getName()
-        spItem.adapter = spAdapter
-        spAdapter.getItemPosition(stringOf(data.selectedItem))?.let {
-            spItem.setSelection(it)
+        spinner.adapter = spAdapter
+        spAdapter.getItemPosition(stringOf(viewModel.selectedItem))?.let {
+            spinner.setSelection(it)
         }
-        spItem.onItemSelectedListener = onItemSelectedListener
-        typedItem.viewModel.onDataUpdated = {
+        spinner.onItemSelectedListener = onItemSelectedListener
+        item.viewModel.onDataUpdated = {
             val selectedItem = it as? String
-            spItem.onItemSelectedListener = null
-            data.itemList.firstOrNull { item -> item.value == selectedItem }?.let { keyValue ->
-                val position = data.itemList.indexOf(keyValue)
-                spItem.setSelection(position)
+            spinner.onItemSelectedListener = null
+            viewModel.itemList.firstOrNull { item -> item.value == selectedItem }?.let { keyValue ->
+                val position = viewModel.itemList.indexOf(keyValue)
+                spinner.setSelection(position)
             }
-            spItem.onItemSelectedListener = onItemSelectedListener
+            spinner.onItemSelectedListener = onItemSelectedListener
         }
     }
 }
