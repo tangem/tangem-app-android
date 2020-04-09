@@ -8,13 +8,16 @@ import android.view.ViewGroup
 import android.widget.TextView
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.impl.TextItem
-import com.tangem.tangemtest._arch.widget.abstraction.getName
 import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.DescriptionWidget
 
 /**
 [REDACTED_AUTHOR]
  */
-class ResponseTextWidget(parent: ViewGroup, private val textItem: TextItem) : DescriptionWidget<String>(parent, textItem) {
+class ResponseTextWidget(
+        parent: ViewGroup,
+        private val typedItem: TextItem
+) : DescriptionWidget(parent, typedItem) {
+
     override fun getLayoutId(): Int = R.layout.w_response_item
 
     private val tvName: TextView = view.findViewById(R.id.tv_name)
@@ -25,7 +28,7 @@ class ResponseTextWidget(parent: ViewGroup, private val textItem: TextItem) : De
     }
 
     private fun initWidgets() {
-        val data = textItem.getData()
+        val data = typedItem.getData() as? String
         if (data == null || data.isEmpty()) {
             view.visibility = View.GONE
             return
@@ -38,7 +41,7 @@ class ResponseTextWidget(parent: ViewGroup, private val textItem: TextItem) : De
             val clipboard = view.context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
                     ?: return@setOnClickListener
 
-            val clip: ClipData = ClipData.newPlainText("FieldValue", "${dataItem.getData()}")
+            val clip: ClipData = ClipData.newPlainText("FieldValue", "$data")
             clipboard.setPrimaryClip(clip)
         }
     }

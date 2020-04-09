@@ -2,7 +2,6 @@ package com.tangem.tangemtest.ucase.variants.responses
 
 import android.view.View
 import androidx.lifecycle.ViewModel
-import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest._arch.structure.abstraction.ModelToItems
 import com.tangem.tangemtest._arch.structure.abstraction.iterate
@@ -30,8 +29,7 @@ class ResponseViewModel : ViewModel() {
 
     fun toggleDescriptionVisibility(state: Boolean) {
         itemList?.iterate {
-            val baseItem = it as? BaseItem<*> ?: return@iterate
-            baseItem.viewModel.viewState.descriptionVisibility = if (state) View.VISIBLE else View.GONE
+            it.viewModel.viewState.descriptionVisibility = if (state) View.VISIBLE else View.GONE
         }
     }
 }
