@@ -6,7 +6,7 @@ import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.calculateSha512
 import com.tangem.tangemtest._arch.structure.PayloadHolder
 import com.tangem.tangemtest._arch.structure.abstraction.Item
-import com.tangem.tangemtest._arch.structure.abstraction.findDataItem
+import com.tangem.tangemtest._arch.structure.abstraction.findItem
 import com.tangem.tangemtest.ucase.domain.paramsManager.PayloadKey
 import com.tangem.tangemtest.ucase.tunnel.ActionView
 import com.tangem.tangemtest.ucase.variants.TlvId
@@ -27,7 +27,7 @@ class SignScanConsequence : ItemsChangeConsequence {
     override fun affectChanges(payload: PayloadHolder, changedItem: Item, itemList: List<Item>): List<Item>? {
         if (changedItem.id != TlvId.CardId) return null
 
-        val hashItem = itemList.findDataItem(TlvId.TransactionOutHash) ?: return null
+        val hashItem = itemList.findItem(TlvId.TransactionOutHash) ?: return null
         val affectedItems = mutableListOf(hashItem)
         val card = payload.remove(PayloadKey.card) as Card?
         if (card == null) {
