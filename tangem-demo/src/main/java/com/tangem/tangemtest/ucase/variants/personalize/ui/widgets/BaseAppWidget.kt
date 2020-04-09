@@ -13,7 +13,7 @@ import ru.dev.gbixahue.eu4d.lib.android._android.views.stringFrom
 /**
 [REDACTED_AUTHOR]
  */
-abstract class BaseAppWidget(parent: ViewGroup, item: Item): BaseViewWidget(parent, item) {
+abstract class BaseAppWidget(parent: ViewGroup, item: Item) : BaseViewWidget(parent, item) {
     override fun getName(): String {
         return when (val id = item.id) {
             is StringId -> id.value
