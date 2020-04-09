@@ -1,16 +1,16 @@
 package com.tangem.tangemtest.ucase.variants.responses.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.LinearLayout
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import com.google.gson.Gson
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.widget.WidgetBuilder
 import com.tangem.tangemtest._main.MainViewModel
+import com.tangem.tangemtest.extensions.shareText
 import com.tangem.tangemtest.ucase.ui.BaseFragment
 import com.tangem.tangemtest.ucase.variants.responses.ResponseViewModel
 import com.tangem.tangemtest.ucase.variants.responses.ui.widget.ResponseItemBuilder
@@ -27,9 +27,9 @@ open class ResponseFragment : BaseFragment() {
 
     override fun getLayoutId(): Int = R.layout.fg_card_response
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         setTittle()
-        return super.onCreateView(inflater, container, savedInstanceState)
     }
 
     private fun setTittle() {
@@ -40,6 +40,7 @@ open class ResponseFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        setHasOptionsMenu(true)
         buildWidgets()
         listenDescriptionSwitchChanges()
     }
@@ -54,5 +55,19 @@ open class ResponseFragment : BaseFragment() {
         mainActivityVM.ldDescriptionSwitch.observe(viewLifecycleOwner, Observer {
             selfVM.toggleDescriptionVisibility(it)
         })
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+
+        val menuItem = menu.findItem(R.id.action_share)
+        menuItem.isVisible = true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.action_share -> shareText(Gson().toJson(mainActivityVM.responseEvent))
+        }
+        return super.onOptionsItemSelected(item)
     }
 }
