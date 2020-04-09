@@ -2,7 +2,10 @@
     <string name="app_name">Tangem Development Kit</string>
 
     <string name="fg_name_entry_point">@string/app_name</string>
-    <string name="current_card_id">"Current card ID: "</string>
+    <string name="fg_name_response_scan">Scan response</string>
+    <string name="fg_name_response_sign">Sign response</string>
+    <string name="fg_name_response_personalization">Personalization response</string>
+    <string name="fg_name_response_depersonalization">Depersonalization response</string>
 
     <string name="unknown">unknown</string>
     <string name="switch_description">Docs</string>
