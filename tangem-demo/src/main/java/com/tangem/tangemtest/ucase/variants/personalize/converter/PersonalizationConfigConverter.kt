@@ -147,7 +147,7 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
         blocList.add(pins())
         blocList.iterate {
             if (itemTypes.hiddenList.contains(it.id)) {
-                it.viewModel.viewState.isHiddenField = true
+                it.viewModel.viewState.isHidden = true
             }
         }
         return blocList
