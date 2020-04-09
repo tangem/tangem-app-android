@@ -5,27 +5,30 @@ import android.widget.CompoundButton
 import androidx.appcompat.widget.SwitchCompat
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.impl.BoolItem
-import com.tangem.tangemtest._arch.widget.abstraction.getName
 
 /**
 [REDACTED_AUTHOR]
  */
-class SwitchWidget(parent: ViewGroup, data: BoolItem) : DescriptionWidget<Boolean>(parent, data) {
+class SwitchWidget(
+        parent: ViewGroup,
+        private val typedItem: BoolItem
+) : DescriptionWidget(parent, typedItem) {
+
     override fun getLayoutId(): Int = R.layout.w_personalize_item_switch
 
     private val switchItem = view.findViewById<SwitchCompat>(R.id.sw_item)
 
     private val changeListener = CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
-        dataItem.viewModel.updateDataByView(isChecked)
+        typedItem.viewModel.updateDataByView(isChecked)
     }
 
     init {
         switchItem.text = getName()
-        switchItem.isChecked = dataItem.getData() ?: false
+        switchItem.isChecked = typedItem.getTypedData() ?: false
         switchItem.setOnCheckedChangeListener(changeListener)
-        dataItem.viewModel.onDataUpdated = {
+        typedItem.viewModel.onDataUpdated = {
             switchItem.setOnCheckedChangeListener(null)
-            switchItem.isChecked = it ?: false
+            switchItem.isChecked = it as? Boolean ?: false
             switchItem.setOnCheckedChangeListener(changeListener)
         }
     }
