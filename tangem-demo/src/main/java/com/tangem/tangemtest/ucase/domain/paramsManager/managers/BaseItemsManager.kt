@@ -5,7 +5,7 @@ import com.tangem.CardManager
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.Payload
 import com.tangem.tangemtest._arch.structure.abstraction.Item
-import com.tangem.tangemtest._arch.structure.abstraction.findDataItem
+import com.tangem.tangemtest._arch.structure.abstraction.findItem
 import com.tangem.tangemtest.ucase.domain.actions.Action
 import com.tangem.tangemtest.ucase.domain.actions.AttrForAction
 import com.tangem.tangemtest.ucase.domain.paramsManager.ActionCallback
@@ -30,7 +30,7 @@ open class BaseItemsManager(protected val action: Action) : ItemsManager, Lifecy
 
     override fun itemChanged(id: Id, value: Any?, callback: AffectedItemsCallback?) {
         if (itemList.isEmpty()) return
-        val foundItem = itemList.findDataItem(id) ?: return
+        val foundItem = itemList.findItem(id) ?: return
 
         foundItem.setData(value)
         applyChangesByAffectedItems(foundItem, callback)
