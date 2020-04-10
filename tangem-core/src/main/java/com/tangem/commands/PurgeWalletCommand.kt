@@ -1,6 +1,6 @@
 package com.tangem.commands
 
-import com.tangem.CardEnvironment
+import com.tangem.SessionEnvironment
 import com.tangem.SessionError
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
@@ -29,7 +29,7 @@ class PurgeWalletResponse(
  */
 class PurgeWalletCommand : Command<PurgeWalletResponse>() {
 
-    override fun serialize(environment: CardEnvironment): CommandApdu {
+    override fun serialize(environment: SessionEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Pin, environment.pin1)
         tlvBuilder.append(TlvTag.CardId, environment.card?.cardId)
@@ -40,7 +40,7 @@ class PurgeWalletCommand : Command<PurgeWalletResponse>() {
         )
     }
 
-    override fun deserialize(environment: CardEnvironment, apdu: ResponseApdu): PurgeWalletResponse {
+    override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): PurgeWalletResponse {
         val tlvData = apdu.getTlvData(environment.encryptionKey)
                 ?: throw SessionError.DeserializeApduFailed()
 
