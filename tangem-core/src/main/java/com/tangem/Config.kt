@@ -24,5 +24,10 @@ class Config(
          * If not null, it will be used to validate Issuer data and issuer extra data.
          * If null, issuerPublicKey from current card will be used.
          */
-        val issuerPublicKey: ByteArray? = null
+        val issuerPublicKey: ByteArray? = null,
+
+        /**
+         * Level of encryption used in communication with a Tangem Card.
+         */
+        val encryptionMode: EncryptionMode = EncryptionMode.NONE
 )

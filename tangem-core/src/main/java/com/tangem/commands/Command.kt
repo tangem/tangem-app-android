@@ -22,20 +22,20 @@ abstract class Command<T : CommandResponse> : CardSessionRunnable<T> {
     /**
      * Serializes data into an array of [com.tangem.common.tlv.Tlv],
      * then creates [CommandApdu] with this data.
-     * @param environment [CardEnvironment] of the current card
+     * @param environment [SessionEnvironment] of the current card
      * @return command data converted to [CommandApdu] that allows to convert it to [ByteArray]
      * that can be sent to a Tangem card
      */
-    abstract fun serialize(environment: CardEnvironment): CommandApdu
+    abstract fun serialize(environment: SessionEnvironment): CommandApdu
 
     /**
      * Deserializes data received from a card and stored in [ResponseApdu]
      * into an array of [com.tangem.common.tlv.Tlv]. Then maps it into a [CommandResponse].
-     * @param environment [CardEnvironment] of the current card.
+     * @param environment [SessionEnvironment] of the current card.
      * @param apdu received data.
      * @return Card response converted to a [CommandResponse] of a type [T]
      */
-    abstract fun deserialize(environment: CardEnvironment, apdu: ResponseApdu): T
+    abstract fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): T
 
     override fun run(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
         transceive(session, callback)
@@ -92,9 +92,8 @@ abstract class Command<T : CommandResponse> : CardSessionRunnable<T> {
                 is CompletionResult.Failure ->
                     if (result.error == SessionError.TagLost()) {
                         session.viewDelegate.onTagLost()
-                    } else if (result.error is SessionError.UserCancelled) {
-                        callback(CompletionResult.Failure(SessionError.UserCancelled()))
-                        session.reader.closeSession()
+                    } else {
+                        callback(CompletionResult.Failure(result.error))
                     }
             }
         }
@@ -105,12 +104,12 @@ abstract class Command<T : CommandResponse> : CardSessionRunnable<T> {
      *
      * @return Remaining security delay in milliseconds.
      */
-    private fun deserializeSecurityDelay(responseApdu: ResponseApdu, cardEnvironment: CardEnvironment): Int? {
+    private fun deserializeSecurityDelay(responseApdu: ResponseApdu, environment: SessionEnvironment): Int? {
         val tlv = responseApdu.getTlvData()
         return tlv?.find { it.tag == TlvTag.Pause }?.value?.toInt()
     }
 
-    private fun tryHandleError(error: SessionError) : Boolean {
+    private fun tryHandleError(error: SessionError): Boolean {
         return false
     }
 
