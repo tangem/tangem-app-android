@@ -5,7 +5,7 @@ import android.view.View
 import android.widget.CompoundButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.tangem.CardEnvironment
+import com.tangem.SessionEnvironment
 import com.tangem.SessionError
 import com.tangem.TangemSdk
 import com.tangem.common.CompletionResult
@@ -143,7 +143,7 @@ class WriteOptions {
     }
 
     fun updatePin2(chbx: CompoundButton) {
-        val value = CardEnvironment.DEFAULT_PIN2
+        val value = SessionEnvironment.DEFAULT_PIN2
         pin2 = if (chbx.isChecked) value else null
     }
 }
