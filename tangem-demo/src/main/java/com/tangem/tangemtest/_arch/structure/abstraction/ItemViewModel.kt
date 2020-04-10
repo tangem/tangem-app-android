@@ -8,30 +8,46 @@ import com.tangem.tangemtest._arch.structure.PayloadHolder
 /**
 [REDACTED_AUTHOR]
  */
-typealias ValueChange<V> = (V?) -> Unit
-typealias SafeValueChange<V> = (V) -> Unit
+typealias ValueChanged<V> = (V?) -> Unit
+typealias SafeValueChanged<V> = (V) -> Unit
 
 class KeyValue(val key: String, val value: Any)
 
 class ViewState(
-        var isHidden: Boolean = false,
-        var backgroundColor: Int? = -1
+        isVisible: Boolean? = null,
+        bgColor: Int? = -1
 ) {
 
-    var descriptionVisibility: Int = 0x00000008
-        set(value) {
-            field = value
-            onDescriptionVisibilityChanged?.invoke(value)
-        }
+    class State<T>(
+            stateValue: T,
+            var onValueChanged: SafeValueChanged<T>? = null
+    ) {
+        var value = stateValue
+            set(value) {
+                if (preventSameChanges && field == value) return
 
-    var onDescriptionVisibilityChanged: SafeValueChange<Int>? = null
+                field = value
+                onValueChanged?.invoke(value)
+            }
+
+        internal var preventSameChanges = true
+    }
+
+    var isVisibleState = State(isVisible)
+    var backgroundColor = State(bgColor)
+    var descriptionVisibility = State(0x00000008)
+
+    internal fun preventSameChanges(isPrevented: Boolean) {
+        val states = listOf(isVisibleState, backgroundColor, descriptionVisibility)
+        states.forEach { it.preventSameChanges = isPrevented }
+    }
 }
 
 interface ItemViewModel : PayloadHolder {
     val viewState: ViewState
     var data: Any?
     var defaultData: Any?
-    var onDataUpdated: ValueChange<Any?>?
+    var onDataUpdated: ValueChanged<Any?>?
 
     fun updateDataByView(data: Any?)
 }
@@ -57,7 +73,7 @@ open class BaseItemViewModel(
         }
 
     // Use it for handling data updates in View
-    override var onDataUpdated: ValueChange<Any?>? = null
+    override var onDataUpdated: ValueChanged<Any?>? = null
 
     // When data updates directly it invokes onDataUpdated
     // return true = data will update
