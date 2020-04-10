@@ -1,16 +1,19 @@
 package com.tangem.commands
 
+import com.tangem.CardSession
+import com.tangem.SessionEnvironment
+import com.tangem.SessionError
 import com.tangem.commands.common.DefaultIssuerDataVerifier
 import com.tangem.commands.common.IssuerDataMode
+import com.tangem.commands.common.IssuerDataToVerify
 import com.tangem.commands.common.IssuerDataVerifier
-import com.tangem.common.CardEnvironment
+import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.tlv.TlvBuilder
-import com.tangem.common.tlv.TlvMapper
+import com.tangem.common.tlv.TlvDecoder
 import com.tangem.common.tlv.TlvTag
-import com.tangem.tasks.TaskError
 
 class WriteIssuerDataResponse(
         /**
@@ -33,13 +36,50 @@ class WriteIssuerDataCommand(
         private val issuerData: ByteArray,
         private val issuerDataSignature: ByteArray,
         private val issuerDataCounter: Int? = null,
+        private val issuerPublicKey: ByteArray? = null,
         verifier: IssuerDataVerifier = DefaultIssuerDataVerifier()
-) : CommandSerializer<WriteIssuerDataResponse>(), IssuerDataVerifier by verifier {
+) : Command<WriteIssuerDataResponse>(), IssuerDataVerifier by verifier {
 
-    override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
+    override fun run(session: CardSession, callback: (result: CompletionResult<WriteIssuerDataResponse>) -> Unit) {
+
+        val card = session.environment.card
+        if (card == null) {
+            callback(CompletionResult.Failure(SessionError.MissingPreflightRead()))
+            return
+        }
+        val publicKey = issuerPublicKey ?: card.issuerPublicKey
+        if (publicKey == null) {
+            callback(CompletionResult.Failure(SessionError.MissingIssuerPubicKey()))
+            return
+        }
+
+        if (!isCounterValid(issuerDataCounter, card)) {
+            callback(CompletionResult.Failure(SessionError.MissingCounter()))
+        } else if (!verifySignature(publicKey, card.cardId)) {
+            callback(CompletionResult.Failure(SessionError.VerificationFailed()))
+        } else {
+            super.run(session, callback)
+        }
+    }
+
+    private fun isCounterValid(issuerDataCounter: Int?, card: Card): Boolean =
+            if (isCounterRequired(card)) issuerDataCounter != null else true
+
+    private fun isCounterRequired(card: Card): Boolean =
+            card.settingsMask?.contains(Settings.ProtectIssuerDataAgainstReplay) != false
+
+    private fun verifySignature(publicKey: ByteArray, cardId: String): Boolean {
+        return verify(
+                publicKey,
+                issuerDataSignature,
+                IssuerDataToVerify(cardId, issuerData, issuerDataCounter)
+        )
+    }
+
+    override fun serialize(environment: SessionEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
-        tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
-        tlvBuilder.append(TlvTag.CardId, cardEnvironment.cardId)
+        tlvBuilder.append(TlvTag.Pin, environment.pin1)
+        tlvBuilder.append(TlvTag.CardId, environment.card?.cardId)
         tlvBuilder.append(TlvTag.Mode, IssuerDataMode.WriteData)
         tlvBuilder.append(TlvTag.IssuerData, issuerData)
         tlvBuilder.append(TlvTag.IssuerDataSignature, issuerDataSignature)
@@ -47,20 +87,17 @@ class WriteIssuerDataCommand(
 
         return CommandApdu(
                 Instruction.WriteIssuerData, tlvBuilder.serialize(),
-                cardEnvironment.encryptionMode, cardEnvironment.encryptionKey
+                environment.encryptionMode, environment.encryptionKey
         )
     }
 
-    override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): WriteIssuerDataResponse? {
-        val tlvData = responseApdu.getTlvData(cardEnvironment.encryptionKey) ?: return null
+    override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): WriteIssuerDataResponse {
+        val tlvData = apdu.getTlvData(environment.encryptionKey)
+                ?: throw SessionError.DeserializeApduFailed()
 
-        return try {
-            val mapper = TlvMapper(tlvData)
-            WriteIssuerDataResponse(
-                    cardId = mapper.map(TlvTag.CardId)
-            )
-        } catch (exception: Exception) {
-            throw TaskError.SerializeCommandError()
-        }
+        val decoder = TlvDecoder(tlvData)
+        return WriteIssuerDataResponse(
+                cardId = decoder.decode(TlvTag.CardId)
+        )
     }
 }
