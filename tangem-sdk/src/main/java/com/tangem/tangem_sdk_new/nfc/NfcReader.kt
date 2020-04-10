@@ -6,10 +6,10 @@ import android.nfc.tech.IsoDep
 import android.nfc.tech.NfcV
 import com.tangem.CardReader
 import com.tangem.Log
+import com.tangem.SessionError
 import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.ResponseApdu
-import com.tangem.tasks.TaskError
 
 /**
  * Provides NFC communication between an Android application and Tangem card.
@@ -38,7 +38,7 @@ class NfcReader : CardReader {
                 // Stops reading and sends failure callback to a task
                 // if reading is cancelled (when user closes nfc bottom sheet dialog).
                 closeSession()
-                callback?.invoke(CompletionResult.Failure(TaskError.UserCancelled()))
+                callback?.invoke(CompletionResult.Failure(SessionError.UserCancelled()))
             }
         }
 
@@ -67,7 +67,7 @@ class NfcReader : CardReader {
 
     private fun transceiveData() {
         if (readingCancelled) {
-            callback?.invoke(CompletionResult.Failure(TaskError.UserCancelled()))
+            callback?.invoke(CompletionResult.Failure(SessionError.UserCancelled()))
             return
         }
         if (data == null) return
@@ -76,7 +76,7 @@ class NfcReader : CardReader {
         try {
             rawResponse = isoDep?.transceive(data)
         } catch (exception: TagLostException) {
-            callback?.invoke(CompletionResult.Failure(TaskError.TagLost()))
+            callback?.invoke(CompletionResult.Failure(SessionError.TagLost()))
             isoDep = null
             return
         } catch (exception: Exception) {
@@ -110,7 +110,7 @@ class NfcReader : CardReader {
         when (response) {
             is SlixReadResult.Failure -> {
                 Log.e(this::class.simpleName!!, "${response.exception.message}")
-                callback?.invoke(CompletionResult.Failure(TaskError.ErrorProcessingCommand()))
+                callback?.invoke(CompletionResult.Failure(SessionError.ErrorProcessingCommand()))
             }
             is SlixReadResult.Success -> {
                  callback?.invoke(CompletionResult.Success(ResponseApdu(response.data)))
