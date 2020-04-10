@@ -3,7 +3,7 @@ package com.tangem.tangem_sdk_new
 import android.app.Application
 import android.content.SharedPreferences
 import at.favre.lib.armadillo.Armadillo
-import com.tangem.common.KeyPair
+import com.tangem.KeyPair
 import com.tangem.common.TerminalKeysService
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
@@ -12,7 +12,7 @@ import com.tangem.crypto.CryptoUtils
 
 /**
  * Service for managing Terminal keypair, used for Linked Terminal feature.
- * Needs to be provided to [com.tangem.CardManager] by calling [com.tangem.CardManager.setTerminalKeysService]
+ * Needs to be provided to [com.tangem.TangemSdk] by calling [com.tangem.TangemSdk.setTerminalKeysService]
  * Linked Terminal feature can be disabled manually by editing [com.tangem.Config].
  * @param applicationContext is required to retrieve an instance of [SharedPreferences]
  */
