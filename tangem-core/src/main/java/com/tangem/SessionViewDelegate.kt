@@ -1,19 +1,18 @@
 package com.tangem
 
 import com.tangem.common.CompletionResult
-import com.tangem.tasks.TaskError
 
 /**
  * Allows interaction with users and shows visual elements.
  *
  * Its default implementation, DefaultCardManagerDelegate, is in our tangem-sdk module.
  */
-interface CardManagerDelegate {
+interface SessionViewDelegate {
 
     /**
      * It is called when user is expected to scan a Tangem Card with an Android device.
      */
-    fun onNfcSessionStarted(cardId: String?)
+    fun onNfcSessionStarted(cardId: String?, message: Message? = null)
 
     /**
      * It is called when security delay is triggered by the card.
@@ -36,12 +35,12 @@ interface CardManagerDelegate {
     /**
      * It is called when NFC session was completed and a user can take the card away from the Android device.
      */
-    fun onNfcSessionCompleted()
+    fun onNfcSessionCompleted(message: Message? = null)
 
     /**
      * It is called when some error occur during NFC session.
      */
-    fun onError(error: TaskError)
+    fun onError(errorMessage: String)
 
     /**
      * It is called when a user is expected to enter pin code.
@@ -49,3 +48,8 @@ interface CardManagerDelegate {
     fun onPinRequested(callback: (result: CompletionResult<String>) -> Unit)
 
 }
+
+/**
+ * Wrapper for a message that can be shown to user after a start of NFC session.
+ */
+data class Message(val header: String? = null, val body: String? = null)
