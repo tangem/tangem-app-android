@@ -1,7 +1,7 @@
 package com.tangem.commands
 
-import com.tangem.CardEnvironment
 import com.tangem.CardSession
+import com.tangem.SessionEnvironment
 import com.tangem.SessionError
 import com.tangem.commands.common.DefaultIssuerDataVerifier
 import com.tangem.commands.common.IssuerDataMode
@@ -90,7 +90,7 @@ class ReadIssuerDataCommand(
         }
     }
 
-    override fun serialize(environment: CardEnvironment): CommandApdu {
+    override fun serialize(environment: SessionEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Pin, environment.pin1)
         tlvBuilder.append(TlvTag.CardId, environment.card?.cardId)
@@ -101,7 +101,7 @@ class ReadIssuerDataCommand(
         )
     }
 
-    override fun deserialize(environment: CardEnvironment, apdu: ResponseApdu): ReadIssuerDataResponse {
+    override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): ReadIssuerDataResponse {
         val tlvData = apdu.getTlvData(environment.encryptionKey)
                 ?: throw SessionError.DeserializeApduFailed()
 
