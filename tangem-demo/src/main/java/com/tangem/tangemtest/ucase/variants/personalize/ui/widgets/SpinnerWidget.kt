@@ -41,7 +41,7 @@ class SpinnerWidget(
         val name = view.findViewById<TextView>(R.id.tv_name)
         name.text = getName()
         spinner.adapter = spAdapter
-        spAdapter.getItemPosition(stringOf(viewModel.selectedItem))?.let {
+        spAdapter.getItemPosition(viewModel.selectedItem)?.let {
             spinner.setSelection(it)
         }
         spinner.onItemSelectedListener = onItemSelectedListener
@@ -87,8 +87,9 @@ class SpItemAdapter(list: List<KeyValue>?) : BaseAdapter() {
 
     override fun getCount(): Int = itemList.size
 
-    fun getItemPosition(item: String): Int? {
-        val kv = itemList.firstOrNull { it.value == item } ?: return null
+    fun getItemPosition(item: Any?): Int? {
+        val selectedValue = item ?: return null
+        val kv = itemList.firstOrNull { it.value == selectedValue } ?: return null
         return itemList.indexOf(kv)
     }
 }
