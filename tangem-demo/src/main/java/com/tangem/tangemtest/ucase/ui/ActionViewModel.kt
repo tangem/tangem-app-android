@@ -16,7 +16,9 @@ import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest._arch.structure.abstraction.iterate
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.responses.ResponseJsonConverter
+import com.tangem.tangemtest.ucase.resources.ActionType
 import com.tangem.tangemtest.ucase.tunnel.ViewScreen
+import com.tangem.tangemtest.ucase.variants.personalize.converter.ItemTypes
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 
 /**
@@ -75,7 +77,7 @@ class ActionViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
 
     fun toggleDescriptionVisibility(state: Boolean) {
         ldItemList.value?.iterate {
-            it.viewModel.viewState.descriptionVisibility = if (state) View.VISIBLE else View.GONE
+            it.viewModel.viewState.descriptionVisibility.value = if (state) View.VISIBLE else View.GONE
         }
     }
 
@@ -88,6 +90,41 @@ class ActionViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
         val keyList = mutableListOf<String>()
         itemsManager.payload.filterValues { it is ViewScreen }.forEach { keyList.add(it.key) }
         keyList.forEach { itemsManager.payload.remove(it) }
+    }
+
+    fun showFields(type: ActionType) {
+        toggleFieldsVisibility(type, true)
+    }
+
+    fun hideFields(type: ActionType) {
+        toggleFieldsVisibility(type, false)
+    }
+
+    private fun toggleFieldsVisibility(type: ActionType, show: Boolean) {
+        val oftenUsed = getItemsForTogglingVisibilityState(type)
+        val hidden = getItemIdsWhichWontShows(type)
+        itemsManager.getItems().iterate {
+            if (!hidden.contains(it.id)) {
+                if (!oftenUsed.contains(it.id)) {
+                    it.viewModel.viewState.isVisibleState.value = show
+                }
+            }
+
+        }
+    }
+
+    private fun getItemsForTogglingVisibilityState(type: ActionType): List<Id> {
+        return when (type) {
+            ActionType.Personalize -> ItemTypes().oftenUsedList
+            else -> emptyList()
+        }
+    }
+
+    private fun getItemIdsWhichWontShows(type: ActionType): List<Id> {
+        return when (type) {
+            ActionType.Personalize -> ItemTypes().hiddenList
+            else -> emptyList()
+        }
     }
 }
 
