@@ -1,6 +1,6 @@
 package com.tangem.commands.personalization
 
-import com.tangem.CardEnvironment
+import com.tangem.SessionEnvironment
 import com.tangem.SessionError
 import com.tangem.commands.Card
 import com.tangem.commands.CardData
@@ -36,7 +36,7 @@ class PersonalizeCommand(
         private val acquirer: Acquirer? = null
 ) : Command<Card>() {
 
-    override fun serialize(environment: CardEnvironment): CommandApdu {
+    override fun serialize(environment: SessionEnvironment): CommandApdu {
         return CommandApdu(
                 Instruction.Personalize,
                 serializePersonalizationData(config),
@@ -44,7 +44,7 @@ class PersonalizeCommand(
         )
     }
 
-    override fun deserialize(environment: CardEnvironment, apdu: ResponseApdu): Card {
+    override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): Card {
         val tlvData = apdu.getTlvData(devPersonalizationKey)
                 ?: throw SessionError.DeserializeApduFailed()
 
