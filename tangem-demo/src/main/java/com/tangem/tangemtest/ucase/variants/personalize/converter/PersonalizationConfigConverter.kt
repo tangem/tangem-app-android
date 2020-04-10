@@ -166,12 +166,13 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
     private fun common(): ItemGroup {
         val block = createGroup(BlockId.Common)
         mutableListOf(
-                Common.Curve,
                 Common.Blockchain,
                 Common.BlockchainCustom,
+                Common.Curve,
                 Common.MaxSignatures,
-                Common.CreateWallet
-        ).forEach { createItem(block, it) }
+                Common.CreateWallet,
+                Pins.PauseBeforePin2
+        ).forEach { createItem(block, it as Id) }
         return block
     }
 
@@ -279,8 +280,12 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
 
     private fun pins(): ItemGroup {
         val block = createGroup(BlockId.Pins)
-        mutableListOf(Pins.Pin, Pins.Pin2, Pins.Pin3, Pins.Cvc, Pins.PauseBeforePin2)
-                .forEach { createItem(block, it) }
+        mutableListOf(
+                Pins.Pin,
+                Pins.Pin2,
+                Pins.Pin3,
+                Pins.Cvc
+        ).forEach { createItem(block, it) }
         return block
     }
 
