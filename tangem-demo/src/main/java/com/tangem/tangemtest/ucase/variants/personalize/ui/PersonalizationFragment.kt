@@ -11,8 +11,8 @@ import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.StringId
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest._arch.widget.WidgetBuilder
-import com.tangem.tangemtest.commons.view.ButtonState
 import com.tangem.tangemtest.commons.view.MultiActionView
+import com.tangem.tangemtest.commons.view.ViewAction
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.paramsManager.PayloadKey
 import com.tangem.tangemtest.ucase.domain.paramsManager.managers.PersonalizationItemsManager
@@ -48,8 +48,8 @@ class PersonalizationFragment : BaseCardActionFragment() {
         val show = StringId("show")
         val hide = StringId("hide")
         val multiAction = MultiActionView(mutableListOf(
-                ButtonState(show, R.string.show_rare_fields) { actionVM.showFields(ActionType.Personalize) },
-                ButtonState(hide, R.string.hide_rare_fields) { actionVM.hideFields(ActionType.Personalize) }
+                ViewAction(show, R.string.show_rare_fields) { actionVM.showFields(ActionType.Personalize) },
+                ViewAction(hide, R.string.hide_rare_fields) { actionVM.hideFields(ActionType.Personalize) }
         ), btn)
         multiAction.afterAction = {
             multiAction.state = if (it == show) hide else show
