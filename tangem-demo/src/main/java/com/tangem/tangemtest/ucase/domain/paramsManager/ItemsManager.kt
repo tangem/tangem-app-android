@@ -1,14 +1,14 @@
 package com.tangem.tangemtest.ucase.domain.paramsManager
 
-import com.tangem.CardManager
+import com.tangem.TangemSdk
+import com.tangem.common.CompletionResult
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.Payload
 import com.tangem.tangemtest._arch.structure.PayloadHolder
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest.ucase.domain.paramsManager.triggers.changeConsequence.ItemsChangeConsequence
-import com.tangem.tasks.TaskEvent
 
-typealias ActionResponse = TaskEvent<*>
+typealias ActionResponse = CompletionResult<*>
 typealias AffectedList = List<Item>
 typealias AffectedItemsCallback = (AffectedList) -> Unit
 typealias ActionCallback = (ActionResponse, AffectedList) -> Unit
@@ -22,8 +22,8 @@ interface ItemsManager : PayloadHolder {
     fun setItems(items: List<Item>)
     fun getItems(): List<Item>
     fun setItemChangeConsequences(consequence: ItemsChangeConsequence?)
-    fun invokeMainAction(cardManager: CardManager, callback: ActionCallback)
-    fun getActionByTag(id: Id, cardManager: CardManager): ((ActionCallback) -> Unit)?
+    fun invokeMainAction(tangemSdk: TangemSdk, callback: ActionCallback)
+    fun getActionByTag(id: Id, tangemSdk: TangemSdk): ((ActionCallback) -> Unit)?
     fun attachPayload(payload: Payload)
 }
 
