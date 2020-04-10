@@ -43,4 +43,6 @@ abstract class BaseAction : Action {
         }
         callback(taskEvent, modifiedItems)
     }
+
+    override fun getActionByTag(payload: PayloadHolder, id: Id, attrs: AttrForAction): ((ActionCallback) -> Unit)? = null
 }
