@@ -4,6 +4,7 @@ import com.tangem.commands.Card
 import com.tangem.commands.CardData
 import com.tangem.commands.Settings
 import com.tangem.commands.SettingsMask
+import com.tangem.common.extensions.toHexString
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.StringId
@@ -51,11 +52,11 @@ class CardConverter : ModelToItems<Card> {
         group.addItem(TextItem(CardId.manufacturerName, from.manufacturerName))
         group.addItem(TextItem(CardId.status, stringOf(from.status)))
         group.addItem(TextItem(CardId.firmwareVersion, from.firmwareVersion))
-        group.addItem(TextItem(CardId.cardPublicKey, stringOf(from.cardPublicKey)))
-        group.addItem(TextItem(CardId.issuerPublicKey, stringOf(from.issuerPublicKey)))
+        group.addItem(TextItem(CardId.cardPublicKey, from.cardPublicKey?.toHexString()))
+        group.addItem(TextItem(CardId.issuerPublicKey, from.issuerPublicKey?.toHexString()))
         group.addItem(TextItem(CardId.curve, stringOf(from.curve)))
         group.addItem(TextItem(CardId.maxSignatures, stringOf(from.maxSignatures)))
-        group.addItem(TextItem(CardId.signingMethod, stringOf(from.signingMethod)))
+        group.addItem(TextItem(CardId.signingMethod, stringOf(from.signingMethod?.rawValue)))
         group.addItem(TextItem(CardId.pauseBeforePin2, stringOf(from.pauseBeforePin2)))
         group.addItem(TextItem(CardId.walletPublicKey, stringOf(from.walletPublicKey)))
         group.addItem(TextItem(CardId.walletRemainingSignatures, stringOf(from.walletRemainingSignatures)))
@@ -79,8 +80,8 @@ class CardConverter : ModelToItems<Card> {
         group.addItem(TextItem(CardDataId.manufactureDateTime, stringOf(data.manufactureDateTime)))
         group.addItem(TextItem(CardDataId.issuerName, data.issuerName))
         group.addItem(TextItem(CardDataId.blockchainName, data.blockchainName))
-        group.addItem(TextItem(CardDataId.manufacturerSignature, stringOf(data.manufacturerSignature)))
-        group.addItem(TextItem(CardDataId.productMask, stringOf(data.productMask)))
+        group.addItem(TextItem(CardDataId.manufacturerSignature, data.manufacturerSignature?.toHexString()))
+        group.addItem(TextItem(CardDataId.productMask, stringOf(data.productMask?.rawValue)))
         group.addItem(TextItem(CardDataId.tokenSymbol, data.tokenSymbol))
         group.addItem(TextItem(CardDataId.tokenContractAddress, data.tokenContractAddress))
         group.addItem(TextItem(CardDataId.tokenDecimal, data.tokenSymbol))
