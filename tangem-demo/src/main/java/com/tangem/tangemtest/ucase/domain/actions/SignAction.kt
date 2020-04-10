@@ -16,7 +16,7 @@ class SignAction : BaseAction() {
         val hash = dataForHashing.getData() as? ByteArray ?: return
         val cardId = attrs.itemList.findDataItem(TlvId.CardId)?.viewModel?.data ?: return
 
-        attrs.cardManager.sign(arrayOf(hash), stringOf(cardId)) { handleResult(payload, it, null, attrs, callback) }
+        attrs.tangemSdk.sign(arrayOf(hash), stringOf(cardId)) { handleResult(payload, it, null, attrs, callback) }
     }
 
     override fun getActionByTag(payload: PayloadHolder, id: Id, attrs: AttrForAction): ((ActionCallback) -> Unit)? {
