@@ -12,7 +12,7 @@ import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest._arch.structure.abstraction.iterate
 import com.tangem.tangemtest.commons.performAction
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
-import com.tangem.tangemtest.ucase.domain.responses.GsonInitializer
+import com.tangem.tangemtest.ucase.domain.responses.ResponseJsonConverter
 import com.tangem.tangemtest.ucase.tunnel.ViewScreen
 import com.tangem.tasks.ScanEvent
 import com.tangem.tasks.TaskError
@@ -92,7 +92,7 @@ class ActionViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
 internal class Notifier(private val vm: ActionViewModel) {
 
     private var notShowedError: TaskError? = null
-    private val gson: Gson = GsonInitializer().gson
+    private val gson: Gson = ResponseJsonConverter().gson
 
     fun handleActionResult(response: TaskEvent<*>, list: List<Item>) {
         if (list.isNotEmpty()) notifyItemsChanged(list)
