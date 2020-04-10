@@ -8,8 +8,8 @@ import com.tangem.blockchain.common.extensions.SimpleResult
 import com.tangem.blockchain.ethereum.network.EthereumNetworkManager
 import com.tangem.blockchain.ethereum.network.EthereumResponse
 import com.tangem.blockchain.wallets.CurrencyWallet
+import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
-import com.tangem.tasks.TaskEvent
 import org.kethereum.DEFAULT_GAS_LIMIT
 import org.kethereum.crypto.api.ec.ECDSASignature
 import org.kethereum.crypto.determineRecId
@@ -81,11 +81,11 @@ class EthereumWalletManager(
         val transactionToSign = builder.buildToSign(transactionData, txCount.toBigInteger())
                 ?: return SimpleResult.Failure(Exception("Not enough data"))
         when (val signerResponse = signer.sign(transactionToSign.hashes.toTypedArray(), cardId)) {
-            is TaskEvent.Event -> {
+            is CompletionResult.Success -> {
                 val transactionToSend = builder.buildToSend(signerResponse.data.signature, transactionToSign, walletPublicKey)
                 return networkManager.sendTransaction(String.format("0x%s", transactionToSend.toHexString()))
             }
-            is TaskEvent.Completion -> return SimpleResult.Failure(signerResponse.error)
+            is CompletionResult.Failure -> return SimpleResult.Failure(signerResponse.error)
         }
     }
 
