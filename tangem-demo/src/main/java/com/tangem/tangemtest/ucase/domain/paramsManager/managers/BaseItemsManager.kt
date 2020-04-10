@@ -47,8 +47,8 @@ open class BaseItemsManager(protected val action: Action) : ItemsManager, Lifecy
         this.changeConsequence = consequence
     }
 
-    override fun invokeMainAction(cardManager: CardManager, callback: ActionCallback) {
-        action.executeMainAction(this, getAttrsForAction(cardManager), callback)
+    override fun invokeMainAction(tangemSdk: TangemSdk, callback: ActionCallback) {
+        action.executeMainAction(this, getAttrsForAction(tangemSdk), callback)
     }
 
     override fun getActionByTag(id: Id, tangemSdk: TangemSdk): ((ActionCallback) -> Unit)? {
