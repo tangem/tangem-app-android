@@ -42,7 +42,7 @@ class CardConverter : ModelToItems<Card> {
                 else -> false
             }
 
-            if (isHidden) it.viewModel.viewState.isHidden = true
+            if (isHidden) it.viewModel.viewState.isVisibleState.value = false
         }
     }
 
@@ -100,6 +100,6 @@ class CardConverter : ModelToItems<Card> {
 
     private fun createGroup(id: Id, colorId: Int? = null): ItemGroup {
         return if (colorId == null) SimpleItemGroup(id)
-        else SimpleItemGroup(id, BaseItemViewModel(viewState = ViewState(backgroundColor = colorId)))
+        else SimpleItemGroup(id, BaseItemViewModel(viewState = ViewState(bgColor = colorId)))
     }
 }
