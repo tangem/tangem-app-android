@@ -1,20 +1,20 @@
 package com.tangem.commands
 
-import com.tangem.common.CardEnvironment
+import com.tangem.CardEnvironment
+import com.tangem.SessionError
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.tlv.TlvBuilder
-import com.tangem.common.tlv.TlvMapper
+import com.tangem.common.tlv.TlvDecoder
 import com.tangem.common.tlv.TlvTag
-import com.tangem.tasks.TaskError
 
 class WriteUserDataResponse(
-    /**
-     * CID, Unique Tangem card ID number.
-     */
-    val cardId: String
-): CommandResponse
+        /**
+         * CID, Unique Tangem card ID number.
+         */
+        val cardId: String
+) : CommandResponse
 
 /**
  * This command write some of User_Data, User_ProtectedData, User_Counter and User_ProtectedCounter fields.
@@ -29,33 +29,29 @@ class WriteUserDataResponse(
  * User_ProtectedCounter and User_ProtectedData additionaly need PIN2 to confirmation.
  */
 class WriteUserDataCommand(private val userData: ByteArray? = null, private val userProtectedData: ByteArray? = null,
-    private val userCounter: Int? = null,
-    private val userProtectedCounter: Int? = null): CommandSerializer<WriteUserDataResponse>() {
+                           private val userCounter: Int? = null,
+                           private val userProtectedCounter: Int? = null) : Command<WriteUserDataResponse>() {
 
-  override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
-    val builder = TlvBuilder()
-    builder.append(TlvTag.CardId, cardEnvironment.cardId)
-    builder.append(TlvTag.Pin, cardEnvironment.pin1)
-    builder.append(TlvTag.UserData, userData)
-    builder.append(TlvTag.UserCounter, userCounter)
-    builder.append(TlvTag.UserProtectedData, userProtectedData)
-    builder.append(TlvTag.UserProtectedCounter, userProtectedCounter)
-    if (userProtectedCounter != null || userProtectedData != null)
-      builder.append(TlvTag.Pin2, cardEnvironment.pin2)
+    override fun serialize(environment: CardEnvironment): CommandApdu {
+        val builder = TlvBuilder()
+        builder.append(TlvTag.CardId, environment.card?.cardId)
+        builder.append(TlvTag.Pin, environment.pin1)
+        builder.append(TlvTag.UserData, userData)
+        builder.append(TlvTag.UserCounter, userCounter)
+        builder.append(TlvTag.UserProtectedData, userProtectedData)
+        builder.append(TlvTag.UserProtectedCounter, userProtectedCounter)
+        if (userProtectedCounter != null || userProtectedData != null)
+            builder.append(TlvTag.Pin2, environment.pin2)
 
-    return CommandApdu(
-            Instruction.WriteUserData, builder.serialize(),
-            cardEnvironment.encryptionMode, cardEnvironment.encryptionKey
-    )
-  }
-
-  override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): WriteUserDataResponse? {
-    val tlvData = responseApdu.getTlvData(cardEnvironment.encryptionKey) ?: return null
-
-    return try {
-      WriteUserDataResponse(TlvMapper(tlvData).map(TlvTag.CardId))
-    } catch (exception: Exception) {
-      throw TaskError.SerializeCommandError()
+        return CommandApdu(
+                Instruction.WriteUserData, builder.serialize(),
+                environment.encryptionMode, environment.encryptionKey
+        )
     }
-  }
+
+    override fun deserialize(environment: CardEnvironment, apdu: ResponseApdu): WriteUserDataResponse {
+        val tlvData = apdu.getTlvData(environment.encryptionKey)
+                ?: throw SessionError.DeserializeApduFailed()
+        return WriteUserDataResponse(TlvDecoder(tlvData).decode(TlvTag.CardId))
+    }
 }
