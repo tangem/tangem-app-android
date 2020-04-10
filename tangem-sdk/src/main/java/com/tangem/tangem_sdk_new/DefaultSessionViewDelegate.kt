@@ -6,10 +6,10 @@ import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.fragment.app.FragmentActivity
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.tangem.CardSessionViewDelegate
 import com.tangem.Log
 import com.tangem.LoggerInterface
 import com.tangem.Message
+import com.tangem.SessionViewDelegate
 import com.tangem.common.CompletionResult
 import com.tangem.tangem_sdk_new.extensions.hide
 import com.tangem.tangem_sdk_new.extensions.show
@@ -20,10 +20,10 @@ import kotlinx.android.synthetic.main.layout_touch_card.*
 import kotlinx.android.synthetic.main.nfc_bottom_sheet.*
 
 /**
- * Default implementation of [CardSessionViewDelegate].
+ * Default implementation of [SessionViewDelegate].
  * If no customisation is required, this is the preferred way to use Tangem SDK.
  */
-class DefaultCardSessionViewDelegate(private val reader: NfcReader) : CardSessionViewDelegate {
+class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDelegate {
 
     lateinit var activity: FragmentActivity
     private var readingDialog: BottomSheetDialog? = null

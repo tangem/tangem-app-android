@@ -7,7 +7,7 @@ import com.tangem.common.CompletionResult
  *
  * Its default implementation, DefaultCardManagerDelegate, is in our tangem-sdk module.
  */
-interface CardSessionViewDelegate {
+interface SessionViewDelegate {
 
     /**
      * It is called when user is expected to scan a Tangem Card with an Android device.
