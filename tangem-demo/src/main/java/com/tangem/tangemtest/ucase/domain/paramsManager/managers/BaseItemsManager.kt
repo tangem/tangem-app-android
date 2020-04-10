@@ -1,7 +1,7 @@
 package com.tangem.tangemtest.ucase.domain.paramsManager.managers
 
 import androidx.lifecycle.LifecycleObserver
-import com.tangem.CardManager
+import com.tangem.TangemSdk
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.Payload
 import com.tangem.tangemtest._arch.structure.abstraction.Item
@@ -47,12 +47,12 @@ open class BaseItemsManager(protected val action: Action) : ItemsManager, Lifecy
         this.changeConsequence = consequence
     }
 
-    override fun invokeMainAction(cardManager: CardManager, callback: ActionCallback) {
-        action.executeMainAction(this, getAttrsForAction(cardManager), callback)
+    override fun invokeMainAction(tangemSdk: TangemSdk, callback: ActionCallback) {
+        action.executeMainAction(this, getAttrsForAction(tangemSdk), callback)
     }
 
-    override fun getActionByTag(id: Id, cardManager: CardManager): ((ActionCallback) -> Unit)? {
-        return action.getActionByTag(this, id, getAttrsForAction(cardManager))
+    override fun getActionByTag(id: Id, tangemSdk: TangemSdk): ((ActionCallback) -> Unit)? {
+        return action.getActionByTag(this, id, getAttrsForAction(tangemSdk))
     }
 
     override fun attachPayload(payload: Payload) {
@@ -64,6 +64,6 @@ open class BaseItemsManager(protected val action: Action) : ItemsManager, Lifecy
         changeConsequence?.affectChanges(this, param, itemList)?.let { callback?.invoke(it) }
     }
 
-    protected fun getAttrsForAction(cardManager: CardManager)
-            : AttrForAction = AttrForAction(cardManager, itemList, payload, changeConsequence)
+    protected fun getAttrsForAction(tangemSdk: TangemSdk)
+            : AttrForAction = AttrForAction(tangemSdk, itemList, payload, changeConsequence)
 }
