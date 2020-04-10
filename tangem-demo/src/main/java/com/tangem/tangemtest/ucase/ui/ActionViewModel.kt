@@ -19,9 +19,6 @@ import com.tangem.tangemtest.ucase.domain.responses.ResponseJsonConverter
 import com.tangem.tangemtest.ucase.resources.ActionType
 import com.tangem.tangemtest.ucase.tunnel.ViewScreen
 import com.tangem.tangemtest.ucase.variants.personalize.converter.ItemTypes
-import com.tangem.tasks.ScanEvent
-import com.tangem.tasks.TaskError
-import com.tangem.tasks.TaskEvent
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 
 /**
