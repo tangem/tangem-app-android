@@ -1,5 +1,7 @@
 package com.tangem.common.apdu
 
+import com.tangem.SessionError
+
 /**
  * Part of a response from the card, shows the status of the operation
  */
@@ -21,5 +23,18 @@ enum class StatusWord(val code: Int, val description: String) {
         private val values = values()
         fun byCode(code: Int): StatusWord = values.find { it.code == code } ?: Unknown
     }
+}
 
+fun StatusWord.toSessionError(): SessionError? {
+    return when (this) {
+        StatusWord.ProcessCompleted, StatusWord.Pin1Changed,
+        StatusWord.Pin2Changed, StatusWord.PinsChanged -> null
+        StatusWord.NeedPause -> null
+        StatusWord.InvalidParams -> SessionError.InvalidParams()
+        StatusWord.ErrorProcessingCommand -> SessionError.ErrorProcessingCommand()
+        StatusWord.InvalidState -> SessionError.InvalidState()
+        StatusWord.InsNotSupported -> SessionError.InsNotSupported()
+        StatusWord.NeedEncryption -> SessionError.NeedEncryption()
+        StatusWord.Unknown -> SessionError.UnknownStatus()
+    }
 }
