@@ -1,7 +1,7 @@
 package com.tangem.blockchain.common
 
 import com.google.common.truth.Truth
-import com.tangem.common.CardEnvironment
+import com.tangem.CardEnvironment
 import com.tangem.blockchain.bitcoin.BitcoinWalletManager
 import com.tangem.blockchain.cardano.CardanoWalletManager
 import com.tangem.blockchain.ethereum.EthereumWalletManager
