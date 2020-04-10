@@ -10,6 +10,7 @@ import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.StringId
 import com.tangem.tangemtest._arch.structure.StringResId
 import com.tangem.tangemtest._arch.structure.abstraction.Item
+import com.tangem.tangemtest._arch.structure.abstraction.ViewState
 import ru.dev.gbixahue.eu4d.lib.android._android.views.colorFrom
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.LayoutHolder
 
@@ -34,11 +35,22 @@ abstract class BaseViewWidget(
     private var defaultBackground: Drawable? = view.background
 
     init {
-        if (item.viewModel.viewState.isHidden) {
-            view.visibility = View.GONE
-        } else {
-            setBackgroundColor(item.viewModel.viewState.backgroundColor)
+        subscribeToViewStateChanges(item.viewModel.viewState)
+        initViewState(item.viewModel.viewState)
+    }
+
+    protected open fun subscribeToViewStateChanges(viewState: ViewState) {
+        viewState.isVisibleState.onValueChanged = { state ->
+            state?.let { view.visibility = if (it) View.VISIBLE else View.GONE }
         }
+        viewState.backgroundColor.onValueChanged = { setBackgroundColor(it) }
+    }
+
+    protected open fun initViewState(viewState: ViewState) {
+        viewState.preventSameChanges(false)
+        viewState.isVisibleState.value = viewState.isVisibleState.value
+        if (viewState.backgroundColor.value != -1) setBackgroundColor(viewState.backgroundColor.value)
+        viewState.preventSameChanges(true)
     }
 
     override fun getName(): String {
