@@ -15,8 +15,8 @@ class PersonalizationConfig {
     var curveID = "ed25519"
     var blockchain = "BTC/test"
     var blockchainCustom = ""
-    var MaxSignatures: Long = 100
-    var createWallet = false
+    var MaxSignatures: Long = 999999
+    var createWallet = true
 
     // Signing method
     var SigningMethod0 = true
@@ -62,7 +62,7 @@ class PersonalizationConfig {
     var allowSwapPIN = true
     var allowSwapPIN2 = true
     var forbidDefaultPIN = false
-    var smartSecurityDelay = false
+    var smartSecurityDelay = true
     var protectIssuerDataAgainstReplay = true
     var skipSecurityDelayIfValidatedByIssuer = true
     var skipCheckPIN2andCVCIfValidatedByIssuer = true
@@ -88,15 +88,8 @@ class PersonalizationConfig {
     var PIN2 = "000"
     var PIN3 = ""
     var CVC = "000"
-    var pauseBeforePIN2: Long = 15000
+    var pauseBeforePIN2: Long = 5000L
 
-
-    // not used
-//    var count: Long = 20
-//    var numberFormat = ""
-//    var issuerData = null
-//    var releaseVersion = false
-//    var issuerName = "TANGEM SDK"
 }
 
 class CardData {
