@@ -1,12 +1,8 @@
 package com.tangem.tangemtest.ucase.domain.responses
 
 import com.google.gson.*
-import com.tangem.commands.ProductMask
-import com.tangem.commands.Settings
-import com.tangem.commands.SettingsMask
-import com.tangem.commands.SigningMethod
+import com.tangem.commands.*
 import com.tangem.common.extensions.toHexString
-import com.tangem.tasks.TaskEvent
 import java.lang.reflect.Type
 import java.text.DateFormat
 import java.util.*
@@ -29,12 +25,7 @@ class ResponseJsonConverter {
         return builder.create()
     }
 
-    fun convertTaskEvent(task: TaskEvent<*>?): String = gson.toJson(task)
-
-    fun convertEvent(task: TaskEvent<*>?): String {
-        val event = task as? TaskEvent.Event ?: ""
-        return gson.toJson(event)
-    }
+    fun convertResponse(response: CommandResponse?): String = gson.toJson(response)
 }
 
 class ByteTypeAdapter : JsonSerializer<ByteArray> {
