@@ -1,13 +1,13 @@
 package com.tangem.commands
 
-import com.tangem.common.CardEnvironment
+import com.tangem.CardEnvironment
+import com.tangem.SessionError
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.tlv.TlvBuilder
-import com.tangem.common.tlv.TlvMapper
+import com.tangem.common.tlv.TlvDecoder
 import com.tangem.common.tlv.TlvTag
-import com.tangem.tasks.TaskError
 
 class ReadUserDataResponse(
     /**
@@ -47,33 +47,30 @@ class ReadUserDataResponse(
  * of new transaction (on SIGN command that calculate new signatures). The App defines purpose of use.
  * For example, this fields may contain blockchain nonce value.
  */
-class ReadUserDataCommand: CommandSerializer<ReadUserDataResponse>() {
+class ReadUserDataCommand: Command<ReadUserDataResponse>() {
 
-  override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
+  override fun serialize(environment: CardEnvironment): CommandApdu {
     val builder = TlvBuilder()
-    builder.append(TlvTag.CardId, cardEnvironment.cardId)
-    builder.append(TlvTag.Pin, cardEnvironment.pin1)
+    builder.append(TlvTag.CardId, environment.card?.cardId)
+    builder.append(TlvTag.Pin, environment.pin1)
 
     return CommandApdu(
             Instruction.ReadUserData, builder.serialize(),
-            cardEnvironment.encryptionMode, cardEnvironment.encryptionKey
+            environment.encryptionMode, environment.encryptionKey
     )
   }
 
-  override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): ReadUserDataResponse? {
-    val tlvData = responseApdu.getTlvData(cardEnvironment.encryptionKey) ?: return null
+  override fun deserialize(environment: CardEnvironment, apdu: ResponseApdu): ReadUserDataResponse {
+    val tlvData = apdu.getTlvData(environment.encryptionKey)
+            ?: throw SessionError.DeserializeApduFailed()
 
-    return try {
-      val mapper = TlvMapper(tlvData)
-      ReadUserDataResponse(
-          cardId = mapper.map(TlvTag.CardId),
-          userData = mapper.map(TlvTag.UserData),
-          userProtectedData = mapper.map(TlvTag.UserProtectedData),
-          userCounter = mapper.map(TlvTag.UserCounter),
-          userProtectedCounter = mapper.map(TlvTag.UserProtectedCounter)
+      val decoder = TlvDecoder(tlvData)
+      return ReadUserDataResponse(
+          cardId = decoder.decode(TlvTag.CardId),
+          userData = decoder.decode(TlvTag.UserData),
+          userProtectedData = decoder.decode(TlvTag.UserProtectedData),
+          userCounter = decoder.decode(TlvTag.UserCounter),
+          userProtectedCounter = decoder.decode(TlvTag.UserProtectedCounter)
       )
-    } catch (exception: Exception) {
-      throw TaskError.SerializeCommandError()
-    }
   }
 }
