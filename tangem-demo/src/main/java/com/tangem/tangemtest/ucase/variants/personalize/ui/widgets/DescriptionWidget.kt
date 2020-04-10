@@ -30,7 +30,7 @@ abstract class DescriptionWidget(
 
     protected open fun changeDescriptionVisibility(state: Int) {
         val tv = tvDescription ?: return
-        val descriptionId = getResDescription() ?: return
+        val descriptionId = getResDescriptionId() ?: return
         val description = tv.context.getString(descriptionId)
         if (description.isEmpty()) return
 
