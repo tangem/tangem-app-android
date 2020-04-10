@@ -34,7 +34,7 @@ class ResponseViewModel : ViewModel() {
 
     fun toggleDescriptionVisibility(state: Boolean) {
         itemList?.iterate {
-            it.viewModel.viewState.descriptionVisibility = if (state) View.VISIBLE else View.GONE
+            it.viewModel.viewState.descriptionVisibility.value = if (state) View.VISIBLE else View.GONE
         }
     }
 
