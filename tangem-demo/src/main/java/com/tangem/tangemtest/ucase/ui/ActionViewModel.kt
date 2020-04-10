@@ -4,13 +4,16 @@ import android.view.View
 import androidx.annotation.UiThread
 import androidx.lifecycle.*
 import com.google.gson.Gson
-import com.tangem.CardManager
+import com.tangem.SessionError
+import com.tangem.TangemSdk
+import com.tangem.commands.Card
+import com.tangem.commands.CommandResponse
+import com.tangem.common.CompletionResult
 import com.tangem.tangemtest._arch.SingleLiveEvent
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.Payload
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest._arch.structure.abstraction.iterate
-import com.tangem.tangemtest.commons.performAction
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.responses.ResponseJsonConverter
 import com.tangem.tangemtest.ucase.resources.ActionType
@@ -30,19 +33,19 @@ class ActionViewModelFactory(private val manager: ItemsManager) : ViewModelProvi
 
 class ActionViewModel(private val itemsManager: ItemsManager) : ViewModel(), LifecycleObserver {
 
-    val seResponseEvent = SingleLiveEvent<TaskEvent<*>>()
-    val seReadResponse = SingleLiveEvent<String>()
-    val seResponse = SingleLiveEvent<String>()
+    val seResponse = SingleLiveEvent<CommandResponse>()
+    val seResponseData = SingleLiveEvent<CommandResponse>()
+    val seResponseCardData = SingleLiveEvent<Card>()
 
     val ldItemList = MutableLiveData(itemsManager.getItems())
     val seError: MutableLiveData<String> = SingleLiveEvent()
     val seChangedItems: MutableLiveData<List<Item>> = SingleLiveEvent()
 
     private val notifier: Notifier = Notifier(this)
-    private lateinit var cardManager: CardManager
+    private lateinit var tangemSdk: TangemSdk
 
-    fun setCardManager(cardManager: CardManager) {
-        this.cardManager = cardManager
+    fun setCardManager(tangemSdk: TangemSdk) {
+        this.tangemSdk = tangemSdk
     }
 
     @Deprecated("Events must be send directly from the Widget")
@@ -56,15 +59,17 @@ class ActionViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
 
     //invokes Scan, Sign etc...
     fun invokeMainAction() {
-        performAction(itemsManager, cardManager, { paramsManager, cardManager ->
-            paramsManager.invokeMainAction(cardManager) { response, listOfChangedParams ->
-                notifier.handleActionResult(response, listOfChangedParams)
-            }
-        })
+        if (!::tangemSdk.isInitialized) {
+            Log.e(this, "TangemSdk isn't initialized")
+            return
+        }
+        itemsManager.invokeMainAction(tangemSdk) { response, listOfChangedParams ->
+            notifier.handleActionResult(response, listOfChangedParams)
+        }
     }
 
     fun getItemAction(id: Id): (() -> Unit)? {
-        val itemFunction = itemsManager.getActionByTag(id, cardManager) ?: return null
+        val itemFunction = itemsManager.getActionByTag(id, tangemSdk) ?: return null
 
         return {
             itemFunction { response, listOfChangedParams ->
@@ -128,12 +133,12 @@ class ActionViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
 
 internal class Notifier(private val vm: ActionViewModel) {
 
-    private var notShowedError: TaskError? = null
+    private var notShowedError: SessionError? = null
     private val gson: Gson = ResponseJsonConverter().gson
 
-    fun handleActionResult(response: TaskEvent<*>, list: List<Item>) {
+    fun handleActionResult(result: CompletionResult<*>, list: List<Item>) {
         if (list.isNotEmpty()) notifyItemsChanged(list)
-        handleResponse(response)
+        handleCompletionResult(result)
     }
 
     @UiThread
@@ -141,47 +146,35 @@ internal class Notifier(private val vm: ActionViewModel) {
         vm.seChangedItems.postValue(list)
     }
 
-    fun handleResponse(response: TaskEvent<*>) {
-        val taskEvent = response as? TaskEvent<*> ?: return
+    fun handleCompletionResult(result: CompletionResult<*>) {
+        val commandResponse = result as? CompletionResult<CommandResponse> ?: return
 
-        when (taskEvent) {
-            is TaskEvent.Completion -> handleCompletionEvent(taskEvent)
-            is TaskEvent.Event -> {
-                handleDataEvent(taskEvent.data)
-                vm.seResponseEvent.postValue(taskEvent)
-            }
+        when (commandResponse) {
+            is CompletionResult.Success -> handleData(commandResponse.data)
+            is CompletionResult.Failure -> handleError(commandResponse.error)
         }
     }
 
-    private fun handleDataEvent(event: Any?) {
+    private fun handleData(event: CommandResponse?) {
+        vm.seResponse.postValue(event)
         when (event) {
-            is ScanEvent.OnReadEvent -> vm.seReadResponse.postValue(gson.toJson(event))
-            is ScanEvent.OnVerifyEvent -> {
-            }
-            else -> vm.seResponse.postValue(gson.toJson(event))
+            is Card -> vm.seResponseCardData.postValue(event)
+            else -> vm.seResponseData.postValue(event)
         }
     }
 
-    private fun handleCompletionEvent(taskEvent: TaskEvent.Completion<*>) {
-        if (taskEvent.error == null) {
-            Log.d(this, "error = null")
-            if (notShowedError != null) {
-                vm.seError.postValue("${notShowedError!!::class.simpleName}")
-                notShowedError = null
-            }
-        } else {
-            Log.d(this, "error = ${taskEvent.error}")
-            when (taskEvent.error) {
-                is TaskError.UserCancelled -> {
-                    if (notShowedError == null) {
-                        vm.seError.postValue("User canceled the action")
-                    } else {
-                        vm.seError.postValue("${notShowedError!!::class.simpleName}")
-                        notShowedError = null
-                    }
+    private fun handleError(error: SessionError) {
+        Log.d(this, "error = $error")
+        when (error) {
+            is SessionError.UserCancelled -> {
+                if (notShowedError == null) {
+                    vm.seError.postValue("User canceled the action")
+                } else {
+                    vm.seError.postValue("${notShowedError!!::class.simpleName}")
+                    notShowedError = null
                 }
-                else -> notShowedError = taskEvent.error
             }
+            else -> notShowedError = error
         }
     }
 }
