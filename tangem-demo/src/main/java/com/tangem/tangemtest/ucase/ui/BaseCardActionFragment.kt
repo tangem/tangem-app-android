@@ -47,8 +47,13 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
         actionVM.attachToPayload(mutableMapOf(PayloadKey.actionView to this as ActionView))
 
         initFab()
-        createWidgets { subscribeToViewModelChanges() }
+        createWidgets {
+            widgetsWasCreated()
+            subscribeToViewModelChanges()
+        }
     }
+
+    protected open fun widgetsWasCreated() {}
 
     protected open fun bindViews() {
         itemContainer = mainView.findViewById(R.id.ll_container)
