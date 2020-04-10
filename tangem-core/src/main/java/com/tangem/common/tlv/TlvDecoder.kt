@@ -1,13 +1,13 @@
 package com.tangem.common.tlv
 
 import com.tangem.Log
+import com.tangem.SessionError
 import com.tangem.commands.*
 import com.tangem.commands.common.IssuerDataMode
 import com.tangem.common.extensions.toDate
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.extensions.toInt
 import com.tangem.common.extensions.toUtf8
-import com.tangem.tasks.TaskError
 import java.util.*
 
 /**
@@ -16,7 +16,7 @@ import java.util.*
  *
  * @property tlvList List of TLVs, which values are to be converted to particular classes.
  */
-class TlvMapper(val tlvList: List<Tlv>) {
+class TlvDecoder(val tlvList: List<Tlv>) {
 
     /**
      * Finds [Tlv] by its [TlvTag].
@@ -26,10 +26,10 @@ class TlvMapper(val tlvList: List<Tlv>) {
      *
      * @return Value converted to a nullable type [T].
      */
-    inline fun <reified T> mapOptional(tag: TlvTag): T? =
+    inline fun <reified T> decodeOptional(tag: TlvTag): T? =
             try {
-                map<T>(tag)
-            } catch (exception: TaskError.MissingTag) {
+                decode<T>(tag)
+            } catch (exception: SessionError.DecodingFailedMissingTag) {
                 null
             }
 
@@ -44,13 +44,13 @@ class TlvMapper(val tlvList: List<Tlv>) {
      *
      * @throws [TaskError.MissingTag] exception if no [Tlv] is found by the Tag.
      */
-    inline fun <reified T> map(tag: TlvTag): T {
+    inline fun <reified T> decode(tag: TlvTag): T {
         val tlvValue: ByteArray = tlvList.find { it.tag == tag }?.value
                 ?: if (tag.valueType() == TlvValueType.BoolValue && T::class == Boolean::class) {
                     return false as T
                 } else {
                     Log.e(this::class.simpleName!!, "Tag $tag not found")
-                    throw TaskError.MissingTag()
+                    throw SessionError.DecodingFailedMissingTag()
                 }
 
         return when (tag.valueType()) {
@@ -68,7 +68,7 @@ class TlvMapper(val tlvList: List<Tlv>) {
                     tlvValue.toInt() as T
                 } catch (exception: IllegalArgumentException) {
                     Log.e(this::class.simpleName!!, exception.message ?: "")
-                    throw TaskError.ConvertError()
+                    throw SessionError.DecodingFailed()
                 }
             }
             TlvValueType.BoolValue -> {
@@ -85,7 +85,7 @@ class TlvMapper(val tlvList: List<Tlv>) {
                     EllipticCurve.byName(tlvValue.toUtf8()) as T
                 } catch (exception: Exception) {
                     logException(tag, tlvValue.toUtf8(), exception)
-                    throw TaskError.ConvertError()
+                    throw SessionError.DecodingFailed()
                 }
 
 
@@ -96,7 +96,7 @@ class TlvMapper(val tlvList: List<Tlv>) {
                     tlvValue.toDate() as T
                 } catch (exception: Exception) {
                     logException(tag, tlvValue.toHexString(), exception)
-                    throw TaskError.ConvertError()
+                    throw SessionError.DecodingFailed()
                 }
             }
             TlvValueType.ProductMask -> {
@@ -113,7 +113,7 @@ class TlvMapper(val tlvList: List<Tlv>) {
                     CardStatus.byCode(tlvValue.toInt()) as T
                 } catch (exception: Exception) {
                     logException(tag, tlvValue.toInt().toString(), exception)
-                    throw TaskError.ConvertError()
+                    throw SessionError.DecodingFailed()
                 }
             }
             TlvValueType.SigningMethod -> {
@@ -122,7 +122,7 @@ class TlvMapper(val tlvList: List<Tlv>) {
                     SigningMethod(tlvValue.toInt()) as T
                 } catch (exception: Exception) {
                     logException(tag, tlvValue.toInt().toString(), exception)
-                    throw TaskError.ConvertError()
+                    throw SessionError.DecodingFailed()
                 }
             }
             TlvValueType.IssuerDataMode -> {
@@ -131,7 +131,7 @@ class TlvMapper(val tlvList: List<Tlv>) {
                     IssuerDataMode.byCode(tlvValue.toInt().toByte()) as T
                 } catch (exception: Exception) {
                     logException(tag, tlvValue.toInt().toString(), exception)
-                    throw TaskError.ConvertError()
+                    throw SessionError.DecodingFailed()
                 }
             }
         }
@@ -146,7 +146,7 @@ class TlvMapper(val tlvList: List<Tlv>) {
         if (T::class != ExpectedT::class) {
             Log.e(this::class.simpleName!!,
                     "Mapping error. Type for tag: $tag must be ${tag.valueType()}. It is ${T::class}")
-            throw TaskError.WrongType()
+            throw SessionError.DecodingFailedTypeMismatch()
         }
     }
 
