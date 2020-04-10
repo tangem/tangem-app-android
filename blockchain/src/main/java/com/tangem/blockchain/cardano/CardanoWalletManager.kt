@@ -8,7 +8,7 @@ import com.tangem.blockchain.common.extensions.Result
 import com.tangem.blockchain.common.extensions.SimpleResult
 import com.tangem.blockchain.common.extensions.encodeBase64NoWrap
 import com.tangem.blockchain.wallets.CurrencyWallet
-import com.tangem.tasks.TaskEvent
+import com.tangem.common.CompletionResult
 
 class CardanoWalletManager(
         private val cardId: String,
@@ -47,11 +47,11 @@ class CardanoWalletManager(
         val transactionHash = transactionBuilder.buildToSign(transactionData)
 
         when (val signerResponse = signer.sign(arrayOf(transactionHash), cardId)) {
-            is TaskEvent.Event -> {
+            is CompletionResult.Success -> {
                 val transactionToSend = transactionBuilder.buildToSend(signerResponse.data.signature, walletPublicKey)
                 return networkManager.sendTransaction(transactionToSend.encodeBase64NoWrap())
             }
-            is TaskEvent.Completion -> return SimpleResult.Failure(signerResponse.error)
+            is CompletionResult.Failure -> return SimpleResult.Failure(signerResponse.error)
         }
     }
 
