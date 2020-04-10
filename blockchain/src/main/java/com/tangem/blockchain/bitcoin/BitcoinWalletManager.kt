@@ -8,8 +8,8 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.extensions.Result
 import com.tangem.blockchain.common.extensions.SimpleResult
 import com.tangem.blockchain.wallets.CurrencyWallet
+import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
-import com.tangem.tasks.TaskEvent
 import java.math.BigDecimal
 
 class BitcoinWalletManager(
@@ -66,11 +66,11 @@ class BitcoinWalletManager(
             is Result.Failure -> return SimpleResult.Failure(buildTransactionResult.error)
             is Result.Success -> {
                 when (val signerResponse = signer.sign(buildTransactionResult.data.toTypedArray(), cardId)) {
-                    is TaskEvent.Event -> {
+                    is CompletionResult.Success -> {
                         val transactionToSend = transactionBuilder.buildToSend(signerResponse.data.signature, walletPublicKey)
                         return networkManager.sendTransaction(transactionToSend.toHexString())
                     }
-                    is TaskEvent.Completion -> return SimpleResult.Failure(signerResponse.error)
+                    is CompletionResult.Failure -> return SimpleResult.Failure(signerResponse.error)
                 }
             }
         }
