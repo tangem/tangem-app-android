@@ -33,7 +33,7 @@ open class ResponseFragment : BaseFragment() {
     }
 
     private fun setTittle() {
-        val titleId = selfVM.determineTitleId(mainActivityVM.responseEvent)
+        val titleId = selfVM.determineTitleId(mainActivityVM.commandResponse)
         activity?.setTitle(titleId)
     }
 
@@ -47,7 +47,7 @@ open class ResponseFragment : BaseFragment() {
 
     private fun buildWidgets() {
         val builder = WidgetBuilder(ResponseItemBuilder())
-        val itemList = selfVM.createItemList(mainActivityVM.responseEvent)
+        val itemList = selfVM.createItemList(mainActivityVM.commandResponse)
         itemList.forEach { builder.build(it, itemContainer) }
     }
 
@@ -67,7 +67,7 @@ open class ResponseFragment : BaseFragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_share -> {
-                shareText(ResponseJsonConverter().convertEvent(mainActivityVM.responseEvent))
+                shareText(ResponseJsonConverter().convertResponse(mainActivityVM.commandResponse))
             }
         }
         return super.onOptionsItemSelected(item)
