@@ -3,16 +3,14 @@ package com.tangem.tangemtest
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.tangem.CardManager
+import com.tangem.TangemSdk
+import com.tangem.common.CompletionResult
 import com.tangem.tangem_sdk_new.extensions.init
-import com.tangem.tasks.ScanEvent
-import com.tangem.tasks.TaskError
-import com.tangem.tasks.TaskEvent
 import kotlinx.android.synthetic.main.old_activity_main.*
 
 class Old_MainActivity : AppCompatActivity() {
 
-    private lateinit var cardManager: CardManager
+    private lateinit var tangemSdk: TangemSdk
     private lateinit var cardId: String
     private lateinit var issuerData: ByteArray
     private lateinit var issuerDataSignature: ByteArray
@@ -22,66 +20,50 @@ class Old_MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.old_activity_main)
 
-        cardManager = CardManager.init(this)
+        tangemSdk = TangemSdk.init(this)
 
         btn_scan?.setOnClickListener { _ ->
-            cardManager.scanCard { taskEvent ->
+            tangemSdk.scanCard { taskEvent ->
                 when (taskEvent) {
-                    is TaskEvent.Event -> {
-                        when (taskEvent.data) {
-                            is ScanEvent.OnReadEvent -> {
-                                // Handle returned card data
-                                cardId = (taskEvent.data as ScanEvent.OnReadEvent).card.cardId
-                                runOnUiThread {
-                                    tv_card_cid?.text = cardId
-                                    btn_create_wallet.isEnabled = true
-                                }
-                            }
-                            is ScanEvent.OnVerifyEvent -> {
-                                //Handle card verification
-                                runOnUiThread {
-                                    tv_card_cid?.text = cardId
-                                    btn_sign.isEnabled = true
-                                    btn_read_issuer_data.isEnabled = true
-                                    btn_read_issuer_extra_data.isEnabled = true
-                                    btn_write_issuer_data.isEnabled = true
-                                    btn_purge_wallet.isEnabled = true
-                                    btn_create_wallet.isEnabled = true
-                                }
-                            }
+                    is CompletionResult.Success -> {
+                        // Handle returned card data
+                        val card = taskEvent.data
+                        cardId = card.cardId
+                        runOnUiThread {
+                            tv_card_cid?.text = cardId
+                            btn_create_wallet.isEnabled = true
+                            tv_card_cid?.text = cardId
+                            btn_sign.isEnabled = true
+                            btn_read_issuer_data.isEnabled = true
+                            btn_read_issuer_extra_data.isEnabled = true
+                            btn_write_issuer_data.isEnabled = true
+                            btn_purge_wallet.isEnabled = true
+                            btn_create_wallet.isEnabled = true
+
                         }
-                    }
-                    is TaskEvent.Completion -> {
-                        if (taskEvent.error != null) {
-                            if (taskEvent.error is TaskError.UserCancelled) {
-                                // Handle case when user cancelled manually
-                            }
-                            // Handle other errors
-                        }
-                        // Handle completion
                     }
                 }
             }
         }
         btn_sign?.setOnClickListener { _ ->
-            cardManager.sign(
+            tangemSdk.sign(
                     createSampleHashes(),
                     cardId) {
                 when (it) {
-                    is TaskEvent.Completion -> {
-                        if (it.error != null) runOnUiThread { tv_card_cid?.text = it.error!!::class.simpleName }
+                    is CompletionResult.Failure -> {
+                        runOnUiThread { tv_card_cid?.text = it.error::class.simpleName }
                     }
-                    is TaskEvent.Event -> runOnUiThread { tv_card_cid?.text = cardId + "was used to sign sample hashes." }
+                    is CompletionResult.Success -> runOnUiThread { tv_card_cid?.text = cardId + "was used to sign sample hashes." }
                 }
             }
         }
         btn_read_issuer_data?.setOnClickListener { _ ->
-            cardManager.readIssuerData(cardId) {
+            tangemSdk.readIssuerData(cardId) {
                 when (it) {
-                    is TaskEvent.Completion -> {
-                        if (it.error != null) runOnUiThread { tv_card_cid?.text = it.error!!::class.simpleName }
+                    is CompletionResult.Failure -> {
+                        runOnUiThread { tv_card_cid?.text = it.error::class.simpleName }
                     }
-                    is TaskEvent.Event -> runOnUiThread {
+                    is CompletionResult.Success -> runOnUiThread {
                         btn_write_issuer_data.isEnabled = true
                         tv_card_cid?.text = it.data.issuerData.contentToString()
                         issuerData = it.data.issuerData
@@ -91,27 +73,27 @@ class Old_MainActivity : AppCompatActivity() {
             }
         }
         btn_write_issuer_data?.setOnClickListener { _ ->
-            cardManager.writeIssuerData(
+            tangemSdk.writeIssuerData(
                     cardId,
                     issuerData,
                     issuerDataSignature) {
                 when (it) {
-                    is TaskEvent.Completion -> {
-                        if (it.error != null) runOnUiThread { tv_card_cid?.text = it.error!!::class.simpleName }
+                    is CompletionResult.Failure -> {
+                        runOnUiThread { tv_card_cid?.text = it.error::class.simpleName }
                     }
-                    is TaskEvent.Event -> runOnUiThread {
+                    is CompletionResult.Success -> runOnUiThread {
                         tv_card_cid?.text = it.data.cardId
                     }
                 }
             }
         }
         btn_read_issuer_extra_data?.setOnClickListener { _ ->
-            cardManager.readIssuerExtraData(cardId) {
+            tangemSdk.readIssuerExtraData(cardId) {
                 when (it) {
-                    is TaskEvent.Completion -> {
-                        if (it.error != null) runOnUiThread { tv_card_cid?.text = it.error!!::class.simpleName }
+                    is CompletionResult.Failure -> {
+                        runOnUiThread { tv_card_cid?.text = it.error::class.simpleName }
                     }
-                    is TaskEvent.Event -> runOnUiThread {
+                    is CompletionResult.Success -> runOnUiThread {
                         issuerDataCounter = (it.data.issuerDataCounter ?: 0) + 1
                         btn_write_issuer_data.isEnabled = true
                         tv_card_cid?.text = "Read ${it.data.issuerData.size} bytes of data."
@@ -120,26 +102,26 @@ class Old_MainActivity : AppCompatActivity() {
             }
         }
         btn_purge_wallet?.setOnClickListener { _ ->
-            cardManager.purgeWallet(
+            tangemSdk.purgeWallet(
                     cardId) {
                 when (it) {
-                    is TaskEvent.Completion -> {
-                        if (it.error != null) runOnUiThread { tv_card_cid?.text = it.error!!::class.simpleName }
+                    is CompletionResult.Failure -> {
+                        runOnUiThread { tv_card_cid?.text = it.error::class.simpleName }
                     }
-                    is TaskEvent.Event -> runOnUiThread {
+                    is CompletionResult.Success -> runOnUiThread {
                         tv_card_cid?.text = it.data.status.name
                     }
                 }
             }
         }
         btn_create_wallet?.setOnClickListener { _ ->
-            cardManager.createWallet(
+            tangemSdk.createWallet(
                     cardId) {
                 when (it) {
-                    is TaskEvent.Completion -> {
-                        if (it.error != null) runOnUiThread { tv_card_cid?.text = it.error!!::class.simpleName }
+                    is CompletionResult.Failure -> {
+                        runOnUiThread { tv_card_cid?.text = it.error::class.simpleName }
                     }
-                    is TaskEvent.Event -> runOnUiThread {
+                    is CompletionResult.Success -> runOnUiThread {
                         tv_card_cid?.text = it.data.status.name
                         btn_sign.isEnabled = true
                         btn_read_issuer_data.isEnabled = true
