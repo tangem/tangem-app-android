@@ -1,16 +1,16 @@
 <component name="ProjectDictionaryState">
   <dictionary name="tangem">
     <words>
-      <w>blockchain</w>
-      <w>tangem</w>
-      <w>testnet</w>
-      <w>ethereum</w>
-      <w>cardano</w>
       <w>binance</w>
-      <w>tezos</w>
+      <w>blockchain</w>
+      <w>cardano</w>
       <w>ducatus</w>
+      <w>ethereum</w>
       <w>litecoin</w>
       <w>matic</w>
+      <w>tangem</w>
+      <w>testnet</w>
+      <w>tezos</w>
     </words>
   </dictionary>
 </component>
