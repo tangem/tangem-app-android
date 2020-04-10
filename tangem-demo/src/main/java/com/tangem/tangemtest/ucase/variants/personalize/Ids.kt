@@ -104,7 +104,8 @@ enum class SettingsMaskNdef : BlockItem {
     DynamicNdef,
     DisablePrecomputedNdef,
     Aar,
-    AarCustom
+    AarCustom,
+    Uri,
 }
 
 enum class Pins : BlockItem {
