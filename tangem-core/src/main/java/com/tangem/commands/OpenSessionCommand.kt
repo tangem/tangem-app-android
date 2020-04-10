@@ -1,13 +1,13 @@
 package com.tangem.commands
 
-import com.tangem.common.CardEnvironment
+import com.tangem.CardEnvironment
+import com.tangem.SessionError
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.tlv.TlvBuilder
-import com.tangem.common.tlv.TlvMapper
+import com.tangem.common.tlv.TlvDecoder
 import com.tangem.common.tlv.TlvTag
-import com.tangem.tasks.TaskError
 
 class OpenSessionResponse(
         val sessionKeyB: ByteArray,
@@ -20,27 +20,24 @@ class OpenSessionResponse(
  * to encrypt and decrypt commands’ payload.
 
  */
-class OpenSessionCommand(private val sessionKeyA: ByteArray) : CommandSerializer<OpenSessionResponse>() {
-    override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
+class OpenSessionCommand(private val sessionKeyA: ByteArray) : Command<OpenSessionResponse>() {
+    override fun serialize(environment: CardEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.SessionKeyA, sessionKeyA)
         return CommandApdu(
                 Instruction.OpenSession, tlvBuilder.serialize(),
-                encryptionMode = cardEnvironment.encryptionMode
+                encryptionMode = environment.encryptionMode
         )
     }
 
-    override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): OpenSessionResponse? {
-        val tlvData = responseApdu.getTlvData() ?: return null
+    override fun deserialize(environment: CardEnvironment, apdu: ResponseApdu): OpenSessionResponse {
+        val tlvData = apdu.getTlvData()
+                ?: throw SessionError.DeserializeApduFailed()
 
-        return try {
-            val mapper = TlvMapper(tlvData)
-            OpenSessionResponse(
-                    sessionKeyB = mapper.map(TlvTag.SessionKeyB),
-                    uid = mapper.map(TlvTag.Uid)
-            )
-        } catch (exception: Exception) {
-            throw TaskError.SerializeCommandError()
-        }
+        val decoder = TlvDecoder(tlvData)
+        return OpenSessionResponse(
+                sessionKeyB = decoder.decode(TlvTag.SessionKeyB),
+                uid = decoder.decode(TlvTag.Uid)
+        )
     }
 }
