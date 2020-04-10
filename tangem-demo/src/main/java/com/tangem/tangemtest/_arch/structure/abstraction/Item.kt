@@ -1,31 +1,39 @@
 package com.tangem.tangemtest._arch.structure.abstraction
 
-import com.tangem.tangemtest._arch.structure.DataHolder
 import com.tangem.tangemtest._arch.structure.Id
-import com.tangem.tangemtest._arch.structure.Payload
-import com.tangem.tangemtest._arch.structure.PayloadHolder
 
 /**
 [REDACTED_AUTHOR]
  */
-interface Item : PayloadHolder {
+interface Item {
     val id: Id
     var parent: Item?
-}
+    var viewModel: ItemViewModel
 
-abstract class BaseItem<D>(
-        override var viewModel: ItemViewModel<D>
-) : Item, DataHolder<ItemViewModel<D>> {
-    override var parent: Item? = null
-    override val payload: Payload = mutableMapOf()
+    fun added(parent: Item) {
+        this.parent = parent
+    }
 
-    fun getData(): D? = viewModel.data
+    fun removed(parent: Item) {
+        this.parent = null
+    }
 
-    fun setData(value: D?) {
+    fun <D> getData(): D? = viewModel.data as? D
+
+    fun setData(value: Any?) {
         viewModel.data = value
     }
 
-    fun restoreDefaultData(){
+    fun restoreDefaultData() {
         setData(viewModel.defaultData)
     }
+}
+
+open class BaseItem(
+        override val id: Id,
+        override var viewModel: ItemViewModel
+) : Item {
+
+    override var parent: Item? = null
+
 }
