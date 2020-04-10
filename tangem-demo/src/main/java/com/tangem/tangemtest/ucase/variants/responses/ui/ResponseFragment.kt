@@ -6,11 +6,11 @@ import android.widget.LinearLayout
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import com.google.gson.Gson
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.widget.WidgetBuilder
 import com.tangem.tangemtest._main.MainViewModel
 import com.tangem.tangemtest.extensions.shareText
+import com.tangem.tangemtest.ucase.domain.responses.ResponseJsonConverter
 import com.tangem.tangemtest.ucase.ui.BaseFragment
 import com.tangem.tangemtest.ucase.variants.responses.ResponseViewModel
 import com.tangem.tangemtest.ucase.variants.responses.ui.widget.ResponseItemBuilder
@@ -66,7 +66,9 @@ open class ResponseFragment : BaseFragment() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.action_share -> shareText(Gson().toJson(mainActivityVM.responseEvent))
+            R.id.action_share -> {
+                shareText(ResponseJsonConverter().convertEvent(mainActivityVM.responseEvent))
+            }
         }
         return super.onOptionsItemSelected(item)
     }
