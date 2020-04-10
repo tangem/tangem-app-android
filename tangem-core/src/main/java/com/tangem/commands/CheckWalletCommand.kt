@@ -1,7 +1,7 @@
 package com.tangem.commands
 
-import com.tangem.CardEnvironment
 import com.tangem.CardSession
+import com.tangem.SessionEnvironment
 import com.tangem.SessionError
 import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
@@ -70,7 +70,7 @@ class CheckWalletCommand(
         }
     }
 
-    override fun serialize(environment: CardEnvironment): CommandApdu {
+    override fun serialize(environment: SessionEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Pin, environment.pin1)
         tlvBuilder.append(TlvTag.CardId, environment.card?.cardId)
@@ -81,7 +81,7 @@ class CheckWalletCommand(
         )
     }
 
-    override fun deserialize(environment: CardEnvironment, apdu: ResponseApdu): CheckWalletResponse {
+    override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): CheckWalletResponse {
         val tlvData = apdu.getTlvData(environment.encryptionKey)
                 ?: throw SessionError.DeserializeApduFailed()
 
