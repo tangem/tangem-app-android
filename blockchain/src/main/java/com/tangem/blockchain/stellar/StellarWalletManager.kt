@@ -5,7 +5,7 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.extensions.Result
 import com.tangem.blockchain.common.extensions.SimpleResult
 import com.tangem.blockchain.wallets.CurrencyWallet
-import com.tangem.tasks.TaskEvent
+import com.tangem.common.CompletionResult
 import java.math.BigDecimal
 import java.util.*
 
@@ -58,11 +58,11 @@ class StellarWalletManager(
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
         val hashes = builder.buildToSign(transactionData, sequence, baseFee.toStroops())
         when (val signerResponse = signer.sign(hashes.toTypedArray(), cardId)) {
-            is TaskEvent.Event -> {
+            is CompletionResult.Success -> {
                 val transactionToSend = builder.buildToSend(signerResponse.data.signature)
                 return networkManager.sendTransaction(transactionToSend)
             }
-            is TaskEvent.Completion -> return SimpleResult.Failure(signerResponse.error)
+            is CompletionResult.Failure -> return SimpleResult.Failure(signerResponse.error)
         }
     }
 
