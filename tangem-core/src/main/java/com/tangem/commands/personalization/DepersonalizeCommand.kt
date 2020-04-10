@@ -1,6 +1,6 @@
 package com.tangem.commands.personalization
 
-import com.tangem.CardEnvironment
+import com.tangem.SessionEnvironment
 import com.tangem.commands.Command
 import com.tangem.commands.CommandResponse
 import com.tangem.common.apdu.CommandApdu
@@ -17,13 +17,13 @@ data class DepersonalizeResponse(val success: Boolean) : CommandResponse
  */
 class DepersonalizeCommand : Command<DepersonalizeResponse>() {
 
-    override fun serialize(environment: CardEnvironment): CommandApdu {
+    override fun serialize(environment: SessionEnvironment): CommandApdu {
         return CommandApdu(
                 Instruction.Depersonalize, byteArrayOf()
         )
     }
 
-    override fun deserialize(environment: CardEnvironment, apdu: ResponseApdu): DepersonalizeResponse {
+    override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): DepersonalizeResponse {
         return DepersonalizeResponse(true)
     }
 }
