@@ -1,19 +1,20 @@
 package com.tangem.tangemtest.ucase.variants.responses.converter
 
+import com.tangem.commands.Card
 import com.tangem.commands.SignResponse
 import com.tangem.commands.personalization.DepersonalizeResponse
+import com.tangem.common.CompletionResult
 import com.tangem.tangemtest._arch.structure.StringId
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest._arch.structure.abstraction.ModelToItems
 import com.tangem.tangemtest._arch.structure.impl.TextItem
-import com.tangem.tasks.ScanEvent
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
 /**
 [REDACTED_AUTHOR]
  */
-class ReadEventConverter : ModelToItems<ScanEvent.OnReadEvent> {
-    override fun convert(from: ScanEvent.OnReadEvent): List<Item> = CardConverter().convert(from.card)
+class ReadEventConverter : ModelToItems<CompletionResult.Success<Card>> {
+    override fun convert(from: CompletionResult.Success<Card>): List<Item> = CardConverter().convert(from.data)
 }
 
 class SignResponseConverter : ModelToItems<SignResponse> {
