@@ -3,6 +3,7 @@ package com.tangem.tangemtest.ucase.variants.personalize.ui
 import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.Observer
+import com.tangem.commands.Card
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.abstraction.Item
@@ -52,20 +53,6 @@ class PersonalizationFragment : BaseCardActionFragment() {
         })
     }
 
-    override fun subscribeToViewModelChanges() {
-        Log.d(this, "subscribeToViewModelChanges")
-        listenEvent()
-        listenError()
-        listenDescriptionSwitchChanges()
-    }
-
-    override fun listenEvent() {
-        actionVM.seResponseEvent.observe(viewLifecycleOwner, Observer {
-            mainActivityVM.changeResponseEvent(it)
-            navigateTo(R.id.action_nav_card_action_to_response_screen)
-        })
-    }
-
     override fun showSnackbar(id: Id, additionalHandler: ((Id) -> Int)?) {
         super.showSnackbar(id) {
             when (id) {
@@ -74,5 +61,10 @@ class PersonalizationFragment : BaseCardActionFragment() {
                 else -> additionalHandler?.invoke(id) ?: UNDEFINED
             }
         }
+    }
+
+    override fun responseCardDataHandled(card: Card?) {
+        super.responseCardDataHandled(card)
+        navigateTo(R.id.action_nav_card_action_to_response_screen)
     }
 }
