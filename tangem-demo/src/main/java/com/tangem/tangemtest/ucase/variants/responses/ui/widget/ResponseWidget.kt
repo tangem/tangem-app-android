@@ -22,11 +22,12 @@ abstract class ResponseWidget(parent: ViewGroup, item: Item): DescriptionWidget(
             val clipboard = view.context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
                     ?: return@setOnClickListener
 
-            val clip: ClipData = ClipData.newPlainText("FieldValue", "$data")
+            val clipboardData = "${getName()} - $data"
+            val clip: ClipData = ClipData.newPlainText("FieldValue", clipboardData)
             clipboard.setPrimaryClip(clip)
 
             val copyMessage = view.stringFrom(R.string.copy_to_clipboard)
-            view.toast("$copyMessage: ${getName()} - $data")
+            view.toast("$copyMessage\n$clipboardData")
         }
     }
 }
