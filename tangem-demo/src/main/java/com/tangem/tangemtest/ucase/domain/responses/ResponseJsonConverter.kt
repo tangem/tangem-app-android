@@ -6,6 +6,7 @@ import com.tangem.commands.Settings
 import com.tangem.commands.SettingsMask
 import com.tangem.commands.SigningMethod
 import com.tangem.common.extensions.toHexString
+import com.tangem.tasks.TaskEvent
 import java.lang.reflect.Type
 import java.text.DateFormat
 import java.util.*
@@ -13,7 +14,7 @@ import java.util.*
 /**
 [REDACTED_AUTHOR]
  */
-class GsonInitializer {
+class ResponseJsonConverter {
     val gson: Gson by lazy { init() }
 
     private fun init(): Gson {
@@ -26,6 +27,13 @@ class GsonInitializer {
         }
         builder.setPrettyPrinting()
         return builder.create()
+    }
+
+    fun convertTaskEvent(task: TaskEvent<*>?): String = gson.toJson(task)
+
+    fun convertEvent(task: TaskEvent<*>?): String {
+        val event = task as? TaskEvent.Event ?: ""
+        return gson.toJson(event)
     }
 }
 
