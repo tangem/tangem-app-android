@@ -6,24 +6,24 @@ import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.fragment.app.FragmentActivity
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.tangem.CardManagerDelegate
+import com.tangem.CardSessionViewDelegate
 import com.tangem.Log
 import com.tangem.LoggerInterface
+import com.tangem.Message
 import com.tangem.common.CompletionResult
 import com.tangem.tangem_sdk_new.extensions.hide
 import com.tangem.tangem_sdk_new.extensions.show
 import com.tangem.tangem_sdk_new.nfc.NfcReader
 import com.tangem.tangem_sdk_new.ui.NfcEnableDialog
 import com.tangem.tangem_sdk_new.ui.TouchCardAnimation
-import com.tangem.tasks.TaskError
 import kotlinx.android.synthetic.main.layout_touch_card.*
 import kotlinx.android.synthetic.main.nfc_bottom_sheet.*
 
 /**
- * Default implementation of [CardManagerDelegate].
+ * Default implementation of [CardSessionViewDelegate].
  * If no customisation is required, this is the preferred way to use Tangem SDK.
  */
-class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDelegate {
+class DefaultCardSessionViewDelegate(private val reader: NfcReader) : CardSessionViewDelegate {
 
     lateinit var activity: FragmentActivity
     private var readingDialog: BottomSheetDialog? = null
@@ -33,13 +33,13 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
         setLogger()
     }
 
-    override fun onNfcSessionStarted(cardId: String?) {
+    override fun onNfcSessionStarted(cardId: String?, message: Message?) {
         reader.readingCancelled = false
-        postUI { showReadingDialog(activity, cardId) }
+        postUI { showReadingDialog(activity, cardId, message) }
         if (!reader.nfcEnabled) showNFCEnableDialog()
     }
 
-    private fun showReadingDialog(activity: FragmentActivity, cardId: String?) {
+    private fun showReadingDialog(activity: FragmentActivity, cardId: String?, message: Message?) {
         val dialogView = activity.layoutInflater.inflate(R.layout.nfc_bottom_sheet, null)
         readingDialog = BottomSheetDialog(activity)
         readingDialog?.setContentView(dialogView)
@@ -55,6 +55,10 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
                 readingDialog?.tvCard?.visibility = View.VISIBLE
                 readingDialog?.tvCardId?.visibility = View.VISIBLE
                 readingDialog?.tvCardId?.text = cardId
+            }
+            if (message != null) {
+                if (message.body != null) readingDialog?.tvTaskText?.text = message.body
+                if (message.header != null) readingDialog?.tvTaskTitle?.text = message.header
             }
         }
         readingDialog?.setOnCancelListener {
@@ -132,25 +136,29 @@ class DefaultCardManagerDelegate(private val reader: NfcReader) : CardManagerDel
         }
     }
 
-    override fun onNfcSessionCompleted() {
+    override fun onNfcSessionCompleted(message: Message?) {
         postUI {
             readingDialog?.lTouchCard?.hide()
             readingDialog?.flSecurityDelay?.hide()
             readingDialog?.flCompletion?.show()
             readingDialog?.ivCompletion?.setImageDrawable(activity.getDrawable(R.drawable.ic_done_135dp))
+            if (message != null) {
+                if (message.body != null) readingDialog?.tvTaskText?.text = message.body
+                if (message.header != null) readingDialog?.tvTaskTitle?.text = message.header
+            }
             performHapticFeedback()
         }
         postUI(300) { readingDialog?.dismiss() }
     }
 
-    override fun onError(error: TaskError) {
+    override fun onError(errorMessage: String) {
         postUI {
             readingDialog?.lTouchCard?.hide()
             readingDialog?.flSecurityDelay?.hide()
             readingDialog?.flCompletion?.hide()
             readingDialog?.flError?.show()
             readingDialog?.tvTaskTitle?.text = activity.getText(R.string.dialog_error)
-            readingDialog?.tvTaskText?.text = "${error::class.simpleName}: ${error.code}"
+            readingDialog?.tvTaskText?.text = errorMessage
             performHapticFeedback()
         }
     }
