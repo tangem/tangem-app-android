@@ -7,7 +7,7 @@ import com.tangem.blockchain.common.extensions.SimpleResult
 import com.tangem.blockchain.wallets.CurrencyWallet
 import com.tangem.blockchain.xrp.network.XrpInfoResponse
 import com.tangem.blockchain.xrp.network.XrpNetworkManager
-import com.tangem.tasks.TaskEvent
+import com.tangem.common.CompletionResult
 
 class XrpWalletManager(
         private val cardId: String,
@@ -68,11 +68,11 @@ class XrpWalletManager(
         val transactionHash = transactionBuilder.buildToSign(transactionData)
 
         when (val signerResponse = signer.sign(arrayOf(transactionHash), cardId)) {
-            is TaskEvent.Event -> {
+            is CompletionResult.Success -> {
                 val transactionToSend = transactionBuilder.buildToSend(signerResponse.data.signature)
                 return networkManager.sendTransaction(transactionToSend)
             }
-            is TaskEvent.Completion -> return SimpleResult.Failure(signerResponse.error)
+            is CompletionResult.Failure -> return SimpleResult.Failure(signerResponse.error)
         }
     }
 
