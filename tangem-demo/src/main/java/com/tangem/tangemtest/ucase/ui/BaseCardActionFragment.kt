@@ -9,7 +9,8 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.tangem.CardManager
+import com.tangem.TangemSdk
+import com.tangem.commands.Card
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
@@ -43,7 +44,7 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
 
         bindViews()
         viewLifecycleOwner.lifecycle.addObserver(actionVM)
-        actionVM.setCardManager(CardManager.init(requireActivity()))
+        actionVM.setCardManager(TangemSdk.init(requireActivity()))
         actionVM.attachToPayload(mutableMapOf(PayloadKey.actionView to this as ActionView))
 
         initFab()
@@ -80,27 +81,36 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
 
     protected open fun subscribeToViewModelChanges() {
         Log.d(this, "subscribeToViewModelChanges")
-        listenEvent()
-        listenReadResponse()
         listenResponse()
+        listenResponseData()
+        listenResponseCardData()
         listenError()
         listenChangedItems()
         listenDescriptionSwitchChanges()
     }
 
-    protected open fun listenEvent() {
-        actionVM.seResponseEvent.observe(viewLifecycleOwner, Observer {
+    private fun listenResponse() {
+        actionVM.seResponse.observe(viewLifecycleOwner, Observer {
+            Log.d(this, "listen response: $it")
             mainActivityVM.changeResponseEvent(it)
         })
     }
 
-    protected open fun listenReadResponse() {}
-
-    protected open fun listenResponse() {
-        actionVM.seResponse.observe(viewLifecycleOwner, Observer {
+    protected open fun listenResponseData() {
+        actionVM.seResponseData.observe(viewLifecycleOwner, Observer {
+            Log.d(this, "listen responseData: $it")
             navigateTo(R.id.action_nav_card_action_to_response_screen)
         })
     }
+
+    protected open fun listenResponseCardData() {
+        actionVM.seResponseCardData.observe(viewLifecycleOwner, Observer {
+            Log.d(this, "listen responseCardData: $it")
+            responseCardDataHandled(it)
+        })
+    }
+
+    protected open fun responseCardDataHandled(card: Card?) {}
 
     protected open fun listenError() {
         actionVM.seError.observe(viewLifecycleOwner, Observer { showSnackbar(it) })
