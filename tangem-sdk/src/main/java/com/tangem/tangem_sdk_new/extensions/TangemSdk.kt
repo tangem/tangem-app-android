@@ -2,7 +2,7 @@ package com.tangem.tangem_sdk_new.extensions
 
 import androidx.fragment.app.FragmentActivity
 import com.tangem.TangemSdk
-import com.tangem.tangem_sdk_new.DefaultCardSessionViewDelegate
+import com.tangem.tangem_sdk_new.DefaultSessionViewDelegate
 import com.tangem.tangem_sdk_new.NfcLifecycleObserver
 import com.tangem.tangem_sdk_new.TerminalKeysStorage
 import com.tangem.tangem_sdk_new.nfc.NfcManager
@@ -12,7 +12,7 @@ fun TangemSdk.Companion.init(activity: FragmentActivity): TangemSdk {
         this.setCurrentActivity(activity)
         activity.lifecycle.addObserver(NfcLifecycleObserver(this))
     }
-    val viewDelegate = DefaultCardSessionViewDelegate(nfcManager.reader).apply {
+    val viewDelegate = DefaultSessionViewDelegate(nfcManager.reader).apply {
         this.activity = activity
     }
     return TangemSdk(nfcManager.reader, viewDelegate).apply {
