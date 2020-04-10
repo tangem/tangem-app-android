@@ -1,6 +1,6 @@
 package com.tangem.commands
 
-import com.tangem.CardEnvironment
+import com.tangem.SessionEnvironment
 import com.tangem.SessionError
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
@@ -382,10 +382,10 @@ class Card(
  */
 class ReadCommand : Command<Card>() {
 
-    override fun serialize(environment: CardEnvironment): CommandApdu {
+    override fun serialize(environment: SessionEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
         /**
-         *  [CardEnvironment] stores the pin1 value. If no pin1 value was set, it will contain
+         *  [SessionEnvironment] stores the pin1 value. If no pin1 value was set, it will contain
          *  default value of ‘000000’.
          *  In order to obtain card’s data, [ReadCommand] should use the correct pin 1 value.
          *  The card will not respond if wrong pin 1 has been submitted.
@@ -398,7 +398,7 @@ class ReadCommand : Command<Card>() {
         )
     }
 
-    override fun deserialize(environment: CardEnvironment, apdu: ResponseApdu): Card {
+    override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): Card {
         val tlvData = apdu.getTlvData(environment.encryptionKey)
                 ?: throw SessionError.DeserializeApduFailed()
 
