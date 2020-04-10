@@ -12,14 +12,14 @@ import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 [REDACTED_AUTHOR]
  */
 open class MultiActionView<V : TextView>(
-        stateList: MutableList<ButtonState>,
+        stateActionList: MutableList<ViewAction>,
         val child: V
 ) {
 
     interface State {
         val id: Id
 
-        fun getAction(): StateButtonAction
+        fun getAction(): SimpleFunction
         fun getResNameId(): Int
     }
 
@@ -53,7 +53,7 @@ open class MultiActionView<V : TextView>(
             child.setText(value.getResNameId())
         }
 
-    protected val stateHolder: MutableMap<String, State> = stateList.associateBy { getKey(it.id) }.toMutableMap()
+    protected val stateHolder: MutableMap<String, State> = stateActionList.associateBy { getKey(it.id) }.toMutableMap()
 
     fun performAction(id: Id) {
         Log.d(this, "performAction ${getKey(id)}")
@@ -71,15 +71,15 @@ open class MultiActionView<V : TextView>(
 
 enum class DefaultId : Id { default }
 
-typealias StateButtonAction = () -> Unit
+typealias SimpleFunction = () -> Unit
 
-class ButtonState(
+class ViewAction(
         override val id: Id,
         @StringRes val name: Int,
-        private val action: StateButtonAction
+        private val action: SimpleFunction
 ) : MultiActionView.State {
 
-    override fun getAction(): StateButtonAction = action
+    override fun getAction(): SimpleFunction = action
 
     override fun getResNameId(): Int = name
 }
