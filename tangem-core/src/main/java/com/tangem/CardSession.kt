@@ -7,7 +7,6 @@ import com.tangem.commands.ReadCommand
 import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.ResponseApdu
-import com.tangem.common.extensions.calculateSha256
 import com.tangem.crypto.EncryptionHelper
 import com.tangem.crypto.FastEncryptionHelper
 import com.tangem.crypto.StrongEncryptionHelper
@@ -41,9 +40,9 @@ interface CardSessionRunnable<T : CommandResponse> {
  * If null, a default header and text body will be used.
  */
 class CardSession(
-        val environment: CardEnvironment,
-        val reader: CardReader,
-        val viewDelegate: CardSessionViewDelegate,
+        val environment: SessionEnvironment,
+        private val reader: CardReader,
+        val viewDelegate: SessionViewDelegate,
         private var cardId: String? = null,
         private val initialMessage: Message? = null
 ) {
@@ -208,7 +207,7 @@ class CardSession(
             when (result) {
                 is CompletionResult.Success -> {
                     val uid = result.data.uid
-                    val protocolKey = environment.pin1.calculateSha256().pbkdf2Hash(uid, 50)
+                    val protocolKey = environment.pin1.pbkdf2Hash(uid, 50)
                     val secret = encryptionHelper.generateSecret(result.data.sessionKeyB)
                     val sessionKey = (secret + protocolKey).calculateSha256()
                     environment.encryptionKey = sessionKey
