@@ -13,7 +13,7 @@ import androidx.lifecycle.Observer
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
-import com.tangem.CardManager
+import com.tangem.TangemSdk
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
@@ -56,7 +56,7 @@ abstract class BaseCardActionFragment : Fragment(), LayoutHolder, ActionView {
         Log.d(this, "onViewCreated")
 
         viewLifecycleOwner.lifecycle.addObserver(paramsVM)
-        paramsVM.setCardManager(CardManager.init(requireActivity()))
+        paramsVM.setCardManager(TangemSdk.init(requireActivity()))
         paramsVM.attachToPayload(mutableMapOf(PayloadKey.actionView to this as ActionView))
         initFab()
         showActionFab(false)
