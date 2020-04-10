@@ -3,8 +3,11 @@ package com.tangem.tangemtest.ucase.ui
 import androidx.annotation.UiThread
 import androidx.lifecycle.*
 import com.google.gson.Gson
-import com.tangem.CardManager
+import com.tangem.SessionError
+import com.tangem.TangemSdk
 import com.tangem.commands.Card
+import com.tangem.commands.CommandResponse
+import com.tangem.common.CompletionResult
 import com.tangem.tangemtest._arch.SingleLiveEvent
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.Payload
@@ -13,9 +16,6 @@ import com.tangem.tangemtest.commons.performAction
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.responses.GsonInitializer
 import com.tangem.tangemtest.ucase.tunnel.ViewScreen
-import com.tangem.tasks.ScanEvent
-import com.tangem.tasks.TaskError
-import com.tangem.tasks.TaskEvent
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 
 /**
@@ -37,10 +37,10 @@ class ParamsViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
     val seChangedItems: MutableLiveData<List<Item>> = SingleLiveEvent()
 
     private val notifier: Notifier = Notifier(this)
-    private lateinit var cardManager: CardManager
+    private lateinit var tangemSdk: TangemSdk
 
-    fun setCardManager(cardManager: CardManager) {
-        this.cardManager = cardManager
+    fun setCardManager(tangemSdk: TangemSdk) {
+        this.tangemSdk = tangemSdk
     }
 
     fun userChangedItem(id: Id, value: Any?) {
@@ -53,7 +53,7 @@ class ParamsViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
 
     //invokes Scan, Sign etc...
     fun invokeMainAction() {
-        performAction(itemsManager, cardManager) { paramsManager, cardManager ->
+        performAction(itemsManager, tangemSdk) { paramsManager, cardManager ->
             paramsManager.invokeMainAction(cardManager) { response, listOfChangedParams ->
                 notifier.handleActionResult(response, listOfChangedParams)
             }
@@ -61,7 +61,7 @@ class ParamsViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
     }
 
     fun getItemAction(id: Id): (() -> Unit)? {
-        val itemFunction = itemsManager.getActionByTag(id, cardManager) ?: return null
+        val itemFunction = itemsManager.getActionByTag(id, tangemSdk) ?: return null
 
         return {
             itemFunction { response, listOfChangedParams ->
@@ -84,10 +84,10 @@ class ParamsViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
 
 internal class Notifier(private val vm: ParamsViewModel) {
 
-    private var notShowedError: TaskError? = null
+    private var notShowedError: SessionError? = null
     private val gson: Gson = GsonInitializer().gson
 
-    fun handleActionResult(response: TaskEvent<*>, list: List<Item>) {
+    fun handleActionResult(response: CompletionResult<*>, list: List<Item>) {
         if (list.isNotEmpty()) notifyItemsChanged(list)
         handleResponse(response)
     }
@@ -97,48 +97,37 @@ internal class Notifier(private val vm: ParamsViewModel) {
         vm.seChangedItems.postValue(list)
     }
 
-    fun handleResponse(response: TaskEvent<*>) {
-        val taskEvent = response as? TaskEvent<*> ?: return
+    fun handleResponse(response: CompletionResult<*>) {
+        val commandResponse = response as? CompletionResult<CommandResponse> ?: return
 
-        when (taskEvent) {
-            is TaskEvent.Completion -> handleCompletionEvent(taskEvent)
-            is TaskEvent.Event -> handleDataEvent(taskEvent.data)
+        when (commandResponse) {
+            is CompletionResult.Failure -> handleError(commandResponse.error)
+            is CompletionResult.Success -> handleDataEvent(commandResponse.data)
         }
     }
 
-    private fun handleDataEvent(event: Any?) {
-        when (event) {
-            is ScanEvent.OnReadEvent -> {
-                vm.ldCard.postValue(event.card)
-                vm.ldReadResponse.postValue(gson.toJson(event))
+    private fun handleDataEvent(data: CommandResponse?) {
+        when (data) {
+            is Card -> {
+                vm.ldCard.postValue(data)
+                vm.ldReadResponse.postValue(gson.toJson(data))
             }
-            is ScanEvent.OnVerifyEvent -> {
-                vm.ldIsVerified.postValue(true)
-            }
-            else -> vm.ldResponse.postValue(gson.toJson(event))
+            else -> vm.ldResponse.postValue(gson.toJson(data))
         }
     }
 
-    private fun handleCompletionEvent(taskEvent: TaskEvent.Completion<*>) {
-        if (taskEvent.error == null) {
-            Log.d(this, "error = null")
-            if (notShowedError != null) {
-                vm.seError.postValue("${notShowedError!!::class.simpleName}")
-                notShowedError = null
-            }
-        } else {
-            Log.d(this, "error = ${taskEvent.error}")
-            when (taskEvent.error) {
-                is TaskError.UserCancelled -> {
-                    if (notShowedError == null) {
-                        vm.seError.postValue("User canceled the action")
-                    } else {
-                        vm.seError.postValue("${notShowedError!!::class.simpleName}")
-                        notShowedError = null
-                    }
+    private fun handleError(error: SessionError) {
+        Log.d(this, "error = ${error}")
+        when (error) {
+            is SessionError.UserCancelled -> {
+                if (notShowedError == null) {
+                    vm.seError.postValue("User canceled the action")
+                } else {
+                    vm.seError.postValue("${notShowedError!!::class.simpleName}")
+                    notShowedError = null
                 }
-                else -> notShowedError = taskEvent.error
             }
+            else -> notShowedError = error
         }
     }
 }
