@@ -1,6 +1,6 @@
 package com.tangem.common.apdu
 
-import com.tangem.common.EncryptionMode
+import com.tangem.EncryptionMode
 import com.tangem.common.extensions.calculateCrc16
 import com.tangem.common.extensions.toByteArray
 import com.tangem.crypto.encrypt
