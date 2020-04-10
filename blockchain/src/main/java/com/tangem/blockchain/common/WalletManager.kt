@@ -4,7 +4,7 @@ import com.tangem.blockchain.common.extensions.Result
 import com.tangem.blockchain.common.extensions.SimpleResult
 import com.tangem.blockchain.wallets.CurrencyWallet
 import com.tangem.commands.SignResponse
-import com.tangem.tasks.TaskEvent
+import com.tangem.common.CompletionResult
 
 interface WalletManager {
     var wallet: CurrencyWallet
@@ -18,7 +18,7 @@ interface TransactionSender {
 }
 
 interface TransactionSigner {
-    suspend fun sign(hashes: Array<ByteArray>, cardId: String): TaskEvent<SignResponse>
+    suspend fun sign(hashes: Array<ByteArray>, cardId: String): CompletionResult<SignResponse>
 }
 
 interface FeeProvider {
