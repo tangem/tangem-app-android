@@ -210,6 +210,7 @@
     <string name="confirm_transaction_error_cannot_calculate_fee">Cannot calculate fee! Wrong data received from the node</string>
     <string name="confirm_transaction_error_incoming_transaction_unconfirmed">Please wait for confirmation of incoming transaction</string>
     <string name="confirm_transaction_error_not_enough_eth_for_fee">Not enough ETH funds for fee</string>
+    <string name="confirm_transaction_error_not_enough_xlm_for_fee">Not enough XLM funds for fee</string>
     <string name="confirm_transaction_error_not_enough_rbtc_for_fee">Not enough RBTC funds for fee</string>
     <string name="confirm_transaction_error_not_enough_xlm_for_create">Target account is not created! Send 1+ XLM to create it</string>
     <string name="confirm_transaction_error_pin_2_is_required">PIN2 is required to sign the payment</string>

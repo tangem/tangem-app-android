@@ -8,7 +8,14 @@
     <color name="edit_text_underline">#E6959595</color>
 
     <color name="action_name">#2B2B2B</color>
-    <color name="field_description">#888888</color>
+
+    <color name="field_info">#888888</color>
+    <color name="field_content">#303030</color>
+    <color name="field_description">@color/field_info</color>
+
+    <color name="group_card_data">#D7E4F3</color>
+    <color name="group_signing_method">#D7F3E6</color>
+
 
     <color name="switchTrack">#C6C6C6</color>
     <color name="switchTrackActive">#FFE391</color>
