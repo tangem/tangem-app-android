@@ -1,6 +1,6 @@
 package com.tangem.commands
 
-import com.tangem.CardEnvironment
+import com.tangem.SessionEnvironment
 import com.tangem.SessionError
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
@@ -35,7 +35,7 @@ class SignCommand(private val hashes: Array<ByteArray>)
 
     private val hashSizes = if (hashes.isNotEmpty()) hashes.first().size else 0
 
-    override fun serialize(environment: CardEnvironment): CommandApdu {
+    override fun serialize(environment: SessionEnvironment): CommandApdu {
         val dataToSign = flattenHashes()
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Pin, environment.pin1)
@@ -71,7 +71,7 @@ class SignCommand(private val hashes: Array<ByteArray>)
      * (this key should be generated and securily stored by the application).
      */
     private fun addTerminalSignature(
-            environment: CardEnvironment, dataToSign: ByteArray, tlvBuilder: TlvBuilder) {
+            environment: SessionEnvironment, dataToSign: ByteArray, tlvBuilder: TlvBuilder) {
         environment.terminalKeys?.let { terminalKeyPair ->
             val signedData = dataToSign.sign(terminalKeyPair.privateKey)
             tlvBuilder.append(TlvTag.TerminalTransactionSignature, signedData)
@@ -79,7 +79,7 @@ class SignCommand(private val hashes: Array<ByteArray>)
         }
     }
 
-    override fun deserialize(environment: CardEnvironment, apdu: ResponseApdu): SignResponse {
+    override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): SignResponse {
         val tlvData = apdu.getTlvData(environment.encryptionKey)
                 ?: throw SessionError.DeserializeApduFailed()
 
