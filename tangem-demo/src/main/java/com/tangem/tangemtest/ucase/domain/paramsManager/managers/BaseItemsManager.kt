@@ -1,6 +1,6 @@
 package com.tangem.tangemtest.ucase.domain.paramsManager.managers
 
-import com.tangem.CardManager
+import com.tangem.TangemSdk
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.Payload
 import com.tangem.tangemtest._arch.structure.abstraction.Item
@@ -33,7 +33,7 @@ abstract class BaseItemsManager(protected val action: Action) : ItemsManager {
 
     override fun getItems(): MutableList<Item> = itemList.toMutableList()
 
-    override fun getActionByTag(id: Id, cardManager: CardManager): ((ActionCallback) -> Unit)? = null
+    override fun getActionByTag(id: Id, tangemSdk: TangemSdk): ((ActionCallback) -> Unit)? = null
 
     override fun attachPayload(payload: Payload) {
         payload.forEach { this.payload[it.key] = it.value }
@@ -44,8 +44,8 @@ abstract class BaseItemsManager(protected val action: Action) : ItemsManager {
         consequence?.affectChanges(this, param, itemList)?.let { callback?.invoke(it) }
     }
 
-    protected fun getAttrsForAction(cardManager: CardManager)
-            : AttrForAction = AttrForAction(cardManager, itemList, payload, consequence)
+    protected fun getAttrsForAction(tangemSdk: TangemSdk)
+            : AttrForAction = AttrForAction(tangemSdk, itemList, payload, consequence)
 
     abstract fun createItemsList(): List<Item>
 }
