@@ -2,7 +2,7 @@ package com.tangem.tangemtest._main
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.tangem.tasks.TaskEvent
+import com.tangem.commands.CommandResponse
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 
 /**
@@ -11,16 +11,16 @@ import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 class MainViewModel : ViewModel() {
     val ldDescriptionSwitch = MutableLiveData<Boolean>(false)
 
-    var responseEvent: TaskEvent<*>? = null
+    var commandResponse: CommandResponse? = null
 
     fun switchToggled(state: Boolean) {
         ldDescriptionSwitch.postValue(state)
     }
 
-    fun changeResponseEvent(event: TaskEvent<*>?) {
+    fun changeResponseEvent(commandResponse: CommandResponse?) {
         Log.d(this, "changeResponseEvent")
-        val reqEvent = event ?: return
+        val response = commandResponse ?: return
 
-        responseEvent = reqEvent
+        this.commandResponse = response
     }
 }
