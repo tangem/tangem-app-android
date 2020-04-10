@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/def_indent"
+        android:paddingTop="14dp"
+        android:paddingEnd="@dimen/def_indent"
+        android:paddingBottom="14dp">
+
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/sw_item"
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:layout_marginEnd="2dp"
+            android:button="@null"
+            android:drawableEnd="?android:attr/listChoiceIndicatorMultiple"
+            android:textColor="@color/field_content"
+            android:textSize="@dimen/iw_text_size"
+            tools:text="Some text field" />
+
+        <include
+            layout="@layout/w_field_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+    <include
+        layout="@layout/m_divider_h"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_gravity="bottom" />
+
+</FrameLayout>
