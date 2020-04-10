@@ -1,15 +1,16 @@
 package com.tangem.tangemtest.ucase.tunnel
 
+import com.google.android.material.snackbar.Snackbar
 import com.tangem.tangemtest._arch.structure.Id
+
+interface SnackbarHolder {
+    fun showSnackbar(message: String, length: Int = Snackbar.LENGTH_SHORT)
+    fun showSnackbar(id: Int, length: Int = Snackbar.LENGTH_SHORT)
+}
 
 interface ViewScreen
 
-interface SnackbarHolder {
-    fun showSnackbar(message: String)
-    fun showSnackbar(id: Int)
-    fun showSnackbar(id: Id)
-}
-
 interface ActionView : ViewScreen, SnackbarHolder {
-    fun showActionFab(show: Boolean)
+    fun enableActionFab(enable: Boolean)
+    fun showSnackbar(id: Id, additionalHandler: ((Id) -> Int)? = null)
 }
