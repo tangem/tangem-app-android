@@ -1,6 +1,6 @@
 package com.tangem.tangemtest.ucase.domain.paramsManager.managers
 
-import com.tangem.CardManager
+import com.tangem.TangemSdk
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest._arch.structure.impl.EditTextItem
@@ -24,11 +24,11 @@ class SignItemsManager : BaseItemsManager(SignAction()) {
         )
     }
 
-    override fun invokeMainAction(cardManager: CardManager, callback: ActionCallback) {
-        action.executeMainAction(this, getAttrsForAction(cardManager), callback)
+    override fun invokeMainAction(tangemSdk: TangemSdk, callback: ActionCallback) {
+        action.executeMainAction(this, getAttrsForAction(tangemSdk), callback)
     }
 
-    override fun getActionByTag(id: Id, cardManager: CardManager): ((ActionCallback) -> Unit)? {
-        return action.getActionByTag(this, id, getAttrsForAction(cardManager))
+    override fun getActionByTag(id: Id, tangemSdk: TangemSdk): ((ActionCallback) -> Unit)? {
+        return action.getActionByTag(this, id, getAttrsForAction(tangemSdk))
     }
 }
