@@ -12,7 +12,7 @@ import androidx.lifecycle.Observer
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
-import com.tangem.CardManager
+import com.tangem.TangemSdk
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
@@ -70,7 +70,7 @@ class PersonalizeFragment : Fragment(), ActionView {
             personalizeVM.toggleDescriptionVisibility(it)
         })
 
-        val cardManager = CardManager.init(requireActivity())
+        val cardManager = TangemSdk.init(requireActivity())
         paramsVM.setCardManager(cardManager)
         paramsVM.ldResponse.observe(viewLifecycleOwner, Observer {
             Log.d(this, "action response: ${if (it.length > 50) it.substring(0..50) else it}")
