@@ -4,24 +4,23 @@ import android.os.Bundle
 import android.text.Editable
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.tangem.CardManager
+import com.tangem.SessionError
+import com.tangem.TangemSdk
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.extensions.Result
 import com.tangem.blockchain.common.extensions.Signer
 import com.tangem.blockchain.common.extensions.SimpleResult
 import com.tangem.blockchain_demo.databinding.ActivityBlockchainDemoBinding
 import com.tangem.commands.Card
+import com.tangem.common.CompletionResult
 import com.tangem.tangem_sdk_new.extensions.init
-import com.tangem.tasks.ScanEvent
-import com.tangem.tasks.TaskError
-import com.tangem.tasks.TaskEvent
 import kotlinx.coroutines.*
 import java.math.BigDecimal
 import kotlin.coroutines.CoroutineContext
 
 class BlockchainDemoActivity : AppCompatActivity() {
 
-    private lateinit var cardManager: CardManager
+    private lateinit var tangemSdk: TangemSdk
     private lateinit var signer: TransactionSigner
     private lateinit var card: Card
     private lateinit var walletManager: WalletManager
@@ -47,8 +46,8 @@ class BlockchainDemoActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
-        cardManager = CardManager.init(this)
-        signer = Signer(cardManager)
+        tangemSdk = TangemSdk.init(this)
+        signer = Signer(tangemSdk)
 
         binding.btnScan.setOnClickListener { scan() }
 
@@ -59,27 +58,20 @@ class BlockchainDemoActivity : AppCompatActivity() {
 
 
     private fun scan() {
-        cardManager.scanCard { taskEvent ->
-            when (taskEvent) {
-                is TaskEvent.Event -> {
-                    when (taskEvent.data) {
-                        is ScanEvent.OnReadEvent -> {
-                            card = (taskEvent.data as ScanEvent.OnReadEvent).card
-                            walletManager = WalletManagerFactory.makeWalletManager(card)!!
+        tangemSdk.scanCard { result ->
+            when (result) {
+                is CompletionResult.Success -> {
+                            walletManager = WalletManagerFactory.makeWalletManager(result.data)!!
                             getInfo()
                         }
-                    }
-                }
-                is TaskEvent.Completion -> {
-                    if (taskEvent.error != null) {
-                        if (taskEvent.error !is TaskError.UserCancelled) {
-                            handleError(taskEvent.error.toString())
+                is CompletionResult.Failure -> {
+                        if (result.error !is SessionError.UserCancelled) {
+                            handleError(result.error.toString())
                         }
                     }
                 }
             }
         }
-    }
 
     private fun getInfo() {
         scope.launch {
