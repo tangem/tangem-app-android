@@ -1,13 +1,13 @@
 package com.tangem.commands
 
-import com.tangem.common.CardEnvironment
+import com.tangem.SessionEnvironment
+import com.tangem.SessionError
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.tlv.TlvBuilder
-import com.tangem.common.tlv.TlvMapper
+import com.tangem.common.tlv.TlvDecoder
 import com.tangem.common.tlv.TlvTag
-import com.tangem.tasks.TaskError
 
 class PurgeWalletResponse(
         /**
@@ -27,29 +27,26 @@ class PurgeWalletResponse(
  * ‘Purged’ state is final, it makes the card useless.
  * @property cardId CID, Unique Tangem card ID number.
  */
-class PurgeWalletCommand : CommandSerializer<PurgeWalletResponse>() {
+class PurgeWalletCommand : Command<PurgeWalletResponse>() {
 
-    override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
+    override fun serialize(environment: SessionEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
-        tlvBuilder.append(TlvTag.Pin, cardEnvironment.pin1)
-        tlvBuilder.append(TlvTag.CardId, cardEnvironment.cardId)
-        tlvBuilder.append(TlvTag.Pin2, cardEnvironment.pin2)
+        tlvBuilder.append(TlvTag.Pin, environment.pin1)
+        tlvBuilder.append(TlvTag.CardId, environment.card?.cardId)
+        tlvBuilder.append(TlvTag.Pin2, environment.pin2)
         return CommandApdu(
                 Instruction.PurgeWallet, tlvBuilder.serialize(),
-                cardEnvironment.encryptionMode, cardEnvironment.encryptionKey
+                environment.encryptionMode, environment.encryptionKey
         )
     }
 
-    override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): PurgeWalletResponse? {
-        val tlvData = responseApdu.getTlvData(cardEnvironment.encryptionKey) ?: return null
+    override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): PurgeWalletResponse {
+        val tlvData = apdu.getTlvData(environment.encryptionKey)
+                ?: throw SessionError.DeserializeApduFailed()
 
-        return try {
-            val mapper = TlvMapper(tlvData)
-            PurgeWalletResponse(
-                    cardId = mapper.map(TlvTag.CardId),
-                    status = mapper.map(TlvTag.Status))
-        } catch (exception: Exception) {
-            throw TaskError.SerializeCommandError()
-        }
+        val decoder = TlvDecoder(tlvData)
+        return PurgeWalletResponse(
+                cardId = decoder.decode(TlvTag.CardId),
+                status = decoder.decode(TlvTag.Status))
     }
 }
