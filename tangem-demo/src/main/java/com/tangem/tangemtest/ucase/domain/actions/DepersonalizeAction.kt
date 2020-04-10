@@ -14,7 +14,7 @@ class DepersonalizeAction : BaseAction() {
         val item = attrs.itemList.findDataItem(TlvId.CardId) ?: return
         val cardId = item.viewModel.data as? String ?: return
 
-        attrs.cardManager.depersonalize(cardId) { handleResult(payload, it, null, attrs, callback) }
+        attrs.tangemSdk.depersonalize(cardId) { handleResult(payload, it, null, attrs, callback) }
     }
 
     override fun getActionByTag(payload: PayloadHolder, id: Id, attrs: AttrForAction): ((ActionCallback) -> Unit)? {
