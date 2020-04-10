@@ -1,8 +1,6 @@
 package com.tangem.tangemtest.ucase.variants.scan.ui
 
-import android.os.Bundle
-import android.view.View
-import androidx.lifecycle.Observer
+import com.tangem.commands.Card
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.paramsManager.managers.ScanItemsManager
@@ -17,14 +15,12 @@ class ScanActionFragment : BaseCardActionFragment() {
 
     override fun getLayoutId(): Int = R.layout.fg_action_card_scan
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        enableActionFab(true)
+    override fun initFab() {
+        actionFab.setOnClickListener { actionVM.invokeMainAction() }
     }
 
-    override fun listenReadResponse() {
-        actionVM.seReadResponse.observe(viewLifecycleOwner, Observer {
-            navigateTo(R.id.action_nav_card_action_to_response_screen)
-        })
+    override fun responseCardDataHandled(card: Card?) {
+        super.responseCardDataHandled(card)
+        navigateTo(R.id.action_nav_card_action_to_response_screen)
     }
 }
