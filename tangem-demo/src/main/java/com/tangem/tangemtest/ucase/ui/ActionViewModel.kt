@@ -14,7 +14,6 @@ import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.Payload
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest._arch.structure.abstraction.iterate
-import com.tangem.tangemtest.commons.performAction
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.responses.ResponseJsonConverter
 import com.tangem.tangemtest.ucase.tunnel.ViewScreen
@@ -29,9 +28,9 @@ class ActionViewModelFactory(private val manager: ItemsManager) : ViewModelProvi
 
 class ActionViewModel(private val itemsManager: ItemsManager) : ViewModel(), LifecycleObserver {
 
-    val seResponseEvent = SingleLiveEvent<TaskEvent<*>>()
-    val seReadResponse = SingleLiveEvent<String>()
-    val seResponse = SingleLiveEvent<String>()
+    val seResponse = SingleLiveEvent<CommandResponse>()
+    val seResponseData = SingleLiveEvent<CommandResponse>()
+    val seResponseCardData = SingleLiveEvent<Card>()
 
     val ldItemList = MutableLiveData(itemsManager.getItems())
     val seError: MutableLiveData<String> = SingleLiveEvent()
@@ -55,11 +54,13 @@ class ActionViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
 
     //invokes Scan, Sign etc...
     fun invokeMainAction() {
-        performAction(itemsManager, tangemSdk) { paramsManager, tangemSdk ->
-            paramsManager.invokeMainAction(tangemSdk) { response, listOfChangedParams ->
-                notifier.handleActionResult(response, listOfChangedParams)
-            }
-        })
+        if (!::tangemSdk.isInitialized) {
+            Log.e(this, "TangemSdk isn't initialized")
+            return
+        }
+        itemsManager.invokeMainAction(tangemSdk) { response, listOfChangedParams ->
+            notifier.handleActionResult(response, listOfChangedParams)
+        }
     }
 
     fun getItemAction(id: Id): (() -> Unit)? {
@@ -95,9 +96,9 @@ internal class Notifier(private val vm: ActionViewModel) {
     private var notShowedError: SessionError? = null
     private val gson: Gson = ResponseJsonConverter().gson
 
-    fun handleActionResult(response: CompletionResult<*>, list: List<Item>) {
+    fun handleActionResult(result: CompletionResult<*>, list: List<Item>) {
         if (list.isNotEmpty()) notifyItemsChanged(list)
-        handleResponse(response)
+        handleCompletionResult(result)
     }
 
     @UiThread
@@ -105,30 +106,25 @@ internal class Notifier(private val vm: ActionViewModel) {
         vm.seChangedItems.postValue(list)
     }
 
-    fun handleResponse(response: CompletionResult<*>) {
-        val commandResponse = response as? CompletionResult<CommandResponse> ?: return
+    fun handleCompletionResult(result: CompletionResult<*>) {
+        val commandResponse = result as? CompletionResult<CommandResponse> ?: return
 
         when (commandResponse) {
+            is CompletionResult.Success -> handleData(commandResponse.data)
             is CompletionResult.Failure -> handleError(commandResponse.error)
-            is CompletionResult.Success -> {
-                handleDataEvent(commandResponse.data)
-                vm.seResponseEvent.postValue(commandResponse)
-            }
         }
     }
 
-    private fun handleDataEvent(data: CommandResponse?) {
-        when (data) {
-            is Card -> {
-                vm.ldCard.postValue(data)
-                vm.seReadResponse.postValue(gson.toJson(data))
-            }
-            else -> vm.seResponse.postValue(gson.toJson(data))
+    private fun handleData(event: CommandResponse?) {
+        vm.seResponse.postValue(event)
+        when (event) {
+            is Card -> vm.seResponseCardData.postValue(event)
+            else -> vm.seResponseData.postValue(event)
         }
     }
 
     private fun handleError(error: SessionError) {
-        Log.d(this, "error = ${error}")
+        Log.d(this, "error = $error")
         when (error) {
             is SessionError.UserCancelled -> {
                 if (notShowedError == null) {
