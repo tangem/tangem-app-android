@@ -47,10 +47,11 @@ class LocalStorage
             artworks = HashMap()
         }
 
-        if (artworks.count() < 43) {
+        if (artworks.count() < 44) {
 //          forceSave=true only on the last one
             putResourceArtworkToCatalog(R.drawable.card_default, false)
             putResourceArtworkToCatalog(R.drawable.card_default_nft, false)
+            putResourceArtworkToCatalog(R.drawable.card_id_issuer, false)
             putResourceArtworkToCatalog(R.drawable.card_ru006, false)
             putResourceArtworkToCatalog(R.drawable.card_ru007, false)
             putResourceArtworkToCatalog(R.drawable.card_ru011, false)
@@ -229,7 +230,7 @@ class LocalStorage
     fun getCardArtworkBitmap(card: TangemCard): Bitmap {
         // special cases (first series of cards, hardcode CID->artwork), on new series batch<->artwork
 
-        if (card.isIDIssuer) {
+        if (card.isIDIssuer || isIdSergio(card)) {
             val artworkId = context.resources.getResourceEntryName(R.drawable.card_id_issuer)
             return getArtworkBitmap(artworkId) ?: return getDefaultArtworkBitmap(card)
         }
@@ -374,4 +375,10 @@ class LocalStorage
 
         }
     }
+}
+
+fun LocalStorage.isIdSergio(card: TangemCard): Boolean {
+    val key = card.walletPublicKey ?: return false
+    val hexString = Util.bytesToHex(key)
+    return hexString == "04EAD74FEEE4061044F46B19EB654CEEE981E9318F0C8FE99AF5CDB9D779D2E52BB51EA2D14545E0B323F7A90CF4CC72753C973149009C10DB2D83DCEC28487729"
 }
