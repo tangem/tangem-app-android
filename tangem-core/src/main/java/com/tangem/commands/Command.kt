@@ -38,6 +38,7 @@ abstract class Command<T : CommandResponse> : CardSessionRunnable<T> {
     abstract fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): T
 
     override fun run(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
+        Log.i("Command", "Sending ${this::class.java.simpleName}")
         transceive(session, callback)
     }
 
