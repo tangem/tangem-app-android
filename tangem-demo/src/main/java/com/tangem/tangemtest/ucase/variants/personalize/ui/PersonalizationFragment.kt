@@ -10,7 +10,6 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.Fade
-import androidx.transition.TransitionManager
 import com.tangem.commands.Card
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
@@ -21,6 +20,7 @@ import com.tangem.tangemtest._arch.widget.WidgetBuilder
 import com.tangem.tangemtest.commons.DialogController
 import com.tangem.tangemtest.commons.view.MultiActionView
 import com.tangem.tangemtest.commons.view.ViewAction
+import com.tangem.tangemtest.extensions.view.beginDelayedTransition
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.paramsManager.PayloadKey
 import com.tangem.tangemtest.ucase.domain.paramsManager.managers.PersonalizationItemsManager
@@ -86,7 +86,7 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
                 val timeEnd = System.currentTimeMillis()
                 val diff = timeEnd - timeStart
                 postUI(maxDelay - diff) {
-                    TransitionManager.beginDelayedTransition(contentContainer, Fade())
+                    contentContainer.beginDelayedTransition(Fade())
                     contentContainer.addView(llContainer)
                     widgetCreatedCallback()
                     swrLayout.isRefreshing = false
