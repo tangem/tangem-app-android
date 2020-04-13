@@ -9,6 +9,6 @@ import com.tangem.tangemtest.ucase.domain.paramsManager.triggers.afterAction.Aft
  */
 class ScanAction : BaseAction() {
     override fun executeMainAction(payload: PayloadHolder, attrs: AttrForAction, callback: ActionCallback) {
-        attrs.cardManager.scanCard { handleResult(payload, it, AfterScanModifier(), attrs, callback) }
+        attrs.tangemSdk.scanCard { handleResult(payload, it, AfterScanModifier(), attrs, callback) }
     }
 }
