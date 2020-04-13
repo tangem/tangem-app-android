@@ -8,13 +8,13 @@ import com.tangem.wallet.eth.EthData;
 
 public class TokenData extends EthData {
     private CoinEngine.InternalAmount balanceAlter = null;
-    private Integer sequence = null;
+//    private Integer sequence = null;
 
     @Override
     public void clearInfo() {
         super.clearInfo();
         balanceAlter = null;
-        sequence = null;
+//        sequence = null;
     }
 
     public CoinEngine.InternalAmount getBalanceAlterInInternalUnits() {
@@ -26,13 +26,13 @@ public class TokenData extends EthData {
         balanceAlter = value;
     }
 
-    public Integer getSequence() {
-        return sequence;
-    }
-
-    public void setSequence(Integer sequence) {
-        this.sequence = sequence;
-    }
+//    public Integer getSequence() {
+//        return sequence;
+//    }
+//
+//    public void setSequence(Integer sequence) {
+//        this.sequence = sequence;
+//    }
 
     @Override
     public void loadFromBundle(Bundle B) {
@@ -43,11 +43,11 @@ public class TokenData extends EthData {
         } else {
             balanceAlter = null;
         }
-        if (B.containsKey("Sequence")) {
-            sequence = B.getInt("Sequence");
-        } else {
-            sequence = null;
-        }
+//        if (B.containsKey("Sequence")) {
+//            sequence = B.getInt("Sequence");
+//        } else {
+//            sequence = null;
+//        }
     }
 
     @Override
@@ -58,9 +58,9 @@ public class TokenData extends EthData {
             if (balanceAlter != null) {
                 B.putString("BalanceDecimalAlter", balanceAlter.toString());
             }
-            if (sequence != null) {
-                B.putInt("Sequence", sequence);
-            }
+//            if (sequence != null) {
+//                B.putInt("Sequence", sequence);
+//            }
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());
         }
