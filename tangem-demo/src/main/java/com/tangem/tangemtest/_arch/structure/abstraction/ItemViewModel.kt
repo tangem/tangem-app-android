@@ -16,7 +16,7 @@ class KeyValue(val key: String, val value: Any)
 class ViewState(
         isVisible: Boolean? = null,
         bgColor: Int? = -1
-) {
+) : UpdateBy<ViewState> {
 
     class State<T>(
             stateValue: T,
@@ -41,9 +41,15 @@ class ViewState(
         val states = listOf(isVisibleState, backgroundColor, descriptionVisibility)
         states.forEach { it.preventSameChanges = isPrevented }
     }
+
+    override fun update(value: ViewState) {
+        isVisibleState = value.isVisibleState
+        backgroundColor = value.backgroundColor
+        descriptionVisibility = value.descriptionVisibility
+    }
 }
 
-interface ItemViewModel : PayloadHolder {
+interface ItemViewModel : PayloadHolder, UpdateBy<ItemViewModel> {
     val viewState: ViewState
     var data: Any?
     var defaultData: Any?
@@ -91,6 +97,14 @@ open class BaseItemViewModel(
         onDataUpdated = null
         this.data = data
         onDataUpdated = callback
+    }
+
+    override fun update(value: ItemViewModel) {
+        viewState.update(value.viewState)
+        defaultData = value.defaultData
+        data = value.data
+        payload.clear()
+        payload.putAll(value.payload)
     }
 }
 
