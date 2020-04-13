@@ -48,6 +48,7 @@ class CardSession(
         private val initialMessage: Message? = null
 ) {
 
+    private val tag = this.javaClass.simpleName
     /**
      * True if some operation is still in progress.
      */
@@ -164,7 +165,10 @@ class CardSession(
         } else {
             error.localizedMessage
         }
-        if (error !is SessionError.UserCancelled) viewDelegate.onError(errorMessage)
+        if (error !is SessionError.UserCancelled) {
+            Log.e("tag", "Finishing with error: $errorMessage")
+            viewDelegate.onError(errorMessage)
+        }
     }
 
     fun send(apdu: CommandApdu, callback: (result: CompletionResult<ResponseApdu>) -> Unit) {
@@ -176,6 +180,7 @@ class CardSession(
 
         when (error) {
             is SessionError.NeedEncryption -> {
+                Log.i(tag, "Establishing encryption")
                 when (environment.encryptionMode) {
                     EncryptionMode.NONE -> {
                         environment.encryptionKey = null
@@ -186,7 +191,7 @@ class CardSession(
                         environment.encryptionMode = EncryptionMode.STRONG
                     }
                     EncryptionMode.STRONG -> {
-                        Log.e(this::class.simpleName!!, "Encryption doesn't work")
+                        Log.e(tag, "Encryption doesn't work")
                         callback(CompletionResult.Failure(SessionError.NeedEncryption()))
                     }
                 }
