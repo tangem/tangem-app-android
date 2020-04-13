@@ -1,11 +1,14 @@
 package com.tangem.tangemtest.ucase.variants.personalize.ui
 
+import android.content.DialogInterface
 import android.os.Bundle
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
 import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.Fade
 import androidx.transition.TransitionManager
 import com.tangem.commands.Card
@@ -13,7 +16,9 @@ import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.StringId
 import com.tangem.tangemtest._arch.structure.abstraction.Item
+import com.tangem.tangemtest._arch.structure.abstraction.SafeValueChanged
 import com.tangem.tangemtest._arch.widget.WidgetBuilder
+import com.tangem.tangemtest.commons.DialogController
 import com.tangem.tangemtest.commons.view.MultiActionView
 import com.tangem.tangemtest.commons.view.ViewAction
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
@@ -24,6 +29,9 @@ import com.tangem.tangemtest.ucase.tunnel.ActionView
 import com.tangem.tangemtest.ucase.tunnel.ItemError
 import com.tangem.tangemtest.ucase.ui.BaseCardActionFragment
 import com.tangem.tangemtest.ucase.variants.personalize.PersonalizationConfigStore
+import com.tangem.tangemtest.ucase.variants.personalize.ui.presets.PersonalizationPresetManager
+import com.tangem.tangemtest.ucase.variants.personalize.ui.presets.PersonalizationPresetView
+import com.tangem.tangemtest.ucase.variants.personalize.ui.presets.RvPresetNamesAdapter
 import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.PersonalizationItemBuilder
 import ru.dev.gbixahue.eu4d.lib.android._android.views.inflate
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
@@ -33,11 +41,16 @@ import ru.dev.gbixahue.eu4d.lib.android.global.threading.postWork
 /**
 [REDACTED_AUTHOR]
  */
-class PersonalizationFragment : BaseCardActionFragment() {
+class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetView {
 
     override val itemsManager: ItemsManager by lazy { PersonalizationItemsManager(PersonalizationConfigStore(requireContext())) }
 
     override fun getLayoutId(): Int = R.layout.fg_base_action_layout
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        setHasOptionsMenu(true)
+        return super.onCreateView(inflater, container, savedInstanceState)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -102,6 +115,28 @@ class PersonalizationFragment : BaseCardActionFragment() {
         contentContainer.addView(btnContainer)
     }
 
+    override fun handleResponseCardData(card: Card) {
+        super.handleResponseCardData(card)
+        navigateTo(R.id.action_nav_card_action_to_response_screen)
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu) {
+        super.onPrepareOptionsMenu(menu)
+        menu.setGroupVisible(R.id.menu_group_personalization_preset, true)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val store = PersonalizationConfigStore(requireContext())
+        val presetManager = PersonalizationPresetManager(itemsManager, store, this)
+        when (item.itemId) {
+            R.id.action_reset -> presetManager.resetToDefault()
+            R.id.action_save -> presetManager.savePreset()
+            R.id.action_load -> presetManager.loadPreset()
+            else -> return super.onOptionsItemSelected(item)
+        }
+        return true
+    }
+
     override fun showSnackbar(id: Id, additionalHandler: ((Id) -> Int)?) {
         super.showSnackbar(id) {
             when (id) {
@@ -112,8 +147,31 @@ class PersonalizationFragment : BaseCardActionFragment() {
         }
     }
 
-    override fun responseCardDataHandled(card: Card?) {
-        super.responseCardDataHandled(card)
-        navigateTo(R.id.action_nav_card_action_to_response_screen)
+    override fun showSavePresetDialog(onOk: SafeValueChanged<String>) {
+        val dlgController = DialogController()
+        val dlg = dlgController.createAlert(requireActivity(), R.layout.dlg_personalization_preset_save)
+        dlg.setTitle(R.string.menu_preset_save)
+        dlg.setButton(DialogInterface.BUTTON_NEGATIVE, getString(R.string.btn_cancel)) { dialog, which -> }
+        dlg.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string.btn_ok)) { dialog, which ->
+            val tvName = dlgController.view?.findViewById<EditText>(R.id.et_item) ?: return@setButton
+            val name = tvName.text.toString()
+            if (name.isEmpty()) showSnackbar("Not saved")
+            else onOk.invoke(name)
+        }
+        dlgController.show()
+    }
+
+    override fun showLoadPresetDialog(namesList: List<String>, onChoose: SafeValueChanged<String>, onDelete: SafeValueChanged<String>) {
+        val dlgController = DialogController()
+        val dlg = dlgController.createAlert(requireActivity(), R.layout.dlg_personalization_preset_load)
+        dlg.setTitle(R.string.menu_preset_load)
+        val rvPresetNames: RecyclerView = dlgController.view?.findViewById(R.id.recycler_view) ?: return
+
+        rvPresetNames.layoutManager = LinearLayoutManager(context)
+        rvPresetNames.adapter = RvPresetNamesAdapter({
+            onChoose(it)
+            dlgController.dismiss()
+        }, onDelete).apply { setItemList(namesList.toMutableList()) }
+        dlgController.show()
     }
 }
