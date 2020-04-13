@@ -57,25 +57,25 @@
         android:id="@+id/nav_scan"
         android:name="com.tangem.tangemtest.ucase.variants.scan.ui.ScanActionFragment"
         android:label="@string/action_card_scan"
-        tools:layout="@layout/fg_action_card_scan" />
+        tools:layout="@layout/fg_base_action_layout" />
 
     <fragment
         android:id="@+id/nav_sign"
         android:name="com.tangem.tangemtest.ucase.variants.sign.ui.SignActionFragment"
         android:label="@string/action_card_sign"
-        tools:layout="@layout/fg_action_card_sign" />
+        tools:layout="@layout/fg_base_action_layout" />
 
     <fragment
         android:id="@+id/nav_personalize"
         android:name="com.tangem.tangemtest.ucase.variants.personalize.ui.PersonalizationFragment"
         android:label="@string/action_personalize"
-        tools:layout="@layout/fg_personalization" />
+        tools:layout="@layout/fg_base_action_layout" />
 
     <fragment
         android:id="@+id/nav_depersonalize"
         android:name="com.tangem.tangemtest.ucase.variants.depersonalize.ui.DepersonalizeActionFragment"
         android:label="@string/action_depersonalize"
-        tools:layout="@layout/fg_depersonalize" />
+        tools:layout="@layout/fg_base_action_layout" />
 
     <fragment
         android:id="@+id/nav_issuer_read_data"
