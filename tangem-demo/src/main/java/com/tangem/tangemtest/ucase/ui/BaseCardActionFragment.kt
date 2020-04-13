@@ -8,6 +8,7 @@ import androidx.core.view.plusAssign
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.tangem.TangemSdk
 import com.tangem.commands.Card
@@ -28,7 +29,8 @@ import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
  */
 abstract class BaseCardActionFragment : BaseFragment(), ActionView {
 
-    protected lateinit var itemContainer: ViewGroup
+    protected lateinit var swrLayout: SwipeRefreshLayout
+    protected lateinit var contentContainer: ViewGroup
     protected lateinit var actionFab: FloatingActionButton
 
     protected abstract val itemsManager: ItemsManager
@@ -37,6 +39,8 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
     protected val UNDEFINED = -1
 
     private val paramsWidgetList = mutableListOf<ParameterWidget>()
+
+    override fun getLayoutId(): Int = R.layout.fg_base_action_layout
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -47,7 +51,7 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
         actionVM.setCardManager(TangemSdk.init(requireActivity()))
         actionVM.attachToPayload(mutableMapOf(PayloadKey.actionView to this as ActionView))
 
-        initFab()
+        initViews()
         createWidgets {
             widgetsWasCreated()
             subscribeToViewModelChanges()
@@ -57,11 +61,13 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
     protected open fun widgetsWasCreated() {}
 
     protected open fun bindViews() {
-        itemContainer = mainView.findViewById(R.id.ll_container)
+        swrLayout = mainView.findViewById(R.id.swr_layout)
+        contentContainer = mainView.findViewById(R.id.ll_content_container)
         actionFab = mainView.findViewById(R.id.fab_action)
     }
 
-    protected open fun initFab() {
+    protected open fun initViews() {
+        swrLayout.isEnabled = false
         enableActionFab(false)
         actionFab.setOnClickListener { actionVM.invokeMainAction() }
     }
@@ -70,7 +76,7 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
         Log.d(this, "createWidgets")
         actionVM.ldItemList.observe(viewLifecycleOwner, Observer { itemList ->
             itemList.forEach { param ->
-                val widget = ParameterWidget(inflateParamView(itemContainer), param)
+                val widget = ParameterWidget(inflateParamView(contentContainer), param)
                 widget.onValueChanged = { id, value -> actionVM.userChangedItem(id, value) }
                 widget.onActionBtnClickListener = actionVM.getItemAction(param.id)
                 paramsWidgetList.add(widget)
