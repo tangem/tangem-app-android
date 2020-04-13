@@ -71,10 +71,4 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         preferenceScreen.sharedPreferences
                 .unregisterOnSharedPreferenceChangeListener(this);
     }
-
-    override fun onDestroyView() {
-        (activity as AppCompatActivity).setSupportActionBar(toolbar)
-        super.onDestroyView()
-    }
-
 }
