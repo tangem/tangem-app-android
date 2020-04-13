@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <item
         android:id="@+id/action_share"
@@ -10,9 +11,26 @@
         app:showAsAction="always" />
 
     <item
-        android:id="@+id/action_favorite"
+        android:id="@+id/action_toggle_description_visibility"
         android:title=""
         app:actionLayout="@layout/menu_item_switch"
         app:showAsAction="always" />
+
+    <group
+        android:id="@+id/menu_group_personalization_preset"
+        android:visible="false"
+        tools:visible="true">
+
+        <item
+            android:id="@+id/action_reset"
+            android:title="@string/menu_preset_reset" />
+        <item
+            android:id="@+id/action_save"
+            android:title="@string/menu_preset_save" />
+        <item
+            android:id="@+id/action_load"
+            android:title="@string/menu_preset_load" />
+
+    </group>
 
 </menu>
