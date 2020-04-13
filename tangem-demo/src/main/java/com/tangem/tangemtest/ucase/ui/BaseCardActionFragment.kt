@@ -12,6 +12,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.tangem.TangemSdk
 import com.tangem.commands.Card
+import com.tangem.commands.CommandResponse
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
@@ -87,39 +88,45 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
 
     protected open fun subscribeToViewModelChanges() {
         Log.d(this, "subscribeToViewModelChanges")
-        listenResponse()
-        listenResponseData()
-        listenResponseCardData()
-        listenError()
-        listenChangedItems()
-        listenDescriptionSwitchChanges()
-    }
-
-    private fun listenResponse() {
         actionVM.seResponse.observe(viewLifecycleOwner, Observer {
-            Log.d(this, "listen response: $it")
-            mainActivityVM.changeResponseEvent(it)
+            Log.d(this, "handle response: $it")
+            handleResponse(it)
         })
-    }
-
-    protected open fun listenResponseData() {
         actionVM.seResponseData.observe(viewLifecycleOwner, Observer {
-            Log.d(this, "listen responseData: $it")
-            navigateTo(R.id.action_nav_card_action_to_response_screen)
+            Log.d(this, "handle responseData: $it")
+            handleResponseData(it)
         })
-    }
-
-    protected open fun listenResponseCardData() {
         actionVM.seResponseCardData.observe(viewLifecycleOwner, Observer {
-            Log.d(this, "listen responseCardData: $it")
-            responseCardDataHandled(it)
+            Log.d(this, "handle responseCardData: $it")
+            handleResponseCardData(it)
         })
+        actionVM.seError.observe(viewLifecycleOwner, Observer {
+            Log.d(this, "handle error: $it")
+            handleError(it)
+        })
+        mainActivityVM.ldDescriptionSwitch.observe(viewLifecycleOwner, Observer {
+            Log.d(this, "handle descriptionVisibilityState: $it")
+            handleDescriptionSwitchChanges(it)
+        })
+        listenChangedItems()
     }
 
-    protected open fun responseCardDataHandled(card: Card?) {}
+    protected open fun handleResponse(response: CommandResponse) {
+        mainActivityVM.changeResponseEvent(response)
+    }
 
-    protected open fun listenError() {
-        actionVM.seError.observe(viewLifecycleOwner, Observer { showSnackbar(it) })
+    protected open fun handleResponseData(response: CommandResponse) {
+        navigateTo(R.id.action_nav_card_action_to_response_screen)
+    }
+
+    protected open fun handleResponseCardData(card: Card) {}
+
+    protected open fun handleError(error: String) {
+        showSnackbar(error)
+    }
+
+    protected open fun handleDescriptionSwitchChanges(descriptionVisibilityState: Boolean) {
+        actionVM.toggleDescriptionVisibility(descriptionVisibilityState)
     }
 
     @Deprecated("Start to use itemViewModel")
@@ -129,12 +136,6 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
                 Log.d(this, "item changed from VM - name: ${item.id}, value:${item.viewModel.data}")
                 paramsWidgetList.firstOrNull { it.id == item.id }?.changeParamValue(item.viewModel.data)
             }
-        })
-    }
-
-    protected open fun listenDescriptionSwitchChanges() {
-        mainActivityVM.ldDescriptionSwitch.observe(viewLifecycleOwner, Observer {
-            actionVM.toggleDescriptionVisibility(it)
         })
     }
 
