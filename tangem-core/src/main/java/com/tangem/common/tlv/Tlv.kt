@@ -1,6 +1,7 @@
 package com.tangem.common.tlv
 
 import com.tangem.Log
+import com.tangem.common.extensions.toHexString
 import java.io.ByteArrayInputStream
 import java.io.IOException
 
@@ -69,6 +70,10 @@ class Tlv {
             } while (tlv != null)
             return tlvList
         }
+    }
+
+    override fun toString(): String {
+        return "${this.tag} ($tagRaw): ${value.toHexString()}"
     }
 
 }
