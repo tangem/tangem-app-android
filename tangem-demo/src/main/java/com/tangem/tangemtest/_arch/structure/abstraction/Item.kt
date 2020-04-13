@@ -5,7 +5,12 @@ import com.tangem.tangemtest._arch.structure.Id
 /**
 [REDACTED_AUTHOR]
  */
-interface Item {
+
+interface UpdateBy<B>{
+    fun update(value: B)
+}
+
+interface Item: UpdateBy<Item> {
     val id: Id
     var parent: Item?
     var viewModel: ItemViewModel
@@ -36,4 +41,7 @@ open class BaseItem(
 
     override var parent: Item? = null
 
+    override fun update(value: Item) {
+        viewModel.update(value.viewModel)
+    }
 }

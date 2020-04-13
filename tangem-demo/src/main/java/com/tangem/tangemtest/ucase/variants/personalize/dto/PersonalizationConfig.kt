@@ -6,20 +6,19 @@ package com.tangem.tangemtest.ucase.variants.personalize.dto
 class PersonalizationConfig {
 
     // Card number
-    var series = "BB"
-    var startNumber: Long = 300000000000
-    var batchId = "ffff"
-
+    var series = ""
+    var startNumber: Long = 0
+    var batchId = ""
 
     // Common
-    var curveID = "ed25519"
-    var blockchain = "BTC/test"
+    var curveID = ""
+    var blockchain = ""
     var blockchainCustom = ""
-    var MaxSignatures: Long = 999999
-    var createWallet = true
+    var MaxSignatures: Long = 0
+    var createWallet = false
 
     // Signing method
-    var SigningMethod0 = true
+    var SigningMethod0 = false
     var SigningMethod1 = false
     var SigningMethod2 = false
     var SigningMethod3 = false
@@ -27,19 +26,16 @@ class PersonalizationConfig {
     var SigningMethod5 = false
     var SigningMethod6 = false
 
-
     // Sign hash external properties
-    var pinLessFloorLimit: Long = 100000
-    var hexCrExKey = "00112233445566778899AABBCCDDEEFFFFEEDDCCBBAA998877665544332211000000111122223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFF"
+    var pinLessFloorLimit: Long = 0
+    var hexCrExKey = ""
     var requireTerminalTxSignature = false
     var requireTerminalCertSignature = false
-    var checkPIN3onCard = true
-
+    var checkPIN3onCard = false
 
     // Denomination
     var writeOnPersonalization = false
-    var denomination: Long = 1000000
-
+    var denomination: Long = 0
 
     // Token
     var itsToken = false
@@ -47,49 +43,125 @@ class PersonalizationConfig {
     var contractAddress = ""
     var decimal: Long = 0
 
-
     var cardData = CardData()
 
-
     // Settings mask
-    var isReusable = true
+    var isReusable = false
     var useActivation = false
     var forbidPurgeWallet = false
     var allowSelectBlockchain = false
     var useBlock = false
     var oneApdu = false
     var useCVC = false
-    var allowSwapPIN = true
-    var allowSwapPIN2 = true
+    var allowSwapPIN = false
+    var allowSwapPIN2 = false
     var forbidDefaultPIN = false
-    var smartSecurityDelay = true
-    var protectIssuerDataAgainstReplay = true
-    var skipSecurityDelayIfValidatedByIssuer = true
-    var skipCheckPIN2andCVCIfValidatedByIssuer = true
-    var skipSecurityDelayIfValidatedByLinkedTerminal = true
+    var smartSecurityDelay = false
+    var protectIssuerDataAgainstReplay = false
+    var skipSecurityDelayIfValidatedByIssuer = false
+    var skipCheckPIN2andCVCIfValidatedByIssuer = false
+    var skipSecurityDelayIfValidatedByLinkedTerminal = false
     var restrictOverwriteIssuerDataEx = false
 
-
     // Settings mask - protocol encryption
-    var protocolAllowUnencrypted = true
-    var protocolAllowStaticEncryption = true
+    var protocolAllowUnencrypted = false
+    var protocolAllowStaticEncryption = false
 
-
-    var useNDEF = true
-    var useDynamicNDEF = true
+    var useNDEF = false
+    var useDynamicNDEF = false
     var disablePrecomputedNDEF = false
-    var aar = "com.tangem.wallet"
+    var aar = ""
     var aarCustom = ""
-    var uri = "https://tangem.com"
-
+    var uri = ""
 
     // Pins
-    var PIN = "000000"
-    var PIN2 = "000"
+    var PIN = ""
+    var PIN2 = ""
     var PIN3 = ""
-    var CVC = "000"
-    var pauseBeforePIN2: Long = 5000L
+    var CVC = ""
+    var pauseBeforePIN2: Long = 0
 
+    companion object {
+        fun default(): PersonalizationConfig {
+            return PersonalizationConfig().apply {
+                // Card number
+                series = "BB"
+                startNumber = 300000000000L
+                batchId = "ffff"
+
+                // Common
+                curveID = "ed25519"
+                blockchain = "BTC/test"
+                blockchainCustom = ""
+                MaxSignatures = 999999L
+                createWallet = true
+
+                // Signing method
+                SigningMethod0 = true
+                SigningMethod1 = false
+                SigningMethod2 = false
+                SigningMethod3 = false
+                SigningMethod4 = false
+                SigningMethod5 = false
+                SigningMethod6 = false
+
+                // Sign hash external properties
+                pinLessFloorLimit = 100000L
+                hexCrExKey = "00112233445566778899AABBCCDDEEFFFFEEDDCCBBAA998877665544332211000000111122223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFF"
+                requireTerminalTxSignature = false
+                requireTerminalCertSignature = false
+                checkPIN3onCard = true
+
+                // Denomination
+                writeOnPersonalization = false
+                denomination = 1000000L
+
+                // Token
+                itsToken = false
+                symbol = ""
+                contractAddress = ""
+                decimal = 0L
+
+                cardData = CardData()
+
+                // Settings mask
+                isReusable = true
+                useActivation = false
+                forbidPurgeWallet = false
+                allowSelectBlockchain = false
+                useBlock = false
+                oneApdu = false
+                useCVC = false
+                allowSwapPIN = true
+                allowSwapPIN2 = true
+                forbidDefaultPIN = false
+                smartSecurityDelay = true
+                protectIssuerDataAgainstReplay = true
+                skipSecurityDelayIfValidatedByIssuer = true
+                skipCheckPIN2andCVCIfValidatedByIssuer = true
+                skipSecurityDelayIfValidatedByLinkedTerminal = true
+                restrictOverwriteIssuerDataEx = false
+
+                // Settings mask - protocol encryption
+                protocolAllowUnencrypted = true
+                protocolAllowStaticEncryption = true
+
+                useNDEF = true
+                useDynamicNDEF = true
+                disablePrecomputedNDEF = false
+                aar = "com.tangem.wallet"
+                aarCustom = ""
+                uri = "https://tangem.com"
+
+                // Pins
+                PIN = "000000"
+                PIN2 = "000"
+                PIN3 = ""
+                CVC = "000"
+                pauseBeforePIN2 = 5000L
+            }
+        }
+    }
 }
 
 class CardData {
