@@ -18,6 +18,11 @@ import java.util.*
  */
 class TlvDecoder(val tlvList: List<Tlv>) {
 
+    init {
+        Log.v("TLV",
+                "List of TLV received from card:\n${tlvList.joinToString("\n")}")
+    }
+
     /**
      * Finds [Tlv] by its [TlvTag].
      * Returns null if [Tlv] is not found, otherwise converts its value to [T].
