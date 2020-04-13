@@ -1,14 +1,10 @@
 package com.tangem.tangemtest._main.entryPoint
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
-import androidx.navigation.NavController
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -19,21 +15,19 @@ import com.tangem.tangemtest._main.MainViewModel
 import com.tangem.tangemtest.ucase.getDefaultNavigationOptions
 import com.tangem.tangemtest.ucase.resources.ActionType
 import com.tangem.tangemtest.ucase.resources.MainResourceHolder
+import com.tangem.tangemtest.ucase.ui.BaseFragment
 import kotlinx.android.synthetic.main.fg_entry_point.*
 
 /**
 [REDACTED_AUTHOR]
  */
-class ActionListFragment : Fragment() {
+class ActionListFragment : BaseFragment() {
 
-    private val navController: NavController by lazy { findNavController() }
     private lateinit var rvActions: RecyclerView
 
     private val mainActivityVM: MainViewModel by activityViewModels()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fg_entry_point, container, false)
-    }
+    override fun getLayoutId(): Int = R.layout.fg_entry_point
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -48,7 +42,9 @@ class ActionListFragment : Fragment() {
 
         val vhDataWrapper = VhExDataWrapper(MainResourceHolder, false)
 
-        rvActions.adapter = RvActionsAdapter(vhDataWrapper) { type, position, data -> navigate(data) }
+        rvActions.adapter = RvActionsAdapter(vhDataWrapper) { type, position, data ->
+            navigateTo(data, options = getDefaultNavigationOptions())
+        }
         mainActivityVM.ldDescriptionSwitch.observe(viewLifecycleOwner, Observer {
             vhDataWrapper.descriptionIsVisible = it
             TransitionManager.beginDelayedTransition(rvActions as ViewGroup, AutoTransition())
@@ -62,10 +58,6 @@ class ActionListFragment : Fragment() {
 
         adapter.setItemList(getNavigateOptions())
         adapter.notifyDataSetChanged()
-    }
-
-    private fun navigate(destinationId: Int) {
-        navController.navigate(destinationId, null, getDefaultNavigationOptions())
     }
 
     private fun getNavigateOptions(): MutableList<ActionType> {
