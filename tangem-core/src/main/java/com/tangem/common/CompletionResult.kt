@@ -1,7 +1,7 @@
 package com.tangem.common
 
+import com.tangem.SessionError
 import com.tangem.common.CompletionResult.Success
-import com.tangem.tasks.TaskError
 
 /**
  * Response class encapsulating successful and failed results.
@@ -9,5 +9,5 @@ import com.tangem.tasks.TaskError
  */
 sealed class CompletionResult<T> {
     class Success<T>(val data: T) : CompletionResult<T>()
-    class Failure<T>(val error: TaskError) : CompletionResult<T>()
+    class Failure<T>(val error: SessionError) : CompletionResult<T>()
 }

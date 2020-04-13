@@ -80,8 +80,10 @@ class App : Application() {
             )
         }
 
-        FirebaseAnalytics.getInstance(this).setAnalyticsCollectionEnabled(Analytics.isEnabled())
         FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(Analytics.isEnabled())
+        FirebaseAnalytics.getInstance(this).setAnalyticsCollectionEnabled(
+                Analytics.isEnabled() && !BuildConfig.DEBUG
+        )
     }
 
     private fun buildToastHelperComponent(): ToastHelperComponent {
