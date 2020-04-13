@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="menu_preset_reset">Reset configuration to default</string>
+    <string name="menu_preset_save">Save configuration</string>
+    <string name="menu_preset_load">Load configuration</string>
+    <string name="error_nothing_to_load">Nothing to load</string>
+
+
     <string name="personalize">Personalize</string>
     <string name="depersonalize">Depersonalize</string>
     <string name="pers_block_card_number">Card number</string>
