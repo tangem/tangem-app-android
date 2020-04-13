@@ -19,7 +19,7 @@ class ConfigValuesHolder : BaseTypedHolder<Id, Value>() {
         register(CardNumber.BatchId, Value(default.batchId))
         register(Common.Curve, Value(default.curveID, Helper.listOfCurves()))
         register(Common.Blockchain, Value(default.blockchain, Helper.listOfBlockchain()))
-        register(Common.BlockchainCustom, Value(""))
+        register(Common.BlockchainCustom, Value(default.blockchainCustom))
         register(Common.MaxSignatures, Value(default.MaxSignatures))
         register(Common.CreateWallet, Value(default.createWallet))
         register(SigningMethod.SignTx, Value(default.SigningMethod0))
