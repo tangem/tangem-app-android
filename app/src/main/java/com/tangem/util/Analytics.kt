@@ -22,6 +22,7 @@ enum class AnalyticsParam(val param: String) {
     FIRMWARE("firmware"),
     ;
 }
+
 class Analytics {
     companion object {
         fun setCardData(ctx: TangemContext): Bundle {
