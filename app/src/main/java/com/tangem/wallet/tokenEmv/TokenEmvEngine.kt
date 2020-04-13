@@ -6,25 +6,23 @@ import com.google.gson.Gson
 import com.tangem.data.Blockchain
 import com.tangem.data.network.ServerApiInfura
 import com.tangem.data.network.ServerApiTokenEmv
-import com.tangem.data.network.model.InfuraResponse
-import com.tangem.data.network.model.TokenEmvTransferBody
+import com.tangem.data.network.model.*
 import com.tangem.tangem_card.data.TangemCard
 import com.tangem.tangem_card.reader.CardProtocol.TangemException
+import com.tangem.tangem_card.reader.TLV
+import com.tangem.tangem_card.reader.TLVList
 import com.tangem.tangem_card.tasks.SignTask
 import com.tangem.tangem_card.util.Util
-import com.tangem.util.CryptoUtil
 import com.tangem.util.DecimalDigitsInputFilter
-import com.tangem.wallet.*
-import com.tangem.wallet.EthTransaction.BruteRecoveryID2
+import com.tangem.wallet.EthTransaction
+import com.tangem.wallet.Keccak256
+import com.tangem.wallet.R
+import com.tangem.wallet.TangemContext
 import com.tangem.wallet.token.TokenEngine
-import io.reactivex.observers.DisposableCompletableObserver
+import io.reactivex.observers.DisposableSingleObserver
 import org.apache.commons.lang3.SerializationUtils
-import org.bitcoinj.core.ECKey
 import org.kethereum.extensions.toBytesPadded
-import org.kethereum.extensions.toFixedLengthByteArray
-import java.math.BigDecimal
 import java.math.BigInteger
-import java.util.*
 
 class TokenEmvEngine : TokenEngine {
     constructor() : super()
@@ -41,7 +39,7 @@ class TokenEmvEngine : TokenEngine {
     }
 
     override fun getChainIdNum(): Int {
-        return EthTransaction.ChainEnum.Mainnet.value
+        return EthTransaction.ChainEnum.Ropsten.value
     }
 
     override fun getBalance(): Amount? {
@@ -96,8 +94,7 @@ class TokenEmvEngine : TokenEngine {
     override fun defineWallet() {
         try {
             if (hasLinkedContract()) {
-                val issuerData = ctx.card.issuerData
-                ctx.coinData.wallet = String(issuerData.copyOfRange(2, issuerData.size))
+                ctx.coinData.wallet = TLVList.fromBytes(ctx.card.issuerData).getTLV(TLV.Tag.TAG_Token_Contract_Address).asString
             } else {
                 ctx.coinData.wallet = calculateAddress(ctx.card.walletPublicKey)
             }
@@ -145,10 +142,10 @@ class TokenEmvEngine : TokenEngine {
         val amountBytes = convertToInternalAmount(amountValue).toBigInteger().toBytesPadded(32)
         val feeLimitBytes = convertToInternalAmount(feeValue).toBigInteger().toBytesPadded(32)
 
-        val sequenceBytes = coinData.sequence.toBigInteger().toBytesPadded(4)
+        val sequence = ctx.card.SignedHashes
+        val sequenceBytes = sequence.toBigInteger().toBytesPadded(4)
 
-        val hashToSign  = Keccak256().digest(contractBytes + functionBytes
-                + amountBytes + recipientBytes + feeLimitBytes + sequenceBytes)
+        val hashToSign = Keccak256().digest(contractBytes + functionBytes + amountBytes + recipientBytes + feeLimitBytes + sequenceBytes)
 
         return object : SignTask.TransactionToSign {
             override fun isSigningMethodSupported(signingMethod: TangemCard.SigningMethod): Boolean {
@@ -176,39 +173,52 @@ class TokenEmvEngine : TokenEngine {
 
             @Throws(java.lang.Exception::class)
             override fun onSignCompleted(signFromCard: ByteArray): ByteArray {
-                val r = BigInteger(1, Arrays.copyOfRange(signFromCard, 0, 32))
-                var s: BigInteger? = BigInteger(1, Arrays.copyOfRange(signFromCard, 32, 64))
-                s = CryptoUtil.toCanonicalised(s)
-
-                val publicKey = ctx.getCard().getWalletPublicKey()
-
-                val verified = ECKey.verify(hashToSign, ECKey.ECDSASignature(r, s), publicKey)
-                if (!verified) {
-                    Log.e(this.javaClass.simpleName + "-CHECK", "sign Failed.")
-                }
-
-                val v = BruteRecoveryID2(ECDSASignatureETH(r, s), hashToSign, publicKey)
-                if (v != 27 && v != 28) {
-                    Log.e(TAG, "invalid v")
-                    throw java.lang.Exception("Error in " + this.javaClass.simpleName + " - invalid v")
-                }
-                Log.e(TAG, this.javaClass.simpleName + " V: " + v.toString())
-
-                var rBytes = r.toByteArray()
-                if (rBytes.size == 33) {
-                    rBytes = rBytes.copyOfRange(1,33)
-                }
-                val sBytes = s.toByteArray()
+//                val r = BigInteger(1, Arrays.copyOfRange(signFromCard, 0, 32))
+//                var s: BigInteger? = BigInteger(1, Arrays.copyOfRange(signFromCard, 32, 64))
+//                s = CryptoUtil.toCanonicalised(s)
+//
+//                val publicKey = ctx.getCard().getWalletPublicKey()
+//
+//                val verified = ECKey.verify(hashToSign, ECKey.ECDSASignature(r, s), publicKey)
+//                if (!verified) {
+//                    Log.e(this.javaClass.simpleName + "-CHECK", "sign Failed.")
+//                }
+//
+//                val v = BruteRecoveryID2(ECDSASignatureETH(r, s), hashToSign, publicKey)
+//                if (v != 27 && v != 28) {
+//                    Log.e(TAG, "invalid v")
+//                    throw java.lang.Exception("Error in " + this.javaClass.simpleName + " - invalid v")
+//                }
+//                Log.e(TAG, this.javaClass.simpleName + " V: " + v.toString())
+//
+//                var rBytes = r.toByteArray()
+//                if (rBytes.size == 33) {
+//                    rBytes = rBytes.copyOfRange(1,33)
+//                }
+//                val sBytes = s.toByteArray()
+//
+//                val tokenEmvTransferBody = TokenEmvTransferBody(
+//                        CID = Util.bytesToHex(ctx.card.cid),
+//                        publicKey = Util.bytesToHex(ctx.card.walletPublicKey),
+//                        contract = contractHex,
+//                        amount = Util.byteArrayToHexString(amountBytes),
+//                        recipient = recipientHex,
+//                        feeLimit = Util.byteArrayToHexString(feeLimitBytes),
+//                        sequence = sequence,
+//                        r = Util.byteArrayToHexString(rBytes),
+//                        s = Util.byteArrayToHexString(sBytes),
+//                        v = v
+//                )
 
                 val tokenEmvTransferBody = TokenEmvTransferBody(
-                        contract = contractHex,
-                        amount = Util.byteArrayToHexString(amountBytes),
-                        recipient = recipientHex,
-                        feeLimit = Util.byteArrayToHexString(feeLimitBytes),
-                        sequence = coinData.sequence,
-                        r = Util.byteArrayToHexString(rBytes),
-                        s = Util.byteArrayToHexString(sBytes),
-                        v = v
+                        CID = Util.bytesToHex(ctx.card.cid),
+                        publicKey = Util.bytesToHex(ctx.card.walletPublicKey),
+                        amount = amountValue.toValueString(),
+                        currency = amountValue.currency,
+                        recipient = targetAddress,
+                        feeLimit = feeValue!!.toValueString(),
+                        sequence = sequence,
+                        signature = Util.bytesToHex(signFromCard)
                 )
 
                 val jsonBody = Gson().toJson(tokenEmvTransferBody)
@@ -287,109 +297,76 @@ class TokenEmvEngine : TokenEngine {
     }
 
     override fun requestFee(blockchainRequestsCallbacks: BlockchainRequestsCallbacks, targetAddress: String?, amount: Amount) {
-        val fee = Amount(BigDecimal.ONE, balanceCurrency)
-                    coinData.minFee = fee
-                    coinData.normalFee = fee
-                    coinData.maxFee = fee
+
+        val tokenEmvTransferBody = TokenEmvGetTransferFeeBody(
+                CID = Util.bytesToHex(ctx.card.cid),
+                publicKey = Util.bytesToHex(ctx.card.walletPublicKey)
+        )
+
+        val observer = object : DisposableSingleObserver<TokenEmvGetTransferFeeAnswer>() {
+            override fun onError(e: Throwable) {
+                ctx.error = "Can't get transfer fee, ${e.message}"
+                blockchainRequestsCallbacks.onComplete(false)
+            }
+
+            override fun onSuccess(t: TokenEmvGetTransferFeeAnswer) {
+                if (t.success != null && t.success) {
+                    ctx.error = null
+                    coinData.minFee = Amount(t.fee, t.currency)
+                    coinData.normalFee = Amount(t.fee, t.currency)
+                    coinData.maxFee = Amount(t.fee, t.currency)
+                    blockchainRequestsCallbacks.onComplete(true)
+                } else {
+                    if (t.error != null) {
+                        ctx.error = t.error
+                    } else {
+                        ctx.error = "Can't get transfer fee, code ${t.errorCode}"
+                    }
+                    blockchainRequestsCallbacks.onComplete(false)
+                }
+            }
+
+        }
+
+        ServerApiTokenEmv().getTransferFee(tokenEmvTransferBody, observer)
+        blockchainRequestsCallbacks.onComplete(true)
     }
 
     override fun requestSendTransaction(blockchainRequestsCallbacks: BlockchainRequestsCallbacks, txForSend: ByteArray?) {
         val jsonBody = SerializationUtils.deserialize<String>(txForSend)
+
+        Log.e(TAG, jsonBody)
+
         val tokenEmvTransferBody = Gson().fromJson(jsonBody, TokenEmvTransferBody::class.java)
 
-        val transferObserver = object : DisposableCompletableObserver() {
-            override fun onComplete() {
-                blockchainRequestsCallbacks.onComplete(true)
+        val observer = object : DisposableSingleObserver<TokenEmvTransferAnswer>() {
+            override fun onError(e: Throwable) {
+                ctx.error = "Can't send transfer, ${e.message}"
+                blockchainRequestsCallbacks.onComplete(false)
             }
 
-            override fun onError(e: Throwable) {
-                blockchainRequestsCallbacks.onComplete(false)
+            override fun onSuccess(t: TokenEmvTransferAnswer) {
+                if (t.success != null && t.success) {
+                    ctx.error = null
+                    blockchainRequestsCallbacks.onComplete(true)
+                } else {
+                    if (t.error != null) {
+                        ctx.error = t.error
+                    } else {
+                        ctx.error = "Can't send transfer, code ${t.errorCode}"
+                    }
+                    blockchainRequestsCallbacks.onComplete(false)
+                }
+
             }
         }
 
-        ServerApiTokenEmv().transfer(tokenEmvTransferBody, transferObserver)
+        ServerApiTokenEmv().transfer(tokenEmvTransferBody, observer)
     }
 
     override fun allowSelectFeeLevel(): Boolean {
         return false
     }
 
-    // TODO: move all below to the server
-    fun constructTransfer(tokenEmvTransferBody: TokenEmvTransferBody, feeValue: Amount?): SignTask.TransactionToSign {
-        val contractAddress = tokenEmvTransferBody.contract
 
-        val nonceValue = coinData.confirmedTXCount
-        val weiFee: BigInteger = convertToInternalAmount(feeValue).toBigIntegerExact() //TODO: get fee as usual but set multiplier m = BigInteger.valueOf(100000), use normal?
-        var gasLimitInt = 100000
-
-        val gasPrice = weiFee.divide(BigInteger.valueOf(gasLimitInt.toLong()))
-        val gasLimit = BigInteger.valueOf(gasLimitInt.toLong())
-        val chainId = this.chainIdNum
-        val amountZero = BigInteger.ZERO
-
-        val transferSignature = "transfer(uint256,address,uint8,bytes32,bytes32,uint256,uint256,uint32)".toByteArray()
-        val selector = Keccak256().digest(transferSignature).copyOf(4)
-
-        val tokenAmount = Util.hexToBytes(tokenEmvTransferBody.amount).toFixedLengthByteArray(32)
-        val recipient = Util.hexToBytes(tokenEmvTransferBody.recipient).toFixedLengthByteArray(32)
-        val sigV = BigInteger.valueOf(tokenEmvTransferBody.v.toLong()).toBytesPadded(32)
-        val sigR = Util.hexToBytes(tokenEmvTransferBody.r).toFixedLengthByteArray(32)
-        val sigS = Util.hexToBytes(tokenEmvTransferBody.s).toFixedLengthByteArray(32)
-        val tokenFee = BigInteger.valueOf(1).toBytesPadded(32) //TODO: calculate using equivalent data
-        val tokenFeeLimit = Util.hexToBytes(tokenEmvTransferBody.feeLimit).toFixedLengthByteArray(32)
-        val sequence = BigInteger.valueOf(tokenEmvTransferBody.sequence.toLong()).toBytesPadded(32)
-
-        val data = selector + tokenAmount + recipient + sigV + sigR + sigS + tokenFee + tokenFeeLimit + sequence
-
-        val tx = EthTransaction.create(contractAddress, amountZero, nonceValue, gasPrice, gasLimit, chainId, data)
-
-        return object : SignTask.TransactionToSign {
-            override fun isSigningMethodSupported(signingMethod: TangemCard.SigningMethod): Boolean {
-                return signingMethod == TangemCard.SigningMethod.Sign_Hash
-            }
-
-            override fun getHashesToSign(): Array<ByteArray> {
-                return arrayOf(tx.rawHash)
-            }
-
-            @Throws(java.lang.Exception::class)
-            override fun getRawDataToSign(): ByteArray {
-                throw java.lang.Exception("Signing of raw transaction not supported for " + this.javaClass.simpleName)
-            }
-
-            @Throws(java.lang.Exception::class)
-            override fun getHashAlgToSign(): String {
-                throw java.lang.Exception("Signing of raw transaction not supported for " + this.javaClass.simpleName)
-            }
-
-            @Throws(java.lang.Exception::class)
-            override fun getIssuerTransactionSignature(dataToSignByIssuer: ByteArray): ByteArray {
-                throw java.lang.Exception("Transaction validation by issuer not supported in this version")
-            }
-
-            @Throws(java.lang.Exception::class)
-            override fun onSignCompleted(signFromCard: ByteArray): ByteArray {
-                val publicKey = ctx.getCard().getWalletPublicKey()
-                val for_hash = tx.rawHash
-                val r = BigInteger(1, Arrays.copyOfRange(signFromCard, 0, 32))
-                var s: BigInteger? = BigInteger(1, Arrays.copyOfRange(signFromCard, 32, 64))
-                s = CryptoUtil.toCanonicalised(s)
-                val f = ECKey.verify(for_hash, ECKey.ECDSASignature(r, s), publicKey)
-                if (!f) {
-                    Log.e(this.javaClass.simpleName + "-CHECK", "sign Failed.")
-                }
-                tx.signature = ECDSASignatureETH(r, s)
-                val v = BruteRecoveryID2(tx.signature, for_hash, publicKey)
-                if (v != 27 && v != 28) {
-                    Log.e(TAG, "invalid v")
-                    throw java.lang.Exception("Error in " + this.javaClass.simpleName + " - invalid v")
-                }
-                tx.signature.v = v.toByte()
-                Log.e(TAG, this.javaClass.simpleName + " V: " + v.toString())
-                val txForSend = tx.encoded
-                notifyOnNeedSendTransaction(txForSend)
-                return txForSend
-            }
-        }
-    }
 }
