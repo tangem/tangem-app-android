@@ -23,7 +23,7 @@ open class ResponseFragment : BaseFragment() {
     private val mainActivityVM: MainViewModel by activityViewModels()
     private val selfVM: ResponseViewModel by viewModels()
 
-    private val itemContainer: ViewGroup by lazy { mainView.findViewById<LinearLayout>(R.id.ll_container) }
+    private val itemContainer: ViewGroup by lazy { mainView.findViewById<LinearLayout>(R.id.ll_content_container) }
 
     override fun getLayoutId(): Int = R.layout.fg_card_response
 
