@@ -47,8 +47,8 @@ class ScanActionFragment : BaseCardActionFragment() {
         actionFab.setOnClickListener { actionVM.invokeMainAction() }
     }
 
-    override fun responseCardDataHandled(card: Card?) {
-        super.responseCardDataHandled(card)
+    override fun handleResponseCardData(card: Card) {
+        super.handleResponseCardData(card)
         navigateTo(R.id.action_nav_card_action_to_response_screen)
     }
 }
