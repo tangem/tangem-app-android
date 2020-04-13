@@ -59,8 +59,6 @@ class RvActionsVH(
 
         containerDescription.visibility = if (wrapper.descriptionIsVisible) View.VISIBLE else View.GONE
     }
-
-    override fun onDataBound(data: ActionType) {}
 }
 
 fun RecyclerView.ViewHolder.getString(@StringRes id: Int?, ifNull: String = ""): String {
