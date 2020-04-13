@@ -378,7 +378,7 @@ class LocalStorage
 }
 
 fun LocalStorage.isIdSergio(card: TangemCard): Boolean {
-    val issuerPublicKey = card.issuer.publicDataKey ?: return false
-    val hexString = Util.bytesToHex(issuerPublicKey)
+    val key = card.walletPublicKey ?: return false
+    val hexString = Util.bytesToHex(key)
     return hexString == "04EAD74FEEE4061044F46B19EB654CEEE981E9318F0C8FE99AF5CDB9D779D2E52BB51EA2D14545E0B323F7A90CF4CC72753C973149009C10DB2D83DCEC28487729"
 }
