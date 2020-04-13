@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
-        val switchMenu = menu.findItem(R.id.action_favorite)
+        val switchMenu = menu.findItem(R.id.action_toggle_description_visibility)
         (switchMenu.actionView as? SwitchCompat)?.let {
             it.setOnCheckedChangeListener { buttonView, isChecked -> vm.switchToggled(isChecked) }
         }

@@ -49,4 +49,8 @@ open class SimpleItemGroup(
         ILog.d(this, "clear $id")
         itemList.clear()
     }
+
+    override fun update(value: Item) {
+        // nothing to do
+    }
 }
