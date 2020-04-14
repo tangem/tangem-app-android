@@ -11,6 +11,7 @@ import com.tangem.tangemtest.R
 import com.tangem.tangemtest.ucase.domain.paramsManager.ItemsManager
 import com.tangem.tangemtest.ucase.domain.paramsManager.managers.ScanItemsManager
 import com.tangem.tangemtest.ucase.ui.BaseCardActionFragment
+import com.tangem.tangemtest.ucase.variants.responses.ui.ResponseFragment
 import ru.dev.gbixahue.eu4d.lib.android._android.views.dpToPx
 
 /**
@@ -49,6 +50,6 @@ class ScanActionFragment : BaseCardActionFragment() {
 
     override fun handleResponseCardData(card: Card) {
         super.handleResponseCardData(card)
-        navigateTo(R.id.action_nav_card_action_to_response_screen)
+        navigateTo(R.id.action_nav_card_action_to_response_screen, ResponseFragment.setTittle(R.string.fg_name_response_scan))
     }
 }
