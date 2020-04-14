@@ -11,6 +11,6 @@ interface Store<M> {
 interface KeyedStore<M> {
     fun save(key: String, value: M)
     fun restore(key: String): M
-    fun restoreAll(): Map<String, M>
+    fun restoreAll(): MutableMap<String, M>
     fun delete(key: String)
 }
