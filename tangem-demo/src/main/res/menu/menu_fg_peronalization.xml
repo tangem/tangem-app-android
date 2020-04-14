@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:id="@+id/menu_group_personalization_preset">
+
+        <item
+            android:id="@+id/action_reset"
+            android:title="@string/menu_personalization_preset_reset" />
+        <item
+            android:id="@+id/action_save"
+            android:title="@string/menu_personalization_preset_save" />
+        <item
+            android:id="@+id/action_load"
+            android:title="@string/menu_personalization_preset_load" />
+
+    </group>
+
+</menu>
