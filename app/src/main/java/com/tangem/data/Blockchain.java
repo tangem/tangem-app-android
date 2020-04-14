@@ -6,7 +6,7 @@ import com.tangem.tangem_sdk.R;
  * Created by dvol on 06.08.2017.
  */
 public enum Blockchain {
-    Unknown("", "", 1.0, R.drawable.ic_logo_unknown, ""),
+    Unknown("", "", 1.0, R.drawable.ic_logo_unknown, "Unknown"),
     Bitcoin("BTC", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin, "Bitcoin"),
     BitcoinTestNet("BTC/test", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin_testnet, "Bitcoin Testnet"),
     BitcoinDual("BTC/dual", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin, "Bitcoin"),
@@ -67,7 +67,7 @@ public enum Blockchain {
         for (Blockchain blockchain : values()) {
             if (blockchain.getID().equals(id)) return blockchain;
         }
-        return null;
+        return Blockchain.Unknown;
     }
 
     public static Blockchain fromCurrency(String currency) {
