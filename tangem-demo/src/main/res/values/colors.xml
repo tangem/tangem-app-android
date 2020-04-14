@@ -14,7 +14,7 @@
     <color name="field_description">@color/field_info</color>
 
     <color name="group_card_data">#D7E4F3</color>
-    <color name="group_signing_method">#D7F3E6</color>
+    <color name="group_settings_mask">#D7F3E6</color>
 
 
     <color name="switchTrack">#C6C6C6</color>
