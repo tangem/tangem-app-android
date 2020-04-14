@@ -30,6 +30,7 @@ open class ResponseFragment : BaseFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setTittle()
+        setHasOptionsMenu(true)
     }
 
     private fun setTittle() {
@@ -40,7 +41,6 @@ open class ResponseFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setHasOptionsMenu(true)
         buildWidgets()
         listenDescriptionSwitchChanges()
     }
@@ -58,10 +58,8 @@ open class ResponseFragment : BaseFragment() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_fg_response, menu)
         super.onCreateOptionsMenu(menu, inflater)
-
-        val menuItem = menu.findItem(R.id.action_share)
-        menuItem.isVisible = true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
