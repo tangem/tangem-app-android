@@ -33,6 +33,7 @@ import com.tangem.tangemtest.ucase.variants.personalize.ui.presets.Personalizati
 import com.tangem.tangemtest.ucase.variants.personalize.ui.presets.PersonalizationPresetView
 import com.tangem.tangemtest.ucase.variants.personalize.ui.presets.RvPresetNamesAdapter
 import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.PersonalizationItemBuilder
+import com.tangem.tangemtest.ucase.variants.responses.ui.ResponseFragment
 import ru.dev.gbixahue.eu4d.lib.android._android.views.inflate
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 import ru.dev.gbixahue.eu4d.lib.android.global.threading.postUI
@@ -117,7 +118,7 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
 
     override fun handleResponseCardData(card: Card) {
         super.handleResponseCardData(card)
-        navigateTo(R.id.action_nav_card_action_to_response_screen)
+        navigateTo(R.id.action_nav_card_action_to_response_screen, ResponseFragment.setTittle(R.string.fg_name_response_personalization))
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
