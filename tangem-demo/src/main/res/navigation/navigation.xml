@@ -6,7 +6,13 @@
 
     <action
         android:id="@+id/action_nav_card_action_to_response_screen"
-        app:destination="@+id/nav_card_response" />
+        app:destination="@+id/nav_card_response"
+        app:enterAnim="@anim/slide_in_right"
+        app:exitAnim="@anim/slide_out_left"
+        app:popEnterAnim="@anim/slide_in_left"
+        app:popExitAnim="@anim/slide_out_right"
+        app:popUpTo="@id/nav_entry_point"
+        app:popUpToInclusive="false" />
 
     <fragment
         android:id="@+id/nav_entry_point"
