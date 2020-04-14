@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Tangem Development Kit</string>
 
-    <string name="menu_main_docs">Docs</string>
+    <string name="menu_main_description">Description</string>
 
     <string name="copy_to_clipboard">Copy to clipboard</string>
     <string name="btn_delete">Delete</string>
