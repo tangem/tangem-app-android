@@ -21,13 +21,13 @@ class PersonalizationPresetManager(
 
     fun loadPreset() {
         val presets = store.restoreAll()
+        presets.remove(PersonalizationConfigStore.defaultKey)
         val namesList = presets.map { it.key }.toMutableList()
-        if (namesList.size <= 1) {
+        if (namesList.isEmpty()) {
             view.showSnackbar(R.string.error_nothing_to_load)
             return
         }
 
-        namesList.removeAt(0)
         view.showLoadPresetDialog(namesList, {
             val converter = PersonalizationConfigConverter()
             val config = store.restore(it)
