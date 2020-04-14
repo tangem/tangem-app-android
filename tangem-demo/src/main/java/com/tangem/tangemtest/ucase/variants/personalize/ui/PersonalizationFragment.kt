@@ -47,9 +47,9 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
 
     override fun getLayoutId(): Int = R.layout.fg_base_action_layout
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-        return super.onCreateView(inflater, container, savedInstanceState)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -120,21 +120,21 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
         navigateTo(R.id.action_nav_card_action_to_response_screen)
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu) {
-        super.onPrepareOptionsMenu(menu)
-        menu.setGroupVisible(R.id.menu_group_personalization_preset, true)
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_fg_peronalization, menu)
+        super.onCreateOptionsMenu(menu, inflater)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val store = PersonalizationConfigStore(requireContext())
         val presetManager = PersonalizationPresetManager(itemsManager, store, this)
-        when (item.itemId) {
+        val result = when (item.itemId) {
             R.id.action_reset -> presetManager.resetToDefault()
             R.id.action_save -> presetManager.savePreset()
             R.id.action_load -> presetManager.loadPreset()
-            else -> return super.onOptionsItemSelected(item)
+            else -> null
         }
-        return true
+        return if (result == null) super.onOptionsItemSelected(item) else true
     }
 
     override fun showSnackbar(id: Id, additionalHandler: ((Id) -> Int)?) {
@@ -150,7 +150,7 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
     override fun showSavePresetDialog(onOk: SafeValueChanged<String>) {
         val dlgController = DialogController()
         val dlg = dlgController.createAlert(requireActivity(), R.layout.dlg_personalization_preset_save)
-        dlg.setTitle(R.string.menu_preset_save)
+        dlg.setTitle(R.string.menu_personalization_preset_save)
         dlg.setButton(DialogInterface.BUTTON_NEGATIVE, getString(R.string.btn_cancel)) { dialog, which -> }
         dlg.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string.btn_ok)) { dialog, which ->
             val tvName = dlgController.view?.findViewById<EditText>(R.id.et_item) ?: return@setButton
@@ -164,7 +164,7 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
     override fun showLoadPresetDialog(namesList: List<String>, onChoose: SafeValueChanged<String>, onDelete: SafeValueChanged<String>) {
         val dlgController = DialogController()
         val dlg = dlgController.createAlert(requireActivity(), R.layout.dlg_personalization_preset_load)
-        dlg.setTitle(R.string.menu_preset_load)
+        dlg.setTitle(R.string.menu_personalization_preset_load)
         val rvPresetNames: RecyclerView = dlgController.view?.findViewById(R.id.recycler_view) ?: return
 
         rvPresetNames.layoutManager = LinearLayoutManager(context)
