@@ -1,5 +1,6 @@
 package com.tangem.wallet.tokenEmv
 
+import android.net.Uri
 import android.text.InputFilter
 import android.util.Log
 import com.google.gson.Gson
@@ -106,6 +107,10 @@ class TokenEmvEngine : TokenEngine {
 
     override fun hasBalanceInfo(): Boolean {
         return coinData.balanceInInternalUnits != null
+    }
+
+    override fun getWalletExplorerUri(): Uri {
+        return Uri.parse("https://ropsten.etherscan.io/token/" + getContractAddress(ctx.card) + "?a=" + ctx.coinData.wallet)
     }
 
     override fun isExtractPossible(): Boolean {
