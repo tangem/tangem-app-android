@@ -11,8 +11,11 @@ import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizationConfi
 
 class PersonalizationConfigStore(context: Context) : Store<PersonalizationConfig>, KeyedStore<PersonalizationConfig> {
 
+    companion object {
+        val defaultKey = "default"
+    }
+
     private val sharedPreferencesKey = "personalization_presets"
-    private val defaultKey = "default"
 
     private val sp: SharedPreferences = (context.applicationContext as AppTangemDemo).sharedPreferences(sharedPreferencesKey)
     private val gson: Gson = Gson()
@@ -32,7 +35,7 @@ class PersonalizationConfigStore(context: Context) : Store<PersonalizationConfig
         return fromJson(json!!)
     }
 
-    override fun restoreAll(): Map<String, PersonalizationConfig> {
+    override fun restoreAll(): MutableMap<String, PersonalizationConfig> {
         val map = mutableMapOf<String, PersonalizationConfig>()
         sp.all.forEach { map[it.key] = fromJson(it.value as String) }
         return map.toSortedMap()
