@@ -4,13 +4,13 @@ import com.tangem.commands.Card
 import com.tangem.commands.CardData
 import com.tangem.commands.Settings
 import com.tangem.commands.SettingsMask
-import com.tangem.common.extensions.toHexString
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.StringId
 import com.tangem.tangemtest._arch.structure.abstraction.*
 import com.tangem.tangemtest._arch.structure.impl.BoolItem
 import com.tangem.tangemtest._arch.structure.impl.TextItem
+import com.tangem.tangemtest.ucase.domain.responses.ResponseFieldConverter
 import com.tangem.tangemtest.ucase.variants.personalize.BlockId
 import com.tangem.tangemtest.ucase.variants.responses.CardDataId
 import com.tangem.tangemtest.ucase.variants.responses.CardId
@@ -20,11 +20,11 @@ import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 [REDACTED_AUTHOR]
  */
 class CardConverter : ModelToItems<Card> {
+
+    private val fieldConverter = ResponseFieldConverter()
+
     override fun convert(from: Card): List<Item> {
         val itemList = mutableListOf<Item>()
-//        val holder = GsonInitializer()
-//        itemList.add(TextItem(Additional.JSON_INCOMING, holder.gson.toJson(from)))
-
         itemList.add(simpleFields(from))
         itemList.add(cardData(from.cardData))
         itemList.add(settingsMask(from.settingsMask))
@@ -52,13 +52,13 @@ class CardConverter : ModelToItems<Card> {
         group.addItem(TextItem(CardId.manufacturerName, from.manufacturerName))
         group.addItem(TextItem(CardId.status, stringOf(from.status)))
         group.addItem(TextItem(CardId.firmwareVersion, from.firmwareVersion))
-        group.addItem(TextItem(CardId.cardPublicKey, from.cardPublicKey?.toHexString()))
-        group.addItem(TextItem(CardId.issuerPublicKey, from.issuerPublicKey?.toHexString()))
+        group.addItem(TextItem(CardId.cardPublicKey, fieldConverter.byteArray(from.cardPublicKey)))
+        group.addItem(TextItem(CardId.issuerPublicKey, fieldConverter.byteArray(from.issuerPublicKey)))
         group.addItem(TextItem(CardId.curve, stringOf(from.curve)))
         group.addItem(TextItem(CardId.maxSignatures, stringOf(from.maxSignatures)))
-        group.addItem(TextItem(CardId.signingMethod, stringOf(from.signingMethod?.rawValue)))
+        group.addItem(TextItem(CardId.signingMethod, fieldConverter.signingMethod(from.signingMethod)))
         group.addItem(TextItem(CardId.pauseBeforePin2, stringOf(from.pauseBeforePin2)))
-        group.addItem(TextItem(CardId.walletPublicKey, stringOf(from.walletPublicKey)))
+        group.addItem(TextItem(CardId.walletPublicKey, fieldConverter.byteArray(from.walletPublicKey)))
         group.addItem(TextItem(CardId.walletRemainingSignatures, stringOf(from.walletRemainingSignatures)))
         group.addItem(TextItem(CardId.walletSignedHashes, stringOf(from.walletSignedHashes)))
         group.addItem(TextItem(CardId.health, stringOf(from.health)))
@@ -80,8 +80,8 @@ class CardConverter : ModelToItems<Card> {
         group.addItem(TextItem(CardDataId.manufactureDateTime, stringOf(data.manufactureDateTime)))
         group.addItem(TextItem(CardDataId.issuerName, data.issuerName))
         group.addItem(TextItem(CardDataId.blockchainName, data.blockchainName))
-        group.addItem(TextItem(CardDataId.manufacturerSignature, data.manufacturerSignature?.toHexString()))
-        group.addItem(TextItem(CardDataId.productMask, stringOf(data.productMask?.rawValue)))
+        group.addItem(TextItem(CardDataId.manufacturerSignature, fieldConverter.byteArray(data.manufacturerSignature)))
+        group.addItem(TextItem(CardDataId.productMask, fieldConverter.productMask(data.productMask)))
         group.addItem(TextItem(CardDataId.tokenSymbol, data.tokenSymbol))
         group.addItem(TextItem(CardDataId.tokenContractAddress, data.tokenContractAddress))
         group.addItem(TextItem(CardDataId.tokenDecimal, data.tokenSymbol))
@@ -90,10 +90,9 @@ class CardConverter : ModelToItems<Card> {
     }
 
     private fun settingsMask(from: SettingsMask?): Item {
-        val group = createGroup(CardId.settingsMask, R.color.group_signing_method)
+        val group = createGroup(CardId.settingsMask, R.color.group_settings_mask)
         val data = from ?: return group
 
-//        group.addItem(TextItem(StringResId(R.string.response_card_settings_mask)))
         Settings.values().forEach { group.addItem(BoolItem(StringId(it.name), data.contains(it))) }
         return group
     }
