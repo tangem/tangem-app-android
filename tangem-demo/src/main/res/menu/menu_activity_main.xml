@@ -5,7 +5,7 @@
     <item
         android:id="@+id/action_toggle_description_visibility"
         android:checkable="true"
-        android:title="@string/menu_main_docs"
+        android:title="@string/menu_main_description"
         app:showAsAction="never" />
 
 </menu>
