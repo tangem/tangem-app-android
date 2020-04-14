@@ -118,7 +118,8 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
 
     override fun handleResponseCardData(card: Card) {
         super.handleResponseCardData(card)
-        navigateTo(R.id.action_nav_card_action_to_response_screen, ResponseFragment.setTittle(R.string.fg_name_response_personalization))
+        val bundle = ResponseFragment.setTittle(R.string.fg_name_response_personalization)
+        navigateTo(R.id.action_nav_card_action_to_response_screen, bundle, null)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
