@@ -1,5 +1,7 @@
 package com.tangem.tangemtest.ucase.variants.personalize.dto
 
+import com.tangem.commands.EllipticCurve
+
 /**
 [REDACTED_AUTHOR]
  */
@@ -90,8 +92,8 @@ class PersonalizationConfig {
                 batchId = "ffff"
 
                 // Common
-                curveID = "ed25519"
-                blockchain = "BTC/test"
+                curveID = EllipticCurve.Secp256k1.curve
+                blockchain = "ETH"
                 blockchainCustom = ""
                 MaxSignatures = 999999L
                 createWallet = true
