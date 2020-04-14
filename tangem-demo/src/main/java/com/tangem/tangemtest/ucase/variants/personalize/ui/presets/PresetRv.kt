@@ -24,9 +24,9 @@ class RvPresetNamesAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PresetNameVH {
         val view = parent.inflate<View>(R.layout.vh_personalization_preset_name, false)
         return PresetNameVH(view, onItemClicked, { position, value ->
-            onDeleteClicked(value)
             itemList.removeAt(position)
             this.notifyItemRemoved(position)
+            onDeleteClicked(value)
         })
     }
 }
