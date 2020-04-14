@@ -7,6 +7,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.Fade
@@ -155,7 +156,8 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
         dlg.setTitle(R.string.menu_personalization_preset_save)
         dlg.setButton(DialogInterface.BUTTON_NEGATIVE, getString(R.string.btn_cancel)) { dialog, which -> }
         dlg.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string.btn_ok)) { dialog, which ->
-            val tvName = dlgController.view?.findViewById<EditText>(R.id.et_item) ?: return@setButton
+            val tvName = dlgController.view?.findViewById<EditText>(R.id.et_item)
+                    ?: return@setButton
             val name = tvName.text.toString()
             if (name.isEmpty()) showSnackbar("Not saved")
             else onOk.invoke(name)
@@ -169,7 +171,10 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
         dlg.setTitle(R.string.menu_personalization_preset_load)
         val rvPresetNames: RecyclerView = dlgController.view?.findViewById(R.id.recycler_view) ?: return
 
-        rvPresetNames.layoutManager = LinearLayoutManager(context)
+        val layoutManager = LinearLayoutManager(context)
+        rvPresetNames.layoutManager = layoutManager
+        rvPresetNames.addItemDecoration(DividerItemDecoration(activity, layoutManager.orientation))
+
         rvPresetNames.adapter = RvPresetNamesAdapter({
             onChoose(it)
             dlgController.dismiss()
