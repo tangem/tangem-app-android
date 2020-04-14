@@ -66,7 +66,7 @@ class ConfigValuesHolder : BaseTypedHolder<Id, Value>() {
         register(SettingsMaskNdef.DynamicNdef, Value(default.useDynamicNDEF))
         register(SettingsMaskNdef.DisablePrecomputedNdef, Value(default.disablePrecomputedNDEF))
         register(SettingsMaskNdef.Aar, Value(default.aar, Helper.aarList()))
-        register(SettingsMaskNdef.AarCustom, Value(default.aar))
+        register(SettingsMaskNdef.AarCustom, Value(default.aarCustom))
         register(SettingsMaskNdef.Uri, Value(default.uri))
         register(Pins.Pin, Value(default.PIN))
         register(Pins.Pin2, Value(default.PIN2))
