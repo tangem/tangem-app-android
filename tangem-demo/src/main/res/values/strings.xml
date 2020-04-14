@@ -1,13 +1,17 @@
 <resources>
     <string name="app_name">Tangem Development Kit</string>
 
-    <string name="unknown">unknown</string>
+    <string name="menu_main_docs">Docs</string>
+
     <string name="copy_to_clipboard">Copy to clipboard</string>
     <string name="btn_delete">Delete</string>
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">Cancel</string>
     <string name="btn_save">Save</string>
     <string name="btn_load">Load</string>
+
+    <string name="unknown">unknown</string>
+    <string name="error_nothing_to_load">Nothing to load</string>
 
     <string name="fg_name_entry_point">@string/app_name</string>
     <string name="fg_name_response_scan">Scan response</string>
