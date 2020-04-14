@@ -3,6 +3,8 @@ package com.tangem.tangemtest.ucase.variants.responses.ui
 import android.os.Bundle
 import android.view.*
 import android.widget.LinearLayout
+import androidx.annotation.StringRes
+import androidx.core.os.bundleOf
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
@@ -29,12 +31,13 @@ open class ResponseFragment : BaseFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setTittle()
+
         setHasOptionsMenu(true)
+        setTittle()
     }
 
     private fun setTittle() {
-        val titleId = selfVM.determineTitleId(mainActivityVM.commandResponse)
+        val titleId = getTittleId(arguments) ?: selfVM.determineTitleId(mainActivityVM.commandResponse)
         activity?.setTitle(titleId)
     }
 
@@ -69,5 +72,13 @@ open class ResponseFragment : BaseFragment() {
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    companion object {
+        private val argTittle = "tittle"
+
+        fun setTittle(@StringRes id: Int): Bundle = bundleOf(Pair(argTittle, id))
+
+        private fun getTittleId(args: Bundle?): Int? = args?.getInt(argTittle)
     }
 }
