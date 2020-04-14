@@ -14,7 +14,7 @@
     <string name="error_nothing_to_load">Nothing to load</string>
 
     <string name="fg_name_entry_point">@string/app_name</string>
-    <string name="fg_name_response_scan">Scan response</string>
+    <string name="fg_name_response_scan">Read response</string>
     <string name="fg_name_response_sign">Sign response</string>
     <string name="fg_name_response_personalization">Personalization response</string>
     <string name="fg_name_response_depersonalization">Depersonalization response</string>
