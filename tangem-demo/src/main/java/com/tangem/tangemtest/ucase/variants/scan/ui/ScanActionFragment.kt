@@ -50,6 +50,7 @@ class ScanActionFragment : BaseCardActionFragment() {
 
     override fun handleResponseCardData(card: Card) {
         super.handleResponseCardData(card)
-        navigateTo(R.id.action_nav_card_action_to_response_screen, ResponseFragment.setTittle(R.string.fg_name_response_scan))
+        val bundle = ResponseFragment.setTittle(R.string.fg_name_response_scan)
+        navigateTo(R.id.action_nav_card_action_to_response_screen, bundle, null)
     }
 }
