@@ -43,9 +43,9 @@ class ViewState(
     }
 
     override fun update(value: ViewState) {
-        isVisibleState = value.isVisibleState
-        backgroundColor = value.backgroundColor
-        descriptionVisibility = value.descriptionVisibility
+//        isVisibleState.update(value.isVisibleState)
+//        backgroundColor.update(value.backgroundColor)
+//        descriptionVisibility.update(value.descriptionVisibility)
     }
 }
 
