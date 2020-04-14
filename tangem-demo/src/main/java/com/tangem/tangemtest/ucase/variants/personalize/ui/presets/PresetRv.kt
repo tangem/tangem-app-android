@@ -37,7 +37,7 @@ class PresetNameVH(
         private val onDeleteClicked: (Int, String) -> Unit
 ) : RvVH<String>(itemView) {
     private val tvName = itemView.findViewById<TextView>(R.id.tv_name)
-    private val btnDelete = itemView.findViewById<Button>(R.id.btn_delete)
+    private val btnDelete = itemView.findViewById<View>(R.id.btn_delete)
     override fun onDataBound(data: String) {
         tvName.text = data
         tvName.isClickable = false
