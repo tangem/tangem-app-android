@@ -3,9 +3,12 @@ package com.tangem.tangemtest.ucase.variants.personalize.ui
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.*
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -37,8 +40,10 @@ import com.tangem.tangemtest.ucase.variants.personalize.ui.widgets.Personalizati
 import com.tangem.tangemtest.ucase.variants.responses.ui.ResponseFragment
 import ru.dev.gbixahue.eu4d.lib.android._android.views.inflate
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
+import ru.dev.gbixahue.eu4d.lib.android.global.threading.post
 import ru.dev.gbixahue.eu4d.lib.android.global.threading.postUI
 import ru.dev.gbixahue.eu4d.lib.android.global.threading.postWork
+
 
 /**
 [REDACTED_AUTHOR]
@@ -162,23 +167,39 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
             if (name.isEmpty()) showSnackbar("Not saved")
             else onOk.invoke(name)
         }
+        dlgController.onShowCallback = {
+            dlgController.view?.findViewById<TextView>(R.id.et_item)?.let {
+                post(150) {
+                    it.requestFocus()
+                    val imm = getSystemService(requireContext(), InputMethodManager::class.java)
+                    imm?.showSoftInput(it, InputMethodManager.SHOW_IMPLICIT)
+                }
+            }
+        }
         dlgController.show()
     }
 
     override fun showLoadPresetDialog(namesList: List<String>, onChoose: SafeValueChanged<String>, onDelete: SafeValueChanged<String>) {
         val dlgController = DialogController()
-        val dlg = dlgController.createAlert(requireActivity(), R.layout.dlg_personalization_preset_load)
-        dlg.setTitle(R.string.menu_personalization_preset_load)
-        val rvPresetNames: RecyclerView = dlgController.view?.findViewById(R.id.recycler_view) ?: return
+        dlgController.createAlert(requireActivity(), R.layout.dlg_personalization_preset_load)
+                .setTitle(R.string.menu_personalization_preset_load)
 
+        val rvPresetNames: RecyclerView = dlgController.view?.findViewById(R.id.recycler_view) ?: return
         val layoutManager = LinearLayoutManager(context)
         rvPresetNames.layoutManager = layoutManager
         rvPresetNames.addItemDecoration(DividerItemDecoration(activity, layoutManager.orientation))
 
-        rvPresetNames.adapter = RvPresetNamesAdapter({
+        val adapter = RvPresetNamesAdapter({
             onChoose(it)
             dlgController.dismiss()
-        }, onDelete).apply { setItemList(namesList.toMutableList()) }
+        }, {
+            onDelete(it)
+            if (rvPresetNames.adapter?.itemCount == 0)
+                dlgController.dismiss()
+        })
+        adapter.setItemList(namesList.toMutableList())
+
+        rvPresetNames.adapter = adapter
         dlgController.show()
     }
 }
