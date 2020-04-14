@@ -116,7 +116,7 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
     }
 
     protected open fun handleResponseData(response: CommandResponse) {
-        navigateTo(R.id.action_nav_card_action_to_response_screen)
+        navigateTo(R.id.action_nav_card_action_to_response_screen, options = null)
     }
 
     protected open fun handleResponseCardData(card: Card) {}
