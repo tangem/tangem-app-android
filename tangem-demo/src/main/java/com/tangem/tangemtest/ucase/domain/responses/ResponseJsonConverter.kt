@@ -20,7 +20,7 @@ class ResponseJsonConverter {
     private fun init(): Gson {
         val builder = GsonBuilder().apply {
             registerTypeAdapter(ByteArray::class.java, ByteTypeAdapter(fieldConverter))
-            registerTypeAdapter(SigningMethod::class.java, SigningMethodTypeAdapter(fieldConverter))
+            registerTypeAdapter(SigningMethodMask::class.java, SigningMethodTypeAdapter(fieldConverter))
             registerTypeAdapter(SettingsMask::class.java, SettingsMaskTypeAdapter(fieldConverter))
             registerTypeAdapter(ProductMask::class.java, ProductMaskTypeAdapter(fieldConverter))
             registerTypeAdapter(Date::class.java, DateTypeAdapter())
@@ -62,8 +62,8 @@ class ProductMaskTypeAdapter(
 
 class SigningMethodTypeAdapter(
         private val fieldConverter: ResponseFieldConverter
-) : JsonSerializer<SigningMethod> {
-    override fun serialize(src: SigningMethod, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+) : JsonSerializer<SigningMethodMask> {
+    override fun serialize(src: SigningMethodMask, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         return JsonArray().apply {
             fieldConverter.signingMethodList(src).forEach { add(it) }
         }
@@ -86,32 +86,17 @@ class ResponseFieldConverter {
     fun productMaskList(productMask: ProductMask?): List<String> {
         val mask = productMask ?: return emptyList()
 
-        val signingMap = mutableMapOf(
-                ProductMask.note to "Note",
-                ProductMask.tag to "Tag",
-                ProductMask.idCard to "IdCard",
-                ProductMask.idIssuer to "IdIssuer"
-        )
-        return signingMap.filter { mask.contains(it.key) }.map { it.value }
+        return Product.values().filter { mask.contains(it) }.map { it.name }
     }
 
-    fun signingMethod(signingMethod: SigningMethod?): String {
-        return signingMethodList(signingMethod).print(wrap = false)
+    fun signingMethod(signingMask: SigningMethodMask?): String {
+        return signingMethodList(signingMask).print(wrap = false)
     }
 
-    fun signingMethodList(signingMethod: SigningMethod?): List<String> {
-        val methods = signingMethod ?: return emptyList()
+    fun signingMethodList(signingMask: SigningMethodMask?): List<String> {
+        val mask = signingMask ?: return emptyList()
 
-        val signingMap = mutableMapOf(
-                SigningMethod.signHash to "Hash",
-                SigningMethod.signRaw to "Raw",
-                SigningMethod.signHashValidatedByIssuer to "HashValidatedByIssuer",
-                SigningMethod.signRawValidatedByIssuer to "RawValidatedByIssuer",
-                SigningMethod.signHashValidatedByIssuerAndWriteIssuerData to "HashValidatedByIssuerAndWriteIssuerData",
-                SigningMethod.signRawValidatedByIssuerAndWriteIssuerData to "RawValidatedByIssuerAndWriteIssuerData",
-                SigningMethod.signPos to "Pos"
-        )
-        return signingMap.filter { methods.contains(it.key) }.map { it.value }
+        return SigningMethod.values().filter { mask.contains(it) }.map { it.name }
     }
 
     fun settingsMask(settingsMask: SettingsMask?): String {
@@ -124,7 +109,7 @@ class ResponseFieldConverter {
         return Settings.values().filter { masks.contains(it) }.map { it.name }
     }
 
-    fun byteArray(byteArray: ByteArray?): String {
-        return byteArray?.toHexString() ?: ""
+    fun byteArray(byteArray: ByteArray?): String? {
+        return byteArray?.toHexString()
     }
 }

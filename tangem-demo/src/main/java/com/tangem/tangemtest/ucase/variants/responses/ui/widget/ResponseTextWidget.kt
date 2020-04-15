@@ -4,6 +4,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.impl.TextItem
+import com.tangem.tangemtest.ucase.variants.responses.item.TextHeaderItem
 
 /**
 [REDACTED_AUTHOR]
@@ -26,5 +27,19 @@ class ResponseTextWidget(
         val data = typedItem.getData() as? String
         tvName.text = getName()
         tvValue.text = data
+    }
+}
+
+class ResponseHeaderWidget(
+        parent: ViewGroup,
+        private val typedItem: TextHeaderItem
+) : ResponseWidget(parent, typedItem) {
+    override fun getLayoutId(): Int = R.layout.w_response_item_header
+
+    private val tvName: TextView = view.findViewById(R.id.tv_name)
+
+    init {
+        tvName.text = getName()
+
     }
 }
