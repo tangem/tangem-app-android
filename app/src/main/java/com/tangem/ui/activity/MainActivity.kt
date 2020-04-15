@@ -8,6 +8,7 @@ import android.nfc.Tag
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.findNavController
 import com.scottyab.rootbeer.RootBeer
@@ -16,6 +17,7 @@ import com.tangem.di.ToastHelper
 import com.tangem.tangem_sdk.android.nfc.NfcLifecycleObserver
 import com.tangem.tangem_sdk.android.reader.NfcManager
 import com.tangem.ui.dialog.RootFoundDialog
+import com.tangem.ui.fragment.MainFragment
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import javax.inject.Inject
@@ -44,6 +46,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     }
 
     private fun navigateSafelyToMainFragment() {
+        if (getActiveFragment() is MainFragment) return
+
         try {
             findNavController(R.id.nav_host_fragment).popBackStack()
         } catch (e: IllegalArgumentException) {
@@ -73,8 +77,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     }
 
     override fun onTagDiscovered(tag: Tag) {
-        val activeFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
-                ?.childFragmentManager?.primaryNavigationFragment
+        val activeFragment = getActiveFragment()
         if (activeFragment is NfcAdapter.ReaderCallback) {
             activeFragment.onTagDiscovered(tag)
         } else {
@@ -82,4 +85,8 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
     }
 
+    private fun getActiveFragment(): Fragment? {
+        return supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
+                ?.childFragmentManager?.primaryNavigationFragment
+    }
 }
