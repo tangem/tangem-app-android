@@ -6,7 +6,7 @@ import com.tangem.tangem_sdk.R;
  * Created by dvol on 06.08.2017.
  */
 public enum Blockchain {
-    Unknown("", "", 1.0, R.drawable.ic_logo_unknown, ""),
+    Unknown("", "", 1.0, R.drawable.ic_logo_unknown, "Unknown"),
     Bitcoin("BTC", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin, "Bitcoin"),
     BitcoinTestNet("BTC/test", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin_testnet, "Bitcoin Testnet"),
     BitcoinDual("BTC/dual", "BTC", 100000000.0, R.drawable.ic_logo_bitcoin, "Bitcoin"),
@@ -32,7 +32,8 @@ public enum Blockchain {
     Eos("EOS", "EOS", 10000.0, R.drawable.tangem2, "EOS"),
     Ducatus("DUC", "DUC", 100000000.0, R.drawable.tangem2, "Ducatus"),
     Tezos("TEZOS", "XTZ", 10000000.0, R.drawable.ic_logo_tezos, "Tezos"),
-    FlowDemo("FLOW/demo", "", 1.0, R.drawable.tangem2, "Flow demo");
+    FlowDemo("FLOW/demo", "", 1.0, R.drawable.tangem2, "Flow demo"),
+    TokenEmv("TTW", "ETH", 1.0, R.drawable.ic_logo_ethereum, "Ethereum");
 
     Blockchain(String ID, String currency, double multiplier, int imageResource, String officialName) {
         mID = ID;
@@ -67,7 +68,7 @@ public enum Blockchain {
         for (Blockchain blockchain : values()) {
             if (blockchain.getID().equals(id)) return blockchain;
         }
-        return null;
+        return Blockchain.Unknown;
     }
 
     public static Blockchain fromCurrency(String currency) {
