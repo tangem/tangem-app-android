@@ -26,13 +26,13 @@ data class SigningMethodMask(val rawValue: Int) {
 }
 
 enum class SigningMethod(val code: Int) {
-    SIGN_HASH(0),
-    SIGN_RAW(1),
-    SIGN_HASH_VALIDATE_BY_ISSUER(2),
-    SIGN_RAW_VALIDATE_BY_ISSUER(3),
-    SIGN_HASH_VALIDATE_BY_ISSUER_WRITE_ISSUER_DATA(4),
-    SIGN_RAW_VALIDATE_BY_ISSUER_WRITE_ISSUER_DATA(5),
-    SIGN_POS(6)
+    SignHash(0),
+    SignRaw(1),
+    SignHashValidateByIssuer(2),
+    SignRawValidateByIssuer(3),
+    SignHashValidateByIssuerWriteIssuerData(4),
+    SignRawValidateByIssuerWriteIssuerData(5),
+    SignPos(6)
 }
 
 class SigningMethodMaskBuilder() {
@@ -101,10 +101,10 @@ data class ProductMask(val rawValue: Int) {
 }
 
 enum class Product(val code: Int) {
-    NOTE(0x01),
-    TAG(0x02),
-    ID_CARD(0x04),
-    ID_ISSUER(0x08)
+    Note(0x01),
+    Tag(0x02),
+    IdCard(0x04),
+    IdIssuer(0x08)
 }
 
 class ProductMaskBuilder() {
@@ -327,21 +327,21 @@ class Card(
         val activationSeed: ByteArray?,
 
         /**
-         * Returned only if [SigningMethod.SIGN_POS] enabling POS transactions is supported by card.
+         * Returned only if [SigningMethod.SignPos] enabling POS transactions is supported by card.
          */
         val paymentFlowVersion: ByteArray?,
 
         /**
          * This value can be initialized by terminal and will be increased by COS on execution of every [SignCommand].
          * For example, this field can store blockchain “nonce” for quick one-touch transaction on POS terminals.
-         * Returned only if [SigningMethod.SIGN_POS]  enabling POS transactions is supported by card.
+         * Returned only if [SigningMethod.SignPos]  enabling POS transactions is supported by card.
          */
         val userCounter: Int?,
 
         /**
          * This value can be initialized by App (with PIN2 confirmation) and will be increased by COS
          * with the execution of each [SignCommand]. For example, this field can store blockchain “nonce”
-         * for a quick one-touch transaction on POS terminals. Returned only if [SigningMethod.SIGN_POS].
+         * for a quick one-touch transaction on POS terminals. Returned only if [SigningMethod.SignPos].
          */
         val userProtectedCounter: Int?,
 
