@@ -20,7 +20,10 @@ fun List<Item>.iterate(func: (Item) -> Unit) {
     forEach {
         when (it) {
             is BaseItem -> func(it)
-            is ItemGroup -> it.itemList.iterate(func)
+            is ItemGroup -> {
+                func(it)
+                it.itemList.iterate(func)
+            }
         }
     }
 }
