@@ -2,7 +2,7 @@ package com.tangem.commands.personalization.entities
 
 import com.tangem.commands.CardData
 import com.tangem.commands.EllipticCurve
-import com.tangem.commands.SigningMethod
+import com.tangem.commands.SigningMethodMask
 
 data class NdefRecord(
         val type: Type,
@@ -33,7 +33,7 @@ data class CardConfig(
         val pauseBeforePin2: Int,
         val smartSecurityDelay: Boolean,
         val curveID: EllipticCurve,
-        val signingMethod: SigningMethod,
+        val signingMethods: SigningMethodMask,
         val maxSignatures: Int,
         val isReusable: Boolean,
         val allowSwapPin: Boolean,
