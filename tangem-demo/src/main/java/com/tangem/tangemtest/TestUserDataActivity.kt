@@ -5,14 +5,11 @@ import android.view.View
 import android.widget.CompoundButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.tangem.CardManager
-import com.tangem.commands.ReadUserDataResponse
-import com.tangem.commands.WriteUserDataResponse
-import com.tangem.common.CardEnvironment
+import com.tangem.SessionEnvironment
+import com.tangem.SessionError
+import com.tangem.TangemSdk
+import com.tangem.common.CompletionResult
 import com.tangem.tangem_sdk_new.extensions.init
-import com.tangem.tasks.ScanEvent
-import com.tangem.tasks.TaskError
-import com.tangem.tasks.TaskEvent
 import kotlinx.android.synthetic.main.activity_test_user_data.*
 import java.nio.charset.StandardCharsets
 
@@ -21,7 +18,7 @@ import java.nio.charset.StandardCharsets
  */
 class TestUserDataActivity : AppCompatActivity() {
 
-    private lateinit var cardManager: CardManager
+    private lateinit var tangemSdk: TangemSdk
     private lateinit var writeOptions: WriteOptions
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,31 +30,15 @@ class TestUserDataActivity : AppCompatActivity() {
     }
 
     private fun init() {
-        cardManager = CardManager.init(this)
+        tangemSdk = TangemSdk.init(this)
 
         btn_scan?.setOnClickListener { _ ->
-            cardManager.scanCard { taskEvent ->
+            tangemSdk.scanCard { taskEvent ->
                 when (taskEvent) {
-                    is TaskEvent.Event -> {
-                        when (taskEvent.data) {
-                            is ScanEvent.OnReadEvent -> {
-                                // Handle returned card data
-                                writeOptions.cardId = (taskEvent.data as ScanEvent.OnReadEvent).card.cardId
-                                runOnUiThread { showReadWriteSection(true) }
-                            }
-                            is ScanEvent.OnVerifyEvent -> {
-                                //Handle card verification
-                            }
-                        }
-                    }
-                    is TaskEvent.Completion -> {
-                        if (taskEvent.error != null) {
-                            if (taskEvent.error is TaskError.UserCancelled) {
-                                // Handle case when user cancelled manually
-                            }
-                            // Handle other errors
-                        }
-                        // Handle completion
+                    is CompletionResult.Success -> {
+                        // Handle returned card data
+                        writeOptions.cardId = taskEvent.data.cardId
+                        runOnUiThread { showReadWriteSection(true) }
                     }
                 }
             }
@@ -66,7 +47,7 @@ class TestUserDataActivity : AppCompatActivity() {
         btn_write.setOnClickListener {
             if (writeOptions.cardId == null) return@setOnClickListener
 
-            cardManager.writeUserData(
+            tangemSdk.writeUserData(
                     writeOptions.cardId!!,
                     writeOptions.userData,
                     writeOptions.userProtectedData,
@@ -74,16 +55,9 @@ class TestUserDataActivity : AppCompatActivity() {
                     writeOptions.userProtectedCounter
             ) {
                 when (it) {
-                    is TaskEvent.Completion -> handleError(tv_write_result, it.error)
-                    is TaskEvent.Event -> {
-                        runOnUiThread {
-                            val data = it.data as? WriteUserDataResponse
-                            if (data == null) {
-                                tv_write_result.text = "Response doesn't match"
-                                return@runOnUiThread
-                            }
-                            tv_write_result?.text = "Success"
-                        }
+                    is CompletionResult.Failure -> handleError(tv_write_result, it.error)
+                    is CompletionResult.Success -> {
+                        runOnUiThread { tv_write_result?.text = "Success" }
                     }
                 }
             }
@@ -92,28 +66,24 @@ class TestUserDataActivity : AppCompatActivity() {
         btn_read.setOnClickListener {
             if (writeOptions.cardId == null) return@setOnClickListener
 
-            cardManager.readUserData(writeOptions.cardId!!) {
+            tangemSdk.readUserData(writeOptions.cardId!!) {
                 when (it) {
-                    is TaskEvent.Completion -> handleError(tv_read_result, it.error)
-                    is TaskEvent.Event -> {
+                    is CompletionResult.Failure -> handleError(tv_write_result, it.error)
+                    is CompletionResult.Success -> {
                         runOnUiThread {
-                            val data = it.data as? ReadUserDataResponse
-                            if (data == null) {
-                                tv_read_result.text = "Response doesn't match"
-                                return@runOnUiThread
-                            }
+
                             tv_read_result?.text = "Success"
 
-                            writeOptions.userData = data.userData
-                            writeOptions.userProtectedData = data.userProtectedData
-                            writeOptions.userCounter = data.userCounter
-                            writeOptions.userProtectedCounter = data.userProtectedCounter
+                            writeOptions.userData = it.data.userData
+                            writeOptions.userProtectedData = it.data.userProtectedData
+                            writeOptions.userCounter = it.data.userCounter
+                            writeOptions.userProtectedCounter = it.data.userProtectedCounter
 
-                            tv_card_cid.text = data.cardId
-                            tv_data.text = String(data.userData, StandardCharsets.US_ASCII)
-                            tv_protected_data.text = String(data.userProtectedData, StandardCharsets.US_ASCII)
-                            tv_counter.text = data.userCounter.toString()
-                            tv_protected_counter.text = data.userProtectedCounter.toString()
+                            tv_card_cid.text = it.data.cardId
+                            tv_data.text = String(it.data.userData, StandardCharsets.US_ASCII)
+                            tv_protected_data.text = String(it.data.userProtectedData, StandardCharsets.US_ASCII)
+                            tv_counter.text = it.data.userCounter.toString()
+                            tv_protected_counter.text = it.data.userProtectedCounter.toString()
                         }
 
                     }
@@ -122,11 +92,10 @@ class TestUserDataActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleError(tv: TextView, error: TaskError?) {
-        val er = error ?: return
-        if (er is TaskError.UserCancelled) return
+    private fun handleError(tv: TextView, error: SessionError) {
+        if (error is SessionError.UserCancelled) return
 
-        runOnUiThread { tv.text = er::class.simpleName }
+        runOnUiThread { tv.text = error::class.simpleName }
     }
 
     private fun initWriteOptions() {
@@ -174,7 +143,7 @@ class WriteOptions {
     }
 
     fun updatePin2(chbx: CompoundButton) {
-        val value = CardEnvironment.DEFAULT_PIN2
+        val value = SessionEnvironment.DEFAULT_PIN2
         pin2 = if (chbx.isChecked) value else null
     }
 }
