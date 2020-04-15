@@ -136,4 +136,23 @@
     <string name="info_response_card_card_data_token_symbol"></string>
     <string name="info_response_card_card_data_token_contract_address"></string>
     <string name="info_response_card_card_data_token_decimal"></string>
+
+
+    <!--  Field names - Response: Sign  -->
+    <string name="response_sign_cid">CID</string>
+    <string name="response_sign_wallet_signed_hashes">Wallet signed hashes</string>
+    <string name="response_sign_wallet_remaining_signatures">Wallet remaining signatures</string>
+    <string name="response_sign_signature">Signature</string>
+
+    <string name="info_response_sign_cid">@string/info_response_card_cid</string>
+    <string name="info_response_sign_wallet_signed_hashes">Total number of signed single hashes returned by the card in SIGN command responses since card personalization. Sums up array elements within all SIGN commands.</string>
+    <string name="info_response_sign_wallet_remaining_signatures">Remaining number of SIGN operations before the wallet will stop signing transactions.</string>
+    <string name="info_response_sign_signature">Array of resulting signatures that App should embed into a raw transaction according to a transaction format of an appropriate blockchain.</string>
+
+
+    <!--  Field names - Response: Depersonalize  -->
+    <string name="response_depersonalize_is_success">Is success</string>
+
+    <string name="info_response_depersonalize_is_success">Is success</string>
+
 </resources>
