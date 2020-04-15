@@ -30,7 +30,7 @@ class ResponseResources {
         holder.register(CardId.issuerPublicKey, Resources(R.string.response_card_issuer_data_public_key, R.string.info_response_card_issuer_data_public_key))
         holder.register(CardId.curve, Resources(R.string.response_card_curve, R.string.info_response_card_curve))
         holder.register(CardId.maxSignatures, Resources(R.string.response_card_max_signatures, R.string.info_response_card_max_signatures))
-        holder.register(CardId.signingMethod, Resources(R.string.response_card_signing_method, R.string.response_card_signing_method))
+        holder.register(CardId.signingMethod, Resources(R.string.response_card_signing_method, R.string.info_response_card_signing_method))
         holder.register(CardId.pauseBeforePin2, Resources(R.string.response_card_pause_before_pin2, R.string.info_response_card_allow_pin2))
         holder.register(CardId.walletPublicKey, Resources(R.string.response_card_wallet_public_key, R.string.info_response_card_wallet_public_key))
         holder.register(CardId.walletRemainingSignatures, Resources(R.string.response_card_wallet_remaining_signatures, R.string.info_response_card_wallet_remaining_signatures))
