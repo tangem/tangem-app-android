@@ -1,78 +1,42 @@
 package com.tangem.tasks
 
+import com.tangem.CardSession
+import com.tangem.CardSessionRunnable
+import com.tangem.SessionError
 import com.tangem.commands.*
-import com.tangem.common.CardEnvironment
 import com.tangem.common.CompletionResult
-
-/**
- * Events that [ScanTask] returns on completion of its commands.
- */
-sealed class ScanEvent {
-
-    /**
-     * Contains data from a Tangem card after successful completion of [ReadCommand].
-     */
-    data class OnReadEvent(val card: Card) : ScanEvent()
-
-    /**
-     * Shows whether the Tangem card was verified on completion of [CheckWalletCommand].
-     */
-    data class OnVerifyEvent(val isGenuine: Boolean) : ScanEvent()
-}
 
 /**
  * Task that allows to read Tangem card and verify its private key.
  *
  * It performs two commands, [ReadCommand] and [CheckWalletCommand], subsequently.
  */
-internal class ScanTask : Task<ScanEvent>() {
+internal class ScanTask : CardSessionRunnable<Card> {
 
-    override fun onRun(cardEnvironment: CardEnvironment,
-                       currentCard: Card?,
-                       callback: (result: TaskEvent<ScanEvent>) -> Unit) {
+    override fun run(session: CardSession, callback: (result: CompletionResult<Card>) -> Unit) {
 
-        if (currentCard != null) callback(TaskEvent.Event(ScanEvent.OnReadEvent(currentCard)))
+        val card = session.environment.card
 
-        if (currentCard == null) {
-            completeNfcSession(TaskError.MissingPreflightRead())
-            callback(TaskEvent.Completion(TaskError.MissingPreflightRead()))
+        if (card == null) {
+            callback(CompletionResult.Failure(SessionError.MissingPreflightRead()))
 
-        } else if (currentCard.cardData?.productMask?.contains(ProductMask.tag) != false) {
-            completeNfcSession()
-            callback(TaskEvent.Completion())
+        } else if (card.cardData?.productMask?.contains(ProductMask.tag) != false) {
+            callback(CompletionResult.Success(card))
 
-        } else if (currentCard.status != CardStatus.Loaded) {
-            completeNfcSession()
-            callback(TaskEvent.Completion())
+        } else if (card.status != CardStatus.Loaded) {
+            callback(CompletionResult.Success(card))
 
-        } else if (currentCard.curve == null || currentCard.walletPublicKey == null) {
-            completeNfcSession(TaskError.CardError())
-            callback(TaskEvent.Completion(TaskError.CardError()))
+        } else if (card.curve == null || card.walletPublicKey == null) {
+            callback(CompletionResult.Failure(SessionError.CardError()))
 
         } else {
+            val checkWalletCommand = CheckWalletCommand(card.curve, card.walletPublicKey)
 
-            val checkWalletCommand = CheckWalletCommand()
-
-            sendCommand(checkWalletCommand, cardEnvironment) { result ->
+            checkWalletCommand.run(session) { result ->
                 when (result) {
-                    is CompletionResult.Failure -> {
-                        if (result.error !is TaskError.UserCancelled) {
-                            completeNfcSession(result.error)
-                        }
-                        callback(TaskEvent.Completion(result.error))
-                    }
-                    is CompletionResult.Success -> {
-                        completeNfcSession()
-                        val verified = result.data.verify(
-                                currentCard.curve,
-                                currentCard.walletPublicKey,
-                                checkWalletCommand.challenge
-                        )
-                        callback(TaskEvent.Event(ScanEvent.OnVerifyEvent(verified)))
-                        callback(TaskEvent.Completion())
-                    }
+                    is CompletionResult.Success -> callback(CompletionResult.Success(card))
+                    is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
                 }
-
             }
         }
     }
