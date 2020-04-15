@@ -1,8 +1,8 @@
 package com.tangem.tangemtest.ucase.domain.paramsManager.triggers.afterAction
 
+import com.tangem.common.CompletionResult
 import com.tangem.tangemtest._arch.structure.PayloadHolder
 import com.tangem.tangemtest._arch.structure.abstraction.Item
-import com.tangem.tasks.TaskEvent
 
 /**
 [REDACTED_AUTHOR]
@@ -12,5 +12,5 @@ import com.tangem.tasks.TaskEvent
  * Returns a list of items that have been modified
  */
 interface AfterActionModification {
-    fun modify(payload: PayloadHolder, taskEvent: TaskEvent<*>, itemList: List<Item>): List<Item>
+    fun modify(payload: PayloadHolder, commandResult: CompletionResult<*>, itemList: List<Item>): List<Item>
 }
