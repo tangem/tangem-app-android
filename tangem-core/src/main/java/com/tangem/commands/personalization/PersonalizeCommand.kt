@@ -1,10 +1,11 @@
 package com.tangem.commands.personalization
 
+import com.tangem.SessionEnvironment
+import com.tangem.SessionError
 import com.tangem.commands.Card
 import com.tangem.commands.CardData
-import com.tangem.commands.CommandSerializer
+import com.tangem.commands.Command
 import com.tangem.commands.personalization.entities.*
-import com.tangem.common.CardEnvironment
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
@@ -12,10 +13,9 @@ import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvBuilder
-import com.tangem.common.tlv.TlvMapper
+import com.tangem.common.tlv.TlvDecoder
 import com.tangem.common.tlv.TlvTag
 import com.tangem.crypto.sign
-import com.tangem.tasks.TaskError
 
 /**
  * Command available on SDK cards only
@@ -34,9 +34,9 @@ class PersonalizeCommand(
         private val config: CardConfig,
         private val issuer: Issuer, private val manufacturer: Manufacturer,
         private val acquirer: Acquirer? = null
-) : CommandSerializer<Card>() {
+) : Command<Card>() {
 
-    override fun serialize(cardEnvironment: CardEnvironment): CommandApdu {
+    override fun serialize(environment: SessionEnvironment): CommandApdu {
         return CommandApdu(
                 Instruction.Personalize,
                 serializePersonalizationData(config),
@@ -44,39 +44,37 @@ class PersonalizeCommand(
         )
     }
 
-    override fun deserialize(cardEnvironment: CardEnvironment, responseApdu: ResponseApdu): Card? {
-        val tlvData = responseApdu.getTlvData(devPersonalizationKey) ?: return null
+    override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): Card {
+        val tlvData = apdu.getTlvData(devPersonalizationKey)
+                ?: throw SessionError.DeserializeApduFailed()
 
-        return try {
-            val tlvMapper = TlvMapper(tlvData)
-            Card(
-                    cardId = tlvMapper.mapOptional(TlvTag.CardId) ?: "",
-                    manufacturerName = tlvMapper.mapOptional(TlvTag.ManufactureId) ?: "",
-                    status = tlvMapper.mapOptional(TlvTag.Status),
+        val decoder = TlvDecoder(tlvData)
+        return Card(
+                cardId = decoder.decodeOptional(TlvTag.CardId) ?: "",
+                manufacturerName = decoder.decodeOptional(TlvTag.ManufactureId) ?: "",
+                status = decoder.decodeOptional(TlvTag.Status),
 
-                    firmwareVersion = tlvMapper.mapOptional(TlvTag.Firmware),
-                    cardPublicKey = tlvMapper.mapOptional(TlvTag.CardPublicKey),
-                    settingsMask = tlvMapper.mapOptional(TlvTag.SettingsMask),
-                    issuerPublicKey = tlvMapper.mapOptional(TlvTag.IssuerDataPublicKey),
-                    curve = tlvMapper.mapOptional(TlvTag.CurveId),
-                    maxSignatures = tlvMapper.mapOptional(TlvTag.MaxSignatures),
-                    signingMethod = tlvMapper.mapOptional(TlvTag.SigningMethod),
-                    pauseBeforePin2 = tlvMapper.mapOptional(TlvTag.PauseBeforePin2),
-                    walletPublicKey = tlvMapper.mapOptional(TlvTag.WalletPublicKey),
-                    walletRemainingSignatures = tlvMapper.mapOptional(TlvTag.RemainingSignatures),
-                    walletSignedHashes = tlvMapper.mapOptional(TlvTag.SignedHashes),
-                    health = tlvMapper.mapOptional(TlvTag.Health),
-                    isActivated = tlvMapper.map(TlvTag.IsActivated),
-                    activationSeed = tlvMapper.mapOptional(TlvTag.ActivationSeed),
-                    paymentFlowVersion = tlvMapper.mapOptional(TlvTag.PaymentFlowVersion),
-                    userCounter = tlvMapper.mapOptional(TlvTag.UserCounter),
-                    terminalIsLinked = tlvMapper.map(TlvTag.TerminalIsLinked),
+                firmwareVersion = decoder.decodeOptional(TlvTag.Firmware),
+                cardPublicKey = decoder.decodeOptional(TlvTag.CardPublicKey),
+                settingsMask = decoder.decodeOptional(TlvTag.SettingsMask),
+                issuerPublicKey = decoder.decodeOptional(TlvTag.IssuerDataPublicKey),
+                curve = decoder.decodeOptional(TlvTag.CurveId),
+                maxSignatures = decoder.decodeOptional(TlvTag.MaxSignatures),
+                signingMethod = decoder.decodeOptional(TlvTag.SigningMethod),
+                pauseBeforePin2 = decoder.decodeOptional(TlvTag.PauseBeforePin2),
+                walletPublicKey = decoder.decodeOptional(TlvTag.WalletPublicKey),
+                walletRemainingSignatures = decoder.decodeOptional(TlvTag.RemainingSignatures),
+                walletSignedHashes = decoder.decodeOptional(TlvTag.SignedHashes),
+                health = decoder.decodeOptional(TlvTag.Health),
+                isActivated = decoder.decode(TlvTag.IsActivated),
+                activationSeed = decoder.decodeOptional(TlvTag.ActivationSeed),
+                paymentFlowVersion = decoder.decodeOptional(TlvTag.PaymentFlowVersion),
+                userCounter = decoder.decodeOptional(TlvTag.UserCounter),
+                userProtectedCounter = decoder.decodeOptional(TlvTag.UserProtectedCounter),
+                terminalIsLinked = decoder.decode(TlvTag.TerminalIsLinked),
 
-                    cardData = deserializeCardData(tlvData)
-            )
-        } catch (exception: Exception) {
-            throw TaskError.SerializeCommandError()
-        }
+                cardData = deserializeCardData(tlvData)
+        )
     }
 
     private fun deserializeCardData(tlvData: List<Tlv>): CardData? {
@@ -85,23 +83,23 @@ class PersonalizeCommand(
         }
         if (cardDataTlvs.isNullOrEmpty()) return null
 
-        val tlvMapper = TlvMapper(cardDataTlvs)
+        val decoder = TlvDecoder(cardDataTlvs)
         return CardData(
-                batchId = tlvMapper.mapOptional(TlvTag.Batch),
-                manufactureDateTime = tlvMapper.mapOptional(TlvTag.ManufactureDateTime),
-                issuerName = tlvMapper.mapOptional(TlvTag.IssuerId),
-                blockchainName = tlvMapper.mapOptional(TlvTag.BlockchainId),
-                manufacturerSignature = tlvMapper.mapOptional(TlvTag.ManufacturerSignature),
-                productMask = tlvMapper.mapOptional(TlvTag.ProductMask),
+                batchId = decoder.decodeOptional(TlvTag.Batch),
+                manufactureDateTime = decoder.decodeOptional(TlvTag.ManufactureDateTime),
+                issuerName = decoder.decodeOptional(TlvTag.IssuerId),
+                blockchainName = decoder.decodeOptional(TlvTag.BlockchainId),
+                manufacturerSignature = decoder.decodeOptional(TlvTag.ManufacturerSignature),
+                productMask = decoder.decodeOptional(TlvTag.ProductMask),
 
-                tokenSymbol = tlvMapper.mapOptional(TlvTag.TokenSymbol),
-                tokenContractAddress = tlvMapper.mapOptional(TlvTag.TokenContractAddress),
-                tokenDecimal = tlvMapper.mapOptional(TlvTag.TokenDecimal)
+                tokenSymbol = decoder.decodeOptional(TlvTag.TokenSymbol),
+                tokenContractAddress = decoder.decodeOptional(TlvTag.TokenContractAddress),
+                tokenDecimal = decoder.decodeOptional(TlvTag.TokenDecimal)
         )
     }
 
     private fun serializePersonalizationData(config: CardConfig): ByteArray {
-        val cardId = config.createCardId() ?: throw TaskError.SerializeCommandError()
+        val cardId = config.createCardId() ?: throw SessionError.SerializeCommandError()
 
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.CardId, cardId)
