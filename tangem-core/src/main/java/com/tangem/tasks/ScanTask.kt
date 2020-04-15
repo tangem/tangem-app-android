@@ -20,7 +20,7 @@ internal class ScanTask : CardSessionRunnable<Card> {
         if (card == null) {
             callback(CompletionResult.Failure(SessionError.MissingPreflightRead()))
 
-        } else if (card.cardData?.productMask?.contains(ProductMask.tag) != false) {
+        } else if (card.cardData?.productMask?.contains(Product.Tag) != false) {
             callback(CompletionResult.Success(card))
 
         } else if (card.status != CardStatus.Loaded) {
