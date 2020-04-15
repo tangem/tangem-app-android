@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/delimiter"
+    android:background="@color/field_header_background"
     android:minHeight="@dimen/iw_layout_frame_header_min_height"
     android:paddingTop="6dp"
     android:paddingBottom="6dp">
