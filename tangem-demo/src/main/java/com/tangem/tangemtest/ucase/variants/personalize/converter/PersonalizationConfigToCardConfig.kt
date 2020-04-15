@@ -12,25 +12,25 @@ class PersonalizationConfigToCardConfig : Converter<PersonalizationConfig, CardC
     override fun convert(from: PersonalizationConfig): CardConfig {
         val signingMethodMaskBuilder = SigningMethodMaskBuilder()
         if (from.SigningMethod0) {
-            signingMethodMaskBuilder.add(SigningMethod.SIGN_HASH)
+            signingMethodMaskBuilder.add(SigningMethod.SignHash)
         }
         if (from.SigningMethod1) {
-            signingMethodMaskBuilder.add(SigningMethod.SIGN_RAW)
+            signingMethodMaskBuilder.add(SigningMethod.SignRaw)
         }
         if (from.SigningMethod2) {
-            signingMethodMaskBuilder.add(SigningMethod.SIGN_HASH_VALIDATE_BY_ISSUER)
+            signingMethodMaskBuilder.add(SigningMethod.SignHashValidateByIssuer)
         }
         if (from.SigningMethod3) {
-            signingMethodMaskBuilder.add(SigningMethod.SIGN_RAW_VALIDATE_BY_ISSUER)
+            signingMethodMaskBuilder.add(SigningMethod.SignRawValidateByIssuer)
         }
         if (from.SigningMethod4) {
-            signingMethodMaskBuilder.add(SigningMethod.SIGN_HASH_VALIDATE_BY_ISSUER_WRITE_ISSUER_DATA)
+            signingMethodMaskBuilder.add(SigningMethod.SignHashValidateByIssuerWriteIssuerData)
         }
         if (from.SigningMethod5) {
-            signingMethodMaskBuilder.add(SigningMethod.SIGN_RAW_VALIDATE_BY_ISSUER_WRITE_ISSUER_DATA)
+            signingMethodMaskBuilder.add(SigningMethod.SignRawValidateByIssuerWriteIssuerData)
         }
         if (from.SigningMethod6) {
-            signingMethodMaskBuilder.add(SigningMethod.SIGN_HASH)
+            signingMethodMaskBuilder.add(SigningMethod.SignHash)
         }
         val signingMethod = signingMethodMaskBuilder.build()
 
@@ -40,10 +40,10 @@ class PersonalizationConfigToCardConfig : Converter<PersonalizationConfig, CardC
         val isIdIssuer = from.cardData.product_id_issuer
 
         val productMaskBuilder = ProductMaskBuilder()
-        if (isNote) productMaskBuilder.add(com.tangem.commands.Product.NOTE)
-        if (isTag) productMaskBuilder.add(com.tangem.commands.Product.TAG)
-        if (isIdCard) productMaskBuilder.add(com.tangem.commands.Product.ID_CARD)
-        if (isIdIssuer) productMaskBuilder.add(com.tangem.commands.Product.ID_ISSUER)
+        if (isNote) productMaskBuilder.add(com.tangem.commands.Product.Note)
+        if (isTag) productMaskBuilder.add(com.tangem.commands.Product.Tag)
+        if (isIdCard) productMaskBuilder.add(com.tangem.commands.Product.IdCard)
+        if (isIdIssuer) productMaskBuilder.add(com.tangem.commands.Product.IdIssuer)
         val productMask = productMaskBuilder.build()
 
         var tokenSymbol: String? = null
