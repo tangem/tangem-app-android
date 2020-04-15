@@ -12,8 +12,8 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
-import com.tangem.tangemtest._arch.structure.abstraction.BaseItem
 import com.tangem.tangemtest._arch.structure.abstraction.Item
+import com.tangem.tangemtest._arch.structure.impl.EditTextItem
 import com.tangem.tangemtest.ucase.resources.ActionType
 import com.tangem.tangemtest.ucase.resources.MainResourceHolder
 import com.tangem.tangemtest.ucase.resources.Resources
@@ -29,7 +29,7 @@ class ParameterWidget(
 ) {
 
     val id: Id = item.id
-    val dataItem: BaseItem<Any> = item as BaseItem<Any>
+    val typedItem = item as EditTextItem
 
     var onValueChanged: ((Id, Any?) -> Unit)? = null
     var onActionBtnClickListener: (() -> Unit)? = null
@@ -47,11 +47,11 @@ class ParameterWidget(
     private val tvDescription: TextView? by lazy { descriptionContainer.findViewById<TextView>(R.id.tv_description) }
 
     private var actionBtnVisibilityState: Int = btnAction.visibility
-    private var value: Any? = dataItem.viewModel.data
+    private var value: Any? = typedItem.viewModel.data
 
     init {
         tilValue.hint = tilValue.context.getString(getResNameId())
-        etValue.setText(stringOf(dataItem.viewModel.data))
+        etValue.setText(stringOf(typedItem.viewModel.data))
         etValue.addTextChangedListener(valueWatcher)
         btnAction.setOnClickListener { onActionBtnClickListener?.invoke() }
         btnAction.setText(getResNameId(ActionType.Scan))
