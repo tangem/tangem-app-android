@@ -1,9 +1,9 @@
 package com.tangem.blockchain.common.extensions
 
-import com.tangem.CardManager
+import com.tangem.TangemSdk
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.commands.SignResponse
-import com.tangem.tasks.TaskEvent
+import com.tangem.common.CompletionResult
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.IOException
@@ -54,10 +54,10 @@ sealed class SimpleResult {
     data class Failure(val error: Throwable?) : SimpleResult()
 }
 
-class Signer(private val cardManager: CardManager) : TransactionSigner {
-    override suspend fun sign(hashes: Array<ByteArray>, cardId: String): TaskEvent<SignResponse> =
+class Signer(private val tangemSdk: TangemSdk) : TransactionSigner {
+    override suspend fun sign(hashes: Array<ByteArray>, cardId: String): CompletionResult<SignResponse> =
             suspendCancellableCoroutine { continuation ->
-                cardManager.sign(hashes, cardId) { result ->
+                tangemSdk.sign(hashes, cardId) { result ->
                     if (continuation.isActive) continuation.resume(result)
                 }
             }
