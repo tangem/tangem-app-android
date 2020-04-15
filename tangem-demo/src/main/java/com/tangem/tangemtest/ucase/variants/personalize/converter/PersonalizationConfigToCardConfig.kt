@@ -1,8 +1,6 @@
 package com.tangem.tangemtest.ucase.variants.personalize.converter
 
-import com.tangem.commands.CardData
-import com.tangem.commands.EllipticCurve
-import com.tangem.commands.ProductMaskBuilder
+import com.tangem.commands.*
 import com.tangem.commands.personalization.entities.CardConfig
 import com.tangem.commands.personalization.entities.NdefRecord
 import com.tangem.tangemtest.ucase.variants.personalize.dto.PersonalizationConfig
@@ -12,15 +10,29 @@ import java.util.*
 class PersonalizationConfigToCardConfig : Converter<PersonalizationConfig, CardConfig> {
 
     override fun convert(from: PersonalizationConfig): CardConfig {
-        val signingMethod = com.tangem.commands.SigningMethod.build(
-                signHash = from.SigningMethod0,
-                signRaw = from.SigningMethod1,
-                signHashValidatedByIssuer = from.SigningMethod2,
-                signRawValidatedByIssuer = from.SigningMethod3,
-                signHashValidatedByIssuerAndWriteIssuerData = from.SigningMethod4,
-                signRawValidatedByIssuerAndWriteIssuerData = from.SigningMethod5,
-                signPos = from.SigningMethod6
-        )
+        val signingMethodMaskBuilder = SigningMethodMaskBuilder()
+        if (from.SigningMethod0) {
+            signingMethodMaskBuilder.add(SigningMethod.SignHash)
+        }
+        if (from.SigningMethod1) {
+            signingMethodMaskBuilder.add(SigningMethod.SignRaw)
+        }
+        if (from.SigningMethod2) {
+            signingMethodMaskBuilder.add(SigningMethod.SignHashValidateByIssuer)
+        }
+        if (from.SigningMethod3) {
+            signingMethodMaskBuilder.add(SigningMethod.SignRawValidateByIssuer)
+        }
+        if (from.SigningMethod4) {
+            signingMethodMaskBuilder.add(SigningMethod.SignHashValidateByIssuerWriteIssuerData)
+        }
+        if (from.SigningMethod5) {
+            signingMethodMaskBuilder.add(SigningMethod.SignRawValidateByIssuerWriteIssuerData)
+        }
+        if (from.SigningMethod6) {
+            signingMethodMaskBuilder.add(SigningMethod.SignHash)
+        }
+        val signingMethod = signingMethodMaskBuilder.build()
 
         val isNote = from.cardData.product_note
         val isTag = from.cardData.product_tag
@@ -28,10 +40,10 @@ class PersonalizationConfigToCardConfig : Converter<PersonalizationConfig, CardC
         val isIdIssuer = from.cardData.product_id_issuer
 
         val productMaskBuilder = ProductMaskBuilder()
-        if (isNote) productMaskBuilder.add(com.tangem.commands.ProductMask.note)
-        if (isTag) productMaskBuilder.add(com.tangem.commands.ProductMask.tag)
-        if (isIdCard) productMaskBuilder.add(com.tangem.commands.ProductMask.idCard)
-        if (isIdIssuer) productMaskBuilder.add(com.tangem.commands.ProductMask.idIssuer)
+        if (isNote) productMaskBuilder.add(com.tangem.commands.Product.Note)
+        if (isTag) productMaskBuilder.add(com.tangem.commands.Product.Tag)
+        if (isIdCard) productMaskBuilder.add(com.tangem.commands.Product.IdCard)
+        if (isIdIssuer) productMaskBuilder.add(com.tangem.commands.Product.IdIssuer)
         val productMask = productMaskBuilder.build()
 
         var tokenSymbol: String? = null
