@@ -14,67 +14,50 @@ import java.util.*
 /**
  * Determines which type of data is required for signing.
  */
-data class SigningMethod(val rawValue: Int) {
+data class SigningMethodMask(val rawValue: Int) {
 
-    fun contains(value: Int): Boolean {
+    fun contains(signingMethod: SigningMethod): Boolean {
         return if (rawValue and 0x80 == 0) {
-            value == rawValue
+            signingMethod.code == rawValue
         } else {
-            rawValue and (0x01 shl value) != 0
+            rawValue and (0x01 shl signingMethod.code) != 0
         }
     }
+}
 
-    companion object {
-        const val signHash = 0
-        const val signRaw = 1
-        const val signHashValidatedByIssuer = 2
-        const val signRawValidatedByIssuer = 3
-        const val signHashValidatedByIssuerAndWriteIssuerData = 4
-        const val signRawValidatedByIssuerAndWriteIssuerData = 5
-        const val signPos = 6
+enum class SigningMethod(val code: Int) {
+    SIGN_HASH(0),
+    SIGN_RAW(1),
+    SIGN_HASH_VALIDATE_BY_ISSUER(2),
+    SIGN_RAW_VALIDATE_BY_ISSUER(3),
+    SIGN_HASH_VALIDATE_BY_ISSUER_WRITE_ISSUER_DATA(4),
+    SIGN_RAW_VALIDATE_BY_ISSUER_WRITE_ISSUER_DATA(5),
+    SIGN_POS(6)
+}
 
-        fun build(
-                signHash: Boolean = false,
-                signRaw: Boolean = false,
-                signHashValidatedByIssuer: Boolean = false,
-                signRawValidatedByIssuer: Boolean = false,
-                signHashValidatedByIssuerAndWriteIssuerData: Boolean = false,
-                signRawValidatedByIssuerAndWriteIssuerData: Boolean = false,
-                signPos: Boolean = false
+class SigningMethodMaskBuilder() {
 
-        ): SigningMethod {
-            fun Boolean.toInt() = if (this) 1 else 0
+    private val signingMethods = mutableSetOf<SigningMethod>()
 
-            val signingMethodsCount = 0 +
-                    signHash.toInt() +
-                    signRaw.toInt() +
-                    signHashValidatedByIssuer.toInt() +
-                    signRawValidatedByIssuer.toInt() +
-                    signHashValidatedByIssuerAndWriteIssuerData.toInt() +
-                    signRawValidatedByIssuerAndWriteIssuerData.toInt() +
-                    signPos.toInt()
+    fun add(signingMethod: SigningMethod) {
+        signingMethods.add(signingMethod)
+    }
 
-            var signingMethod: Int = 0
-            if (signingMethodsCount == 1) {
-                if (signHash) signingMethod += SigningMethod.signHash
-                if (signRaw) signingMethod += SigningMethod.signRaw
-                if (signHashValidatedByIssuer) signingMethod += SigningMethod.signHashValidatedByIssuer
-                if (signRawValidatedByIssuer) signingMethod += SigningMethod.signRawValidatedByIssuer
-                if (signHashValidatedByIssuerAndWriteIssuerData) signingMethod += SigningMethod.signHashValidatedByIssuerAndWriteIssuerData
-                if (signRawValidatedByIssuerAndWriteIssuerData) signingMethod += SigningMethod.signRawValidatedByIssuerAndWriteIssuerData
-                if (signPos) signingMethod += SigningMethod.signPos
-            } else if (signingMethodsCount > 1) {
-                signingMethod = 0x80
-                if (signHash) signingMethod += 0x01
-                if (signRaw) signingMethod += 0x01 shl SigningMethod.signRaw
-                if (signHashValidatedByIssuer) signingMethod += 0x01 shl SigningMethod.signHashValidatedByIssuer
-                if (signRawValidatedByIssuer) signingMethod += 0x01 shl SigningMethod.signRawValidatedByIssuer
-                if (signHashValidatedByIssuerAndWriteIssuerData) signingMethod += 0x01 shl SigningMethod.signHashValidatedByIssuerAndWriteIssuerData
-                if (signRawValidatedByIssuerAndWriteIssuerData) signingMethod += 0x01 shl SigningMethod.signRawValidatedByIssuerAndWriteIssuerData
-                if (signPos) signingMethod += 0x01 shl SigningMethod.signPos
+    fun build(): SigningMethodMask {
+        val rawValue: Int = when {
+            signingMethods.count() == 0 -> {
+                0
             }
-            return SigningMethod(signingMethod)
+            signingMethods.count() == 1 -> {
+                signingMethods.iterator().next().code
+            }
+            else -> {
+                signingMethods.fold(
+                        0x80, { acc, singingMethod -> acc + (0x01 shl singingMethod.code) }
+                )
+            }
         }
+        return SigningMethodMask(rawValue)
     }
 }
 
@@ -113,22 +96,23 @@ enum class CardStatus(val code: Int) {
  */
 data class ProductMask(val rawValue: Int) {
 
-    fun contains(value: Int): Boolean = (rawValue and value) != 0
+    fun contains(product: Product): Boolean = (rawValue and product.code) != 0
 
-    companion object {
-        const val note = 0x01
-        const val tag = 0x02
-        const val idCard = 0x04
-        const val idIssuer = 0x08
-    }
+}
+
+enum class Product(val code: Int) {
+    NOTE(0x01),
+    TAG(0x02),
+    ID_CARD(0x04),
+    ID_ISSUER(0x08)
 }
 
 class ProductMaskBuilder() {
 
     private var productMaskValue = 0
 
-    fun add(productCode: Int) {
-        productMaskValue = productMaskValue or productCode
+    fun add(product: Product) {
+        productMaskValue = productMaskValue or product.code
     }
 
     fun build() = ProductMask(productMaskValue)
@@ -299,7 +283,7 @@ class Card(
         /**
          * Defines what data should be submitted to SIGN command.
          */
-        val signingMethod: SigningMethod?,
+        val signingMethods: SigningMethodMask?,
 
         /**
          * Delay in seconds before COS executes commands protected by PIN2.
@@ -343,21 +327,21 @@ class Card(
         val activationSeed: ByteArray?,
 
         /**
-         * Returned only if [SigningMethod.SignPos] enabling POS transactions is supported by card.
+         * Returned only if [SigningMethod.SIGN_POS] enabling POS transactions is supported by card.
          */
         val paymentFlowVersion: ByteArray?,
 
         /**
          * This value can be initialized by terminal and will be increased by COS on execution of every [SignCommand].
          * For example, this field can store blockchain “nonce” for quick one-touch transaction on POS terminals.
-         * Returned only if [SigningMethod.SignPos]  enabling POS transactions is supported by card.
+         * Returned only if [SigningMethod.SIGN_POS]  enabling POS transactions is supported by card.
          */
         val userCounter: Int?,
 
         /**
          * This value can be initialized by App (with PIN2 confirmation) and will be increased by COS
          * with the execution of each [SignCommand]. For example, this field can store blockchain “nonce”
-         * for a quick one-touch transaction on POS terminals. Returned only if [SigningMethod.SignPos].
+         * for a quick one-touch transaction on POS terminals. Returned only if [SigningMethod.SIGN_POS].
          */
         val userProtectedCounter: Int?,
 
@@ -415,7 +399,7 @@ class ReadCommand : Command<Card>() {
                 issuerPublicKey = decoder.decodeOptional(TlvTag.IssuerDataPublicKey),
                 curve = decoder.decodeOptional(TlvTag.CurveId),
                 maxSignatures = decoder.decodeOptional(TlvTag.MaxSignatures),
-                signingMethod = decoder.decodeOptional(TlvTag.SigningMethod),
+                signingMethods = decoder.decodeOptional(TlvTag.SigningMethod),
                 pauseBeforePin2 = decoder.decodeOptional(TlvTag.PauseBeforePin2),
                 walletPublicKey = decoder.decodeOptional(TlvTag.WalletPublicKey),
                 walletRemainingSignatures = decoder.decodeOptional(TlvTag.RemainingSignatures),
