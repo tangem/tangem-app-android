@@ -57,10 +57,10 @@ class CardConverter : BaseResponseConverter<Card>() {
         group.addItem(TextItem(CardId.paymentFlowVersion, valueToString(from.paymentFlowVersion)))
         group.addItem(TextItem(CardId.userCounter, valueToString(from.userCounter)))
 
-        val settingsMask = from.settingsMask ?: return
+        val signingMethodMask = from.signingMethods ?: return
 
         group.addItem(TextHeaderItem(CardId.signingMethod, ""))
-        Settings.values().forEach { group.addItem(BoolItem(StringId(it.name), settingsMask.contains(it))) }
+        SigningMethod.values().forEach { group.addItem(BoolItem(StringId(it.name), signingMethodMask.contains(it))) }
     }
 
     private fun cardDataGroup(itemList: MutableList<Item>, cardData: CardData?) {
