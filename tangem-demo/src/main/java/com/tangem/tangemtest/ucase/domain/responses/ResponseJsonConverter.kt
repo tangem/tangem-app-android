@@ -16,7 +16,7 @@ class ResponseJsonConverter {
     private fun init(): Gson {
         val builder = GsonBuilder().apply {
             registerTypeAdapter(ByteArray::class.java, ByteTypeAdapter())
-            registerTypeAdapter(SigningMethod::class.java, SigningMethodTypeAdapter())
+            registerTypeAdapter(SigningMethodMask::class.java, SigningMethodTypeAdapter())
             registerTypeAdapter(SettingsMask::class.java, SettingsMaskTypeAdapter())
             registerTypeAdapter(ProductMask::class.java, ProductMaskTypeAdapter())
             registerTypeAdapter(Date::class.java, DateTypeAdapter())
@@ -50,8 +50,8 @@ class ProductMaskTypeAdapter : JsonSerializer<ProductMask> {
     }
 }
 
-class SigningMethodTypeAdapter : JsonSerializer<SigningMethod> {
-    override fun serialize(src: SigningMethod, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+class SigningMethodTypeAdapter : JsonSerializer<SigningMethodMask> {
+    override fun serialize(src: SigningMethodMask, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         return JsonPrimitive(src.rawValue.toString())
     }
 }
