@@ -5,6 +5,8 @@ import com.tangem.tangemtest.ucase.resources.MainResourceHolder
 import com.tangem.tangemtest.ucase.resources.Resources
 import com.tangem.tangemtest.ucase.variants.responses.CardDataId
 import com.tangem.tangemtest.ucase.variants.responses.CardId
+import com.tangem.tangemtest.ucase.variants.responses.DepersonalizeId
+import com.tangem.tangemtest.ucase.variants.responses.SignId
 
 /**
 [REDACTED_AUTHOR]
@@ -13,6 +15,8 @@ class ResponseResources {
     fun init(holder: MainResourceHolder) {
         initCard(holder)
         initCardData(holder)
+        initSignResponse(holder)
+        initDepersonalizeResponse(holder)
     }
 
     private fun initCard(holder: MainResourceHolder) {
@@ -49,5 +53,16 @@ class ResponseResources {
         holder.register(CardDataId.tokenSymbol, Resources(R.string.response_card_card_data_token_symbol, R.string.info_response_card_card_data_token_symbol))
         holder.register(CardDataId.tokenContractAddress, Resources(R.string.response_card_card_data_token_contract_address, R.string.info_response_card_card_data_token_contract_address))
         holder.register(CardDataId.tokenDecimal, Resources(R.string.response_card_card_data_token_decimal, R.string.info_response_card_card_data_token_decimal))
+    }
+
+    private fun initSignResponse(holder: MainResourceHolder) {
+        holder.register(SignId.cid, Resources(R.string.response_sign_cid, R.string.info_response_sign_cid))
+        holder.register(SignId.walletSignedHashes, Resources(R.string.response_sign_wallet_signed_hashes, R.string.info_response_sign_wallet_signed_hashes))
+        holder.register(SignId.walletRemainingSignatures, Resources(R.string.response_sign_wallet_remaining_signatures, R.string.info_response_sign_wallet_remaining_signatures))
+        holder.register(SignId.signature, Resources(R.string.response_sign_signature, R.string.info_response_sign_signature))
+    }
+
+    private fun initDepersonalizeResponse(holder: MainResourceHolder) {
+        holder.register(DepersonalizeId.isSuccess, Resources(R.string.response_depersonalize_is_success, R.string.info_response_depersonalize_is_success))
     }
 }
