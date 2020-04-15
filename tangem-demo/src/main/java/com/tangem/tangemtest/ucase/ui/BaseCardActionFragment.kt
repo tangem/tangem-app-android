@@ -127,6 +127,7 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
 
     protected open fun handleDescriptionSwitchChanges(descriptionVisibilityState: Boolean) {
         actionVM.toggleDescriptionVisibility(descriptionVisibilityState)
+        paramsWidgetList.forEach { it.toggleDescriptionVisibility(descriptionVisibilityState) }
     }
 
     @Deprecated("Start to use itemViewModel")
