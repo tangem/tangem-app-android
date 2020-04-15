@@ -9,6 +9,7 @@
 
     <color name="action_name">#2B2B2B</color>
 
+    <color name="field_header_background">#C3C3C3</color>
     <color name="field_info">#888888</color>
     <color name="field_content">#303030</color>
     <color name="field_description">@color/field_info</color>
