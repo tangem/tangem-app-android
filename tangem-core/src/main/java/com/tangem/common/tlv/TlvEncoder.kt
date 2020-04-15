@@ -87,8 +87,8 @@ class TlvEncoder {
                 (value as CardStatus).code.toByteArray()
             }
             TlvValueType.SigningMethod -> {
-                typeCheck<T, SigningMethod>(tag)
-                byteArrayOf((value as SigningMethod).rawValue.toByte())
+                typeCheck<T, SigningMethodMask>(tag)
+                byteArrayOf((value as SigningMethodMask).rawValue.toByte())
             }
             TlvValueType.IssuerDataMode -> {
                 typeCheck<T, IssuerDataMode>(tag)
