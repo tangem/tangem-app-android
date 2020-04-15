@@ -1,33 +1,27 @@
 package com.tangem.tangemtest.ucase.variants.responses.converter
 
-import com.tangem.commands.Card
-import com.tangem.commands.CardData
-import com.tangem.commands.Settings
-import com.tangem.commands.SettingsMask
+import com.tangem.commands.*
 import com.tangem.tangemtest.R
-import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.StringId
-import com.tangem.tangemtest._arch.structure.abstraction.*
+import com.tangem.tangemtest._arch.structure.abstraction.Item
+import com.tangem.tangemtest._arch.structure.abstraction.ItemGroup
+import com.tangem.tangemtest._arch.structure.abstraction.iterate
 import com.tangem.tangemtest._arch.structure.impl.BoolItem
 import com.tangem.tangemtest._arch.structure.impl.TextItem
-import com.tangem.tangemtest.ucase.domain.responses.ResponseFieldConverter
-import com.tangem.tangemtest.ucase.variants.personalize.BlockId
 import com.tangem.tangemtest.ucase.variants.responses.CardDataId
 import com.tangem.tangemtest.ucase.variants.responses.CardId
-import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
+import com.tangem.tangemtest.ucase.variants.responses.item.TextHeaderItem
 
 /**
 [REDACTED_AUTHOR]
  */
-class CardConverter : ModelToItems<Card> {
-
-    private val fieldConverter = ResponseFieldConverter()
+class CardConverter : BaseResponseConverter<Card>() {
 
     override fun convert(from: Card): List<Item> {
         val itemList = mutableListOf<Item>()
-        itemList.add(simpleFields(from))
-        itemList.add(cardData(from.cardData))
-        itemList.add(settingsMask(from.settingsMask))
+        commonGroup(itemList, from)
+        cardDataGroup(itemList, from.cardData)
+        settingsMaskGroup(itemList, from.settingsMask)
         hideEmptyNullFields(itemList)
 
         return itemList
@@ -35,70 +29,66 @@ class CardConverter : ModelToItems<Card> {
 
     private fun hideEmptyNullFields(itemList: MutableList<Item>) {
         itemList.iterate {
-            val data = it.getData<Any?>()
-            val isHidden = if (data == null) true
-            else when (data) {
-                is String -> data.isEmpty()
-                else -> false
-            }
+            if (it is ItemGroup) return@iterate
 
-            if (isHidden) it.viewModel.viewState.isVisibleState.value = false
+            if (it.getData<Any?>() == null) it.viewModel.viewState.isVisibleState.value = false
         }
     }
 
-    private fun simpleFields(from: Card): Item {
-        val group = createGroup(BlockId.Common)
+    private fun commonGroup(itemList: MutableList<Item>, from: Card) {
+        val group = createGroup(CardId.empty, addHeaderItem = false)
+        itemList.add(group)
+
         group.addItem(TextItem(CardId.cardId, from.cardId))
         group.addItem(TextItem(CardId.manufacturerName, from.manufacturerName))
-        group.addItem(TextItem(CardId.status, stringOf(from.status)))
+        group.addItem(TextItem(CardId.status, valueToString(from.status)))
         group.addItem(TextItem(CardId.firmwareVersion, from.firmwareVersion))
         group.addItem(TextItem(CardId.cardPublicKey, fieldConverter.byteArray(from.cardPublicKey)))
         group.addItem(TextItem(CardId.issuerPublicKey, fieldConverter.byteArray(from.issuerPublicKey)))
-        group.addItem(TextItem(CardId.curve, stringOf(from.curve)))
-        group.addItem(TextItem(CardId.maxSignatures, stringOf(from.maxSignatures)))
-        group.addItem(TextItem(CardId.signingMethod, fieldConverter.signingMethod(from.signingMethod)))
-        group.addItem(TextItem(CardId.pauseBeforePin2, stringOf(from.pauseBeforePin2)))
+        group.addItem(TextItem(CardId.curve, valueToString(from.curve)))
+        group.addItem(TextItem(CardId.maxSignatures, valueToString(from.maxSignatures)))
+        group.addItem(TextItem(CardId.pauseBeforePin2, valueToString(from.pauseBeforePin2)))
         group.addItem(TextItem(CardId.walletPublicKey, fieldConverter.byteArray(from.walletPublicKey)))
-        group.addItem(TextItem(CardId.walletRemainingSignatures, stringOf(from.walletRemainingSignatures)))
-        group.addItem(TextItem(CardId.walletSignedHashes, stringOf(from.walletSignedHashes)))
-        group.addItem(TextItem(CardId.health, stringOf(from.health)))
-        group.addItem(TextItem(CardId.isActivated, stringOf(from.isActivated)))
-        group.addItem(TextItem(CardId.activationSeed, stringOf(from.activationSeed)))
-        group.addItem(TextItem(CardId.paymentFlowVersion, stringOf(from.paymentFlowVersion)))
-        group.addItem(TextItem(CardId.userCounter, stringOf(from.userCounter)))
-//        block.addItem(TextItem(CardId.UserProtectedCounter, stringOf(from.userProtectedCounter)))
-        return group
+        group.addItem(TextItem(CardId.walletRemainingSignatures, valueToString(from.walletRemainingSignatures)))
+        group.addItem(TextItem(CardId.walletSignedHashes, valueToString(from.walletSignedHashes)))
+        group.addItem(TextItem(CardId.health, valueToString(from.health)))
+        group.addItem(TextItem(CardId.isActivated, valueToString(from.isActivated)))
+        group.addItem(TextItem(CardId.activationSeed, valueToString(from.activationSeed)))
+        group.addItem(TextItem(CardId.paymentFlowVersion, valueToString(from.paymentFlowVersion)))
+        group.addItem(TextItem(CardId.userCounter, valueToString(from.userCounter)))
+
+        val settingsMask = from.settingsMask ?: return
+
+        group.addItem(TextHeaderItem(CardId.signingMethod, ""))
+        Settings.values().forEach { group.addItem(BoolItem(StringId(it.name), settingsMask.contains(it))) }
     }
 
-    private fun cardData(from: CardData?): Item {
-        val group = createGroup(BlockId.Common, R.color.group_card_data)
-        val data = from ?: return group
+    private fun cardDataGroup(itemList: MutableList<Item>, cardData: CardData?) {
+        val data = cardData ?: return
 
-//        group.addItem(TextItem(StringResId(R.string.response_card_card_data)))
+        val group = createGroup(CardId.cardData, R.color.group_card_data)
+        itemList.add(group)
         group.addItem(TextItem(CardDataId.batchId, data.batchId))
-//        Format: Year (2 bytes) | Month (1 byte) | Day (1 byte)
-        group.addItem(TextItem(CardDataId.manufactureDateTime, stringOf(data.manufactureDateTime)))
+        group.addItem(TextItem(CardDataId.manufactureDateTime, valueToString(data.manufactureDateTime)))
         group.addItem(TextItem(CardDataId.issuerName, data.issuerName))
         group.addItem(TextItem(CardDataId.blockchainName, data.blockchainName))
         group.addItem(TextItem(CardDataId.manufacturerSignature, fieldConverter.byteArray(data.manufacturerSignature)))
-        group.addItem(TextItem(CardDataId.productMask, fieldConverter.productMask(data.productMask)))
         group.addItem(TextItem(CardDataId.tokenSymbol, data.tokenSymbol))
         group.addItem(TextItem(CardDataId.tokenContractAddress, data.tokenContractAddress))
         group.addItem(TextItem(CardDataId.tokenDecimal, data.tokenSymbol))
 
-        return group
+        val productMask = data.productMask ?: return
+
+        group.addItem(TextHeaderItem(CardDataId.productMask, ""))
+        Product.values().forEach { group.addItem(BoolItem(StringId(it.name), productMask.contains(it))) }
     }
 
-    private fun settingsMask(from: SettingsMask?): Item {
+    private fun settingsMaskGroup(itemList: MutableList<Item>, from: SettingsMask?) {
+        val data = from ?: return
+
         val group = createGroup(CardId.settingsMask, R.color.group_settings_mask)
-        val data = from ?: return group
+        itemList.add(group)
 
         Settings.values().forEach { group.addItem(BoolItem(StringId(it.name), data.contains(it))) }
-        return group
-    }
-
-    private fun createGroup(id: Id, colorId: Int? = null): ItemGroup {
-        return if (colorId == null) SimpleItemGroup(id)
-        else SimpleItemGroup(id, BaseItemViewModel(viewState = ViewState(bgColor = colorId)))
     }
 }
