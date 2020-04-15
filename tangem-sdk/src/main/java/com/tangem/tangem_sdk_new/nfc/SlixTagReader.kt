@@ -7,7 +7,7 @@ import com.tangem.common.apdu.StatusWord
 import com.tangem.common.extensions.toByteArray
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.tlv.Tlv
-import com.tangem.common.tlv.TlvMapper
+import com.tangem.common.tlv.TlvDecoder
 import com.tangem.common.tlv.TlvTag
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -64,9 +64,9 @@ class SlixTagReader() {
 
         val areaBuf = readMultipleBlocks(1, blocksCount)
 
-        val tlvNdef = TlvMapper(Tlv.deserialize(areaBuf, true) ?: listOf())
+        val tlvNdef = TlvDecoder(Tlv.deserialize(areaBuf, true) ?: listOf())
 
-        return NdefMessage(tlvNdef.map<ByteArray>(TlvTag.CardPublicKey))
+        return NdefMessage(tlvNdef.decode<ByteArray>(TlvTag.CardPublicKey))
     }
 
     private fun readSingleBlock(blockNo: Int): ByteArray {
