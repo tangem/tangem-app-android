@@ -56,7 +56,7 @@ class CardConverter : ModelToItems<Card> {
         group.addItem(TextItem(CardId.issuerPublicKey, from.issuerPublicKey?.toHexString()))
         group.addItem(TextItem(CardId.curve, stringOf(from.curve)))
         group.addItem(TextItem(CardId.maxSignatures, stringOf(from.maxSignatures)))
-        group.addItem(TextItem(CardId.signingMethod, stringOf(from.signingMethod?.rawValue)))
+        group.addItem(TextItem(CardId.signingMethod, stringOf(from.signingMethods?.rawValue)))
         group.addItem(TextItem(CardId.pauseBeforePin2, stringOf(from.pauseBeforePin2)))
         group.addItem(TextItem(CardId.walletPublicKey, stringOf(from.walletPublicKey)))
         group.addItem(TextItem(CardId.walletRemainingSignatures, stringOf(from.walletRemainingSignatures)))
