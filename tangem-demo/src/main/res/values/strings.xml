@@ -1,10 +1,14 @@
 <resources>
-    <string name="app_name">Tangem Demo</string>
+    <string name="app_name">Tangem Development Kit</string>
 
     <string name="fg_name_entry_point">@string/app_name</string>
-    <string name="current_card_id">"Current card ID: "</string>
+    <string name="fg_name_response_scan">Scan response</string>
+    <string name="fg_name_response_sign">Sign response</string>
+    <string name="fg_name_response_personalization">Personalization response</string>
+    <string name="fg_name_response_depersonalization">Depersonalization response</string>
 
     <string name="unknown">unknown</string>
+    <string name="copy_to_clipboard">Copy to clipboard</string>
     <string name="switch_description">Docs</string>
 
     <string name="card_error_not_personalized">Your card hasn\'t been personalized yet. You need to run personalize command first.</string>
@@ -13,5 +17,8 @@
 
     <string name="stub">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit</string>
 <!--    <string name="stub">Sed ut perspiciatis unde omnis iste natus</string>-->
+
+    <string name="show_rare_fields">Show rarely used fields</string>
+    <string name="hide_rare_fields">Hide</string>
 
 </resources>
