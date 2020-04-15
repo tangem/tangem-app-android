@@ -13,25 +13,25 @@ fun CardConfig.Companion.create(application: Application): CardConfig {
 
     val signingMethodMaskBuilder = SigningMethodMaskBuilder()
     if (preferences.getBoolean("personalization_SigningMethod_0", false)) {
-        signingMethodMaskBuilder.add(SigningMethod.SIGN_HASH)
+        signingMethodMaskBuilder.add(SigningMethod.SignHash)
     }
     if (preferences.getBoolean("personalization_SigningMethod_1", false)) {
-        signingMethodMaskBuilder.add(SigningMethod.SIGN_RAW)
+        signingMethodMaskBuilder.add(SigningMethod.SignRaw)
     }
     if (preferences.getBoolean("personalization_SigningMethod_2", false)) {
-        signingMethodMaskBuilder.add(SigningMethod.SIGN_HASH_VALIDATE_BY_ISSUER)
+        signingMethodMaskBuilder.add(SigningMethod.SignHashValidateByIssuer)
     }
     if (preferences.getBoolean("personalization_SigningMethod_3", false)) {
-        signingMethodMaskBuilder.add(SigningMethod.SIGN_RAW_VALIDATE_BY_ISSUER)
+        signingMethodMaskBuilder.add(SigningMethod.SignRawValidateByIssuer)
     }
     if (preferences.getBoolean("personalization_SigningMethod_4", false)) {
-        signingMethodMaskBuilder.add(SigningMethod.SIGN_HASH_VALIDATE_BY_ISSUER_WRITE_ISSUER_DATA)
+        signingMethodMaskBuilder.add(SigningMethod.SignHashValidateByIssuerWriteIssuerData)
     }
     if (preferences.getBoolean("personalization_SigningMethod_5", false)) {
-        signingMethodMaskBuilder.add(SigningMethod.SIGN_RAW_VALIDATE_BY_ISSUER_WRITE_ISSUER_DATA)
+        signingMethodMaskBuilder.add(SigningMethod.SignRawValidateByIssuerWriteIssuerData)
     }
     if (preferences.getBoolean("personalization_SigningMethod_6", false)) {
-        signingMethodMaskBuilder.add(SigningMethod.SIGN_HASH)
+        signingMethodMaskBuilder.add(SigningMethod.SignHash)
     }
     val signingMethod = signingMethodMaskBuilder.build()
 
@@ -40,9 +40,9 @@ fun CardConfig.Companion.create(application: Application): CardConfig {
     val isIdCard = preferences.getBoolean("personalization_ProductMask_IsIDCard", false)
 
     val productMaskBuilder = ProductMaskBuilder()
-    if (isNote) productMaskBuilder.add(Product.NOTE)
-    if (isTag) productMaskBuilder.add(Product.TAG)
-    if (isIdCard) productMaskBuilder.add(Product.ID_CARD)
+    if (isNote) productMaskBuilder.add(Product.Note)
+    if (isTag) productMaskBuilder.add(Product.Tag)
+    if (isIdCard) productMaskBuilder.add(Product.IdCard)
     val productMask = productMaskBuilder.build()
 
     var tokenSymbol: String? = null
