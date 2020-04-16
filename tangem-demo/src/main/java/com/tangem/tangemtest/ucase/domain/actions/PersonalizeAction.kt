@@ -37,7 +37,7 @@ class PersonalizeAction : BaseAction() {
         val acquirer = DefaultPersonalizationParams.acquirer()
         val manufacturer = DefaultPersonalizationParams.manufacturer()
 
-        val personalizeConfig = PersonalizationConfigConverter().convert(itemList, PersonalizationConfig())
+        val personalizeConfig = PersonalizationConfigConverter().convert(itemList, PersonalizationConfig.default())
         val cardConfig = PersonalizationConfigToCardConfig().convert(personalizeConfig)
 
         attrs.tangemSdk.personalize(cardConfig, issuer, manufacturer, acquirer) {
