@@ -27,7 +27,6 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
 
     lateinit var activity: FragmentActivity
     private var readingDialog: BottomSheetDialog? = null
-    private var nfcEnableDialog: NfcEnableDialog? = null
 
     init {
         setLogger()
