@@ -25,6 +25,7 @@ interface ItemsManager : PayloadHolder {
     fun invokeMainAction(tangemSdk: TangemSdk, callback: ActionCallback)
     fun getActionByTag(id: Id, tangemSdk: TangemSdk): ((ActionCallback) -> Unit)?
     fun attachPayload(payload: Payload)
+    fun updateByItemList(list: List<Item>)
 }
 
 interface PayloadKey {
