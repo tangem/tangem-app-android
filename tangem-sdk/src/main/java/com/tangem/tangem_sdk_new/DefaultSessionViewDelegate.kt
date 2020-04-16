@@ -1,13 +1,10 @@
 package com.tangem.tangem_sdk_new
 
 import android.animation.ObjectAnimator
-import android.app.Activity
-import android.content.Intent
-import android.provider.Settings
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.animation.DecelerateInterpolator
-import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.FragmentActivity
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.Log
 import com.tangem.LoggerInterface
@@ -17,6 +14,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.tangem_sdk_new.extensions.hide
 import com.tangem.tangem_sdk_new.extensions.show
 import com.tangem.tangem_sdk_new.nfc.NfcReader
+import com.tangem.tangem_sdk_new.ui.NfcEnableDialog
 import com.tangem.tangem_sdk_new.ui.TouchCardAnimation
 import kotlinx.android.synthetic.main.layout_touch_card.*
 import kotlinx.android.synthetic.main.nfc_bottom_sheet.*
@@ -27,8 +25,9 @@ import kotlinx.android.synthetic.main.nfc_bottom_sheet.*
  */
 class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDelegate {
 
-    lateinit var activity: Activity
+    lateinit var activity: FragmentActivity
     private var readingDialog: BottomSheetDialog? = null
+    private var nfcEnableDialog: NfcEnableDialog? = null
 
     init {
         setLogger()
@@ -37,10 +36,10 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
     override fun onNfcSessionStarted(cardId: String?, message: Message?) {
         reader.readingCancelled = false
         postUI { showReadingDialog(activity, cardId, message) }
-        if (!reader.nfcEnabled) showNFCEnableDialog()
+        if (!reader.nfcEnabled) NfcEnableDialog().show(activity)
     }
 
-    private fun showReadingDialog(activity: Activity, cardId: String?, message: Message?) {
+    private fun showReadingDialog(activity: FragmentActivity, cardId: String?, message: Message?) {
         val dialogView = activity.layoutInflater.inflate(R.layout.nfc_bottom_sheet, null)
         readingDialog = BottomSheetDialog(activity)
         readingDialog?.setContentView(dialogView)
@@ -68,18 +67,6 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
             Log.i(this::class.simpleName!!, "readingCancelled is set to true")
         }
         readingDialog?.show()
-    }
-
-    private fun showNFCEnableDialog() {
-        val builder = AlertDialog.Builder(activity)
-                .setCancelable(false)
-                .setIcon(R.drawable.ic_action_nfc_gray)
-                .setTitle(R.string.dialog_nfc_enable_title)
-                .setMessage(R.string.dialog_nfc_enable_text)
-        builder.setPositiveButton(R.string.general_ok) { _, _ ->
-            activity.startActivity(Intent(Settings.ACTION_NFC_SETTINGS))
-        }
-        builder.create().show()
     }
 
     override fun onSecurityDelay(ms: Int, totalDurationSeconds: Int) {
