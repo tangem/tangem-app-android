@@ -46,9 +46,8 @@ class SpinnerWidget(
         }
         spinner.onItemSelectedListener = onItemSelectedListener
         item.viewModel.onDataUpdated = {
-            val selectedItem = it as? String
             spinner.onItemSelectedListener = null
-            viewModel.itemList.firstOrNull { item -> item.value == selectedItem }?.let { keyValue ->
+            viewModel.itemList.firstOrNull { item -> item.value == it }?.let { keyValue ->
                 val position = viewModel.itemList.indexOf(keyValue)
                 spinner.setSelection(position)
             }
