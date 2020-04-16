@@ -14,7 +14,7 @@ import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 /**
 [REDACTED_AUTHOR]
  */
-abstract class ResponseWidget(parent: ViewGroup, item: Item): DescriptionWidget(parent, item)  {
+abstract class ResponseWidget(parent: ViewGroup, item: Item) : DescriptionWidget(parent, item) {
 
     init {
         view.setOnClickListener {
