@@ -13,10 +13,10 @@ import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 class SignAction : BaseAction() {
     override fun executeMainAction(payload: PayloadHolder, attrs: AttrForAction, callback: ActionCallback) {
         val dataForHashing = attrs.itemList.findItem(TlvId.TransactionOutHash) ?: return
-        val hash = dataForHashing.getData() as? ByteArray ?: return
+        val hash = dataForHashing.getData() as? String ?: return
         val cardId = attrs.itemList.findItem(TlvId.CardId)?.viewModel?.data ?: return
 
-        attrs.tangemSdk.sign(arrayOf(hash), stringOf(cardId)) { handleResult(payload, it, null, attrs, callback) }
+        attrs.tangemSdk.sign(arrayOf(hash.toByteArray()), stringOf(cardId)) { handleResult(payload, it, null, attrs, callback) }
     }
 
     override fun getActionByTag(payload: PayloadHolder, id: Id, attrs: AttrForAction): ((ActionCallback) -> Unit)? {
