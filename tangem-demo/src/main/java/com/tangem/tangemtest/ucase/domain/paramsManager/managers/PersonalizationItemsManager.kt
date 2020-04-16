@@ -29,7 +29,7 @@ class PersonalizationItemsManager(
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     fun onDestroy() {
-        val config = converter.convert(itemList, PersonalizationConfig())
+        val config = converter.convert(itemList, PersonalizationConfig.default())
         store.save(config)
     }
 }
