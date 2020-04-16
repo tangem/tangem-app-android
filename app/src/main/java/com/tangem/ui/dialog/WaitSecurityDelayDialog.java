@@ -147,21 +147,23 @@ public class WaitSecurityDelayDialog extends DialogFragment {
     }
 
     private void setRemainingTimeout(final int msec) {
-        progressBar.post(() -> {
-            int progress = WaitSecurityDelayDialog.this.progressBar.getProgress();
-            if (timer != null) {
-                // we get delay latency from card for first time - don't change progress by timer, only by card answer
-                progressBar.setMax(progress + msec);
-                timer.cancel();
-                timer = null;
-            } else {
-                int newProgress = progressBar.getMax() - msec;
-                if (newProgress > progress)
-                    progressBar.setProgress(newProgress);
-                else
+        if (progressBar != null) {
+            progressBar.post(() -> {
+                int progress = WaitSecurityDelayDialog.this.progressBar.getProgress();
+                if (timer != null) {
+                    // we get delay latency from card for first time - don't change progress by timer, only by card answer
                     progressBar.setMax(progress + msec);
-            }
-        });
+                    timer.cancel();
+                    timer = null;
+                } else {
+                    int newProgress = progressBar.getMax() - msec;
+                    if (newProgress > progress)
+                        progressBar.setProgress(newProgress);
+                    else
+                        progressBar.setMax(progress + msec);
+                }
+            });
+        }
     }
 
 }
