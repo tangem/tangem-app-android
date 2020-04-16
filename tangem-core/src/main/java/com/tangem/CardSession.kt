@@ -74,7 +74,10 @@ class CardSession(
             }
 
             runnable.run(this) { result ->
-                stop()
+                when (result) {
+                    is CompletionResult.Success -> stop()
+                    is CompletionResult.Failure -> stopWithError(result.error)
+                }
                 callback(result)
             }
         }
@@ -99,7 +102,6 @@ class CardSession(
                 }
                 is CompletionResult.Success -> {
                     callback(this, null)
-
                 }
             }
         }
