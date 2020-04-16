@@ -6,14 +6,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
-import androidx.transition.AutoTransition
-import androidx.transition.TransitionManager
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.Id
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest._arch.structure.impl.EditTextItem
+import com.tangem.tangemtest.extensions.view.beginDelayedTransition
 import com.tangem.tangemtest.ucase.resources.ActionType
 import com.tangem.tangemtest.ucase.resources.MainResourceHolder
 import com.tangem.tangemtest.ucase.resources.Resources
@@ -73,7 +72,7 @@ class ParameterWidget(
     }
 
     fun toggleDescriptionVisibility(state: Boolean) {
-        TransitionManager.beginDelayedTransition(parent.parent as ViewGroup, AutoTransition())
+        (parent.parent as ViewGroup).beginDelayedTransition()
         descriptionContainer.visibility = if (state) View.VISIBLE else View.GONE
     }
 
@@ -95,7 +94,7 @@ class ParameterWidget(
     private fun toggleActionBtnVisibility() {
         fun switchVisibilityState(newState: Int) {
             actionBtnVisibilityState = newState
-            TransitionManager.beginDelayedTransition(parent, AutoTransition())
+            parent.beginDelayedTransition()
             btnAction.visibility = actionBtnVisibilityState
         }
         when {
