@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <include layout="@layout/w_personalize_item_text" />
+    <include layout="@layout/w_personalize_item_header" />
 
     <include layout="@layout/w_personalize_item_edit_text" />
 
