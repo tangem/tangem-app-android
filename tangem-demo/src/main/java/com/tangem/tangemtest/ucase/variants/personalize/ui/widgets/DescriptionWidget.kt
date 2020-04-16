@@ -2,11 +2,10 @@ package com.tangem.tangemtest.ucase.variants.personalize.ui.widgets
 
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.transition.AutoTransition
-import androidx.transition.TransitionManager
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest._arch.structure.abstraction.ViewState
+import com.tangem.tangemtest.extensions.view.beginDelayedTransition
 
 /**
 [REDACTED_AUTHOR]
@@ -31,7 +30,7 @@ abstract class DescriptionWidget(
         if (description.isEmpty()) return
 
         tv.text = description
-        TransitionManager.beginDelayedTransition(view.parent as ViewGroup, AutoTransition())
+        (view.parent as ViewGroup).beginDelayedTransition()
         descriptionContainer.visibility = state
     }
 }
