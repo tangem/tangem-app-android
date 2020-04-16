@@ -52,6 +52,7 @@ class ItemsToPersonalizationConfig : ItemsToModel<PersonalizationConfig> {
         val export = PersonalizationConfig()
         export.series = getTyped(CardNumber.Series)
         export.startNumber = getTyped(CardNumber.Number)
+        export.batchId = getTyped(CardNumber.BatchId)
         export.curveID = getTyped(Common.Curve)
         export.blockchain = getTyped(Common.Blockchain)
         export.blockchainCustom = getTyped(Common.BlockchainCustom)
