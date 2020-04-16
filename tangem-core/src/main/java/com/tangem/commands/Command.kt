@@ -91,7 +91,7 @@ abstract class Command<T : CommandResponse> : CardSessionRunnable<T> {
                     }
                 }
                 is CompletionResult.Failure ->
-                    if (result.error == SessionError.TagLost()) {
+                    if (result.error is SessionError.TagLost) {
                         session.viewDelegate.onTagLost()
                     } else {
                         callback(CompletionResult.Failure(result.error))
