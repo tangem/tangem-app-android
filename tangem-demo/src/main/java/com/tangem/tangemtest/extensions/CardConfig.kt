@@ -11,24 +11,38 @@ fun CardConfig.Companion.create(application: Application): CardConfig {
 
     val preferences = application.getSharedPreferences("prefs", Context.MODE_PRIVATE)
 
-    val signingMethod = SigningMethod.build(
-            signHash = preferences.getBoolean("personalization_SigningMethod_0", false),
-            signRaw = preferences.getBoolean("personalization_SigningMethod_1", false),
-            signHashValidatedByIssuer = preferences.getBoolean("personalization_SigningMethod_2", false),
-            signRawValidatedByIssuer = preferences.getBoolean("personalization_SigningMethod_3", false),
-            signHashValidatedByIssuerAndWriteIssuerData = preferences.getBoolean("personalization_SigningMethod_4", false),
-            signRawValidatedByIssuerAndWriteIssuerData = preferences.getBoolean("personalization_SigningMethod_5", false),
-            signPos = preferences.getBoolean("personalization_SigningMethod_6", false)
-    )
+    val signingMethodMaskBuilder = SigningMethodMaskBuilder()
+    if (preferences.getBoolean("personalization_SigningMethod_0", false)) {
+        signingMethodMaskBuilder.add(SigningMethod.SignHash)
+    }
+    if (preferences.getBoolean("personalization_SigningMethod_1", false)) {
+        signingMethodMaskBuilder.add(SigningMethod.SignRaw)
+    }
+    if (preferences.getBoolean("personalization_SigningMethod_2", false)) {
+        signingMethodMaskBuilder.add(SigningMethod.SignHashValidateByIssuer)
+    }
+    if (preferences.getBoolean("personalization_SigningMethod_3", false)) {
+        signingMethodMaskBuilder.add(SigningMethod.SignRawValidateByIssuer)
+    }
+    if (preferences.getBoolean("personalization_SigningMethod_4", false)) {
+        signingMethodMaskBuilder.add(SigningMethod.SignHashValidateByIssuerWriteIssuerData)
+    }
+    if (preferences.getBoolean("personalization_SigningMethod_5", false)) {
+        signingMethodMaskBuilder.add(SigningMethod.SignRawValidateByIssuerWriteIssuerData)
+    }
+    if (preferences.getBoolean("personalization_SigningMethod_6", false)) {
+        signingMethodMaskBuilder.add(SigningMethod.SignHash)
+    }
+    val signingMethod = signingMethodMaskBuilder.build()
 
     val isNote = preferences.getBoolean("personalization_ProductMask_IsNote", true)
     val isTag = preferences.getBoolean("personalization_ProductMask_IsTag", false)
     val isIdCard = preferences.getBoolean("personalization_ProductMask_IsIDCard", false)
 
     val productMaskBuilder = ProductMaskBuilder()
-    if (isNote) productMaskBuilder.add(ProductMask.note)
-    if (isTag) productMaskBuilder.add(ProductMask.tag)
-    if (isIdCard) productMaskBuilder.add(ProductMask.idCard)
+    if (isNote) productMaskBuilder.add(Product.Note)
+    if (isTag) productMaskBuilder.add(Product.Tag)
+    if (isIdCard) productMaskBuilder.add(Product.IdCard)
     val productMask = productMaskBuilder.build()
 
     var tokenSymbol: String? = null
@@ -80,7 +94,7 @@ fun CardConfig.Companion.create(application: Application): CardConfig {
             cardData = cardData,
             curveID = EllipticCurve.byName(preferences.getString("personalization_CurveId", "secp256k1")!!)
                     ?: EllipticCurve.Secp256k1,
-            signingMethod = signingMethod,
+            signingMethods = signingMethod,
             createWallet = preferences.getBoolean("personalization_CreateWallet", true),
             maxSignatures = preferences.getString("personalization_MaxSignatures", "1000")!!.toInt(),
             isReusable = preferences.getBoolean("personalization_SettingsMask_IsReusable", true),
