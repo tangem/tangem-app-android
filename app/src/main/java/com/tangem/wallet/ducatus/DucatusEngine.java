@@ -6,12 +6,9 @@ import android.util.Log;
 
 import com.tangem.App;
 import com.tangem.data.network.ServerApiBitcore;
-import com.tangem.data.network.ServerApiInsight;
 import com.tangem.data.network.model.BitcoreBalanceAndUnspents;
 import com.tangem.data.network.model.BitcoreSendResponse;
 import com.tangem.data.network.model.BitcoreUtxo;
-import com.tangem.data.network.model.InsightResponse;
-import com.tangem.data.network.model.InsightUtxo;
 import com.tangem.tangem_card.data.TangemCard;
 import com.tangem.tangem_card.reader.CardProtocol;
 import com.tangem.tangem_card.tasks.SignTask;
@@ -39,7 +36,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import io.reactivex.SingleObserver;
 import io.reactivex.observers.DisposableSingleObserver;
@@ -449,8 +445,6 @@ public class DucatusEngine extends BtcEngine {
             @Override
             public byte[][] getHashesToSign() throws Exception {
                 byte[][] dataForSign = new byte[unspentOutputs.size()][];
-                if (txForSign.length > 10)
-                    throw new Exception("To much hashes in one transaction!");
                 for (int i = 0; i < unspentOutputs.size(); ++i) {
                     dataForSign[i] = bodyDoubleHash[i];
                 }
