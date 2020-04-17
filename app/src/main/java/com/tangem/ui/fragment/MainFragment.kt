@@ -338,7 +338,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
 
                         lastTag = null
                         ReadCardInfoTask.resetLastReadInfo()
-                        (activity as MainActivity).nfcManager.notifyReadResult(false)
+                        (activity as? MainActivity)?.nfcManager?.notifyReadResult(false)
                     }
                 }
             }
