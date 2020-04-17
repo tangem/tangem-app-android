@@ -27,7 +27,6 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
 
     lateinit var activity: FragmentActivity
     private var readingDialog: BottomSheetDialog? = null
-    private var nfcEnableDialog: NfcEnableDialog? = null
 
     init {
         setLogger()
@@ -36,7 +35,7 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
     override fun onNfcSessionStarted(cardId: String?, message: Message?) {
         reader.readingCancelled = false
         postUI { showReadingDialog(activity, cardId, message) }
-        if (!reader.nfcEnabled) showNFCEnableDialog()
+        if (!reader.nfcEnabled) NfcEnableDialog().show(activity)
     }
 
     private fun showReadingDialog(activity: FragmentActivity, cardId: String?, message: Message?) {
@@ -67,11 +66,6 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
             Log.i(this::class.simpleName!!, "readingCancelled is set to true")
         }
         readingDialog?.show()
-    }
-
-    private fun showNFCEnableDialog() {
-        nfcEnableDialog = NfcEnableDialog()
-        activity.supportFragmentManager.let { nfcEnableDialog?.show(it, NfcEnableDialog.TAG) }
     }
 
     override fun onSecurityDelay(ms: Int, totalDurationSeconds: Int) {
