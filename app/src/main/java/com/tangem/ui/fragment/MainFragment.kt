@@ -22,6 +22,8 @@ import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModelProviders
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.google.firebase.perf.FirebasePerformance
+import com.google.firebase.perf.metrics.Trace
 import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Blockchain
@@ -77,6 +79,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
     override val layoutId = R.layout.fragment_main
     private lateinit var viewModel: MainViewModel
     private lateinit var nfcDeviceAntenna: NfcDeviceAntennaLocation
+    private var tapTimerTrace: Trace? = null
     private var unsuccessReadCount = 0
     private var task: CustomReadCardTask? = null
     private var lastTag: Tag? = null
@@ -156,6 +159,9 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
     }
 
     override fun onResume() {
+        tapTimerTrace = FirebasePerformance.getInstance()
+                .newTrace(AnalyticsEvent.CARD_TAP_USER_TIMER.event)
+        tapTimerTrace?.start()
         super.onResume()
         nfcDeviceAntenna.animate()
     }
@@ -167,6 +173,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
 
     override fun onStop() {
         task?.cancel(true)
+        tapTimerTrace = null
         super.onStop()
     }
 
@@ -248,6 +255,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
     }
 
     override fun onReadFinish(cardProtocol: CardProtocol?) {
+        tapTimerTrace?.stop()
         task = null
         if (cardProtocol != null) {
             if (cardProtocol.error == null) {
@@ -338,7 +346,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
 
                         lastTag = null
                         ReadCardInfoTask.resetLastReadInfo()
-                        (activity as MainActivity).nfcManager.notifyReadResult(false)
+                        (activity as? MainActivity)?.nfcManager?.notifyReadResult(false)
                     }
                 }
             }
