@@ -28,7 +28,7 @@ enum class Blockchain(
     Ethereum("ETH", "ETH", 18, "Ethereum", 0),
     Rootstock("", "", 18, "", 0),
     Cardano("CARDANO", "ADA", 6, "Cardano", 0),
-    XRP("", "XRP", 6, "XRP Ledger", 0),
+    XRP("XRP", "XRP", 6, "XRP Ledger", 0),
     Binance("BINANCE", "BNB", 8, "Binance", 0),
     BinanceTestnet("BINANCE/test", "BNBt", 8, "Binance", 0),
     Stellar("XLM", "XLM", 7, "Stellar", 0);
