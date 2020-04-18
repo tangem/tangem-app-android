@@ -1,5 +1,6 @@
 package com.tangem.blockchain.common
 
+import com.tangem.blockchain.binance.BinanceWalletManager
 import com.tangem.blockchain.bitcoin.BitcoinWalletManager
 import com.tangem.blockchain.cardano.CardanoWalletManager
 import com.tangem.blockchain.ethereum.Chain
@@ -65,6 +66,21 @@ object WalletManagerFactory {
                         cardId = card.cardId,
                         walletPublicKey = walletPublicKey,
                         wallet = wallet
+                )
+            }
+            Blockchain.Binance -> {
+                return BinanceWalletManager(
+                        cardId = card.cardId,
+                        walletPublicKey = walletPublicKey,
+                        wallet = wallet
+                )
+            }
+            Blockchain.BinanceTestnet -> {
+                return BinanceWalletManager(
+                        cardId = card.cardId,
+                        walletPublicKey = walletPublicKey,
+                        wallet = wallet,
+                        isTestNet = true
                 )
             }
             else -> return null
