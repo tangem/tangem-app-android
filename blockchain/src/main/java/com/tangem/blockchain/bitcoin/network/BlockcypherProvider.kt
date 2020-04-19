@@ -1,11 +1,11 @@
 package com.tangem.blockchain.bitcoin.network
 
 import com.tangem.blockchain.bitcoin.UnspentTransaction
-import com.tangem.blockchain.bitcoin.network.BitcoinNetworkManager.Companion.SATOSHI_IN_BTC
 import com.tangem.blockchain.bitcoin.network.api.BlockcypherApi
 import com.tangem.blockchain.bitcoin.network.api.BlockcypherBody
 import com.tangem.blockchain.bitcoin.network.response.BlockcypherFee
 import com.tangem.blockchain.bitcoin.network.response.BlockcypherResponse
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.extensions.Result
 import com.tangem.blockchain.common.extensions.SimpleResult
 import com.tangem.blockchain.common.extensions.retryIO
@@ -14,6 +14,7 @@ import com.tangem.common.extensions.hexToBytes
 class BlockcypherProvider(private val api: BlockcypherApi, isTestNet: Boolean) : BitcoinProvider {
 
     private val blockchain = "btc"
+    private val decimals = Blockchain.Bitcoin.decimals.toInt()
 
     private val network = if (isTestNet) {
         BlockcypherNetwork.Test.network
@@ -26,14 +27,14 @@ class BlockcypherProvider(private val api: BlockcypherApi, isTestNet: Boolean) :
             val addressData: BlockcypherResponse = retryIO { api.getAddressData(blockchain, network, address) }
             val unspents = addressData.txrefs?.map {
                 UnspentTransaction(
-                        it.amount!!.toBigDecimal().divide(SATOSHI_IN_BTC),
+                        it.amount!!.toBigDecimal().movePointLeft(decimals),
                         it.outputIndex!!.toLong(),
                         it.hash!!.hexToBytes(),
                         it.outputScript!!.hexToBytes()
                 )
             }
             return Result.Success(BitcoinAddressResponse(
-                    addressData.balance!!.toBigDecimal().divide(SATOSHI_IN_BTC),
+                    addressData.balance!!.toBigDecimal().movePointLeft(decimals),
                     addressData.unconfirmedBalance != 0L,
                     unspents))
 
@@ -43,27 +44,27 @@ class BlockcypherProvider(private val api: BlockcypherApi, isTestNet: Boolean) :
     }
 
     override suspend fun getFee(): Result<BitcoinFee> {
-        try {
+        return try {
             val receivedFee: BlockcypherFee = retryIO { api.getFee(blockchain, network) }
-            return Result.Success(
-                    BitcoinFee(receivedFee.minFeePerKb!!.toBigDecimal().divide(SATOSHI_IN_BTC),
-                            receivedFee.normalFeePerKb!!.toBigDecimal().divide(SATOSHI_IN_BTC),
-                            receivedFee.priorityFeePerKb!!.toBigDecimal().divide(SATOSHI_IN_BTC))
+            Result.Success(
+                    BitcoinFee(receivedFee.minFeePerKb!!.toBigDecimal().movePointLeft(decimals),
+                            receivedFee.normalFeePerKb!!.toBigDecimal().movePointLeft(decimals),
+                            receivedFee.priorityFeePerKb!!.toBigDecimal().movePointLeft(decimals))
             )
         } catch (error: Exception) {
-            return Result.Failure(error)
+            Result.Failure(error)
         }
     }
 
     override suspend fun sendTransaction(transaction: String): SimpleResult {
-        try {
+        return try {
             retryIO {
                 api.sendTransaction(
                         blockchain, network, BlockcypherBody(transaction), BlockcypherToken.getToken())
             }
-            return SimpleResult.Success
+            SimpleResult.Success
         } catch (error: Exception) {
-            return SimpleResult.Failure(error)
+            SimpleResult.Failure(error)
         }
     }
 }
