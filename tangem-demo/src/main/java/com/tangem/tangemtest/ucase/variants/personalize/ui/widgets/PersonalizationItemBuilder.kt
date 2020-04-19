@@ -12,7 +12,7 @@ import com.tangem.tangemtest._arch.widget.abstraction.ViewWidget
 class PersonalizationItemBuilder : ItemWidgetBuilder {
     override fun build(item: BaseItem, parent: ViewGroup): ViewWidget? {
         return when (item) {
-            is TextItem -> GroupTitleWidget(parent, item)
+            is TextItem -> TextHeaderWidget(parent, item)
             is EditTextItem -> EditTextWidget(parent, item)
             is NumberItem -> NumberWidget(parent, item)
             is BoolItem -> SwitchWidget(parent, item)
