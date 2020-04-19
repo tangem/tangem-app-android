@@ -5,6 +5,7 @@ class ServerURL {
     static final String API_COINMARKETCAP = "https://pro-api.coinmarketcap.com/";
     static final String API_INFURA = "https://mainnet.infura.io/";
     static final String API_INFURA_TESTNET = "https://rinkeby.infura.io/";
+    static final String API_INFURA_ROPSTEN = "https://ropsten.infura.io/";
     static final String API_SOCHAIN_V2 = "https://chain.so/";
     static final String API_ESTIMATEFEE = "https://estimatefee.com/";
     static final String API_UPDATE_VERSION = "https://raw.githubusercontent.com/";
