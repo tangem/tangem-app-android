@@ -1,5 +1,7 @@
 package com.tangem.blockchain.common
 
+import com.tangem.blockchain.binance.BinanceAddressFactory
+import com.tangem.blockchain.binance.BinanceAddressValidator
 import com.tangem.blockchain.bitcoin.BitcoinAddressFactory
 import com.tangem.blockchain.bitcoin.BitcoinAddressValidator
 import com.tangem.blockchain.cardano.CardanoAddressFactory
@@ -22,12 +24,13 @@ enum class Blockchain(
 ) {
     Unknown("", "", 0, "", 0),
     Bitcoin("BTC", "BTC", 8, "Bitcoin", 0),
-    BitcoinTestnet("BTC", "BTC", 8, "Bitcoin Testnet", 0),
+    BitcoinTestnet("BTC/test", "BTCt", 8, "Bitcoin Testnet", 0),
     Ethereum("ETH", "ETH", 18, "Ethereum", 0),
     Rootstock("", "", 18, "", 0),
     Cardano("CARDANO", "ADA", 6, "Cardano", 0),
     XRP("XRP", "XRP", 6, "XRP Ledger", 0),
-    Binance("", "", 8, "", 0),
+    Binance("BINANCE", "BNB", 8, "Binance", 0),
+    BinanceTestnet("BINANCE/test", "BNBt", 8, "Binance", 0),
     Stellar("XLM", "XLM", 7, "Stellar", 0);
 
     fun roundingMode(): Int = when (this) {
@@ -45,7 +48,8 @@ enum class Blockchain(
 //            Rootstock -> RootstockAddressFactory.makeAddress(cardPublicKey)
             Cardano -> CardanoAddressFactory.makeAddress(walletPublicKey)
             XRP -> XrpAddressFactory.makeAddress(walletPublicKey)
-//            Binance -> BinanceAddressFactory.makeAddress(cardPublicKey)
+            Binance -> BinanceAddressFactory.makeAddress(walletPublicKey)
+            BinanceTestnet -> BinanceAddressFactory.makeAddress(walletPublicKey, testNet = true)
             Stellar -> StellarAddressFactory.makeAddress(walletPublicKey)
             else -> throw Exception("unsupported blockchain")
         }
@@ -60,7 +64,8 @@ enum class Blockchain(
 //            Rootstock -> RootstockAddressValidator.validate(address)
             Cardano -> CardanoAddressValidator.validate(address)
             XRP -> XrpAddressValidator.validate(address)
-//            Binance -> BinanceAddressValidator.validate(address)
+            Binance -> BinanceAddressValidator.validate(address)
+            BinanceTestnet -> BinanceAddressValidator.validate(address, testNet = true)
 //            Stellar -> StellarAddressValidator.validate(address)
             else -> throw Exception("unsupported blockchain")
         }
