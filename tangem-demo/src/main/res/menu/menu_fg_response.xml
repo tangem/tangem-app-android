@@ -5,14 +5,7 @@
     <item
         android:id="@+id/action_share"
         android:icon="@drawable/ic_share_white_18dp"
-        android:title="Share"
-        android:visible="false"
-        app:showAsAction="always" />
-
-    <item
-        android:id="@+id/action_favorite"
-        android:title=""
-        app:actionLayout="@layout/menu_item_switch"
-        app:showAsAction="always" />
+        android:title="@string/menu_response_share"
+        app:showAsAction="ifRoom" />
 
 </menu>
