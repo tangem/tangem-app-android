@@ -78,13 +78,13 @@ class BlockchainDemoActivity : AppCompatActivity() {
             walletManager.update()
             withContext(Dispatchers.Main) {
                 binding.tvBalance.text =
-                        "${walletManager.wallet.balances[AmountType.Coin]?.value
+                        "${walletManager.wallet.balances[AmountType.Coin]?.value?.toPlainString()
                                 ?: "error"} ${walletManager.blockchain.currency}"
                 val token = walletManager.wallet.balances[AmountType.Token]
                 if (token != null) {
-                    binding.tvBalance.text = token.currencySymbol + " " + token.value
+                    binding.tvBalance.text = token.value?.toPlainString() + " " + token.currencySymbol
                     binding.etSumToSend.text = Editable.Factory.getInstance().newEditable(
-                            token.value.toString()
+                            token.value?.toPlainString() ?: ""
                     )
                 } else {
                     binding.etSumToSend.text =
