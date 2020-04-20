@@ -9,6 +9,7 @@ import com.tangem.blockchain.common.extensions.SimpleResult
 import com.tangem.blockchain.common.extensions.encodeBase64NoWrap
 import com.tangem.blockchain.wallets.CurrencyWallet
 import com.tangem.common.CompletionResult
+import java.math.RoundingMode
 
 class CardanoWalletManager(
         private val cardId: String,
@@ -61,7 +62,7 @@ class CardanoWalletManager(
         val size = transactionBuilder.getEstimateSize(
                 TransactionData(amount, null, address, destination), walletPublicKey
         )
-        val fee = (a + b * size).toBigDecimal()
+        val fee = (a + b * size).toBigDecimal().setScale(blockchain.decimals.toInt(), RoundingMode.UP)
         return Result.Success(listOf(Amount(blockchain.currency, fee, address, blockchain.decimals)))
     }
 }
