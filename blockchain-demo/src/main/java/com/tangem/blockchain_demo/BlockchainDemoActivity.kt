@@ -89,7 +89,7 @@ class BlockchainDemoActivity : AppCompatActivity() {
                 } else {
                     binding.etSumToSend.text =
                             Editable.Factory.getInstance().newEditable(
-                                    walletManager.wallet.balances[AmountType.Coin]?.value.toString()
+                                    walletManager.wallet.balances[AmountType.Coin]?.value?.toPlainString()
                             )
                 }
                 binding.btnCheckFee.isEnabled = true
