@@ -25,10 +25,6 @@ class BitcoinWalletManager(
     private val transactionBuilder = BitcoinTransactionBuilder(isTestNet)
     private val networkManager = BitcoinNetworkManager(isTestNet)
 
-    init {
-        wallet.balances[AmountType.Coin] = Amount(null, blockchain, address)
-    }
-
     override suspend fun update() {
         val response = networkManager.getInfo(address)
         when (response) {
