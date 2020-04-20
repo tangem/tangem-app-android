@@ -349,7 +349,7 @@ public class LtcEngine extends BtcEngine {
 
     @Override
     public Amount convertToAmount(InternalAmount internalAmount) {
-        BigDecimal d = internalAmount.divide(new BigDecimal("100000000"));
+        BigDecimal d = internalAmount.divide(new BigDecimal("100000000")).setScale(getDecimals(), RoundingMode.DOWN);
         return new Amount(d, getBalanceCurrency());
     }
 
