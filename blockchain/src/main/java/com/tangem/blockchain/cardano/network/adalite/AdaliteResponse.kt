@@ -5,7 +5,7 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class AdaliteAddress(
-        @Json(name = "final_balance")
+        @Json(name = "Right")
         var data: AdaliteAddressData? = null
 )
 
