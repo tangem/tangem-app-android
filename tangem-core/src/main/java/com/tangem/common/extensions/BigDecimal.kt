@@ -1,4 +1,4 @@
-package com.tangem.blockchain.common.extensions
+package com.tangem.common.extensions
 
 import java.math.BigDecimal
 
