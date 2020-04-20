@@ -39,7 +39,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import io.reactivex.CompletableObserver;
 import io.reactivex.SingleObserver;
@@ -425,8 +424,6 @@ public class BtcCashEngine extends CoinEngine {
             @Override
             public byte[][] getHashesToSign() throws Exception {
                 byte[][] dataForSign = new byte[unspentOutputs.size()][];
-                if (txForSign.length > 10)
-                    throw new Exception("To much hashes in one transaction!");
                 for (int i = 0; i < unspentOutputs.size(); ++i) {
                     dataForSign[i] = bodyDoubleHash[i];
                 }
