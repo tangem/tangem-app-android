@@ -12,9 +12,9 @@ interface AdaliteApi {
 
     @Headers("Content-Type: application/json")
     @POST("/api/bulk/addresses/utxo")
-    suspend fun getUnspents(@Body address: String): AdaliteUnspents
+    suspend fun getUnspents(@Body addresses: List<String>): AdaliteUnspents
 
     @Headers("Content-Type: application/json")
     @POST("/api/v2/txs/signed")
-    suspend fun sendTransaction(@Body adaliteBody: AdaliteSendBody): ResponseBody // List<Any>?
+    suspend fun sendTransaction(@Body adaliteBody: AdaliteSendBody): String // List<Any>?
 }
