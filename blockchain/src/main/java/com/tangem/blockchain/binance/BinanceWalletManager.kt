@@ -23,10 +23,6 @@ class BinanceWalletManager(
     private val transactionBuilder = BinanceTransactionBuilder(walletPublicKey, isTestNet)
     private val networkManager = BinanceNetworkManager(isTestNet)
 
-    init {
-        wallet.balances[AmountType.Coin] = Amount(null, blockchain, address)
-    }
-
     override suspend fun update() {
         val result = networkManager.getInfo(address)
         when (result) {
