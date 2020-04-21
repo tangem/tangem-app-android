@@ -8,6 +8,7 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.activity.OnBackPressedCallback
 import com.google.firebase.crashlytics.FirebaseCrashlytics
@@ -114,6 +115,10 @@ class ValidateIdFragment : BaseFragment(), NavigationResultListener,
                     val data = Bundle()
                     ctx.saveToBundle(data)
                     data.putByteArray(Constant.EXTRA_TX, tx)
+
+                    Log.d(this.javaClass.simpleName,
+                            "Transaction is ready to be sent.")
+
                     navigateForResult(
                             Constant.REQUEST_CODE_SEND_TRANSACTION_,
                             R.id.action_validateIdFragment_to_writeIdFragment,
@@ -161,6 +166,8 @@ class ValidateIdFragment : BaseFragment(), NavigationResultListener,
                     }
 
                     PINStorage.setPIN2(PINStorage.getDefaultPIN2())
+                    Log.d(this.javaClass.simpleName,
+                            "Ready to sing transaction, launching OneTouchSignTask")
                     signTransactionTask = OneTouchSignTask(NfcReader((activity as MainActivity).nfcManager, isoDep),
                             App.localStorage, App.pinStorage, this@ValidateIdFragment, transaction)
                     signTransactionTask?.start()
@@ -216,6 +223,8 @@ class ValidateIdFragment : BaseFragment(), NavigationResultListener,
 
                 mpFinishSignSound.start()
             } else {
+                Log.d(this.javaClass.simpleName,
+                        "Error while signing with ID Issuer card: ${cardProtocol.error.localizedMessage}")
                 FirebaseCrashlytics.getInstance().recordException(cardProtocol.error)
                 lastReadSuccess = false
                 if (cardProtocol.error.javaClass == CardProtocol.TangemException_InvalidPIN::class.java) {
