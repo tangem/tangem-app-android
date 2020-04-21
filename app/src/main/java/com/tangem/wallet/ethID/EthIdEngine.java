@@ -277,6 +277,9 @@ public class EthIdEngine extends CoinEngine {
     @Override
     public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) {
 
+        Log.d(this.getClass().getSimpleName(),
+                "Constructing transaction for signature");
+
         final EthTransaction tx = constructIdTxForSign(coinData.getApprovalAddressNonce());
 
         return new SignTask.TransactionToSign() {
@@ -309,6 +312,9 @@ public class EthIdEngine extends CoinEngine {
 
             @Override
             public byte[] onSignCompleted(byte[] signFromCard) throws Exception {
+                Log.d(this.getClass().getSimpleName(),
+                        "Transaction has been signed, now preparing transaction to send");
+
                 byte[] for_hash = tx.getRawHash();
                 BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, 0, 32));
                 BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, 32, 64));
@@ -330,6 +336,8 @@ public class EthIdEngine extends CoinEngine {
                 Log.e(this.getClass().getSimpleName(), " V: " + String.valueOf(v));
 
                 byte[] txForSend = tx.getEncoded();
+                Log.d(this.getClass().getSimpleName(),
+                        "Tx is ready to be sent");
                 notifyOnNeedSendTransaction(txForSend);
                 return txForSend;
             }
@@ -434,9 +442,13 @@ public class EthIdEngine extends CoinEngine {
                 if (method.equals(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION)) {
                     if (infuraResponse.getResult() == null || infuraResponse.getResult().isEmpty()) {
                         ctx.setError("Rejected by node: " + infuraResponse.getError());
+                        Log.d(this.getClass().getSimpleName(),
+                                "Rejected by node:" + infuraResponse.getError());
                         blockchainRequestsCallbacks.onComplete(false);
                     } else {
                         ctx.setError(null);
+                        Log.d(this.getClass().getSimpleName(),
+                                "Transaction has been sent successfully");
                         blockchainRequestsCallbacks.onComplete(true);
                     }
                 }
@@ -444,6 +456,8 @@ public class EthIdEngine extends CoinEngine {
 
             @Override
             public void onFail(String method, String message) {
+                Log.d(this.getClass().getSimpleName(),
+                        "requestSendTransaction failed with message: " + message);
                 if (method.equals(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION)) {
                     ctx.setError(message);
                     blockchainRequestsCallbacks.onComplete(false);
