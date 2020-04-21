@@ -1,7 +1,6 @@
 package com.tangem.tangem_sdk_new.extensions
 
 import androidx.fragment.app.FragmentActivity
-import com.tangem.CardReader
 import com.tangem.Config
 import com.tangem.SessionViewDelegate
 import com.tangem.TangemSdk
@@ -24,13 +23,13 @@ fun TangemSdk.Companion.init(activity: FragmentActivity, config: Config = Config
 
 fun TangemSdk.Companion.customInit(
         activity: FragmentActivity,
-        viewDelegate: SessionViewDelegate? = null, cardReader: CardReader? = null,
+        viewDelegate: SessionViewDelegate? = null,
         config: Config = Config()
 ): TangemSdk {
     val nfcManager = TangemSdk.initNfcManager(activity)
 
     val tangemSdk = TangemSdk(
-            cardReader ?: nfcManager.reader,
+            nfcManager.reader,
             viewDelegate ?: DefaultSessionViewDelegate(nfcManager.reader)
                     .apply { this.activity = activity },
             config
