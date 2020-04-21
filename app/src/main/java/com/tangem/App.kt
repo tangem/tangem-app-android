@@ -2,8 +2,6 @@ package com.tangem
 
 import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
-import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.tangem.data.dp.PrefsManager
@@ -80,10 +78,7 @@ class App : Application() {
             )
         }
 
-        FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(Analytics.isEnabled())
-        FirebaseAnalytics.getInstance(this).setAnalyticsCollectionEnabled(
-                Analytics.isEnabled() && !BuildConfig.DEBUG
-        )
+        Analytics.setFirebaseEnabled(this)
     }
 
     private fun buildToastHelperComponent(): ToastHelperComponent {
