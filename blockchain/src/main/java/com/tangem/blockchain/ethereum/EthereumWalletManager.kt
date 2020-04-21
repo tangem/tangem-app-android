@@ -37,17 +37,6 @@ class EthereumWalletManager(
     private var pendingTxCount = -1L
     private var txCount = -1L
 
-    init {
-        if (token != null) wallet.balances[AmountType.Token] =
-                Amount(
-                        token.symbol,
-                        null,
-                        token.contractAddress,
-                        token.decimals,
-                        AmountType.Token)
-        wallet.balances[AmountType.Coin] = Amount(null, blockchain)
-    }
-
     override suspend fun update() {
         val result = networkManager.getInfo(address, wallet.balances[AmountType.Token]?.address)
         when (result) {
