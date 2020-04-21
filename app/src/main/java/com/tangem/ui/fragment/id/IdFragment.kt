@@ -8,6 +8,7 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -231,6 +232,8 @@ class IdFragment : BaseFragment(), NfcAdapter.ReaderCallback,
                     mpSecondScanSound.start()
                 }
             } else {
+                Log.d(this.javaClass.simpleName,
+                        "Error while reading ID card: ${cardProtocol.error.localizedMessage}")
                 // remove last UIDs because of error and no card read
                 FirebaseCrashlytics.getInstance().recordException(cardProtocol.error)
                 rlProgressBar?.post {
