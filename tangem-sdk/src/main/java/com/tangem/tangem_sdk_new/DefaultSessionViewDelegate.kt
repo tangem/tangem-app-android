@@ -1,10 +1,10 @@
 package com.tangem.tangem_sdk_new
 
 import android.animation.ObjectAnimator
+import android.app.Activity
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.animation.DecelerateInterpolator
-import androidx.fragment.app.FragmentActivity
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.Log
 import com.tangem.LoggerInterface
@@ -25,9 +25,8 @@ import kotlinx.android.synthetic.main.nfc_bottom_sheet.*
  */
 class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDelegate {
 
-    lateinit var activity: FragmentActivity
+    lateinit var activity: Activity
     private var readingDialog: BottomSheetDialog? = null
-    private var nfcEnableDialog: NfcEnableDialog? = null
 
     init {
         setLogger()
@@ -36,10 +35,10 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
     override fun onNfcSessionStarted(cardId: String?, message: Message?) {
         reader.readingCancelled = false
         postUI { showReadingDialog(activity, cardId, message) }
-        if (!reader.nfcEnabled) showNFCEnableDialog()
+        if (!reader.nfcEnabled) NfcEnableDialog().show(activity)
     }
 
-    private fun showReadingDialog(activity: FragmentActivity, cardId: String?, message: Message?) {
+    private fun showReadingDialog(activity: Activity, cardId: String?, message: Message?) {
         val dialogView = activity.layoutInflater.inflate(R.layout.nfc_bottom_sheet, null)
         readingDialog = BottomSheetDialog(activity)
         readingDialog?.setContentView(dialogView)
@@ -67,11 +66,6 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
             Log.i(this::class.simpleName!!, "readingCancelled is set to true")
         }
         readingDialog?.show()
-    }
-
-    private fun showNFCEnableDialog() {
-        nfcEnableDialog = NfcEnableDialog()
-        activity.supportFragmentManager.let { nfcEnableDialog?.show(it, NfcEnableDialog.TAG) }
     }
 
     override fun onSecurityDelay(ms: Int, totalDurationSeconds: Int) {
