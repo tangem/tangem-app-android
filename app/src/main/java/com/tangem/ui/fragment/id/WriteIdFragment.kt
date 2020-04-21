@@ -8,6 +8,7 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.activity.OnBackPressedCallback
 import com.google.firebase.crashlytics.FirebaseCrashlytics
@@ -186,6 +187,8 @@ class WriteIdFragment : BaseFragment(), NavigationResultListener,
                 )
 
             } else {
+                Log.d(this.javaClass.simpleName,
+                        "Error while writing on ID card: ${cardProtocol.error}")
                 lastReadSuccess = false
                 FirebaseCrashlytics.getInstance().recordException(cardProtocol.error)
                 if (cardProtocol.error.javaClass == CardProtocol.TangemException_InvalidPIN::class.java) {
