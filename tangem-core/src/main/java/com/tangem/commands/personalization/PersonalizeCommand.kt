@@ -60,7 +60,7 @@ class PersonalizeCommand(
                 issuerPublicKey = decoder.decodeOptional(TlvTag.IssuerDataPublicKey),
                 curve = decoder.decodeOptional(TlvTag.CurveId),
                 maxSignatures = decoder.decodeOptional(TlvTag.MaxSignatures),
-                signingMethod = decoder.decodeOptional(TlvTag.SigningMethod),
+                signingMethods = decoder.decodeOptional(TlvTag.SigningMethod),
                 pauseBeforePin2 = decoder.decodeOptional(TlvTag.PauseBeforePin2),
                 walletPublicKey = decoder.decodeOptional(TlvTag.WalletPublicKey),
                 walletRemainingSignatures = decoder.decodeOptional(TlvTag.RemainingSignatures),
@@ -105,7 +105,7 @@ class PersonalizeCommand(
         tlvBuilder.append(TlvTag.CardId, cardId)
         tlvBuilder.append(TlvTag.CurveId, config.curveID)
         tlvBuilder.append(TlvTag.MaxSignatures, config.maxSignatures)
-        tlvBuilder.append(TlvTag.SigningMethod, config.signingMethod)
+        tlvBuilder.append(TlvTag.SigningMethod, config.signingMethods)
         tlvBuilder.append(TlvTag.SettingsMask, config.createSettingsMask())
         tlvBuilder.append(TlvTag.PauseBeforePin2, config.pauseBeforePin2 / 10)
         tlvBuilder.append(TlvTag.Cvc, config.cvc.toByteArray())
