@@ -122,9 +122,9 @@ class TlvDecoder(val tlvList: List<Tlv>) {
                 }
             }
             TlvValueType.SigningMethod -> {
-                typeCheck<T, SigningMethod>(tag)
+                typeCheck<T, SigningMethodMask>(tag)
                 try {
-                    SigningMethod(tlvValue.toInt()) as T
+                    SigningMethodMask(tlvValue.toInt()) as T
                 } catch (exception: Exception) {
                     logException(tag, tlvValue.toInt().toString(), exception)
                     throw SessionError.DecodingFailed()
