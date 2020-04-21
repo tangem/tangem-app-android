@@ -68,8 +68,8 @@ class CardanoAddressFactory {
                     .end()
                     .build())
 
-            val hexAddress = addressBaos.toByteArray()
-            return hexAddress.encodeBase58()
+            val addressBytes = addressBaos.toByteArray()
+            return addressBytes.encodeBase58()
         }
 
         fun extendPublicKey(publicKey: ByteArray): ByteArray {
