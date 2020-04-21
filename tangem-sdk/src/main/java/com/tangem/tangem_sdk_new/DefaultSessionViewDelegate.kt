@@ -1,10 +1,10 @@
 package com.tangem.tangem_sdk_new
 
 import android.animation.ObjectAnimator
+import android.app.Activity
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.animation.DecelerateInterpolator
-import androidx.fragment.app.FragmentActivity
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.Log
 import com.tangem.LoggerInterface
@@ -25,7 +25,7 @@ import kotlinx.android.synthetic.main.nfc_bottom_sheet.*
  */
 class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDelegate {
 
-    lateinit var activity: FragmentActivity
+    lateinit var activity: Activity
     private var readingDialog: BottomSheetDialog? = null
 
     init {
@@ -38,7 +38,7 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
         if (!reader.nfcEnabled) NfcEnableDialog().show(activity)
     }
 
-    private fun showReadingDialog(activity: FragmentActivity, cardId: String?, message: Message?) {
+    private fun showReadingDialog(activity: Activity, cardId: String?, message: Message?) {
         val dialogView = activity.layoutInflater.inflate(R.layout.nfc_bottom_sheet, null)
         readingDialog = BottomSheetDialog(activity)
         readingDialog?.setContentView(dialogView)
