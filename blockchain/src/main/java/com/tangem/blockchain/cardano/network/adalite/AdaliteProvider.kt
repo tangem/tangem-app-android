@@ -1,11 +1,13 @@
 package com.tangem.blockchain.cardano.network.adalite
 
+import com.squareup.moshi.Json
 import com.tangem.blockchain.cardano.network.CardanoAddressResponse
 import com.tangem.blockchain.cardano.UnspentOutput
 import com.tangem.blockchain.cardano.network.api.AdaliteApi
 import com.tangem.blockchain.common.extensions.Result
 import com.tangem.blockchain.common.extensions.SimpleResult
 import com.tangem.blockchain.common.extensions.retryIO
+import com.tangem.common.extensions.hexToBytes
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 
@@ -15,7 +17,7 @@ class AdaliteProvider(private val api: AdaliteApi) {
         return try {
             coroutineScope {
                 val addressDeferred = retryIO { async { api.getAddress(address) } }
-                val unspentsDeferred = retryIO { async { api.getUnspents(address) } }
+                val unspentsDeferred = retryIO { async { api.getUnspents(listOf(address)) } }
 
                 val addressData = addressDeferred.await()
                 val unspents = unspentsDeferred.await()
@@ -24,7 +26,7 @@ class AdaliteProvider(private val api: AdaliteApi) {
                     UnspentOutput(
                             it.amountData!!.amount!!,
                             it.outputIndex!!.toLong(),
-                            it.hash!!.toByteArray()
+                            it.hash!!.hexToBytes()
                     )
                 }
 
@@ -42,7 +44,7 @@ class AdaliteProvider(private val api: AdaliteApi) {
 
     suspend fun sendTransaction(transaction: String): SimpleResult {
         return try {
-            retryIO { api.sendTransaction(AdaliteSendBody(transaction)) }
+            val response = retryIO { api.sendTransaction(AdaliteSendBody(transaction)) }
             SimpleResult.Success
         } catch (exception: Exception) {
             SimpleResult.Failure(exception)
@@ -50,4 +52,7 @@ class AdaliteProvider(private val api: AdaliteApi) {
     }
 }
 
-data class AdaliteSendBody(val signedTransaction: String)
+data class AdaliteSendBody(
+        @Json(name = "signedTx")
+        val signedTransaction: String
+)
