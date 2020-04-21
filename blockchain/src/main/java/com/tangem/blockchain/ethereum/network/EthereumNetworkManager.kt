@@ -12,6 +12,7 @@ import kotlinx.coroutines.coroutineScope
 import org.kethereum.ETH_IN_WEI
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 
 
 class EthereumNetworkManager {
@@ -70,8 +71,8 @@ class EthereumNetworkManager {
     private fun String.parseFee(gasLimit: Long): List<BigDecimal> {
         val gasPrice = this.responseToNumber().toBigDecimal()
         val minFee = gasPrice.multiply(gasLimit.toBigDecimal())
-        val normalFee = minFee.multiply(BigDecimal(1.2))
-        val priorityFee = minFee.multiply(BigDecimal(1.5))
+        val normalFee = minFee.multiply(BigDecimal(1.2)).setScale(0, RoundingMode.HALF_UP)
+        val priorityFee = minFee.multiply(BigDecimal(1.5)).setScale(0, RoundingMode.HALF_UP)
         return listOf(
                 minFee.convertFeeToEth(),
                 normalFee.convertFeeToEth(),
