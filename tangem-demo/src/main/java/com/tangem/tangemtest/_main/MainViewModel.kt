@@ -10,10 +10,12 @@ import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
  */
 class MainViewModel : ViewModel() {
     val ldDescriptionSwitch = MutableLiveData<Boolean>(false)
+    var descriptionSwitchState = false
 
     var commandResponse: CommandResponse? = null
 
     fun switchToggled(state: Boolean) {
+        descriptionSwitchState = state
         ldDescriptionSwitch.postValue(state)
     }
 
