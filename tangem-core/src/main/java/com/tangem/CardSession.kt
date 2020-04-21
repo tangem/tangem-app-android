@@ -20,7 +20,7 @@ interface CardSessionRunnable<T : CommandResponse> {
 
     /**
      * The starting point for custom business logic.
-     * Implement this interface and use [TangemSdk.startSession] to run.
+     * Implement this interface and use [TangemSdk.startSessionWithRunnable] to run.
      * @param session run commands in this [CardSession].
      * @param callback trigger the callback to complete the task.
      */
