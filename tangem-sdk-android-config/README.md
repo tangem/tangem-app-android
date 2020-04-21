@@ -13,18 +13,23 @@ The Tangem card is a self-custodial hardware wallet for blockchain assets. The m
 	- [Card interaction](#card-interaction)
 		- [Scan card](#scan-card)
 		- [Sign](#sign)
-		- [Read Issuer Data](#read-issuer-data)
-		- [Read Issuer Extra Data](#read-issuer-extra-data)
-		- [Write Issuer Data](#write-issuer-data)
-		- [Write Issuer Extra Data](#write-issuer-extra-data)
-		- [Write User Data](#write-user-data)
-		- [Read User Data](#read-user-data)
-		- [Create Wallet](#create-wallet)
-		- [Purge Wallet](#purge-wallet)
-		- [Depersonalize](#depersonalize)
-		- [Personalize](#personalize)
+		- [Issuer Data](#issuer-data)
+		    - [Read Issuer Data](#read-issuer-data)
+		    - [Read Issuer Extra Data](#read-issuer-extra-data)
+		    - [Write Issuer Data](#write-issuer-data)
+		    - [Write Issuer Extra Data](#write-issuer-extra-data)
+		- [User Data](#user-data)
+		    - [Write User Data](#write-user-data)
+		    - [Read User Data](#read-user-data)
+		- [Wallet](#wallet)
+		    - [Create Wallet](#create-wallet)
+		    - [Purge Wallet](#purge-wallet)
+		- [Personalization](#personalization)
+		    - [Depersonalize](#depersonalize)
+		    - [Personalize](#personalize)
 - [Customization](#customization)
 	- [UI](#ui)
+	- [Reader](#reader)
 	- [Custom Tasks](#custom-tasks)
 
 
@@ -86,20 +91,16 @@ Tangem SDK is a self-sufficient solution that implements a card abstraction mode
 
 ### Initialization
 To get started, you need to create an instance of the `TangemSdk` class. It provides the simple way of interacting with the card. 
-Our default implementation of `TangemSdk` comes with `NfcReader` and `DefaultSessionViewDelegate` and can be initialized with a static method 
-TangemSdk.init(activity: Activity).
+Our default implementation of `TangemSdk` can be initialized with a static method TangemSdk.init(activity: Activity).
 
 
 ```kotlin
 val tangemSdk: TangemSdk = TangemSdk.init(activity)
 ```
 
-TangemSdk requires a reference to activity in order to use Android API for interacting with NFC.  DefaultSessionViewDelegate requires a reference to activity in order to render views. 
-
+TangemSdk requires a reference to activity in order to use Android API for interacting with NFC and to render views. 
 Default implementation of `TangemSdk` allows you to start using SDK in your application without any additional setup.
-
-You can also provide your implementations of `CardReader` and `SessionViewDelegate`.
-You can read more about this in [Customization](#customization).
+(You can read about additional options in [Customization](#customization)).
 
 ### Card interaction
 
@@ -162,7 +163,9 @@ This method allows you to sign one or multiple hashes. Simultaneous signing of a
         }
 ```
 
-#### Read Issuer Data
+#### Issuer Data
+
+##### Read Issuer Data
 An example of usage (description is available at documentation for `TangemSdk.readIssuerData` method and corresponding command class): 
 
 ```kotlin
@@ -182,7 +185,7 @@ An example of usage (description is available at documentation for `TangemSdk.re
         }
 ```
 
-#### Read Issuer Extra Data
+##### Read Issuer Extra Data
 An example of usage (description is available at documentation for `TangemSdk.readIssuerExtraData` method and corresponding command class): 
 
 ```kotlin
@@ -202,7 +205,7 @@ An example of usage (description is available at documentation for `TangemSdk.re
         }
 ```
 
-#### Write Issuer Data
+##### Write Issuer Data
 An example of usage (description is available at documentation for `TangemSdk.writeIssuerData` method and corresponding command class): 
 
 ```kotlin
@@ -221,7 +224,7 @@ An example of usage (description is available at documentation for `TangemSdk.wr
         }
 ```
 
-#### Write Issuer Extra Data
+##### Write Issuer Extra Data
 An example of usage (description is available at documentation for `TangemSdk.writeIssuerExtraData` method and corresponding command class): 
 
 ```kotlin
@@ -241,8 +244,8 @@ An example of usage (description is available at documentation for `TangemSdk.wr
             }
         }
 ```
-
-#### Write User Data
+#### User Data
+##### Write User Data
 An example of usage (description is available at documentation for `TangemSdk.writeUserData` method and corresponding command class): 
 
 ```kotlin
@@ -263,7 +266,7 @@ An example of usage (description is available at documentation for `TangemSdk.wr
         }
 ```
 
-#### Read User Data
+##### Read User Data
 An example of usage (description is available at documentation for `TangemSdk.readUserData` method and corresponding command class): 
 
 ```kotlin
@@ -281,8 +284,8 @@ An example of usage (description is available at documentation for `TangemSdk.re
             }
         }
 ```
-
-#### Create Wallet
+#### Wallet
+##### Create Wallet
 An example of usage (description is available at documentation for `TangemSdk.createWallet` method and corresponding command class): 
 
 ```kotlin
@@ -301,7 +304,7 @@ An example of usage (description is available at documentation for `TangemSdk.cr
         }
 ```
 
-#### Purge Wallet
+##### Purge Wallet
 An example of usage (description is available at documentation for `TangemSdk.purgeWallet` method and corresponding command class): 
 
 ```kotlin
@@ -320,7 +323,8 @@ An example of usage (description is available at documentation for `TangemSdk.pu
         }
 ```
 
-#### Depersonalize
+#### Personalization
+##### Depersonalize
 An example of usage (description is available at documentation for `TangemSdk.depersonalize` method and corresponding command class): 
 
 ```kotlin
@@ -339,7 +343,7 @@ An example of usage (description is available at documentation for `TangemSdk.de
         }
 ```
 
-#### Personalize
+##### Personalize
 An example of usage (description is available at documentation for `TangemSdk.personalize` method and corresponding command class): 
 
 ```kotlin
@@ -361,11 +365,15 @@ An example of usage (description is available at documentation for `TangemSdk.pe
 
 ## Customization
 ### UI
-If the interaction with user is required, the SDK performs the entire cycle of this interaction. In order to change the appearance or behavior of the user UI, you can provide you own implementation of the `SessionViewDelegate` inteface. After this, initialize the `TangemSdk` class with your delegate class.
+If the interaction with user is required, the SDK performs the entire cycle of this interaction. In order to change the appearance or behavior of the user UI, you can provide you own implementation of the `SessionViewDelegate` interface. After this, initialize the `TangemSdk` class with your delegate class.
 
 ```kolin
-val tangemSdk = TangemSdk.customInit(this, viewDelegate = MySessionViewDelegate())
+val tangemSdk = TangemSdk.customInit(this, MySessionViewDelegate())
 ```
+
+### Reader
+
+TangemSdk uses Android NFC capabilities to communicate with TangemCards. If there is a need to use other means of communication or other platforms, it is possible to implement this functionality by implementing `CardReader` interface and using it instead of the default `NfcReader`.
 
 ### Custom Tasks
 `TangemSdk` specific methods run particular commands and tasks. If you want to trigger card commands in a different order, or implement additional
@@ -400,7 +408,7 @@ To do this, you need to call `tangemSdk.startSession()` method and get a `CardSe
 Another option is to put all logic in a in `CardSessionRunnable` class and launch it using `tangemSdk.startSessionWithRunnable()` method.
 In Tangem SDK we use this approach for our `ScanTask`.
 
-> For example, you want to read the card and immediately sign a transaction with it. With subclassing  `CardSessionRunnable` you can achieve it this way.
+> For example, if you want to read the card and immediately sign a transaction with it, with subclassing  `CardSessionRunnable` you can achieve it this way.
 
 ```kotlin
 class OneTapSignTask(private val hashesToSign: Array<ByteArray>) : CardSessionRunnable<Card> {
