@@ -23,6 +23,7 @@ import com.tangem.wallet.BTCUtils;
 import com.tangem.wallet.BalanceValidator;
 import com.tangem.wallet.Base58;
 import com.tangem.wallet.CoinData;
+import com.tangem.wallet.CoinEngine;
 import com.tangem.wallet.R;
 import com.tangem.wallet.TangemContext;
 import com.tangem.wallet.Transaction;
@@ -348,7 +349,7 @@ public class LtcEngine extends BtcEngine {
 
     @Override
     public Amount convertToAmount(InternalAmount internalAmount) {
-        BigDecimal d = internalAmount.divide(new BigDecimal("100000000"));
+        BigDecimal d = internalAmount.divide(new BigDecimal("100000000")).setScale(getDecimals(), RoundingMode.DOWN);
         return new Amount(d, getBalanceCurrency());
     }
 
@@ -450,8 +451,6 @@ public class LtcEngine extends BtcEngine {
             @Override
             public byte[][] getHashesToSign() throws Exception {
                 byte[][] dataForSign = new byte[unspentOutputs.size()][];
-                if (txForSign.length > 10)
-                    throw new Exception("To much hashes in one transaction!");
                 for (int i = 0; i < unspentOutputs.size(); ++i) {
                     dataForSign[i] = bodyDoubleHash[i];
                 }
@@ -623,12 +622,74 @@ public class LtcEngine extends BtcEngine {
         }
     }
 
-    private final static BigDecimal relayFee = new BigDecimal(0.00001).setScale(8, RoundingMode.DOWN);
+    private final static Amount relayFee = new Amount(new BigDecimal(0.00001).setScale(8, RoundingMode.DOWN), "LTC");
+
+    private void forceRelayFeeMinimum(Amount fee) {
+        if (fee.compareTo(relayFee) < 0) {
+            fee = relayFee;
+        }
+    }
 
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) throws Exception {
-        coinData.minFee = coinData.normalFee = coinData.maxFee = new Amount(relayFee, "LTC");
-        blockchainRequestsCallbacks.onComplete(true);
+        final int calcSize = calculateEstimatedTransactionSize(targetAddress, amount.toValueString());
+        Log.e(TAG, String.format("Estimated tx size %d", calcSize));
+        coinData.minFee = null;
+        coinData.maxFee = null;
+        coinData.normalFee = null;
+
+        final ServerApiBlockcypher serverApiBlockcypher = new ServerApiBlockcypher();
+
+        ServerApiBlockcypher.ResponseListener blockcypherListener = new ServerApiBlockcypher.ResponseListener() {
+            @Override
+            public void onSuccess(String method, BlockcypherResponse blockcypherResponse) {
+                Log.e(TAG, "Wrong response type for requestFee");
+                ctx.setError("Wrong response type for requestFee");
+                blockchainRequestsCallbacks.onComplete(false);
+            }
+
+            public void onSuccess(String method, BlockcypherFee blockcypherFee) {
+                Log.i(TAG, "onSuccess: " + method);
+                try {
+                    BigDecimal minByteFee = new BigDecimal(blockcypherFee.getLow_fee_per_kb()).divide(BigDecimal.valueOf(1024));
+                    BigDecimal normalByteFee = new BigDecimal(blockcypherFee.getMedium_fee_per_kb()).divide(BigDecimal.valueOf(1024));
+                    BigDecimal maxByteFee = new BigDecimal(blockcypherFee.getHigh_fee_per_kb()).divide(BigDecimal.valueOf(1024));
+
+                    CoinEngine.InternalAmount minIntAmount = new CoinEngine.InternalAmount(minByteFee.multiply(BigDecimal.valueOf(calcSize)), "satoshi");
+                    CoinEngine.InternalAmount normalIntAmount = new CoinEngine.InternalAmount(normalByteFee.multiply(BigDecimal.valueOf(calcSize)), "satoshi");
+                    CoinEngine.InternalAmount maxIntAmount = new CoinEngine.InternalAmount(maxByteFee.multiply(BigDecimal.valueOf(calcSize)), "satoshi");
+
+                    coinData.minFee = convertToAmount(minIntAmount);
+                    coinData.normalFee = convertToAmount(normalIntAmount);
+                    coinData.maxFee = convertToAmount(maxIntAmount);
+
+                    forceRelayFeeMinimum(coinData.minFee);
+                    forceRelayFeeMinimum(coinData.normalFee);
+                    forceRelayFeeMinimum(coinData.maxFee);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.e(TAG, "FAIL BLOCKCYPHER_FEE Exception");
+                }
+
+                if (serverApiBlockcypher.isRequestsSequenceCompleted()) {
+                    blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                } else {
+                    blockchainRequestsCallbacks.onProgress();
+                }
+            }
+
+            @Override
+            public void onFail(String method, String message) {
+                Log.i(TAG, "onFail: " + method + " " + message);
+                ctx.setError(message);
+                blockchainRequestsCallbacks.onComplete(false);
+            }
+        };
+
+        serverApiBlockcypher.setResponseListener(blockcypherListener);
+
+        serverApiBlockcypher.requestData(ctx.getBlockchain().getID(), ServerApiBlockcypher.BLOCKCYPHER_FEE, "", "");
     }
 
     @Override
@@ -676,10 +737,5 @@ public class LtcEngine extends BtcEngine {
         serverApiBlockcypher.setResponseListener(blockcypherListener);
 
         serverApiBlockcypher.requestData(ctx.getBlockchain().getID(), ServerApiBlockcypher.BLOCKCYPHER_SEND, "", txStr);
-    }
-
-    @Override
-    public boolean allowSelectFeeLevel() {
-        return false;
     }
 }
