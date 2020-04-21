@@ -4,6 +4,7 @@ import com.tangem.commands.Card
 import com.tangem.commands.EllipticCurve
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.calculateSha512
+import com.tangem.common.extensions.toHexString
 import com.tangem.tangemtest._arch.structure.PayloadHolder
 import com.tangem.tangemtest._arch.structure.abstraction.Item
 import com.tangem.tangemtest._arch.structure.abstraction.findItem
@@ -40,7 +41,7 @@ class SignScanConsequence : ItemsChangeConsequence {
                 EllipticCurve.Ed25519 -> dataForHashing.calculateSha512()
                 else -> return null
             }
-            hashItem.setData(hashedData)
+            hashItem.setData(hashedData.toHexString())
         }
         return affectedItems.toList()
     }
