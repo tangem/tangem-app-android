@@ -82,8 +82,8 @@ class TlvDecoderTest {
 
     @Test
     fun `map SigningMethods single value returns correct value`() {
-        val signingMethods: SigningMethod = tlvMapper.decode(TlvTag.SigningMethod)
-        assertThat(signingMethods.contains(SigningMethod.signHash))
+        val signingMethods: SigningMethodMask = tlvMapper.decode(TlvTag.SigningMethod)
+        assertThat(signingMethods.contains(SigningMethod.SignHash))
                 .isTrue()
     }
 
@@ -91,20 +91,20 @@ class TlvDecoderTest {
     fun `map SigningMethods set of methods returns correct value`() {
         val localMapper = TlvDecoder(Tlv.deserialize("070195".hexToBytes())!!)
 
-        val signingMethod: SigningMethod = localMapper.decode(TlvTag.SigningMethod)
-        assertThat(signingMethod.contains(SigningMethod.signHash))
+        val signingMethods: SigningMethodMask = localMapper.decode(TlvTag.SigningMethod)
+        assertThat(signingMethods.contains(SigningMethod.SignHash))
                 .isTrue()
-        assertThat(signingMethod.contains(SigningMethod.signHashValidatedByIssuer))
+        assertThat(signingMethods.contains(SigningMethod.SignHashValidateByIssuer))
                 .isTrue()
-        assertThat(signingMethod.contains(SigningMethod.signHashValidatedByIssuerAndWriteIssuerData))
+        assertThat(signingMethods.contains(SigningMethod.SignHashValidateByIssuerWriteIssuerData))
                 .isTrue()
-        assertThat(signingMethod.contains(SigningMethod.signRaw))
+        assertThat(signingMethods.contains(SigningMethod.SignRaw))
                 .isFalse()
-        assertThat(signingMethod.contains(SigningMethod.signRawValidatedByIssuer))
+        assertThat(signingMethods.contains(SigningMethod.SignRawValidateByIssuer))
                 .isFalse()
-        assertThat(signingMethod.contains(SigningMethod.signRawValidatedByIssuerAndWriteIssuerData))
+        assertThat(signingMethods.contains(SigningMethod.SignRawValidateByIssuerWriteIssuerData))
                 .isFalse()
-        assertThat(signingMethod.contains(SigningMethod.signPos))
+        assertThat(signingMethods.contains(SigningMethod.SignPos))
                 .isFalse()
     }
 
@@ -119,7 +119,7 @@ class TlvDecoderTest {
     fun `map ProductMask with raw value 5 returns correct value`() {
         val localMapper = TlvDecoder(listOf(Tlv(TlvTag.ProductMask, byteArrayOf(5))))
         val productMask: ProductMask = localMapper.decode(TlvTag.ProductMask)
-        assertThat(productMask.contains(ProductMask.note) && productMask.contains(ProductMask.idCard))
+        assertThat(productMask.contains(Product.Note) && productMask.contains(Product.IdCard))
                 .isTrue()
     }
 
@@ -127,7 +127,7 @@ class TlvDecoderTest {
     fun `map ProductMask with raw value 1 returns correct value`() {
         val localMapper = TlvDecoder(listOf(Tlv(TlvTag.ProductMask, byteArrayOf(1))))
         val productMask: ProductMask = localMapper.decode(TlvTag.ProductMask)
-        assertThat(productMask.contains(ProductMask.note))
+        assertThat(productMask.contains(Product.Note))
                 .isTrue()
     }
 
