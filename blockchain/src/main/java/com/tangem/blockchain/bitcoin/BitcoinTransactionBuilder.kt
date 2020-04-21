@@ -2,6 +2,7 @@ package com.tangem.blockchain.bitcoin
 
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.extensions.Result
+import com.tangem.common.extensions.isZero
 import org.bitcoinj.core.*
 import org.bitcoinj.crypto.TransactionSignature
 import org.bitcoinj.script.Script
@@ -81,7 +82,7 @@ internal fun TransactionData.toBitcoinJTransaction(networkParameters: NetworkPar
     transaction.addOutput(
             Coin.parseCoin(this.amount.value!!.toPlainString()),
             Address.fromString(networkParameters, this.destinationAddress))
-    if (change != 0.toBigDecimal()) {
+    if (!change.isZero()) {
         transaction.addOutput(
                 Coin.parseCoin(change.toPlainString()),
                 Address.fromString(networkParameters,
