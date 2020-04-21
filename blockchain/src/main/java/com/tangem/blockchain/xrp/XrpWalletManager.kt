@@ -22,11 +22,6 @@ class XrpWalletManager(
     private val transactionBuilder = XrpTransactionBuilder(walletPublicKey)
     private val networkManager = XrpNetworkManager()
 
-    init {
-        wallet.balances[AmountType.Coin] = Amount(null, blockchain)
-        wallet.balances[AmountType.Reserve] = Amount(null, blockchain, type = AmountType.Reserve)
-    }
-
     override suspend fun update() {
         val result = networkManager.getInfo(address)
         when (result) {
