@@ -14,6 +14,8 @@ import java.io.ByteArrayOutputStream;
 public class SignTask extends CustomReadCardTask {
     public static final String TAG = SignTask.class.getSimpleName();
 
+    private static final int MAX_HASHES_TO_SIGN = 10;
+
     /**
      * Transaction Engine request/notifications during sign process
      */
@@ -58,13 +60,31 @@ public class SignTask extends CustomReadCardTask {
         TLVList signResult;
         switch (mCard.getSigningMethod()) {
             case Sign_Hash:
-                signResult = protocol.run_SignHashes(pinsProvider.getPIN2(), transactionToSign.getHashesToSign(), null, null, null);
-                break;
+                byte[][] remainingHashes = transactionToSign.getHashesToSign();
+                ByteArrayOutputStream signatures = new ByteArrayOutputStream();
+                while (remainingHashes.length > 0) {
+                    byte[][] hashesToSign;
+                    if (remainingHashes.length <= MAX_HASHES_TO_SIGN) {
+                        hashesToSign = remainingHashes.clone();
+                        remainingHashes = new byte[0][];
+                    } else {
+                        hashesToSign = new byte[MAX_HASHES_TO_SIGN][];
+                        System.arraycopy(remainingHashes, 0, hashesToSign, 0, MAX_HASHES_TO_SIGN);
+                        remainingHashes = removeFirstTenEntries(remainingHashes);
+                    }
+
+                    signResult = protocol.run_SignHashes(pinsProvider.getPIN2(), hashesToSign, null, null, null);
+                    signatures.write(signResult.getTLV(TLV.Tag.TAG_Signature).Value);
+                }
+                mNotifications.onReadProgress(protocol, 100);
+                transactionToSign.onSignCompleted(signatures.toByteArray());
+                return;
+
             case Sign_Hash_Validated_By_Issuer:
             case Sign_Hash_Validated_By_Issuer_And_WriteIssuerData:
                 ByteArrayOutputStream bs = new ByteArrayOutputStream();
                 byte[][] hashes = transactionToSign.getHashesToSign();
-                if (hashes.length > 10) throw new CardProtocol.TangemException("To much hashes in one transaction!");
+                if (hashes.length > MAX_HASHES_TO_SIGN) throw new CardProtocol.TangemException("To much hashes in one transaction!");
                 for (int i = 0; i < hashes.length; i++) {
                     if (i != 0 && hashes[0].length != hashes[i].length)
                         throw new CardProtocol.TangemException("Hashes length must be identical!");
@@ -88,5 +108,11 @@ public class SignTask extends CustomReadCardTask {
         //TODO: maybe we should move notifyOnNeedSendTransaction(txForSend) here?
         mNotifications.onReadProgress(protocol, 100);
 
+    }
+
+    private byte[][] removeFirstTenEntries(byte[][] array) {
+        byte[][] temp = new byte[array.length - MAX_HASHES_TO_SIGN][];
+        System.arraycopy(array, MAX_HASHES_TO_SIGN, temp, 0, temp.length);
+        return temp;
     }
 }
