@@ -3,7 +3,6 @@ package com.tangem.blockchain.bitcoin
 import android.util.Log
 import com.tangem.blockchain.bitcoin.network.BitcoinAddressResponse
 import com.tangem.blockchain.bitcoin.network.BitcoinNetworkManager
-import com.tangem.blockchain.bitcoin.network.BitcoinNetworkManager.Companion.SATOSHI_IN_BTC
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.extensions.Result
 import com.tangem.blockchain.common.extensions.SimpleResult
@@ -25,10 +24,6 @@ class BitcoinWalletManager(
     private val address = blockchain.makeAddress(walletPublicKey)
     private val transactionBuilder = BitcoinTransactionBuilder(isTestNet)
     private val networkManager = BitcoinNetworkManager(isTestNet)
-
-    init {
-        wallet.balances[AmountType.Coin] = Amount(null, blockchain)
-    }
 
     override suspend fun update() {
         val response = networkManager.getInfo(address)
@@ -80,9 +75,11 @@ class BitcoinWalletManager(
         when (val result = networkManager.getFee()) {
             is Result.Failure -> return result
             is Result.Success -> {
+                val feeValue = BigDecimal.ONE.movePointLeft(blockchain.decimals.toInt())
+                amount.value = amount.value!! - feeValue
                 val sizeResult = transactionBuilder.getEstimateSize(
                         TransactionData(amount,
-                                Amount(1.toBigDecimal().divide(SATOSHI_IN_BTC), blockchain),
+                                Amount(feeValue, blockchain),
                                 address, destination),
                         walletPublicKey
                 )
