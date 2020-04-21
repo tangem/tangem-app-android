@@ -85,10 +85,6 @@ class BitcoinNetworkManager(private val isTestNet: Boolean) : BitcoinProvider {
             }
         }
     }
-
-    companion object {
-        val SATOSHI_IN_BTC = 100000000.toBigDecimal()
-    }
 }
 
 data class BitcoinAddressResponse(
