@@ -11,7 +11,6 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.util.Analytics
 import com.tangem.util.AnalyticsEvent
 import com.tangem.wallet.BuildConfig
@@ -48,15 +47,13 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         if (key == getString(R.string.pref_analytics)) {
-            activity?.let {
-                val analytics = FirebaseAnalytics.getInstance(it)
+            activity?.let {activity ->
+                val analytics = FirebaseAnalytics.getInstance(activity)
                 if (!Analytics.isEnabled()) {
                     analytics.logEvent(AnalyticsEvent.ANALYTICS_TURNED_OFF.event, bundleOf())
                 }
-                analytics.setAnalyticsCollectionEnabled(Analytics.isEnabled() && !BuildConfig.DEBUG)
+                Analytics.setFirebaseEnabled(activity)
             }
-            FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(Analytics.isEnabled())
-
         }
     }
 
