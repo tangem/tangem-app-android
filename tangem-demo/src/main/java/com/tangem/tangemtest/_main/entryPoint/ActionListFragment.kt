@@ -2,16 +2,14 @@ package com.tangem.tangemtest._main.entryPoint
 
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.transition.AutoTransition
-import androidx.transition.TransitionManager
 import com.tangem.tangemtest.R
 import com.tangem.tangemtest._main.MainViewModel
+import com.tangem.tangemtest.extensions.view.beginDelayedTransition
 import com.tangem.tangemtest.ucase.getDefaultNavigationOptions
 import com.tangem.tangemtest.ucase.resources.ActionType
 import com.tangem.tangemtest.ucase.resources.MainResourceHolder
@@ -47,7 +45,7 @@ class ActionListFragment : BaseFragment() {
         }
         mainActivityVM.ldDescriptionSwitch.observe(viewLifecycleOwner, Observer {
             vhDataWrapper.descriptionIsVisible = it
-            TransitionManager.beginDelayedTransition(rvActions as ViewGroup, AutoTransition())
+            rvActions.beginDelayedTransition()
             rvActions.adapter?.notifyDataSetChanged()
         })
     }
