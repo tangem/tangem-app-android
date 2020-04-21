@@ -37,11 +37,11 @@ class CurrencyWallet(
         fun newInstance(blockchain: Blockchain, address: String, token: Token?): CurrencyWallet {
 
             return when (blockchain) {
-                Blockchain.Bitcoin, Blockchain.XRP -> {
+                Blockchain.Bitcoin, Blockchain.BitcoinTestnet, Blockchain.XRP -> {
                     val config = WalletConfig(true, true)
                     CurrencyWallet(blockchain, address, config)
                 }
-                Blockchain.Cardano -> {
+                Blockchain.Cardano, Blockchain.Binance, Blockchain.BinanceTestnet -> {
                     val config = WalletConfig(false, true)
                     CurrencyWallet(blockchain, address, config)
                 }
