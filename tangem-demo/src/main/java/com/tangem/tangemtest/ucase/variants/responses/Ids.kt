@@ -29,6 +29,7 @@ enum class CardId : ResponseId {
     paymentFlowVersion,
     userCounter,
     userProtectedCounter,
+    empty
 }
 
 enum class CardDataId : ResponseId {
@@ -41,4 +42,15 @@ enum class CardDataId : ResponseId {
     tokenSymbol,
     tokenContractAddress,
     tokenDecimal,
+}
+
+enum class SignId : ResponseId {
+    cid,
+    walletSignedHashes,
+    walletRemainingSignatures,
+    signature,
+}
+
+enum class DepersonalizeId: ResponseId {
+    isSuccess
 }
