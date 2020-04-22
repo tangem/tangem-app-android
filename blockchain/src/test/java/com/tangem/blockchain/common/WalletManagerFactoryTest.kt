@@ -2,12 +2,12 @@ package com.tangem.blockchain.common
 
 import com.google.common.truth.Truth
 import com.tangem.SessionEnvironment
-import com.tangem.blockchain.binance.BinanceWalletManager
-import com.tangem.blockchain.bitcoin.BitcoinWalletManager
-import com.tangem.blockchain.cardano.CardanoWalletManager
-import com.tangem.blockchain.ethereum.EthereumWalletManager
-import com.tangem.blockchain.stellar.StellarWalletManager
-import com.tangem.blockchain.xrp.XrpWalletManager
+import com.tangem.blockchain.blockchains.binance.BinanceWalletManager
+import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
+import com.tangem.blockchain.blockchains.cardano.CardanoWalletManager
+import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
+import com.tangem.blockchain.blockchains.stellar.StellarWalletManager
+import com.tangem.blockchain.blockchains.xrp.XrpWalletManager
 import com.tangem.commands.ReadCommand
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.extensions.hexToBytes
