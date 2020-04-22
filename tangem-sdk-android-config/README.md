@@ -13,6 +13,9 @@ The Tangem card is a self-custodial hardware wallet for blockchain assets. The m
 	- [Card interaction](#card-interaction)
 		- [Scan card](#scan-card)
 		- [Sign](#sign)
+        - [Wallet](#wallet)
+		    - [Create Wallet](#create-wallet)
+		    - [Purge Wallet](#purge-wallet)
 		- [Issuer Data](#issuer-data)
 		    - [Read Issuer Data](#read-issuer-data)
 		    - [Read Issuer Extra Data](#read-issuer-extra-data)
@@ -21,9 +24,6 @@ The Tangem card is a self-custodial hardware wallet for blockchain assets. The m
 		- [User Data](#user-data)
 		    - [Write User Data](#write-user-data)
 		    - [Read User Data](#read-user-data)
-		- [Wallet](#wallet)
-		    - [Create Wallet](#create-wallet)
-		    - [Purge Wallet](#purge-wallet)
 		- [Personalization](#personalization)
 		    - [Depersonalize](#depersonalize)
 		    - [Personalize](#personalize)
@@ -40,9 +40,9 @@ Android with minimal SDK version of 21 and a device with NFC support
 
 ### Installation
 
-1) Add Tangem library to the project:
+1. Add Tangem library to the project:
 
-Add to a project build.gradle file:
+Add to a project `build.gradle` file:
 
 ```gradle
 allprojects {
@@ -52,7 +52,7 @@ allprojects {
 }
 ```
 
-And add Tangem library to the dependencies (in an app or module build.gradle file):
+And add Tangem library to the dependencies (in an app or module `build.gradle` file):
 
 ```gradle 
 dependencies {
@@ -60,10 +60,10 @@ dependencies {
     implementation "com.github.tangem.tangem-sdk-android:tangem-sdk:$latestVersion"
 }
 ```
-Tangem Core is a JVM library (without Android dependencies) that provides core functionality of interacting with Tangem cards.
-Tangem Sdk is an Android library that implements NFC interaction between Android devices and Tangem cards and graphical interface for this  interaction. 
+`tangem-core` is a JVM library (without Android dependencies) that provides core functionality of interacting with Tangem cards.
+`tangem-sdk` is an Android library that implements NFC interaction between Android devices and Tangem cards and graphical interface for this interaction. 
 
-2) Add res file ‘tech_filter’ with the following:
+2. Save the file (you can name it anything you wish) with the following tech-list filters in the `<project-root>/res/xml`
 
 ```xml
 <resources>
@@ -75,24 +75,21 @@ Tangem Sdk is an Android library that implements NFC interaction between Android
 </resources>
 ```
 
-3) Add to Manifest:
+3. Add to `AndroidManifest.xml`:
 ```xml
 <intent-filter>
-               <action android:name=“android.nfc.action.TECH_DISCOVERED” />
+    <action android:name=“android.nfc.action.TECH_DISCOVERED” />
 </intent-filter>
 <meta-data
-               android:name=“android.nfc.action.TECH_DISCOVERED”
-               android:resource=“@xml/tech_filter” />
+    android:name=“android.nfc.action.TECH_DISCOVERED”
+    android:resource=“@xml/tech_filter” />
 ```
 
 ## Usage
-
 Tangem SDK is a self-sufficient solution that implements a card abstraction model, methods of interaction with the card and interactions with the user via UI.
 
 ### Initialization
 To get started, you need to create an instance of the `TangemSdk` class. It provides the simple way of interacting with the card. 
-Our default implementation of `TangemSdk` can be initialized with a static method TangemSdk.init(activity: Activity).
-
 
 ```kotlin
 val tangemSdk: TangemSdk = TangemSdk.init(activity)
@@ -103,39 +100,34 @@ Default implementation of `TangemSdk` allows you to start using SDK in your appl
 (You can read about additional options in [Customization](#customization)).
 
 ### Card interaction
-
-Tangem SDK provides a number of commands and tasks that can be run from a `TangemSdk` class. 
-
 #### Scan card 
-To start using any card, you first need to read it using the `scanCard()` method. This method launches an NFC session, and once it’s connected with the card, it obtains the card data. If the card contains a wallet (private and public key pair), it proves that the wallet owns a private key that corresponds to a public one.
+To obtain data from the card use `scanCard()` method. This method launches an NFC session, and once it’s connected with the card, it obtains the card data. If the card contains a wallet (private and public key pair), it proves that the wallet owns a private key that corresponds to a public one.
 
 Example:
-
 ```kotlin
-            tangemSdk.scanCard { result ->
-                when (result) {
-                    is CompletionResult.Success -> {
-                        // Handle returned card data
-                        val card = result.data
-                        cardId = card.cardId
-                        // Switch to UI thread to show results in UI
-                        runOnUiThread {
-                            tv_card_cid?.text = cardId
-                        }
-                    }
-                    is CompletionResult.Failure -> {
-                        if (result.error is SessionError.UserCancelledError) {
-                        // Handle case when user cancelled manually
-                        }
-                        // Handle other errors                    
-                    }
-                }
+tangemSdk.scanCard { result ->
+    when (result) {
+        is CompletionResult.Success -> {
+            // Handle returned card data
+            val card = result.data
+            cardId = card.cardId
+            // Switch to UI thread to show results in UI
+            runOnUiThread {
+                tv_card_cid?.text = cardId
             }
+        }
+        is CompletionResult.Failure -> {
+            if (result.error is SessionError.UserCancelledError) {
+            // Handle case when user cancelled manually
+            }
+            // Handle other errors
+        }
+    }
+}
+
 ```
 
-Communication with the card is an asynchronous operation. In order to get a result for the method, you need to subscribe to the task callback. In order to render the callback results on UI, you need to switch to the main thread.
-
-Every `CardSessionRunnable` (`Command` or custom tasks) can invoke callback once with either success or error:
+Communication with the card is an asynchronous operation. In order to get a result for the method, you need to implement the callback function. In order to render the callback results on UI, you need to switch to the main thread.
 
 `CompletionResult<T>` – this is the sealed class for the results of `CardSessionRunnable`.
 
@@ -146,21 +138,21 @@ Every `CardSessionRunnable` (`Command` or custom tasks) can invoke callback once
 This method allows you to sign one or multiple hashes. Simultaneous signing of array of hashes in a single SIGN command is required to support Bitcoin-type multi-input blockchains (UTXO). The SIGN command will return a corresponding array of signatures.
 
 ```kotlin
-        tangemSdk.sign(
-                hashes = arrayOf(hash1, hash2),
-                cardId) { result ->
-            when (result) {
-                is CompletionResult.Failure -> {
-                   if (result.error is SessionError.UserCancelledError) {
-                       // Handle case when user cancelled manually
-                   }
-                   // Handle other errors  
-                }
-                is CompletionResult.Success -> {
-                    val signResponse = result.data
-                }
-            }
+tangemSdk.sign(
+        hashes = arrayOf(hash1, hash2),
+        cardId) { result ->
+    when (result) {
+        is CompletionResult.Failure -> {
+           if (result.error is SessionError.UserCancelledError) {
+               // Handle case when user cancelled manually
+           }
+           // Handle other errors
         }
+        is CompletionResult.Success -> {
+            val signResponse = result.data
+        }
+    }
+}
 ```
 
 #### Issuer Data
