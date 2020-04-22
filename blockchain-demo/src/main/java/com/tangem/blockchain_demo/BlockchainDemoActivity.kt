@@ -7,9 +7,9 @@ import androidx.appcompat.app.AppCompatActivity
 import com.tangem.SessionError
 import com.tangem.TangemSdk
 import com.tangem.blockchain.common.*
-import com.tangem.blockchain.common.extensions.Result
-import com.tangem.blockchain.common.extensions.Signer
-import com.tangem.blockchain.common.extensions.SimpleResult
+import com.tangem.blockchain.extensions.Result
+import com.tangem.blockchain.extensions.Signer
+import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain_demo.databinding.ActivityBlockchainDemoBinding
 import com.tangem.commands.Card
 import com.tangem.common.CompletionResult
@@ -78,9 +78,9 @@ class BlockchainDemoActivity : AppCompatActivity() {
             walletManager.update()
             withContext(Dispatchers.Main) {
                 binding.tvBalance.text =
-                        "${walletManager.wallet.balances[AmountType.Coin]?.value?.toPlainString()
-                                ?: "error"} ${walletManager.blockchain.currency}"
-                val token = walletManager.wallet.balances[AmountType.Token]
+                        "${walletManager.wallet.amounts[AmountType.Coin]?.value?.toPlainString()
+                                ?: "error"} ${walletManager.wallet.blockchain.currency}"
+                val token = walletManager.wallet.amounts[AmountType.Token]
                 if (token != null) {
                     binding.tvBalance.text = token.value?.toPlainString() + " " + token.currencySymbol
                     binding.etSumToSend.text = Editable.Factory.getInstance().newEditable(
@@ -89,7 +89,7 @@ class BlockchainDemoActivity : AppCompatActivity() {
                 } else {
                     binding.etSumToSend.text =
                             Editable.Factory.getInstance().newEditable(
-                                    walletManager.wallet.balances[AmountType.Coin]?.value?.toPlainString()
+                                    walletManager.wallet.amounts[AmountType.Coin]?.value?.toPlainString()
                             )
                 }
                 binding.btnCheckFee.isEnabled = true
@@ -107,9 +107,9 @@ class BlockchainDemoActivity : AppCompatActivity() {
         }
 
         scope.launch {
-            val feeResult = (walletManager as FeeProvider).getFee(
-                    walletManager.wallet.balances[AmountType.Token]
-                            ?: walletManager.wallet.balances[AmountType.Coin]!!,
+            val feeResult = (walletManager as TransactionSender).getFee(
+                    walletManager.wallet.amounts[AmountType.Token]
+                            ?: walletManager.wallet.amounts[AmountType.Coin]!!,
                     binding.etReceiverAddress.text.toString())
             withContext(Dispatchers.Main) {
                 when (feeResult) {
@@ -154,17 +154,17 @@ class BlockchainDemoActivity : AppCompatActivity() {
     }
 
     private fun formTransactionData(): TransactionData {
-        val amount = if (walletManager.wallet.balances[AmountType.Token] != null) {
-            walletManager.wallet.balances[AmountType.Token]!!
+        val amount = if (walletManager.wallet.amounts[AmountType.Token] != null) {
+            walletManager.wallet.amounts[AmountType.Token]!!
         } else {
-            walletManager.wallet.balances[AmountType.Coin]!!.copy(
+            walletManager.wallet.amounts[AmountType.Coin]!!.copy(
                     value = binding.etSumToSend.text.toString().toBigDecimal() - fee
             )
         }
         return TransactionData(
                 amount,
-                walletManager.wallet.balances[AmountType.Coin]!!.copy(value = fee),
-                walletManager.wallet.balances[AmountType.Coin]!!.address!!,
+                walletManager.wallet.amounts[AmountType.Coin]!!.copy(value = fee),
+                walletManager.wallet.amounts[AmountType.Coin]!!.address!!,
                 binding.etReceiverAddress.text.toString()
         )
     }
