@@ -1,6 +1,7 @@
 package com.tangem.blockchain.blockchains.binance.network
 
 import com.tangem.blockchain.blockchains.binance.client.BinanceDexApiClientFactory
+import com.tangem.blockchain.blockchains.binance.client.BinanceDexApiRestClient
 import com.tangem.blockchain.blockchains.binance.client.BinanceDexEnvironment
 import com.tangem.blockchain.blockchains.binance.client.encoding.message.TransactionRequestAssemblerExtSign
 import com.tangem.blockchain.common.Blockchain
@@ -14,11 +15,15 @@ import okhttp3.RequestBody
 import java.math.BigDecimal
 
 class BinanceNetworkManager(isTestNet: Boolean = false) {
-    val api = createRetrofitInstance(if (!isTestNet) API_BINANCE else API_BINANCE_TESTNET)
-            .create(BinanceApi::class.java)
-    val client = BinanceDexApiClientFactory.newInstance().newRestClient(
-            if (!isTestNet) BinanceDexEnvironment.PROD.baseUrl else BinanceDexEnvironment.TEST_NET.baseUrl
-    )
+    val api: BinanceApi by lazy {
+        createRetrofitInstance(if (!isTestNet) API_BINANCE else API_BINANCE_TESTNET)
+                .create(BinanceApi::class.java)
+    }
+    val client: BinanceDexApiRestClient by lazy {
+        BinanceDexApiClientFactory.newInstance().newRestClient(
+                if (!isTestNet) BinanceDexEnvironment.PROD.baseUrl else BinanceDexEnvironment.TEST_NET.baseUrl
+        )
+    }
 
     suspend fun getInfo(address: String): Result<BinanceInfoResponse> {
         return try {
