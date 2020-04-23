@@ -1,6 +1,5 @@
 package com.tangem.blockchain.blockchains.ethereum.network
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.extensions.retryIO
@@ -87,7 +86,7 @@ class EthereumNetworkManager {
 
     private fun BigDecimal.convertFeeToEth(): BigDecimal {
         return this.divide(ETH_IN_WEI.toBigDecimal())
-                .setScale(12, Blockchain.Ethereum.roundingMode()).stripTrailingZeros()
+                .setScale(12, BigDecimal.ROUND_DOWN).stripTrailingZeros()
     }
 
 }
