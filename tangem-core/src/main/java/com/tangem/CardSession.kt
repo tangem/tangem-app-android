@@ -8,6 +8,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.extensions.calculateSha256
+import com.tangem.common.extensions.getType
 import com.tangem.crypto.EncryptionHelper
 import com.tangem.crypto.FastEncryptionHelper
 import com.tangem.crypto.StrongEncryptionHelper
@@ -134,6 +135,11 @@ class CardSession(
                     if (cardId != null && receivedCardId != cardId) {
                         stopWithError(SessionError.WrongCard())
                         callback(CompletionResult.Failure(SessionError.WrongCard()))
+                        return@run
+                    }
+                    if (!environment.allowedCards.contains(result.data.getType())) {
+                        stopWithError(SessionError.WrongCardType())
+                        callback(CompletionResult.Failure(SessionError.WrongCardType()))
                         return@run
                     }
                     environment.card = result.data
