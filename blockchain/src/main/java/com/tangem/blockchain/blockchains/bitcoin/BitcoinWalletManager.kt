@@ -89,6 +89,6 @@ class BitcoinWalletManager(
     private fun BigDecimal.calculateFee(transactionSize: BigDecimal): BigDecimal {
         val bytesInKb = BigDecimal(1024)
         return this.divide(bytesInKb).multiply(transactionSize)
-                .setScale(8, blockchain.roundingMode())
+                .setScale(8, BigDecimal.ROUND_DOWN)
     }
 }
