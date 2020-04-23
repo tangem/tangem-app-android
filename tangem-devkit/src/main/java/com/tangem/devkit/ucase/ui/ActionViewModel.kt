@@ -45,7 +45,7 @@ class ActionViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
 
     fun setCardManager(tangemSdk: TangemSdk) {
         this.tangemSdk = tangemSdk
-        this.tangemSdk.config.allowedCards = EnumSet.of(CardType.Sdk)
+        this.tangemSdk.config.cardFilter.allowedCardTypes = EnumSet.of(CardType.Sdk)
     }
 
     @Deprecated("Events must be send directly from the Widget")
