@@ -2,8 +2,10 @@ package com.tangem
 
 import com.tangem.commands.Card
 import com.tangem.commands.EllipticCurve
+import com.tangem.common.extensions.CardType
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.crypto.CryptoUtils.generatePublicKey
+import java.util.*
 
 
 /**
@@ -20,7 +22,8 @@ data class SessionEnvironment(
         val terminalKeys: KeyPair? = null,
         var encryptionMode: EncryptionMode = EncryptionMode.NONE,
         var encryptionKey: ByteArray? = null,
-        val cvc: ByteArray? = null
+        val cvc: ByteArray? = null,
+        var allowedCards: EnumSet<CardType>
 ) {
 
     fun setPin1(pin1: String) {
