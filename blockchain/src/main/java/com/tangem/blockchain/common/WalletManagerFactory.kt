@@ -82,19 +82,17 @@ object WalletManagerFactory {
                 )
             }
             Blockchain.Binance -> {
-                val networkManager = BinanceNetworkManager()
                 return BinanceWalletManager(
                         cardId, wallet,
-                        BinanceTransactionBuilder(walletPublicKey, networkManager.client),
-                        networkManager
+                        BinanceTransactionBuilder(walletPublicKey),
+                        BinanceNetworkManager()
                 )
             }
             Blockchain.BinanceTestnet -> {
-                val networkManager = BinanceNetworkManager(true)
                 return BinanceWalletManager(
                         cardId, wallet,
-                        BinanceTransactionBuilder(walletPublicKey, networkManager.client, true),
-                        networkManager
+                        BinanceTransactionBuilder(walletPublicKey, true),
+                        BinanceNetworkManager(true)
                 )
             }
             else -> return null
@@ -108,9 +106,3 @@ object WalletManagerFactory {
         return Token(symbol, contractAddress, decimals)
     }
 }
-
-data class Token(
-        val symbol: String,
-        val contractAddress: String,
-        val decimals: Int
-)
