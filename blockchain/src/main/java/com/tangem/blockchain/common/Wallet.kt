@@ -58,13 +58,4 @@ class Wallet(
         return amounts[amountType]?.value ?: BigDecimal.ZERO
     }
 
-//    fun validateTransaction(amount: Amount, fee: Amount?): EnumSet<ValidationError> {
-//        TODO("not implemented")
-//    }
-}
-
-enum class AmountType { Coin, Token, Reserve }
-
-interface TransactionValidator {
-    fun validateTransaction(amount: Amount, fee: Amount?): EnumSet<TransactionError>
 }
