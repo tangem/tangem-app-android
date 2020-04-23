@@ -1,6 +1,5 @@
 package com.tangem.blockchain.blockchains.binance
 
-import com.tangem.blockchain.blockchains.binance.client.BinanceDexApiRestClient
 import com.tangem.blockchain.blockchains.binance.client.domain.broadcast.TransactionOption
 import com.tangem.blockchain.blockchains.binance.client.domain.broadcast.Transfer
 import com.tangem.blockchain.blockchains.binance.client.encoding.message.MessageType
@@ -8,6 +7,8 @@ import com.tangem.blockchain.blockchains.binance.client.encoding.message.Transac
 import com.tangem.blockchain.blockchains.binance.client.encoding.message.TransferMessage
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.extensions.Result
+import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.toCompressedPublicKey
 import org.bitcoinj.core.ECKey
@@ -15,7 +16,7 @@ import org.bitcoinj.core.Utils
 import java.math.BigInteger
 
 class BinanceTransactionBuilder(
-        publicKey: ByteArray, private val client: BinanceDexApiRestClient, isTestNet: Boolean = false
+        publicKey: ByteArray, isTestNet: Boolean = false
 ) {
     var accountNumber: Long? = null
     var sequence: Long? = null
@@ -26,7 +27,12 @@ class BinanceTransactionBuilder(
     private var transactionAssembler: TransactionRequestAssemblerExtSign? = null
     private var transferMessage: TransferMessage? = null
 
-    fun buildToSign(transactionData: TransactionData): ByteArray {
+    fun buildToSign(transactionData: TransactionData): Result<ByteArray> {
+
+        if (!transactionData.amount.isAboveZero()) return Result.Failure(Exception("Transaction amount is not defined"))
+        val accountNumber = accountNumber ?: return Result.Failure(Exception("No account number"))
+        val sequence = sequence ?: return Result.Failure(Exception("No sequence"))
+
         val transfer = Transfer()
         transfer.coin = transactionData.amount.currencySymbol
         transfer.fromAddress = transactionData.sourceAddress
@@ -36,12 +42,12 @@ class BinanceTransactionBuilder(
 
         val options = TransactionOption.DEFAULT_INSTANCE
 
-        val accountData = BinanceAccountData(chainId, accountNumber!!, sequence!!)
+        val accountData = BinanceAccountData(chainId, accountNumber, sequence)
 
-        transactionAssembler = client.prepareTransfer(transfer, accountData, prefixedPubKey, options, true)
+        transactionAssembler = TransactionRequestAssemblerExtSign(accountData, prefixedPubKey, options)
         transferMessage = transactionAssembler!!.createTransferMessage(transfer)
 
-        return transactionAssembler!!.prepareForSign(transferMessage).calculateSha256()
+        return Result.Success(transactionAssembler!!.prepareForSign(transferMessage).calculateSha256())
     }
 
     fun buildToSend(signature: ByteArray): ByteArray {
