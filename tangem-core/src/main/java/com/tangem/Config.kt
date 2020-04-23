@@ -1,8 +1,5 @@
 package com.tangem
 
-import com.tangem.common.extensions.CardType
-import java.util.*
-
 class Config(
         /**
         * Enables or disables Linked Terminal feature.
@@ -35,7 +32,7 @@ class Config(
         var encryptionMode: EncryptionMode = EncryptionMode.NONE,
 
         /**
-         * Type of cards that are allowed to be interacted with in TangemSdk.
+         * Filter that can be used to limit cards that can be interacted with in TangemSdk.
          */
-        var allowedCards: EnumSet<CardType> = EnumSet.allOf(CardType::class.java)
+        val cardFilter: CardFilter = CardFilter()
 )
