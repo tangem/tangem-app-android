@@ -9,6 +9,7 @@ import com.tangem.TangemSdk
 import com.tangem.commands.Card
 import com.tangem.commands.CommandResponse
 import com.tangem.common.CompletionResult
+import com.tangem.common.extensions.CardType
 import com.tangem.devkit._arch.SingleLiveEvent
 import com.tangem.devkit._arch.structure.Id
 import com.tangem.devkit._arch.structure.Payload
@@ -20,6 +21,7 @@ import com.tangem.devkit.ucase.resources.ActionType
 import com.tangem.devkit.ucase.tunnel.ViewScreen
 import com.tangem.devkit.ucase.variants.personalize.converter.ItemTypes
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
+import java.util.*
 
 /**
 [REDACTED_AUTHOR]
@@ -43,6 +45,7 @@ class ActionViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
 
     fun setCardManager(tangemSdk: TangemSdk) {
         this.tangemSdk = tangemSdk
+        this.tangemSdk.config.allowedCards = EnumSet.of(CardType.Sdk)
     }
 
     @Deprecated("Events must be send directly from the Widget")
