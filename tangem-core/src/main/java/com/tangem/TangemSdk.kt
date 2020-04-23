@@ -368,7 +368,7 @@ class TangemSdk(
         val terminalKeys = if (config.linkedTerminal) terminalKeysService?.getKeys() else null
         return SessionEnvironment(
                 terminalKeys = terminalKeys,
-                allowedCards = config.allowedCards
+                cardFilter = config.cardFilter
         )
     }
 
