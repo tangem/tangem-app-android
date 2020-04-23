@@ -22,3 +22,5 @@ data class Amount(
     constructor(amount: Amount, value: BigDecimal) :
             this(amount.currencySymbol, value, amount.address, amount.decimals, amount.type)
 }
+
+enum class AmountType { Coin, Token, Reserve }
