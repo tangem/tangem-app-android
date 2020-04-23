@@ -137,7 +137,8 @@ class CardSession(
                         callback(CompletionResult.Failure(SessionError.WrongCard()))
                         return@run
                     }
-                    if (!environment.allowedCards.contains(result.data.getType())) {
+                    val allowedCardTypes = environment.cardFilter.allowedCardTypes
+                    if (!allowedCardTypes.contains(result.data.getType())) {
                         stopWithError(SessionError.WrongCardType())
                         callback(CompletionResult.Failure(SessionError.WrongCardType()))
                         return@run
