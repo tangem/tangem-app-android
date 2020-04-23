@@ -39,14 +39,18 @@ class BinanceWalletManager(
     }
 
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
-        val transactionHash = transactionBuilder.buildToSign(transactionData)
-
-        when (val signerResponse = signer.sign(arrayOf(transactionHash), cardId)) {
-            is CompletionResult.Success -> {
-                val transactionToSend = transactionBuilder.buildToSend(signerResponse.data.signature)
-                return networkManager.sendTransaction(transactionToSend)
+        val buildTransactionResult = transactionBuilder.buildToSign(transactionData)
+        when (buildTransactionResult) {
+            is Result.Failure -> return SimpleResult.Failure(buildTransactionResult.error)
+            is Result.Success -> {
+                when (val signerResponse = signer.sign(arrayOf(buildTransactionResult.data), cardId)) {
+                    is CompletionResult.Success -> {
+                        val transactionToSend = transactionBuilder.buildToSend(signerResponse.data.signature)
+                        return networkManager.sendTransaction(transactionToSend)
+                    }
+                    is CompletionResult.Failure -> return SimpleResult.Failure(signerResponse.error)
+                }
             }
-            is CompletionResult.Failure -> return SimpleResult.Failure(signerResponse.error)
         }
     }
 
