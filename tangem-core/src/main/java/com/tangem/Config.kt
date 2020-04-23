@@ -1,5 +1,8 @@
 package com.tangem
 
+import com.tangem.common.extensions.CardType
+import java.util.*
+
 class Config(
         /**
         * Enables or disables Linked Terminal feature.
@@ -18,16 +21,21 @@ class Config(
         the correctness of Terminal_Transaction_Signature using previously stored Terminal_PublicKey
         and, if correct, will skip security delay for the current SIGN operation.
          */
-        val linkedTerminal: Boolean = true,
+        var linkedTerminal: Boolean = true,
 
         /**
          * If not null, it will be used to validate Issuer data and issuer extra data.
          * If null, issuerPublicKey from current card will be used.
          */
-        val issuerPublicKey: ByteArray? = null,
+        var issuerPublicKey: ByteArray? = null,
 
         /**
          * Level of encryption used in communication with a Tangem Card.
          */
-        val encryptionMode: EncryptionMode = EncryptionMode.NONE
+        var encryptionMode: EncryptionMode = EncryptionMode.NONE,
+
+        /**
+         * Type of cards that are allowed to be interacted with in TangemSdk.
+         */
+        var allowedCards: EnumSet<CardType> = EnumSet.allOf(CardType::class.java)
 )
