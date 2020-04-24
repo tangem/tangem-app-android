@@ -3,53 +3,59 @@ package com.tangem.blockchain.common
 import java.math.BigDecimal
 import java.util.*
 
-interface Wallet {
-    val config: WalletConfig
-    val address: String
-    val exploreUrl: String?
-    val shareUrl: String?
-}
-
-class WalletConfig(
-        val allowFeeSelection: Boolean,
-        val allowFeeInclusion: Boolean,
-        var allowExtract: Boolean = false,
-        var allowLoad: Boolean = false
-)
-
-data class Amount(
-        val currencySymbol: String,
-        var value: BigDecimal? = null,
-        val address: String? = null,
-        val decimals: Byte,
-        val type: AmountType = AmountType.Coin
+class Wallet(
+        val blockchain: Blockchain,
+        val address: String,
+        val token: Token? = null
 ) {
-    constructor(
-            value: BigDecimal?,
-            blockchain: Blockchain,
-            address: String? = null,
-            type: AmountType = AmountType.Coin
-    ) : this(blockchain.currency, value, address, blockchain.decimals, type)
+    val exploreUrl: String
+    val shareUrl: String
+    val transactions: MutableList<TransactionData> = mutableListOf()
+    val amounts: MutableMap<AmountType, Amount> = mutableMapOf()
 
-    constructor(token: Token, value: BigDecimal? = null) :
-            this(token.symbol, value, token.contractAddress, token.decimals, AmountType.Token)
-}
+    init {
+        setAmount(Amount(null, blockchain, address))
+        if (token != null) setAmount(Amount(token))
 
-data class TransactionData(
-        val amount: Amount,
-        val fee: Amount?,
-        val sourceAddress: String,
-        val destinationAddress: String,
-        var status: TransactionStatus = TransactionStatus.Unconfirmed,
-        var date: Calendar? = null
-)
+        exploreUrl = blockchain.getExploreUrl(address, token)
+        shareUrl = blockchain.getShareUri(address)
+    }
 
-enum class AmountType { Coin, Token, Reserve }
+    fun setAmount(amount: Amount) {
+        amounts[amount.type] = amount
+    }
 
-enum class TransactionStatus { Confirmed, Unconfirmed }
+    fun setCoinValue(value: BigDecimal) {
+        val amount = Amount(value, blockchain, address)
+        setAmount(amount)
+    }
 
-enum class ValidationError { WrongAmount, WrongFee, WrongTotal }
+    fun setTokenValue(value: BigDecimal) {
+        if (token != null) {
+            val amount = Amount(token, value)
+            setAmount(amount)
+        }
+    }
 
-interface TransactionValidator {
-    fun validateTransaction(amount: Amount, fee: Amount?): EnumSet<ValidationError>
+    fun setReserveValue(value: BigDecimal) {
+        val amount = Amount(value, blockchain, address, AmountType.Reserve)
+        setAmount(amount)
+    }
+
+    fun addTransaction(transaction: TransactionData) {
+        transactions.add(transaction.copy(date = Calendar.getInstance()))
+    }
+
+    fun addIncomingTransaction() {
+        val dummyAmount = Amount(null, blockchain)
+        val transaction = TransactionData(dummyAmount, dummyAmount,
+                "unknown", address, date = Calendar.getInstance()
+        )
+        transactions.add(transaction)
+    }
+
+    fun fundsAvailable(amountType: AmountType): BigDecimal {
+        return amounts[amountType]?.value ?: BigDecimal.ZERO
+    }
+
 }
