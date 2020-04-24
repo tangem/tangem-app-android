@@ -53,7 +53,7 @@
     <string name="dialog_this_card_has_enforced_security_delay">This card has enforced security delay</string>
     <string name="dialog_hold_card">Please hold the card firmly\n until the operation is completed…</string>
     <string name="dialog_you_may_be_required_to_repeat">You may be required to repeat this operation a few times depending on the NFC performance of your smartphone.\n This is made for safety of your funds.</string>
-    <string name="alert_unknown_blockchain">This is a genuine Tangem card. Please follow instructions written on the card to install the official app.</string>
+    <string name="alert_unknown_blockchain">Uh oh!\nYour Tangem card was made to work with a different application. Please see the name and instructions on your card, and install the correct app.</string>
 
     <!-- menu main -->
     <string name="main_menu_manage_pin_1">Manage user PIN1…</string>
