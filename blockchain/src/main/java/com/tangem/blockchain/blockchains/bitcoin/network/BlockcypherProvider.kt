@@ -1,6 +1,6 @@
 package com.tangem.blockchain.blockchains.bitcoin.network
 
-import com.tangem.blockchain.blockchains.bitcoin.UnspentTransaction
+import com.tangem.blockchain.blockchains.bitcoin.BitcoinUnspentOutput
 import com.tangem.blockchain.blockchains.bitcoin.network.api.BlockcypherApi
 import com.tangem.blockchain.blockchains.bitcoin.network.api.BlockcypherBody
 import com.tangem.blockchain.blockchains.bitcoin.network.response.BlockcypherFee
@@ -26,7 +26,7 @@ class BlockcypherProvider(private val api: BlockcypherApi, isTestNet: Boolean) :
         try {
             val addressData: BlockcypherResponse = retryIO { api.getAddressData(blockchain, network, address) }
             val unspents = addressData.txrefs?.map {
-                UnspentTransaction(
+                BitcoinUnspentOutput(
                         it.amount!!.toBigDecimal().movePointLeft(decimals),
                         it.outputIndex!!.toLong(),
                         it.hash!!.hexToBytes(),
