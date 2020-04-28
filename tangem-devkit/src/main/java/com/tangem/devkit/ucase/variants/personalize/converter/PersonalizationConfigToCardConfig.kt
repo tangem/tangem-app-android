@@ -13,7 +13,7 @@ import java.util.*
 class PersonalizationConfigToCardConfig : Converter<PersonalizationConfig, CardConfig> {
 
     override fun convert(from: PersonalizationConfig): CardConfig {
-        val signingMethod = PersonalizationConfig.makeSigningMask(from)
+        val signingMethod = PersonalizationConfig.makeSigningMethodMask(from)
 
         val isNote = from.cardData.product_note
         val isTag = from.cardData.product_tag
