@@ -164,7 +164,7 @@ class PersonalizationConfig {
             }
         }
 
-        fun makeSigningMask(from: PersonalizationConfig): SigningMethodMask {
+        fun makeSigningMethodMask(from: PersonalizationConfig): SigningMethodMask {
             val signingMethodMaskBuilder = SigningMethodMaskBuilder()
             if (from.SigningMethod0) {
                 signingMethodMaskBuilder.add(SigningMethod.SignHash)
