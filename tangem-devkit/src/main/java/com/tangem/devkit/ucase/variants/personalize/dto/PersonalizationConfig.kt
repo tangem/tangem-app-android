@@ -1,6 +1,7 @@
 package com.tangem.devkit.ucase.variants.personalize.dto
 
 import com.tangem.commands.EllipticCurve
+import com.tangem.commands.personalization.entities.NdefRecord
 
 /**
 [REDACTED_AUTHOR]
@@ -35,10 +36,6 @@ class PersonalizationConfig {
     var requireTerminalCertSignature = false
     var checkPIN3onCard = false
 
-    // Denomination
-    var writeOnPersonalization = false
-    var denomination: Long = 0
-
     // Token
     var itsToken = false
     var symbol = ""
@@ -53,7 +50,7 @@ class PersonalizationConfig {
     var forbidPurgeWallet = false
     var allowSelectBlockchain = false
     var useBlock = false
-    var oneApdu = false
+    var useOneCommandAtTime = false
     var useCVC = false
     var allowSwapPIN = false
     var allowSwapPIN2 = false
@@ -114,10 +111,6 @@ class PersonalizationConfig {
                 requireTerminalCertSignature = false
                 checkPIN3onCard = true
 
-                // Denomination
-                writeOnPersonalization = false
-                denomination = 1000000L
-
                 // Token
                 itsToken = false
                 symbol = ""
@@ -132,7 +125,7 @@ class PersonalizationConfig {
                 forbidPurgeWallet = false
                 allowSelectBlockchain = false
                 useBlock = false
-                oneApdu = false
+                useOneCommandAtTime = false
                 useCVC = false
                 allowSwapPIN = true
                 allowSwapPIN2 = true
