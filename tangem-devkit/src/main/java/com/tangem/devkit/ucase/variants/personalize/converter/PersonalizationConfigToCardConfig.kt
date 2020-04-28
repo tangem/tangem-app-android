@@ -1,6 +1,9 @@
 package com.tangem.devkit.ucase.variants.personalize.converter
 
-import com.tangem.commands.*
+import com.tangem.commands.CardData
+import com.tangem.commands.EllipticCurve
+import com.tangem.commands.Product
+import com.tangem.commands.ProductMaskBuilder
 import com.tangem.commands.personalization.entities.CardConfig
 import com.tangem.commands.personalization.entities.NdefRecord
 import com.tangem.devkit.ucase.variants.personalize.dto.PersonalizationConfig
@@ -10,29 +13,7 @@ import java.util.*
 class PersonalizationConfigToCardConfig : Converter<PersonalizationConfig, CardConfig> {
 
     override fun convert(from: PersonalizationConfig): CardConfig {
-        val signingMethodMaskBuilder = SigningMethodMaskBuilder()
-        if (from.SigningMethod0) {
-            signingMethodMaskBuilder.add(SigningMethod.SignHash)
-        }
-        if (from.SigningMethod1) {
-            signingMethodMaskBuilder.add(SigningMethod.SignRaw)
-        }
-        if (from.SigningMethod2) {
-            signingMethodMaskBuilder.add(SigningMethod.SignHashValidateByIssuer)
-        }
-        if (from.SigningMethod3) {
-            signingMethodMaskBuilder.add(SigningMethod.SignRawValidateByIssuer)
-        }
-        if (from.SigningMethod4) {
-            signingMethodMaskBuilder.add(SigningMethod.SignHashValidateByIssuerWriteIssuerData)
-        }
-        if (from.SigningMethod5) {
-            signingMethodMaskBuilder.add(SigningMethod.SignRawValidateByIssuerWriteIssuerData)
-        }
-        if (from.SigningMethod6) {
-            signingMethodMaskBuilder.add(SigningMethod.SignHash)
-        }
-        val signingMethod = signingMethodMaskBuilder.build()
+        val signingMethod = PersonalizationConfig.makeSigningMask(from)
 
         val isNote = from.cardData.product_note
         val isTag = from.cardData.product_tag
@@ -40,25 +21,25 @@ class PersonalizationConfigToCardConfig : Converter<PersonalizationConfig, CardC
         val isIdIssuer = from.cardData.product_id_issuer
 
         val productMaskBuilder = ProductMaskBuilder()
-        if (isNote) productMaskBuilder.add(com.tangem.commands.Product.Note)
-        if (isTag) productMaskBuilder.add(com.tangem.commands.Product.Tag)
-        if (isIdCard) productMaskBuilder.add(com.tangem.commands.Product.IdCard)
-        if (isIdIssuer) productMaskBuilder.add(com.tangem.commands.Product.IdIssuer)
+        if (isNote) productMaskBuilder.add(Product.Note)
+        if (isTag) productMaskBuilder.add(Product.Tag)
+        if (isIdCard) productMaskBuilder.add(Product.IdCard)
+        if (isIdIssuer) productMaskBuilder.add(Product.IdIssuer)
         val productMask = productMaskBuilder.build()
 
         var tokenSymbol: String? = null
         var tokenContractAddress: String? = null
         var tokenDecimal: Int? = null
         if (from.itsToken) {
-            tokenSymbol = from.symbol
-            tokenContractAddress = from.contractAddress
-            tokenDecimal = from.decimal.toInt()
+            tokenSymbol = from.cardData.token_symbol
+            tokenContractAddress = from.cardData.token_contract_address
+            tokenDecimal = from.cardData.token_decimal
         }
 
-        val blockchain = if (from.blockchain.isNotEmpty()) from.blockchain else from.blockchainCustom
+        val blockchain = if (from.cardData.blockchain.isNotEmpty()) from.cardData.blockchain else from.blockchainCustom
         val cardData = CardData(
                 blockchainName = blockchain,
-                batchId = from.batchId,
+                batchId = from.cardData.batch,
                 productMask = productMask,
                 tokenSymbol = tokenSymbol,
                 tokenContractAddress = tokenContractAddress,
