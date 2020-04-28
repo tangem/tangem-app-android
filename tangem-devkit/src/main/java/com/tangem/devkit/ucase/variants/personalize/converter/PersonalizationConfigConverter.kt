@@ -52,9 +52,9 @@ class ItemsToPersonalizationConfig : ItemsToModel<PersonalizationConfig> {
         val export = PersonalizationConfig()
         export.series = getTyped(CardNumber.Series)
         export.startNumber = getTyped(CardNumber.Number)
-        export.batchId = getTyped(CardNumber.BatchId)
+        export.cardData.batch = getTyped(CardNumber.BatchId)
         export.curveID = getTyped(Common.Curve)
-        export.blockchain = getTyped(Common.Blockchain)
+        export.cardData.blockchain = getTyped(Common.Blockchain)
         export.blockchainCustom = getTyped(Common.BlockchainCustom)
         export.MaxSignatures = getTyped(Common.MaxSignatures)
         export.createWallet = getTyped(Common.CreateWallet)
@@ -71,9 +71,9 @@ class ItemsToPersonalizationConfig : ItemsToModel<PersonalizationConfig> {
         export.requireTerminalTxSignature = getTyped(SignHashExProp.RequireTerminalTxSig)
         export.checkPIN3onCard = getTyped(SignHashExProp.CheckPin3)
         export.itsToken = getTyped(Token.ItsToken)
-        export.symbol = getTyped(Token.Symbol)
-        export.contractAddress = getTyped(Token.ContractAddress)
-        export.decimal = getTyped(Token.Decimal)
+        export.cardData.token_symbol = getTyped(Token.Symbol)
+        export.cardData.token_contract_address = getTyped(Token.ContractAddress)
+        export.cardData.token_decimal = getTyped(Token.Decimal)
         export.cardData = export.cardData.apply { this.product_note = getTyped(ProductMask.Note) }
         export.cardData = export.cardData.apply { this.product_tag = getTyped(ProductMask.Tag) }
         export.cardData = export.cardData.apply { this.product_id_card = getTyped(ProductMask.IdCard) }
