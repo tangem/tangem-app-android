@@ -70,8 +70,6 @@ class ItemsToPersonalizationConfig : ItemsToModel<PersonalizationConfig> {
         export.requireTerminalCertSignature = getTyped(SignHashExProp.RequireTerminalCertSig)
         export.requireTerminalTxSignature = getTyped(SignHashExProp.RequireTerminalTxSig)
         export.checkPIN3onCard = getTyped(SignHashExProp.CheckPin3)
-        export.writeOnPersonalization = getTyped(Denomination.WriteOnPersonalize)
-        export.denomination = getTyped(Denomination.Denomination)
         export.itsToken = getTyped(Token.ItsToken)
         export.symbol = getTyped(Token.Symbol)
         export.contractAddress = getTyped(Token.ContractAddress)
@@ -85,7 +83,7 @@ class ItemsToPersonalizationConfig : ItemsToModel<PersonalizationConfig> {
         export.forbidPurgeWallet = getTyped(SettingsMask.ForbidPurge)
         export.allowSelectBlockchain = getTyped(SettingsMask.AllowSelectBlockchain)
         export.useBlock = getTyped(SettingsMask.UseBlock)
-        export.oneApdu = getTyped(SettingsMask.OneApdu)
+        export.useOneCommandAtTime = getTyped(SettingsMask.OneApdu)
         export.useCVC = getTyped(SettingsMask.UseCvc)
         export.allowSwapPIN = getTyped(SettingsMask.AllowSwapPin)
         export.allowSwapPIN2 = getTyped(SettingsMask.AllowSwapPin2)
@@ -139,7 +137,6 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
         blocList.add(common())
         blocList.add(signingMethod())
         blocList.add(signHashExProperties())
-        blocList.add(denomination())
         blocList.add(token())
         blocList.add(productMask())
         blocList.add(settingsMask())
@@ -199,15 +196,6 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
                 SignHashExProp.RequireTerminalCertSig,
                 SignHashExProp.RequireTerminalTxSig,
                 SignHashExProp.CheckPin3
-        ).forEach { createItem(block, it) }
-        return block
-    }
-
-    private fun denomination(): ItemGroup {
-        val block = createGroup(BlockId.Denomination)
-        mutableListOf(
-                Denomination.WriteOnPersonalize,
-                Denomination.Denomination
         ).forEach { createItem(block, it) }
         return block
     }

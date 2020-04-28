@@ -54,11 +54,6 @@ enum class SignHashExProp : PersonalizationId {
     CheckPin3,
 }
 
-enum class Denomination : PersonalizationId {
-    WriteOnPersonalize,
-    Denomination,
-}
-
 enum class Token : PersonalizationId {
     ItsToken,
     Symbol,
