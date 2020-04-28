@@ -4,6 +4,7 @@ import com.google.common.truth.Truth
 import com.tangem.SessionEnvironment
 import com.tangem.blockchain.blockchains.binance.BinanceWalletManager
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
+import com.tangem.blockchain.blockchains.bitcoincash.BitcoinCashWalletManager
 import com.tangem.blockchain.blockchains.cardano.CardanoWalletManager
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.stellar.StellarWalletManager
@@ -79,5 +80,16 @@ internal class WalletManagerFactoryTest {
 
         Truth.assertThat(walletManager)
                 .isInstanceOf(BinanceWalletManager::class.java)
+    }
+
+    @Test
+    fun createBitcoinCashWalletManager() {
+        val data = "0108BB00000000000049200754414E47454D00020102800A322E3432642053444B00034104766A1586D164B436E5D420AED01FDAB41B2AE7EDF0C865D7AF1DA995D70AB297E5B94B761CFBB405084C21BC97C02B4A1EA9ED4F515576EAB4D83AD3A0DFAA8A0A04041E76310C618102FFFF8A0101820407E4041B830B54414E47454D2053444B00840342434886408058F0F628C2466B09ECEB13F2A8EFDD4558F5D2DBDA9BD0628EE8C8CC99A778FF0F1AECD35704B9F3518486EA5C1D20F9DFCBAA66184F4CCCD9282E2632882C3041045F16BD1D2EAFE463E62A335A09E6B2BBCBD04452526885CB679FC4D27AF1BD22F553C7DEEFB54FD3D4F361D14E6DC3F11B7D4EA183250A60720EBDF9E110CD26050A736563703235366B31000804000186A0070100604104BE37CD5251C8999EDBBFC759D800EB41E4DCB718289601EB15819404E1B2F2ED90FE50C2A481D06EC790D1EF6184974EB655ABAE4BE56A6D1C9E1A17B1EFDF0262040001869A6304000000060F01009000"
+        val responseApdu = ResponseApdu(data.hexToBytes())
+        val card = ReadCommand().deserialize(SessionEnvironment(), responseApdu)
+        val walletManager = WalletManagerFactory.makeWalletManager(card!!)
+
+        Truth.assertThat(walletManager)
+                .isInstanceOf(BitcoinCashWalletManager::class.java)
     }
 }
