@@ -106,6 +106,13 @@ sealed class SessionError(val code: Int) : Exception() {
      */
     class HashSizeMustBeEqual : SessionError(3005)
 
+
+    /**
+     * This error is returned when a user scans a card of a [com.tangem.common.extensions.CardType]
+     * that is not specified in [Config.allowedCards].
+     */
+    class WrongCardType : SessionError(3006)
+
     /**
      * This error is returned when [com.tangem.TangemSdk] was called with a new [Task],
      * while a previous [Task] is still in progress.
