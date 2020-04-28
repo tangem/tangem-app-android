@@ -21,7 +21,7 @@ data class SessionEnvironment(
         var encryptionMode: EncryptionMode = EncryptionMode.NONE,
         var encryptionKey: ByteArray? = null,
         val cvc: ByteArray? = null,
-        var cardFilter: CardFilter
+        var cardFilter: CardFilter = CardFilter()
 ) {
 
     fun setPin1(pin1: String) {
