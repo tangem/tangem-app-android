@@ -1,7 +1,9 @@
 package com.tangem.devkit.ucase.variants.personalize.dto
 
 import com.tangem.commands.EllipticCurve
-import com.tangem.commands.personalization.entities.NdefRecord
+import com.tangem.commands.SigningMethod
+import com.tangem.commands.SigningMethodMask
+import com.tangem.commands.SigningMethodMaskBuilder
 
 /**
 [REDACTED_AUTHOR]
@@ -11,11 +13,9 @@ class PersonalizationConfig {
     // Card number
     var series = ""
     var startNumber: Long = 0
-    var batchId = ""
 
     // Common
     var curveID = ""
-    var blockchain = ""
     var blockchainCustom = ""
     var MaxSignatures: Long = 0
     var createWallet = false
@@ -38,10 +38,8 @@ class PersonalizationConfig {
 
     // Token
     var itsToken = false
-    var symbol = ""
-    var contractAddress = ""
-    var decimal: Long = 0
 
+    // Product mask
     var cardData = CardData()
 
     // Settings mask
@@ -66,6 +64,7 @@ class PersonalizationConfig {
     var protocolAllowUnencrypted = false
     var protocolAllowStaticEncryption = false
 
+    // Settings mask
     var useNDEF = false
     var useDynamicNDEF = false
     var disablePrecomputedNDEF = false
@@ -80,17 +79,24 @@ class PersonalizationConfig {
     var CVC = ""
     var pauseBeforePIN2: Long = 0
 
+//    Fields from JSON
+//    var releaseVersion = true - don't use in personalization
+//    var count = 1050          - don't use in personalization
+//    var numberFormat = ""     - don't use in personalization
+    var count: Long = 0
+    var issuerName = ""
+    var issuerData = null
+
     companion object {
+
         fun default(): PersonalizationConfig {
             return PersonalizationConfig().apply {
                 // Card number
                 series = "BB"
                 startNumber = 300000000000L
-                batchId = "ffff"
 
                 // Common
                 curveID = EllipticCurve.Secp256k1.curve
-                blockchain = "ETH"
                 blockchainCustom = ""
                 MaxSignatures = 999999L
                 createWallet = true
@@ -113,11 +119,8 @@ class PersonalizationConfig {
 
                 // Token
                 itsToken = false
-                symbol = ""
-                contractAddress = ""
-                decimal = 0L
 
-                cardData = CardData()
+                cardData = CardData.default()
 
                 // Settings mask
                 isReusable = true
@@ -154,17 +157,67 @@ class PersonalizationConfig {
                 PIN3 = ""
                 CVC = "000"
                 pauseBeforePIN2 = 5000L
+
+                count = 1050
+                issuerName = "TANGEM"
+                issuerData = null
             }
+        }
+
+        fun makeSigningMask(from: PersonalizationConfig): SigningMethodMask {
+            val signingMethodMaskBuilder = SigningMethodMaskBuilder()
+            if (from.SigningMethod0) {
+                signingMethodMaskBuilder.add(SigningMethod.SignHash)
+            }
+            if (from.SigningMethod1) {
+                signingMethodMaskBuilder.add(SigningMethod.SignRaw)
+            }
+            if (from.SigningMethod2) {
+                signingMethodMaskBuilder.add(SigningMethod.SignHashValidateByIssuer)
+            }
+            if (from.SigningMethod3) {
+                signingMethodMaskBuilder.add(SigningMethod.SignRawValidateByIssuer)
+            }
+            if (from.SigningMethod4) {
+                signingMethodMaskBuilder.add(SigningMethod.SignHashValidateByIssuerWriteIssuerData)
+            }
+            if (from.SigningMethod5) {
+                signingMethodMaskBuilder.add(SigningMethod.SignRawValidateByIssuerWriteIssuerData)
+            }
+            if (from.SigningMethod6) {
+                signingMethodMaskBuilder.add(SigningMethod.SignHash)
+            }
+            return signingMethodMaskBuilder.build()
         }
     }
 }
 
 class CardData {
-    var date = "2020-02-17"
-    var batch = "FF87"
-    var blockchain = "IROHA"
-    var product_note = true
+    var date = ""
+    var batch = ""
+    var blockchain = ""
+    var token_symbol = ""
+    var token_contract_address = ""
+    var token_decimal: Int = 0
+    var product_note = false
     var product_tag = false
     var product_id_card = false
     var product_id_issuer = false
+
+    companion object {
+        fun default(): CardData {
+            return CardData().apply {
+                date = "2020-02-17"
+                batch = "FFFF"
+                blockchain = "ETH"
+                token_symbol = ""
+                token_contract_address = ""
+                token_decimal = 0
+                product_note = true
+                product_tag = false
+                product_id_card = false
+                product_id_issuer = false
+            }
+        }
+    }
 }
