@@ -6,6 +6,9 @@ import com.tangem.blockchain.blockchains.binance.network.BinanceNetworkManager
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinTransactionBuilder
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
 import com.tangem.blockchain.blockchains.bitcoin.network.BitcoinNetworkManager
+import com.tangem.blockchain.blockchains.bitcoincash.BitcoinCashNetworkManager
+import com.tangem.blockchain.blockchains.bitcoincash.BitcoinCashTransactionBuilder
+import com.tangem.blockchain.blockchains.bitcoincash.BitcoinCashWalletManager
 import com.tangem.blockchain.blockchains.cardano.CardanoTransactionBuilder
 import com.tangem.blockchain.blockchains.cardano.CardanoWalletManager
 import com.tangem.blockchain.blockchains.cardano.network.CardanoNetworkManager
@@ -21,6 +24,7 @@ import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.blockchains.xrp.XrpWalletManager
 import com.tangem.blockchain.blockchains.xrp.network.XrpNetworkManager
 import com.tangem.commands.Card
+import com.tangem.common.extensions.toCompressedPublicKey
 
 object WalletManagerFactory {
 
@@ -48,6 +52,13 @@ object WalletManagerFactory {
                         card.cardId, wallet,
                         BitcoinTransactionBuilder(walletPublicKey, true),
                         BitcoinNetworkManager(true)
+                )
+            }
+            Blockchain.BitcoinCash -> {
+                return BitcoinCashWalletManager(
+                        card.cardId, wallet,
+                        BitcoinCashTransactionBuilder(walletPublicKey.toCompressedPublicKey()),
+                        BitcoinCashNetworkManager()
                 )
             }
             Blockchain.Ethereum -> {
