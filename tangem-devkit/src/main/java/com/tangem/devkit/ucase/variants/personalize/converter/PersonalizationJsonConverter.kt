@@ -35,7 +35,7 @@ internal class JsonToConfig : Converter<PersonalizationJson, PersonalizationConf
             createWallet = from.createWallet != 0L
 
             // Sign hash external properties
-            pinLessFloorLimit = 100000L
+//            pinLessFloorLimit = 100000L
             hexCrExKey = from.hexCrExKey
             requireTerminalTxSignature = from.requireTerminalTxSignature
             requireTerminalCertSignature = from.requireTerminalCertSignature
@@ -173,7 +173,7 @@ internal class ConfigToJson : Converter<PersonalizationConfig, PersonalizationJs
     }
 
     private fun fillSigningMethod(jsonDto: PersonalizationJson, from: PersonalizationConfig) {
-        jsonDto.SigningMethod = PersonalizationConfig.makeSigningMask(from).rawValue.toLong()
+        jsonDto.SigningMethod = PersonalizationConfig.makeSigningMethodMask(from).rawValue.toLong()
     }
 
     private fun fillNdef(jsonDto: PersonalizationJson, from: PersonalizationConfig) {
