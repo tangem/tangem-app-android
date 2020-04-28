@@ -49,7 +49,7 @@ class TangemSdk(
      * in the form of [Card] if the task was performed successfully or [SessionError] in case of an error.
      */
     fun scanCard(initialMessage: Message? = null, callback: (result: CompletionResult<Card>) -> Unit) {
-        startSession(ScanTask(), null, initialMessage, callback)
+        startSessionWithRunnable(ScanTask(), null, initialMessage, callback)
     }
 
     /**
@@ -72,7 +72,7 @@ class TangemSdk(
      */
     fun sign(hashes: Array<ByteArray>, cardId: String, initialMessage: Message? = null,
              callback: (result: CompletionResult<SignResponse>) -> Unit) {
-        startSession(SignCommand(hashes), cardId, initialMessage, callback)
+        startSessionWithRunnable(SignCommand(hashes), cardId, initialMessage, callback)
     }
 
     /**
@@ -90,7 +90,7 @@ class TangemSdk(
      */
     fun readIssuerData(cardId: String, initialMessage: Message? = null,
                        callback: (result: CompletionResult<ReadIssuerDataResponse>) -> Unit) {
-        startSession(ReadIssuerDataCommand(config.issuerPublicKey), cardId, initialMessage, callback)
+        startSessionWithRunnable(ReadIssuerDataCommand(config.issuerPublicKey), cardId, initialMessage, callback)
     }
 
     /**
@@ -109,7 +109,7 @@ class TangemSdk(
      */
     fun readIssuerExtraData(cardId: String,
                             callback: (result: CompletionResult<ReadIssuerExtraDataResponse>) -> Unit) {
-        startSession(ReadIssuerExtraDataCommand(config.issuerPublicKey), cardId, null, callback)
+        startSessionWithRunnable(ReadIssuerExtraDataCommand(config.issuerPublicKey), cardId, null, callback)
     }
 
     /**
@@ -140,7 +140,7 @@ class TangemSdk(
                 issuerDataCounter,
                 config.issuerPublicKey
         )
-        startSession(command, cardId, initialMessage, callback)
+        startSessionWithRunnable(command, cardId, initialMessage, callback)
     }
 
     /**
@@ -179,7 +179,7 @@ class TangemSdk(
                 issuerDataCounter,
                 config.issuerPublicKey
         )
-        startSession(command, cardId, initialMessage, callback)
+        startSessionWithRunnable(command, cardId, initialMessage, callback)
     }
 
     /**
@@ -206,7 +206,7 @@ class TangemSdk(
             callback: (result: CompletionResult<WriteUserDataResponse>) -> Unit
     ) {
         val command = WriteUserDataCommand(userData, userProtectedData, userCounter, userProtectedCounter)
-        startSession(command, cardId, initialMessage, callback)
+        startSessionWithRunnable(command, cardId, initialMessage, callback)
     }
 
     /**
@@ -228,7 +228,7 @@ class TangemSdk(
      */
     fun readUserData(cardId: String, initialMessage: Message? = null,
                      callback: (result: CompletionResult<ReadUserDataResponse>) -> Unit) {
-        startSession(ReadUserDataCommand(), cardId, initialMessage, callback)
+        startSessionWithRunnable(ReadUserDataCommand(), cardId, initialMessage, callback)
     }
 
     /**
@@ -250,7 +250,7 @@ class TangemSdk(
      */
     fun createWallet(cardId: String, initialMessage: Message? = null,
                      callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
-        startSession(CreateWalletTask(), cardId, initialMessage, callback)
+        startSessionWithRunnable(CreateWalletTask(), cardId, initialMessage, callback)
     }
 
     /**
@@ -269,7 +269,7 @@ class TangemSdk(
      */
     fun purgeWallet(cardId: String, initialMessage: Message? = null,
                     callback: (result: CompletionResult<PurgeWalletResponse>) -> Unit) {
-        startSession(PurgeWalletCommand(), cardId, initialMessage, callback)
+        startSessionWithRunnable(PurgeWalletCommand(), cardId, initialMessage, callback)
     }
 
     /**
@@ -287,7 +287,7 @@ class TangemSdk(
      * */
     fun depersonalize(cardId: String, initialMessage: Message? = null,
                       callback: (result: CompletionResult<DepersonalizeResponse>) -> Unit) {
-        startSession(DepersonalizeCommand(), cardId, initialMessage, callback)
+        startSessionWithRunnable(DepersonalizeCommand(), cardId, initialMessage, callback)
     }
 
     /**
@@ -313,7 +313,7 @@ class TangemSdk(
                     initialMessage: Message? = null,
                     callback: (result: CompletionResult<Card>) -> Unit) {
         val command = PersonalizeCommand(config, issuer, manufacturer, acquirer)
-        startSession(command, null, initialMessage, callback)
+        startSessionWithRunnable(command, null, initialMessage, callback)
     }
 
     /**
@@ -330,7 +330,7 @@ class TangemSdk(
      * If null, default message will be used.
      *  @callback: Standard [TangemSdk] callback.
      */
-    fun <T : CommandResponse> startSession(
+    fun <T : CommandResponse> startSessionWithRunnable(
             runnable: CardSessionRunnable<T>, cardId: String? = null, initialMessage: Message? = null,
             callback: (result: CompletionResult<T>) -> Unit) {
         val cardSession = CardSession(buildEnvironment(), reader, viewDelegate, cardId, initialMessage)
@@ -349,8 +349,7 @@ class TangemSdk(
      * @callback: At first, you should check that the [SessionError] is not null,
      * then you can use the [CardSession] to interact with a card.
      */
-    fun <T : CommandResponse> startSession(
-            cardId: String? = null, initialMessage: Message? = null,
+    fun startSession(cardId: String? = null, initialMessage: Message? = null,
             callback: (session: CardSession, error: SessionError?) -> Unit) {
         val cardSession = CardSession(buildEnvironment(), reader, viewDelegate, cardId, initialMessage)
         Thread().run { cardSession.start(callback) }
@@ -367,7 +366,8 @@ class TangemSdk(
     private fun buildEnvironment(): SessionEnvironment {
         val terminalKeys = if (config.linkedTerminal) terminalKeysService?.getKeys() else null
         return SessionEnvironment(
-                terminalKeys = terminalKeys
+                terminalKeys = terminalKeys,
+                cardFilter = config.cardFilter
         )
     }
 
