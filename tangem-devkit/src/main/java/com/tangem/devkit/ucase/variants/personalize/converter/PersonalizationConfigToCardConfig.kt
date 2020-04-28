@@ -101,7 +101,7 @@ class PersonalizationConfigToCardConfig : Converter<PersonalizationConfig, CardC
                 from.useCVC,
                 from.useNDEF,
                 from.useDynamicNDEF,
-                from.oneApdu,
+                from.useOneCommandAtTime,
                 from.useBlock,
                 from.allowSelectBlockchain,
                 from.forbidPurgeWallet,
