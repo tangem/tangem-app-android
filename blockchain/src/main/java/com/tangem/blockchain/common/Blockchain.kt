@@ -2,6 +2,7 @@ package com.tangem.blockchain.common
 
 import com.tangem.blockchain.blockchains.binance.BinanceAddressService
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinAddressService
+import com.tangem.blockchain.blockchains.bitcoincash.BitcoinCashAddressService
 import com.tangem.blockchain.blockchains.cardano.CardanoAddressService
 import com.tangem.blockchain.blockchains.ethereum.EthereumAddressService
 import com.tangem.blockchain.blockchains.stellar.StellarAddressService
@@ -17,6 +18,7 @@ enum class Blockchain(
     Unknown("", "", ""),
     Bitcoin("BTC", "BTC", "Bitcoin"),
     BitcoinTestnet("BTC/test", "BTCt", "Bitcoin Testnet"),
+    BitcoinCash("BCH", "BCH", "Bitcoin Cash"),
     Ethereum("ETH", "ETH", "Ethereum"),
     Rootstock("", "", ""),
     Cardano("CARDANO", "ADA", "Cardano"),
@@ -32,7 +34,7 @@ enum class Blockchain(
     }
 
     fun decimals(): Int = when (this) {
-        Bitcoin, BitcoinTestnet, Binance, BinanceTestnet -> 8
+        Bitcoin, BitcoinTestnet, BitcoinCash, Binance, BinanceTestnet -> 8
         Cardano, XRP -> 6
         Ethereum, Rootstock -> 18
         Stellar -> 7
@@ -51,6 +53,7 @@ enum class Blockchain(
         Unknown -> throw Exception("unsupported blockchain")
         Bitcoin -> BitcoinAddressService()
         BitcoinTestnet -> BitcoinAddressService(true)
+        BitcoinCash -> BitcoinCashAddressService()
         Ethereum -> EthereumAddressService()
         Rootstock -> throw Exception("unsupported blockchain")
         Cardano -> CardanoAddressService()
@@ -70,6 +73,8 @@ enum class Blockchain(
     fun getExploreUrl(address: String, token: Token? = null): String = when (this) {
         Binance -> "https://explorer.binance.org/address/$address"
         Bitcoin -> "https://blockchain.info/address/$address"
+        BitcoinTestnet -> "https://live.blockcypher.com/btc-testnet/address/$address"
+        BitcoinCash -> "https://blockchair.com/bitcoin-cash/address/$address"
         Cardano -> "https://cardanoexplorer.com/address/$address"
         Ethereum -> if (token == null) {
             "https://etherscan.io/address/"
