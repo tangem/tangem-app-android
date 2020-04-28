@@ -1,6 +1,6 @@
 package com.tangem.blockchain.blockchains.bitcoin.network
 
-import com.tangem.blockchain.blockchains.bitcoin.UnspentTransaction
+import com.tangem.blockchain.blockchains.bitcoin.BitcoinUnspentOutput
 import com.tangem.blockchain.blockchains.bitcoin.network.api.BlockchainInfoApi
 import com.tangem.blockchain.blockchains.bitcoin.network.api.EstimatefeeApi
 import com.tangem.blockchain.common.Blockchain
@@ -29,7 +29,7 @@ class BlockchainInfoProvider(
                 val unconfirmedTransactions = addressData.transactions?.find { it.blockHeight == 0L } != null
 
                 val bitcoinUnspents = unspents.unspentOutputs.map {
-                    UnspentTransaction(
+                    BitcoinUnspentOutput(
                             it.amount!!.toBigDecimal().movePointLeft(decimals),
                             it.outputIndex!!.toLong(),
                             it.hash!!.hexToBytes(),
