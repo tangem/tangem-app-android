@@ -10,20 +10,20 @@ import org.bitcoinj.script.ScriptBuilder
 import java.math.BigDecimal
 import java.math.BigInteger
 
-class BitcoinTransactionBuilder(
+open class BitcoinTransactionBuilder(
         private val walletPublicKey: ByteArray, private val testNet: Boolean = false
 ) {
 
     private lateinit var transaction: Transaction
-    private var networkParameters: NetworkParameters? = null
-    var unspentOutputs: List<UnspentTransaction>? = null
+    protected var networkParameters: NetworkParameters? = null
+    var unspentOutputs: List<BitcoinUnspentOutput>? = null
 
-    fun buildToSign(
+    open fun buildToSign(
             transactionData: TransactionData): Result<List<ByteArray>> {
 
         if (unspentOutputs == null) return Result.Failure(Exception("Currently there's an unconfirmed transaction"))
 
-        val change: BigDecimal = calculateChange(transactionData)
+        val change: BigDecimal = calculateChange(transactionData, unspentOutputs!!)
 
         networkParameters = if (testNet) {
             NetworkParameters.fromID(NetworkParameters.ID_TESTNET)
@@ -40,25 +40,11 @@ class BitcoinTransactionBuilder(
         return Result.Success(hashesForSign)
     }
 
-    private fun calculateChange(transactionData: TransactionData): BigDecimal {
-        val fullAmount = unspentOutputs!!.map { it.amount }.reduce { acc, number -> acc + number }
-        return fullAmount - (transactionData.amount.value!! + (transactionData.fee?.value
-                ?: 0.toBigDecimal()))
-    }
-
-    fun buildToSend(signedTransaction: ByteArray): ByteArray {
+    open fun buildToSend(signedTransaction: ByteArray): ByteArray {
         for (index in transaction.inputs.indices) {
             transaction.inputs[index].scriptSig = createScript(index, signedTransaction, walletPublicKey)
         }
         return transaction.bitcoinSerialize()
-    }
-
-    private fun createScript(index: Int, signedTransaction: ByteArray, publicKey: ByteArray): Script {
-        val r = BigInteger(1, signedTransaction.copyOfRange(index * 64, 32 + index * 64))
-        val s = BigInteger(1, signedTransaction.copyOfRange(32 + index * 64, 64 + index * 64))
-        val canonicalS = ECKey.ECDSASignature(r, s).toCanonicalised().s
-        val signature = TransactionSignature(r, canonicalS)
-        return ScriptBuilder.createInputScript(signature, ECKey.fromPublicOnly(publicKey))
     }
 
     fun getEstimateSize(transactionData: TransactionData): Result<Int> {
@@ -72,14 +58,28 @@ class BitcoinTransactionBuilder(
             }
         }
     }
+
+    fun calculateChange(transactionData: TransactionData, unspentOutputs: List<BitcoinUnspentOutput>): BigDecimal {
+        val fullAmount = unspentOutputs!!.map { it.amount }.reduce { acc, number -> acc + number }
+        return fullAmount - (transactionData.amount.value!! + (transactionData.fee?.value
+                ?: 0.toBigDecimal()))
+    }
+
+    open fun createScript(index: Int, signedTransaction: ByteArray, publicKey: ByteArray): Script {
+        val r = BigInteger(1, signedTransaction.copyOfRange(index * 64, 32 + index * 64))
+        val s = BigInteger(1, signedTransaction.copyOfRange(32 + index * 64, 64 + index * 64))
+        val canonicalS = ECKey.ECDSASignature(r, s).toCanonicalised().s
+        val signature = TransactionSignature(r, canonicalS)
+        return ScriptBuilder.createInputScript(signature, ECKey.fromPublicOnly(publicKey))
+    }
 }
 
 internal fun TransactionData.toBitcoinJTransaction(networkParameters: NetworkParameters?,
-                                                   unspentOutputs: List<UnspentTransaction>,
+                                                   unspentOutputs: List<BitcoinUnspentOutput>,
                                                    change: BigDecimal): Transaction {
     val transaction = Transaction(networkParameters)
     for (utxo in unspentOutputs) {
-        transaction.addInput(Sha256Hash.wrap(utxo.hash), utxo.outputIndex, Script(utxo.outputScript))
+        transaction.addInput(Sha256Hash.wrap(utxo.transactionHash), utxo.outputIndex, Script(utxo.outputScript))
     }
     transaction.addOutput(
             Coin.parseCoin(this.amount.value!!.toPlainString()),
@@ -93,9 +93,9 @@ internal fun TransactionData.toBitcoinJTransaction(networkParameters: NetworkPar
     return transaction
 }
 
-class UnspentTransaction(
+class BitcoinUnspentOutput(
         val amount: BigDecimal,
         val outputIndex: Long,
-        val hash: ByteArray,
+        val transactionHash: ByteArray,
         val outputScript: ByteArray
 )
