@@ -2,7 +2,6 @@ package com.tangem.devkit.ucase.domain.paramsManager.managers
 
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.OnLifecycleEvent
-import com.google.gson.Gson
 import com.tangem.TangemSdk
 import com.tangem.devkit.commons.Store
 import com.tangem.devkit.ucase.domain.actions.PersonalizeAction
@@ -35,20 +34,20 @@ class PersonalizationItemsManager(
         if (jsonString.isEmpty()) return
 
         val jsonDto = try {
-            Gson().fromJson(jsonString, PersonalizationJson::class.java)
+            PersonalizationJson.getJsonConverter().fromJson(jsonString, PersonalizationJson::class.java)
         } catch (ex: Exception) {
             Log.e(this, "Can't convert imported string to Json object. Error: $ex")
             return
         }
 
         val config = PersonalizationJsonConverter().aToB(jsonDto)
-        setItems(converter.convert(config))
+        updateByItemList(converter.convert(config))
     }
 
     fun exportJsonConfig(): String {
         val config = converter.convert(itemList, PersonalizationConfig.default())
         val jsonDto = PersonalizationJsonConverter().bToA(config)
-        val jsonString = Gson().toJson(jsonDto)
+        val jsonString = PersonalizationJson.getJsonConverter().toJson(jsonDto)
         return jsonString
     }
 
