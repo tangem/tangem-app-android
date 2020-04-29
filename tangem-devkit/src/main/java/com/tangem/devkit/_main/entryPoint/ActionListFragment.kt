@@ -63,15 +63,15 @@ class ActionListFragment : BaseFragment() {
                 ActionType.Scan,
                 ActionType.Sign,
                 ActionType.Personalize,
-                ActionType.Depersonalize
-//                ActionType.CreateWallet,
-//                ActionType.PurgeWallet,
-//                ActionType.ReadIssuerData,
-//                ActionType.WriteIssuerData,
-//                ActionType.ReadIssuerExData,
-//                ActionType.WriteIssuerExData,
-//                ActionType.ReadUserData,
-//                ActionType.WriteUserData
+                ActionType.Depersonalize,
+                ActionType.CreateWallet,
+                ActionType.PurgeWallet,
+                ActionType.ReadIssuerData,
+                ActionType.WriteIssuerData,
+                ActionType.ReadIssuerExData,
+                ActionType.WriteIssuerExData,
+                ActionType.ReadUserData,
+                ActionType.WriteUserData
         )
     }
 }
