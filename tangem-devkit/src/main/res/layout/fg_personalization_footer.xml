@@ -13,7 +13,7 @@
         android:layout_marginStart="@dimen/def_indent"
         android:layout_marginEnd="@dimen/def_indent"
         android:orientation="vertical"
-        android:visibility="visible"
+        android:visibility="gone"
         tools:visibility="visible">
 
         <EditText
@@ -22,17 +22,23 @@
             android:layout_height="wrap_content"
             tools:text="@string/stub" />
 
-        <TextView
-            android:id="@+id/tv_json_export"
+        <Button
+            android:id="@+id/btn_import_json"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            tools:text="@string/stub" />
+            android:text="Import json" />
 
         <Button
-            android:id="@+id/btn_prepare_export"
+            android:id="@+id/btn_export_json"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Prepare json to export" />
+
+        <EditText
+            android:id="@+id/et_json_export"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="@string/stub" />
 
     </LinearLayout>
 
