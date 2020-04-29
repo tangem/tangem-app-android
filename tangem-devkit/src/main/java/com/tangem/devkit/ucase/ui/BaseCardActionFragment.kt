@@ -140,7 +140,7 @@ abstract class BaseCardActionFragment : BaseFragment(), ActionView {
         })
     }
 
-    private fun inflateParamView(where: ViewGroup): ViewGroup {
+    protected fun inflateParamView(where: ViewGroup): ViewGroup {
         val inflater = LayoutInflater.from(where.context)
         val view = inflater.inflate(R.layout.w_card_incoming_param, where, false)
         where.plusAssign(view)
