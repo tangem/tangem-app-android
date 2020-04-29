@@ -2,9 +2,7 @@ package com.tangem.devkit.ucase.variants.responses
 
 import android.view.View
 import androidx.lifecycle.ViewModel
-import com.tangem.commands.Card
-import com.tangem.commands.CommandResponse
-import com.tangem.commands.SignResponse
+import com.tangem.commands.*
 import com.tangem.commands.personalization.DepersonalizeResponse
 import com.tangem.devkit.R
 import com.tangem.devkit._arch.structure.abstraction.Item
@@ -44,6 +42,14 @@ class ResponseViewModel : ViewModel() {
             is Card -> R.string.fg_name_response_personalization
             is SignResponse -> R.string.fg_name_response_sign
             is DepersonalizeResponse -> R.string.fg_name_response_depersonalization
+            is CreateWalletResponse -> R.string.fg_name_response_create_wallet
+            is PurgeWalletResponse -> R.string.fg_name_response_purge_wallet
+            is ReadIssuerDataResponse -> R.string.fg_name_response_read_issuer_data
+            is WriteIssuerDataResponse -> R.string.fg_name_response_write_issuer_data
+            is ReadIssuerExtraDataResponse -> R.string.fg_name_response_read_issuer_extra_data
+            is ReadUserDataResponse -> R.string.fg_name_response_read_user_data
+            is WriteUserDataResponse -> R.string.fg_name_response_write_user_data
+
             else -> R.string.unknown
         }
     }
