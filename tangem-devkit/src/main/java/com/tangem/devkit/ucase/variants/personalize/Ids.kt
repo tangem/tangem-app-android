@@ -22,13 +22,13 @@ enum class BlockId : PersonalizationId {
     Pins,
 }
 
-enum class CardNumber : PersonalizationId {
+enum class CardNumberId : PersonalizationId {
     Series,
     Number,
     BatchId,
 }
 
-enum class Common : PersonalizationId {
+enum class CommonId : PersonalizationId {
     Curve,
     Blockchain,
     BlockchainCustom,
@@ -36,7 +36,7 @@ enum class Common : PersonalizationId {
     CreateWallet,
 }
 
-enum class SigningMethod : PersonalizationId {
+enum class SigningMethodId : PersonalizationId {
     SignTx,
     SignTxRaw,
     SignValidatedTx,
@@ -46,7 +46,7 @@ enum class SigningMethod : PersonalizationId {
     SignExternal,
 }
 
-enum class SignHashExProp : PersonalizationId {
+enum class SignHashExPropId : PersonalizationId {
     PinLessFloorLimit,
     CryptoExKey,
     RequireTerminalCertSig,
@@ -54,26 +54,26 @@ enum class SignHashExProp : PersonalizationId {
     CheckPin3,
 }
 
-enum class Denomination : PersonalizationId {
+enum class DenominationId : PersonalizationId {
     WriteOnPersonalize,
     Denomination,
 }
 
-enum class Token : PersonalizationId {
+enum class TokenId : PersonalizationId {
     ItsToken,
     Symbol,
     ContractAddress,
     Decimal
 }
 
-enum class ProductMask : PersonalizationId {
+enum class ProductMaskId : PersonalizationId {
     Note,
     Tag,
     IdCard,
     IdIssuerCard
 }
 
-enum class SettingsMask : PersonalizationId {
+enum class SettingsMaskId : PersonalizationId {
     IsReusable,
     NeedActivation,
     ForbidPurge,
@@ -92,12 +92,12 @@ enum class SettingsMask : PersonalizationId {
     RestrictOverwriteExtraIssuerData,
 }
 
-enum class SettingsMaskProtocolEnc : PersonalizationId {
+enum class SettingsMaskProtocolEncId : PersonalizationId {
     AllowUnencrypted,
     AllowStaticEncryption
 }
 
-enum class SettingsMaskNdef : PersonalizationId {
+enum class SettingsMaskNdefId : PersonalizationId {
     UseNdef,
     DynamicNdef,
     DisablePrecomputedNdef,
@@ -106,7 +106,7 @@ enum class SettingsMaskNdef : PersonalizationId {
     Uri,
 }
 
-enum class Pins : PersonalizationId {
+enum class PinsId : PersonalizationId {
     Pin,
     Pin2,
     Pin3,
