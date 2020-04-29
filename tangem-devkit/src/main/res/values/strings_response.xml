@@ -155,4 +155,27 @@
 
     <string name="info_response_depersonalize_is_success">Is success</string>
 
+
+    <!-- Field names - Response: Read Issuer (Extra) Data -->
+    <string name="response_issuer_data_size">Size of Issuer Data</string>
+    <string name="response_issuer_data">Issuer Data</string>
+    <string name="response_issuer_data_signature">Issuer Data Signature</string>
+    <string name="response_issuer_data_counter">Issuer Data Counter</string>
+
+    <string name="info_response_issuer_data_size">A size of issuer extra data written on a card.</string>
+    <string name="info_response_issuer_data">Data defined by the issuer.</string>
+    <string name="info_response_issuer_data_signature">Issuer data, signed by the issuer with issuer data private key.</string>
+    <string name="info_response_issuer_data_counter">An optional counter that protects issuer data against replay attack.</string>
+
+    <!-- Field names - Response: Read User Data -->
+    <string name="response_user_data">User Data</string>
+    <string name="response_user_protected_data">Protected User Data</string>
+    <string name="response_user_data_counter">User Data Counter</string>
+    <string name="response_user_data_protected_counter">Protected User Data Counter</string>
+
+    <string name="info_response_user_data">Data defined by user\'s App</string>
+    <string name="info_response_user_protected_data">Data defined by user’s App (confirmed by PIN2)</string>
+    <string name="info_response_user_data_counter">Counter initialized by user’s App and increased on every signing of new transaction</string>
+    <string name="info_response_user_data_protected_counter">Counter initialized by user’s App (confirmed by PIN2) and increased on every signing of new transaction</string>
+
 </resources>
