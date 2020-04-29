@@ -39,7 +39,6 @@ import com.tangem.devkit.ucase.variants.personalize.ui.presets.PersonalizationPr
 import com.tangem.devkit.ucase.variants.personalize.ui.presets.RvPresetNamesAdapter
 import com.tangem.devkit.ucase.variants.personalize.ui.widgets.PersonalizationItemBuilder
 import com.tangem.devkit.ucase.variants.responses.ui.ResponseFragment
-import ru.dev.gbixahue.eu4d.lib.android._android.views.afterTextChanged
 import ru.dev.gbixahue.eu4d.lib.android._android.views.inflate
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 import ru.dev.gbixahue.eu4d.lib.android.global.threading.post
@@ -131,19 +130,22 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
         }
 
         fun initImportExportJson(parent: ViewGroup) {
-            val tvJsonImport = parent.findViewById<EditText>(R.id.et_json_import)
-            tvJsonImport.afterTextChanged { personalizationItemsManager.importJsonConfig(it) }
+            val tvJsonExport = parent.findViewById<EditText>(R.id.et_json_export)
+            val btnExportJson = parent.findViewById<Button>(R.id.btn_export_json)
 
-            val tvJsonExport = parent.findViewById<TextView>(R.id.tv_json_export)
             tvJsonExport.setOnClickListener {
                 val jsonString = tvJsonExport.text
                 Log.w(this, jsonString)
                 requireContext().copyToClipboard(jsonString, "Exported Json")
             }
+            btnExportJson.setOnClickListener {
+                tvJsonExport.setText(personalizationItemsManager.exportJsonConfig())
+            }
 
-            val btnPrepareExport = parent.findViewById<Button>(R.id.btn_prepare_export)
-            btnPrepareExport.setOnClickListener {
-                tvJsonExport.text = personalizationItemsManager.exportJsonConfig()
+            val tvJsonImport = parent.findViewById<EditText>(R.id.et_json_import)
+            val btnImportJson = parent.findViewById<Button>(R.id.btn_import_json)
+            btnImportJson.setOnClickListener {
+                personalizationItemsManager.importJsonConfig(tvJsonImport.text.toString().trim())
             }
         }
 
