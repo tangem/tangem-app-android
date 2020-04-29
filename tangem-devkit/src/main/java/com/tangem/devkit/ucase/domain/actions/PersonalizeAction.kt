@@ -9,7 +9,7 @@ import com.tangem.devkit.ucase.domain.paramsManager.ActionCallback
 import com.tangem.devkit.ucase.domain.paramsManager.PayloadKey
 import com.tangem.devkit.ucase.tunnel.ActionView
 import com.tangem.devkit.ucase.tunnel.ItemError
-import com.tangem.devkit.ucase.variants.personalize.CardNumber
+import com.tangem.devkit.ucase.variants.personalize.CardNumberId
 import com.tangem.devkit.ucase.variants.personalize.converter.PersonalizationConfigConverter
 import com.tangem.devkit.ucase.variants.personalize.converter.PersonalizationConfigToCardConfig
 import com.tangem.devkit.ucase.variants.personalize.dto.DefaultPersonalizationParams
@@ -46,7 +46,7 @@ class PersonalizeAction : BaseAction() {
     }
 
     private fun checkSeries(itemList: List<Item>): Boolean {
-        val seriesItem = itemList.findItem(CardNumber.Series) as? EditTextItem ?: return false
+        val seriesItem = itemList.findItem(CardNumberId.Series) as? EditTextItem ?: return false
         val data = seriesItem.getData() as? String ?: return false
 
         seriesItem.setData(data.toUpperCase())
@@ -54,8 +54,8 @@ class PersonalizeAction : BaseAction() {
     }
 
     private fun checkNumber(itemList: List<Item>): Boolean {
-        val seriesItem = itemList.findItem(CardNumber.Series) as? EditTextItem ?: return false
-        val numberItem = itemList.findItem(CardNumber.Number) as? NumberItem ?: return false
+        val seriesItem = itemList.findItem(CardNumberId.Series) as? EditTextItem ?: return false
+        val numberItem = itemList.findItem(CardNumberId.Number) as? NumberItem ?: return false
         val seriesData = seriesItem.getData() as? String ?: return false
         val numberData = stringOf(numberItem.getData() as? Number)
 
