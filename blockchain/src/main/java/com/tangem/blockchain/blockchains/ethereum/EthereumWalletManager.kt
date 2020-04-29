@@ -31,6 +31,7 @@ class EthereumWalletManager(
     private var txCount = -1L
 
     override suspend fun update() {
+
         val result = networkManager.getInfo(wallet.address, wallet.amounts[AmountType.Token]?.address)
         when (result) {
             is Result.Failure -> updateError(result.error)
@@ -73,63 +74,9 @@ class EthereumWalletManager(
             is Result.Success -> {
                 val feeValues: List<BigDecimal> = result.data
                 return Result.Success(
-                        feeValues.map { feeValue -> Amount(amount, feeValue) })
+                        feeValues.map { feeValue -> Amount(wallet.amounts[AmountType.Coin]!!, feeValue) })
             }
             is Result.Failure -> return result
         }
-    }
-}
-
-class EthereumTransactionBuilder(private val walletPublicKey: ByteArray, private val chain: Chain) {
-
-    fun buildToSign(transactionData: TransactionData, nonce: BigInteger?): TransactionToSign? {
-
-        val amount: BigDecimal = transactionData.amount.value ?: return null
-        val transactionFee: BigDecimal = transactionData.fee?.value ?: return null
-
-        val value = amount.movePointRight(transactionData.amount.decimals.toInt()).toBigInteger()
-        val fee = transactionFee.movePointRight(transactionData.fee.decimals.toInt()).toBigInteger()
-
-        val transaction = createTransactionWithDefaults(
-                from = Address(transactionData.sourceAddress),
-                to = Address(transactionData.destinationAddress),
-                value = value,
-                gasPrice = fee.divide(DEFAULT_GAS_LIMIT),
-                gasLimit = DEFAULT_GAS_LIMIT,
-                nonce = nonce,
-                chain = ChainId(chain.id.toLong())
-        )
-        val hash = transaction.encodeRLP(SignatureData(v = chain.id.toBigInteger())).keccak()
-        return TransactionToSign(transaction, listOf(hash))
-    }
-
-    fun buildToSend(signature: ByteArray, transactionToSign: TransactionToSign): ByteArray {
-        val r = BigInteger(1, signature.copyOfRange(0, 32))
-        val s = BigInteger(1, signature.copyOfRange(32, 64))
-
-        val ecdsaSignature = ECDSASignature(r, s).canonicalise()
-
-        val recId = ecdsaSignature.determineRecId(transactionToSign.hashes[0], PublicKey(walletPublicKey.sliceArray(1..64)))
-        val v = (recId + 27 + 8 + (chain.id * 2)).toBigInteger()
-        val signatureData = SignatureData(ecdsaSignature.r, ecdsaSignature.s, v)
-
-        return transactionToSign.transaction.encodeRLP(signatureData)
-    }
-}
-
-class TransactionToSign(val transaction: Transaction, val hashes: List<ByteArray>)
-
-enum class GasLimit(val value: Long) {
-    Default(21000),
-    Token(60000),
-    High(300000)
-}
-
-private fun getGasLimit(amount: Amount): GasLimit {
-    return when (amount.currencySymbol) {
-        Blockchain.Ethereum.currency -> GasLimit.Default
-        "DGX" -> GasLimit.High
-        "CGT" -> GasLimit.High
-        else -> GasLimit.Token
     }
 }
