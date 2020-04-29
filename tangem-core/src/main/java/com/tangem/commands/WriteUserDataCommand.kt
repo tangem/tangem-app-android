@@ -17,7 +17,7 @@ class WriteUserDataResponse(
 ) : CommandResponse
 
 /**
- * This command write some of User_Data, User_ProtectedData, User_Counter and User_ProtectedCounter fields.
+ * This command writes to the card any of User_Data, User_ProtectedData, User_Counter and User_ProtectedCounter fields.
  * User_Data and User_ProtectedData are never changed or parsed by the executable code the Tangem COS.
  * The App defines purpose of use, format and it's payload. For example, this field may contain cashed information
  * from blockchain to accelerate preparing new transaction.
