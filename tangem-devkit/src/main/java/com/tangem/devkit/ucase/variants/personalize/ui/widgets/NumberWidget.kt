@@ -8,7 +8,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.tangem.devkit.R
 import com.tangem.devkit._arch.structure.impl.NumberItem
-import com.tangem.devkit.ucase.variants.personalize.CardNumber
+import com.tangem.devkit.ucase.variants.personalize.CardNumberId
 import ru.dev.gbixahue.eu4d.lib.android._android.views.addInputFilter
 import ru.dev.gbixahue.eu4d.lib.android._android.views.moveCursorToEnd
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
@@ -39,7 +39,7 @@ class NumberWidget(
         tilItem.hint = getName()
 
         //TODO: remove from Widget
-        if (item.id == CardNumber.Number) etItem.addInputFilter(InputFilter.LengthFilter(13))
+        if (item.id == CardNumberId.Number) etItem.addInputFilter(InputFilter.LengthFilter(13))
 
         etItem.setText(stringOf(typedItem.getTypedData()))
         etItem.addTextChangedListener(watcher)
