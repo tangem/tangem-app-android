@@ -6,41 +6,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <LinearLayout
-        android:id="@+id/exim_json_container"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/def_indent"
-        android:layout_marginEnd="@dimen/def_indent"
-        android:orientation="vertical"
-        android:visibility="gone"
-        tools:visibility="visible">
-
-        <EditText
-            android:id="@+id/et_json_import"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            tools:text="@string/stub" />
-
-        <Button
-            android:id="@+id/btn_import_json"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Import json" />
-
-        <Button
-            android:id="@+id/btn_export_json"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Prepare json to export" />
-
-        <EditText
-            android:id="@+id/et_json_export"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            tools:text="@string/stub" />
-
-    </LinearLayout>
+    <include layout="@layout/v_export_import_json"/>
 
     <Button
         android:id="@+id/btn_show_hide_fields"
