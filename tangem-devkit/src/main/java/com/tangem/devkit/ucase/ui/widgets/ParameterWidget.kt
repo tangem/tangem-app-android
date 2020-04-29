@@ -56,6 +56,7 @@ class ParameterWidget(
         btnAction.setText(getResNameId(ActionType.Scan))
         toggleActionBtnVisibility()
         initDescriptionWidget()
+        parent.tag = Id.getTag(typedItem.id)
     }
 
     fun changeParamValue(data: Any?, silent: Boolean = true) {
