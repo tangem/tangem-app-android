@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.ColorRes
 import com.tangem.devkit.R
+import com.tangem.devkit._arch.structure.Id
 import com.tangem.devkit._arch.structure.StringId
 import com.tangem.devkit._arch.structure.StringResId
 import com.tangem.devkit._arch.structure.abstraction.Item
@@ -37,6 +38,7 @@ abstract class BaseViewWidget(
     init {
         subscribeToViewStateChanges(item.viewModel.viewState)
         initViewState(item.viewModel.viewState)
+        view.tag = Id.getTag(item.id)
     }
 
     protected open fun subscribeToViewStateChanges(viewState: ViewState) {
