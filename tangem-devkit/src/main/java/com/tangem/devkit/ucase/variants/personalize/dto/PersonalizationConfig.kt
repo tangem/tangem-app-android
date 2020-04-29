@@ -79,10 +79,6 @@ class PersonalizationConfig {
     var CVC = ""
     var pauseBeforePIN2: Long = 0
 
-//    Fields from JSON
-//    var releaseVersion = true - don't use in personalization
-//    var count = 1050          - don't use in personalization
-//    var numberFormat = ""     - don't use in personalization
     var count: Long = 0
     var issuerName = ""
     var issuerData = null
@@ -198,7 +194,7 @@ class CardData {
     var blockchain = ""
     var token_symbol = ""
     var token_contract_address = ""
-    var token_decimal: Int = 0
+    var token_decimal: Long = 0
     var product_note = false
     var product_tag = false
     var product_id_card = false

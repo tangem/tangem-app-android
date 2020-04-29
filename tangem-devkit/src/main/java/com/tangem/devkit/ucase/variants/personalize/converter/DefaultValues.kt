@@ -5,6 +5,7 @@ import com.tangem.devkit._arch.structure.Id
 import com.tangem.devkit._arch.structure.abstraction.KeyValue
 import com.tangem.devkit.ucase.variants.personalize.*
 import com.tangem.devkit.ucase.variants.personalize.dto.PersonalizationConfig
+import com.tangem.devkit.ucase.variants.personalize.dto.PersonalizationJson
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.BaseTypedHolder
 
 /**
@@ -92,7 +93,7 @@ internal class Helper {
 
         fun listOfBlockchain(): List<KeyValue> {
             return mutableListOf(
-                    KeyValue("--- CUSTOM ---", ""),
+                    KeyValue(PersonalizationJson.CUSTOM, PersonalizationJson.CUSTOM),
                     KeyValue("BTC", "BTC"),
                     KeyValue("BTC/test", "BTC/test"),
                     KeyValue("ETH", "ETH"),
@@ -113,7 +114,7 @@ internal class Helper {
 
         fun aarList(): List<KeyValue> {
             return mutableListOf(
-                    KeyValue("--- CUSTOM ---", ""),
+                    KeyValue(PersonalizationJson.CUSTOM, PersonalizationJson.CUSTOM),
                     KeyValue("Release APP", "com.tangem.wallet"),
                     KeyValue("Debug APP", "com.tangem.wallet.debug"),
                     KeyValue("None", "")
