@@ -44,7 +44,7 @@ class ReadIssuerExtraDataResponse(
         val issuerDataSignature: ByteArray?,
 
         /**
-         * An optional counter that protect issuer data against replay attack.
+         * An optional counter that protects issuer data against replay attack.
          * When flag [Settings.ProtectIssuerDataAgainstReplay] set in [SettingsMask]
          * then this value is mandatory and must increase on each execution of [WriteIssuerDataCommand].
          */
