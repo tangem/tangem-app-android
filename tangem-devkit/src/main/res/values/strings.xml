@@ -14,10 +14,17 @@
     <string name="error_nothing_to_load">Nothing to load</string>
 
     <string name="fg_name_entry_point">@string/app_name</string>
-    <string name="fg_name_response_scan">Read response</string>
-    <string name="fg_name_response_sign">Sign response</string>
-    <string name="fg_name_response_personalization">Personalization response</string>
-    <string name="fg_name_response_depersonalization">Depersonalization response</string>
+    <string name="fg_name_response_scan">Read Response</string>
+    <string name="fg_name_response_sign">Sign Response</string>
+    <string name="fg_name_response_personalization">Personalization Response</string>
+    <string name="fg_name_response_depersonalization">Depersonalization Response</string>
+    <string name="fg_name_response_create_wallet">Create Wallet Response</string>
+    <string name="fg_name_response_purge_wallet">Purge Wallet Response</string>
+    <string name="fg_name_response_read_issuer_data">Read Issuer Data Response</string>
+    <string name="fg_name_response_write_issuer_data">Write Issuer Data Response</string>
+    <string name="fg_name_response_read_issuer_extra_data">Read Issuer Extra Data Response</string>
+    <string name="fg_name_response_read_user_data">Read User Data Response</string>
+    <string name="fg_name_response_write_user_data">Write User Data Response</string>
 
 
     <string name="switch_description">Docs</string>
