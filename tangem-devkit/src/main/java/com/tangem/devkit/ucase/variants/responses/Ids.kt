@@ -54,3 +54,37 @@ enum class SignId : ResponseId {
 enum class DepersonalizeId: ResponseId {
     isSuccess
 }
+
+enum class CreateWalletId : ResponseId {
+    cid,
+    cardStatus,
+    walletPublicKey,
+}
+
+enum class PurgeWalletId : ResponseId {
+    cid,
+    cardStatus
+}
+
+enum class ReadIssuerDataId : ResponseId {
+    cid,
+    issuerData,
+    issuerDataSignature,
+    issuerDataCounter
+}
+
+enum class ReadIssuerExtraDataId : ResponseId {
+    cid,
+    size,
+    issuerData,
+    issuerDataSignature,
+    issuerDataCounter
+}
+
+enum class ReadUserDataId : ResponseId {
+    cid,
+    userData,
+    userProtectedData,
+    userCounter,
+    userProtectedCounter
+}
