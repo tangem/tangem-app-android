@@ -85,51 +85,51 @@
 
     <fragment
         android:id="@+id/nav_issuer_read_data"
-        android:name="com.tangem.devkit.ucase.ui.IssuerReadDataActionFragment"
+        android:name="com.tangem.devkit.ucase.variants.issuerdata.ui.ReadIssuerDataFragment"
         android:label="@string/action_issuer_read_data"
-        tools:layout="@layout/fg_action_issuer_read_data" />
+        tools:layout="@layout/fg_base_action_layout" />
 
     <fragment
         android:id="@+id/nav_issuer_write_data"
-        android:name="com.tangem.devkit.ucase.ui.IssuerWriteDataActionFragment"
+        android:name="com.tangem.devkit.ucase.variants.issuerdata.ui.WriteIssuerDataFragment"
         android:label="@string/action_issuer_write_data"
-        tools:layout="@layout/fg_action_issuer_write_data" />
+        tools:layout="@layout/fg_base_action_layout" />
 
     <fragment
         android:id="@+id/nav_issuer_read_ex_data"
-        android:name="com.tangem.devkit.ucase.ui.IssuerReadExDataActionFragment"
+        android:name="com.tangem.devkit.ucase.variants.issuerdata.ui.ReadIssuerExtraDataFragment"
         android:label="@string/action_issuer_read_ex_data"
-        tools:layout="@layout/fg_action_issuer_read_ex_data" />
+        tools:layout="@layout/fg_base_action_layout" />
 
     <fragment
         android:id="@+id/nav_issuer_write_ex_data"
-        android:name="com.tangem.devkit.ucase.ui.IssuerWriteExDataActionFragment"
+        android:name="com.tangem.devkit.ucase.variants.issuerdata.ui.WriteIssuerExtraDataFragment"
         android:label="@string/action_issuer_write_ex_data"
-        tools:layout="@layout/fg_action_issuer_write_ex_data" />
+        tools:layout="@layout/fg_base_action_layout" />
 
     <fragment
         android:id="@+id/nav_user_read_data"
-        android:name="com.tangem.devkit.ucase.ui.UserReadDataActionFragment"
+        android:name="com.tangem.devkit.ucase.variants.userdata.ui.ReadUserDataFragment"
         android:label="@string/action_user_read_data"
-        tools:layout="@layout/fg_action_user_read_data" />
+        tools:layout="@layout/fg_base_action_layout" />
 
     <fragment
         android:id="@+id/nav_user_write_data"
-        android:name="com.tangem.devkit.ucase.ui.UserWriteDataActionFragment"
+        android:name="com.tangem.devkit.ucase.variants.userdata.ui.WriteUserDataFragment"
         android:label="@string/action_user_write_data"
-        tools:layout="@layout/fg_action_user_write_data" />
+        tools:layout="@layout/fg_base_action_layout" />
 
     <fragment
         android:id="@+id/nav_wallet_create"
-        android:name="com.tangem.devkit.ucase.ui.WalletCreateActionFragment"
+        android:name="com.tangem.devkit.ucase.variants.createwallet.ui.CreateWalletActionFragment"
         android:label="@string/action_wallet_create"
-        tools:layout="@layout/fg_action_wallet_create" />
+        tools:layout="@layout/fg_base_action_layout" />
 
     <fragment
         android:id="@+id/nav_wallet_purge"
-        android:name="com.tangem.devkit.ucase.ui.WalletPurgeActionFragment"
+        android:name="com.tangem.devkit.ucase.variants.purgewallet.ui.PurgeWalletActionFragment"
         android:label="@string/action_wallet_purge"
-        tools:layout="@layout/fg_action_wallet_purge" />
+        tools:layout="@layout/fg_base_action_layout" />
 
     <fragment
         android:id="@+id/nav_card_response"
