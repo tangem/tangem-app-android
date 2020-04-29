@@ -1,6 +1,6 @@
 package com.tangem.blockchain.blockchains.bitcoin.network
 
-import com.tangem.blockchain.blockchains.bitcoin.UnspentTransaction
+import com.tangem.blockchain.blockchains.bitcoin.BitcoinUnspentOutput
 import com.tangem.blockchain.blockchains.bitcoin.network.api.BlockchainInfoApi
 import com.tangem.blockchain.blockchains.bitcoin.network.api.BlockcypherApi
 import com.tangem.blockchain.blockchains.bitcoin.network.api.EstimatefeeApi
@@ -90,7 +90,7 @@ class BitcoinNetworkManager(private val isTestNet: Boolean = false) : BitcoinPro
 data class BitcoinAddressResponse(
         val balance: BigDecimal,
         val hasUnconfirmed: Boolean,
-        val unspentTransactions: List<UnspentTransaction>?
+        val unspentOutputs: List<BitcoinUnspentOutput>?
 )
 
 data class BitcoinFee(
