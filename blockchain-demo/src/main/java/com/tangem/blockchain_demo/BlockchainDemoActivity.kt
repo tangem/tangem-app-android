@@ -156,7 +156,7 @@ class BlockchainDemoActivity : AppCompatActivity() {
     private fun formTransactionData(): TransactionData {
         val amount = if (walletManager.wallet.amounts[AmountType.Token] != null) {
             walletManager.wallet.amounts[AmountType.Token]!!.copy(
-                    value = binding.etSumToSend.text.toString().toBigDecimal() - fee
+                    value = binding.etSumToSend.text.toString().toBigDecimal()
             )
         } else {
             walletManager.wallet.amounts[AmountType.Coin]!!.copy(
