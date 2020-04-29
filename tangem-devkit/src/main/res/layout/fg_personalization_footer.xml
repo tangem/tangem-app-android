@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/personalization_footer_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/exim_json_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/def_indent"
+        android:layout_marginEnd="@dimen/def_indent"
+        android:orientation="vertical"
+        android:visibility="visible"
+        tools:visibility="visible">
+
+        <EditText
+            android:id="@+id/et_json_import"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="@string/stub" />
+
+        <TextView
+            android:id="@+id/tv_json_export"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="@string/stub" />
+
+        <Button
+            android:id="@+id/btn_prepare_export"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Prepare json to export" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_show_hide_fields"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/def_indent"
+        tools:text="Show/Hide fields" />
+
+</LinearLayout>
