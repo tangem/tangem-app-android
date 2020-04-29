@@ -3,10 +3,7 @@ package com.tangem.devkit.ucase.resources.initializers
 import com.tangem.devkit.R
 import com.tangem.devkit.ucase.resources.MainResourceHolder
 import com.tangem.devkit.ucase.resources.Resources
-import com.tangem.devkit.ucase.variants.responses.CardDataId
-import com.tangem.devkit.ucase.variants.responses.CardId
-import com.tangem.devkit.ucase.variants.responses.DepersonalizeId
-import com.tangem.devkit.ucase.variants.responses.SignId
+import com.tangem.devkit.ucase.variants.responses.*
 
 /**
 [REDACTED_AUTHOR]
@@ -17,6 +14,13 @@ class ResponseResources {
         initCardData(holder)
         initSignResponse(holder)
         initDepersonalizeResponse(holder)
+        initCreateWalletResponse(holder)
+        initPurgeWalletResponse(holder)
+        initReadIssuerDataResponse(holder)
+        initWriteIssuerDataResponse(holder)
+        initReadIssuerExtraDataResponse(holder)
+        initReadUserDataResponse(holder)
+        initWriteUserDataResponse(holder)
     }
 
     private fun initCard(holder: MainResourceHolder) {
@@ -64,5 +68,47 @@ class ResponseResources {
 
     private fun initDepersonalizeResponse(holder: MainResourceHolder) {
         holder.register(DepersonalizeId.isSuccess, Resources(R.string.response_depersonalize_is_success, R.string.info_response_depersonalize_is_success))
+    }
+
+    private fun initCreateWalletResponse(holder: MainResourceHolder) {
+        holder.register(CreateWalletId.cid, Resources(R.string.response_card_cid, R.string.info_response_card_cid))
+        holder.register(CreateWalletId.cardStatus, Resources(R.string.response_card_status, R.string.info_response_card_status))
+        holder.register(CreateWalletId.walletPublicKey, Resources(R.string.response_card_wallet_public_key, R.string.info_response_card_wallet_public_key))
+    }
+
+    private fun initPurgeWalletResponse(holder: MainResourceHolder) {
+        holder.register(PurgeWalletId.cid, Resources(R.string.response_card_cid, R.string.info_response_card_cid))
+        holder.register(PurgeWalletId.cardStatus, Resources(R.string.response_card_status, R.string.info_response_card_status))
+    }
+
+    private fun initReadIssuerDataResponse(holder: MainResourceHolder) {
+        holder.register(ReadIssuerDataId.cid, Resources(R.string.response_card_cid, R.string.info_response_card_cid))
+        holder.register(ReadIssuerDataId.issuerData, Resources(R.string.response_issuer_data, R.string.info_response_issuer_data))
+        holder.register(ReadIssuerDataId.issuerDataSignature, Resources(R.string.response_issuer_data_signature, R.string.info_response_issuer_data_signature))
+        holder.register(ReadIssuerDataId.issuerDataCounter, Resources(R.string.response_issuer_data_counter, R.string.info_response_issuer_data_counter))
+    }
+
+    private fun initWriteIssuerDataResponse(holder: MainResourceHolder) {
+        holder.register(ReadIssuerDataId.cid, Resources(R.string.response_card_cid, R.string.info_response_card_cid))
+    }
+
+    private fun initReadIssuerExtraDataResponse(holder: MainResourceHolder) {
+        holder.register(ReadIssuerExtraDataId.cid, Resources(R.string.response_card_cid, R.string.info_response_card_cid))
+        holder.register(ReadIssuerExtraDataId.size, Resources(R.string.response_issuer_data_size, R.string.info_response_issuer_data_size))
+        holder.register(ReadIssuerExtraDataId.issuerData, Resources(R.string.response_issuer_data, R.string.info_response_issuer_data))
+        holder.register(ReadIssuerExtraDataId.issuerDataSignature, Resources(R.string.response_issuer_data_signature, R.string.info_response_issuer_data_signature))
+        holder.register(ReadIssuerExtraDataId.issuerDataCounter, Resources(R.string.response_issuer_data_counter, R.string.info_response_issuer_data_counter))
+    }
+
+    private fun initReadUserDataResponse(holder: MainResourceHolder) {
+        holder.register(ReadUserDataId.cid, Resources(R.string.response_card_cid, R.string.info_response_card_cid))
+        holder.register(ReadUserDataId.userData, Resources(R.string.response_user_data, R.string.info_response_user_data))
+        holder.register(ReadUserDataId.userProtectedData, Resources(R.string.response_user_protected_data, R.string.info_response_user_protected_data))
+        holder.register(ReadUserDataId.userCounter, Resources(R.string.response_user_data_counter, R.string.info_response_user_data_counter))
+        holder.register(ReadUserDataId.userProtectedCounter, Resources(R.string.response_user_data_protected_counter, R.string.info_response_user_data_protected_counter))
+    }
+
+    private fun initWriteUserDataResponse(holder: MainResourceHolder) {
+        holder.register(ReadIssuerDataId.cid, Resources(R.string.response_card_cid, R.string.info_response_card_cid))
     }
 }
