@@ -50,65 +50,65 @@ class ItemsToPersonalizationConfig : ItemsToModel<PersonalizationConfig> {
 
     private fun createModel(): PersonalizationConfig {
         val export = PersonalizationConfig()
-        export.series = getTyped(CardNumber.Series)
-        export.startNumber = getTyped(CardNumber.Number)
-        export.batchId = getTyped(CardNumber.BatchId)
-        export.curveID = getTyped(Common.Curve)
-        export.blockchain = getTyped(Common.Blockchain)
-        export.blockchainCustom = getTyped(Common.BlockchainCustom)
-        export.MaxSignatures = getTyped(Common.MaxSignatures)
-        export.createWallet = getTyped(Common.CreateWallet)
-        export.SigningMethod0 = getTyped(SigningMethod.SignTx)
-        export.SigningMethod1 = getTyped(SigningMethod.SignTxRaw)
-        export.SigningMethod2 = getTyped(SigningMethod.SignValidatedTx)
-        export.SigningMethod3 = getTyped(SigningMethod.SignValidatedTxRaw)
-        export.SigningMethod4 = getTyped(SigningMethod.SignValidatedTxIssuer)
-        export.SigningMethod5 = getTyped(SigningMethod.SignValidatedTxRawIssuer)
-        export.SigningMethod6 = getTyped(SigningMethod.SignExternal)
-        export.pinLessFloorLimit = getTyped(SignHashExProp.PinLessFloorLimit)
-        export.hexCrExKey = getTyped(SignHashExProp.CryptoExKey)
-        export.requireTerminalCertSignature = getTyped(SignHashExProp.RequireTerminalCertSig)
-        export.requireTerminalTxSignature = getTyped(SignHashExProp.RequireTerminalTxSig)
-        export.checkPIN3onCard = getTyped(SignHashExProp.CheckPin3)
-        export.writeOnPersonalization = getTyped(Denomination.WriteOnPersonalize)
-        export.denomination = getTyped(Denomination.Denomination)
-        export.itsToken = getTyped(Token.ItsToken)
-        export.symbol = getTyped(Token.Symbol)
-        export.contractAddress = getTyped(Token.ContractAddress)
-        export.decimal = getTyped(Token.Decimal)
-        export.cardData = export.cardData.apply { this.product_note = getTyped(ProductMask.Note) }
-        export.cardData = export.cardData.apply { this.product_tag = getTyped(ProductMask.Tag) }
-        export.cardData = export.cardData.apply { this.product_id_card = getTyped(ProductMask.IdCard) }
-        export.cardData = export.cardData.apply { this.product_id_issuer = getTyped(ProductMask.IdIssuerCard) }
-        export.isReusable = getTyped(SettingsMask.IsReusable)
-        export.useActivation = getTyped(SettingsMask.NeedActivation)
-        export.forbidPurgeWallet = getTyped(SettingsMask.ForbidPurge)
-        export.allowSelectBlockchain = getTyped(SettingsMask.AllowSelectBlockchain)
-        export.useBlock = getTyped(SettingsMask.UseBlock)
-        export.oneApdu = getTyped(SettingsMask.OneApdu)
-        export.useCVC = getTyped(SettingsMask.UseCvc)
-        export.allowSwapPIN = getTyped(SettingsMask.AllowSwapPin)
-        export.allowSwapPIN2 = getTyped(SettingsMask.AllowSwapPin2)
-        export.forbidDefaultPIN = getTyped(SettingsMask.ForbidDefaultPin)
-        export.smartSecurityDelay = getTyped(SettingsMask.SmartSecurityDelay)
-        export.protectIssuerDataAgainstReplay = getTyped(SettingsMask.ProtectIssuerDataAgainstReplay)
-        export.skipSecurityDelayIfValidatedByIssuer = getTyped(SettingsMask.SkipSecurityDelayIfValidated)
-        export.skipCheckPIN2andCVCIfValidatedByIssuer = getTyped(SettingsMask.SkipPin2CvcIfValidated)
-        export.skipSecurityDelayIfValidatedByLinkedTerminal = getTyped(SettingsMask.SkipSecurityDelayOnLinkedTerminal)
-        export.restrictOverwriteIssuerDataEx = getTyped(SettingsMask.RestrictOverwriteExtraIssuerData)
-        export.protocolAllowUnencrypted = getTyped(SettingsMaskProtocolEnc.AllowUnencrypted)
-        export.protocolAllowStaticEncryption = getTyped(SettingsMaskProtocolEnc.AllowStaticEncryption)
-        export.useNDEF = getTyped(SettingsMaskNdef.UseNdef)
-        export.useDynamicNDEF = getTyped(SettingsMaskNdef.DynamicNdef)
-        export.disablePrecomputedNDEF = getTyped(SettingsMaskNdef.DisablePrecomputedNdef)
-        export.aar = getTyped(SettingsMaskNdef.Aar)
-        export.aarCustom = getTyped(SettingsMaskNdef.AarCustom)
-        export.uri = getTyped(SettingsMaskNdef.Uri)
-        export.PIN = getTyped(Pins.Pin)
-        export.PIN2 = getTyped(Pins.Pin2)
-        export.PIN3 = getTyped(Pins.Pin3)
-        export.CVC = getTyped(Pins.Cvc)
-        export.pauseBeforePIN2 = getTyped(Pins.PauseBeforePin2)
+        export.series = getTyped(CardNumberId.Series)
+        export.startNumber = getTyped(CardNumberId.Number)
+        export.batchId = getTyped(CardNumberId.BatchId)
+        export.curveID = getTyped(CommonId.Curve)
+        export.blockchain = getTyped(CommonId.Blockchain)
+        export.blockchainCustom = getTyped(CommonId.BlockchainCustom)
+        export.MaxSignatures = getTyped(CommonId.MaxSignatures)
+        export.createWallet = getTyped(CommonId.CreateWallet)
+        export.SigningMethod0 = getTyped(SigningMethodId.SignTx)
+        export.SigningMethod1 = getTyped(SigningMethodId.SignTxRaw)
+        export.SigningMethod2 = getTyped(SigningMethodId.SignValidatedTx)
+        export.SigningMethod3 = getTyped(SigningMethodId.SignValidatedTxRaw)
+        export.SigningMethod4 = getTyped(SigningMethodId.SignValidatedTxIssuer)
+        export.SigningMethod5 = getTyped(SigningMethodId.SignValidatedTxRawIssuer)
+        export.SigningMethod6 = getTyped(SigningMethodId.SignExternal)
+        export.pinLessFloorLimit = getTyped(SignHashExPropId.PinLessFloorLimit)
+        export.hexCrExKey = getTyped(SignHashExPropId.CryptoExKey)
+        export.requireTerminalCertSignature = getTyped(SignHashExPropId.RequireTerminalCertSig)
+        export.requireTerminalTxSignature = getTyped(SignHashExPropId.RequireTerminalTxSig)
+        export.checkPIN3onCard = getTyped(SignHashExPropId.CheckPin3)
+        export.writeOnPersonalization = getTyped(DenominationId.WriteOnPersonalize)
+        export.denomination = getTyped(DenominationId.Denomination)
+        export.itsToken = getTyped(TokenId.ItsToken)
+        export.symbol = getTyped(TokenId.Symbol)
+        export.contractAddress = getTyped(TokenId.ContractAddress)
+        export.decimal = getTyped(TokenId.Decimal)
+        export.cardData = export.cardData.apply { this.product_note = getTyped(ProductMaskId.Note) }
+        export.cardData = export.cardData.apply { this.product_tag = getTyped(ProductMaskId.Tag) }
+        export.cardData = export.cardData.apply { this.product_id_card = getTyped(ProductMaskId.IdCard) }
+        export.cardData = export.cardData.apply { this.product_id_issuer = getTyped(ProductMaskId.IdIssuerCard) }
+        export.isReusable = getTyped(SettingsMaskId.IsReusable)
+        export.useActivation = getTyped(SettingsMaskId.NeedActivation)
+        export.forbidPurgeWallet = getTyped(SettingsMaskId.ForbidPurge)
+        export.allowSelectBlockchain = getTyped(SettingsMaskId.AllowSelectBlockchain)
+        export.useBlock = getTyped(SettingsMaskId.UseBlock)
+        export.oneApdu = getTyped(SettingsMaskId.OneApdu)
+        export.useCVC = getTyped(SettingsMaskId.UseCvc)
+        export.allowSwapPIN = getTyped(SettingsMaskId.AllowSwapPin)
+        export.allowSwapPIN2 = getTyped(SettingsMaskId.AllowSwapPin2)
+        export.forbidDefaultPIN = getTyped(SettingsMaskId.ForbidDefaultPin)
+        export.smartSecurityDelay = getTyped(SettingsMaskId.SmartSecurityDelay)
+        export.protectIssuerDataAgainstReplay = getTyped(SettingsMaskId.ProtectIssuerDataAgainstReplay)
+        export.skipSecurityDelayIfValidatedByIssuer = getTyped(SettingsMaskId.SkipSecurityDelayIfValidated)
+        export.skipCheckPIN2andCVCIfValidatedByIssuer = getTyped(SettingsMaskId.SkipPin2CvcIfValidated)
+        export.skipSecurityDelayIfValidatedByLinkedTerminal = getTyped(SettingsMaskId.SkipSecurityDelayOnLinkedTerminal)
+        export.restrictOverwriteIssuerDataEx = getTyped(SettingsMaskId.RestrictOverwriteExtraIssuerData)
+        export.protocolAllowUnencrypted = getTyped(SettingsMaskProtocolEncId.AllowUnencrypted)
+        export.protocolAllowStaticEncryption = getTyped(SettingsMaskProtocolEncId.AllowStaticEncryption)
+        export.useNDEF = getTyped(SettingsMaskNdefId.UseNdef)
+        export.useDynamicNDEF = getTyped(SettingsMaskNdefId.DynamicNdef)
+        export.disablePrecomputedNDEF = getTyped(SettingsMaskNdefId.DisablePrecomputedNdef)
+        export.aar = getTyped(SettingsMaskNdefId.Aar)
+        export.aarCustom = getTyped(SettingsMaskNdefId.AarCustom)
+        export.uri = getTyped(SettingsMaskNdefId.Uri)
+        export.PIN = getTyped(PinsId.Pin)
+        export.PIN2 = getTyped(PinsId.Pin2)
+        export.PIN3 = getTyped(PinsId.Pin3)
+        export.CVC = getTyped(PinsId.Cvc)
+        export.pauseBeforePIN2 = getTyped(PinsId.PauseBeforePin2)
         return export
     }
 
@@ -138,14 +138,14 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
         blocList.add(cardNumber())
         blocList.add(common())
         blocList.add(signingMethod())
-        blocList.add(signHashExProperties())
-        blocList.add(denomination())
-        blocList.add(token())
-        blocList.add(productMask())
-        blocList.add(settingsMask())
-        blocList.add(settingsMaskProtocolEnc())
-        blocList.add(settingsMaskNdef())
-        blocList.add(pins())
+//        blocList.add(signHashExProperties())
+//        blocList.add(denomination())
+//        blocList.add(token())
+//        blocList.add(productMask())
+//        blocList.add(settingsMask())
+//        blocList.add(settingsMaskProtocolEnc())
+//        blocList.add(settingsMaskNdef())
+//        blocList.add(pins())
         blocList.iterate {
             if (itemTypes.hiddenList.contains(it.id)) {
                 it.viewModel.viewState.isVisibleState.value = false
@@ -157,9 +157,9 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
     private fun cardNumber(): ItemGroup {
         val block = createGroup(BlockId.CardNumber)
         mutableListOf(
-                CardNumber.Series,
-                CardNumber.Number,
-                CardNumber.BatchId
+                CardNumberId.Series,
+                CardNumberId.Number,
+                CardNumberId.BatchId
         ).forEach { createItem(block, it as Id) }
         return block
     }
@@ -167,12 +167,12 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
     private fun common(): ItemGroup {
         val block = createGroup(BlockId.Common)
         mutableListOf(
-                Common.Blockchain,
-                Common.BlockchainCustom,
-                Common.Curve,
-                Common.MaxSignatures,
-                Common.CreateWallet,
-                Pins.PauseBeforePin2
+                CommonId.Blockchain,
+                CommonId.BlockchainCustom,
+                CommonId.Curve,
+                CommonId.MaxSignatures,
+                CommonId.CreateWallet,
+                PinsId.PauseBeforePin2
         ).forEach { createItem(block, it as Id) }
         return block
     }
@@ -180,13 +180,13 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
     private fun signingMethod(): ItemGroup {
         val block = createGroup(BlockId.SigningMethod)
         mutableListOf(
-                SigningMethod.SignTx,
-                SigningMethod.SignTxRaw,
-                SigningMethod.SignValidatedTx,
-                SigningMethod.SignValidatedTxRaw,
-                SigningMethod.SignValidatedTxIssuer,
-                SigningMethod.SignValidatedTxRawIssuer,
-                SigningMethod.SignExternal
+                SigningMethodId.SignTx,
+                SigningMethodId.SignTxRaw,
+                SigningMethodId.SignValidatedTx,
+                SigningMethodId.SignValidatedTxRaw,
+                SigningMethodId.SignValidatedTxIssuer,
+                SigningMethodId.SignValidatedTxRawIssuer,
+                SigningMethodId.SignExternal
         ).forEach { createItem(block, it) }
         return block
     }
@@ -194,11 +194,11 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
     private fun signHashExProperties(): ItemGroup {
         val block = createGroup(BlockId.SignHashExProp)
         mutableListOf(
-                SignHashExProp.PinLessFloorLimit,
-                SignHashExProp.CryptoExKey,
-                SignHashExProp.RequireTerminalCertSig,
-                SignHashExProp.RequireTerminalTxSig,
-                SignHashExProp.CheckPin3
+                SignHashExPropId.PinLessFloorLimit,
+                SignHashExPropId.CryptoExKey,
+                SignHashExPropId.RequireTerminalCertSig,
+                SignHashExPropId.RequireTerminalTxSig,
+                SignHashExPropId.CheckPin3
         ).forEach { createItem(block, it) }
         return block
     }
@@ -206,8 +206,8 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
     private fun denomination(): ItemGroup {
         val block = createGroup(BlockId.Denomination)
         mutableListOf(
-                Denomination.WriteOnPersonalize,
-                Denomination.Denomination
+                DenominationId.WriteOnPersonalize,
+                DenominationId.Denomination
         ).forEach { createItem(block, it) }
         return block
     }
@@ -215,10 +215,10 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
     private fun token(): ItemGroup {
         val block = createGroup(BlockId.Token)
         mutableListOf(
-                Token.ItsToken,
-                Token.Symbol,
-                Token.ContractAddress,
-                Token.Decimal
+                TokenId.ItsToken,
+                TokenId.Symbol,
+                TokenId.ContractAddress,
+                TokenId.Decimal
         ).forEach { createItem(block, it) }
         return block
     }
@@ -226,10 +226,10 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
     private fun productMask(): ItemGroup {
         val block = createGroup(BlockId.ProdMask)
         mutableListOf(
-                ProductMask.Note,
-                ProductMask.Tag,
-                ProductMask.IdCard,
-                ProductMask.IdIssuerCard
+                ProductMaskId.Note,
+                ProductMaskId.Tag,
+                ProductMaskId.IdCard,
+                ProductMaskId.IdIssuerCard
         ).forEach { createItem(block, it) }
         return block
     }
@@ -237,22 +237,22 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
     private fun settingsMask(): ItemGroup {
         val block = createGroup(BlockId.SettingsMask)
         mutableListOf(
-                SettingsMask.IsReusable,
-                SettingsMask.NeedActivation,
-                SettingsMask.ForbidPurge,
-                SettingsMask.AllowSelectBlockchain,
-                SettingsMask.UseBlock,
-                SettingsMask.OneApdu,
-                SettingsMask.UseCvc,
-                SettingsMask.AllowSwapPin,
-                SettingsMask.AllowSwapPin2,
-                SettingsMask.ForbidDefaultPin,
-                SettingsMask.SmartSecurityDelay,
-                SettingsMask.ProtectIssuerDataAgainstReplay,
-                SettingsMask.SkipSecurityDelayIfValidated,
-                SettingsMask.SkipPin2CvcIfValidated,
-                SettingsMask.SkipSecurityDelayOnLinkedTerminal,
-                SettingsMask.RestrictOverwriteExtraIssuerData
+                SettingsMaskId.IsReusable,
+                SettingsMaskId.NeedActivation,
+                SettingsMaskId.ForbidPurge,
+                SettingsMaskId.AllowSelectBlockchain,
+                SettingsMaskId.UseBlock,
+                SettingsMaskId.OneApdu,
+                SettingsMaskId.UseCvc,
+                SettingsMaskId.AllowSwapPin,
+                SettingsMaskId.AllowSwapPin2,
+                SettingsMaskId.ForbidDefaultPin,
+                SettingsMaskId.SmartSecurityDelay,
+                SettingsMaskId.ProtectIssuerDataAgainstReplay,
+                SettingsMaskId.SkipSecurityDelayIfValidated,
+                SettingsMaskId.SkipPin2CvcIfValidated,
+                SettingsMaskId.SkipSecurityDelayOnLinkedTerminal,
+                SettingsMaskId.RestrictOverwriteExtraIssuerData
         ).forEach { createItem(block, it) }
         return block
     }
@@ -260,8 +260,8 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
     private fun settingsMaskProtocolEnc(): ItemGroup {
         val block = createGroup(BlockId.SettingsMaskProtocolEnc)
         mutableListOf(
-                SettingsMaskProtocolEnc.AllowUnencrypted,
-                SettingsMaskProtocolEnc.AllowStaticEncryption
+                SettingsMaskProtocolEncId.AllowUnencrypted,
+                SettingsMaskProtocolEncId.AllowStaticEncryption
         ).forEach { createItem(block, it) }
         return block
     }
@@ -269,12 +269,12 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
     private fun settingsMaskNdef(): ItemGroup {
         val block = createGroup(BlockId.SettingsMaskNdef)
         mutableListOf(
-                SettingsMaskNdef.UseNdef,
-                SettingsMaskNdef.DynamicNdef,
-                SettingsMaskNdef.DisablePrecomputedNdef,
-                SettingsMaskNdef.Aar,
-                SettingsMaskNdef.AarCustom,
-                SettingsMaskNdef.Uri
+                SettingsMaskNdefId.UseNdef,
+                SettingsMaskNdefId.DynamicNdef,
+                SettingsMaskNdefId.DisablePrecomputedNdef,
+                SettingsMaskNdefId.Aar,
+                SettingsMaskNdefId.AarCustom,
+                SettingsMaskNdefId.Uri
         ).forEach { createItem(block, it) }
         return block
     }
@@ -282,10 +282,10 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
     private fun pins(): ItemGroup {
         val block = createGroup(BlockId.Pins)
         mutableListOf(
-                Pins.Pin,
-                Pins.Pin2,
-                Pins.Pin3,
-                Pins.Cvc
+                PinsId.Pin,
+                PinsId.Pin2,
+                PinsId.Pin3,
+                PinsId.Cvc
         ).forEach { createItem(block, it) }
         return block
     }
