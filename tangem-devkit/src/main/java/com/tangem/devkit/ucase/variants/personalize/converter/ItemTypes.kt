@@ -11,37 +11,37 @@ class ItemTypes {
             BlockId.SettingsMaskNdef, BlockId.Pins
     )
 
-    val listItemList = mutableListOf(Common.Curve, Common.Blockchain, SettingsMaskNdef.Aar, Pins.PauseBeforePin2)
+    val listItemList = mutableListOf(CommonId.Curve, CommonId.Blockchain, SettingsMaskNdefId.Aar, PinsId.PauseBeforePin2)
 
     val boolList = mutableListOf(
-            Common.CreateWallet, SigningMethod.SignTx, SigningMethod.SignTxRaw, SigningMethod.SignValidatedTx,
-            SigningMethod.SignValidatedTxRaw, SigningMethod.SignValidatedTxIssuer,
-            SigningMethod.SignValidatedTxRawIssuer, SigningMethod.SignExternal, SignHashExProp.RequireTerminalCertSig,
-            SignHashExProp.RequireTerminalTxSig, SignHashExProp.CheckPin3, Denomination.WriteOnPersonalize, Token.ItsToken,
-            ProductMask.Note, ProductMask.Tag, ProductMask.IdCard, ProductMask.IdIssuerCard, SettingsMask.IsReusable, SettingsMask.NeedActivation,
-            SettingsMask.ForbidPurge, SettingsMask.AllowSelectBlockchain, SettingsMask.UseBlock, SettingsMask.OneApdu,
-            SettingsMask.UseCvc, SettingsMask.AllowSwapPin, SettingsMask.AllowSwapPin2, SettingsMask.ForbidDefaultPin,
-            SettingsMask.SmartSecurityDelay, SettingsMask.ProtectIssuerDataAgainstReplay,
-            SettingsMask.SkipSecurityDelayIfValidated, SettingsMask.SkipPin2CvcIfValidated,
-            SettingsMask.SkipSecurityDelayOnLinkedTerminal, SettingsMask.RestrictOverwriteExtraIssuerData,
-            SettingsMaskProtocolEnc.AllowUnencrypted, SettingsMaskProtocolEnc.AllowStaticEncryption,
-            SettingsMaskNdef.UseNdef, SettingsMaskNdef.DynamicNdef, SettingsMaskNdef.DisablePrecomputedNdef
+            CommonId.CreateWallet, SigningMethodId.SignTx, SigningMethodId.SignTxRaw, SigningMethodId.SignValidatedTx,
+            SigningMethodId.SignValidatedTxRaw, SigningMethodId.SignValidatedTxIssuer,
+            SigningMethodId.SignValidatedTxRawIssuer, SigningMethodId.SignExternal, SignHashExPropId.RequireTerminalCertSig,
+            SignHashExPropId.RequireTerminalTxSig, SignHashExPropId.CheckPin3, DenominationId.WriteOnPersonalize, TokenId.ItsToken,
+            ProductMaskId.Note, ProductMaskId.Tag, ProductMaskId.IdCard, ProductMaskId.IdIssuerCard, SettingsMaskId.IsReusable, SettingsMaskId.NeedActivation,
+            SettingsMaskId.ForbidPurge, SettingsMaskId.AllowSelectBlockchain, SettingsMaskId.UseBlock, SettingsMaskId.OneApdu,
+            SettingsMaskId.UseCvc, SettingsMaskId.AllowSwapPin, SettingsMaskId.AllowSwapPin2, SettingsMaskId.ForbidDefaultPin,
+            SettingsMaskId.SmartSecurityDelay, SettingsMaskId.ProtectIssuerDataAgainstReplay,
+            SettingsMaskId.SkipSecurityDelayIfValidated, SettingsMaskId.SkipPin2CvcIfValidated,
+            SettingsMaskId.SkipSecurityDelayOnLinkedTerminal, SettingsMaskId.RestrictOverwriteExtraIssuerData,
+            SettingsMaskProtocolEncId.AllowUnencrypted, SettingsMaskProtocolEncId.AllowStaticEncryption,
+            SettingsMaskNdefId.UseNdef, SettingsMaskNdefId.DynamicNdef, SettingsMaskNdefId.DisablePrecomputedNdef
     )
 
     val editTextList = mutableListOf(
-            CardNumber.Series, CardNumber.BatchId, Common.BlockchainCustom, SignHashExProp.CryptoExKey, Token.Symbol,
-            Token.ContractAddress, Pins.Pin, Pins.Pin2, Pins.Pin3, Pins.Cvc, SettingsMaskNdef.AarCustom, SettingsMaskNdef.Uri
+            CardNumberId.Series, CardNumberId.BatchId, CommonId.BlockchainCustom, SignHashExPropId.CryptoExKey, TokenId.Symbol,
+            TokenId.ContractAddress, PinsId.Pin, PinsId.Pin2, PinsId.Pin3, PinsId.Cvc, SettingsMaskNdefId.AarCustom, SettingsMaskNdefId.Uri
     )
 
     val numberList = mutableListOf(
-            CardNumber.Number, Common.MaxSignatures, SignHashExProp.PinLessFloorLimit, Denomination.Denomination, Token.Decimal
+            CardNumberId.Number, CommonId.MaxSignatures, SignHashExPropId.PinLessFloorLimit, DenominationId.Denomination, TokenId.Decimal
     )
 
     val hiddenList = mutableListOf<Id>(
-            CardNumber.Series, CardNumber.BatchId, Pins.Pin3, SigningMethod.SignExternal,
-            SignHashExProp.CryptoExKey, SignHashExProp.CheckPin3, SettingsMask.OneApdu,
-            SettingsMask.UseBlock, SettingsMask.ProtectIssuerDataAgainstReplay,
-            SignHashExProp.RequireTerminalCertSig, SignHashExProp.RequireTerminalTxSig
+            CardNumberId.Series, CardNumberId.BatchId, PinsId.Pin3, SigningMethodId.SignExternal,
+            SignHashExPropId.CryptoExKey, SignHashExPropId.CheckPin3, SettingsMaskId.OneApdu,
+            SettingsMaskId.UseBlock, SettingsMaskId.ProtectIssuerDataAgainstReplay,
+            SignHashExPropId.RequireTerminalCertSig, SignHashExPropId.RequireTerminalTxSig
     )
 
     val oftenUsedList = listOf<Id>(
@@ -56,11 +56,11 @@ class ItemTypes {
 //            BlockId.SettingsMaskProtocolEnc,
             BlockId.SettingsMaskNdef,
 //            BlockId.Pins,
-            Common.Curve,
-            Common.Blockchain,
-            Common.BlockchainCustom,
+            CommonId.Curve,
+            CommonId.Blockchain,
+            CommonId.BlockchainCustom,
 //            Common.MaxSignatures,
-            Common.CreateWallet,
+            CommonId.CreateWallet,
 //            SigningMethod.SignTx,
 //            SigningMethod.SignTxRaw,
 //            SigningMethod.SignValidatedTx,
@@ -79,10 +79,10 @@ class ItemTypes {
 //            Token.Symbol,
 //            Token.ContractAddress,
 //            Token.Decimal,
-            ProductMask.Note,
-            ProductMask.Tag,
-            ProductMask.IdCard,
-            ProductMask.IdIssuerCard,
+            ProductMaskId.Note,
+            ProductMaskId.Tag,
+            ProductMaskId.IdCard,
+            ProductMaskId.IdIssuerCard,
 //            SettingsMask.IsReusable,
 //            SettingsMask.NeedActivation,
 //            SettingsMask.ForbidPurge,
@@ -104,14 +104,14 @@ class ItemTypes {
 //            SettingsMaskNdef.UseNdef,
 //            SettingsMaskNdef.DynamicNdef,
 //            SettingsMaskNdef.DisablePrecomputedNdef,
-            SettingsMaskNdef.Aar,
-            SettingsMaskNdef.AarCustom,
-            SettingsMaskNdef.Uri,
+            SettingsMaskNdefId.Aar,
+            SettingsMaskNdefId.AarCustom,
+            SettingsMaskNdefId.Uri,
 //            Pins.Pin,
 //            Pins.Pin2,
 //            Pins.Pin3,
 //            Pins.Cvc,
-            Pins.PauseBeforePin2
+            PinsId.PauseBeforePin2
     )
 
 }
