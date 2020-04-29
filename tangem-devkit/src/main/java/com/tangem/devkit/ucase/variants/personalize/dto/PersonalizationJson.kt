@@ -1,10 +1,11 @@
 package com.tangem.devkit.ucase.variants.personalize.dto
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.tangem.commands.personalization.entities.NdefRecord
 
 class PersonalizationJson {
 
-    var releaseVersion = false
     var issuerName = ""
     var series = ""
     var startNumber = 0L
@@ -48,5 +49,15 @@ class PersonalizationJson {
     var ndef = mutableListOf<NdefRecord>()
     var cardData = CardData()
 
+    var releaseVersion = false
     var numberFormat = ""
+
+    companion object {
+        const val CUSTOM = "--- CUSTOM ---"
+
+        fun getJsonConverter(): Gson {
+            val builder = GsonBuilder().setPrettyPrinting()
+            return builder.create()
+        }
+    }
 }
