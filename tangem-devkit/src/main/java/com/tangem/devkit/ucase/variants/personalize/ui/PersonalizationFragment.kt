@@ -24,6 +24,7 @@ import com.tangem.devkit._arch.widget.WidgetBuilder
 import com.tangem.devkit.commons.DialogController
 import com.tangem.devkit.commons.view.MultiActionView
 import com.tangem.devkit.commons.view.ViewAction
+import com.tangem.devkit.extensions.copyToClipboard
 import com.tangem.devkit.extensions.view.beginDelayedTransition
 import com.tangem.devkit.ucase.domain.paramsManager.ItemsManager
 import com.tangem.devkit.ucase.domain.paramsManager.PayloadKey
@@ -38,6 +39,7 @@ import com.tangem.devkit.ucase.variants.personalize.ui.presets.PersonalizationPr
 import com.tangem.devkit.ucase.variants.personalize.ui.presets.RvPresetNamesAdapter
 import com.tangem.devkit.ucase.variants.personalize.ui.widgets.PersonalizationItemBuilder
 import com.tangem.devkit.ucase.variants.responses.ui.ResponseFragment
+import ru.dev.gbixahue.eu4d.lib.android._android.views.afterTextChanged
 import ru.dev.gbixahue.eu4d.lib.android._android.views.inflate
 import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 import ru.dev.gbixahue.eu4d.lib.android.global.threading.post
@@ -50,7 +52,12 @@ import ru.dev.gbixahue.eu4d.lib.android.global.threading.postWork
  */
 class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetView {
 
-    override val itemsManager: ItemsManager by lazy { PersonalizationItemsManager(PersonalizationConfigStore(requireContext())) }
+    private lateinit var personalizationItemsManager: PersonalizationItemsManager
+
+    override val itemsManager: ItemsManager by lazy {
+        personalizationItemsManager = PersonalizationItemsManager(PersonalizationConfigStore(requireContext()))
+        personalizationItemsManager
+    }
 
     override fun getLayoutId(): Int = R.layout.fg_base_action_layout
 
@@ -106,20 +113,44 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
     override fun widgetsWasCreated() {
         super.widgetsWasCreated()
 
-        val btnContainer = contentContainer.inflate<ViewGroup>(R.layout.view_simple_button)
-        val btn = btnContainer.findViewById<Button>(R.id.button)
+        val footerContainer = contentContainer.inflate<ViewGroup>(R.layout.fg_personalization_footer)
 
-        val show = StringId("show")
-        val hide = StringId("hide")
-        val multiAction = MultiActionView(mutableListOf(
-                ViewAction(show, R.string.show_rare_fields) { actionVM.showFields(ActionType.Personalize) },
-                ViewAction(hide, R.string.hide_rare_fields) { actionVM.hideFields(ActionType.Personalize) }
-        ), btn)
-        multiAction.afterAction = {
-            multiAction.state = if (it == show) hide else show
+        fun initShowHideBtn(parent: ViewGroup) {
+            val btn = parent.findViewById<Button>(R.id.btn_show_hide_fields)
+
+            val show = StringId("show")
+            val hide = StringId("hide")
+            val multiAction = MultiActionView(mutableListOf(
+                    ViewAction(show, R.string.show_rare_fields) { actionVM.showFields(ActionType.Personalize) },
+                    ViewAction(hide, R.string.hide_rare_fields) { actionVM.hideFields(ActionType.Personalize) }
+            ), btn)
+            multiAction.afterAction = {
+                multiAction.state = if (it == show) hide else show
+            }
+            multiAction.performAction(hide)
         }
-        multiAction.performAction(hide)
-        contentContainer.addView(btnContainer)
+
+        fun initImportExportJson(parent: ViewGroup) {
+            val tvJsonImport = parent.findViewById<EditText>(R.id.et_json_import)
+            tvJsonImport.afterTextChanged { personalizationItemsManager.importJsonConfig(it) }
+
+            val tvJsonExport = parent.findViewById<TextView>(R.id.tv_json_export)
+            tvJsonExport.setOnClickListener {
+                val jsonString = tvJsonExport.text
+                Log.w(this, jsonString)
+                requireContext().copyToClipboard(jsonString, "Exported Json")
+            }
+
+            val btnPrepareExport = parent.findViewById<Button>(R.id.btn_prepare_export)
+            btnPrepareExport.setOnClickListener {
+                tvJsonExport.text = personalizationItemsManager.exportJsonConfig()
+            }
+        }
+
+        initShowHideBtn(footerContainer)
+        initImportExportJson(footerContainer)
+
+        contentContainer.addView(footerContainer)
     }
 
     override fun handleResponseCardData(card: Card) {
