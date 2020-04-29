@@ -5,7 +5,6 @@ import com.tangem.commands.SigningMethod
 import com.tangem.commands.SigningMethodMask
 import com.tangem.commands.personalization.entities.NdefRecord
 import com.tangem.devkit._arch.structure.abstraction.TwoWayConverter
-import com.tangem.devkit.ucase.variants.personalize.dto.CardData
 import com.tangem.devkit.ucase.variants.personalize.dto.PersonalizationConfig
 import com.tangem.devkit.ucase.variants.personalize.dto.PersonalizationJson
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.Converter
@@ -21,85 +20,77 @@ class PersonalizationJsonConverter : TwoWayConverter<PersonalizationJson, Person
 }
 
 internal class JsonToConfig : Converter<PersonalizationJson, PersonalizationConfig> {
-    override fun convert(from: PersonalizationJson): PersonalizationConfig {
+
+    override fun convert(jsonDto: PersonalizationJson): PersonalizationConfig {
         val config = PersonalizationConfig.default()
         config.apply {
-            // Card number
-            series = from.series
-            startNumber = from.startNumber
-
-            // Common
-            curveID = EllipticCurve.byName(from.curveID)?.curve ?: ""
+            series = jsonDto.series
+            startNumber = jsonDto.startNumber
+            curveID = EllipticCurve.byName(jsonDto.curveID)?.curve ?: ""
             blockchainCustom = ""
-            MaxSignatures = from.MaxSignatures
-            createWallet = from.createWallet != 0L
-
-            // Sign hash external properties
-//            pinLessFloorLimit = 100000L
-            hexCrExKey = from.hexCrExKey
-            requireTerminalTxSignature = from.requireTerminalTxSignature
-            requireTerminalCertSignature = from.requireTerminalCertSignature
-            checkPIN3onCard = from.checkPIN3onCard
-
-            // Product mask
-            cardData = from.cardData
-
-            // Settings mask
-            isReusable = from.isReusable
-            useActivation = from.useActivation
-            forbidPurgeWallet = from.forbidPurgeWallet
-            allowSelectBlockchain = from.allowSelectBlockchain
-            useBlock = from.useBlock
-            useOneCommandAtTime = from.useOneCommandAtTime
-            useCVC = from.useCVC
-            allowSwapPIN = from.allowSwapPIN
-            allowSwapPIN2 = from.allowSwapPIN2
-            forbidDefaultPIN = from.forbidDefaultPIN
-            smartSecurityDelay = from.smartSecurityDelay
-            protectIssuerDataAgainstReplay = from.protectIssuerDataAgainstReplay
-            skipSecurityDelayIfValidatedByIssuer = from.skipSecurityDelayIfValidatedByIssuer
-            skipCheckPIN2andCVCIfValidatedByIssuer = from.skipCheckPIN2andCVCIfValidatedByIssuer
-            skipSecurityDelayIfValidatedByLinkedTerminal = from.skipSecurityDelayIfValidatedByLinkedTerminal
-            restrictOverwriteIssuerDataEx = from.restrictOverwriteIssuerDataEx
-
-            // Settings mask - protocol encryption
-            protocolAllowUnencrypted = from.protocolAllowUnencrypted
-            protocolAllowStaticEncryption = from.protocolAllowStaticEncryption
-
-            // Settings mask
-            useNDEF = from.useNDEF
-            useDynamicNDEF = from.useDynamicNDEF
-            disablePrecomputedNDEF = from.disablePrecomputedNDEF
-
-            // Pins
-            PIN = from.PIN
-            PIN2 = from.PIN2
-            PIN3 = from.PIN3
-            CVC = from.CVC
-            pauseBeforePIN2 = from.pauseBeforePIN2
-
-            count = from.count
-            issuerName = from.issuerName
-            issuerData = from.issuerData
+            MaxSignatures = jsonDto.MaxSignatures
+            createWallet = jsonDto.createWallet != 0L
+            hexCrExKey = jsonDto.hexCrExKey
+            requireTerminalTxSignature = jsonDto.requireTerminalTxSignature
+            requireTerminalCertSignature = jsonDto.requireTerminalCertSignature
+            checkPIN3onCard = jsonDto.checkPIN3onCard
+            isReusable = jsonDto.isReusable
+            useActivation = jsonDto.useActivation
+            forbidPurgeWallet = jsonDto.forbidPurgeWallet
+            allowSelectBlockchain = jsonDto.allowSelectBlockchain
+            useBlock = jsonDto.useBlock
+            useOneCommandAtTime = jsonDto.useOneCommandAtTime
+            useCVC = jsonDto.useCVC
+            allowSwapPIN = jsonDto.allowSwapPIN
+            allowSwapPIN2 = jsonDto.allowSwapPIN2
+            forbidDefaultPIN = jsonDto.forbidDefaultPIN
+            smartSecurityDelay = jsonDto.smartSecurityDelay
+            protectIssuerDataAgainstReplay = jsonDto.protectIssuerDataAgainstReplay
+            skipSecurityDelayIfValidatedByIssuer = jsonDto.skipSecurityDelayIfValidatedByIssuer
+            skipCheckPIN2andCVCIfValidatedByIssuer = jsonDto.skipCheckPIN2andCVCIfValidatedByIssuer
+            skipSecurityDelayIfValidatedByLinkedTerminal = jsonDto.skipSecurityDelayIfValidatedByLinkedTerminal
+            restrictOverwriteIssuerDataEx = jsonDto.restrictOverwriteIssuerDataEx
+            protocolAllowUnencrypted = jsonDto.protocolAllowUnencrypted
+            protocolAllowStaticEncryption = jsonDto.protocolAllowStaticEncryption
+            useNDEF = jsonDto.useNDEF
+            useDynamicNDEF = jsonDto.useDynamicNDEF
+            disablePrecomputedNDEF = jsonDto.disablePrecomputedNDEF
+            PIN = jsonDto.PIN
+            PIN2 = jsonDto.PIN2
+            PIN3 = jsonDto.PIN3
+            CVC = jsonDto.CVC
+            pauseBeforePIN2 = jsonDto.pauseBeforePIN2
+            count = jsonDto.count
+            issuerName = jsonDto.issuerName
+            issuerData = jsonDto.issuerData
 //            numberFormat = from.numberFormat
+//            pinLessFloorLimit = 100000L
         }
 
-        fillToken(config, from.cardData)
-        fillSigningMethod(config, from.SigningMethod)
-        fillNdef(config, from.ndef)
+        fillCardData(jsonDto, config)
+        fillSigningMethod(jsonDto, config)
+        fillNdef(jsonDto, config)
 
         return config
     }
 
-    private fun fillToken(config: PersonalizationConfig, cardData: CardData) {
-        config.itsToken = cardData.token_contract_address.isNotEmpty() || cardData.token_symbol.isNotEmpty()
-        config.cardData.token_contract_address = cardData.token_contract_address
-        config.cardData.token_symbol = cardData.token_symbol
-        config.cardData.token_decimal = cardData.token_decimal
+    private fun fillCardData(jsonDto: PersonalizationJson, config: PersonalizationConfig) {
+        val jsonCardData = jsonDto.cardData
+
+        // copy whole object and then checking tricky places
+        config.cardData = jsonCardData
+
+        config.itsToken = jsonCardData.token_contract_address.isNotEmpty() || jsonCardData.token_symbol.isNotEmpty()
+
+        val selectedBlockchain = Helper.listOfBlockchain().firstOrNull { it.value == jsonCardData.blockchain }
+        if (selectedBlockchain == null) {
+            config.cardData.blockchain = PersonalizationJson.CUSTOM
+            config.blockchainCustom = jsonCardData.blockchain
+        }
     }
 
-    private fun fillSigningMethod(config: PersonalizationConfig, signingMethod: Long) {
-        val mask = SigningMethodMask(signingMethod.toInt())
+    private fun fillSigningMethod(jsonDto: PersonalizationJson, config: PersonalizationConfig) {
+        val mask = SigningMethodMask(jsonDto.SigningMethod.toInt())
         if (mask.contains(SigningMethod.SignHash)) config.SigningMethod0 = true
         if (mask.contains(SigningMethod.SignRaw)) config.SigningMethod1 = true
         if (mask.contains(SigningMethod.SignHashValidateByIssuer)) config.SigningMethod2 = true
@@ -108,8 +99,8 @@ internal class JsonToConfig : Converter<PersonalizationJson, PersonalizationConf
         if (mask.contains(SigningMethod.SignRawValidateByIssuerWriteIssuerData)) config.SigningMethod5 = true
     }
 
-    private fun fillNdef(config: PersonalizationConfig, ndef: MutableList<NdefRecord>) {
-        ndef.forEach { record ->
+    private fun fillNdef(jsonDto: PersonalizationJson, config: PersonalizationConfig) {
+        jsonDto.ndef.forEach { record ->
             when (record.type) {
                 NdefRecord.Type.URI -> config.uri = record.value
                 NdefRecord.Type.AAR -> config.aar = record.value
@@ -121,6 +112,7 @@ internal class JsonToConfig : Converter<PersonalizationJson, PersonalizationConf
 }
 
 internal class ConfigToJson : Converter<PersonalizationConfig, PersonalizationJson> {
+
     override fun convert(from: PersonalizationConfig): PersonalizationJson {
         val jsonDto = PersonalizationJson()
         jsonDto.apply {
@@ -163,27 +155,44 @@ internal class ConfigToJson : Converter<PersonalizationConfig, PersonalizationJs
             checkPIN3onCard = from.checkPIN3onCard
             createWallet = if (from.createWallet) 1 else 0
             issuerData = from.issuerData
-            cardData = from.cardData
 //            numberFormat = from.numberFormat
+//            pinLessFloorLimit = 100000L
         }
 
-        fillSigningMethod(jsonDto, from)
-        fillNdef(jsonDto, from)
+        fillCardData(from, jsonDto)
+        fillSigningMethod(from, jsonDto)
+        fillNdef(from, jsonDto)
         return jsonDto
     }
 
-    private fun fillSigningMethod(jsonDto: PersonalizationJson, from: PersonalizationConfig) {
-        jsonDto.SigningMethod = PersonalizationConfig.makeSigningMethodMask(from).rawValue.toLong()
+    private fun fillCardData(config: PersonalizationConfig, jsonDto: PersonalizationJson) {
+        jsonDto.cardData = config.cardData
+        if (config.cardData.blockchain == PersonalizationJson.CUSTOM) {
+            jsonDto.cardData.blockchain = config.blockchainCustom
+        }
+        if (config.itsToken) {
+            jsonDto.cardData.token_contract_address = config.cardData.token_contract_address
+            jsonDto.cardData.token_symbol = config.cardData.token_symbol
+            jsonDto.cardData.token_decimal = config.cardData.token_decimal
+        } else {
+            jsonDto.cardData.token_contract_address = ""
+            jsonDto.cardData.token_symbol = ""
+            jsonDto.cardData.token_decimal = 0
+        }
     }
 
-    private fun fillNdef(jsonDto: PersonalizationJson, from: PersonalizationConfig) {
+    private fun fillSigningMethod(config: PersonalizationConfig, jsonDto: PersonalizationJson) {
+        jsonDto.SigningMethod = PersonalizationConfig.makeSigningMethodMask(config).rawValue.toLong()
+    }
+
+    private fun fillNdef(config: PersonalizationConfig, jsonDto: PersonalizationJson) {
         fun add(value: String, type: NdefRecord.Type) {
             if (value.isNotEmpty()) jsonDto.ndef.add(NdefRecord(type, value))
         }
 
-        if (from.aarCustom.isNotEmpty()) add(from.aarCustom, NdefRecord.Type.AAR)
-        else add(from.aar, NdefRecord.Type.AAR)
+        if (config.aarCustom.isNotEmpty()) add(config.aarCustom, NdefRecord.Type.AAR)
+        else add(config.aar, NdefRecord.Type.AAR)
 
-        add(from.uri, NdefRecord.Type.URI)
+        add(config.uri, NdefRecord.Type.URI)
     }
 }
