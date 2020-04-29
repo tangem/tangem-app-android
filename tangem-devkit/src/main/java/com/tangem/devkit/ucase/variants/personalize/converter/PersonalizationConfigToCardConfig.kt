@@ -7,6 +7,7 @@ import com.tangem.commands.ProductMaskBuilder
 import com.tangem.commands.personalization.entities.CardConfig
 import com.tangem.commands.personalization.entities.NdefRecord
 import com.tangem.devkit.ucase.variants.personalize.dto.PersonalizationConfig
+import com.tangem.devkit.ucase.variants.personalize.dto.PersonalizationJson
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.Converter
 import java.util.*
 
@@ -29,7 +30,7 @@ class PersonalizationConfigToCardConfig : Converter<PersonalizationConfig, CardC
 
         var tokenSymbol: String? = null
         var tokenContractAddress: String? = null
-        var tokenDecimal: Int? = null
+        var tokenDecimal: Long? = null
         if (from.itsToken) {
             tokenSymbol = from.cardData.token_symbol
             tokenContractAddress = from.cardData.token_contract_address
@@ -43,7 +44,7 @@ class PersonalizationConfigToCardConfig : Converter<PersonalizationConfig, CardC
                 productMask = productMask,
                 tokenSymbol = tokenSymbol,
                 tokenContractAddress = tokenContractAddress,
-                tokenDecimal = tokenDecimal,
+                tokenDecimal = tokenDecimal?.toInt(),
                 issuerName = null,
                 manufactureDateTime = Calendar.getInstance().time,
                 manufacturerSignature = null)
@@ -55,7 +56,7 @@ class PersonalizationConfigToCardConfig : Converter<PersonalizationConfig, CardC
         }
         when (from.aar) {
             "None" -> null
-            "--- CUSTOM ---" -> NdefRecord(NdefRecord.Type.AAR, from.aarCustom)
+            PersonalizationJson.CUSTOM -> NdefRecord(NdefRecord.Type.AAR, from.aarCustom)
             else -> NdefRecord(NdefRecord.Type.AAR, from.aar)
         }?.let { ndefs.add(it) }
 
