@@ -27,12 +27,6 @@ enum class Blockchain(
     BinanceTestnet("BINANCE/test", "BNBt", "Binance"),
     Stellar("XLM", "XLM", "Stellar");
 
-    fun roundingMode(): Int = when (this) {
-        Bitcoin, BitcoinTestnet, Ethereum, Rootstock, Binance, BinanceTestnet -> BigDecimal.ROUND_DOWN
-        Cardano -> BigDecimal.ROUND_UP
-        else -> BigDecimal.ROUND_HALF_UP
-    }
-
     fun decimals(): Int = when (this) {
         Bitcoin, BitcoinTestnet, BitcoinCash, Binance, BinanceTestnet -> 8
         Cardano, XRP -> 6
