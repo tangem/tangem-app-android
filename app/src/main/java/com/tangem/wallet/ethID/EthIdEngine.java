@@ -43,8 +43,8 @@ public class EthIdEngine extends CoinEngine {
 
     private static final String TAG = com.tangem.wallet.eth.EthEngine.class.getSimpleName();
     public EthIdData coinData = null;
-    private byte[] approvalPubKey = Util.hexToBytes("04EAD74FEEE4061044F46B19EB654CEEE981E9318F0C8FE99AF5CDB9D779D2E52BB51EA2D14545E0B323F7A90CF4CC72753C973149009C10DB2D83DCEC28487729"); //TODO
-    public String approvalAddress = calculateAddress(approvalPubKey); //TODO
+    //default approval public key for issuance
+    private byte[] approvalPubKey = Util.hexToBytes("04EAD74FEEE4061044F46B19EB654CEEE981E9318F0C8FE99AF5CDB9D779D2E52BB51EA2D14545E0B323F7A90CF4CC72753C973149009C10DB2D83DCEC28487729");
 
     public EthIdEngine(TangemContext ctx) throws Exception {
         super(ctx);
@@ -232,12 +232,12 @@ public class EthIdEngine extends CoinEngine {
         if (coinData != null && coinData.isHasApprovalTx()) {
             balanceValidator.setScore(100);
             balanceValidator.setFirstLine(R.string.id_verified);
-            balanceValidator.setSecondLine(R.string.balance_validator_second_line_unverified_balance);
+            balanceValidator.setSecondLine(R.string.balance_validator_second_line_issued_by);
             return false;
         } else {
             balanceValidator.setScore(0);
             balanceValidator.setFirstLine(R.string.id_not_registered);
-            balanceValidator.setSecondLine(R.string.balance_validator_second_line_unverified_balance);
+            balanceValidator.setSecondLine(R.string.empty_string);
             return false;
         }
     }
@@ -389,7 +389,7 @@ public class EthIdEngine extends CoinEngine {
             public void onSuccess(BlockcypherTx response) {
                 Log.i(TAG, "onSuccess: BlockcypherTx");
                 try {
-                    String address = approvalAddress;
+                    String address = coinData.getApprovalAddress();
                     if (address.startsWith("0x") || address.startsWith("0X")) {
                         address = address.substring(2);
                     }
@@ -484,6 +484,12 @@ public class EthIdEngine extends CoinEngine {
         try {
             String wallet = calculateAddress(calculateCKDpub(ctx.getCard().getIdHash()));
             ctx.getCoinData().setWallet(wallet);
+
+            TangemCard.IDCardData idCardData = ctx.getCard().getIDCardData();
+            if (idCardData != null && idCardData.trustedAddress != null) {
+                String approvalAddress = ctx.getCard().getIDCardData().trustedAddress;
+                coinData.setApprovalAddress(approvalAddress);
+            }
         } catch (Exception e) {
             ctx.getCoinData().setWallet("ERROR");
             throw new CardProtocol.TangemException("Can't define wallet address");
@@ -542,6 +548,6 @@ public class EthIdEngine extends CoinEngine {
         };
         serverApiInfura.setResponseListener(responseListener);
 
-        serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, 67, approvalAddress, "", "");
+        serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, 67, coinData.getApprovalAddress(), "", "");
     }
 }
