@@ -42,31 +42,30 @@ object WalletManagerFactory {
         when (blockchain) {
             Blockchain.Bitcoin -> {
                 return BitcoinWalletManager(
-                        card.cardId, wallet,
+                        cardId, wallet,
                         BitcoinTransactionBuilder(walletPublicKey),
                         BitcoinNetworkManager()
                 )
             }
             Blockchain.BitcoinTestnet -> {
                 return BitcoinWalletManager(
-                        card.cardId, wallet,
+                        cardId, wallet,
                         BitcoinTransactionBuilder(walletPublicKey, true),
                         BitcoinNetworkManager(true)
                 )
             }
             Blockchain.BitcoinCash -> {
                 return BitcoinCashWalletManager(
-                        card.cardId, wallet,
+                        cardId, wallet,
                         BitcoinCashTransactionBuilder(walletPublicKey.toCompressedPublicKey()),
                         BitcoinCashNetworkManager()
                 )
             }
             Blockchain.Ethereum -> {
-                val chain = Chain.Mainnet
                 return EthereumWalletManager(
                         cardId, wallet,
-                        EthereumTransactionBuilder(walletPublicKey, chain),
-                        EthereumNetworkManager()
+                        EthereumTransactionBuilder(walletPublicKey, blockchain),
+                        EthereumNetworkManager(blockchain)
                 )
             }
             Blockchain.Stellar -> {
