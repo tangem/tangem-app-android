@@ -1,5 +1,6 @@
 package com.tangem.blockchain.blockchains.ethereum.network
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.extensions.retryIO
@@ -14,10 +15,14 @@ import java.math.BigInteger
 import java.math.RoundingMode
 
 
-class EthereumNetworkManager {
+class EthereumNetworkManager(blockchain: Blockchain) {
 
     private val api: InfuraApi by lazy {
-        createRetrofitInstance(API_INFURA).create(InfuraApi::class.java)
+        val baseUrl = when (blockchain) {
+            Blockchain.Ethereum -> API_INFURA
+            else -> throw Exception("${blockchain.fullName} blockchain is not supported by EthereumNetworkManager")
+        }
+        createRetrofitInstance(baseUrl).create(InfuraApi::class.java)
     }
 
     private val provider: InfuraProvider by lazy { InfuraProvider(api) }
