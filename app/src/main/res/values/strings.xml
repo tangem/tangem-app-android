@@ -148,6 +148,7 @@
     <string name="balance_validator_second_line_create_account_instruction">To create account send 1+ XLM to this address</string>
     <string name="balance_validator_second_line_create_account_xrp">Load 20+ XRP to create account</string>
     <string name="balance_validator_second_line_authenticity_not_verified">Authenticity cannot be verified. Swipe down to refresh.</string>
+    <string name="balance_validator_second_line_issued_by">Issued by %s</string>
 
     <!-- CreateNewWallet, Purge, SignTransaction -->
     <string name="now_touch_the_card_with_id">Now touch the card with ID</string>
