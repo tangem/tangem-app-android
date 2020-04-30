@@ -108,6 +108,11 @@ internal class JsonToConfig : Converter<PersonalizationJson, PersonalizationConf
                 }
             }
         }
+        val selectedAar = Helper.aarList().firstOrNull { it.value == config.aar }
+        if (selectedAar == null) {
+            config.aarCustom = config.aar
+            config.aar = ""
+        }
     }
 }
 
