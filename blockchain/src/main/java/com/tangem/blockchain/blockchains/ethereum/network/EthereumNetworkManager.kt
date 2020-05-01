@@ -5,6 +5,7 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.extensions.retryIO
 import com.tangem.blockchain.network.API_INFURA
+import com.tangem.blockchain.network.API_RSK
 import com.tangem.blockchain.network.createRetrofitInstance
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -20,6 +21,7 @@ class EthereumNetworkManager(blockchain: Blockchain) {
     private val api: InfuraApi by lazy {
         val baseUrl = when (blockchain) {
             Blockchain.Ethereum -> API_INFURA
+            Blockchain.RSK -> API_RSK
             else -> throw Exception("${blockchain.fullName} blockchain is not supported by EthereumNetworkManager")
         }
         createRetrofitInstance(baseUrl).create(InfuraApi::class.java)
