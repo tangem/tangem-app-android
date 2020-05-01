@@ -8,8 +8,6 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumAddressService
 import com.tangem.blockchain.blockchains.stellar.StellarAddressService
 import com.tangem.blockchain.blockchains.xrp.XrpAddressService
 
-import java.math.BigDecimal
-
 enum class Blockchain(
         val id: String,
         val currency: String,
@@ -20,7 +18,7 @@ enum class Blockchain(
     BitcoinTestnet("BTC/test", "BTCt", "Bitcoin Testnet"),
     BitcoinCash("BCH", "BCH", "Bitcoin Cash"),
     Ethereum("ETH", "ETH", "Ethereum"),
-    Rootstock("", "", ""),
+    RSK("RSK", "RBTC", "RSK"),
     Cardano("CARDANO", "ADA", "Cardano"),
     XRP("XRP", "XRP", "XRP Ledger"),
     Binance("BINANCE", "BNB", "Binance"),
@@ -30,7 +28,7 @@ enum class Blockchain(
     fun decimals(): Int = when (this) {
         Bitcoin, BitcoinTestnet, BitcoinCash, Binance, BinanceTestnet -> 8
         Cardano, XRP -> 6
-        Ethereum, Rootstock -> 18
+        Ethereum, RSK -> 18
         Stellar -> 7
         Unknown -> 0
     }
@@ -49,7 +47,7 @@ enum class Blockchain(
         BitcoinTestnet -> BitcoinAddressService(true)
         BitcoinCash -> BitcoinCashAddressService()
         Ethereum -> EthereumAddressService()
-        Rootstock -> throw Exception("unsupported blockchain")
+        RSK -> throw Exception("unsupported blockchain")
         Cardano -> CardanoAddressService()
         XRP -> XrpAddressService()
         Binance -> BinanceAddressService()
@@ -75,7 +73,7 @@ enum class Blockchain(
         } else {
             "https://etherscan.io/token/${token.contractAddress}?a=$address"
         }
-        Rootstock -> {
+        RSK -> {
             var url = "https://explorer.rsk.co/address/$address"
             if (token != null) {
                 url += "?__tab=tokens"
