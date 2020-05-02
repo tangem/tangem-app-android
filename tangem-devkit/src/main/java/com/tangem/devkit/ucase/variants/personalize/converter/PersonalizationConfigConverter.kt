@@ -52,9 +52,9 @@ class ItemsToPersonalizationConfig : ItemsToModel<PersonalizationConfig> {
         val export = PersonalizationConfig()
         export.series = getTyped(CardNumberId.Series)
         export.startNumber = getTyped(CardNumberId.Number)
-        export.batchId = getTyped(CardNumberId.BatchId)
+        export.cardData.batch = getTyped(CardNumberId.BatchId)
         export.curveID = getTyped(CommonId.Curve)
-        export.blockchain = getTyped(CommonId.Blockchain)
+        export.cardData.blockchain = getTyped(CommonId.Blockchain)
         export.blockchainCustom = getTyped(CommonId.BlockchainCustom)
         export.MaxSignatures = getTyped(CommonId.MaxSignatures)
         export.createWallet = getTyped(CommonId.CreateWallet)
@@ -70,12 +70,10 @@ class ItemsToPersonalizationConfig : ItemsToModel<PersonalizationConfig> {
         export.requireTerminalCertSignature = getTyped(SignHashExPropId.RequireTerminalCertSig)
         export.requireTerminalTxSignature = getTyped(SignHashExPropId.RequireTerminalTxSig)
         export.checkPIN3onCard = getTyped(SignHashExPropId.CheckPin3)
-        export.writeOnPersonalization = getTyped(DenominationId.WriteOnPersonalize)
-        export.denomination = getTyped(DenominationId.Denomination)
         export.itsToken = getTyped(TokenId.ItsToken)
-        export.symbol = getTyped(TokenId.Symbol)
-        export.contractAddress = getTyped(TokenId.ContractAddress)
-        export.decimal = getTyped(TokenId.Decimal)
+        export.cardData.token_symbol = getTyped(TokenId.Symbol)
+        export.cardData.token_contract_address = getTyped(TokenId.ContractAddress)
+        export.cardData.token_decimal = getTyped(TokenId.Decimal)
         export.cardData = export.cardData.apply { this.product_note = getTyped(ProductMaskId.Note) }
         export.cardData = export.cardData.apply { this.product_tag = getTyped(ProductMaskId.Tag) }
         export.cardData = export.cardData.apply { this.product_id_card = getTyped(ProductMaskId.IdCard) }
@@ -85,7 +83,7 @@ class ItemsToPersonalizationConfig : ItemsToModel<PersonalizationConfig> {
         export.forbidPurgeWallet = getTyped(SettingsMaskId.ForbidPurge)
         export.allowSelectBlockchain = getTyped(SettingsMaskId.AllowSelectBlockchain)
         export.useBlock = getTyped(SettingsMaskId.UseBlock)
-        export.oneApdu = getTyped(SettingsMaskId.OneApdu)
+        export.useOneCommandAtTime = getTyped(SettingsMaskId.OneApdu)
         export.useCVC = getTyped(SettingsMaskId.UseCvc)
         export.allowSwapPIN = getTyped(SettingsMaskId.AllowSwapPin)
         export.allowSwapPIN2 = getTyped(SettingsMaskId.AllowSwapPin2)
@@ -138,14 +136,13 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
         blocList.add(cardNumber())
         blocList.add(common())
         blocList.add(signingMethod())
-//        blocList.add(signHashExProperties())
-//        blocList.add(denomination())
-//        blocList.add(token())
-//        blocList.add(productMask())
-//        blocList.add(settingsMask())
-//        blocList.add(settingsMaskProtocolEnc())
-//        blocList.add(settingsMaskNdef())
-//        blocList.add(pins())
+        blocList.add(signHashExProperties())
+        blocList.add(token())
+        blocList.add(productMask())
+        blocList.add(settingsMask())
+        blocList.add(settingsMaskProtocolEnc())
+        blocList.add(settingsMaskNdef())
+        blocList.add(pins())
         blocList.iterate {
             if (itemTypes.hiddenList.contains(it.id)) {
                 it.viewModel.viewState.isVisibleState.value = false
@@ -199,15 +196,6 @@ class PersonalizationConfigToItems : ModelToItems<PersonalizationConfig> {
                 SignHashExPropId.RequireTerminalCertSig,
                 SignHashExPropId.RequireTerminalTxSig,
                 SignHashExPropId.CheckPin3
-        ).forEach { createItem(block, it) }
-        return block
-    }
-
-    private fun denomination(): ItemGroup {
-        val block = createGroup(BlockId.Denomination)
-        mutableListOf(
-                DenominationId.WriteOnPersonalize,
-                DenominationId.Denomination
         ).forEach { createItem(block, it) }
         return block
     }
