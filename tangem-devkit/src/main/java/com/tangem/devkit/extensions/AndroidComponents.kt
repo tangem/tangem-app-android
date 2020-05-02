@@ -1,5 +1,8 @@
 package com.tangem.devkit.extensions
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.fragment.app.Fragment
@@ -7,6 +10,13 @@ import androidx.fragment.app.Fragment
 /**
 [REDACTED_AUTHOR]
  */
+fun Context.copyToClipboard(value: Any, label: String = "") {
+    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager ?: return
+
+    val clip: ClipData = ClipData.newPlainText(label, value.toString())
+    clipboard.setPrimaryClip(clip)
+}
+
 fun Fragment.shareText(text: String) {
     requireActivity().shareText(text)
 }
