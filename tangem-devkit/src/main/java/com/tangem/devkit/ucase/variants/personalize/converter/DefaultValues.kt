@@ -5,6 +5,7 @@ import com.tangem.devkit._arch.structure.Id
 import com.tangem.devkit._arch.structure.abstraction.KeyValue
 import com.tangem.devkit.ucase.variants.personalize.*
 import com.tangem.devkit.ucase.variants.personalize.dto.PersonalizationConfig
+import com.tangem.devkit.ucase.variants.personalize.dto.PersonalizationJson
 import ru.dev.gbixahue.eu4d.lib.kotlin.common.BaseTypedHolder
 
 /**
@@ -16,9 +17,9 @@ class ConfigValuesHolder : BaseTypedHolder<Id, Value>() {
     fun init(default: PersonalizationConfig) {
         register(CardNumberId.Series, Value(default.series))
         register(CardNumberId.Number, Value(default.startNumber))
-        register(CardNumberId.BatchId, Value(default.batchId))
+        register(CardNumberId.BatchId, Value(default.cardData.batch))
         register(CommonId.Curve, Value(default.curveID, Helper.listOfCurves()))
-        register(CommonId.Blockchain, Value(default.blockchain, Helper.listOfBlockchain()))
+        register(CommonId.Blockchain, Value(default.cardData.blockchain, Helper.listOfBlockchain()))
         register(CommonId.BlockchainCustom, Value(default.blockchainCustom))
         register(CommonId.MaxSignatures, Value(default.MaxSignatures))
         register(CommonId.CreateWallet, Value(default.createWallet))
@@ -34,12 +35,10 @@ class ConfigValuesHolder : BaseTypedHolder<Id, Value>() {
         register(SignHashExPropId.RequireTerminalCertSig, Value(default.requireTerminalCertSignature))
         register(SignHashExPropId.RequireTerminalTxSig, Value(default.requireTerminalTxSignature))
         register(SignHashExPropId.CheckPin3, Value(default.checkPIN3onCard))
-        register(DenominationId.WriteOnPersonalize, Value(default.writeOnPersonalization))
-        register(DenominationId.Denomination, Value(default.denomination))
         register(TokenId.ItsToken, Value(default.itsToken))
-        register(TokenId.Symbol, Value(default.symbol))
-        register(TokenId.ContractAddress, Value(default.contractAddress))
-        register(TokenId.Decimal, Value(default.decimal))
+        register(TokenId.Symbol, Value(default.cardData.token_symbol))
+        register(TokenId.ContractAddress, Value(default.cardData.token_contract_address))
+        register(TokenId.Decimal, Value(default.cardData.token_decimal))
         register(ProductMaskId.Note, Value(default.cardData.product_note))
         register(ProductMaskId.Tag, Value(default.cardData.product_tag))
         register(ProductMaskId.IdCard, Value(default.cardData.product_id_card))
@@ -49,7 +48,7 @@ class ConfigValuesHolder : BaseTypedHolder<Id, Value>() {
         register(SettingsMaskId.ForbidPurge, Value(default.forbidPurgeWallet))
         register(SettingsMaskId.AllowSelectBlockchain, Value(default.allowSelectBlockchain))
         register(SettingsMaskId.UseBlock, Value(default.useBlock))
-        register(SettingsMaskId.OneApdu, Value(default.oneApdu))
+        register(SettingsMaskId.OneApdu, Value(default.useOneCommandAtTime))
         register(SettingsMaskId.UseCvc, Value(default.useCVC))
         register(SettingsMaskId.AllowSwapPin, Value(default.allowSwapPIN))
         register(SettingsMaskId.AllowSwapPin2, Value(default.allowSwapPIN2))
@@ -94,7 +93,7 @@ internal class Helper {
 
         fun listOfBlockchain(): List<KeyValue> {
             return mutableListOf(
-                    KeyValue("--- CUSTOM ---", ""),
+                    KeyValue(PersonalizationJson.CUSTOM, PersonalizationJson.CUSTOM),
                     KeyValue("BTC", "BTC"),
                     KeyValue("BTC/test", "BTC/test"),
                     KeyValue("ETH", "ETH"),
@@ -115,7 +114,7 @@ internal class Helper {
 
         fun aarList(): List<KeyValue> {
             return mutableListOf(
-                    KeyValue("--- CUSTOM ---", ""),
+                    KeyValue(PersonalizationJson.CUSTOM, PersonalizationJson.CUSTOM),
                     KeyValue("Release APP", "com.tangem.wallet"),
                     KeyValue("Debug APP", "com.tangem.wallet.debug"),
                     KeyValue("None", "")
