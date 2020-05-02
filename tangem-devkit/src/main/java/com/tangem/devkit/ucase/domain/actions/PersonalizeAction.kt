@@ -11,9 +11,10 @@ import com.tangem.devkit.ucase.tunnel.ActionView
 import com.tangem.devkit.ucase.tunnel.ItemError
 import com.tangem.devkit.ucase.variants.personalize.CardNumberId
 import com.tangem.devkit.ucase.variants.personalize.converter.PersonalizationConfigConverter
-import com.tangem.devkit.ucase.variants.personalize.converter.PersonalizationConfigToCardConfig
+import com.tangem.devkit.ucase.variants.personalize.converter.PersonalizationJsonConverter
 import com.tangem.devkit.ucase.variants.personalize.dto.DefaultPersonalizationParams
 import com.tangem.devkit.ucase.variants.personalize.dto.PersonalizationConfig
+import com.tangem.devkit.ucase.variants.personalize.dto.toCardConfig
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
 /**
@@ -37,10 +38,10 @@ class PersonalizeAction : BaseAction() {
         val acquirer = DefaultPersonalizationParams.acquirer()
         val manufacturer = DefaultPersonalizationParams.manufacturer()
 
-        val personalizeConfig = PersonalizationConfigConverter().convert(itemList, PersonalizationConfig.default())
-        val cardConfig = PersonalizationConfigToCardConfig().convert(personalizeConfig)
+        val config = PersonalizationConfigConverter().convert(itemList, PersonalizationConfig.default())
+        val jsonDto = PersonalizationJsonConverter().bToA(config)
 
-        attrs.tangemSdk.personalize(cardConfig, issuer, manufacturer, acquirer) {
+        attrs.tangemSdk.personalize(jsonDto.toCardConfig(), issuer, manufacturer, acquirer) {
             handleResult(payload, it, null, attrs, callback)
         }
     }

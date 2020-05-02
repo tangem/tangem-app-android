@@ -9,6 +9,11 @@ interface DefaultConverter<A, B> {
     fun convert(from: A, default: B): B
 }
 
+interface TwoWayConverter<A, B> {
+    fun aToB(from: A): B
+    fun bToA(from: B): A
+}
+
 interface ItemsToModel<M> : DefaultConverter<List<Item>, M>
 interface ModelToItems<M> : Converter<M, List<Item>>
 
