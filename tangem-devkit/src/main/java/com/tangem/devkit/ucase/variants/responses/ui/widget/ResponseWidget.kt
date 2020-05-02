@@ -1,11 +1,9 @@
 package com.tangem.devkit.ucase.variants.responses.ui.widget
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.view.ViewGroup
 import com.tangem.devkit.R
 import com.tangem.devkit._arch.structure.abstraction.Item
+import com.tangem.devkit.extensions.copyToClipboard
 import com.tangem.devkit.ucase.variants.personalize.ui.widgets.DescriptionWidget
 import ru.dev.gbixahue.eu4d.lib.android._android.views.stringFrom
 import ru.dev.gbixahue.eu4d.lib.android._android.views.toast
@@ -19,12 +17,8 @@ abstract class ResponseWidget(parent: ViewGroup, item: Item) : DescriptionWidget
     init {
         view.setOnClickListener {
             val data = stringOf(item.getData<Any?>())
-            val clipboard = view.context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                    ?: return@setOnClickListener
-
             val clipboardData = "${getName()} - $data"
-            val clip: ClipData = ClipData.newPlainText("FieldValue", clipboardData)
-            clipboard.setPrimaryClip(clip)
+            view.context.copyToClipboard(clipboardData, "FieldValue")
 
             val copyMessage = view.stringFrom(R.string.copy_to_clipboard)
             view.toast("$copyMessage\n$clipboardData")
