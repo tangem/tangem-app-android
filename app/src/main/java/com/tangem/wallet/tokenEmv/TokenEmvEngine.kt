@@ -24,6 +24,7 @@ import io.reactivex.observers.DisposableSingleObserver
 import org.apache.commons.lang3.SerializationUtils
 import org.kethereum.extensions.toBytesPadded
 import java.math.BigInteger
+import java.util.*
 
 class TokenEmvEngine : TokenEngine {
     constructor() : super()
@@ -40,7 +41,11 @@ class TokenEmvEngine : TokenEngine {
     }
 
     override fun getChainIdNum(): Int {
-        return EthTransaction.ChainEnum.Ropsten.value
+        if( ctx.card.tokenSymbol=="MyERC" || ctx.card.tokenSymbol.toLowerCase(Locale.getDefault()).startsWith("test")) {
+            return EthTransaction.ChainEnum.Ropsten.value
+        }else{
+            return EthTransaction.ChainEnum.Mainnet.value
+        }
     }
 
     override fun getBalance(): Amount? {
@@ -110,7 +115,11 @@ class TokenEmvEngine : TokenEngine {
     }
 
     override fun getWalletExplorerUri(): Uri {
-        return Uri.parse("https://ropsten.etherscan.io/token/" + getContractAddress(ctx.card) + "?a=" + ctx.coinData.wallet)
+        if( chainIdNum==EthTransaction.ChainEnum.Ropsten.value ) {
+            return Uri.parse("https://ropsten.etherscan.io/token/" + getContractAddress(ctx.card) + "?a=" + ctx.coinData.wallet)
+        }else{
+            return Uri.parse("https://etherscan.io/token/" + getContractAddress(ctx.card) + "?a=" + ctx.coinData.wallet)
+        }
     }
 
     override fun isExtractPossible(): Boolean {
@@ -236,7 +245,7 @@ class TokenEmvEngine : TokenEngine {
     }
 
     override fun requestBalanceAndUnspentTransactions(blockchainRequestsCallbacks: BlockchainRequestsCallbacks) {
-        val serverApiInfura = ServerApiInfura(ctx.blockchain)
+        val serverApiInfura = if( chainIdNum== EthTransaction.ChainEnum.Ropsten.value ) ServerApiInfura(ctx.blockchain) else ServerApiInfura()
 
         val responseListener: ServerApiInfura.ResponseListener = object : ServerApiInfura.ResponseListener {
             override fun onSuccess(method: String, infuraResponse: InfuraResponse) {
