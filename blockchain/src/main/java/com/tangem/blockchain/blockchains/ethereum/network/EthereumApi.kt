@@ -4,15 +4,16 @@ import com.squareup.moshi.JsonClass
 import retrofit2.http.Body
 import retrofit2.http.Headers
 import retrofit2.http.POST
+import retrofit2.http.Path
 
-interface InfuraApi {
+interface EthereumApi {
     @Headers("Content-Type: application/json")
-    @POST("v3/613a0b14833145968b1f656240c7d245")
-    suspend fun postToInfura(@Body body: InfuraBody?): InfuraResponse
+    @POST("{apiKey}")
+    suspend fun post(@Body body: EthereumBody?, @Path("apiKey") apiKey: String): EthereumResponse
 }
 
 @JsonClass(generateAdapter = true)
-data class InfuraBody(
+data class EthereumBody(
         val jsonrpc: String = "2.0",
         val id: Int = 67,
         val method: String? = null,
@@ -21,7 +22,7 @@ data class InfuraBody(
 
 data class EthCallParams(private val data: String, private val to: String)
 
-enum class InfuraMethod(val value: String) {
+enum class EthereumMethod(val value: String) {
     GET_BALANCE("eth_getBalance"),
     GET_TRANSACTION_COUNT("eth_getTransactionCount"),
     GET_PENDING_COUNT("eth_getPendingCount"),
