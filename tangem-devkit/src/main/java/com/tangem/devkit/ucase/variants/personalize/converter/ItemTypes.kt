@@ -17,7 +17,7 @@ class ItemTypes {
             CommonId.CreateWallet, SigningMethodId.SignTx, SigningMethodId.SignTxRaw, SigningMethodId.SignValidatedTx,
             SigningMethodId.SignValidatedTxRaw, SigningMethodId.SignValidatedTxIssuer,
             SigningMethodId.SignValidatedTxRawIssuer, SigningMethodId.SignExternal, SignHashExPropId.RequireTerminalCertSig,
-            SignHashExPropId.RequireTerminalTxSig, SignHashExPropId.CheckPin3, DenominationId.WriteOnPersonalize, TokenId.ItsToken,
+            SignHashExPropId.RequireTerminalTxSig, SignHashExPropId.CheckPin3, TokenId.ItsToken,
             ProductMaskId.Note, ProductMaskId.Tag, ProductMaskId.IdCard, ProductMaskId.IdIssuerCard, SettingsMaskId.IsReusable, SettingsMaskId.NeedActivation,
             SettingsMaskId.ForbidPurge, SettingsMaskId.AllowSelectBlockchain, SettingsMaskId.UseBlock, SettingsMaskId.OneApdu,
             SettingsMaskId.UseCvc, SettingsMaskId.AllowSwapPin, SettingsMaskId.AllowSwapPin2, SettingsMaskId.ForbidDefaultPin,
@@ -34,7 +34,7 @@ class ItemTypes {
     )
 
     val numberList = mutableListOf(
-            CardNumberId.Number, CommonId.MaxSignatures, SignHashExPropId.PinLessFloorLimit, DenominationId.Denomination, TokenId.Decimal
+            CardNumberId.Number, CommonId.MaxSignatures, SignHashExPropId.PinLessFloorLimit, TokenId.Decimal
     )
 
     val hiddenList = mutableListOf<Id>(
