@@ -2,21 +2,13 @@ package com.tangem.blockchain.blockchains.ethereum
 
 import android.util.Log
 import com.tangem.blockchain.blockchains.ethereum.network.EthereumNetworkManager
-import com.tangem.blockchain.blockchains.ethereum.network.EthereumResponse
+import com.tangem.blockchain.blockchains.ethereum.network.EthereumInfoResponse
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
-import org.kethereum.DEFAULT_GAS_LIMIT
-import org.kethereum.crypto.api.ec.ECDSASignature
-import org.kethereum.crypto.determineRecId
-import org.kethereum.crypto.impl.ec.canonicalise
-import org.kethereum.extensions.transactions.encodeRLP
-import org.kethereum.keccakshortcut.keccak
-import org.kethereum.model.*
 import java.math.BigDecimal
-import java.math.BigInteger
 
 class EthereumWalletManager(
         cardId: String,
@@ -39,7 +31,7 @@ class EthereumWalletManager(
         }
     }
 
-    private fun updateWallet(data: EthereumResponse) {
+    private fun updateWallet(data: EthereumInfoResponse) {
         wallet.amounts[AmountType.Coin]?.value = data.balance
         wallet.amounts[AmountType.Token]?.value = data.tokenBalance
         txCount = data.txCount
