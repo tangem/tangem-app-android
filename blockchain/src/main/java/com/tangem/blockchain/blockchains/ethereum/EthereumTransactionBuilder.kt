@@ -5,7 +5,6 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.common.extensions.hexToBytes
-import org.kethereum.DEFAULT_GAS_LIMIT
 import org.kethereum.crypto.api.ec.ECDSASignature
 import org.kethereum.crypto.determineRecId
 import org.kethereum.crypto.impl.ec.canonicalise
@@ -22,6 +21,7 @@ class EthereumTransactionBuilder(private val walletPublicKey: ByteArray, blockch
 
     private val chainId = when (blockchain) {
         Blockchain.Ethereum -> Chain.Mainnet.id
+        Blockchain.RSK -> Chain.RskMainnet.id
         else -> throw Exception("${blockchain.fullName} blockchain is not supported by EthereumTransactionBuilder")
     }
 
@@ -36,14 +36,15 @@ class EthereumTransactionBuilder(private val walletPublicKey: ByteArray, blockch
 
         val to: Address
         val value: BigInteger
-        val input: ByteArray//data for smart contract
+        val input: ByteArray //data for smart contract
 
-        if (transactionData.amount.type == AmountType.Coin) { //ETH transfer
+        if (transactionData.amount.type == AmountType.Coin) { //coin transfer
             to = Address(transactionData.destinationAddress)
             value = bigIntegerAmount
             input = ByteArray(0)
-        } else { //Token transfer
-            to = Address(transactionData.contractAddress ?: throw Exception("Contract address is not specified!"))
+        } else { //token transfer
+            to = Address(transactionData.contractAddress
+                    ?: throw Exception("Contract address is not specified!"))
             value = BigInteger.ZERO
             input = createErc20TransferData(transactionData.destinationAddress, bigIntegerAmount)
         }
@@ -104,8 +105,8 @@ enum class Chain(val id: Int) {
     Morden(2),
     Ropsten(3),
     Rinkeby(4),
-    RootstockMainnet(30),
-    RootstockTestnet(31),
+    RskMainnet(30),
+    RskTestnet(31),
     Kovan(42),
     EthereumClassicMainnet(61),
     EthereumClassicTestnet(62),
