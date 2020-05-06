@@ -17,7 +17,6 @@ class PersonalizationResources() {
         initCommon(holder)
         initSigningMethod(holder)
         initSignHashExProp(holder)
-        initDenomination(holder)
         initToken(holder)
         initProductMask(holder)
         initSettingsMask(holder)
@@ -70,11 +69,6 @@ class PersonalizationResources() {
         holder.register(SignHashExPropId.RequireTerminalCertSig, Resources(R.string.pers_item_require_terminal_cert_sig, R.string.info_pers_item_require_terminal_cert_sig))
         holder.register(SignHashExPropId.RequireTerminalTxSig, Resources(R.string.pers_item_require_terminal_tx_sig, R.string.info_pers_item_require_terminal_tx_sig))
         holder.register(SignHashExPropId.CheckPin3, Resources(R.string.pers_item_check_pin3_on_card, R.string.info_pers_item_check_pin3_on_card))
-    }
-
-    private fun initDenomination(holder: TypedHolder<Id, Resources>) {
-        holder.register(DenominationId.WriteOnPersonalize, Resources(R.string.pers_item_write_on_personalize, R.string.info_pers_item_write_on_personalize))
-        holder.register(DenominationId.Denomination, Resources(R.string.pers_item_denomination, R.string.info_pers_item_denomination))
     }
 
     private fun initToken(holder: TypedHolder<Id, Resources>) {
