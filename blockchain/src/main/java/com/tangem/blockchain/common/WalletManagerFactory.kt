@@ -12,7 +12,6 @@ import com.tangem.blockchain.blockchains.bitcoincash.BitcoinCashWalletManager
 import com.tangem.blockchain.blockchains.cardano.CardanoTransactionBuilder
 import com.tangem.blockchain.blockchains.cardano.CardanoWalletManager
 import com.tangem.blockchain.blockchains.cardano.network.CardanoNetworkManager
-import com.tangem.blockchain.blockchains.ethereum.Chain
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionBuilder
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.ethereum.network.EthereumNetworkManager
@@ -61,7 +60,7 @@ object WalletManagerFactory {
                         BitcoinCashNetworkManager()
                 )
             }
-            Blockchain.Ethereum -> {
+            Blockchain.Ethereum, Blockchain.RSK -> {
                 return EthereumWalletManager(
                         cardId, wallet,
                         EthereumTransactionBuilder(walletPublicKey, blockchain),
