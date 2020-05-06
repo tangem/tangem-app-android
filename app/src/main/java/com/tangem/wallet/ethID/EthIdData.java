@@ -9,7 +9,7 @@ public class EthIdData extends CoinData {
     private boolean hasApprovalTx = false;
     private Long approvalAddressNonce;
     private byte[] CKDpub = null;
-    private String approvalAddress = "0x74bd17417f07ee8cf89a476fc3cc6ef7b7b140a7"; //default approval address for issuance
+    private String approvalAddress = null; //default approval address for issuance
 
     public boolean isHasApprovalTx() {
         return hasApprovalTx;
