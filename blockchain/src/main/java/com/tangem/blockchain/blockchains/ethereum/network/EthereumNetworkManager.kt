@@ -5,6 +5,7 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.extensions.retryIO
 import com.tangem.blockchain.network.API_INFURA
+import com.tangem.blockchain.network.API_RSK
 import com.tangem.blockchain.network.createRetrofitInstance
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -16,16 +17,24 @@ import java.math.RoundingMode
 
 
 class EthereumNetworkManager(blockchain: Blockchain) {
+    private val infuraPath = "v3/"
 
-    private val api: InfuraApi by lazy {
+    private val api: EthereumApi by lazy {
         val baseUrl = when (blockchain) {
-            Blockchain.Ethereum -> API_INFURA
+            Blockchain.Ethereum -> API_INFURA + infuraPath
+            Blockchain.RSK -> API_RSK
             else -> throw Exception("${blockchain.fullName} blockchain is not supported by EthereumNetworkManager")
         }
-        createRetrofitInstance(baseUrl).create(InfuraApi::class.java)
+        createRetrofitInstance(baseUrl).create(EthereumApi::class.java)
     }
 
-    private val provider: InfuraProvider by lazy { InfuraProvider(api) }
+    private val apiKey = when (blockchain) {
+        Blockchain.Ethereum -> INFURA_API_KEY
+        Blockchain.RSK -> ""
+        else -> throw Exception("${blockchain.fullName} blockchain is not supported by EthereumNetworkManager")
+    }
+
+    private val provider: EthereumProvider by lazy { EthereumProvider(api, apiKey) }
 
     suspend fun sendTransaction(transaction: String): SimpleResult {
         return try {
@@ -50,17 +59,17 @@ class EthereumNetworkManager(blockchain: Blockchain) {
         }
     }
 
-    suspend fun getInfo(address: String, contractAddress: String? = null): Result<EthereumResponse> {
+    suspend fun getInfo(address: String, contractAddress: String? = null): Result<EthereumInfoResponse> {
         return try {
             coroutineScope {
                 val balanceResponse = retryIO { async { provider.getBalance(address) } }
                 val txCountResponse = retryIO { async { provider.getTxCount(address) } }
                 val pendingTxCountResponse = retryIO { async { provider.getPendingTxCount(address) } }
-                var tokenBalanceResponse: Deferred<InfuraResponse>? = null
+                var tokenBalanceResponse: Deferred<EthereumResponse>? = null
                 if (contractAddress != null) {
                     tokenBalanceResponse = retryIO { async { provider.getTokenBalance(address, contractAddress) } }
                 }
-                Result.Success(EthereumResponse(
+                Result.Success(EthereumInfoResponse(
                         balanceResponse.await().result!!.parseAmount(),
                         tokenBalanceResponse?.await()?.result?.parseAmount(),
                         txCountResponse.await().result?.responseToNumber()?.toLong() ?: 0,
@@ -96,9 +105,11 @@ class EthereumNetworkManager(blockchain: Blockchain) {
 
 }
 
-data class EthereumResponse(
+data class EthereumInfoResponse(
         val balance: BigDecimal,
         val tokenBalance: BigDecimal?,
         val txCount: Long,
         val pendingTxCount: Long
 )
+
+private const val INFURA_API_KEY = "613a0b14833145968b1f656240c7d245"
