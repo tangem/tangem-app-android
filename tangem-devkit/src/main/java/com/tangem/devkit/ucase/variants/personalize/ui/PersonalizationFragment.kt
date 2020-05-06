@@ -24,6 +24,7 @@ import com.tangem.devkit._arch.widget.WidgetBuilder
 import com.tangem.devkit.commons.DialogController
 import com.tangem.devkit.commons.view.MultiActionView
 import com.tangem.devkit.commons.view.ViewAction
+import com.tangem.devkit.extensions.copyToClipboard
 import com.tangem.devkit.extensions.view.beginDelayedTransition
 import com.tangem.devkit.ucase.domain.paramsManager.ItemsManager
 import com.tangem.devkit.ucase.domain.paramsManager.PayloadKey
@@ -50,7 +51,12 @@ import ru.dev.gbixahue.eu4d.lib.android.global.threading.postWork
  */
 class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetView {
 
-    override val itemsManager: ItemsManager by lazy { PersonalizationItemsManager(PersonalizationConfigStore(requireContext())) }
+    private lateinit var personalizationItemsManager: PersonalizationItemsManager
+
+    override val itemsManager: ItemsManager by lazy {
+        personalizationItemsManager = PersonalizationItemsManager(PersonalizationConfigStore(requireContext()))
+        personalizationItemsManager
+    }
 
     override fun getLayoutId(): Int = R.layout.fg_base_action_layout
 
@@ -106,20 +112,47 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
     override fun widgetsWasCreated() {
         super.widgetsWasCreated()
 
-        val btnContainer = contentContainer.inflate<ViewGroup>(R.layout.view_simple_button)
-        val btn = btnContainer.findViewById<Button>(R.id.button)
+        val footerContainer = contentContainer.inflate<ViewGroup>(R.layout.fg_personalization_footer)
 
-        val show = StringId("show")
-        val hide = StringId("hide")
-        val multiAction = MultiActionView(mutableListOf(
-                ViewAction(show, R.string.show_rare_fields) { actionVM.showFields(ActionType.Personalize) },
-                ViewAction(hide, R.string.hide_rare_fields) { actionVM.hideFields(ActionType.Personalize) }
-        ), btn)
-        multiAction.afterAction = {
-            multiAction.state = if (it == show) hide else show
+        fun initShowHideBtn(parent: ViewGroup) {
+            val btn = parent.findViewById<Button>(R.id.btn_show_hide_fields)
+
+            val show = StringId("show")
+            val hide = StringId("hide")
+            val multiAction = MultiActionView(mutableListOf(
+                    ViewAction(show, R.string.show_rare_fields) { actionVM.showFields(ActionType.Personalize) },
+                    ViewAction(hide, R.string.hide_rare_fields) { actionVM.hideFields(ActionType.Personalize) }
+            ), btn)
+            multiAction.afterAction = {
+                multiAction.state = if (it == show) hide else show
+            }
+            multiAction.performAction(hide)
         }
-        multiAction.performAction(hide)
-        contentContainer.addView(btnContainer)
+
+        fun initImportExportJson(parent: ViewGroup) {
+            val tvJsonExport = parent.findViewById<EditText>(R.id.et_json_export)
+            val btnExportJson = parent.findViewById<Button>(R.id.btn_export_json)
+
+            tvJsonExport.setOnClickListener {
+                val jsonString = tvJsonExport.text
+                Log.w(this, jsonString)
+                requireContext().copyToClipboard(jsonString, "Exported Json")
+            }
+            btnExportJson.setOnClickListener {
+                tvJsonExport.setText(personalizationItemsManager.exportJsonConfig())
+            }
+
+            val tvJsonImport = parent.findViewById<EditText>(R.id.et_json_import)
+            val btnImportJson = parent.findViewById<Button>(R.id.btn_import_json)
+            btnImportJson.setOnClickListener {
+                personalizationItemsManager.importJsonConfig(tvJsonImport.text.toString().trim())
+            }
+        }
+
+        initShowHideBtn(footerContainer)
+        initImportExportJson(footerContainer)
+
+        contentContainer.addView(footerContainer)
     }
 
     override fun handleResponseCardData(card: Card) {
