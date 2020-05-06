@@ -11,6 +11,7 @@ import android.nfc.tech.IsoDep
 import android.os.Build
 import android.os.Bundle
 import com.tangem.Log
+import com.tangem.tangem_sdk_new.ui.NfcEnableDialog
 
 /**
  * Helps use NFC, leveraging Android NFC functionality.
@@ -22,6 +23,7 @@ class NfcManager : NfcAdapter.ReaderCallback {
     val reader = NfcReader()
     private var activity: Activity? = null
     private var nfcAdapter: NfcAdapter? = null
+    private var nfcEnableDialog: NfcEnableDialog? = null
 
     fun setCurrentActivity(activity: Activity) {
         this.activity = activity
@@ -47,14 +49,19 @@ class NfcManager : NfcAdapter.ReaderCallback {
     fun onResume() {
         val filter = IntentFilter(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED)
         activity?.registerReceiver(mBroadcastReceiver, filter)
-
-        if ((nfcAdapter == null || nfcAdapter?.isEnabled != true)) {
-            reader.nfcEnabled = false
-        } else {
-            reader.nfcEnabled = true
-            enableReaderMode()
-        }
+        handleNfcEnabled(nfcAdapter?.isEnabled == true)
         reader.manager = this
+    }
+
+    private fun handleNfcEnabled(nfcEnabled: Boolean) {
+        reader.nfcEnabled = nfcEnabled
+        if (nfcEnabled) {
+            enableReaderMode()
+            nfcEnableDialog?.cancel()
+        } else {
+            nfcEnableDialog = NfcEnableDialog()
+            activity?.let{ nfcEnableDialog?.show(it) }
+        }
     }
 
     fun onPause() {
