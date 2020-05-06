@@ -4,7 +4,7 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
-data class InfuraResponse(
+data class EthereumResponse(
         @Json(name = "jsonrpc")
         val jsonrpc: String = "",
 
@@ -15,11 +15,11 @@ data class InfuraResponse(
         val result: String? = null,
 
         @Json(name = "error")
-        val error: InfuraError? = null
+        val error: EthereumError? = null
 )
 
 @JsonClass(generateAdapter = true)
-data class InfuraError(
+data class EthereumError(
         @Json(name = "code")
         val code: Int? = null,
 
