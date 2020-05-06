@@ -56,10 +56,22 @@ public class EthIdEngine extends CoinEngine {
         } else {
             throw new Exception("Invalid type of Blockchain data for " + this.getClass().getSimpleName());
         }
+        defineApprovalAddress();
     }
 
     public EthIdEngine() {
         super();
+    }
+
+    private void defineApprovalAddress() {
+        TangemCard.IDCardData idCardData = ctx.getCard().getIDCardData();
+        String approvalAddress;
+        if (idCardData != null && idCardData.trustedAddress != null) {
+            approvalAddress = ctx.getCard().getIDCardData().trustedAddress;
+        } else {
+            approvalAddress = calculateAddress(approvalPubKey);
+        }
+        coinData.setApprovalAddress(approvalAddress);
     }
 
     private static int getDecimals() {
@@ -484,12 +496,6 @@ public class EthIdEngine extends CoinEngine {
         try {
             String wallet = calculateAddress(calculateCKDpub(ctx.getCard().getIdHash()));
             ctx.getCoinData().setWallet(wallet);
-
-            TangemCard.IDCardData idCardData = ctx.getCard().getIDCardData();
-            if (idCardData != null && idCardData.trustedAddress != null) {
-                String approvalAddress = ctx.getCard().getIDCardData().trustedAddress;
-                coinData.setApprovalAddress(approvalAddress);
-            }
         } catch (Exception e) {
             ctx.getCoinData().setWallet("ERROR");
             throw new CardProtocol.TangemException("Can't define wallet address");
