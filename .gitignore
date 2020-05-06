@@ -16,7 +16,7 @@ local.properties
 .idea/codeStyles
 
 # LayoutInspector files
-.captures
+/captures
 
 # OS-specific files
 .DS_Store
