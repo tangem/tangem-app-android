@@ -151,9 +151,9 @@
 
 
     <!--  Field names - Response: Depersonalize  -->
-    <string name="response_depersonalize_is_success">Is success</string>
+    <string name="response_depersonalize_is_success">Success</string>
 
-    <string name="info_response_depersonalize_is_success">Is success</string>
+    <string name="info_response_depersonalize_is_success">Success</string>
 
 
     <!-- Field names - Response: Read Issuer (Extra) Data -->
