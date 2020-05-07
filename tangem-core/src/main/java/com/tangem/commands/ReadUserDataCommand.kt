@@ -1,7 +1,9 @@
 package com.tangem.commands
 
+import com.tangem.CardSession
 import com.tangem.SessionEnvironment
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
+import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
@@ -10,32 +12,32 @@ import com.tangem.common.tlv.TlvDecoder
 import com.tangem.common.tlv.TlvTag
 
 class ReadUserDataResponse(
-    /**
-     * CID, Unique Tangem card ID number.
-     */
-    val cardId: String,
+        /**
+         * CID, Unique Tangem card ID number.
+         */
+        val cardId: String,
 
-    /**
-     * Data defined by user's App.
-     */
-    val userData: ByteArray,
+        /**
+         * Data defined by user's App.
+         */
+        val userData: ByteArray,
 
-    /**
-     * Data defined by user's App (confirmed by PIN2).
-     */
-    val userProtectedData: ByteArray,
+        /**
+         * Data defined by user's App (confirmed by PIN2).
+         */
+        val userProtectedData: ByteArray,
 
-    /**
-     * Counter initialized by user's App and increased on every signing of new transaction
-     */
-    val userCounter: Int,
+        /**
+         * Counter initialized by user's App and increased on every signing of new transaction
+         */
+        val userCounter: Int,
 
-    /**
-     * Counter initialized by user's App (confirmed by PIN2) and increased on every signing of new transaction
-     */
-    val userProtectedCounter: Int
+        /**
+         * Counter initialized by user's App (confirmed by PIN2) and increased on every signing of new transaction
+         */
+        val userProtectedCounter: Int
 
-): CommandResponse
+) : CommandResponse
 
 /**
  * This command returns two up to 512-byte User_Data, User_Protected_Data and two counters User_Counter and
@@ -47,30 +49,42 @@ class ReadUserDataResponse(
  * of new transaction (on SIGN command that calculate new signatures). The App defines purpose of use.
  * For example, this fields may contain blockchain nonce value.
  */
-class ReadUserDataCommand: Command<ReadUserDataResponse>() {
+class ReadUserDataCommand : Command<ReadUserDataResponse>() {
 
-  override fun serialize(environment: SessionEnvironment): CommandApdu {
-    val builder = TlvBuilder()
-    builder.append(TlvTag.CardId, environment.card?.cardId)
-    builder.append(TlvTag.Pin, environment.pin1)
+    override fun handlePreRunErrors(session: CardSession, callback: (result: CompletionResult<ReadUserDataResponse>) -> Unit): Boolean {
+        if (session.environment.card?.status == CardStatus.NotPersonalized) {
+            callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
+            return true
+        }
+        if (session.environment.card?.isActivated == true) {
+            callback(CompletionResult.Failure(TangemSdkError.NotActivated()))
+            return true
+        }
+        return false
+    }
 
-    return CommandApdu(
-            Instruction.ReadUserData, builder.serialize(),
-            environment.encryptionMode, environment.encryptionKey
-    )
-  }
+    override fun serialize(environment: SessionEnvironment): CommandApdu {
+        val builder = TlvBuilder()
+        builder.append(TlvTag.CardId, environment.card?.cardId)
+        builder.append(TlvTag.Pin, environment.pin1)
 
-  override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): ReadUserDataResponse {
-    val tlvData = apdu.getTlvData(environment.encryptionKey)
-            ?: throw SessionError.DeserializeApduFailed()
+        return CommandApdu(
+                Instruction.ReadUserData, builder.serialize(),
+                environment.encryptionMode, environment.encryptionKey
+        )
+    }
 
-      val decoder = TlvDecoder(tlvData)
-      return ReadUserDataResponse(
-          cardId = decoder.decode(TlvTag.CardId),
-          userData = decoder.decode(TlvTag.UserData),
-          userProtectedData = decoder.decode(TlvTag.UserProtectedData),
-          userCounter = decoder.decode(TlvTag.UserCounter),
-          userProtectedCounter = decoder.decode(TlvTag.UserProtectedCounter)
-      )
-  }
+    override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): ReadUserDataResponse {
+        val tlvData = apdu.getTlvData(environment.encryptionKey)
+                ?: throw TangemSdkError.DeserializeApduFailed()
+
+        val decoder = TlvDecoder(tlvData)
+        return ReadUserDataResponse(
+                cardId = decoder.decode(TlvTag.CardId),
+                userData = decoder.decode(TlvTag.UserData),
+                userProtectedData = decoder.decode(TlvTag.UserProtectedData),
+                userCounter = decoder.decode(TlvTag.UserCounter),
+                userProtectedCounter = decoder.decode(TlvTag.UserProtectedCounter)
+        )
+    }
 }
