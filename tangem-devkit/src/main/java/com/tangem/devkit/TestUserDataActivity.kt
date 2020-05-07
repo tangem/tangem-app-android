@@ -6,8 +6,8 @@ import android.widget.CompoundButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.SessionEnvironment
-import com.tangem.SessionError
 import com.tangem.TangemSdk
+import com.tangem.TangemSdkError
 import com.tangem.common.CompletionResult
 import com.tangem.tangem_sdk_new.extensions.init
 import kotlinx.android.synthetic.main.activity_test_user_data.*
@@ -92,8 +92,8 @@ class TestUserDataActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleError(tv: TextView, error: SessionError) {
-        if (error is SessionError.UserCancelled) return
+    private fun handleError(tv: TextView, error: TangemSdkError) {
+        if (error is TangemSdkError.UserCancelled) return
 
         runOnUiThread { tv.text = error::class.simpleName }
     }
