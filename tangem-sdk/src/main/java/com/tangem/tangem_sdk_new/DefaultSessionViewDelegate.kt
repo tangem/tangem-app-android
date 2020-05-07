@@ -14,7 +14,6 @@ import com.tangem.common.CompletionResult
 import com.tangem.tangem_sdk_new.extensions.hide
 import com.tangem.tangem_sdk_new.extensions.show
 import com.tangem.tangem_sdk_new.nfc.NfcReader
-import com.tangem.tangem_sdk_new.ui.NfcEnableDialog
 import com.tangem.tangem_sdk_new.ui.TouchCardAnimation
 import kotlinx.android.synthetic.main.layout_touch_card.*
 import kotlinx.android.synthetic.main.nfc_bottom_sheet.*
@@ -35,7 +34,6 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
     override fun onNfcSessionStarted(cardId: String?, message: Message?) {
         reader.readingCancelled = false
         postUI { showReadingDialog(activity, cardId, message) }
-        if (!reader.nfcEnabled) NfcEnableDialog().show(activity)
     }
 
     private fun showReadingDialog(activity: Activity, cardId: String?, message: Message?) {
