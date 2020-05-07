@@ -2,7 +2,7 @@ package com.tangem.tasks
 
 import com.tangem.CardSession
 import com.tangem.CardSessionRunnable
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
 import com.tangem.commands.*
 import com.tangem.common.CompletionResult
 
@@ -18,7 +18,7 @@ internal class ScanTask : CardSessionRunnable<Card> {
         val card = session.environment.card
 
         if (card == null) {
-            callback(CompletionResult.Failure(SessionError.MissingPreflightRead()))
+            callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
 
         } else if (card.cardData?.productMask?.contains(Product.Tag) != false) {
             callback(CompletionResult.Success(card))
@@ -27,7 +27,7 @@ internal class ScanTask : CardSessionRunnable<Card> {
             callback(CompletionResult.Success(card))
 
         } else if (card.curve == null || card.walletPublicKey == null) {
-            callback(CompletionResult.Failure(SessionError.CardError()))
+            callback(CompletionResult.Failure(TangemSdkError.CardError()))
 
         } else {
             val checkWalletCommand = CheckWalletCommand(card.curve, card.walletPublicKey)
