@@ -36,7 +36,7 @@ class ByteTypeAdapter(
         private val fieldConverter: ResponseFieldConverter
 ) : JsonSerializer<ByteArray> {
     override fun serialize(src: ByteArray, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-        return JsonPrimitive(fieldConverter.byteArray(src))
+        return JsonPrimitive(fieldConverter.byteArrayToHex(src))
     }
 }
 
@@ -109,7 +109,11 @@ class ResponseFieldConverter {
         return Settings.values().filter { masks.contains(it) }.map { it.name }
     }
 
-    fun byteArray(byteArray: ByteArray?): String? {
+    fun byteArrayToHex(byteArray: ByteArray?): String? {
         return byteArray?.toHexString()
+    }
+
+    fun byteArrayToString(byteArray: ByteArray?): String? {
+        return if (byteArray == null) null else String(byteArray)
     }
 }
