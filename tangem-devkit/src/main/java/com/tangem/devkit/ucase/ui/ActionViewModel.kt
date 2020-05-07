@@ -16,7 +16,6 @@ import com.tangem.devkit._arch.structure.Payload
 import com.tangem.devkit._arch.structure.abstraction.Item
 import com.tangem.devkit._arch.structure.abstraction.iterate
 import com.tangem.devkit.ucase.domain.paramsManager.ItemsManager
-import com.tangem.devkit.ucase.domain.responses.ResponseJsonConverter
 import com.tangem.devkit.ucase.resources.ActionType
 import com.tangem.devkit.ucase.tunnel.ViewScreen
 import com.tangem.devkit.ucase.variants.personalize.converter.ItemTypes
@@ -134,7 +133,6 @@ class ActionViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
 internal class Notifier(private val vm: ActionViewModel) {
 
     private var notShowedError: TangemSdkError? = null
-    private val gson: Gson = ResponseJsonConverter().gson
 
     fun handleActionResult(result: CompletionResult<*>, list: List<Item>) {
         if (list.isNotEmpty()) notifyItemsChanged(list)
