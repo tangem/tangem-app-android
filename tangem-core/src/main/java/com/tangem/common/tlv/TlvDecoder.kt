@@ -1,7 +1,7 @@
 package com.tangem.common.tlv
 
 import com.tangem.Log
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
 import com.tangem.commands.*
 import com.tangem.commands.common.IssuerDataMode
 import com.tangem.common.extensions.toDate
@@ -34,7 +34,7 @@ class TlvDecoder(val tlvList: List<Tlv>) {
     inline fun <reified T> decodeOptional(tag: TlvTag): T? =
             try {
                 decode<T>(tag)
-            } catch (exception: SessionError.DecodingFailedMissingTag) {
+            } catch (exception: TangemSdkError.DecodingFailedMissingTag) {
                 null
             }
 
@@ -55,7 +55,7 @@ class TlvDecoder(val tlvList: List<Tlv>) {
                     return false as T
                 } else {
                     Log.e(this::class.simpleName!!, "Tag $tag not found")
-                    throw SessionError.DecodingFailedMissingTag()
+                    throw TangemSdkError.DecodingFailedMissingTag()
                 }
 
         return when (tag.valueType()) {
@@ -73,7 +73,7 @@ class TlvDecoder(val tlvList: List<Tlv>) {
                     tlvValue.toInt() as T
                 } catch (exception: IllegalArgumentException) {
                     Log.e(this::class.simpleName!!, exception.message ?: "")
-                    throw SessionError.DecodingFailed()
+                    throw TangemSdkError.DecodingFailed()
                 }
             }
             TlvValueType.BoolValue -> {
@@ -90,7 +90,7 @@ class TlvDecoder(val tlvList: List<Tlv>) {
                     EllipticCurve.byName(tlvValue.toUtf8()) as T
                 } catch (exception: Exception) {
                     logException(tag, tlvValue.toUtf8(), exception)
-                    throw SessionError.DecodingFailed()
+                    throw TangemSdkError.DecodingFailed()
                 }
 
 
@@ -101,7 +101,7 @@ class TlvDecoder(val tlvList: List<Tlv>) {
                     tlvValue.toDate() as T
                 } catch (exception: Exception) {
                     logException(tag, tlvValue.toHexString(), exception)
-                    throw SessionError.DecodingFailed()
+                    throw TangemSdkError.DecodingFailed()
                 }
             }
             TlvValueType.ProductMask -> {
@@ -118,7 +118,7 @@ class TlvDecoder(val tlvList: List<Tlv>) {
                     CardStatus.byCode(tlvValue.toInt()) as T
                 } catch (exception: Exception) {
                     logException(tag, tlvValue.toInt().toString(), exception)
-                    throw SessionError.DecodingFailed()
+                    throw TangemSdkError.DecodingFailed()
                 }
             }
             TlvValueType.SigningMethod -> {
@@ -127,7 +127,7 @@ class TlvDecoder(val tlvList: List<Tlv>) {
                     SigningMethodMask(tlvValue.toInt()) as T
                 } catch (exception: Exception) {
                     logException(tag, tlvValue.toInt().toString(), exception)
-                    throw SessionError.DecodingFailed()
+                    throw TangemSdkError.DecodingFailed()
                 }
             }
             TlvValueType.IssuerDataMode -> {
@@ -136,7 +136,7 @@ class TlvDecoder(val tlvList: List<Tlv>) {
                     IssuerDataMode.byCode(tlvValue.toInt().toByte()) as T
                 } catch (exception: Exception) {
                     logException(tag, tlvValue.toInt().toString(), exception)
-                    throw SessionError.DecodingFailed()
+                    throw TangemSdkError.DecodingFailed()
                 }
             }
         }
@@ -151,7 +151,7 @@ class TlvDecoder(val tlvList: List<Tlv>) {
         if (T::class != ExpectedT::class) {
             Log.e(this::class.simpleName!!,
                     "Mapping error. Type for tag: $tag must be ${tag.valueType()}. It is ${T::class}")
-            throw SessionError.DecodingFailedTypeMismatch()
+            throw TangemSdkError.DecodingFailedTypeMismatch()
         }
     }
 
