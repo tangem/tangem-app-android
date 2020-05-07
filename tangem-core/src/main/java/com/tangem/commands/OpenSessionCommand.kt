@@ -1,7 +1,7 @@
 package com.tangem.commands
 
 import com.tangem.SessionEnvironment
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
@@ -32,7 +32,7 @@ class OpenSessionCommand(private val sessionKeyA: ByteArray) : Command<OpenSessi
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): OpenSessionResponse {
         val tlvData = apdu.getTlvData()
-                ?: throw SessionError.DeserializeApduFailed()
+                ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
         return OpenSessionResponse(
