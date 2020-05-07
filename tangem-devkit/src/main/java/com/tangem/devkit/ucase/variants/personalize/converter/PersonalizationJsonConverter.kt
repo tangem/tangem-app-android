@@ -80,7 +80,8 @@ internal class JsonToConfig : Converter<PersonalizationJson, PersonalizationConf
         // copy whole object and then checking tricky places
         config.cardData = jsonCardData
 
-        config.itsToken = jsonCardData.token_contract_address.isNotEmpty() || jsonCardData.token_symbol.isNotEmpty()
+        config.itsToken = jsonCardData.token_contract_address?.isNotEmpty() ?: false
+                || jsonCardData.token_symbol?.isNotEmpty() ?: false
 
         val selectedBlockchain = Helper.listOfBlockchain().firstOrNull { it.value == jsonCardData.blockchain }
         if (selectedBlockchain == null) {
@@ -180,9 +181,9 @@ internal class ConfigToJson : Converter<PersonalizationConfig, PersonalizationJs
             jsonDto.cardData.token_symbol = config.cardData.token_symbol
             jsonDto.cardData.token_decimal = config.cardData.token_decimal
         } else {
-            jsonDto.cardData.token_contract_address = ""
-            jsonDto.cardData.token_symbol = ""
-            jsonDto.cardData.token_decimal = 0
+            jsonDto.cardData.token_contract_address = null
+            jsonDto.cardData.token_symbol = null
+            jsonDto.cardData.token_decimal = null
         }
     }
 
