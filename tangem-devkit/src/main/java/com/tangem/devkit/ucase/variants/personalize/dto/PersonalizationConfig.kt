@@ -192,9 +192,9 @@ class CardData {
     var date = ""
     var batch = ""
     var blockchain = ""
-    var token_symbol = ""
-    var token_contract_address = ""
-    var token_decimal: Long = 0
+    var token_symbol: String? = null
+    var token_contract_address: String? = null
+    var token_decimal: Long? = null
     var product_note = false
     var product_tag = false
     var product_id_card = false
