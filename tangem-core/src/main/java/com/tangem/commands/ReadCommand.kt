@@ -1,7 +1,7 @@
 package com.tangem.commands
 
 import com.tangem.SessionEnvironment
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
@@ -132,7 +132,7 @@ data class SettingsMask(val rawValue: Int) {
 enum class Settings(val code: Int) {
     IsReusable(0x0001),
     UseActivation(0x0002),
-    ForbidPurgeWallet(0x0004),
+    ProhibitPurgeWallet(0x0004),
     UseBlock(0x0008),
 
     AllowSwapPIN(0x0010),
@@ -384,7 +384,7 @@ class ReadCommand : Command<Card>() {
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): Card {
         val tlvData = apdu.getTlvData(environment.encryptionKey)
-                ?: throw SessionError.DeserializeApduFailed()
+                ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
 
