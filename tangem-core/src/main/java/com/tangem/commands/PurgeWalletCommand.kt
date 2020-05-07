@@ -1,7 +1,9 @@
 package com.tangem.commands
 
+import com.tangem.CardSession
 import com.tangem.SessionEnvironment
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
+import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
@@ -29,6 +31,37 @@ class PurgeWalletResponse(
  */
 class PurgeWalletCommand : Command<PurgeWalletResponse>() {
 
+    override fun handlePreRunErrors(session: CardSession, callback: (result: CompletionResult<PurgeWalletResponse>) -> Unit): Boolean {
+        if (session.environment.card?.status == CardStatus.NotPersonalized) {
+            callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
+            return true
+        }
+        if (session.environment.card?.isActivated == true) {
+            callback(CompletionResult.Failure(TangemSdkError.NotActivated()))
+            return true
+        }
+        if (session.environment.card?.settingsMask?.contains(Settings.ProhibitPurgeWallet) == true) {
+            callback(CompletionResult.Failure(TangemSdkError.PurgeWalletProhibited()))
+            return true
+        }
+        return false
+    }
+
+    override fun handleResponseErrors(session: CardSession,
+                                      result: CompletionResult<PurgeWalletResponse>,
+                                      callback: (result: CompletionResult<PurgeWalletResponse>) -> Unit): Boolean {
+        when (result) {
+            is CompletionResult.Failure -> {
+                if (result.error is TangemSdkError.InvalidParams) {
+                    callback(CompletionResult.Failure(TangemSdkError.Pin2OrCvcRequired()))
+                    return true
+                }
+                return false
+            }
+            else -> return false
+        }
+    }
+
     override fun serialize(environment: SessionEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Pin, environment.pin1)
@@ -42,7 +75,7 @@ class PurgeWalletCommand : Command<PurgeWalletResponse>() {
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): PurgeWalletResponse {
         val tlvData = apdu.getTlvData(environment.encryptionKey)
-                ?: throw SessionError.DeserializeApduFailed()
+                ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
         return PurgeWalletResponse(
