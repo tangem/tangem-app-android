@@ -341,6 +341,7 @@ class IdFragment : BaseFragment(), NfcAdapter.ReaderCallback,
             validator.check(ctx, false)
             context?.let { ContextCompat.getColor(it, validator.color) }?.let { tvBalanceLine1?.setTextColor(it) }
             tvBalanceLine1?.text = getString(validator.firstLine)
+            tvBalanceLine2?.text = getString(validator.getSecondLine(false)).format(ctx.card.idCardData.trustedAddress)
         }
 
         if (ctx.card.hasIDCardData()) {

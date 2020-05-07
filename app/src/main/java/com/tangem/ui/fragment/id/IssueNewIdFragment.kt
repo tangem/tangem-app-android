@@ -119,7 +119,7 @@ class IssueNewIdFragment : BaseFragment(), NavigationResultListener {
                 photoInBytes,
                 issuerExpireDate.issueDate,
                 issuerExpireDate.expireDate,
-                (CoinEngineFactory.create(ctx) as? EthIdEngine)?.approvalAddress
+                (CoinEngineFactory.create(ctx) as? EthIdEngine)?.coinData?.approvalAddress
                 )
 
         val inputs = "$name $lastName;$birthDate${gender.toString()}"
