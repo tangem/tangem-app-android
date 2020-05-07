@@ -1,15 +1,29 @@
 package com.tangem.blockchain.common
 
-import com.tangem.blockchain.binance.BinanceWalletManager
-import com.tangem.blockchain.bitcoin.BitcoinWalletManager
-import com.tangem.blockchain.cardano.CardanoWalletManager
-import com.tangem.blockchain.ethereum.Chain
-import com.tangem.blockchain.ethereum.EthereumWalletManager
+import com.tangem.blockchain.blockchains.binance.BinanceTransactionBuilder
+import com.tangem.blockchain.blockchains.binance.BinanceWalletManager
+import com.tangem.blockchain.blockchains.binance.network.BinanceNetworkManager
+import com.tangem.blockchain.blockchains.bitcoin.BitcoinTransactionBuilder
+import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
+import com.tangem.blockchain.blockchains.bitcoin.network.BitcoinNetworkManager
+import com.tangem.blockchain.blockchains.bitcoincash.BitcoinCashNetworkManager
+import com.tangem.blockchain.blockchains.bitcoincash.BitcoinCashTransactionBuilder
+import com.tangem.blockchain.blockchains.bitcoincash.BitcoinCashWalletManager
+import com.tangem.blockchain.blockchains.cardano.CardanoTransactionBuilder
+import com.tangem.blockchain.blockchains.cardano.CardanoWalletManager
+import com.tangem.blockchain.blockchains.cardano.network.CardanoNetworkManager
+import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionBuilder
+import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
+import com.tangem.blockchain.blockchains.ethereum.network.EthereumNetworkManager
+import com.tangem.blockchain.blockchains.stellar.StellarNetworkManager
+import com.tangem.blockchain.blockchains.stellar.StellarTransactionBuilder
 
-import com.tangem.blockchain.stellar.StellarWalletManager
-import com.tangem.blockchain.wallets.CurrencyWallet
-import com.tangem.blockchain.xrp.XrpWalletManager
+import com.tangem.blockchain.blockchains.stellar.StellarWalletManager
+import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
+import com.tangem.blockchain.blockchains.xrp.XrpWalletManager
+import com.tangem.blockchain.blockchains.xrp.network.XrpNetworkManager
 import com.tangem.commands.Card
+import com.tangem.common.extensions.toCompressedPublicKey
 
 object WalletManagerFactory {
 
@@ -18,69 +32,76 @@ object WalletManagerFactory {
         val blockchainName: String = card.cardData?.blockchainName ?: return null
         val blockchain = Blockchain.fromId(blockchainName)
 
-        val token = getToken(card)
-        val wallet = CurrencyWallet.newInstance(blockchain, blockchain.makeAddress(walletPublicKey), token)
+        val cardId = card.cardId
 
+        val token = getToken(card)
+
+        val wallet = Wallet(blockchain, blockchain.makeAddress(walletPublicKey), token)
 
         when (blockchain) {
             Blockchain.Bitcoin -> {
                 return BitcoinWalletManager(
-                        cardId = card.cardId,
-                        walletPublicKey = walletPublicKey,
-                        wallet = wallet
+                        cardId, wallet,
+                        BitcoinTransactionBuilder(walletPublicKey),
+                        BitcoinNetworkManager()
                 )
             }
             Blockchain.BitcoinTestnet -> {
                 return BitcoinWalletManager(
-                        cardId = card.cardId,
-                        walletPublicKey = walletPublicKey,
-                        wallet = wallet,
-                        isTestNet = true
+                        cardId, wallet,
+                        BitcoinTransactionBuilder(walletPublicKey, true),
+                        BitcoinNetworkManager(true)
                 )
             }
-            Blockchain.Ethereum -> {
-                val chain = Chain.Mainnet
+            Blockchain.BitcoinCash -> {
+                return BitcoinCashWalletManager(
+                        cardId, wallet,
+                        BitcoinCashTransactionBuilder(walletPublicKey.toCompressedPublicKey()),
+                        BitcoinCashNetworkManager()
+                )
+            }
+            Blockchain.Ethereum, Blockchain.RSK -> {
                 return EthereumWalletManager(
-                        cardId = card.cardId,
-                        walletPublicKey = walletPublicKey,
-                        wallet = wallet,
-                        chain = chain
+                        cardId, wallet,
+                        EthereumTransactionBuilder(walletPublicKey, blockchain),
+                        EthereumNetworkManager(blockchain)
                 )
             }
             Blockchain.Stellar -> {
+                val networkManager = StellarNetworkManager()
+
                 return StellarWalletManager(
-                        cardId = card.cardId,
-                        walletPublicKey = walletPublicKey,
-                        wallet = wallet
+                        cardId, wallet,
+                        StellarTransactionBuilder(networkManager, walletPublicKey),
+                        networkManager
                 )
             }
             Blockchain.Cardano -> {
                 return CardanoWalletManager(
-                        cardId = card.cardId,
-                        walletPublicKey = walletPublicKey,
-                        wallet = wallet
+                        cardId, wallet,
+                        CardanoTransactionBuilder(walletPublicKey),
+                        CardanoNetworkManager()
                 )
             }
             Blockchain.XRP -> {
                 return XrpWalletManager(
-                        cardId = card.cardId,
-                        walletPublicKey = walletPublicKey,
-                        wallet = wallet
+                        cardId, wallet,
+                        XrpTransactionBuilder(walletPublicKey),
+                        XrpNetworkManager()
                 )
             }
             Blockchain.Binance -> {
                 return BinanceWalletManager(
-                        cardId = card.cardId,
-                        walletPublicKey = walletPublicKey,
-                        wallet = wallet
+                        cardId, wallet,
+                        BinanceTransactionBuilder(walletPublicKey),
+                        BinanceNetworkManager()
                 )
             }
             Blockchain.BinanceTestnet -> {
                 return BinanceWalletManager(
-                        cardId = card.cardId,
-                        walletPublicKey = walletPublicKey,
-                        wallet = wallet,
-                        isTestNet = true
+                        cardId, wallet,
+                        BinanceTransactionBuilder(walletPublicKey, true),
+                        BinanceNetworkManager(true)
                 )
             }
             else -> return null
@@ -91,13 +112,6 @@ object WalletManagerFactory {
         val symbol = card.cardData?.tokenSymbol ?: return null
         val contractAddress = card.cardData?.tokenContractAddress ?: return null
         val decimals = card.cardData?.tokenDecimal ?: return null
-        return Token(symbol, contractAddress, decimals.toByte())
+        return Token(symbol, contractAddress, decimals)
     }
 }
-
-
-data class Token(
-        val symbol: String,
-        val contractAddress: String,
-        val decimals: Byte
-)
