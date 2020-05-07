@@ -17,7 +17,7 @@ class SignResponseConverter : BaseResponseConverter<SignResponse>() {
                 TextItem(SignId.cid, from.cardId),
                 TextItem(SignId.walletSignedHashes, valueToString(from.walletSignedHashes)),
                 TextItem(SignId.walletRemainingSignatures, valueToString(from.walletRemainingSignatures)),
-                TextItem(SignId.signature, fieldConverter.byteArray(from.signature))
+                TextItem(SignId.signature, fieldConverter.byteArrayToHex(from.signature))
         )
     }
 }
@@ -33,7 +33,7 @@ class CreateWalletResponseConverter : BaseResponseConverter<CreateWalletResponse
         return listOf(
                 TextItem(CreateWalletId.cid, from.cardId),
                 TextItem(CreateWalletId.cardStatus, valueToString(from.status)),
-                TextItem(CreateWalletId.walletPublicKey, fieldConverter.byteArray(from.walletPublicKey))
+                TextItem(CreateWalletId.walletPublicKey, fieldConverter.byteArrayToHex(from.walletPublicKey))
         )
     }
 }
@@ -51,8 +51,8 @@ class ReadIssuerDataResponseConverter : BaseResponseConverter<ReadIssuerDataResp
     override fun convert(from: ReadIssuerDataResponse): List<Item> {
         return listOf(
                 TextItem(ReadIssuerDataId.cid, from.cardId),
-                TextItem(ReadIssuerDataId.issuerData, fieldConverter.byteArray(from.issuerData)),
-                TextItem(ReadIssuerDataId.issuerDataSignature, fieldConverter.byteArray(from.issuerDataSignature)),
+                TextItem(ReadIssuerDataId.issuerData, fieldConverter.byteArrayToString(from.issuerData)),
+                TextItem(ReadIssuerDataId.issuerDataSignature, fieldConverter.byteArrayToHex(from.issuerDataSignature)),
                 TextItem(ReadIssuerDataId.issuerDataCounter, valueToString(from.issuerDataCounter))
         )
     }
@@ -63,8 +63,8 @@ class ReadIssuerExtraDataResponseConverter : BaseResponseConverter<ReadIssuerExt
         return listOf(
                 TextItem(ReadIssuerExtraDataId.cid, from.cardId),
                 TextItem(ReadIssuerExtraDataId.size, valueToString(from.size)),
-                TextItem(ReadIssuerExtraDataId.issuerData, fieldConverter.byteArray(from.issuerData)),
-                TextItem(ReadIssuerExtraDataId.issuerDataSignature, fieldConverter.byteArray(from.issuerDataSignature)),
+                TextItem(ReadIssuerExtraDataId.issuerData, fieldConverter.byteArrayToString(from.issuerData)),
+                TextItem(ReadIssuerExtraDataId.issuerDataSignature, fieldConverter.byteArrayToHex(from.issuerDataSignature)),
                 TextItem(ReadIssuerExtraDataId.issuerDataCounter, valueToString(from.issuerDataCounter))
         )
     }
@@ -82,8 +82,8 @@ class ReadUserDataResponseConverter : BaseResponseConverter<ReadUserDataResponse
     override fun convert(from: ReadUserDataResponse): List<Item> {
         return listOf(
                 TextItem(ReadUserDataId.cid, from.cardId),
-                TextItem(ReadUserDataId.userData, fieldConverter.byteArray(from.userData)),
-                TextItem(ReadUserDataId.userProtectedData, fieldConverter.byteArray(from.userProtectedData)),
+                TextItem(ReadUserDataId.userData, fieldConverter.byteArrayToString(from.userData)),
+                TextItem(ReadUserDataId.userProtectedData, fieldConverter.byteArrayToString(from.userProtectedData)),
                 TextItem(ReadUserDataId.userCounter, valueToString(from.userCounter)),
                 TextItem(ReadUserDataId.userProtectedCounter, valueToString(from.userProtectedCounter))
         )
