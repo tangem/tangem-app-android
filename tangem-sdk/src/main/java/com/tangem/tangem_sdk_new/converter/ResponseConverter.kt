@@ -1,9 +1,9 @@
-package com.tangem.devkit.ucase.domain.responses
+package com.tangem.tangem_sdk_new.converter
 
 import com.google.gson.*
 import com.tangem.commands.*
 import com.tangem.common.extensions.toHexString
-import com.tangem.devkit.extensions.print
+import com.tangem.tangem_sdk_new.extensions.print
 import java.lang.reflect.Type
 import java.text.DateFormat
 import java.util.*
@@ -11,7 +11,7 @@ import java.util.*
 /**
 [REDACTED_AUTHOR]
  */
-class ResponseJsonConverter {
+class ResponseConverter {
 
     val gson: Gson by lazy { init() }
 
@@ -36,7 +36,7 @@ class ByteTypeAdapter(
         private val fieldConverter: ResponseFieldConverter
 ) : JsonSerializer<ByteArray> {
     override fun serialize(src: ByteArray, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-        return JsonPrimitive(fieldConverter.byteArray(src))
+        return JsonPrimitive(fieldConverter.byteArrayToHex(src))
     }
 }
 
@@ -109,7 +109,11 @@ class ResponseFieldConverter {
         return Settings.values().filter { masks.contains(it) }.map { it.name }
     }
 
-    fun byteArray(byteArray: ByteArray?): String? {
+    fun byteArrayToHex(byteArray: ByteArray?): String? {
         return byteArray?.toHexString()
+    }
+
+    fun byteArrayToString(byteArray: ByteArray?): String? {
+        return if (byteArray == null) null else String(byteArray)
     }
 }
