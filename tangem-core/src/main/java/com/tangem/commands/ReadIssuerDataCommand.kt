@@ -2,7 +2,7 @@ package com.tangem.commands
 
 import com.tangem.CardSession
 import com.tangem.SessionEnvironment
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
 import com.tangem.commands.common.DefaultIssuerDataVerifier
 import com.tangem.commands.common.IssuerDataMode
 import com.tangem.commands.common.IssuerDataToVerify
@@ -61,12 +61,12 @@ class ReadIssuerDataCommand(
     override fun run(session: CardSession, callback: (result: CompletionResult<ReadIssuerDataResponse>) -> Unit) {
         val card = session.environment.card
         if (card == null) {
-            callback(CompletionResult.Failure(SessionError.MissingPreflightRead()))
+            callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
             return
         }
         val publicKey = issuerPublicKey ?: card.issuerPublicKey
         if (publicKey == null) {
-            callback(CompletionResult.Failure(SessionError.MissingIssuerPubicKey()))
+            callback(CompletionResult.Failure(TangemSdkError.MissingIssuerPubicKey()))
             return
         }
         super.run(session) { result ->
@@ -83,11 +83,19 @@ class ReadIssuerDataCommand(
                     if (verify(publicKey, result.data.issuerDataSignature, issuerDataToVerify)) {
                         callback(result)
                     } else {
-                        callback(CompletionResult.Failure(SessionError.VerificationFailed()))
+                        callback(CompletionResult.Failure(TangemSdkError.VerificationFailed()))
                     }
                 }
             }
         }
+    }
+
+    override fun handlePreRunErrors(session: CardSession, callback: (result: CompletionResult<ReadIssuerDataResponse>) -> Unit): Boolean {
+        if (session.environment.card?.status == CardStatus.NotPersonalized) {
+            callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
+            return true
+        }
+        return false
     }
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
@@ -103,7 +111,7 @@ class ReadIssuerDataCommand(
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): ReadIssuerDataResponse {
         val tlvData = apdu.getTlvData(environment.encryptionKey)
-                ?: throw SessionError.DeserializeApduFailed()
+                ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
         return ReadIssuerDataResponse(

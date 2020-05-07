@@ -1,11 +1,14 @@
 package com.tangem.commands.personalization
 
+import com.tangem.CardSession
 import com.tangem.SessionEnvironment
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
 import com.tangem.commands.Card
 import com.tangem.commands.CardData
+import com.tangem.commands.CardStatus
 import com.tangem.commands.Command
 import com.tangem.commands.personalization.entities.*
+import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
@@ -36,6 +39,14 @@ class PersonalizeCommand(
         private val acquirer: Acquirer? = null
 ) : Command<Card>() {
 
+    override fun handlePreRunErrors(session: CardSession, callback: (result: CompletionResult<Card>) -> Unit): Boolean {
+        if (session.environment.card?.status != CardStatus.NotPersonalized) {
+            callback(CompletionResult.Failure(TangemSdkError.AlreadyPersonalized()))
+            return true
+        }
+        return false
+    }
+
     override fun serialize(environment: SessionEnvironment): CommandApdu {
         return CommandApdu(
                 Instruction.Personalize,
@@ -46,7 +57,7 @@ class PersonalizeCommand(
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): Card {
         val tlvData = apdu.getTlvData(devPersonalizationKey)
-                ?: throw SessionError.DeserializeApduFailed()
+                ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
         return Card(
@@ -99,7 +110,7 @@ class PersonalizeCommand(
     }
 
     private fun serializePersonalizationData(config: CardConfig): ByteArray {
-        val cardId = config.createCardId() ?: throw SessionError.SerializeCommandError()
+        val cardId = config.createCardId() ?: throw TangemSdkError.SerializeCommandError()
 
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.CardId, cardId)
