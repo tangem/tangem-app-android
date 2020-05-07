@@ -22,7 +22,7 @@ data class SessionEnvironment(
         var encryptionKey: ByteArray? = null,
         val cvc: ByteArray? = null,
         var cardFilter: CardFilter = CardFilter(),
-        val handleErrors: Boolean
+        val handleErrors: Boolean = true
 ) {
 
     fun setPin1(pin1: String) {
