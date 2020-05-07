@@ -87,7 +87,7 @@ fun PersonalizationJson.toCardConfig(): CardConfig {
             productMask = productMask,
             tokenSymbol = this.cardData.token_symbol,
             tokenContractAddress = this.cardData.token_contract_address,
-            tokenDecimal = this.cardData.token_decimal.toInt(),
+            tokenDecimal = this.cardData.token_decimal?.toInt(),
             issuerName = this.issuerName,
             manufactureDateTime = Calendar.getInstance().time,
             manufacturerSignature = null)
