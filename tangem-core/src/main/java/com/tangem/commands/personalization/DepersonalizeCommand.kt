@@ -21,7 +21,7 @@ data class DepersonalizeResponse(val success: Boolean) : CommandResponse
  */
 class DepersonalizeCommand : Command<DepersonalizeResponse>() {
 
-    override fun handlePreRunErrors(session: CardSession, callback: (result: CompletionResult<DepersonalizeResponse>) -> Unit): Boolean {
+    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<DepersonalizeResponse>) -> Unit): Boolean {
         if (session.environment.card?.status == CardStatus.NotPersonalized) {
             callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
             return true
