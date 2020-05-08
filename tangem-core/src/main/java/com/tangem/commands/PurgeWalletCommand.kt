@@ -31,7 +31,7 @@ class PurgeWalletResponse(
  */
 class PurgeWalletCommand : Command<PurgeWalletResponse>() {
 
-    override fun handlePreRunErrors(session: CardSession, callback: (result: CompletionResult<PurgeWalletResponse>) -> Unit): Boolean {
+    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<PurgeWalletResponse>) -> Unit): Boolean {
         if (session.environment.card?.status == CardStatus.NotPersonalized) {
             callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
             return true
@@ -47,9 +47,9 @@ class PurgeWalletCommand : Command<PurgeWalletResponse>() {
         return false
     }
 
-    override fun handleResponseErrors(session: CardSession,
-                                      result: CompletionResult<PurgeWalletResponse>,
-                                      callback: (result: CompletionResult<PurgeWalletResponse>) -> Unit): Boolean {
+    override fun performAfterCheck(session: CardSession,
+                                   result: CompletionResult<PurgeWalletResponse>,
+                                   callback: (result: CompletionResult<PurgeWalletResponse>) -> Unit): Boolean {
         when (result) {
             is CompletionResult.Failure -> {
                 if (result.error is TangemSdkError.InvalidParams) {
