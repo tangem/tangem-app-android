@@ -37,7 +37,7 @@ interface CardSessionRunnable<T : CommandResponse> {
  * @property viewDelegate is an  interface that allows interaction with users and shows relevant UI.
  * @property cardId ID, Unique Tangem card ID number. If not null, the SDK will check that you the card
  * with which you tapped a phone has this [cardId] and SDK will return
- * the [SessionError.WrongCard] otherwise.
+ * the [TangemSdkError.WrongCard] otherwise.
  * @property initialMessage A custom description that will be shown at the beginning of the NFC session.
  * If null, a default header and text body will be used.
  */
@@ -86,12 +86,12 @@ class CardSession(
 
     /**
      * Starts a card session and performs preflight [ReadCommand].
-     * @param callback: callback with the card session. Can contain [SessionError] if something goes wrong.
+     * @param callback: callback with the card session. Can contain [TangemSdkError] if something goes wrong.
      */
-    fun start(callback: (session: CardSession, error: SessionError?) -> Unit) {
+    fun start(callback: (session: CardSession, error: TangemSdkError?) -> Unit) {
         try {
             startSession()
-        } catch (error: SessionError) {
+        } catch (error: TangemSdkError) {
             callback(this, error)
         }
 
@@ -109,7 +109,7 @@ class CardSession(
     }
 
     private fun startSession() {
-        if (isBusy) throw SessionError.Busy()
+        if (isBusy) throw TangemSdkError.Busy()
         isBusy = true
         viewDelegate.onNfcSessionStarted(cardId, initialMessage)
         reader.openSession()
@@ -133,14 +133,14 @@ class CardSession(
                 is CompletionResult.Success -> {
                     val receivedCardId = result.data.cardId
                     if (cardId != null && receivedCardId != cardId) {
-                        stopWithError(SessionError.WrongCard())
-                        callback(CompletionResult.Failure(SessionError.WrongCard()))
+                        stopWithError(TangemSdkError.WrongCard())
+                        callback(CompletionResult.Failure(TangemSdkError.WrongCard()))
                         return@run
                     }
                     val allowedCardTypes = environment.cardFilter.allowedCardTypes
                     if (!allowedCardTypes.contains(result.data.getType())) {
-                        stopWithError(SessionError.WrongCardType())
-                        callback(CompletionResult.Failure(SessionError.WrongCardType()))
+                        stopWithError(TangemSdkError.WrongCardType())
+                        callback(CompletionResult.Failure(TangemSdkError.WrongCardType()))
                         return@run
                     }
                     environment.card = result.data
@@ -169,12 +169,12 @@ class CardSession(
         reader.closeSession()
         isBusy = false
 
-        val errorMessage = if (error is SessionError) {
+        val errorMessage = if (error is TangemSdkError) {
             "${error::class.simpleName}: ${error.code}"
         } else {
             error.localizedMessage
         }
-        if (error !is SessionError.UserCancelled) {
+        if (error !is TangemSdkError.UserCancelled) {
             Log.e("tag", "Finishing with error: $errorMessage")
             viewDelegate.onError(errorMessage)
         }
@@ -185,10 +185,10 @@ class CardSession(
     }
 
     private fun tryHandleError(
-            error: SessionError, callback: (result: CompletionResult<Boolean>) -> Unit) {
+            error: TangemSdkError, callback: (result: CompletionResult<Boolean>) -> Unit) {
 
         when (error) {
-            is SessionError.NeedEncryption -> {
+            is TangemSdkError.NeedEncryption -> {
                 Log.i(tag, "Establishing encryption")
                 when (environment.encryptionMode) {
                     EncryptionMode.NONE -> {
@@ -201,12 +201,12 @@ class CardSession(
                     }
                     EncryptionMode.STRONG -> {
                         Log.e(tag, "Encryption doesn't work")
-                        callback(CompletionResult.Failure(SessionError.NeedEncryption()))
+                        callback(CompletionResult.Failure(TangemSdkError.NeedEncryption()))
                     }
                 }
                 return establishEncryption(callback)
             }
-            else -> callback(CompletionResult.Failure(SessionError.UnknownError()))
+            else -> callback(CompletionResult.Failure(TangemSdkError.UnknownError()))
         }
     }
 
