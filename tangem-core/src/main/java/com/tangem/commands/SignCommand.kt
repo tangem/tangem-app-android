@@ -37,7 +37,7 @@ class SignCommand(private val hashes: Array<ByteArray>)
 
     private val hashSizes = if (hashes.isNotEmpty()) hashes.first().size else 0
 
-    override fun handlePreRunErrors(session: CardSession, callback: (result: CompletionResult<SignResponse>) -> Unit): Boolean {
+    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<SignResponse>) -> Unit): Boolean {
         if (session.environment.card?.status == CardStatus.NotPersonalized) {
             callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
             return true
@@ -73,9 +73,9 @@ class SignCommand(private val hashes: Array<ByteArray>)
         return false
     }
 
-    override fun handleResponseErrors(session: CardSession,
-                                      result: CompletionResult<SignResponse>,
-                                      callback: (result: CompletionResult<SignResponse>) -> Unit): Boolean {
+    override fun performAfterCheck(session: CardSession,
+                                   result: CompletionResult<SignResponse>,
+                                   callback: (result: CompletionResult<SignResponse>) -> Unit): Boolean {
         when (result) {
             is CompletionResult.Failure -> {
                 if (result.error is TangemSdkError.InvalidParams) {

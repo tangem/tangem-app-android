@@ -40,24 +40,24 @@ abstract class Command<T : CommandResponse> : CardSessionRunnable<T> {
     override fun run(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
         Log.i("Command", "Sending ${this::class.java.simpleName}")
         if (session.environment.handleErrors) {
-            if (handlePreRunErrors(session, callback)) return
+            if (performPreCheck(session, callback)) return
         }
         transceive(session) { result ->
             if (session.environment.handleErrors) {
-                if (handleResponseErrors(session, result, callback)) return@transceive
+                if (performAfterCheck(session, result, callback)) return@transceive
             }
             callback(result)
         }
     }
 
-    open fun handlePreRunErrors(session: CardSession,
-                                callback: (result: CompletionResult<T>) -> Unit): Boolean {
+    open fun performPreCheck(session: CardSession,
+                             callback: (result: CompletionResult<T>) -> Unit): Boolean {
         return false
     }
 
-    open fun handleResponseErrors(session: CardSession,
-                                  result: CompletionResult<T>,
-                                  callback: (result: CompletionResult<T>) -> Unit): Boolean {
+    open fun performAfterCheck(session: CardSession,
+                               result: CompletionResult<T>,
+                               callback: (result: CompletionResult<T>) -> Unit): Boolean {
         return false
     }
 

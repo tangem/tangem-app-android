@@ -51,7 +51,7 @@ class ReadUserDataResponse(
  */
 class ReadUserDataCommand : Command<ReadUserDataResponse>() {
 
-    override fun handlePreRunErrors(session: CardSession, callback: (result: CompletionResult<ReadUserDataResponse>) -> Unit): Boolean {
+    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<ReadUserDataResponse>) -> Unit): Boolean {
         if (session.environment.card?.status == CardStatus.NotPersonalized) {
             callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
             return true
