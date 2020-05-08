@@ -80,6 +80,7 @@ class NfcReader : CardReader {
             isoDep = null
             return
         } catch (exception: Exception) {
+            Log.i(this::class.simpleName!!, exception.localizedMessage ?: "Error tranceiving data")
             isoDep = null
             return
         }
