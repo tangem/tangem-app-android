@@ -40,7 +40,7 @@ class WriteIssuerDataCommand(
         verifier: IssuerDataVerifier = DefaultIssuerDataVerifier()
 ) : Command<WriteIssuerDataResponse>(), IssuerDataVerifier by verifier {
 
-    override fun handlePreRunErrors(session: CardSession, callback: (result: CompletionResult<WriteIssuerDataResponse>) -> Unit): Boolean {
+    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<WriteIssuerDataResponse>) -> Unit): Boolean {
         val card = session.environment.card
         if (card == null) {
             callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
@@ -74,9 +74,9 @@ class WriteIssuerDataCommand(
         return false
     }
 
-    override fun handleResponseErrors(session: CardSession,
-                                      result: CompletionResult<WriteIssuerDataResponse>,
-                                      callback: (result: CompletionResult<WriteIssuerDataResponse>) -> Unit
+    override fun performAfterCheck(session: CardSession,
+                                   result: CompletionResult<WriteIssuerDataResponse>,
+                                   callback: (result: CompletionResult<WriteIssuerDataResponse>) -> Unit
     ): Boolean {
         when (result) {
             is CompletionResult.Failure -> {
