@@ -46,7 +46,7 @@ class TangemSdk(
      * it proves that the wallet owns a private key that corresponds to a public one.
      *
      * @param callback is triggered on the completion of the [ScanTask] and provides card response
-     * in the form of [Card] if the task was performed successfully or [SessionError] in case of an error.
+     * in the form of [Card] if the task was performed successfully or [TangemSdkError] in case of an error.
      */
     fun scanCard(initialMessage: Message? = null, callback: (result: CompletionResult<Card>) -> Unit) {
         startSessionWithRunnable(ScanTask(), null, initialMessage, callback)
@@ -68,7 +68,7 @@ class TangemSdk(
      * @param cardId CID, Unique Tangem card ID number
      * @param callback is triggered on the completion of the [SignCommand] and provides card response
      * in the form of [SignResponse] if the task was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      */
     fun sign(hashes: Array<ByteArray>, cardId: String, initialMessage: Message? = null,
              callback: (result: CompletionResult<SignResponse>) -> Unit) {
@@ -86,7 +86,7 @@ class TangemSdk(
      * @param cardId CID, Unique Tangem card ID number.
      * @param callback is triggered on the completion of the [ReadIssuerDataCommand] and provides
      * card response in the form of [ReadIssuerDataResponse] if the task was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      */
     fun readIssuerData(cardId: String, initialMessage: Message? = null,
                        callback: (result: CompletionResult<ReadIssuerDataResponse>) -> Unit) {
@@ -105,7 +105,7 @@ class TangemSdk(
      * @param cardId CID, Unique Tangem card ID number.
      * @param callback is triggered on the completion of the [ReadIssuerExtraDataCommand] and provides
      * card response in the form of [ReadIssuerExtraDataResponse] if the task was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      */
     fun readIssuerExtraData(cardId: String,
                             callback: (result: CompletionResult<ReadIssuerExtraDataResponse>) -> Unit) {
@@ -126,7 +126,7 @@ class TangemSdk(
      * @param issuerDataCounter An optional counter that protect issuer data against replay attack.
      * @param callback is triggered on the completion of the [WriteIssuerDataCommand] and provides
      * card response in the form of [WriteIssuerDataResponse] if the task was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      */
     fun writeIssuerData(cardId: String,
                         issuerData: ByteArray,
@@ -164,7 +164,7 @@ class TangemSdk(
      * @param issuerDataCounter An optional counter that protect issuer data against replay attack.
      * @param callback is triggered on the completion of the [WriteIssuerExtraDataCommand] and provides
      * card response in the form of [WriteIssuerDataResponse] if the task was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      */
     fun writeIssuerExtraData(cardId: String,
                              issuerData: ByteArray,
@@ -224,7 +224,7 @@ class TangemSdk(
      * @param cardId CID, Unique Tangem card ID number.
      * @param callback is triggered on the completion of the [ReadUserDataCommand] and provides
      * card response in the form of [ReadUserDataResponse] if the task was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      */
     fun readUserData(cardId: String, initialMessage: Message? = null,
                      callback: (result: CompletionResult<ReadUserDataResponse>) -> Unit) {
@@ -246,7 +246,7 @@ class TangemSdk(
      * @param cardId CID, Unique Tangem card ID number.
      * @param callback is triggered on the completion of the [CreateWalletTask] and provides
      * card response in the form of [CreateWalletResponse] if the task was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      */
     fun createWallet(cardId: String, initialMessage: Message? = null,
                      callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
@@ -265,7 +265,7 @@ class TangemSdk(
      * @param cardId CID, Unique Tangem card ID number.
      * @param callback is triggered on the completion of the [PurgeWalletCommand] and provides
      * card response in the form of [PurgeWalletResponse] if the task was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      */
     fun purgeWallet(cardId: String, initialMessage: Message? = null,
                     callback: (result: CompletionResult<PurgeWalletResponse>) -> Unit) {
@@ -283,7 +283,7 @@ class TangemSdk(
      * @param cardId CID, Unique Tangem card ID number.
      * @param callback is triggered on the completion of the [DepersonalizeCommand] and provides
      * card response in the form of [DepersonalizeResponse] if the task was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      * */
     fun depersonalize(cardId: String, initialMessage: Message? = null,
                       callback: (result: CompletionResult<DepersonalizeResponse>) -> Unit) {
@@ -306,7 +306,7 @@ class TangemSdk(
      * (non-EMV) POS terminal infrastructure and transaction processing back-end.
      * @param callback is triggered on the completion of the [PersonalizeCommand] and provides
      * card response in the form of [Card] if the command was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      */
     fun personalize(config: CardConfig,
                     issuer: Issuer, manufacturer: Manufacturer, acquirer: Acquirer? = null,
@@ -325,7 +325,7 @@ class TangemSdk(
      * @runnable: A custom task, adopting [CardSessionRunnable] protocol
      * @cardId: CID, Unique Tangem card ID number. If not null, the SDK will check that you the card
      * with which you tapped a phone has this [cardId] and SDK will return
-     * the [SessionError.WrongCard] otherwise.
+     * the [TangemSdkError.WrongCard] otherwise.
      * @initialMessage: A custom description that shows at the beginning of the NFC session.
      * If null, default message will be used.
      *  @callback: Standard [TangemSdk] callback.
@@ -343,14 +343,14 @@ class TangemSdk(
 
      * @cardId: CID, Unique Tangem card ID number. If not null, the SDK will check that you the card
      * with which you tapped a phone has this [cardId] and SDK will return
-     * the [SessionError.WrongCard] otherwise.
+     * the [TangemSdkError.WrongCard] otherwise.
      * @initialMessage: A custom description that shows at the beginning of the NFC session.
      * If null, default message will be used.
-     * @callback: At first, you should check that the [SessionError] is not null,
+     * @callback: At first, you should check that the [TangemSdkError] is not null,
      * then you can use the [CardSession] to interact with a card.
      */
     fun startSession(cardId: String? = null, initialMessage: Message? = null,
-            callback: (session: CardSession, error: SessionError?) -> Unit) {
+            callback: (session: CardSession, error: TangemSdkError?) -> Unit) {
         val cardSession = CardSession(buildEnvironment(), reader, viewDelegate, cardId, initialMessage)
         Thread().run { cardSession.start(callback) }
     }
@@ -367,7 +367,8 @@ class TangemSdk(
         val terminalKeys = if (config.linkedTerminal) terminalKeysService?.getKeys() else null
         return SessionEnvironment(
                 terminalKeys = terminalKeys,
-                cardFilter = config.cardFilter
+                cardFilter = config.cardFilter,
+                handleErrors = config.handleErrors
         )
     }
 
