@@ -20,7 +20,7 @@ class TlvDecoder(val tlvList: List<Tlv>) {
 
     init {
         Log.v("TLV",
-                "List of TLV received from card:\n${tlvList.joinToString("\n")}")
+                "List of decoded TLVs:\n${tlvList.joinToString("\n")}")
     }
 
     /**
