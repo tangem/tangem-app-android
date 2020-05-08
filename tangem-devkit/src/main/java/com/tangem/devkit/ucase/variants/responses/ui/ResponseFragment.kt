@@ -12,10 +12,10 @@ import com.tangem.devkit.R
 import com.tangem.devkit._arch.widget.WidgetBuilder
 import com.tangem.devkit._main.MainViewModel
 import com.tangem.devkit.extensions.shareText
-import com.tangem.devkit.ucase.domain.responses.ResponseJsonConverter
 import com.tangem.devkit.ucase.ui.BaseFragment
 import com.tangem.devkit.ucase.variants.responses.ResponseViewModel
 import com.tangem.devkit.ucase.variants.responses.ui.widget.ResponseItemBuilder
+import com.tangem.tangem_sdk_new.converter.ResponseConverter
 
 /**
 [REDACTED_AUTHOR]
@@ -68,7 +68,7 @@ open class ResponseFragment : BaseFragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_share -> {
-                shareText(ResponseJsonConverter().convertResponse(mainActivityVM.commandResponse))
+                shareText(ResponseConverter().convertResponse(mainActivityVM.commandResponse))
             }
         }
         return super.onOptionsItemSelected(item)
