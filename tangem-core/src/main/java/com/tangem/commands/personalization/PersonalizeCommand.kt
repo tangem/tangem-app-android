@@ -39,7 +39,7 @@ class PersonalizeCommand(
         private val acquirer: Acquirer? = null
 ) : Command<Card>() {
 
-    override fun handlePreRunErrors(session: CardSession, callback: (result: CompletionResult<Card>) -> Unit): Boolean {
+    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<Card>) -> Unit): Boolean {
         if (session.environment.card?.status != CardStatus.NotPersonalized) {
             callback(CompletionResult.Failure(TangemSdkError.AlreadyPersonalized()))
             return true
