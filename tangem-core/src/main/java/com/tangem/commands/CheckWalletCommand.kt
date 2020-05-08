@@ -70,7 +70,7 @@ class CheckWalletCommand(
         }
     }
 
-    override fun handlePreRunErrors(
+    override fun performPreCheck(
             session: CardSession,
             callback: (result: CompletionResult<CheckWalletResponse>) -> Unit
     ): Boolean {
