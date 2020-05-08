@@ -39,7 +39,7 @@ class CreateWalletResponse(
  */
 class CreateWalletCommand : Command<CreateWalletResponse>() {
 
-    override fun handlePreRunErrors(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit): Boolean {
+    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit): Boolean {
         if (session.environment.card?.status == CardStatus.NotPersonalized) {
             callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
             return true
@@ -59,9 +59,9 @@ class CreateWalletCommand : Command<CreateWalletResponse>() {
         return false
     }
 
-    override fun handleResponseErrors(session: CardSession,
-                                      result: CompletionResult<CreateWalletResponse>,
-                                      callback: (result: CompletionResult<CreateWalletResponse>) -> Unit): Boolean {
+    override fun performAfterCheck(session: CardSession,
+                                   result: CompletionResult<CreateWalletResponse>,
+                                   callback: (result: CompletionResult<CreateWalletResponse>) -> Unit): Boolean {
         when (result) {
             is CompletionResult.Failure -> {
                 if (result.error is TangemSdkError.InvalidParams) {

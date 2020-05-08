@@ -59,14 +59,6 @@ sealed class TangemSdkError(val code: Int) : Exception(code.toString()) {
      */
     class NeedEncryption : TangemSdkError(30006)
 
-    class Pin1Changed : TangemSdkError(30007)
-
-    class Pin2Changed : TangemSdkError(30008)
-
-    class PinsChanged : TangemSdkError(30009)
-
-
-
     //Personalization Errors
     class AlreadyPersonalized : TangemSdkError(40101)
 
@@ -77,12 +69,12 @@ sealed class TangemSdkError(val code: Int) : Exception(code.toString()) {
     class Pin1Required : TangemSdkError(40401)
     /**
      * This error is returned when a [Task] expects a user to use a particular card,
-     * and a user tries to use a different card.
+     * but the user tries to use a different card.
      */
     class WrongCard : TangemSdkError(40403)
     /**
      * This error is returned when a user scans a card of a [com.tangem.common.extensions.CardType]
-     * that is not specified in [Config.allowedCards].
+     * that is not specified in [Config.cardFilter].
      */
     class WrongCardType : TangemSdkError(40404)
 
