@@ -1,12 +1,12 @@
 package com.tangem.blockchain.blockchains.binance
 
 import android.util.Log
-import com.tangem.blockchain.blockchains.binance.network.BinanceInfoResponse
 import com.tangem.blockchain.blockchains.binance.network.BinanceNetworkManager
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.CompletionResult
+import com.tangem.blockchain.blockchains.binance.network.BinanceInfoResponse as BinanceInfoResponse1
 
 class BinanceWalletManager(
         cardId: String,
@@ -18,16 +18,17 @@ class BinanceWalletManager(
     private val blockchain = wallet.blockchain
 
     override suspend fun update() {
-        val result = networkManager.getInfo(wallet.address)
+        val result = networkManager.getInfo(wallet.address, wallet.amounts[AmountType.Token]?.address)
         when (result) {
             is Result.Success -> updateWallet(result.data)
             is Result.Failure -> updateError(result.error)
         }
     }
 
-    private fun updateWallet(response: BinanceInfoResponse) {
+    private fun updateWallet(response: BinanceInfoResponse1) {
         Log.d(this::class.java.simpleName, "Balance is ${response.balance}")
         wallet.amounts[AmountType.Coin]?.value = response.balance
+        wallet.amounts[AmountType.Token]?.value = response.assetBalance
 
         transactionBuilder.accountNumber = response.accountNumber
         transactionBuilder.sequence = response.sequence
