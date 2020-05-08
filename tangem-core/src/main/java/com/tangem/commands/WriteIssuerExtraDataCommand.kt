@@ -73,7 +73,7 @@ class WriteIssuerExtraDataCommand(
         }
     }
 
-    override fun handlePreRunErrors(session: CardSession, callback: (result: CompletionResult<WriteIssuerDataResponse>) -> Unit): Boolean {
+    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<WriteIssuerDataResponse>) -> Unit): Boolean {
         val card = session.environment.card
         if (card == null) {
             callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
