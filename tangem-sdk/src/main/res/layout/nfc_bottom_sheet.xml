@@ -32,10 +32,11 @@
             android:gravity="center"
             android:letterSpacing="0.02"
             android:text="@string/header_card"
-            android:textColor="#000000"
+            android:textColor="@color/card_sdk_text_color"
             android:textSize="15sp"
             android:textStyle="normal"
-            android:visibility="gone"/>
+            android:visibility="gone"
+            tools:visibility="visible"/>
 
         <TextView
             android:id="@+id/tvCardId"
@@ -47,11 +48,12 @@
             android:paddingStart="5dp"
             android:paddingEnd="5dp"
             android:textAllCaps="true"
-            android:textColor="@color/colorAccent"
+            android:textColor="@color/card_sdk_accent"
             android:textSize="15sp"
             android:textStyle="normal"
             tools:text="cb22000000027374"
-            android:visibility="gone"/>
+            android:visibility="gone"
+            tools:visibility="visible"/>
 
     </LinearLayout>
 
@@ -63,6 +65,7 @@
         android:layout_gravity="center"
         android:layout_marginTop="24dp"
         android:text="@string/dialog_ready_to_scan"
+        android:textColor="@color/card_sdk_text_color"
         android:textAppearance="@style/TextAppearance.AppCompat.Large" />
 
     <include
@@ -85,7 +88,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:fontFamily="sans-serif-light"
-            android:textColor="@color/colorAccent"
+            android:textColor="@color/card_sdk_accent"
             android:textSize="60dp"
             android:textStyle="normal" />
 
@@ -113,6 +116,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:tint="@color/card_sdk_accent"
             android:src="@drawable/ic_done_135dp" />
 
         <ProgressBar
@@ -166,8 +170,9 @@
         android:gravity="center"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
+        android:textColor="@color/card_sdk_text_color"
         android:text="@string/dialog_scan_text"
-        android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+        />
 
 
 </LinearLayout>
