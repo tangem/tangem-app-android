@@ -3,8 +3,9 @@ package com.tangem.devkit.ucase.ui
 import android.view.View
 import androidx.annotation.UiThread
 import androidx.lifecycle.*
-import com.tangem.SessionError
+import com.google.gson.Gson
 import com.tangem.TangemSdk
+import com.tangem.TangemSdkError
 import com.tangem.commands.Card
 import com.tangem.commands.CommandResponse
 import com.tangem.common.CompletionResult
@@ -131,7 +132,7 @@ class ActionViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
 
 internal class Notifier(private val vm: ActionViewModel) {
 
-    private var notShowedError: SessionError? = null
+    private var notShowedError: TangemSdkError? = null
 
     fun handleActionResult(result: CompletionResult<*>, list: List<Item>) {
         if (list.isNotEmpty()) notifyItemsChanged(list)
@@ -160,10 +161,10 @@ internal class Notifier(private val vm: ActionViewModel) {
         }
     }
 
-    private fun handleError(error: SessionError) {
+    private fun handleError(error: TangemSdkError) {
         Log.d(this, "error = $error")
         when (error) {
-            is SessionError.UserCancelled -> {
+            is TangemSdkError.UserCancelled -> {
                 if (notShowedError == null) {
                     vm.seError.postValue("User canceled the action")
                 } else {
