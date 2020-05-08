@@ -34,7 +34,7 @@ class WriteUserDataCommand(private val userData: ByteArray? = null, private val 
                            private val userCounter: Int? = null,
                            private val userProtectedCounter: Int? = null) : Command<WriteUserDataResponse>() {
 
-    override fun handlePreRunErrors(session: CardSession, callback: (result: CompletionResult<WriteUserDataResponse>) -> Unit): Boolean {
+    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<WriteUserDataResponse>) -> Unit): Boolean {
         if (session.environment.card?.status == CardStatus.NotPersonalized) {
             callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
             return true
@@ -50,9 +50,9 @@ class WriteUserDataCommand(private val userData: ByteArray? = null, private val 
         return false
     }
 
-    override fun handleResponseErrors(session: CardSession,
-                                      result: CompletionResult<WriteUserDataResponse>,
-                                      callback: (result: CompletionResult<WriteUserDataResponse>) -> Unit
+    override fun performAfterCheck(session: CardSession,
+                                   result: CompletionResult<WriteUserDataResponse>,
+                                   callback: (result: CompletionResult<WriteUserDataResponse>) -> Unit
     ): Boolean {
         when (result) {
             is CompletionResult.Failure -> {
