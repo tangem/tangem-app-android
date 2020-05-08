@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.tangem.wallet.TangemContext;
 import com.tangem.wallet.Transaction;
+import com.tangem.wallet.binance.BinanceAssetData;
 import com.tangem.wallet.binance.BinanceData;
 import com.tangem.wallet.binance.client.BinanceDexApiRestClient;
 import com.tangem.wallet.binance.client.domain.Account;
@@ -57,6 +58,17 @@ public class ServerApiBinance {
                     }
                 }
 
+                if (binanceData instanceof BinanceAssetData) {
+                    BinanceAssetData binanceAssetData = (BinanceAssetData) binanceData;
+                    for (Balance balance : account.getBalances()) {
+                        if (balance.getSymbol().equals(ctx.getCard().getContractAddress())) {
+                            binanceAssetData.setBalanceReceived(true);
+                            binanceAssetData.setAssetBalance(balance.getFree());
+                            break;
+                        }
+                    }
+                }
+
                 if (!binanceData.isBalanceReceived()) {
                     binanceData.setBalanceReceived(true);
                     binanceData.setBalance("0");
@@ -69,7 +81,7 @@ public class ServerApiBinance {
             @Override
             public void onError(Throwable e) {
                 Log.e(TAG, "getBalance onError" + e.getMessage());
-                if (e.getMessage().contains("code=404")) {
+                if (e.getMessage().contains("account not found")) {
                     ((BinanceData)ctx.getCoinData()).setError404(true);
                     responseListener.onFail();
                 } else {
