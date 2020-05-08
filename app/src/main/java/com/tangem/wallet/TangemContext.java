@@ -47,6 +47,9 @@ public class TangemContext {
         if (blockchain == Blockchain.Stellar && card.isToken()) {
             return Blockchain.StellarAsset;
         }
+        if (blockchain == Blockchain.Binance && card.isToken()) {
+            return Blockchain.BinanceAsset;
+        }
         return blockchain;
     }
 
