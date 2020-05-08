@@ -1,7 +1,7 @@
 package com.tangem.common.tlv
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
 import com.tangem.commands.*
 import com.tangem.common.extensions.hexToBytes
 import org.junit.Test
@@ -35,21 +35,21 @@ class TlvDecoderTest {
 
     @Test
     fun `map when value is null throws MissingTagException`() {
-        assertThrows<SessionError.DecodingFailedMissingTag> {
+        assertThrows<TangemSdkError.DecodingFailedMissingTag> {
             tlvMapper.decode<String>(TlvTag.TokenSymbol)
         }
     }
 
     @Test
     fun `map optional to wrong type throws WrongTypeException`() {
-        assertThrows<SessionError.DecodingFailedTypeMismatch> {
+        assertThrows<TangemSdkError.DecodingFailedTypeMismatch> {
             tlvMapper.decodeOptional<String?>(TlvTag.CardData)
         }
     }
 
     @Test
     fun `map to wrong type throws WrongTypeException`() {
-        assertThrows<SessionError.DecodingFailedTypeMismatch> {
+        assertThrows<TangemSdkError.DecodingFailedTypeMismatch> {
             tlvMapper.decode<String>(TlvTag.CardData)
         }
     }
@@ -76,7 +76,7 @@ class TlvDecoderTest {
                 .isTrue()
         assertThat(settingsMask.contains(Settings.UseDynamicNdef))
                 .isTrue()
-        assertThat(settingsMask.contains(Settings.ForbidPurgeWallet))
+        assertThat(settingsMask.contains(Settings.ProhibitPurgeWallet))
                 .isFalse()
     }
 
@@ -134,7 +134,7 @@ class TlvDecoderTest {
     @Test
     fun `map Enum with unknown code throws ConversionException error`() {
         val localMapper = TlvDecoder(listOf(Tlv(TlvTag.CurveId, "test".toByteArray())))
-        assertThrows<SessionError.DecodingFailed> {
+        assertThrows<TangemSdkError.DecodingFailed> {
             localMapper.decode<EllipticCurve>(TlvTag.CurveId)
         }
     }
@@ -171,7 +171,7 @@ class TlvDecoderTest {
     @Test
     fun `map Int with wrong value throws ConversionException`() {
         val localMapper = TlvDecoder(listOf(Tlv(TlvTag.SignedHashes, byteArrayOf(1, 2, 3, 4, 5))))
-        assertThrows<SessionError.DecodingFailed> {
+        assertThrows<TangemSdkError.DecodingFailed> {
             localMapper.decode<Int>(TlvTag.SignedHashes)
         }
     }
