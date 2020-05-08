@@ -5,6 +5,7 @@ import com.tangem.blockchain.blockchains.binance.client.domain.broadcast.Transfe
 import com.tangem.blockchain.blockchains.binance.client.encoding.message.MessageType
 import com.tangem.blockchain.blockchains.binance.client.encoding.message.TransactionRequestAssemblerExtSign
 import com.tangem.blockchain.blockchains.binance.client.encoding.message.TransferMessage
+import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.extensions.Result
@@ -28,13 +29,14 @@ class BinanceTransactionBuilder(
     private var transferMessage: TransferMessage? = null
 
     fun buildToSign(transactionData: TransactionData): Result<ByteArray> {
+        val amount = transactionData.amount
 
-        if (!transactionData.amount.isAboveZero()) return Result.Failure(Exception("Transaction amount is not defined"))
+        if (!amount.isAboveZero()) return Result.Failure(Exception("Transaction amount is not defined"))
         val accountNumber = accountNumber ?: return Result.Failure(Exception("No account number"))
         val sequence = sequence ?: return Result.Failure(Exception("No sequence"))
 
         val transfer = Transfer()
-        transfer.coin = transactionData.amount.currencySymbol
+        transfer.coin = if (amount.type == AmountType.Coin) amount.currencySymbol else amount.address
         transfer.fromAddress = transactionData.sourceAddress
         transfer.toAddress = transactionData.destinationAddress
         transfer.amount = transactionData.amount.value!!
