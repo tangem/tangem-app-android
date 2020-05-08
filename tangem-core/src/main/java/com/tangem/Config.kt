@@ -34,5 +34,8 @@ class Config(
         /**
          * Filter that can be used to limit cards that can be interacted with in TangemSdk.
          */
-        val cardFilter: CardFilter = CardFilter()
+        val cardFilter: CardFilter = CardFilter(),
+
+        var handleErrors: Boolean = true
+
 )
