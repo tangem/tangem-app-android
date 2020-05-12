@@ -7,14 +7,15 @@ import com.tangem.devkit.ucase.domain.paramsManager.ActionCallback
 import com.tangem.devkit.ucase.variants.TlvId
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
-class WriteUserDataAction : BaseAction() {
+
+class WriteUserProtectedDataAction : BaseAction() {
     override fun executeMainAction(payload: PayloadHolder, attrs: AttrForAction, callback: ActionCallback) {
-        val userData = (attrs.itemList.findItem(TlvId.UserData)?.getData() as? String)?.toByteArray()
+        val protectedUserData = (attrs.itemList.findItem(TlvId.ProtectedUserData)?.getData() as? String)?.toByteArray()
                 ?: return
         val cardId = attrs.itemList.findItem(TlvId.CardId)?.viewModel?.data ?: return
         val counter = (attrs.itemList.findItem(TlvId.Counter)?.viewModel?.data as? Int) ?: 1
 
-        attrs.tangemSdk.writeUserData(stringOf(cardId), userData, counter) {
+        attrs.tangemSdk.writeProtectedUserData(stringOf(cardId), protectedUserData, counter) {
             handleResult(payload, it, null, attrs, callback)
         }
     }
