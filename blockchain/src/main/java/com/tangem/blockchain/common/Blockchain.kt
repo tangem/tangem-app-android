@@ -1,74 +1,87 @@
 package com.tangem.blockchain.common
 
-import com.tangem.blockchain.binance.BinanceAddressFactory
-import com.tangem.blockchain.binance.BinanceAddressValidator
-import com.tangem.blockchain.bitcoin.BitcoinAddressFactory
-import com.tangem.blockchain.bitcoin.BitcoinAddressValidator
-import com.tangem.blockchain.cardano.CardanoAddressFactory
-import com.tangem.blockchain.cardano.CardanoAddressValidator
-import com.tangem.blockchain.ethereum.EthereumAddressFactory
-import com.tangem.blockchain.ethereum.EthereumAddressValidator
-
-import com.tangem.blockchain.stellar.StellarAddressFactory
-import com.tangem.blockchain.xrp.XrpAddressFactory
-import com.tangem.blockchain.xrp.XrpAddressValidator
-
-import java.math.BigDecimal
+import com.tangem.blockchain.blockchains.binance.BinanceAddressService
+import com.tangem.blockchain.blockchains.bitcoin.BitcoinAddressService
+import com.tangem.blockchain.blockchains.bitcoincash.BitcoinCashAddressService
+import com.tangem.blockchain.blockchains.cardano.CardanoAddressService
+import com.tangem.blockchain.blockchains.ethereum.EthereumAddressService
+import com.tangem.blockchain.blockchains.stellar.StellarAddressService
+import com.tangem.blockchain.blockchains.xrp.XrpAddressService
 
 enum class Blockchain(
         val id: String,
         val currency: String,
-        val decimals: Byte,
-        val fullName: String,
-        val pendingTransactionTimeout: Int
+        val fullName: String
 ) {
-    Unknown("", "", 0, "", 0),
-    Bitcoin("BTC", "BTC", 8, "Bitcoin", 0),
-    BitcoinTestnet("BTC/test", "BTCt", 8, "Bitcoin Testnet", 0),
-    Ethereum("ETH", "ETH", 18, "Ethereum", 0),
-    Rootstock("", "", 18, "", 0),
-    Cardano("CARDANO", "ADA", 6, "Cardano", 0),
-    XRP("XRP", "XRP", 6, "XRP Ledger", 0),
-    Binance("BINANCE", "BNB", 8, "Binance", 0),
-    BinanceTestnet("BINANCE/test", "BNBt", 8, "Binance", 0),
-    Stellar("XLM", "XLM", 7, "Stellar", 0);
+    Unknown("", "", ""),
+    Bitcoin("BTC", "BTC", "Bitcoin"),
+    BitcoinTestnet("BTC/test", "BTCt", "Bitcoin Testnet"),
+    BitcoinCash("BCH", "BCH", "Bitcoin Cash"),
+    Ethereum("ETH", "ETH", "Ethereum"),
+    RSK("RSK", "RBTC", "RSK"),
+    Cardano("CARDANO", "ADA", "Cardano"),
+    XRP("XRP", "XRP", "XRP Ledger"),
+    Binance("BINANCE", "BNB", "Binance"),
+    BinanceTestnet("BINANCE/test", "BNBt", "Binance"),
+    Stellar("XLM", "XLM", "Stellar");
 
-    fun roundingMode(): Int = when (this) {
-        Bitcoin, Ethereum, Rootstock, Binance -> BigDecimal.ROUND_DOWN
-        Cardano -> BigDecimal.ROUND_UP
-        else -> BigDecimal.ROUND_HALF_UP
+    fun decimals(): Int = when (this) {
+        Bitcoin, BitcoinTestnet, BitcoinCash, Binance, BinanceTestnet -> 8
+        Cardano, XRP -> 6
+        Ethereum, RSK -> 18
+        Stellar -> 7
+        Unknown -> 0
     }
 
-    fun makeAddress(walletPublicKey: ByteArray): String {
-        return when (this) {
-            Unknown -> throw Exception("unsupported blockchain")
-            Bitcoin -> BitcoinAddressFactory.makeAddress(walletPublicKey)
-            BitcoinTestnet -> BitcoinAddressFactory.makeAddress(walletPublicKey, testNet = true)
-            Ethereum -> EthereumAddressFactory.makeAddress(walletPublicKey)
-//            Rootstock -> RootstockAddressFactory.makeAddress(cardPublicKey)
-            Cardano -> CardanoAddressFactory.makeAddress(walletPublicKey)
-            XRP -> XrpAddressFactory.makeAddress(walletPublicKey)
-            Binance -> BinanceAddressFactory.makeAddress(walletPublicKey)
-            BinanceTestnet -> BinanceAddressFactory.makeAddress(walletPublicKey, testNet = true)
-            Stellar -> StellarAddressFactory.makeAddress(walletPublicKey)
-            else -> throw Exception("unsupported blockchain")
-        }
+    fun pendingTransactionsTimeout(): Int = when (this) {
+        else -> 0
     }
 
-    fun validateAddress(address: String): Boolean {
-        return when (this) {
-            Unknown -> throw Exception("unsupported blockchain")
-            Bitcoin -> BitcoinAddressValidator.validate(address)
-            BitcoinTestnet -> BitcoinAddressValidator.validate(address, testNet = true)
-            Ethereum -> EthereumAddressValidator.validate(address)
-//            Rootstock -> RootstockAddressValidator.validate(address)
-            Cardano -> CardanoAddressValidator.validate(address)
-            XRP -> XrpAddressValidator.validate(address)
-            Binance -> BinanceAddressValidator.validate(address)
-            BinanceTestnet -> BinanceAddressValidator.validate(address, testNet = true)
-//            Stellar -> StellarAddressValidator.validate(address)
-            else -> throw Exception("unsupported blockchain")
+    fun makeAddress(walletPublicKey: ByteArray): String = getAddressService().makeAddress(walletPublicKey)
+
+    fun validateAddress(address: String): Boolean = getAddressService().validate(address)
+
+    private fun getAddressService(): AddressService = when (this) {
+        Unknown -> throw Exception("unsupported blockchain")
+        Bitcoin -> BitcoinAddressService()
+        BitcoinTestnet -> BitcoinAddressService(true)
+        BitcoinCash -> BitcoinCashAddressService()
+        Ethereum, RSK -> EthereumAddressService()
+        Cardano -> CardanoAddressService()
+        XRP -> XrpAddressService()
+        Binance -> BinanceAddressService()
+        BinanceTestnet -> BinanceAddressService(true)
+        Stellar -> StellarAddressService()
+    }
+
+    fun getShareUri(address: String): String = when (this) {
+        Bitcoin -> "bitcoin:$address"
+        Ethereum -> "ethereum:$address"
+        XRP -> "ripple:$address"
+        else -> address
+    }
+
+    fun getExploreUrl(address: String, token: Token? = null): String = when (this) {
+        Binance -> "https://explorer.binance.org/address/$address"
+        Bitcoin -> "https://blockchain.info/address/$address"
+        BitcoinTestnet -> "https://live.blockcypher.com/btc-testnet/address/$address"
+        BitcoinCash -> "https://blockchair.com/bitcoin-cash/address/$address"
+        Cardano -> "https://cardanoexplorer.com/address/$address"
+        Ethereum -> if (token == null) {
+            "https://etherscan.io/address/"
+        } else {
+            "https://etherscan.io/token/${token.contractAddress}?a=$address"
         }
+        RSK -> {
+            var url = "https://explorer.rsk.co/address/$address"
+            if (token != null) {
+                url += "?__tab=tokens"
+            }
+            url
+        }
+        Stellar -> "https://stellar.expert/explorer/public/account/$address"
+        XRP -> "https://xrpscan.com/account/$address"
+        else -> throw Exception("Explore URL not defined!")
     }
 
     companion object {
