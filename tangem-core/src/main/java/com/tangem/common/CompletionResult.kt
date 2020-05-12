@@ -1,6 +1,6 @@
 package com.tangem.common
 
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
 import com.tangem.common.CompletionResult.Success
 
 /**
@@ -9,5 +9,5 @@ import com.tangem.common.CompletionResult.Success
  */
 sealed class CompletionResult<T> {
     class Success<T>(val data: T) : CompletionResult<T>()
-    class Failure<T>(val error: SessionError) : CompletionResult<T>()
+    class Failure<T>(val error: TangemSdkError) : CompletionResult<T>()
 }
