@@ -46,7 +46,7 @@ class TangemSdk(
      * it proves that the wallet owns a private key that corresponds to a public one.
      *
      * @param callback is triggered on the completion of the [ScanTask] and provides card response
-     * in the form of [Card] if the task was performed successfully or [SessionError] in case of an error.
+     * in the form of [Card] if the task was performed successfully or [TangemSdkError] in case of an error.
      */
     fun scanCard(initialMessage: Message? = null, callback: (result: CompletionResult<Card>) -> Unit) {
         startSessionWithRunnable(ScanTask(), null, initialMessage, callback)
@@ -68,7 +68,7 @@ class TangemSdk(
      * @param cardId CID, Unique Tangem card ID number
      * @param callback is triggered on the completion of the [SignCommand] and provides card response
      * in the form of [SignResponse] if the task was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      */
     fun sign(hashes: Array<ByteArray>, cardId: String, initialMessage: Message? = null,
              callback: (result: CompletionResult<SignResponse>) -> Unit) {
@@ -86,7 +86,7 @@ class TangemSdk(
      * @param cardId CID, Unique Tangem card ID number.
      * @param callback is triggered on the completion of the [ReadIssuerDataCommand] and provides
      * card response in the form of [ReadIssuerDataResponse] if the task was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      */
     fun readIssuerData(cardId: String, initialMessage: Message? = null,
                        callback: (result: CompletionResult<ReadIssuerDataResponse>) -> Unit) {
@@ -105,7 +105,7 @@ class TangemSdk(
      * @param cardId CID, Unique Tangem card ID number.
      * @param callback is triggered on the completion of the [ReadIssuerExtraDataCommand] and provides
      * card response in the form of [ReadIssuerExtraDataResponse] if the task was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      */
     fun readIssuerExtraData(cardId: String,
                             callback: (result: CompletionResult<ReadIssuerExtraDataResponse>) -> Unit) {
@@ -126,7 +126,7 @@ class TangemSdk(
      * @param issuerDataCounter An optional counter that protect issuer data against replay attack.
      * @param callback is triggered on the completion of the [WriteIssuerDataCommand] and provides
      * card response in the form of [WriteIssuerDataResponse] if the task was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      */
     fun writeIssuerData(cardId: String,
                         issuerData: ByteArray,
@@ -164,7 +164,7 @@ class TangemSdk(
      * @param issuerDataCounter An optional counter that protect issuer data against replay attack.
      * @param callback is triggered on the completion of the [WriteIssuerExtraDataCommand] and provides
      * card response in the form of [WriteIssuerDataResponse] if the task was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      */
     fun writeIssuerExtraData(cardId: String,
                              issuerData: ByteArray,
@@ -183,29 +183,51 @@ class TangemSdk(
     }
 
     /**
-     * This method launches a [WriteUserDataCommand] on a new thread.
+     * This method launches a [WriteUserDataCommand] on a new thread, writing  UserData and UserCounter fields.
      *
-     * This command writes some of UserData, UserProtectedData, UserCounter and UserProtectedCounter fields.
-     * User_Data and User_ProtectedData are never changed or parsed by the executable code the Tangem COS.
-     * The App defines purpose of use, format and it's payload. For example, this field may contain cashed information
+     * User_Data is never changed or parsed by the executable code the Tangem COS.
+     * The App defines purpose of use, format and its payload. For example, this field may contain cashed information
      * from blockchain to accelerate preparing new transaction.
-     * User_Counter and User_ProtectedCounter are counters, that initial values can be set by App and increased on every signing
+     * The initial value of User_Counter can be set by an App and increased on every signing
      * of new transaction (on SIGN command that calculate new signatures). The App defines purpose of use.
      * For example, this fields may contain blockchain nonce value.
      *
      * Writing of UserCounter and UserData is protected only by PIN1.
-     * UserProtectedCounter and UserProtectedData need additionally PIN2 to confirmation.
      */
     fun writeUserData(
             cardId: String,
             userData: ByteArray? = null,
-            userProtectedData: ByteArray? = null,
             userCounter: Int? = null,
+            initialMessage: Message? = null,
+            callback: (result: CompletionResult<WriteUserDataResponse>) -> Unit
+    ) {
+        val command = WriteUserDataCommand(userData = userData,userCounter = userCounter)
+        startSessionWithRunnable(command, cardId, initialMessage, callback)
+    }
+
+    /**
+     * This method launches a [WriteUserDataCommand] on a new thread,
+     * writing UserProtectedData and UserProtectedCounter fields.
+     *
+     * User_ProtectedData is never changed or parsed by the executable code the Tangem COS.
+     * The App defines purpose of use, format and its payload. For example, this field may contain cashed information
+     * from blockchain to accelerate preparing new transaction.
+     * The initial value of User_ProtectedCounter can be set by an App and increased on every signing
+     * of a new transaction (on SIGN command that calculate new signatures). The App defines the purpose of use.
+     * For example, this fields may contain blockchain nonce value.
+     *
+     * UserProtectedCounter and UserProtectedData require PIN2 for confirmation.
+     */
+    fun writeProtectedUserData(
+            cardId: String,
+            userProtectedData: ByteArray? = null,
             userProtectedCounter: Int? = null,
             initialMessage: Message? = null,
             callback: (result: CompletionResult<WriteUserDataResponse>) -> Unit
     ) {
-        val command = WriteUserDataCommand(userData, userProtectedData, userCounter, userProtectedCounter)
+        val command = WriteUserDataCommand(
+                userProtectedData = userProtectedData, userProtectedCounter = userProtectedCounter
+        )
         startSessionWithRunnable(command, cardId, initialMessage, callback)
     }
 
@@ -224,7 +246,7 @@ class TangemSdk(
      * @param cardId CID, Unique Tangem card ID number.
      * @param callback is triggered on the completion of the [ReadUserDataCommand] and provides
      * card response in the form of [ReadUserDataResponse] if the task was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      */
     fun readUserData(cardId: String, initialMessage: Message? = null,
                      callback: (result: CompletionResult<ReadUserDataResponse>) -> Unit) {
@@ -246,7 +268,7 @@ class TangemSdk(
      * @param cardId CID, Unique Tangem card ID number.
      * @param callback is triggered on the completion of the [CreateWalletTask] and provides
      * card response in the form of [CreateWalletResponse] if the task was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      */
     fun createWallet(cardId: String, initialMessage: Message? = null,
                      callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
@@ -265,7 +287,7 @@ class TangemSdk(
      * @param cardId CID, Unique Tangem card ID number.
      * @param callback is triggered on the completion of the [PurgeWalletCommand] and provides
      * card response in the form of [PurgeWalletResponse] if the task was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      */
     fun purgeWallet(cardId: String, initialMessage: Message? = null,
                     callback: (result: CompletionResult<PurgeWalletResponse>) -> Unit) {
@@ -283,7 +305,7 @@ class TangemSdk(
      * @param cardId CID, Unique Tangem card ID number.
      * @param callback is triggered on the completion of the [DepersonalizeCommand] and provides
      * card response in the form of [DepersonalizeResponse] if the task was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      * */
     fun depersonalize(cardId: String, initialMessage: Message? = null,
                       callback: (result: CompletionResult<DepersonalizeResponse>) -> Unit) {
@@ -306,7 +328,7 @@ class TangemSdk(
      * (non-EMV) POS terminal infrastructure and transaction processing back-end.
      * @param callback is triggered on the completion of the [PersonalizeCommand] and provides
      * card response in the form of [Card] if the command was performed successfully
-     * or [SessionError] in case of an error.
+     * or [TangemSdkError] in case of an error.
      */
     fun personalize(config: CardConfig,
                     issuer: Issuer, manufacturer: Manufacturer, acquirer: Acquirer? = null,
@@ -325,7 +347,7 @@ class TangemSdk(
      * @runnable: A custom task, adopting [CardSessionRunnable] protocol
      * @cardId: CID, Unique Tangem card ID number. If not null, the SDK will check that you the card
      * with which you tapped a phone has this [cardId] and SDK will return
-     * the [SessionError.WrongCard] otherwise.
+     * the [TangemSdkError.WrongCard] otherwise.
      * @initialMessage: A custom description that shows at the beginning of the NFC session.
      * If null, default message will be used.
      *  @callback: Standard [TangemSdk] callback.
@@ -343,14 +365,14 @@ class TangemSdk(
 
      * @cardId: CID, Unique Tangem card ID number. If not null, the SDK will check that you the card
      * with which you tapped a phone has this [cardId] and SDK will return
-     * the [SessionError.WrongCard] otherwise.
+     * the [TangemSdkError.WrongCard] otherwise.
      * @initialMessage: A custom description that shows at the beginning of the NFC session.
      * If null, default message will be used.
-     * @callback: At first, you should check that the [SessionError] is not null,
+     * @callback: At first, you should check that the [TangemSdkError] is not null,
      * then you can use the [CardSession] to interact with a card.
      */
     fun startSession(cardId: String? = null, initialMessage: Message? = null,
-            callback: (session: CardSession, error: SessionError?) -> Unit) {
+            callback: (session: CardSession, error: TangemSdkError?) -> Unit) {
         val cardSession = CardSession(buildEnvironment(), reader, viewDelegate, cardId, initialMessage)
         Thread().run { cardSession.start(callback) }
     }
@@ -367,7 +389,8 @@ class TangemSdk(
         val terminalKeys = if (config.linkedTerminal) terminalKeysService?.getKeys() else null
         return SessionEnvironment(
                 terminalKeys = terminalKeys,
-                cardFilter = config.cardFilter
+                cardFilter = config.cardFilter,
+                handleErrors = config.handleErrors
         )
     }
 
