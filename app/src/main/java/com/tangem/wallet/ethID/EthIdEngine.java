@@ -43,8 +43,8 @@ public class EthIdEngine extends CoinEngine {
 
     private static final String TAG = com.tangem.wallet.eth.EthEngine.class.getSimpleName();
     public EthIdData coinData = null;
-    private byte[] approvalPubKey = Util.hexToBytes("04EAD74FEEE4061044F46B19EB654CEEE981E9318F0C8FE99AF5CDB9D779D2E52BB51EA2D14545E0B323F7A90CF4CC72753C973149009C10DB2D83DCEC28487729"); //TODO
-    public String approvalAddress = calculateAddress(approvalPubKey); //TODO
+    //default approval public key for issuance
+    private byte[] approvalPubKey = Util.hexToBytes("04EAD74FEEE4061044F46B19EB654CEEE981E9318F0C8FE99AF5CDB9D779D2E52BB51EA2D14545E0B323F7A90CF4CC72753C973149009C10DB2D83DCEC28487729");
 
     public EthIdEngine(TangemContext ctx) throws Exception {
         super(ctx);
@@ -56,10 +56,22 @@ public class EthIdEngine extends CoinEngine {
         } else {
             throw new Exception("Invalid type of Blockchain data for " + this.getClass().getSimpleName());
         }
+        defineApprovalAddress();
     }
 
     public EthIdEngine() {
         super();
+    }
+
+    private void defineApprovalAddress() {
+        TangemCard.IDCardData idCardData = ctx.getCard().getIDCardData();
+        String approvalAddress;
+        if (idCardData != null && idCardData.trustedAddress != null) {
+            approvalAddress = ctx.getCard().getIDCardData().trustedAddress;
+        } else {
+            approvalAddress = calculateAddress(approvalPubKey);
+        }
+        coinData.setApprovalAddress(approvalAddress);
     }
 
     private static int getDecimals() {
@@ -232,12 +244,12 @@ public class EthIdEngine extends CoinEngine {
         if (coinData != null && coinData.isHasApprovalTx()) {
             balanceValidator.setScore(100);
             balanceValidator.setFirstLine(R.string.id_verified);
-            balanceValidator.setSecondLine(R.string.balance_validator_second_line_unverified_balance);
+            balanceValidator.setSecondLine(R.string.balance_validator_second_line_issued_by);
             return false;
         } else {
             balanceValidator.setScore(0);
             balanceValidator.setFirstLine(R.string.id_not_registered);
-            balanceValidator.setSecondLine(R.string.balance_validator_second_line_unverified_balance);
+            balanceValidator.setSecondLine(R.string.empty_string);
             return false;
         }
     }
@@ -277,6 +289,9 @@ public class EthIdEngine extends CoinEngine {
     @Override
     public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) {
 
+        Log.d(this.getClass().getSimpleName(),
+                "Constructing transaction for signature");
+
         final EthTransaction tx = constructIdTxForSign(coinData.getApprovalAddressNonce());
 
         return new SignTask.TransactionToSign() {
@@ -309,6 +324,9 @@ public class EthIdEngine extends CoinEngine {
 
             @Override
             public byte[] onSignCompleted(byte[] signFromCard) throws Exception {
+                Log.d(this.getClass().getSimpleName(),
+                        "Transaction has been signed, now preparing transaction to send");
+
                 byte[] for_hash = tx.getRawHash();
                 BigInteger r = new BigInteger(1, Arrays.copyOfRange(signFromCard, 0, 32));
                 BigInteger s = new BigInteger(1, Arrays.copyOfRange(signFromCard, 32, 64));
@@ -330,6 +348,8 @@ public class EthIdEngine extends CoinEngine {
                 Log.e(this.getClass().getSimpleName(), " V: " + String.valueOf(v));
 
                 byte[] txForSend = tx.getEncoded();
+                Log.d(this.getClass().getSimpleName(),
+                        "Tx is ready to be sent");
                 notifyOnNeedSendTransaction(txForSend);
                 return txForSend;
             }
@@ -381,7 +401,7 @@ public class EthIdEngine extends CoinEngine {
             public void onSuccess(BlockcypherTx response) {
                 Log.i(TAG, "onSuccess: BlockcypherTx");
                 try {
-                    String address = approvalAddress;
+                    String address = coinData.getApprovalAddress();
                     if (address.startsWith("0x") || address.startsWith("0X")) {
                         address = address.substring(2);
                     }
@@ -434,9 +454,13 @@ public class EthIdEngine extends CoinEngine {
                 if (method.equals(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION)) {
                     if (infuraResponse.getResult() == null || infuraResponse.getResult().isEmpty()) {
                         ctx.setError("Rejected by node: " + infuraResponse.getError());
+                        Log.d(this.getClass().getSimpleName(),
+                                "Rejected by node:" + infuraResponse.getError());
                         blockchainRequestsCallbacks.onComplete(false);
                     } else {
                         ctx.setError(null);
+                        Log.d(this.getClass().getSimpleName(),
+                                "Transaction has been sent successfully");
                         blockchainRequestsCallbacks.onComplete(true);
                     }
                 }
@@ -444,6 +468,8 @@ public class EthIdEngine extends CoinEngine {
 
             @Override
             public void onFail(String method, String message) {
+                Log.d(this.getClass().getSimpleName(),
+                        "requestSendTransaction failed with message: " + message);
                 if (method.equals(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION)) {
                     ctx.setError(message);
                     blockchainRequestsCallbacks.onComplete(false);
@@ -528,6 +554,6 @@ public class EthIdEngine extends CoinEngine {
         };
         serverApiInfura.setResponseListener(responseListener);
 
-        serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, 67, approvalAddress, "", "");
+        serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GET_PENDING_COUNT, 67, coinData.getApprovalAddress(), "", "");
     }
 }
