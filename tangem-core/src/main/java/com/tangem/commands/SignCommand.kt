@@ -1,7 +1,9 @@
 package com.tangem.commands
 
+import com.tangem.CardSession
 import com.tangem.SessionEnvironment
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
+import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
@@ -35,6 +37,57 @@ class SignCommand(private val hashes: Array<ByteArray>)
 
     private val hashSizes = if (hashes.isNotEmpty()) hashes.first().size else 0
 
+    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<SignResponse>) -> Unit): Boolean {
+        if (session.environment.card?.status == CardStatus.NotPersonalized) {
+            callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
+            return true
+        }
+        if (session.environment.card?.isActivated == true) {
+            callback(CompletionResult.Failure(TangemSdkError.NotActivated()))
+            return true
+        }
+        if (session.environment.card?.status == CardStatus.Purged) {
+            callback(CompletionResult.Failure(TangemSdkError.CardIsPurged()))
+            return true
+        }
+        if (session.environment.card?.status == CardStatus.Empty) {
+            callback(CompletionResult.Failure(TangemSdkError.CardIsEmpty()))
+            return true
+        }
+        if (session.environment.card?.walletRemainingSignatures == 0) {
+            callback(CompletionResult.Failure(TangemSdkError.NoRemainingSignatures()))
+            return true
+        }
+        if (session.environment.card?.signingMethods?.contains(SigningMethod.SignHash) != true) {
+            callback(CompletionResult.Failure(TangemSdkError.SignHashesNotAvailable()))
+            return true
+        }
+        if (hashSizes == 0) {
+            callback(CompletionResult.Failure(TangemSdkError.EmptyHashes()))
+            return true
+        }
+        if (hashes.any { it.size != hashSizes }) {
+            callback(CompletionResult.Failure(TangemSdkError.HashSizeMustBeEqual()))
+            return true
+        }
+        return false
+    }
+
+    override fun performAfterCheck(session: CardSession,
+                                   result: CompletionResult<SignResponse>,
+                                   callback: (result: CompletionResult<SignResponse>) -> Unit): Boolean {
+        when (result) {
+            is CompletionResult.Failure -> {
+                if (result.error is TangemSdkError.InvalidParams) {
+                    callback(CompletionResult.Failure(TangemSdkError.Pin2OrCvcRequired()))
+                    return true
+                }
+                return false
+            }
+            else -> return false
+        }
+    }
+
     override fun serialize(environment: SessionEnvironment): CommandApdu {
         val dataToSign = flattenHashes()
         val tlvBuilder = TlvBuilder()
@@ -58,9 +111,9 @@ class SignCommand(private val hashes: Array<ByteArray>)
     }
 
     private fun checkForErrors() {
-        if (hashes.isEmpty()) throw SessionError.EmptyHashes()
-        if (hashes.size > 10) throw SessionError.TooMuchHashesInOneTransaction()
-        if (hashes.any { it.size != hashSizes }) throw SessionError.HashSizeMustBeEqual()
+        if (hashes.isEmpty()) throw TangemSdkError.EmptyHashes()
+        if (hashes.size > 10) throw TangemSdkError.TooManyhHashesInOneTransaction()
+        if (hashes.any { it.size != hashSizes }) throw TangemSdkError.HashSizeMustBeEqual()
     }
 
     /**
@@ -81,7 +134,7 @@ class SignCommand(private val hashes: Array<ByteArray>)
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): SignResponse {
         val tlvData = apdu.getTlvData(environment.encryptionKey)
-                ?: throw SessionError.DeserializeApduFailed()
+                ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
         return SignResponse(

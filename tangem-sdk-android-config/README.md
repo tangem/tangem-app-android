@@ -117,7 +117,7 @@ tangemSdk.scanCard { result ->
             }
         }
         is CompletionResult.Failure -> {
-            if (result.error is SessionError.UserCancelledError) {
+            if (result.error is TangemSdkError.UserCancelledError) {
             // Handle case when user cancelled manually
             }
             // Handle other errors
@@ -132,7 +132,7 @@ Communication with the card is an asynchronous operation. In order to get a resu
 `CompletionResult<T>` – this is the sealed class for the results of `CardSessionRunnable`.
 
 `Success<T>(val data: T)` is triggered after successful operation and contains a `CommandResponse`. 
-`Failure<T>(val error: SessionError)` is triggered on error. 
+`Failure<T>(val error: TangemSdkError)` is triggered on error. 
 
 #### Sign
 This method allows you to sign one or multiple hashes. Simultaneous signing of array of hashes in a single SIGN command is required to support Bitcoin-type multi-input blockchains (UTXO). The SIGN command will return a corresponding array of signatures.
@@ -143,7 +143,7 @@ tangemSdk.sign(
         cardId) { result ->
     when (result) {
         is CompletionResult.Failure -> {
-           if (result.error is SessionError.UserCancelledError) {
+           if (result.error is TangemSdkError.UserCancelledError) {
                // Handle case when user cancelled manually
            }
            // Handle other errors
@@ -164,7 +164,7 @@ An example of usage (description is available at documentation for `TangemSdk.re
         tangemSdk.readIssuerData(cardId) { result ->
             when (result) {
                 is CompletionResult.Failure -> {
-                    if (result.error is SessionError.UserCancelledError) {
+                    if (result.error is TangemSdkError.UserCancelledError) {
                         // Handle case when user cancelled manually
                         }
                         // Handle other errors  
@@ -184,7 +184,7 @@ An example of usage (description is available at documentation for `TangemSdk.re
         tangemSdk.readIssuerExtraData(cardId) { result ->
             when (result) {
                 is CompletionResult.Failure -> {
-                    if (result.error is SessionError.UserCancelledError) {
+                    if (result.error is TangemSdkError.UserCancelledError) {
                         // Handle case when user cancelled manually
                         }
                         // Handle other errors  
@@ -204,7 +204,7 @@ An example of usage (description is available at documentation for `TangemSdk.wr
         tangemSdk.writeIssuerData(cardId, issuerData, issuerDataSignature, issuerDataCounter) { result ->
             when (result) {
                 is CompletionResult.Failure -> {
-                    if (result.error is SessionError.UserCancelledError) {
+                    if (result.error is TangemSdkError.UserCancelledError) {
                         // Handle case when user cancelled manually
                         }
                         // Handle other errors  
@@ -225,7 +225,7 @@ An example of usage (description is available at documentation for `TangemSdk.wr
         ) { result ->
             when (result) {
                 is CompletionResult.Failure -> {
-                    if (result.error is SessionError.UserCancelledError) {
+                    if (result.error is TangemSdkError.UserCancelledError) {
                         // Handle case when user cancelled manually
                         }
                         // Handle other errors  
@@ -246,7 +246,7 @@ An example of usage (description is available at documentation for `TangemSdk.wr
         ) { result ->
             when (result) {
                 is CompletionResult.Failure -> {
-                    if (result.error is SessionError.UserCancelledError) {
+                    if (result.error is TangemSdkError.UserCancelledError) {
                         // Handle case when user cancelled manually
                         }
                         // Handle other errors  
@@ -265,7 +265,7 @@ An example of usage (description is available at documentation for `TangemSdk.re
         tangemSdk.readUserData(cardId) { result ->
             when (result) {
                 is CompletionResult.Failure -> {
-                    if (result.error is SessionError.UserCancelledError) {
+                    if (result.error is TangemSdkError.UserCancelledError) {
                         // Handle case when user cancelled manually
                         }
                         // Handle other errors  
@@ -284,7 +284,7 @@ An example of usage (description is available at documentation for `TangemSdk.cr
         tangemSdk.createWallet(cardId) { result ->
             when (result) {
                 is CompletionResult.Failure -> {
-                    if (result.error is SessionError.UserCancelledError) {
+                    if (result.error is TangemSdkError.UserCancelledError) {
                         // Handle case when user cancelled manually
                         }
                         // Handle other errors  
@@ -303,7 +303,7 @@ An example of usage (description is available at documentation for `TangemSdk.pu
         tangemSdk.purgeWallet(cardId) { result ->
             when (result) {
                 is CompletionResult.Failure -> {
-                    if (result.error is SessionError.UserCancelledError) {
+                    if (result.error is TangemSdkError.UserCancelledError) {
                         // Handle case when user cancelled manually
                         }
                         // Handle other errors  
@@ -323,7 +323,7 @@ An example of usage (description is available at documentation for `TangemSdk.de
         tangemSdk.depersonalize(cardId) { result ->
             when (result) {
                 is CompletionResult.Failure -> {
-                    if (result.error is SessionError.UserCancelledError) {
+                    if (result.error is TangemSdkError.UserCancelledError) {
                         // Handle case when user cancelled manually
                         }
                         // Handle other errors  
@@ -342,7 +342,7 @@ An example of usage (description is available at documentation for `TangemSdk.pe
         tangemSdk.personalize(config, issuer, manufacturer, acquirer) { result ->
             when (result) {
                 is CompletionResult.Failure -> {
-                    if (result.error is SessionError.UserCancelledError) {
+                    if (result.error is TangemSdkError.UserCancelledError) {
                         // Handle case when user cancelled manually
                         }
                         // Handle other errors  
@@ -383,7 +383,7 @@ To do this, you need to call `tangemSdk.startSession()` method and get a `CardSe
                         SignCommand(createSampleHashes())) {result ->  
                      when (result) {
                                     is CompletionResult.Failure -> {
-                                       if (result.error is SessionError.UserCancelledError) {
+                                       if (result.error is TangemSdkError.UserCancelledError) {
                                            // Handle case when user cancelled manually
                                        }
                                        // Handle other errors  
@@ -410,7 +410,7 @@ class OneTapSignTask(private val hashesToSign: Array<ByteArray>) : CardSessionRu
         val card = session.environment.card
 
         if (card == null) {
-            callback(CompletionResult.Failure(SessionError.MissingPreflightRead()))
+            callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
 
         } else if (card.cardData?.productMask?.contains(Product.Tag) != false) {
             callback(CompletionResult.Success(card))
@@ -419,7 +419,7 @@ class OneTapSignTask(private val hashesToSign: Array<ByteArray>) : CardSessionRu
             callback(CompletionResult.Success(card))
 
         } else if (card.curve == null || card.walletPublicKey == null) {
-            callback(CompletionResult.Failure(SessionError.CardError()))
+            callback(CompletionResult.Failure(TangemSdkError.CardError()))
 
         } else {
             val signCommand = SignCommand(hashesToSign)
