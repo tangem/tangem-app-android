@@ -24,6 +24,7 @@ class ActionResources {
         holder.register(ActionType.WriteIssuerExData, ActionRes(R.string.action_issuer_write_ex_data, R.string.info_action_issuer_write_ex_data, R.id.action_nav_entry_point_to_nav_issuer_write_ex_data))
         holder.register(ActionType.ReadUserData, ActionRes(R.string.action_user_read_data, R.string.info_action_user_read_data, R.id.action_nav_entry_point_to_nav_user_read_data))
         holder.register(ActionType.WriteUserData, ActionRes(R.string.action_user_write_data, R.string.info_action_user_write_data, R.id.action_nav_entry_point_to_nav_user_write_data))
+        holder.register(ActionType.WriteProtectedUserData, ActionRes(R.string.action_user_write_protected_data, R.string.info_action_user_write_protected_data, R.id.action_nav_entry_point_to_nav_user_write_protected_data))
 //        holder.register(ActionType.Unknown, getIfNotContains())
     }
 }
