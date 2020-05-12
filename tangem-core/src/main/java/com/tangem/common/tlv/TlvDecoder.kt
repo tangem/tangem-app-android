@@ -20,7 +20,7 @@ class TlvDecoder(val tlvList: List<Tlv>) {
 
     init {
         Log.v("TLV",
-                "List of decoded TLVs:\n${tlvList.joinToString("\n")}")
+                "Decoding data from TLV:\n${tlvList.joinToString("\n")}")
     }
 
     /**
@@ -57,7 +57,7 @@ class TlvDecoder(val tlvList: List<Tlv>) {
                     if (logError) {
                         Log.e(this::class.simpleName!!, "TLV $tag not found")
                     } else {
-                        Log.v(this::class.simpleName!!, "TLV $tag not found")
+                        Log.v(this::class.simpleName!!, "TLV $tag not found, but it is not required")
                     }
                     throw TangemSdkError.DecodingFailedMissingTag()
                 }
