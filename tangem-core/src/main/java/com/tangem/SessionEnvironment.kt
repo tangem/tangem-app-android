@@ -20,7 +20,9 @@ data class SessionEnvironment(
         val terminalKeys: KeyPair? = null,
         var encryptionMode: EncryptionMode = EncryptionMode.NONE,
         var encryptionKey: ByteArray? = null,
-        val cvc: ByteArray? = null
+        val cvc: ByteArray? = null,
+        var cardFilter: CardFilter = CardFilter(),
+        val handleErrors: Boolean = true
 ) {
 
     fun setPin1(pin1: String) {
