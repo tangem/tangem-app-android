@@ -18,7 +18,7 @@ class TlvResources {
         holder.register(TlvId.TransactionOutHash, Resources(R.string.tlv_transaction_out_hash, R.string.info_tlv_transaction_out_hash))
         holder.register(TlvId.Counter, Resources(R.string.tlv_counter, R.string.info_tlv_counter))
         holder.register(TlvId.IssuerData, Resources(R.string.tlv_issuer_data, R.string.info_tlv_issuer_data))
-        holder.register(TlvId.UserData, Resources(R.string.tlv_issuer_data, R.string.info_tlv_user_data))
+        holder.register(TlvId.UserData, Resources(R.string.tlv_user_data, R.string.info_tlv_user_data))
         holder.register(TlvId.ProtectedUserData, Resources(R.string.tlv_user_protected_data, R.string.info_tlv_protected_user_data))
     }
 }

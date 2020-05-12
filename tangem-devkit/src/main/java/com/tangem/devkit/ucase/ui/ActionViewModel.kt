@@ -4,8 +4,8 @@ import android.view.View
 import androidx.annotation.UiThread
 import androidx.lifecycle.*
 import com.google.gson.Gson
-import com.tangem.SessionError
 import com.tangem.TangemSdk
+import com.tangem.TangemSdkError
 import com.tangem.commands.Card
 import com.tangem.commands.CommandResponse
 import com.tangem.common.CompletionResult
@@ -16,7 +16,6 @@ import com.tangem.devkit._arch.structure.Payload
 import com.tangem.devkit._arch.structure.abstraction.Item
 import com.tangem.devkit._arch.structure.abstraction.iterate
 import com.tangem.devkit.ucase.domain.paramsManager.ItemsManager
-import com.tangem.devkit.ucase.domain.responses.ResponseJsonConverter
 import com.tangem.devkit.ucase.resources.ActionType
 import com.tangem.devkit.ucase.tunnel.ViewScreen
 import com.tangem.devkit.ucase.variants.personalize.converter.ItemTypes
@@ -133,8 +132,7 @@ class ActionViewModel(private val itemsManager: ItemsManager) : ViewModel(), Lif
 
 internal class Notifier(private val vm: ActionViewModel) {
 
-    private var notShowedError: SessionError? = null
-    private val gson: Gson = ResponseJsonConverter().gson
+    private var notShowedError: TangemSdkError? = null
 
     fun handleActionResult(result: CompletionResult<*>, list: List<Item>) {
         if (list.isNotEmpty()) notifyItemsChanged(list)
@@ -163,10 +161,10 @@ internal class Notifier(private val vm: ActionViewModel) {
         }
     }
 
-    private fun handleError(error: SessionError) {
+    private fun handleError(error: TangemSdkError) {
         Log.d(this, "error = $error")
         when (error) {
-            is SessionError.UserCancelled -> {
+            is TangemSdkError.UserCancelled -> {
                 if (notShowedError == null) {
                     vm.seError.postValue("User canceled the action")
                 } else {

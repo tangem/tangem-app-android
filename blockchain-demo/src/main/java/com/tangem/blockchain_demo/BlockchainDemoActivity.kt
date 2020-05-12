@@ -4,8 +4,8 @@ import android.os.Bundle
 import android.text.Editable
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.tangem.SessionError
 import com.tangem.TangemSdk
+import com.tangem.TangemSdkError
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.Signer
@@ -65,7 +65,7 @@ class BlockchainDemoActivity : AppCompatActivity() {
                             getInfo()
                         }
                 is CompletionResult.Failure -> {
-                        if (result.error !is SessionError.UserCancelled) {
+                        if (result.error !is TangemSdkError.UserCancelled) {
                             handleError(result.error.toString())
                         }
                     }
