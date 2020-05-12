@@ -2,7 +2,7 @@ package com.tangem.commands
 
 import com.tangem.CardSession
 import com.tangem.SessionEnvironment
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
 import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
@@ -49,7 +49,7 @@ class CheckWalletCommand(
     private val challenge = CryptoUtils.generateRandomBytes(16)
 
     override fun run(session: CardSession, callback: (result: CompletionResult<CheckWalletResponse>) -> Unit) {
-        transceive(session) { result ->
+        super.run(session) { result ->
             when (result) {
                 is CompletionResult.Failure -> {
                     callback(CompletionResult.Failure(result.error))
@@ -63,11 +63,26 @@ class CheckWalletCommand(
                     if (verified) {
                         callback(CompletionResult.Success(result.data))
                     } else {
-                        callback(CompletionResult.Failure(SessionError.VerificationFailed()))
+                        callback(CompletionResult.Failure(TangemSdkError.VerificationFailed()))
                     }
                 }
             }
         }
+    }
+
+    override fun performPreCheck(
+            session: CardSession,
+            callback: (result: CompletionResult<CheckWalletResponse>) -> Unit
+    ): Boolean {
+        if (session.environment.card?.status == CardStatus.NotPersonalized) {
+            callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
+            return true
+        }
+        if (session.environment.card?.isActivated == true) {
+            callback(CompletionResult.Failure(TangemSdkError.NotActivated()))
+            return true
+        }
+        return false
     }
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
@@ -83,7 +98,7 @@ class CheckWalletCommand(
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): CheckWalletResponse {
         val tlvData = apdu.getTlvData(environment.encryptionKey)
-                ?: throw SessionError.DeserializeApduFailed()
+                ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
         return CheckWalletResponse(
