@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.RadioButton
@@ -22,7 +23,6 @@ import com.tangem.wallet.ethID.EthIdEngine
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.fragment_issue_new_id.*
 import java.io.ByteArrayOutputStream
-import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -54,6 +54,8 @@ class IssueNewIdFragment : BaseFragment(), NavigationResultListener {
             try {
                 processData()
             } catch (exception: Exception) {
+                Log.e(this.javaClass.simpleName,
+                        "Exception while processing data: ${exception.localizedMessage}")
                 Toast.makeText(context, "Check for correctness of data", Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
@@ -117,12 +119,15 @@ class IssueNewIdFragment : BaseFragment(), NavigationResultListener {
                 photoInBytes,
                 issuerExpireDate.issueDate,
                 issuerExpireDate.expireDate,
-                (CoinEngineFactory.create(ctx) as? EthIdEngine)?.approvalAddress
+                (CoinEngineFactory.create(ctx) as? EthIdEngine)?.coinData?.approvalAddress
                 )
 
         val inputs = "$name $lastName;$birthDate${gender.toString()}"
         val info = inputs.toByteArray() + photoInBytes!!
         ctx.card.idHash = Util.calculateSHA256(info)
+
+        Log.d(this.javaClass.simpleName,
+                "ID info provided: $inputs,\n photo of size ${photoInBytes?.size}")
     }
 
     private fun convertDate(inputDate: CharSequence): String {
