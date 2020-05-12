@@ -71,7 +71,8 @@ class ActionListFragment : BaseFragment() {
                 ActionType.ReadIssuerExData,
                 ActionType.WriteIssuerExData,
                 ActionType.ReadUserData,
-                ActionType.WriteUserData
+                ActionType.WriteUserData,
+                ActionType.WriteProtectedUserData
         )
     }
 }
