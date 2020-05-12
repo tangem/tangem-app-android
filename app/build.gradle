@@ -99,7 +99,7 @@ dependencies {
     implementation 'com.google.dagger:dagger:2.24'
     kapt 'com.google.dagger:dagger-compiler:2.21'
     annotationProcessor 'com.google.dagger:dagger-compiler:2.21'
-    implementation 'com.google.zxing:core:3.4.0'
+    implementation 'com.google.zxing:core:3.3.3' // Do not update to 3.4.0, it requires minSdk 24
     implementation 'com.google.code.gson:gson:2.8.5'
     implementation 'com.madgag.spongycastle:core:1.56.0.0'
     implementation 'com.madgag.spongycastle:prov:1.56.0.0'
