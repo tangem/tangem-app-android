@@ -37,7 +37,7 @@ interface CardSessionRunnable<T : CommandResponse> {
  * @property viewDelegate is an  interface that allows interaction with users and shows relevant UI.
  * @property cardId ID, Unique Tangem card ID number. If not null, the SDK will check that you the card
  * with which you tapped a phone has this [cardId] and SDK will return
- * the [TangemSdkError.WrongCard] otherwise.
+ * the [TangemSdkError.WrongCardNumber] otherwise.
  * @property initialMessage A custom description that will be shown at the beginning of the NFC session.
  * If null, a default header and text body will be used.
  */
@@ -133,8 +133,8 @@ class CardSession(
                 is CompletionResult.Success -> {
                     val receivedCardId = result.data.cardId
                     if (cardId != null && receivedCardId != cardId) {
-                        stopWithError(TangemSdkError.WrongCard())
-                        callback(CompletionResult.Failure(TangemSdkError.WrongCard()))
+                        stopWithError(TangemSdkError.WrongCardNumber())
+                        callback(CompletionResult.Failure(TangemSdkError.WrongCardNumber()))
                         return@run
                     }
                     val allowedCardTypes = environment.cardFilter.allowedCardTypes
