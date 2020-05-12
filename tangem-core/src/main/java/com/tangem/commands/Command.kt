@@ -5,7 +5,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.apdu.StatusWord
-import com.tangem.common.apdu.toSessionError
+import com.tangem.common.apdu.toTangemSdkError
 import com.tangem.common.extensions.toInt
 import com.tangem.common.tlv.TlvTag
 
@@ -39,7 +39,26 @@ abstract class Command<T : CommandResponse> : CardSessionRunnable<T> {
 
     override fun run(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
         Log.i("Command", "Sending ${this::class.java.simpleName}")
-        transceive(session, callback)
+        if (session.environment.handleErrors) {
+            if (performPreCheck(session, callback)) return
+        }
+        transceive(session) { result ->
+            if (session.environment.handleErrors) {
+                if (performAfterCheck(session, result, callback)) return@transceive
+            }
+            callback(result)
+        }
+    }
+
+    open fun performPreCheck(session: CardSession,
+                             callback: (result: CompletionResult<T>) -> Unit): Boolean {
+        return false
+    }
+
+    open fun performAfterCheck(session: CardSession,
+                               result: CompletionResult<T>,
+                               callback: (result: CompletionResult<T>) -> Unit): Boolean {
+        return false
     }
 
     fun transceive(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
@@ -54,7 +73,7 @@ abstract class Command<T : CommandResponse> : CardSessionRunnable<T> {
                     }
                 }
             }
-        } catch (error: SessionError) {
+        } catch (error: TangemSdkError) {
             callback(CompletionResult.Failure(error))
         }
     }
@@ -81,17 +100,17 @@ abstract class Command<T : CommandResponse> : CardSessionRunnable<T> {
                             transceiveApdu(apdu, session, callback)
                         }
                         else -> {
-                            val error = responseApdu.statusWord.toSessionError()
+                            val error = responseApdu.statusWord.toTangemSdkError()
                             if (error != null && !tryHandleError(error)) {
                                 callback(CompletionResult.Failure(error))
                             } else {
-                                callback(CompletionResult.Failure(SessionError.UnknownError()))
+                                callback(CompletionResult.Failure(TangemSdkError.UnknownError()))
                             }
                         }
                     }
                 }
                 is CompletionResult.Failure ->
-                    if (result.error is SessionError.TagLost) {
+                    if (result.error is TangemSdkError.TagLost) {
                         session.viewDelegate.onTagLost()
                     } else {
                         callback(CompletionResult.Failure(result.error))
@@ -110,7 +129,7 @@ abstract class Command<T : CommandResponse> : CardSessionRunnable<T> {
         return tlv?.find { it.tag == TlvTag.Pause }?.value?.toInt()
     }
 
-    private fun tryHandleError(error: SessionError): Boolean {
+    private fun tryHandleError(error: TangemSdkError): Boolean {
         return false
     }
 
