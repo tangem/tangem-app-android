@@ -18,16 +18,24 @@ class Config(
         the correctness of Terminal_Transaction_Signature using previously stored Terminal_PublicKey
         and, if correct, will skip security delay for the current SIGN operation.
          */
-        val linkedTerminal: Boolean = true,
+        var linkedTerminal: Boolean = true,
 
         /**
          * If not null, it will be used to validate Issuer data and issuer extra data.
          * If null, issuerPublicKey from current card will be used.
          */
-        val issuerPublicKey: ByteArray? = null,
+        var issuerPublicKey: ByteArray? = null,
 
         /**
          * Level of encryption used in communication with a Tangem Card.
          */
-        val encryptionMode: EncryptionMode = EncryptionMode.NONE
+        var encryptionMode: EncryptionMode = EncryptionMode.NONE,
+
+        /**
+         * Filter that can be used to limit cards that can be interacted with in TangemSdk.
+         */
+        val cardFilter: CardFilter = CardFilter(),
+
+        var handleErrors: Boolean = true
+
 )
