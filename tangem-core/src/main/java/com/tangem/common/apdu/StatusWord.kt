@@ -1,6 +1,6 @@
 package com.tangem.common.apdu
 
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
 
 /**
  * Part of a response from the card, shows the status of the operation
@@ -25,16 +25,16 @@ enum class StatusWord(val code: Int, val description: String) {
     }
 }
 
-fun StatusWord.toSessionError(): SessionError? {
+fun StatusWord.toTangemSdkError(): TangemSdkError? {
     return when (this) {
         StatusWord.ProcessCompleted, StatusWord.Pin1Changed,
         StatusWord.Pin2Changed, StatusWord.PinsChanged -> null
         StatusWord.NeedPause -> null
-        StatusWord.InvalidParams -> SessionError.InvalidParams()
-        StatusWord.ErrorProcessingCommand -> SessionError.ErrorProcessingCommand()
-        StatusWord.InvalidState -> SessionError.InvalidState()
-        StatusWord.InsNotSupported -> SessionError.InsNotSupported()
-        StatusWord.NeedEncryption -> SessionError.NeedEncryption()
-        StatusWord.Unknown -> SessionError.UnknownStatus()
+        StatusWord.InvalidParams -> TangemSdkError.InvalidParams()
+        StatusWord.ErrorProcessingCommand -> TangemSdkError.ErrorProcessingCommand()
+        StatusWord.InvalidState -> TangemSdkError.InvalidState()
+        StatusWord.InsNotSupported -> TangemSdkError.InsNotSupported()
+        StatusWord.NeedEncryption -> TangemSdkError.NeedEncryption()
+        StatusWord.Unknown -> TangemSdkError.UnknownStatus()
     }
 }
