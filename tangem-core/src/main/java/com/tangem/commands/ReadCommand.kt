@@ -1,7 +1,9 @@
 package com.tangem.commands
 
+import com.tangem.CardSession
 import com.tangem.SessionEnvironment
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
+import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
@@ -132,7 +134,7 @@ data class SettingsMask(val rawValue: Int) {
 enum class Settings(val code: Int) {
     IsReusable(0x0001),
     UseActivation(0x0002),
-    ForbidPurgeWallet(0x0004),
+    ProhibitPurgeWallet(0x0004),
     UseBlock(0x0008),
 
     AllowSwapPIN(0x0010),
@@ -366,6 +368,19 @@ class Card(
  */
 class ReadCommand : Command<Card>() {
 
+    override fun performAfterCheck(session: CardSession, result: CompletionResult<Card>, callback: (result: CompletionResult<Card>) -> Unit): Boolean {
+        when (result) {
+            is CompletionResult.Failure -> {
+                if (result.error is TangemSdkError.InvalidParams) {
+                    callback(CompletionResult.Failure(TangemSdkError.Pin1Required()))
+                    return true
+                }
+                return false
+            }
+            else -> return false
+        }
+    }
+
     override fun serialize(environment: SessionEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
         /**
@@ -384,7 +399,7 @@ class ReadCommand : Command<Card>() {
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): Card {
         val tlvData = apdu.getTlvData(environment.encryptionKey)
-                ?: throw SessionError.DeserializeApduFailed()
+                ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
 
