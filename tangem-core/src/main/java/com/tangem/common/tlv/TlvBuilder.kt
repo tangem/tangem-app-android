@@ -14,7 +14,7 @@ class TlvBuilder {
 
     fun serialize(): ByteArray {
         Log.v("TLV",
-                "List of TLV that are being sent to a card:\n${tlvs.joinToString("\n")}")
+                "List of encoded TLVs:\n${tlvs.joinToString("\n")}")
         return tlvs.serialize()
     }
 
