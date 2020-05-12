@@ -1,7 +1,7 @@
 package com.tangem.common.tlv
 
 import com.tangem.Log
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
 import com.tangem.commands.*
 import com.tangem.commands.common.IssuerDataMode
 import com.tangem.common.extensions.calculateSha256
@@ -24,7 +24,7 @@ class TlvEncoder {
             return Tlv(tag, encodeValue(tag, value))
         } else {
             Log.e(this::class.simpleName!!, "Encoding error. Value for tag $tag is null")
-            throw SessionError.EncodingFailed()
+            throw TangemSdkError.EncodingFailed()
         }
     }
 
@@ -106,7 +106,7 @@ class TlvEncoder {
         if (T::class != ExpectedT::class) {
             Log.e(this::class.simpleName!!,
                     "Mapping error. Type for tag: $tag must be ${tag.valueType()}. It is ${T::class}")
-            throw SessionError.EncodingFailedTypeMismatch()
+            throw TangemSdkError.EncodingFailedTypeMismatch()
         }
     }
 }
