@@ -166,6 +166,8 @@ class CardSession(
      * @param error An error that will be shown.
      */
     private fun stopWithError(error: Exception) {
+        if (!isBusy) return
+
         reader.closeSession()
         isBusy = false
 
@@ -175,9 +177,12 @@ class CardSession(
             error.localizedMessage
         }
         if (error !is TangemSdkError.UserCancelled) {
-            Log.e("tag", "Finishing with error: $errorMessage")
+            Log.e(tag, "Finishing with error: $errorMessage")
             viewDelegate.onError(errorMessage)
+        } else {
+            Log.i(tag, "User cancelled NFC session")
         }
+
     }
 
     fun send(apdu: CommandApdu, callback: (result: CompletionResult<ResponseApdu>) -> Unit) {
