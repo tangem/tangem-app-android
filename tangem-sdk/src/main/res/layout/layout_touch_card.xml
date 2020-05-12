@@ -34,7 +34,7 @@
             android:id="@+id/rippleBackgroundNfc"
             android:layout_width="150dp"
             android:layout_height="150dp"
-            app:rb_color="@color/fab"
+            app:rb_color="@color/card_sdk_ripple"
             app:rb_duration="3000"
             app:rb_radius="16dp"
             app:rb_rippleAmount="4"

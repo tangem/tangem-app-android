@@ -29,7 +29,7 @@ internal fun CardConfig.createSettingsMask(): SettingsMask {
 
     if (protectIssuerDataAgainstReplay) builder.add(Settings.ProtectIssuerDataAgainstReplay)
 
-    if (forbidPurgeWallet) builder.add(Settings.ForbidPurgeWallet)
+    if (forbidPurgeWallet) builder.add(Settings.ProhibitPurgeWallet)
     if (allowSelectBlockchain) builder.add(Settings.AllowSelectBlockchain)
 
     if (skipCheckPIN2andCVCIfValidatedByIssuer) builder.add(Settings.SkipCheckPin2andCvcIfValidatedByIssuer)

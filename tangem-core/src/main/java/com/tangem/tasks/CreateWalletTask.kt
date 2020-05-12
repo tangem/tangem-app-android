@@ -2,7 +2,7 @@ package com.tangem.tasks
 
 import com.tangem.CardSession
 import com.tangem.CardSessionRunnable
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
 import com.tangem.commands.CardStatus
 import com.tangem.commands.CheckWalletCommand
 import com.tangem.commands.CreateWalletCommand
@@ -14,7 +14,7 @@ class CreateWalletTask : CardSessionRunnable<CreateWalletResponse> {
     override fun run(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
         val curve = session.environment.card?.curve
         if (curve == null) {
-            callback(CompletionResult.Failure(SessionError.CardError()))
+            callback(CompletionResult.Failure(TangemSdkError.CardError()))
             return
         }
 
@@ -24,7 +24,7 @@ class CreateWalletTask : CardSessionRunnable<CreateWalletResponse> {
                 is CompletionResult.Failure -> callback(createWalletResult)
                 is CompletionResult.Success -> {
                     if (createWalletResult.data.status != CardStatus.Loaded) {
-                        callback(CompletionResult.Failure(SessionError.UnknownError()))
+                        callback(CompletionResult.Failure(TangemSdkError.UnknownError()))
                     } else {
                         val checkWalletCommand = CheckWalletCommand(
                                 curve, createWalletResult.data.walletPublicKey
