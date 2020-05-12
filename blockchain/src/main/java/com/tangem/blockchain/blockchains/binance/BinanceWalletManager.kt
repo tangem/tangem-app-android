@@ -6,7 +6,7 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.CompletionResult
-import com.tangem.blockchain.blockchains.binance.network.BinanceInfoResponse as BinanceInfoResponse1
+import com.tangem.blockchain.blockchains.binance.network.BinanceInfoResponse
 
 class BinanceWalletManager(
         cardId: String,
@@ -25,7 +25,7 @@ class BinanceWalletManager(
         }
     }
 
-    private fun updateWallet(response: BinanceInfoResponse1) {
+    private fun updateWallet(response: BinanceInfoResponse) {
         Log.d(this::class.java.simpleName, "Balance is ${response.balance}")
         wallet.amounts[AmountType.Coin]?.value = response.balance
         wallet.amounts[AmountType.Token]?.value = response.assetBalance
