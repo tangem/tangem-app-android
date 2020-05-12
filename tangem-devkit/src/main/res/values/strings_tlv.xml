@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="tlv_card_id">Card Id (CID)</string>
+    <string name="tlv_transaction_out_hash">Hash to sign</string>
+    <string name="tlv_issuer_data">Issuer Data</string>
+    <string name="tlv_user_data">User Data</string>
+    <string name="tlv_user_protected_data">Protected User Data</string>
+    <string name="tlv_counter">Counter</string>
+    ​
+    <string name="info_tlv_card_id">Unique Tangem card ID number</string>
+    <string name="info_tlv_transaction_out_hash">Hashed transaction you want to be signed </string>
+    <string name="info_tlv_issuer_data">Issuer Data to be written by this command</string>
+    <string name="info_tlv_user_data">User Data to be written by this command</string>
+    <string name="info_tlv_protected_user_data">Protected User Data to be written by this command</string>
+    <string name="info_tlv_counter">Counter that protects this type of data against replay attack.</string>
+
+</resources>
