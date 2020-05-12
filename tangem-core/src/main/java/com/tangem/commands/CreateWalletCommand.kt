@@ -1,7 +1,9 @@
 package com.tangem.commands
 
+import com.tangem.CardSession
 import com.tangem.SessionEnvironment
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
+import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
@@ -37,6 +39,41 @@ class CreateWalletResponse(
  */
 class CreateWalletCommand : Command<CreateWalletResponse>() {
 
+    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit): Boolean {
+        if (session.environment.card?.status == CardStatus.NotPersonalized) {
+            callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
+            return true
+        }
+        if (session.environment.card?.isActivated == true) {
+            callback(CompletionResult.Failure(TangemSdkError.NotActivated()))
+            return true
+        }
+        if (session.environment.card?.status == CardStatus.Purged) {
+            callback(CompletionResult.Failure(TangemSdkError.CardIsPurged()))
+            return true
+        }
+        if (session.environment.card?.status == CardStatus.Loaded) {
+            callback(CompletionResult.Failure(TangemSdkError.AlreadyCreated()))
+            return true
+        }
+        return false
+    }
+
+    override fun performAfterCheck(session: CardSession,
+                                   result: CompletionResult<CreateWalletResponse>,
+                                   callback: (result: CompletionResult<CreateWalletResponse>) -> Unit): Boolean {
+        when (result) {
+            is CompletionResult.Failure -> {
+                if (result.error is TangemSdkError.InvalidParams) {
+                    callback(CompletionResult.Failure(TangemSdkError.Pin2OrCvcRequired()))
+                    return true
+                }
+                return false
+            }
+            else -> return false
+        }
+    }
+
     override fun serialize(environment: SessionEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.Pin, environment.pin1)
@@ -51,7 +88,7 @@ class CreateWalletCommand : Command<CreateWalletResponse>() {
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): CreateWalletResponse {
         val tlvData = apdu.getTlvData(environment.encryptionKey)
-                ?: throw SessionError.DeserializeApduFailed()
+                ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
         return CreateWalletResponse(

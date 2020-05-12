@@ -1,7 +1,9 @@
 package com.tangem.commands
 
+import com.tangem.CardSession
 import com.tangem.SessionEnvironment
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
+import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
@@ -22,12 +24,43 @@ class PurgeWalletResponse(
 
 /**
  * This command deletes all wallet data. If Is_Reusable flag is enabled during personalization,
- * the card changes state to ‘Empty’ and a new wallet can be created by CREATE_WALLET command.
+ * the card changes state to ‘Empty’ and a new wallet can be created by [CreateWalletCommand].
  * If Is_Reusable flag is disabled, the card switches to ‘Purged’ state.
  * ‘Purged’ state is final, it makes the card useless.
  * @property cardId CID, Unique Tangem card ID number.
  */
 class PurgeWalletCommand : Command<PurgeWalletResponse>() {
+
+    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<PurgeWalletResponse>) -> Unit): Boolean {
+        if (session.environment.card?.status == CardStatus.NotPersonalized) {
+            callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
+            return true
+        }
+        if (session.environment.card?.isActivated == true) {
+            callback(CompletionResult.Failure(TangemSdkError.NotActivated()))
+            return true
+        }
+        if (session.environment.card?.settingsMask?.contains(Settings.ProhibitPurgeWallet) == true) {
+            callback(CompletionResult.Failure(TangemSdkError.PurgeWalletProhibited()))
+            return true
+        }
+        return false
+    }
+
+    override fun performAfterCheck(session: CardSession,
+                                   result: CompletionResult<PurgeWalletResponse>,
+                                   callback: (result: CompletionResult<PurgeWalletResponse>) -> Unit): Boolean {
+        when (result) {
+            is CompletionResult.Failure -> {
+                if (result.error is TangemSdkError.InvalidParams) {
+                    callback(CompletionResult.Failure(TangemSdkError.Pin2OrCvcRequired()))
+                    return true
+                }
+                return false
+            }
+            else -> return false
+        }
+    }
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
@@ -42,7 +75,7 @@ class PurgeWalletCommand : Command<PurgeWalletResponse>() {
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): PurgeWalletResponse {
         val tlvData = apdu.getTlvData(environment.encryptionKey)
-                ?: throw SessionError.DeserializeApduFailed()
+                ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
         return PurgeWalletResponse(
