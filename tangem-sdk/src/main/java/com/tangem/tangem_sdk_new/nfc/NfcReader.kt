@@ -75,6 +75,7 @@ class NfcReader : CardReader {
 
         val rawResponse: ByteArray?
         try {
+            Log.i(this::class.simpleName!!, "Sending data to the card")
             rawResponse = isoDep?.transceive(data)
         } catch (exception: TagLostException) {
             callback?.invoke(CompletionResult.Failure(TangemSdkError.TagLost()))
@@ -86,7 +87,7 @@ class NfcReader : CardReader {
             return
         }
         if (rawResponse != null) {
-            Log.i(this::class.simpleName!!, "NFC response is received")
+            Log.i(this::class.simpleName!!, "Data from the card was received")
             data = null
         }
         rawResponse?.let { callback?.invoke(CompletionResult.Success(ResponseApdu(it))) }
