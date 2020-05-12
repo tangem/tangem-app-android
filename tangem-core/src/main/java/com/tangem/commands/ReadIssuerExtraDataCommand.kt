@@ -2,7 +2,7 @@ package com.tangem.commands
 
 import com.tangem.CardSession
 import com.tangem.SessionEnvironment
-import com.tangem.SessionError
+import com.tangem.TangemSdkError
 import com.tangem.commands.common.DefaultIssuerDataVerifier
 import com.tangem.commands.common.IssuerDataMode
 import com.tangem.commands.common.IssuerDataToVerify
@@ -44,7 +44,7 @@ class ReadIssuerExtraDataResponse(
         val issuerDataSignature: ByteArray?,
 
         /**
-         * An optional counter that protect issuer data against replay attack.
+         * An optional counter that protects issuer data against replay attack.
          * When flag [Settings.ProtectIssuerDataAgainstReplay] set in [SettingsMask]
          * then this value is mandatory and must increase on each execution of [WriteIssuerDataCommand].
          */
@@ -71,12 +71,16 @@ class ReadIssuerExtraDataCommand(
     override fun run(session: CardSession, callback: (result: CompletionResult<ReadIssuerExtraDataResponse>) -> Unit) {
         val card = session.environment.card
         if (card == null) {
-            callback(CompletionResult.Failure(SessionError.MissingPreflightRead()))
+            callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
             return
         }
         val publicKey = issuerPublicKey ?: card.issuerPublicKey
         if (publicKey == null) {
-            callback(CompletionResult.Failure(SessionError.MissingIssuerPubicKey()))
+            callback(CompletionResult.Failure(TangemSdkError.MissingIssuerPubicKey()))
+            return
+        }
+        if (session.environment.card?.status == CardStatus.NotPersonalized) {
+            callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
             return
         }
 
@@ -138,7 +142,7 @@ class ReadIssuerExtraDataCommand(
             )
             callback(CompletionResult.Success(finalResult))
         } else {
-            callback(CompletionResult.Failure(SessionError.VerificationFailed()))
+            callback(CompletionResult.Failure(TangemSdkError.VerificationFailed()))
         }
     }
 
@@ -156,7 +160,7 @@ class ReadIssuerExtraDataCommand(
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): ReadIssuerExtraDataResponse {
         val tlvData = apdu.getTlvData(environment.encryptionKey)
-                ?: throw SessionError.DeserializeApduFailed()
+                ?: throw TangemSdkError.DeserializeApduFailed()
 
 
         val decoder = TlvDecoder(tlvData)
