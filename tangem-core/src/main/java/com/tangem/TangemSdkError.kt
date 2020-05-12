@@ -67,16 +67,6 @@ sealed class TangemSdkError(val code: Int) : Exception(code.toString()) {
 
     //Read Errors
     class Pin1Required : TangemSdkError(40401)
-    /**
-     * This error is returned when a [Task] expects a user to use a particular card,
-     * but the user tries to use a different card.
-     */
-    class WrongCard : TangemSdkError(40403)
-    /**
-     * This error is returned when a user scans a card of a [com.tangem.common.extensions.CardType]
-     * that is not specified in [Config.cardFilter].
-     */
-    class WrongCardType : TangemSdkError(40404)
 
     //CreateWallet Errors
     class AlreadyCreated : TangemSdkError(40501)
@@ -128,11 +118,6 @@ sealed class TangemSdkError(val code: Int) : Exception(code.toString()) {
     class OverwritingDataIsProhibited : TangemSdkError(40008)
     class DataCannotBeWritten : TangemSdkError(40009)
     class MissingIssuerPubicKey : TangemSdkError(40010)
-    /**
-     * This error is returned when a [ScanTask] returns a [Card] without some of the essential fields.
-     */
-    class CardError : TangemSdkError(40011)
-
 
     //SDK Errors
     class UnknownError: TangemSdkError(50001)
@@ -150,7 +135,20 @@ sealed class TangemSdkError(val code: Int) : Exception(code.toString()) {
      * is executed before performing other commands.
      */
     class MissingPreflightRead : TangemSdkError(50004)
-
+    /**
+     * This error is returned when a [Task] expects a user to use a particular card,
+     * but the user tries to use a different card.
+     */
+    class WrongCardNumber : TangemSdkError(50005)
+    /**
+     * This error is returned when a user scans a card of a [com.tangem.common.extensions.CardType]
+     * that is not specified in [Config.cardFilter].
+     */
+    class WrongCardType : TangemSdkError(50006)
+    /**
+     * This error is returned when a [ScanTask] returns a [Card] without some of the essential fields.
+     */
+    class CardError : TangemSdkError(50007)
 
 }
 
