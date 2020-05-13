@@ -16,6 +16,7 @@ enum class ActionType : Id {
     WriteIssuerExData,
     ReadUserData,
     WriteUserData,
+    WriteProtectedUserData,
     Personalize,
     Depersonalize,
     Unknown,
