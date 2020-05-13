@@ -22,7 +22,7 @@ class EthereumTransactionBuilder(private val walletPublicKey: ByteArray, blockch
     private val chainId = when (blockchain) {
         Blockchain.Ethereum -> Chain.Mainnet.id
         Blockchain.RSK -> Chain.RskMainnet.id
-        else -> throw Exception("${blockchain.fullName} blockchain is not supported by EthereumTransactionBuilder")
+        else -> throw Exception("${blockchain.fullName} blockchain is not supported by ${this::class.simpleName}")
     }
 
     fun buildToSign(transactionData: TransactionData, nonce: BigInteger?): TransactionToSign? {
