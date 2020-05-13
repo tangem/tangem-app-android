@@ -1,9 +1,6 @@
-package com.tangem.blockchain.blockchains.bitcoin.network.api
+package com.tangem.blockchain.network.blockcypher
 
 import com.squareup.moshi.JsonClass
-import com.tangem.blockchain.blockchains.bitcoin.network.response.BlockcypherFee
-import com.tangem.blockchain.blockchains.bitcoin.network.response.BlockcypherResponse
-import com.tangem.blockchain.blockchains.bitcoin.network.response.BlockcypherTx
 import retrofit2.http.*
 
 interface BlockcypherApi {
