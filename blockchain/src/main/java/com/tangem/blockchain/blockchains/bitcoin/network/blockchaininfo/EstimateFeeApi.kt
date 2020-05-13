@@ -1,4 +1,4 @@
-package com.tangem.blockchain.blockchains.bitcoin.network.api
+package com.tangem.blockchain.blockchains.bitcoin.network.blockchaininfo
 
 import retrofit2.http.GET
 
