@@ -197,10 +197,11 @@ public abstract class CoinEngine {
     public abstract Uri getShareWalletUri();
 
     public Uri getShareWalletUriEx(){
-        if (ctx.getBlockchain() == Blockchain.BitcoinCash)
-            return getShareWalletUri();
+        String scheme = ctx.getBlockchain().getUriScheme();
+        if (scheme != null)
+            return Uri.parse(scheme + ":" + getShareWalletUri());
         else
-            return Uri.parse(ctx.getBlockchain().name().toLowerCase() + ":" + getShareWalletUri().toString());
+            return getShareWalletUri();
     }
 
     public abstract boolean checkNewTransactionAmount(Amount amount);
