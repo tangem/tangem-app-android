@@ -13,6 +13,7 @@
     <string name="action_issuer_write_ex_data">Write Issuer Extra Data</string>
     <string name="action_user_read_data">Read User Data</string>
     <string name="action_user_write_data">Write User Data</string>
+    <string name="action_user_write_protected_data">Write Protected User Data</string>
     ​
     <string name="info_action_card_scan">This command returns all data about the card and the wallet, including unique card number (CID) that has to be submitted while calling all other commands</string>
     <string name="info_action_card_sign">Depending on Signing_Method parameter defined during personalization, this command signs data using Wallet_PrivateKey</string>
@@ -26,7 +27,8 @@
     <string name="info_action_issuer_read_ex_data">This command retrieves Issuer Extra Data field and its issuer’s signature.</string>
     <string name="info_action_issuer_write_ex_data">This command writes Issuer Extra Data field and its issuer’s signature to the card.</string>
     <string name="info_action_user_read_data">This command returns User Data and User Protected Data (up to 512-byte each) and two counters: User Counter and User Protected Counter.</string>
-    <string name="info_action_user_write_data"> This command writes to the card any of User Data, User Protected Data, User Counter and User Protected Counter fields.
-</string>
+    <string name="info_action_user_write_data"> This command writes to the card User Data and User Counter fields.</string>
+    <string name="info_action_user_write_protected_data"> This command writes to the card User Protected Data and User Protected Counter fields.</string>
+
 
 </resources>
