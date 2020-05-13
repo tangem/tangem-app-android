@@ -1,7 +1,5 @@
-package com.tangem.blockchain.blockchains.bitcoin.network.api
+package com.tangem.blockchain.blockchains.bitcoin.network.blockchaininfo
 
-import com.tangem.blockchain.blockchains.bitcoin.network.response.BlockchainInfoAddress
-import com.tangem.blockchain.blockchains.bitcoin.network.response.BlockchainInfoUnspents
 import okhttp3.ResponseBody
 import retrofit2.http.*
 
