@@ -3,6 +3,7 @@ package com.tangem.wallet
 import android.util.Log
 import com.tangem.data.Blockchain
 import com.tangem.wallet.bch.BtcCashEngine
+import com.tangem.wallet.binance.BinanceAssetEngine
 import com.tangem.wallet.binance.BinanceEngine
 import com.tangem.wallet.btc.BtcEngine
 import com.tangem.wallet.btcmultisig.BtcMultisigEngine
@@ -52,6 +53,7 @@ object CoinEngineFactory {
             Blockchain.Cardano -> CardanoEngine()
             Blockchain.Ripple -> XrpEngine()
             Blockchain.Binance, Blockchain.BinanceTestNet -> BinanceEngine()
+            Blockchain.BinanceAsset -> BinanceAssetEngine()
             Blockchain.Matic, Blockchain.MaticTestNet -> MaticTokenEngine()
             Blockchain.StellarTestNet, Blockchain.Stellar -> XlmEngine()
             Blockchain.StellarAsset -> XlmAssetEngine()
@@ -93,6 +95,8 @@ object CoinEngineFactory {
                 XrpEngine(context)
             else if (Blockchain.Binance == context.blockchain || Blockchain.BinanceTestNet == context.blockchain)
                 BinanceEngine(context)
+            else if (Blockchain.BinanceAsset == context.blockchain)
+                BinanceAssetEngine(context)
             else if (Blockchain.Matic == context.blockchain || Blockchain.MaticTestNet == context.blockchain)
                 MaticTokenEngine(context)
             else if (Blockchain.Stellar == context.blockchain || Blockchain.StellarTestNet == context.blockchain)
