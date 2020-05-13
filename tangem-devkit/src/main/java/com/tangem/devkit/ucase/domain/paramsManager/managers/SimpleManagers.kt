@@ -96,9 +96,18 @@ class WriteUserDataItemsManager : BaseItemsManager(WriteUserDataAction()) {
         setItems(listOf(
                 EditTextItem(TlvId.CardId, null),
                 EditTextItem(TlvId.Counter, "1"),
-                EditTextItem(TlvId.UserData, "User data to be written on a card"),
-                EditTextItem(TlvId.ProtectedUserData, "Protected user data to be written on a card")
-
+                EditTextItem(TlvId.UserData, "User data to be written on a card")
         ))
     }
+}
+
+    class WriteProtectedUserDataItemsManager : BaseItemsManager(WriteUserProtectedDataAction()) {
+        init {
+            setItemChangeConsequences(CardIdConsequence())
+            setItems(listOf(
+                    EditTextItem(TlvId.CardId, null),
+                    EditTextItem(TlvId.Counter, "1"),
+                    EditTextItem(TlvId.ProtectedUserData, "Protected user data to be written on a card")
+            ))
+        }
 }
