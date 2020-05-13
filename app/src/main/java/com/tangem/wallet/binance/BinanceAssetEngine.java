@@ -89,7 +89,7 @@ public class BinanceAssetEngine extends CoinEngine {
 
     @Override
     public String getBalanceHTML() {
-        Amount balance = getBalance();
+        Amount balance = coinData.getBalance();
         Amount assetBalance = coinData.getAssetBalance();
         if (balance != null) {
             if (assetBalance != null) {
