@@ -2,8 +2,8 @@
 <resources>
 
     <string name="menu_personalization_preset_reset">Reset to default</string>
-    <string name="menu_personalization_preset_save">Save configuration</string>
-    <string name="menu_personalization_preset_load">Load configuration</string>
+    <string name="menu_personalization_preset_save">Save preset</string>
+    <string name="menu_personalization_preset_load">Load preset</string>
     <string name="menu_personalization_preset_import">Import configuration</string>
 
     <string name="hint_enter_preset_name">Enter a preset name</string>
