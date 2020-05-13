@@ -9,23 +9,23 @@
             android:title="@string/menu_personalization_preset_reset" />
 
         <item
-            android:id="@+id/action_import_preset"
-            android:icon="@drawable/ic_import"
-            android:title="@string/menu_import"
-            app:showAsAction="ifRoom" />
-
-        <item
-            android:id="@+id/action_share_preset"
-            android:icon="@drawable/ic_share_white_18dp"
-            android:title="@string/menu_share"
-            app:showAsAction="ifRoom" />
-
-        <item
             android:id="@+id/action_save"
             android:title="@string/menu_personalization_preset_save" />
         <item
             android:id="@+id/action_load"
             android:title="@string/menu_personalization_preset_load" />
+
+        <item
+            android:id="@+id/action_import_preset"
+            android:icon="@drawable/ic_import"
+            android:title="@string/menu_import"
+            app:showAsAction="never" />
+
+        <item
+            android:id="@+id/action_share_preset"
+            android:icon="@drawable/ic_share_white_18dp"
+            android:title="@string/menu_export"
+            app:showAsAction="never" />
 
     </group>
 
