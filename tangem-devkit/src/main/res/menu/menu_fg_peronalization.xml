@@ -24,7 +24,7 @@
         <item
             android:id="@+id/action_share_preset"
             android:icon="@drawable/ic_share_white_18dp"
-            android:title="@string/menu_share"
+            android:title="@string/menu_export"
             app:showAsAction="never" />
 
     </group>
