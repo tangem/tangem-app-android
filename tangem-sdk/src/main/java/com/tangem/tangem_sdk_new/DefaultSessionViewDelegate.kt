@@ -61,7 +61,6 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
         readingDialog?.setOnCancelListener {
             reader.readingCancelled = true
             reader.closeSession()
-            Log.i(this::class.simpleName!!, "readingCancelled is set to true")
         }
         readingDialog?.show()
     }
