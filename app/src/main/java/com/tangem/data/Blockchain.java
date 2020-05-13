@@ -23,6 +23,7 @@ public enum Blockchain {
     Ripple("XRP", "XRP", 1000000.0, R.drawable.ic_logo_xrp, "XRP"),
     Binance("BINANCE", "BNB", 100000000.0, R.drawable.ic_logo_binance, "Binance"),
     BinanceTestNet("BINANCE/test", "BNB", 100000000.0, R.drawable.ic_logo_binance, "Binance Testnet"),
+    BinanceAsset("BinanceAsset", "BNB", 100000000.0, R.drawable.ic_logo_binance, "Binance"),
     Matic("MATIC", "MTX", 1.0, R.drawable.tangem2, "Matic"),
     MaticTestNet("MATIC/test", "MTX", 1.0, R.drawable.tangem2, "Matic Testnet"),
     Stellar("XLM", "XLM", 10000000.0, R.drawable.ic_logo_stellar, "Stellar"),
