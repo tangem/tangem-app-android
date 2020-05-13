@@ -12,7 +12,6 @@
         android:layout_height="wrap_content"
         android:padding="16dp"
         app:boxBackgroundColor="@android:color/transparent"
-        android:hint="Enter a preset name"
         tools:hint="Field name">
 
         <com.google.android.material.textfield.TextInputEditText
