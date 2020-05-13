@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.Fade
+import com.google.android.material.textfield.TextInputLayout
 import com.tangem.commands.Card
 import com.tangem.devkit.R
 import com.tangem.devkit._arch.structure.Id
@@ -25,6 +26,7 @@ import com.tangem.devkit.commons.DialogController
 import com.tangem.devkit.commons.view.MultiActionView
 import com.tangem.devkit.commons.view.ViewAction
 import com.tangem.devkit.extensions.copyToClipboard
+import com.tangem.devkit.extensions.shareText
 import com.tangem.devkit.extensions.view.beginDelayedTransition
 import com.tangem.devkit.ucase.domain.paramsManager.ItemsManager
 import com.tangem.devkit.ucase.domain.paramsManager.PayloadKey
@@ -132,6 +134,7 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
         fun initImportExportJson(parent: ViewGroup) {
             val tvJsonExport = parent.findViewById<EditText>(R.id.et_json_export)
             val btnExportJson = parent.findViewById<Button>(R.id.btn_export_json)
+            val presetManager = PersonalizationPresetManager(itemsManager, this)
 
             tvJsonExport.setOnClickListener {
                 val jsonString = tvJsonExport.text
@@ -139,13 +142,13 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
                 requireContext().copyToClipboard(jsonString, "Exported Json")
             }
             btnExportJson.setOnClickListener {
-                tvJsonExport.setText(personalizationItemsManager.exportJsonConfig())
+                tvJsonExport.setText(presetManager.exportJsonConfig())
             }
 
             val tvJsonImport = parent.findViewById<EditText>(R.id.et_json_import)
             val btnImportJson = parent.findViewById<Button>(R.id.btn_import_json)
             btnImportJson.setOnClickListener {
-                personalizationItemsManager.importJsonConfig(tvJsonImport.text.toString().trim())
+                presetManager.importJsonConfig(tvJsonImport.text.toString().trim())
             }
         }
 
@@ -168,11 +171,13 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val store = PersonalizationConfigStore(requireContext())
-        val presetManager = PersonalizationPresetManager(itemsManager, store, this)
+        val presetManager = PersonalizationPresetManager(itemsManager, this)
         val result = when (item.itemId) {
-            R.id.action_reset -> presetManager.resetToDefault()
-            R.id.action_save -> presetManager.savePreset()
-            R.id.action_load -> presetManager.loadPreset()
+            R.id.action_import_preset -> showImportPresetDialog(presetManager)
+            R.id.action_share_preset -> shareText(presetManager.exportJsonConfig())
+            R.id.action_reset -> presetManager.resetToDefault(store)
+            R.id.action_save -> presetManager.savePreset(store)
+            R.id.action_load -> presetManager.loadPreset(store)
             else -> null
         }
         return if (result == null) super.onOptionsItemSelected(item) else true
@@ -191,13 +196,16 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
     override fun showSavePresetDialog(onOk: SafeValueChanged<String>) {
         val dlgController = DialogController()
         val dlg = dlgController.createAlert(requireActivity(), R.layout.dlg_personalization_preset_save)
+        dlgController.view?.findViewById<TextInputLayout>(R.id.til_item)?.let {
+            it.hint = getString(R.string.hint_enter_preset_name)
+        }
         dlg.setTitle(R.string.menu_personalization_preset_save)
         dlg.setButton(DialogInterface.BUTTON_NEGATIVE, getString(R.string.btn_cancel)) { dialog, which -> }
         dlg.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string.btn_ok)) { dialog, which ->
             val tvName = dlgController.view?.findViewById<EditText>(R.id.et_item)
                     ?: return@setButton
             val name = tvName.text.toString()
-            if (name.isEmpty()) showSnackbar("Not saved")
+            if (name.isEmpty()) showSnackbar(R.string.error_not_saved)
             else onOk.invoke(name)
         }
         dlgController.onShowCallback = {
@@ -233,6 +241,32 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
         adapter.setItemList(namesList.toMutableList())
 
         rvPresetNames.adapter = adapter
+        dlgController.show()
+    }
+
+    private fun showImportPresetDialog(presetManager: PersonalizationPresetManager) {
+        val dlgController = DialogController()
+        val dlg = dlgController.createAlert(requireActivity(), R.layout.dlg_personalization_preset_save)
+        dlgController.view?.findViewById<TextInputLayout>(R.id.til_item)?.let {
+            it.hint = getString(R.string.hint_paste)
+        }
+        dlg.setTitle(R.string.menu_personalization_preset_import)
+        dlg.setButton(DialogInterface.BUTTON_NEGATIVE, getString(R.string.btn_cancel)) { dialog, which -> }
+        dlg.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string.btn_ok)) { dialog, which ->
+            val tvName = dlgController.view?.findViewById<EditText>(R.id.et_item) ?: return@setButton
+            val name = tvName.text.toString()
+            if (name.isEmpty()) showSnackbar(R.string.error_nothing_to_import)
+            else presetManager.importJsonConfig(name)
+        }
+        dlgController.onShowCallback = {
+            dlgController.view?.findViewById<TextView>(R.id.et_item)?.let {
+                post(150) {
+                    it.requestFocus()
+                    val imm = getSystemService(requireContext(), InputMethodManager::class.java)
+                    imm?.showSoftInput(it, InputMethodManager.SHOW_IMPLICIT)
+                }
+            }
+        }
         dlgController.show()
     }
 }
