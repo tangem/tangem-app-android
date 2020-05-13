@@ -183,29 +183,51 @@ class TangemSdk(
     }
 
     /**
-     * This method launches a [WriteUserDataCommand] on a new thread.
+     * This method launches a [WriteUserDataCommand] on a new thread, writing  UserData and UserCounter fields.
      *
-     * This command writes some of UserData, UserProtectedData, UserCounter and UserProtectedCounter fields.
-     * User_Data and User_ProtectedData are never changed or parsed by the executable code the Tangem COS.
-     * The App defines purpose of use, format and it's payload. For example, this field may contain cashed information
+     * User_Data is never changed or parsed by the executable code the Tangem COS.
+     * The App defines purpose of use, format and its payload. For example, this field may contain cashed information
      * from blockchain to accelerate preparing new transaction.
-     * User_Counter and User_ProtectedCounter are counters, that initial values can be set by App and increased on every signing
+     * The initial value of User_Counter can be set by an App and increased on every signing
      * of new transaction (on SIGN command that calculate new signatures). The App defines purpose of use.
      * For example, this fields may contain blockchain nonce value.
      *
      * Writing of UserCounter and UserData is protected only by PIN1.
-     * UserProtectedCounter and UserProtectedData need additionally PIN2 to confirmation.
      */
     fun writeUserData(
             cardId: String,
             userData: ByteArray? = null,
-            userProtectedData: ByteArray? = null,
             userCounter: Int? = null,
+            initialMessage: Message? = null,
+            callback: (result: CompletionResult<WriteUserDataResponse>) -> Unit
+    ) {
+        val command = WriteUserDataCommand(userData = userData,userCounter = userCounter)
+        startSessionWithRunnable(command, cardId, initialMessage, callback)
+    }
+
+    /**
+     * This method launches a [WriteUserDataCommand] on a new thread,
+     * writing UserProtectedData and UserProtectedCounter fields.
+     *
+     * User_ProtectedData is never changed or parsed by the executable code the Tangem COS.
+     * The App defines purpose of use, format and its payload. For example, this field may contain cashed information
+     * from blockchain to accelerate preparing new transaction.
+     * The initial value of User_ProtectedCounter can be set by an App and increased on every signing
+     * of a new transaction (on SIGN command that calculate new signatures). The App defines the purpose of use.
+     * For example, this fields may contain blockchain nonce value.
+     *
+     * UserProtectedCounter and UserProtectedData require PIN2 for confirmation.
+     */
+    fun writeProtectedUserData(
+            cardId: String,
+            userProtectedData: ByteArray? = null,
             userProtectedCounter: Int? = null,
             initialMessage: Message? = null,
             callback: (result: CompletionResult<WriteUserDataResponse>) -> Unit
     ) {
-        val command = WriteUserDataCommand(userData, userProtectedData, userCounter, userProtectedCounter)
+        val command = WriteUserDataCommand(
+                userProtectedData = userProtectedData, userProtectedCounter = userProtectedCounter
+        )
         startSessionWithRunnable(command, cardId, initialMessage, callback)
     }
 
@@ -325,7 +347,7 @@ class TangemSdk(
      * @runnable: A custom task, adopting [CardSessionRunnable] protocol
      * @cardId: CID, Unique Tangem card ID number. If not null, the SDK will check that you the card
      * with which you tapped a phone has this [cardId] and SDK will return
-     * the [TangemSdkError.WrongCard] otherwise.
+     * the [TangemSdkError.WrongCardNumber] otherwise.
      * @initialMessage: A custom description that shows at the beginning of the NFC session.
      * If null, default message will be used.
      *  @callback: Standard [TangemSdk] callback.
@@ -343,7 +365,7 @@ class TangemSdk(
 
      * @cardId: CID, Unique Tangem card ID number. If not null, the SDK will check that you the card
      * with which you tapped a phone has this [cardId] and SDK will return
-     * the [TangemSdkError.WrongCard] otherwise.
+     * the [TangemSdkError.WrongCardNumber] otherwise.
      * @initialMessage: A custom description that shows at the beginning of the NFC session.
      * If null, default message will be used.
      * @callback: At first, you should check that the [TangemSdkError] is not null,
