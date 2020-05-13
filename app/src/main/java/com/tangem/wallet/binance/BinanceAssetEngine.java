@@ -95,7 +95,7 @@ public class BinanceAssetEngine extends CoinEngine {
             if (assetBalance != null) {
                 return assetBalance.toDescriptionString(getDecimals()) + "<br><small><small>+ " + balance.toDescriptionString(getDecimals()) + " for fee</small></small>";
             }
-            return balance.toDescriptionString(getDecimals());
+            return new Amount(BigDecimal.ZERO, ctx.getCard().tokenSymbol).toDescriptionString(getDecimals()) + "<br><small><small>+ " + balance.toDescriptionString(getDecimals()) + " for fee</small></small>";
         } else {
             return "";
         }
