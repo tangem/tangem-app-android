@@ -106,8 +106,8 @@ internal class Helper {
                     KeyValue("RSK", "RSK"),
                     KeyValue("XPR", "XPR"),
                     KeyValue("CARDANO", "CARDANO"),
-                    KeyValue("BNB", "BNB"),
-                    KeyValue("XTZ", "XTZ"),
+                    KeyValue("BNB", "BINANCE"),
+                    KeyValue("XTZ", "TEZOS"),
                     KeyValue("DUC", "DUC")
             )
         }
