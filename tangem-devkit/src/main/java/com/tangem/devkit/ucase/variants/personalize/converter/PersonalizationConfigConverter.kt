@@ -71,9 +71,9 @@ class ItemsToPersonalizationConfig : ItemsToModel<PersonalizationConfig> {
         export.requireTerminalTxSignature = getTyped(SignHashExPropId.RequireTerminalTxSig)
         export.checkPIN3onCard = getTyped(SignHashExPropId.CheckPin3)
         export.itsToken = getTyped(TokenId.ItsToken)
-        export.cardData.token_symbol = getTyped(TokenId.Symbol)
-        export.cardData.token_contract_address = getTyped(TokenId.ContractAddress)
-        export.cardData.token_decimal = getTyped(TokenId.Decimal)
+        export.cardData.token_symbol = getTypedUnsafe(TokenId.Symbol)
+        export.cardData.token_contract_address = getTypedUnsafe(TokenId.ContractAddress)
+        export.cardData.token_decimal = getTypedUnsafe(TokenId.Decimal)
         export.cardData = export.cardData.apply { this.product_note = getTyped(ProductMaskId.Note) }
         export.cardData = export.cardData.apply { this.product_tag = getTyped(ProductMaskId.Tag) }
         export.cardData = export.cardData.apply { this.product_id_card = getTyped(ProductMaskId.IdCard) }
@@ -112,6 +112,10 @@ class ItemsToPersonalizationConfig : ItemsToModel<PersonalizationConfig> {
 
     private inline fun <reified Type> getTyped(id: Id): Type {
         return getTypedBy<Type>(valuesHolder, id)!!
+    }
+
+    private inline fun <reified Type> getTypedUnsafe(id: Id): Type? {
+        return getTypedBy<Type>(valuesHolder, id)
     }
 
     private inline fun <reified Type> getTypedBy(holder: ConfigValuesHolder, id: Id): Type? {
