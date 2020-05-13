@@ -78,7 +78,7 @@ internal class JsonToConfig : Converter<PersonalizationJson, PersonalizationConf
         val jsonCardData = jsonDto.cardData
 
         // copy whole object and then checking tricky places
-        config.cardData = jsonCardData
+        config.cardData.copyFrom(jsonCardData)
 
         config.itsToken = jsonCardData.token_contract_address?.isNotEmpty() ?: false
                 || jsonCardData.token_symbol?.isNotEmpty() ?: false
