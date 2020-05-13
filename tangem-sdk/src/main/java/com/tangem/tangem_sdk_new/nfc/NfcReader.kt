@@ -26,7 +26,7 @@ class NfcReader : CardReader {
             if (field == null) {
                 field = value
                 // if tag is received, call connect first before transceiving data
-                connect()
+                if (value != null) connect()
             }
             if (value == null) field = value
         }
@@ -46,6 +46,7 @@ class NfcReader : CardReader {
     private var callback: ((response: CompletionResult<ResponseApdu>) -> Unit)? = null
 
     override fun openSession() {
+        Log.i(this::class.simpleName!!, "NFC reader is starting NFC session")
         readingActive = true
         readingCancelled = false
         manager?.disableReaderMode()
@@ -74,6 +75,7 @@ class NfcReader : CardReader {
 
         val rawResponse: ByteArray?
         try {
+            Log.i(this::class.simpleName!!, "Sending data to the card")
             rawResponse = isoDep?.transceive(data)
         } catch (exception: TagLostException) {
             callback?.invoke(CompletionResult.Failure(TangemSdkError.TagLost()))
@@ -85,7 +87,7 @@ class NfcReader : CardReader {
             return
         }
         if (rawResponse != null) {
-            Log.i(this::class.simpleName!!, "Nfc response is received")
+            Log.i(this::class.simpleName!!, "Data from the card was received")
             data = null
         }
         rawResponse?.let { callback?.invoke(CompletionResult.Success(ResponseApdu(it))) }
@@ -103,7 +105,7 @@ class NfcReader : CardReader {
         isoDep?.close()
         isoDep?.connect()
         isoDep?.timeout = 240000
-        Log.i(this::class.simpleName!!, "Nfc session is started")
+        Log.i(this::class.simpleName!!, "NFC tag is connected")
     }
 
     private fun onNfcVDiscovered(nfcV: NfcV) {
