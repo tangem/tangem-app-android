@@ -10,6 +10,7 @@
     <string name="hint_paste">Paste</string>
 
     <string name="error_nothing_to_import">Nothing to import</string>
+    <string name="error_cant_convert_json">Can\'t convert imported string to Json object</string>
     <string name="error_not_saved">Not saved</string>
 
     <string name="personalize">Personalize</string>
