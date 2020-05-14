@@ -7,6 +7,7 @@ import com.tangem.devkit.ucase.variants.personalize.converter.PersonalizationCon
 import com.tangem.devkit.ucase.variants.personalize.converter.PersonalizationJsonConverter
 import com.tangem.devkit.ucase.variants.personalize.dto.PersonalizationConfig
 import com.tangem.devkit.ucase.variants.personalize.dto.PersonalizationJson
+import ru.dev.gbixahue.eu4d.lib.android.global.log.Log
 
 class PersonalizationPresetManager(
         private val itemsManager: ItemsManager,
@@ -47,12 +48,17 @@ class PersonalizationPresetManager(
     }
 
     fun importJsonConfig(jsonString: String) {
-        if (jsonString.isEmpty()) return
+        if (jsonString.isEmpty()) {
+            view.showSnackbar(R.string.error_nothing_to_import)
+            return
+        }
 
         val jsonDto = try {
-            PersonalizationJson.getJsonConverter().fromJson(jsonString, PersonalizationJson::class.java)
+            val preparedJson = PersonalizationJson.clarifyJson(jsonString)
+            PersonalizationJson.getJsonConverter().fromJson(preparedJson, PersonalizationJson::class.java)
         } catch (ex: Exception) {
-            view.showSnackbar("Can't convert imported string to Json object. Error: $ex")
+            view.showSnackbar(R.string.error_cant_convert_json)
+            Log.e(this, ex)
             return
         }
 
