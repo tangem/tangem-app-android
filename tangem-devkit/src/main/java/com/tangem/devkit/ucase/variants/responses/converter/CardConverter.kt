@@ -11,6 +11,7 @@ import com.tangem.devkit._arch.structure.impl.TextItem
 import com.tangem.devkit.ucase.variants.responses.CardDataId
 import com.tangem.devkit.ucase.variants.responses.CardId
 import com.tangem.devkit.ucase.variants.responses.item.TextHeaderItem
+import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
 /**
 [REDACTED_AUTHOR]
@@ -75,7 +76,7 @@ class CardConverter : BaseResponseConverter<Card>() {
         group.addItem(TextItem(CardDataId.manufacturerSignature, fieldConverter.byteArrayToHex(data.manufacturerSignature)))
         group.addItem(TextItem(CardDataId.tokenSymbol, data.tokenSymbol))
         group.addItem(TextItem(CardDataId.tokenContractAddress, data.tokenContractAddress))
-        group.addItem(TextItem(CardDataId.tokenDecimal, data.tokenSymbol))
+        group.addItem(TextItem(CardDataId.tokenDecimal, stringOf(data.tokenDecimal)))
 
         val productMask = data.productMask ?: return
 
