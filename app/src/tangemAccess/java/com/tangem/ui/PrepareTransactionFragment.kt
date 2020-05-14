@@ -154,17 +154,8 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
             val schemeSplit = code!!.split(":")
             when (schemeSplit.size) {
                 2 -> {
-                    if (ctx.blockchain.officialName.toLowerCase(Locale.ROOT).replace("\\s", "") == schemeSplit[0]) {
-                        val uri = Uri.parse(schemeSplit[1])
-                        etWallet?.setText(uri.path)
-//                        val amount = uri.getQueryParameter("amount") //TODO: enable after redesign
-//                        if (amount != null) {
-//                            etAmount?.setText(amount)
-//                            rgIncFee.check(R.id.rbFeeOut)
-//                        }
-                    } else if (ctx.blockchain == Blockchain.Ripple && schemeSplit[0] == "ripple") {
-                        val uri = Uri.parse(schemeSplit[1])
-                        etWallet?.setText(uri.path)
+                    if (schemeSplit[0] == ctx.blockchain.uriScheme) {
+                        etWallet?.setText(schemeSplit[1])
                     } else {
                         etWallet?.setText(code)
                     }
