@@ -95,7 +95,7 @@ public class BinanceAssetEngine extends CoinEngine {
             if (assetBalance != null) {
                 return assetBalance.toDescriptionString(getDecimals()) + "<br><small><small>+ " + balance.toDescriptionString(getDecimals()) + " for fee</small></small>";
             }
-            return balance.toDescriptionString(getDecimals());
+            return new Amount(BigDecimal.ZERO, ctx.getCard().tokenSymbol).toDescriptionString(getDecimals()) + "<br><small><small>+ " + balance.toDescriptionString(getDecimals()) + " for fee</small></small>";
         } else {
             return "";
         }
@@ -135,6 +135,8 @@ public class BinanceAssetEngine extends CoinEngine {
             ctx.setMessage(R.string.general_wallet_empty);
         } else if (awaitingConfirmation()) {
             ctx.setMessage(R.string.loaded_wallet_message_wait);
+        } else if (coinData.getBalance() == null || coinData.getBalance().isZero()) {
+            ctx.setMessage(ctx.getString(R.string.confirm_transaction_error_not_enough_eth_for_fee));
         } else {
             return true;
         }
