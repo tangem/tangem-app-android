@@ -148,7 +148,7 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
             val tvJsonImport = parent.findViewById<EditText>(R.id.et_json_import)
             val btnImportJson = parent.findViewById<Button>(R.id.btn_import_json)
             btnImportJson.setOnClickListener {
-                presetManager.importJsonConfig(tvJsonImport.text.toString().trim())
+                presetManager.importJsonConfig(tvJsonImport.text.toString())
             }
         }
 
@@ -255,8 +255,7 @@ class PersonalizationFragment : BaseCardActionFragment(), PersonalizationPresetV
         dlg.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string.btn_ok)) { dialog, which ->
             val tvName = dlgController.view?.findViewById<EditText>(R.id.et_item) ?: return@setButton
             val name = tvName.text.toString()
-            if (name.isEmpty()) showSnackbar(R.string.error_nothing_to_import)
-            else presetManager.importJsonConfig(name)
+            presetManager.importJsonConfig(name)
         }
         dlgController.onShowCallback = {
             dlgController.view?.findViewById<TextView>(R.id.et_item)?.let {
