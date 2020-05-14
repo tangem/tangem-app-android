@@ -77,7 +77,16 @@ class CardSession(
             runnable.run(this) { result ->
                 when (result) {
                     is CompletionResult.Success -> stop()
-                    is CompletionResult.Failure -> stopWithError(result.error)
+                    is CompletionResult.Failure -> {
+                        if (result.error is TangemSdkError.ExtendedLengthNotSupported) {
+                            if (session.environment.terminalKeys != null) {
+                                session.environment.terminalKeys = null
+                                startWithRunnable(runnable, callback)
+                                return@run
+                            }
+                        }
+                        stopWithError(result.error)
+                    }
                 }
                 callback(result)
             }
