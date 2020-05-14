@@ -1,21 +1,30 @@
 package com.tangem.blockchain.blockchains.bitcoin
 
+import com.tangem.blockchain.blockchains.litecoin.LitecoinMainNetParams
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.extensions.isZero
 import org.bitcoinj.core.*
 import org.bitcoinj.crypto.TransactionSignature
+import org.bitcoinj.params.MainNetParams
+import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.script.Script
 import org.bitcoinj.script.ScriptBuilder
 import java.math.BigDecimal
 import java.math.BigInteger
 
 open class BitcoinTransactionBuilder(
-        private val walletPublicKey: ByteArray, private val testNet: Boolean = false
+        private val walletPublicKey: ByteArray, blockchain: Blockchain
 ) {
 
     private lateinit var transaction: Transaction
-    protected var networkParameters: NetworkParameters? = null
+    protected var networkParameters = when (blockchain) {
+        Blockchain.Bitcoin, Blockchain.BitcoinCash -> MainNetParams()
+        Blockchain.BitcoinTestnet -> TestNet3Params()
+        Blockchain.Litecoin -> LitecoinMainNetParams()
+        else -> throw Exception("${blockchain.fullName} blockchain is not supported by ${this::class.simpleName}")
+    }
     var unspentOutputs: List<BitcoinUnspentOutput>? = null
 
     open fun buildToSign(
@@ -25,11 +34,6 @@ open class BitcoinTransactionBuilder(
 
         val change: BigDecimal = calculateChange(transactionData, unspentOutputs!!)
 
-        networkParameters = if (testNet) {
-            NetworkParameters.fromID(NetworkParameters.ID_TESTNET)
-        } else {
-            NetworkParameters.fromID(NetworkParameters.ID_MAINNET)
-        }
         transaction = transactionData.toBitcoinJTransaction(networkParameters, unspentOutputs!!, change)
 
         val hashesForSign: MutableList<ByteArray> = MutableList(transaction.inputs.size) { byteArrayOf() }
