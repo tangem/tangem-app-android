@@ -120,7 +120,7 @@ public class BinanceEngine extends CoinEngine {
     @Override
     public boolean hasBalanceInfo() {
         if (coinData == null) return false;
-        return coinData.hasBalanceInfo();
+        return coinData.hasBalanceInfo() || coinData.isError404();
     }
 
     public boolean isExtractPossible() {
