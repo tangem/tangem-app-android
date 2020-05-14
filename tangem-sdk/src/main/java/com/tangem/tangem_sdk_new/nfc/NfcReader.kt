@@ -75,7 +75,7 @@ class NfcReader : CardReader {
 
         val rawResponse: ByteArray?
         try {
-            Log.i(this::class.simpleName!!, "Sending data to the card")
+            Log.i(this::class.simpleName!!, "Sending data to the card, size is ${data?.size}")
             rawResponse = isoDep?.transceive(data)
         } catch (exception: TagLostException) {
             callback?.invoke(CompletionResult.Failure(TangemSdkError.TagLost()))
@@ -83,6 +83,11 @@ class NfcReader : CardReader {
             return
         } catch (exception: Exception) {
             Log.i(this::class.simpleName!!, exception.localizedMessage ?: "Error tranceiving data")
+            // The messages of errors can vary on different Android devices,
+            // but we try to identify it by parsing the message.
+            if (exception.message?.contains("length") == true) {
+                callback?.invoke(CompletionResult.Failure(TangemSdkError.ExtendedLengthNotSupported()))
+            }
             isoDep = null
             return
         }
