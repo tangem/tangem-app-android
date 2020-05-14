@@ -7,6 +7,7 @@ import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
 import com.tangem.blockchain.blockchains.bitcoincash.BitcoinCashWalletManager
 import com.tangem.blockchain.blockchains.cardano.CardanoWalletManager
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
+import com.tangem.blockchain.blockchains.litecoin.LitecoinWalletManager
 import com.tangem.blockchain.blockchains.stellar.StellarWalletManager
 import com.tangem.blockchain.blockchains.xrp.XrpWalletManager
 import com.tangem.commands.ReadCommand
@@ -91,5 +92,16 @@ internal class WalletManagerFactoryTest {
 
         Truth.assertThat(walletManager)
                 .isInstanceOf(BitcoinCashWalletManager::class.java)
+    }
+
+    @Test
+    fun createLitecoinWalletManager() {
+        val data = "0108BB00000000000023200754414E47454D00020102800A322E3432642053444B000341043539F86A40ADD04CE165764A761FD3E4D251028615D2A573B1C3AE652E60AFDBFAF02E3239E89EF2C43FA448A327557ADC5AF36376A0574570F6DBD20113514A0A04041E76310C618102FFFF8A0101820407E40414830B54414E47454D2053444B0084034C5443864004BDEAD0117544886346CB47F7CA84ABA8C34239502F23D28595A4B16CAD72F7DE506BA818B86A649C2BB945986D4574993B3B755B47CBEE31C4FB931F6748183041045F16BD1D2EAFE463E62A335A09E6B2BBCBD04452526885CB679FC4D27AF1BD22F553C7DEEFB54FD3D4F361D14E6DC3F11B7D4EA183250A60720EBDF9E110CD26050A736563703235366B31000804000186A00701006041044A76C9A70422160F515F956D0F50C71BBBA4F9862A22913817D63F0B1EF7C2FAF512E1C91B1BE827560EFE24FB1652B47337E296C778DFB1014D080CDD35EF6562040001869D6304000000030F01009000"
+        val responseApdu = ResponseApdu(data.hexToBytes())
+        val card = ReadCommand().deserialize(SessionEnvironment(), responseApdu)
+        val walletManager = WalletManagerFactory.makeWalletManager(card!!)
+
+        Truth.assertThat(walletManager)
+                .isInstanceOf(LitecoinWalletManager::class.java)
     }
 }
