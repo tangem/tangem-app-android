@@ -4,7 +4,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import androidx.activity.ComponentActivity
 import androidx.fragment.app.Fragment
 
 /**
@@ -17,11 +16,7 @@ fun Context.copyToClipboard(value: Any, label: String = "") {
     clipboard.setPrimaryClip(clip)
 }
 
-fun Fragment.shareText(text: String) {
-    requireActivity().shareText(text)
-}
-
-fun ComponentActivity.shareText(text: String) {
+fun Context.shareText(text: String) {
     val sendIntent: Intent = Intent().apply {
         action = Intent.ACTION_SEND
         putExtra(Intent.EXTRA_TEXT, text)
@@ -29,4 +24,8 @@ fun ComponentActivity.shareText(text: String) {
     }
     val shareIntent = Intent.createChooser(sendIntent, null)
     startActivity(shareIntent)
+}
+
+fun Fragment.shareText(text: String) {
+    requireContext().shareText(text)
 }
