@@ -10,8 +10,8 @@ import java.math.BigDecimal
 class BitcoinCashWalletManager(
         cardId: String,
         wallet: Wallet,
-        private val transactionBuilder: BitcoinCashTransactionBuilder,
-        private val networkManager: BitcoinCashNetworkManager
+        transactionBuilder: BitcoinCashTransactionBuilder,
+        networkManager: BitcoinCashNetworkManager
 ) : BitcoinWalletManager(cardId, wallet, transactionBuilder, networkManager), TransactionSender {
     override suspend fun getFee(amount: Amount, destination: String): Result<List<Amount>> {
         val minimalFee = BigDecimal("0.00001")
