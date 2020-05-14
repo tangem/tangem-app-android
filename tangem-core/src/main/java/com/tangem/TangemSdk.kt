@@ -347,7 +347,7 @@ class TangemSdk(
      * @runnable: A custom task, adopting [CardSessionRunnable] protocol
      * @cardId: CID, Unique Tangem card ID number. If not null, the SDK will check that you the card
      * with which you tapped a phone has this [cardId] and SDK will return
-     * the [TangemSdkError.WrongCard] otherwise.
+     * the [TangemSdkError.WrongCardNumber] otherwise.
      * @initialMessage: A custom description that shows at the beginning of the NFC session.
      * If null, default message will be used.
      *  @callback: Standard [TangemSdk] callback.
@@ -365,7 +365,7 @@ class TangemSdk(
 
      * @cardId: CID, Unique Tangem card ID number. If not null, the SDK will check that you the card
      * with which you tapped a phone has this [cardId] and SDK will return
-     * the [TangemSdkError.WrongCard] otherwise.
+     * the [TangemSdkError.WrongCardNumber] otherwise.
      * @initialMessage: A custom description that shows at the beginning of the NFC session.
      * If null, default message will be used.
      * @callback: At first, you should check that the [TangemSdkError] is not null,
