@@ -1,24 +1,30 @@
-package com.tangem.blockchain.blockchains.bitcoin.network
+package com.tangem.blockchain.blockchains.litecoin
 
-import com.tangem.blockchain.blockchains.bitcoin.BitcoinUnspentOutput
-import com.tangem.blockchain.blockchains.bitcoin.network.blockchaininfo.BlockchainInfoApi
-import com.tangem.blockchain.blockchains.bitcoin.network.blockchaininfo.BlockchainInfoProvider
+import com.tangem.blockchain.blockchains.bitcoin.network.BitcoinAddressResponse
+import com.tangem.blockchain.blockchains.bitcoin.network.BitcoinFee
+import com.tangem.blockchain.blockchains.bitcoin.network.BitcoinProvider
+import com.tangem.blockchain.network.blockcypher.BlockcypherProvider
 import com.tangem.blockchain.network.blockcypher.BlockcypherApi
-import com.tangem.blockchain.blockchains.bitcoin.network.blockchaininfo.EstimatefeeApi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
-import com.tangem.blockchain.network.API_BLOCKCHAIN_INFO
+import com.tangem.blockchain.network.API_BLOCKCHAIR
 import com.tangem.blockchain.network.API_BLOCKCYPHER
-import com.tangem.blockchain.network.API_ESTIMATEFEE
-import com.tangem.blockchain.network.blockcypher.BlockcypherProvider
+import com.tangem.blockchain.network.blockchair.BlockchairApi
+import com.tangem.blockchain.network.blockchair.BlockchairProvider
 import com.tangem.blockchain.network.createRetrofitInstance
 import retrofit2.HttpException
 import java.io.IOException
-import java.math.BigDecimal
 
 
-class BitcoinNetworkManager(blockchain: Blockchain) : BitcoinProvider {
+class LitecoinNetworkManager : BitcoinProvider {
+    private val blockchain = Blockchain.Litecoin
+
+    private val blockchairProvider by lazy {
+        val api = createRetrofitInstance(API_BLOCKCHAIR)
+                .create(BlockchairApi::class.java)
+        BlockchairProvider(api, blockchain)
+    }
 
     private val blockcypherProvider by lazy {
         val api = createRetrofitInstance(API_BLOCKCYPHER)
@@ -26,22 +32,10 @@ class BitcoinNetworkManager(blockchain: Blockchain) : BitcoinProvider {
         BlockcypherProvider(api, blockchain)
     }
 
-    private val blockchainInfoProvider by lazy {
-        val api = createRetrofitInstance(API_BLOCKCHAIN_INFO)
-                .create(BlockchainInfoApi::class.java)
-        val estimateFeeApi = createRetrofitInstance(API_ESTIMATEFEE)
-                .create(EstimatefeeApi::class.java)
-        BlockchainInfoProvider(api, estimateFeeApi)
-    }
-
-    private var provider: BitcoinProvider = blockchainInfoProvider
+    private var provider: BitcoinProvider = blockchairProvider
 
     private fun changeProvider() {
-        provider = if (provider == blockchainInfoProvider) {
-            blockcypherProvider
-        } else {
-            blockchainInfoProvider
-        }
+        provider = if (provider == blockchairProvider) blockcypherProvider else blockchairProvider
     }
 
     override suspend fun getInfo(address: String): Result<BitcoinAddressResponse> {
@@ -89,15 +83,3 @@ class BitcoinNetworkManager(blockchain: Blockchain) : BitcoinProvider {
         }
     }
 }
-
-data class BitcoinAddressResponse(
-        val balance: BigDecimal,
-        val hasUnconfirmed: Boolean,
-        val unspentOutputs: List<BitcoinUnspentOutput>?
-)
-
-data class BitcoinFee(
-        val minimalPerKb: BigDecimal,
-        val normalPerKb: BigDecimal,
-        val priorityPerKb: BigDecimal
-)
