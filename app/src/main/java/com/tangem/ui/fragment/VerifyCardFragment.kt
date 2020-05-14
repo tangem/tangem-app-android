@@ -417,6 +417,7 @@ class VerifyCardFragment : BaseFragment(), NavigationResultListener, NfcAdapter.
         requestPIN2Count = 0
         val engine = CoinEngineFactory.create(ctx) ?: return
         if (!engine.hasBalanceInfo()) {
+            Toast.makeText(context, R.string.general_error_cannot_erase_wallet_with_non_zero_balance, Toast.LENGTH_LONG).show()
             return
         }
         if (engine.isBalanceNotZero) {
