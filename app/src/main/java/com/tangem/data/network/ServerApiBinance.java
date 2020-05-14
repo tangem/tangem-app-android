@@ -62,7 +62,6 @@ public class ServerApiBinance {
                     BinanceAssetData binanceAssetData = (BinanceAssetData) binanceData;
                     for (Balance balance : account.getBalances()) {
                         if (balance.getSymbol().equals(ctx.getCard().getContractAddress())) {
-                            binanceAssetData.setBalanceReceived(true);
                             binanceAssetData.setAssetBalance(balance.getFree());
                             break;
                         }
