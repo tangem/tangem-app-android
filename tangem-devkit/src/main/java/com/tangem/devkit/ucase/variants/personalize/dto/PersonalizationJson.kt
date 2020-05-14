@@ -65,6 +65,16 @@ class PersonalizationJson {
             val builder = GsonBuilder().setPrettyPrinting()
             return builder.create()
         }
+
+        fun clarifyJson(json: String): String {
+            val unsupportedQuotes = mutableListOf("“", "”", "«", "»")
+            var clearedJson = json
+            unsupportedQuotes.forEach {
+                if (clearedJson.contains(it)) clearedJson = clearedJson.replace(it, "\"")
+            }
+            // 160 is 00A0 symbol (No-Break Space)
+            return clearedJson.replace(160.toChar().toString(), "").trim()
+        }
     }
 }
 
