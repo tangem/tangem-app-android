@@ -15,6 +15,8 @@ import com.tangem.blockchain.blockchains.cardano.network.CardanoNetworkManager
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionBuilder
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.ethereum.network.EthereumNetworkManager
+import com.tangem.blockchain.blockchains.litecoin.LitecoinNetworkManager
+import com.tangem.blockchain.blockchains.litecoin.LitecoinWalletManager
 import com.tangem.blockchain.blockchains.stellar.StellarNetworkManager
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionBuilder
 
@@ -42,22 +44,29 @@ object WalletManagerFactory {
             Blockchain.Bitcoin -> {
                 return BitcoinWalletManager(
                         cardId, wallet,
-                        BitcoinTransactionBuilder(walletPublicKey),
-                        BitcoinNetworkManager()
+                        BitcoinTransactionBuilder(walletPublicKey, blockchain),
+                        BitcoinNetworkManager(blockchain)
                 )
             }
             Blockchain.BitcoinTestnet -> {
                 return BitcoinWalletManager(
                         cardId, wallet,
-                        BitcoinTransactionBuilder(walletPublicKey, true),
-                        BitcoinNetworkManager(true)
+                        BitcoinTransactionBuilder(walletPublicKey, blockchain),
+                        BitcoinNetworkManager(blockchain)
                 )
             }
             Blockchain.BitcoinCash -> {
                 return BitcoinCashWalletManager(
                         cardId, wallet,
-                        BitcoinCashTransactionBuilder(walletPublicKey.toCompressedPublicKey()),
+                        BitcoinCashTransactionBuilder(walletPublicKey.toCompressedPublicKey(), blockchain),
                         BitcoinCashNetworkManager()
+                )
+            }
+            Blockchain.Litecoin -> {
+                return LitecoinWalletManager(
+                        cardId, wallet,
+                        BitcoinTransactionBuilder(walletPublicKey, blockchain),
+                        LitecoinNetworkManager()
                 )
             }
             Blockchain.Ethereum, Blockchain.RSK -> {
