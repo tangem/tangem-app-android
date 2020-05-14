@@ -23,7 +23,7 @@ class EthereumNetworkManager(blockchain: Blockchain) {
         val baseUrl = when (blockchain) {
             Blockchain.Ethereum -> API_INFURA + infuraPath
             Blockchain.RSK -> API_RSK
-            else -> throw Exception("${blockchain.fullName} blockchain is not supported by EthereumNetworkManager")
+            else -> throw Exception("${blockchain.fullName} blockchain is not supported by ${this::class.simpleName}")
         }
         createRetrofitInstance(baseUrl).create(EthereumApi::class.java)
     }
@@ -31,7 +31,7 @@ class EthereumNetworkManager(blockchain: Blockchain) {
     private val apiKey = when (blockchain) {
         Blockchain.Ethereum -> INFURA_API_KEY
         Blockchain.RSK -> ""
-        else -> throw Exception("${blockchain.fullName} blockchain is not supported by EthereumNetworkManager")
+        else -> throw Exception("${blockchain.fullName} blockchain is not supported by ${this::class.simpleName}")
     }
 
     private val provider: EthereumProvider by lazy { EthereumProvider(api, apiKey) }
