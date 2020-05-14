@@ -105,4 +105,25 @@ public enum Blockchain {
         return getImageResource();
     }
 
+    public String getUriScheme() {
+        String scheme = null;
+        switch (this) {
+            case Bitcoin:
+            case BitcoinDual:
+                scheme = "bitcoin";
+                break;
+            case Ethereum:
+            case Token:
+            case TokenEmv:
+                scheme = "ethereum";
+                break;
+            case Litecoin:
+                scheme = "litecoin";
+                break;
+            case Ripple:
+                scheme = "ripple";
+        }
+        return scheme;
+    }
+
 }
