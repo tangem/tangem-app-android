@@ -48,14 +48,17 @@ class PersonalizationPresetManager(
     }
 
     fun importJsonConfig(jsonString: String) {
-        if (jsonString.isEmpty()) return
+        if (jsonString.isEmpty()) {
+            view.showSnackbar(R.string.error_nothing_to_import)
+            return
+        }
 
         val jsonDto = try {
-            PersonalizationJson.getJsonConverter().fromJson(jsonString, PersonalizationJson::class.java)
+            val preparedJson = PersonalizationJson.clarifyJson(jsonString)
+            PersonalizationJson.getJsonConverter().fromJson(preparedJson, PersonalizationJson::class.java)
         } catch (ex: Exception) {
-            val message = "Can't convert imported string to Json object"
-            view.showSnackbar(message)
-            Log.e(this, "$message. $ex")
+            view.showSnackbar(R.string.error_cant_convert_json)
+            Log.e(this, ex)
             return
         }
 
