@@ -16,6 +16,10 @@ sealed class TangemSdkError(val code: Int) : Exception(code.toString()) {
      * (e.g. a user detaches card from the phone's NFC module) while the NFC session is in progress.
      */
     class TagLost : TangemSdkError(10001)
+    /**
+     * This error is returned when NFC driver on an Android device does not support sending more than 261 bytes.
+     */
+    class ExtendedLengthNotSupported : TangemSdkError(10002)
 
 
     class SerializeCommandError : TangemSdkError(20001)
