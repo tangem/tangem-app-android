@@ -47,6 +47,9 @@ public class TangemContext {
         if (blockchain == Blockchain.Stellar && card.isToken()) {
             return Blockchain.StellarAsset;
         }
+        if (blockchain == Blockchain.Binance && card.isToken()) {
+            return Blockchain.BinanceAsset;
+        }
         return blockchain;
     }
 
@@ -65,7 +68,7 @@ public class TangemContext {
         if (blockchain == Blockchain.NftToken) {
             return card.getTokenSymbol().substring(4) + "<br><small><small> " + getBlockchain().getOfficialName() + " non-fungible token</small></small>";
         }
-        if (blockchain == Blockchain.StellarAsset) {
+        if (blockchain == Blockchain.StellarAsset || blockchain == Blockchain.BinanceAsset) {
             return card.getTokenSymbol() + "<br><small><small> " + getBlockchain().getOfficialName() + " asset</small></small>";
         }
         if (blockchain == Blockchain.StellarTag) {
