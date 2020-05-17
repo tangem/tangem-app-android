@@ -2,6 +2,9 @@
     <string name="app_name">Tangem DevKit</string>
 
     <string name="menu_main_description">Description</string>
+    <string name="menu_share">Share</string>
+    <string name="menu_import">Import</string>
+    <string name="menu_export">Export</string>
 
     <string name="copy_to_clipboard">Copy to clipboard</string>
     <string name="btn_delete">Delete</string>
