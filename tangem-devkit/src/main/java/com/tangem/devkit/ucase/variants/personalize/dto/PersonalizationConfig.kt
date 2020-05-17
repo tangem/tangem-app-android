@@ -200,6 +200,19 @@ class CardData {
     var product_id_card = false
     var product_id_issuer = false
 
+    fun copyFrom(applyData: CardData) {
+        date = applyData.date
+        batch = applyData.batch
+        blockchain = applyData.blockchain
+        token_symbol = applyData.token_symbol
+        token_contract_address = applyData.token_contract_address
+        token_decimal = applyData.token_decimal
+        product_note = applyData.product_note
+        product_tag = applyData.product_tag
+        product_id_card = applyData.product_id_card
+        product_id_issuer = applyData.product_id_issuer
+    }
+
     companion object {
         fun default(): CardData {
             return CardData().apply {
