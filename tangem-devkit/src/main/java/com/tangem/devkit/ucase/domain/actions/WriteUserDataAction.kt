@@ -11,12 +11,10 @@ class WriteUserDataAction : BaseAction() {
     override fun executeMainAction(payload: PayloadHolder, attrs: AttrForAction, callback: ActionCallback) {
         val userData = (attrs.itemList.findItem(TlvId.UserData)?.getData() as? String)?.toByteArray()
                 ?: return
-        val protectedUserData = (attrs.itemList.findItem(TlvId.ProtectedUserData)?.getData() as? String)?.toByteArray()
-                ?: return
         val cardId = attrs.itemList.findItem(TlvId.CardId)?.viewModel?.data ?: return
         val counter = (attrs.itemList.findItem(TlvId.Counter)?.viewModel?.data as? Int) ?: 1
 
-        attrs.tangemSdk.writeUserData(stringOf(cardId), userData, protectedUserData, counter, counter) {
+        attrs.tangemSdk.writeUserData(stringOf(cardId), userData, counter) {
             handleResult(payload, it, null, attrs, callback)
         }
     }
@@ -24,7 +22,6 @@ class WriteUserDataAction : BaseAction() {
     override fun getActionByTag(payload: PayloadHolder, id: Id, attrs: AttrForAction): ((ActionCallback) -> Unit)? {
         return when (id) {
             TlvId.CardId -> { callback -> ScanAction().executeMainAction(payload, attrs, callback) }
-            TlvId.Counter -> { callback -> ReadUserDataAction().executeMainAction(payload, attrs, callback) }
             else -> null
         }
     }
