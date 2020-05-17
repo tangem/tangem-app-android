@@ -20,7 +20,7 @@ class TlvDecoder(val tlvList: List<Tlv>) {
 
     init {
         Log.v("TLV",
-                "List of decoded TLVs:\n${tlvList.joinToString("\n")}")
+                "Decoding data from TLV:\n${tlvList.joinToString("\n")}")
     }
 
     /**
@@ -33,7 +33,7 @@ class TlvDecoder(val tlvList: List<Tlv>) {
      */
     inline fun <reified T> decodeOptional(tag: TlvTag): T? =
             try {
-                decode<T>(tag)
+                decode<T>(tag, false)
             } catch (exception: TangemSdkError.DecodingFailedMissingTag) {
                 null
             }
@@ -47,14 +47,18 @@ class TlvDecoder(val tlvList: List<Tlv>) {
      *
      * @return [Tlv] value converted to a nullable type [T].
      *
-     * @throws [TaskError.MissingTag] exception if no [Tlv] is found by the Tag.
+     * @throws [TangemSdkError.DecodingFailedMissingTag] exception if no [Tlv] is found by the Tag.
      */
-    inline fun <reified T> decode(tag: TlvTag): T {
+    inline fun <reified T> decode(tag: TlvTag, logError: Boolean = true): T {
         val tlvValue: ByteArray = tlvList.find { it.tag == tag }?.value
                 ?: if (tag.valueType() == TlvValueType.BoolValue && T::class == Boolean::class) {
                     return false as T
                 } else {
-                    Log.e(this::class.simpleName!!, "Tag $tag not found")
+                    if (logError) {
+                        Log.e(this::class.simpleName!!, "TLV $tag not found")
+                    } else {
+                        Log.v(this::class.simpleName!!, "TLV $tag not found, but it is not required")
+                    }
                     throw TangemSdkError.DecodingFailedMissingTag()
                 }
 

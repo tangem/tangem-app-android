@@ -50,9 +50,7 @@ class TestUserDataActivity : AppCompatActivity() {
             tangemSdk.writeUserData(
                     writeOptions.cardId!!,
                     writeOptions.userData,
-                    writeOptions.userProtectedData,
-                    writeOptions.userCounter,
-                    writeOptions.userProtectedCounter
+                    writeOptions.userCounter
             ) {
                 when (it) {
                     is CompletionResult.Failure -> handleError(tv_write_result, it.error)
