@@ -13,6 +13,8 @@ import com.tangem.common.CompletionResult
  */
 internal class ScanTask : CardSessionRunnable<Card> {
 
+    override val performPreflightRead = true
+
     override fun run(session: CardSession, callback: (result: CompletionResult<Card>) -> Unit) {
 
         val card = session.environment.card
