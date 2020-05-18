@@ -284,7 +284,7 @@ public class TLV {
                         return String.format("%s[%d]: %s (%s)", tag.name(), Value.length, Util.bytesToHex(Value), ProductMask.getDescription(iValue));
                     } catch (Exception e) {
                         e.printStackTrace();
-                        return String.format("%s[%d]: %s (%s)", tag.name(), Value.length, Util.bytesToHex(Value));
+                        return String.format("%s[%d]: %s", tag.name(), Value.length, Util.bytesToHex(Value));
                     }
                 } else {
                     return String.format("%s[]: [[NULL]]", tag.name());
