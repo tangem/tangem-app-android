@@ -19,6 +19,8 @@ import com.tangem.crypto.pbkdf2Hash
  */
 interface CardSessionRunnable<T : CommandResponse> {
 
+    val performPreflightRead: Boolean
+
     /**
      * The starting point for custom business logic.
      * Implement this interface and use [TangemSdk.startSessionWithRunnable] to run.
@@ -55,6 +57,8 @@ class CardSession(
      */
     private var isBusy = false
 
+    private var performPreflightRead = true
+
     /**
      * This metod starts a card session, performs preflight [ReadCommand],
      * invokes [CardSessionRunnable.run] and closes the session.
@@ -63,6 +67,8 @@ class CardSession(
      */
     fun <T : CardSessionRunnable<R>, R : CommandResponse> startWithRunnable(
             runnable: T, callback: (result: CompletionResult<R>) -> Unit) {
+
+        performPreflightRead = runnable.performPreflightRead
 
         start { session, error ->
             if (error != null) {
@@ -102,6 +108,11 @@ class CardSession(
             startSession()
         } catch (error: TangemSdkError) {
             callback(this, error)
+        }
+
+        if (!performPreflightRead) {
+            callback(this, null)
+            return
         }
 
         preflightRead() { result ->
