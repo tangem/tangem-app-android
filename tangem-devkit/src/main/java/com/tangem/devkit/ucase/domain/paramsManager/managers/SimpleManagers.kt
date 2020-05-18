@@ -10,13 +10,7 @@ import com.tangem.devkit.ucase.variants.TlvId
  */
 class ScanItemsManager : BaseItemsManager(ScanAction())
 
-class DepersonalizeItemsManager : BaseItemsManager(DepersonalizeAction()) {
-
-    init {
-        setItemChangeConsequences(CardIdConsequence())
-        setItems(listOf(EditTextItem(TlvId.CardId, null)))
-    }
-}
+class DepersonalizeItemsManager : BaseItemsManager(DepersonalizeAction()) 
 
 class SignItemsManager : BaseItemsManager(SignAction()) {
 
