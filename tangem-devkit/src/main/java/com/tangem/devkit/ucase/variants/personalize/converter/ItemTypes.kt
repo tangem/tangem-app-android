@@ -38,10 +38,11 @@ class ItemTypes {
     )
 
     val hiddenList = mutableListOf<Id>(
-            CardNumberId.Series, CardNumberId.BatchId, PinsId.Pin3, SigningMethodId.SignExternal,
+            CardNumberId.Series, CardNumberId.BatchId, SigningMethodId.SignExternal,
             SignHashExPropId.CryptoExKey, SignHashExPropId.CheckPin3, SettingsMaskId.OneApdu,
             SettingsMaskId.UseBlock, SettingsMaskId.ProtectIssuerDataAgainstReplay,
-            SignHashExPropId.RequireTerminalCertSig, SignHashExPropId.RequireTerminalTxSig
+            SignHashExPropId.RequireTerminalCertSig, SignHashExPropId.RequireTerminalTxSig,
+            BlockId.Pins,  PinsId.Pin, PinsId.Pin2, PinsId.Pin3, PinsId.Cvc
     )
 
     val oftenUsedList = listOf<Id>(
