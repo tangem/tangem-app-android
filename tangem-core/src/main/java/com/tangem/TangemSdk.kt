@@ -307,7 +307,7 @@ class TangemSdk(
      * card response in the form of [DepersonalizeResponse] if the task was performed successfully
      * or [TangemSdkError] in case of an error.
      * */
-    fun depersonalize(cardId: String, initialMessage: Message? = null,
+    fun depersonalize(cardId: String? = null, initialMessage: Message? = null,
                       callback: (result: CompletionResult<DepersonalizeResponse>) -> Unit) {
         startSessionWithRunnable(DepersonalizeCommand(), cardId, initialMessage, callback)
     }
