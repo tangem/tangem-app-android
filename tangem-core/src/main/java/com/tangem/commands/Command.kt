@@ -19,6 +19,8 @@ interface CommandResponse
  */
 abstract class Command<T : CommandResponse> : CardSessionRunnable<T> {
 
+    override val performPreflightRead: Boolean = true
+
     /**
      * Serializes data into an array of [com.tangem.common.tlv.Tlv],
      * then creates [CommandApdu] with this data.
