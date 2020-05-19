@@ -9,7 +9,6 @@ import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
@@ -80,7 +79,7 @@ class SignTransactionFragment : BaseFragment(), NavigationResultListener,
         mpFinishSignSound = MediaPlayer.create(context, R.raw.scan_card_sound)
 
         // init NFC Antenna
-        nfcDeviceAntenna = NfcDeviceAntennaLocation(context!!, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
+        nfcDeviceAntenna = NfcDeviceAntennaLocation(requireContext(), ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
         nfcDeviceAntenna.init()
 
         amount = CoinEngine.Amount(arguments?.getString(Constant.EXTRA_AMOUNT), arguments?.getString(Constant.EXTRA_AMOUNT_CURRENCY))
@@ -165,7 +164,7 @@ class SignTransactionFragment : BaseFragment(), NavigationResultListener,
     }
 
     override fun onReadStart(cardProtocol: CardProtocol) {
-        rlProgressBar.post { rlProgressBar.visibility = View.VISIBLE }
+        rlProgressBar?.post { rlProgressBar.visibility = View.VISIBLE }
 
         progressBar?.post {
             progressBar?.visibility = View.VISIBLE
@@ -234,7 +233,9 @@ class SignTransactionFragment : BaseFragment(), NavigationResultListener,
                                 NoExtendedLengthSupportDialog().show(requireFragmentManager(), NoExtendedLengthSupportDialog.TAG)
                             }
                         } else {
-                            Toast.makeText(context, R.string.general_notification_scan_again, Toast.LENGTH_LONG).show()
+                            (activity as? MainActivity)?.toastHelper?.showSingleToast(
+                                    context, getString(R.string.general_notification_scan_again)
+                            )
                         }
                         progressBar?.progress = 100
                         progressBar?.progressTintList = ColorStateList.valueOf(Color.RED)
@@ -280,7 +281,7 @@ class SignTransactionFragment : BaseFragment(), NavigationResultListener,
 
     override fun onReadBeforeRequest(timeout: Int) {
         LOG.i(TAG, "onReadBeforeRequest timeout $timeout")
-        WaitSecurityDelayDialog.onReadBeforeRequest(activity!!, timeout)
+        activity?.let { WaitSecurityDelayDialog.onReadBeforeRequest(it, timeout) }
 
 //        if (!waitSecurityDelayDialogNew.isAdded)
 //            waitSecurityDelayDialogNew.show(supportFragmentManager, WaitSecurityDelayDialogNew.TAG)
@@ -293,7 +294,7 @@ class SignTransactionFragment : BaseFragment(), NavigationResultListener,
 
     override fun onReadAfterRequest() {
         LOG.i(TAG, "onReadAfterRequest")
-        WaitSecurityDelayDialog.onReadAfterRequest(activity!!)
+        activity?.let { WaitSecurityDelayDialog.onReadAfterRequest(it) }
 
 //        val readAfterRequest = ReadAfterRequest()
 //        EventBus.getDefault().post(readAfterRequest)
@@ -301,7 +302,7 @@ class SignTransactionFragment : BaseFragment(), NavigationResultListener,
 
     override fun onReadWait(msec: Int) {
         LOG.i(TAG, "onReadWait msec $msec")
-        WaitSecurityDelayDialog.onReadWait(activity!!, msec)
+        activity?.let { WaitSecurityDelayDialog.onReadWait(it, msec) }
 
 //        val readWait = ReadWait()
 //        readWait.msec = msec
