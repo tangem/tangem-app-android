@@ -10,6 +10,7 @@ import com.tangem.TangemSdkError
 import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.ResponseApdu
+import com.tangem.common.extensions.toHexString
 
 /**
  * Provides NFC communication between an Android application and Tangem card.
@@ -76,7 +77,9 @@ class NfcReader : CardReader {
         val rawResponse: ByteArray?
         try {
             Log.i(this::class.simpleName!!, "Sending data to the card, size is ${data?.size}")
+            Log.v(this::class.simpleName!!, "Raw data that is to be send to the card: ${data?.toHexString()}")
             rawResponse = isoDep?.transceive(data)
+            Log.v(this::class.simpleName!!, "Raw data that was received from the card: ${rawResponse?.toHexString()}")
         } catch (exception: TagLostException) {
             callback?.invoke(CompletionResult.Failure(TangemSdkError.TagLost()))
             isoDep = null
