@@ -6,12 +6,10 @@ import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.tangem.Log
-import com.tangem.LoggerInterface
-import com.tangem.Message
-import com.tangem.SessionViewDelegate
+import com.tangem.*
 import com.tangem.common.CompletionResult
 import com.tangem.tangem_sdk_new.extensions.hide
+import com.tangem.tangem_sdk_new.extensions.localizedDescription
 import com.tangem.tangem_sdk_new.extensions.show
 import com.tangem.tangem_sdk_new.nfc.NfcReader
 import com.tangem.tangem_sdk_new.ui.TouchCardAnimation
@@ -142,14 +140,17 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
         postUI(300) { readingDialog?.dismiss() }
     }
 
-    override fun onError(errorMessage: String) {
+    override fun onError(error: TangemSdkError) {
         postUI {
             readingDialog?.lTouchCard?.hide()
             readingDialog?.flSecurityDelay?.hide()
             readingDialog?.flCompletion?.hide()
             readingDialog?.flError?.show()
             readingDialog?.tvTaskTitle?.text = activity.getText(R.string.dialog_error)
-            readingDialog?.tvTaskText?.text = errorMessage
+            readingDialog?.tvTaskText?.text = activity.getString(
+                    R.string.error_message,
+                    error.code.toString(), activity.getString(error.localizedDescription())
+            )
             performHapticFeedback()
         }
     }
