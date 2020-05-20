@@ -185,7 +185,7 @@ class CardSession(
      * Stops the current session on error.
      * @param error An error that will be shown.
      */
-    private fun stopWithError(error: Exception) {
+    private fun stopWithError(error: TangemSdkError) {
         if (!isBusy) return
 
         reader.closeSession()
@@ -198,7 +198,7 @@ class CardSession(
         }
         if (error !is TangemSdkError.UserCancelled) {
             Log.e(tag, "Finishing with error: $errorMessage")
-            viewDelegate.onError(errorMessage)
+            viewDelegate.onError(error)
         } else {
             Log.i(tag, "User cancelled NFC session")
         }
