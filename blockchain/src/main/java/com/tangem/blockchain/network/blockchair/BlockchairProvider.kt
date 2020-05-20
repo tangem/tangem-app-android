@@ -15,7 +15,8 @@ import java.math.RoundingMode
 class BlockchairProvider(private val api: BlockchairApi, blockchain: Blockchain) : BitcoinProvider {
     private val blockchainPath = when (blockchain) {
         Blockchain.BitcoinCash -> "bitcoin-cash"
-        else -> throw Exception("${blockchain.fullName} blockchain is not supported by BlockchairProvider")
+        Blockchain.Litecoin -> "litecoin"
+        else -> throw Exception("${blockchain.fullName} blockchain is not supported by ${this::class.simpleName}")
     }
     private val decimals = blockchain.decimals()
 
