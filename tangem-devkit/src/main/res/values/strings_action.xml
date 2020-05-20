@@ -30,5 +30,6 @@
     <string name="info_action_user_write_data"> This command writes to the card User Data and User Counter fields.</string>
     <string name="info_action_user_write_protected_data"> This command writes to the card User Protected Data and User Protected Counter fields.</string>
 
+    <string name="htu_depersonalize_action">To depersonalize the card, press the button at the right bottom corner of the screen</string>
 
 </resources>
