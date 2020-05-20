@@ -1,8 +1,9 @@
-package com.tangem.blockchain.blockchains.bitcoin.network
+package com.tangem.blockchain.blockchains.bitcoin.network.blockchaininfo
 
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinUnspentOutput
-import com.tangem.blockchain.blockchains.bitcoin.network.api.BlockchainInfoApi
-import com.tangem.blockchain.blockchains.bitcoin.network.api.EstimatefeeApi
+import com.tangem.blockchain.blockchains.bitcoin.network.BitcoinAddressResponse
+import com.tangem.blockchain.blockchains.bitcoin.network.BitcoinFee
+import com.tangem.blockchain.blockchains.bitcoin.network.BitcoinProvider
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
