@@ -12,7 +12,7 @@ import com.tangem.blockchain.network.blockchair.BlockchairProvider
 import com.tangem.blockchain.network.createRetrofitInstance
 
 class BitcoinCashNetworkManager : BitcoinProvider {
-    private val blockchain: Blockchain = Blockchain.BitcoinCash
+    private val blockchain = Blockchain.BitcoinCash
 
     private val blockchairProvider by lazy {
         val api = createRetrofitInstance(API_BLOCKCHAIR).create(BlockchairApi::class.java)
