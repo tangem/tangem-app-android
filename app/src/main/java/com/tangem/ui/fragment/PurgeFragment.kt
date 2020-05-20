@@ -66,7 +66,7 @@ class PurgeFragment : BaseFragment(), NfcAdapter.ReaderCallback, CardProtocol.No
         super.onViewCreated(view, savedInstanceState)
 
         // init NFC Antenna
-        nfcDeviceAntenna = NfcDeviceAntennaLocation(context!!, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
+        nfcDeviceAntenna = NfcDeviceAntennaLocation(requireContext(), ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
         nfcDeviceAntenna.init()
 
         tvCardID.text = ctx.card.cidDescription
@@ -99,7 +99,7 @@ class PurgeFragment : BaseFragment(), NfcAdapter.ReaderCallback, CardProtocol.No
     }
 
     override fun onReadWait(msec: Int) {
-        WaitSecurityDelayDialog.onReadWait(activity, msec)
+        activity?.let { WaitSecurityDelayDialog.onReadWait(it, msec) }
 
 //        val readWait = ReadWait()
 //        readWait.msec = msec
@@ -107,7 +107,7 @@ class PurgeFragment : BaseFragment(), NfcAdapter.ReaderCallback, CardProtocol.No
     }
 
     override fun onReadBeforeRequest(timeout: Int) {
-        WaitSecurityDelayDialog.onReadBeforeRequest(activity, timeout)
+        activity?.let { WaitSecurityDelayDialog.onReadBeforeRequest(it, timeout) }
 
 //        if (!waitSecurityDelayDialogNew.isAdded)
 //            waitSecurityDelayDialogNew.show(supportFragmentManager, WaitSecurityDelayDialogNew.TAG)
@@ -119,16 +119,16 @@ class PurgeFragment : BaseFragment(), NfcAdapter.ReaderCallback, CardProtocol.No
     }
 
     override fun onReadAfterRequest() {
-        WaitSecurityDelayDialog.onReadAfterRequest(activity)
+        activity?.let { WaitSecurityDelayDialog.onReadAfterRequest(it) }
 
 //        val readAfterRequest = ReadAfterRequest()
 //        EventBus.getDefault().post(readAfterRequest)
     }
 
     override fun onReadStart(cardProtocol: CardProtocol) {
-        rlProgressBar.post { rlProgressBar.visibility = View.VISIBLE }
+        rlProgressBar?.post { rlProgressBar.visibility = View.VISIBLE }
 
-        progressBar.post {
+        progressBar?.post {
             progressBar.visibility = View.VISIBLE
             progressBar.progress = 5
         }
@@ -179,7 +179,7 @@ class PurgeFragment : BaseFragment(), NfcAdapter.ReaderCallback, CardProtocol.No
                     progressBar?.post {
                         if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported) {
                             if (!NoExtendedLengthSupportDialog.allReadyShowed)
-                                NoExtendedLengthSupportDialog().show(activity!!.supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
+                                NoExtendedLengthSupportDialog().show(requireActivity().supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
                         } else
                             Toast.makeText(context, R.string.general_notification_scan_again_to_verify, Toast.LENGTH_LONG).show()
 
