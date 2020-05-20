@@ -94,7 +94,7 @@ class WriteIssuerExtraDataCommand(
             return true
         }
         if (issuerData.size > MAX_SIZE) {
-            callback(CompletionResult.Failure(TangemSdkError.DataSizeTooLarge()))
+            callback(CompletionResult.Failure(TangemSdkError.ExendedDataSizeTooLarge()))
             return true
         }
         if (!isCounterValid(issuerDataCounter, card)) {
