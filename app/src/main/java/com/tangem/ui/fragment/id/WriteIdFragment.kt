@@ -77,7 +77,7 @@ class WriteIdFragment : BaseFragment(), NavigationResultListener,
         mpFinishSignSound = MediaPlayer.create(context, R.raw.scan_card_sound)
 
         // init NFC Antenna
-        nfcDeviceAntenna = NfcDeviceAntennaLocation(context!!, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
+        nfcDeviceAntenna = NfcDeviceAntennaLocation(requireContext(), ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
         nfcDeviceAntenna.init()
 
         tvCardID.text = ctx.card!!.cidDescription
@@ -137,7 +137,7 @@ class WriteIdFragment : BaseFragment(), NavigationResultListener,
     }
 
     override fun onReadStart(cardProtocol: CardProtocol) {
-        rlProgressBar.post { rlProgressBar.visibility = View.VISIBLE }
+        rlProgressBar?.post { rlProgressBar.visibility = View.VISIBLE }
 
         progressBar?.post {
             progressBar?.visibility = View.VISIBLE
@@ -279,17 +279,17 @@ class WriteIdFragment : BaseFragment(), NavigationResultListener,
 
     override fun onReadBeforeRequest(timeout: Int) {
         LOG.i(TAG, "onReadBeforeRequest timeout $timeout")
-        WaitSecurityDelayDialog.onReadBeforeRequest(activity!!, timeout)
+        activity?.let { WaitSecurityDelayDialog.onReadBeforeRequest(it, timeout) }
     }
 
     override fun onReadAfterRequest() {
         LOG.i(TAG, "onReadAfterRequest")
-        WaitSecurityDelayDialog.onReadAfterRequest(activity!!)
+        activity?.let {  WaitSecurityDelayDialog.onReadAfterRequest(it) }
     }
 
     override fun onReadWait(msec: Int) {
         LOG.i(TAG, "onReadWait msec $msec")
-        WaitSecurityDelayDialog.onReadWait(activity!!, msec)
+        activity?.let { WaitSecurityDelayDialog.onReadWait(it, msec) }
     }
 
 }
