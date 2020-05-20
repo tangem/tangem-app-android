@@ -17,6 +17,7 @@ enum class Blockchain(
     Bitcoin("BTC", "BTC", "Bitcoin"),
     BitcoinTestnet("BTC/test", "BTCt", "Bitcoin Testnet"),
     BitcoinCash("BCH", "BCH", "Bitcoin Cash"),
+    Litecoin("LTC", "LTC", "Litecoin"),
     Ethereum("ETH", "ETH", "Ethereum"),
     RSK("RSK", "RBTC", "RSK"),
     Cardano("CARDANO", "ADA", "Cardano"),
@@ -26,7 +27,7 @@ enum class Blockchain(
     Stellar("XLM", "XLM", "Stellar");
 
     fun decimals(): Int = when (this) {
-        Bitcoin, BitcoinTestnet, BitcoinCash, Binance, BinanceTestnet -> 8
+        Bitcoin, BitcoinTestnet, BitcoinCash, Binance, BinanceTestnet, Litecoin -> 8
         Cardano, XRP -> 6
         Ethereum, RSK -> 18
         Stellar -> 7
@@ -43,8 +44,7 @@ enum class Blockchain(
 
     private fun getAddressService(): AddressService = when (this) {
         Unknown -> throw Exception("unsupported blockchain")
-        Bitcoin -> BitcoinAddressService()
-        BitcoinTestnet -> BitcoinAddressService(true)
+        Bitcoin, BitcoinTestnet, Litecoin -> BitcoinAddressService(this)
         BitcoinCash -> BitcoinCashAddressService()
         Ethereum, RSK -> EthereumAddressService()
         Cardano -> CardanoAddressService()
@@ -66,6 +66,7 @@ enum class Blockchain(
         Bitcoin -> "https://blockchain.info/address/$address"
         BitcoinTestnet -> "https://live.blockcypher.com/btc-testnet/address/$address"
         BitcoinCash -> "https://blockchair.com/bitcoin-cash/address/$address"
+        Litecoin -> "https://live.blockcypher.com/ltc/address/$address"
         Cardano -> "https://cardanoexplorer.com/address/$address"
         Ethereum -> if (token == null) {
             "https://etherscan.io/address/"

@@ -101,7 +101,10 @@ sealed class TangemSdkError(val code: Int) : Exception(code.toString()) {
      * Tangem cards can sign currently up to 10 hashes during one [com.tangem.commands.SignCommand].
      * This error is returned when a [com.tangem.commands.SignCommand] receives more than 10 hashes to sign.
      */
-    class TooManyhHashesInOneTransaction : TangemSdkError(40906)
+    class TooManyHashesInOneTransaction : TangemSdkError(40906)
+
+    //Write Extra Issuer Data Errors
+    class ExendedDataSizeTooLarge : TangemSdkError(41101)
 
     //General Errors
     class NotPersonalized() : TangemSdkError(40001)
@@ -114,6 +117,7 @@ sealed class TangemSdkError(val code: Int) : Exception(code.toString()) {
      */
     class VerificationFailed : TangemSdkError(40005)
     class DataSizeTooLarge : TangemSdkError(40006)
+
     /**
      * This error is returned when [ReadIssuerDataTask] or [ReadIssuerExtraDataTask] expects a counter
      * (when the card's requires it), but the counter is missing.
