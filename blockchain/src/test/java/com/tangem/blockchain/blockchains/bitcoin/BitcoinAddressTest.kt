@@ -1,12 +1,13 @@
 package com.tangem.blockchain.blockchains.bitcoin
 
 import com.google.common.truth.Truth
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.hexToBytes
 import org.junit.Test
 
 class BitcoinAddressTest {
 
-    private val addressService = BitcoinAddressService()
+    private val addressService = BitcoinAddressService(Blockchain.Bitcoin)
 
     @Test
     fun makeAddressFromCorrectPublicKey() {
