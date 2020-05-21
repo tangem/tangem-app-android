@@ -1,15 +1,18 @@
 package com.tangem.blockchain.blockchains.bitcoin
 
 
+import com.tangem.blockchain.blockchains.ducatus.DucatusMainNetParams
 import com.tangem.blockchain.blockchains.litecoin.LitecoinMainNetParams
 import com.tangem.blockchain.common.AddressService
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.calculateRipemd160
 import com.tangem.common.extensions.calculateSha256
-import org.bitcoinj.core.*
+import org.bitcoinj.core.Base58
+import org.bitcoinj.core.LegacyAddress
+import org.bitcoinj.core.NetworkParameters
+import org.bitcoinj.core.SegwitAddress
 import org.bitcoinj.params.MainNetParams
 import org.bitcoinj.params.TestNet3Params
-import java.security.MessageDigest
 
 class BitcoinAddressService(private val blockchain: Blockchain) : AddressService {
 
@@ -17,6 +20,7 @@ class BitcoinAddressService(private val blockchain: Blockchain) : AddressService
         Blockchain.Bitcoin -> MainNetParams()
         Blockchain.BitcoinTestnet -> TestNet3Params()
         Blockchain.Litecoin -> LitecoinMainNetParams()
+        Blockchain.Ducatus -> DucatusMainNetParams()
         else -> throw Exception("${blockchain.fullName} blockchain is not supported by ${this::class.simpleName}")
     }
 
