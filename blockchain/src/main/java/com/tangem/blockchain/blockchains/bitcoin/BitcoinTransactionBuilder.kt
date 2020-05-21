@@ -1,5 +1,6 @@
 package com.tangem.blockchain.blockchains.bitcoin
 
+import com.tangem.blockchain.blockchains.ducatus.DucatusMainNetParams
 import com.tangem.blockchain.blockchains.litecoin.LitecoinMainNetParams
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
@@ -23,6 +24,7 @@ open class BitcoinTransactionBuilder(
         Blockchain.Bitcoin, Blockchain.BitcoinCash -> MainNetParams()
         Blockchain.BitcoinTestnet -> TestNet3Params()
         Blockchain.Litecoin -> LitecoinMainNetParams()
+        Blockchain.Ducatus -> DucatusMainNetParams()
         else -> throw Exception("${blockchain.fullName} blockchain is not supported by ${this::class.simpleName}")
     }
     var unspentOutputs: List<BitcoinUnspentOutput>? = null
@@ -64,7 +66,7 @@ open class BitcoinTransactionBuilder(
     }
 
     fun calculateChange(transactionData: TransactionData, unspentOutputs: List<BitcoinUnspentOutput>): BigDecimal {
-        val fullAmount = unspentOutputs!!.map { it.amount }.reduce { acc, number -> acc + number }
+        val fullAmount = unspentOutputs.map { it.amount }.reduce { acc, number -> acc + number }
         return fullAmount - (transactionData.amount.value!! + (transactionData.fee?.value
                 ?: 0.toBigDecimal()))
     }
