@@ -1,9 +1,9 @@
-package com.tangem.tangem_sdk_new.converter
+package com.tangem.commands.common
 
 import com.google.gson.*
 import com.tangem.commands.*
+import com.tangem.common.extensions.print
 import com.tangem.common.extensions.toHexString
-import com.tangem.tangem_sdk_new.extensions.print
 import java.lang.reflect.Type
 import java.text.DateFormat
 import java.util.*
