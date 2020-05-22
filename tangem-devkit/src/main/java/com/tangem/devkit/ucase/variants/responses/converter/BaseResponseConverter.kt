@@ -1,9 +1,9 @@
 package com.tangem.devkit.ucase.variants.responses.converter
 
+import com.tangem.commands.common.ResponseFieldConverter
 import com.tangem.devkit._arch.structure.Id
 import com.tangem.devkit._arch.structure.abstraction.*
 import com.tangem.devkit.ucase.variants.responses.item.TextHeaderItem
-import com.tangem.tangem_sdk_new.converter.ResponseFieldConverter
 import ru.dev.gbixahue.eu4d.lib.kotlin.stringOf
 
 /**
