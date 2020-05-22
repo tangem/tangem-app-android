@@ -70,7 +70,7 @@ class TangemSdk(
      * in the form of [SignResponse] if the task was performed successfully
      * or [TangemSdkError] in case of an error.
      */
-    fun sign(hashes: Array<ByteArray>, cardId: String, initialMessage: Message? = null,
+    fun sign(hashes: Array<ByteArray>, cardId: String? = null, initialMessage: Message? = null,
              callback: (result: CompletionResult<SignResponse>) -> Unit) {
         startSessionWithRunnable(SignCommand(hashes), cardId, initialMessage, callback)
     }
@@ -88,7 +88,7 @@ class TangemSdk(
      * card response in the form of [ReadIssuerDataResponse] if the task was performed successfully
      * or [TangemSdkError] in case of an error.
      */
-    fun readIssuerData(cardId: String, initialMessage: Message? = null,
+    fun readIssuerData(cardId: String? = null, initialMessage: Message? = null,
                        callback: (result: CompletionResult<ReadIssuerDataResponse>) -> Unit) {
         startSessionWithRunnable(ReadIssuerDataCommand(config.issuerPublicKey), cardId, initialMessage, callback)
     }
@@ -107,7 +107,7 @@ class TangemSdk(
      * card response in the form of [ReadIssuerExtraDataResponse] if the task was performed successfully
      * or [TangemSdkError] in case of an error.
      */
-    fun readIssuerExtraData(cardId: String,
+    fun readIssuerExtraData(cardId: String? = null,
                             callback: (result: CompletionResult<ReadIssuerExtraDataResponse>) -> Unit) {
         startSessionWithRunnable(ReadIssuerExtraDataCommand(config.issuerPublicKey), cardId, null, callback)
     }
@@ -128,7 +128,7 @@ class TangemSdk(
      * card response in the form of [WriteIssuerDataResponse] if the task was performed successfully
      * or [TangemSdkError] in case of an error.
      */
-    fun writeIssuerData(cardId: String,
+    fun writeIssuerData(cardId: String? = null,
                         issuerData: ByteArray,
                         issuerDataSignature: ByteArray,
                         issuerDataCounter: Int? = null,
@@ -166,7 +166,7 @@ class TangemSdk(
      * card response in the form of [WriteIssuerDataResponse] if the task was performed successfully
      * or [TangemSdkError] in case of an error.
      */
-    fun writeIssuerExtraData(cardId: String,
+    fun writeIssuerExtraData(cardId: String? = null,
                              issuerData: ByteArray,
                              startingSignature: ByteArray,
                              finalizingSignature: ByteArray,
@@ -195,7 +195,7 @@ class TangemSdk(
      * Writing of UserCounter and UserData is protected only by PIN1.
      */
     fun writeUserData(
-            cardId: String,
+            cardId: String? = null,
             userData: ByteArray? = null,
             userCounter: Int? = null,
             initialMessage: Message? = null,
@@ -219,7 +219,7 @@ class TangemSdk(
      * UserProtectedCounter and UserProtectedData require PIN2 for confirmation.
      */
     fun writeProtectedUserData(
-            cardId: String,
+            cardId: String? = null,
             userProtectedData: ByteArray? = null,
             userProtectedCounter: Int? = null,
             initialMessage: Message? = null,
@@ -248,7 +248,7 @@ class TangemSdk(
      * card response in the form of [ReadUserDataResponse] if the task was performed successfully
      * or [TangemSdkError] in case of an error.
      */
-    fun readUserData(cardId: String, initialMessage: Message? = null,
+    fun readUserData(cardId: String? = null, initialMessage: Message? = null,
                      callback: (result: CompletionResult<ReadUserDataResponse>) -> Unit) {
         startSessionWithRunnable(ReadUserDataCommand(), cardId, initialMessage, callback)
     }
@@ -270,7 +270,7 @@ class TangemSdk(
      * card response in the form of [CreateWalletResponse] if the task was performed successfully
      * or [TangemSdkError] in case of an error.
      */
-    fun createWallet(cardId: String, initialMessage: Message? = null,
+    fun createWallet(cardId: String? = null, initialMessage: Message? = null,
                      callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
         startSessionWithRunnable(CreateWalletTask(), cardId, initialMessage, callback)
     }
@@ -289,7 +289,7 @@ class TangemSdk(
      * card response in the form of [PurgeWalletResponse] if the task was performed successfully
      * or [TangemSdkError] in case of an error.
      */
-    fun purgeWallet(cardId: String, initialMessage: Message? = null,
+    fun purgeWallet(cardId: String? = null, initialMessage: Message? = null,
                     callback: (result: CompletionResult<PurgeWalletResponse>) -> Unit) {
         startSessionWithRunnable(PurgeWalletCommand(), cardId, initialMessage, callback)
     }
