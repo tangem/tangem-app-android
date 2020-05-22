@@ -56,6 +56,7 @@ class BitcoinAddressService(private val blockchain: Blockchain) : AddressService
                 Blockchain.Bitcoin -> LegacyAddress.fromBase58(MainNetParams(), address)
                 Blockchain.BitcoinTestnet -> LegacyAddress.fromBase58(TestNet3Params(), address)
                 Blockchain.Litecoin -> LegacyAddress.fromBase58(LitecoinMainNetParams(), address)
+                Blockchain.Ducatus -> LegacyAddress.fromBase58(DucatusMainNetParams(), address)
                 else -> return false
             }
             true
