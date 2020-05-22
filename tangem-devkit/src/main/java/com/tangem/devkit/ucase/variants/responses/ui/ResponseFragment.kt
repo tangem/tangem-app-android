@@ -8,6 +8,7 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import com.tangem.commands.common.ResponseConverter
 import com.tangem.devkit.R
 import com.tangem.devkit._arch.widget.WidgetBuilder
 import com.tangem.devkit._main.MainViewModel
@@ -15,7 +16,6 @@ import com.tangem.devkit.extensions.shareText
 import com.tangem.devkit.ucase.ui.BaseFragment
 import com.tangem.devkit.ucase.variants.responses.ResponseViewModel
 import com.tangem.devkit.ucase.variants.responses.ui.widget.ResponseItemBuilder
-import com.tangem.tangem_sdk_new.converter.ResponseConverter
 
 /**
 [REDACTED_AUTHOR]
