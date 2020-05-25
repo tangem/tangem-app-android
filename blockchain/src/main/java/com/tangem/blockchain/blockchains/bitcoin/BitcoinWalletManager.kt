@@ -13,7 +13,7 @@ import java.math.BigDecimal
 open class BitcoinWalletManager(
         cardId: String,
         wallet: Wallet,
-        private val transactionBuilder: BitcoinTransactionBuilder,
+        protected val transactionBuilder: BitcoinTransactionBuilder,
         private val networkManager: BitcoinProvider
 ) : WalletManager(cardId, wallet), TransactionSender {
 
