@@ -157,9 +157,24 @@
             android:progressDrawable="@drawable/pb_circle"
             android:progressTint="#FF9D30"
             android:secondaryProgress="100" />
-
     </FrameLayout>
 
+    <FrameLayout
+        android:id="@+id/flReading"
+        android:layout_width="wrap_content"
+        android:layout_height="200dp"
+        android:layout_gravity="center"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:id="@+id/pbReading"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center"
+            android:indeterminateDrawable="@drawable/pb_simple_circle"
+            android:progressTint="#FF9D30"/>
+
+    </FrameLayout>
 
     <TextView
         android:id="@+id/tvTaskText"
