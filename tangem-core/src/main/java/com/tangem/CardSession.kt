@@ -1,6 +1,5 @@
 package com.tangem
 
-import com.tangem.commands.Card
 import com.tangem.commands.CommandResponse
 import com.tangem.commands.OpenSessionCommand
 import com.tangem.commands.ReadCommand
@@ -13,6 +12,14 @@ import com.tangem.crypto.EncryptionHelper
 import com.tangem.crypto.FastEncryptionHelper
 import com.tangem.crypto.StrongEncryptionHelper
 import com.tangem.crypto.pbkdf2Hash
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.launch
 
 /**
  * Basic interface for running tasks and [com.tangem.commands.Command] in a [CardSession]
@@ -28,6 +35,16 @@ interface CardSessionRunnable<T : CommandResponse> {
      * @param callback trigger the callback to complete the task.
      */
     fun run(session: CardSession, callback: (result: CompletionResult<T>) -> Unit)
+}
+
+enum class CardSessionState {
+    Inactive,
+    Active
+}
+
+enum class TagType {
+    Nfc,
+    Slix
 }
 
 /**
@@ -51,13 +68,16 @@ class CardSession(
         private val initialMessage: Message? = null
 ) {
 
-    private val tag = this.javaClass.simpleName
+    var connectedTag: TagType? = null
+
     /**
      * True if some operation is still in progress.
      */
-    private var isBusy = false
+    private var state = CardSessionState.Inactive
 
-    private var performPreflightRead = true
+    private val scope = CoroutineScope(Dispatchers.IO)
+
+    private val tag = this.javaClass.simpleName
 
     /**
      * This metod starts a card session, performs preflight [ReadCommand],
@@ -68,9 +88,7 @@ class CardSession(
     fun <T : CardSessionRunnable<R>, R : CommandResponse> startWithRunnable(
             runnable: T, callback: (result: CompletionResult<R>) -> Unit) {
 
-        performPreflightRead = runnable.performPreflightRead
-
-        start { session, error ->
+        start(runnable.performPreflightRead) { session, error ->
             if (error != null) {
                 callback(CompletionResult.Failure(error))
                 return@start
@@ -103,49 +121,55 @@ class CardSession(
      * Starts a card session and performs preflight [ReadCommand].
      * @param callback: callback with the card session. Can contain [TangemSdkError] if something goes wrong.
      */
-    fun start(callback: (session: CardSession, error: TangemSdkError?) -> Unit) {
-        try {
-            startSession()
-        } catch (error: TangemSdkError) {
-            callback(this, error)
-        }
+    fun start(performPreflightRead: Boolean = true,
+              callback: (session: CardSession, error: TangemSdkError?) -> Unit) {
 
-        if (!performPreflightRead) {
-            callback(this, null)
+        if (state != CardSessionState.Inactive) {
+            callback(this, TangemSdkError.Busy())
             return
         }
+        state = CardSessionState.Active
+        viewDelegate.onSessionStarted(cardId)
 
-        preflightRead() { result ->
-            when (result) {
-                is CompletionResult.Failure -> {
-                    callback(this, result.error)
-                    stopWithError(result.error)
-                }
-                is CompletionResult.Success -> {
-                    callback(this, null)
-                }
-            }
+        scope.launch {
+            reader.tag
+                    .asFlow()
+                    .collect { tagType ->
+                        if (tagType == null && connectedTag != null) {
+                            handleTagLost()
+                        } else if (tagType != null) {
+                            connectedTag = tagType
+                            viewDelegate.onTagConnected()
+
+                            if (tagType == TagType.Nfc && performPreflightRead) {
+                                preflightCheck(callback)
+                            } else {
+                                callback(this@CardSession, null)
+                            }
+                        }
+                    }
         }
+        reader.scope = scope
+        reader.startSession()
     }
 
-    private fun startSession() {
-        if (isBusy) throw TangemSdkError.Busy()
-        isBusy = true
-        viewDelegate.onNfcSessionStarted(cardId, initialMessage)
-        reader.openSession()
+    private fun handleTagLost() {
+        connectedTag = null
+        environment.encryptionKey = null
+        viewDelegate.onTagLost()
     }
 
-    private fun preflightRead(callback: (result: CompletionResult<Card>) -> Unit) {
+    private fun preflightCheck(callback: (session: CardSession, error: TangemSdkError?) -> Unit) {
         val readCommand = ReadCommand()
         readCommand.run(this) { result ->
             when (result) {
                 is CompletionResult.Failure -> {
                     tryHandleError(result.error) { handleErrorResult ->
                         when (handleErrorResult) {
-                            is CompletionResult.Success -> preflightRead(callback)
+                            is CompletionResult.Success -> preflightCheck(callback)
                             is CompletionResult.Failure -> {
                                 stopWithError(result.error)
-                                callback(CompletionResult.Failure(result.error))
+                                callback(this, result.error)
                             }
                         }
                     }
@@ -153,22 +177,26 @@ class CardSession(
                 is CompletionResult.Success -> {
                     val receivedCardId = result.data.cardId
                     if (cardId != null && receivedCardId != cardId) {
-                        stopWithError(TangemSdkError.WrongCardNumber())
-                        callback(CompletionResult.Failure(TangemSdkError.WrongCardNumber()))
+                        viewDelegate.onWrongCard()
+                        preflightCheck(callback)
                         return@run
                     }
                     val allowedCardTypes = environment.cardFilter.allowedCardTypes
                     if (!allowedCardTypes.contains(result.data.getType())) {
                         stopWithError(TangemSdkError.WrongCardType())
-                        callback(CompletionResult.Failure(TangemSdkError.WrongCardType()))
+                        callback(this, TangemSdkError.WrongCardType())
                         return@run
                     }
                     environment.card = result.data
                     cardId = receivedCardId
-                    callback(CompletionResult.Success(result.data))
+                    callback(this, null)
                 }
             }
         }
+    }
+
+    fun readSlixTag(callback: (result: CompletionResult<ResponseApdu>) -> Unit) {
+        reader.readSlixTag(callback)
     }
 
     /**
@@ -176,9 +204,8 @@ class CardSession(
      * @param message If null, the default message will be shown.
      */
     private fun stop(message: Message? = null) {
-        reader.closeSession()
-        viewDelegate.onNfcSessionCompleted(message)
-        isBusy = false
+        stopSession()
+        viewDelegate.onSessionStopped(message)
     }
 
     /**
@@ -186,27 +213,34 @@ class CardSession(
      * @param error An error that will be shown.
      */
     private fun stopWithError(error: TangemSdkError) {
-        if (!isBusy) return
-
-        reader.closeSession()
-        isBusy = false
-
-        val errorMessage = if (error is TangemSdkError) {
-            "${error::class.simpleName}: ${error.code}"
-        } else {
-            error.localizedMessage
-        }
+        stopSession()
         if (error !is TangemSdkError.UserCancelled) {
-            Log.e(tag, "Finishing with error: $errorMessage")
+            Log.e(tag, "Finishing with error: ${error::class.simpleName}: ${error.code}")
             viewDelegate.onError(error)
         } else {
             Log.i(tag, "User cancelled NFC session")
         }
+    }
 
+    private fun stopSession() {
+        reader.stopSession()
+        state = CardSessionState.Inactive
+        scope.cancel()
     }
 
     fun send(apdu: CommandApdu, callback: (result: CompletionResult<ResponseApdu>) -> Unit) {
-        reader.transceiveApdu(apdu, callback)
+        val subscription = reader.tag.openSubscription()
+
+        scope.launch {
+            subscription.consumeAsFlow()
+                    .filterNotNull()
+                    .collect {
+                        reader.transceiveApdu(apdu) { result ->
+                            subscription.cancel()
+                            callback(result)
+                        }
+                    }
+        }
     }
 
     private fun tryHandleError(
