@@ -10,7 +10,6 @@ import com.tangem.blockchain.network.createRetrofitInstance
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import org.kethereum.ETH_IN_WEI
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -35,6 +34,7 @@ class EthereumNetworkManager(blockchain: Blockchain) {
     }
 
     private val provider: EthereumProvider by lazy { EthereumProvider(api, apiKey) }
+    private val decimals = Blockchain.Ethereum.decimals()
 
     suspend fun sendTransaction(transaction: String): SimpleResult {
         return try {
@@ -59,19 +59,20 @@ class EthereumNetworkManager(blockchain: Blockchain) {
         }
     }
 
-    suspend fun getInfo(address: String, contractAddress: String? = null): Result<EthereumInfoResponse> {
+    suspend fun getInfo(address: String, contractAddress: String? = null, tokenDecimals: Int? = null)
+            : Result<EthereumInfoResponse> {
         return try {
             coroutineScope {
                 val balanceResponse = retryIO { async { provider.getBalance(address) } }
                 val txCountResponse = retryIO { async { provider.getTxCount(address) } }
                 val pendingTxCountResponse = retryIO { async { provider.getPendingTxCount(address) } }
                 var tokenBalanceResponse: Deferred<EthereumResponse>? = null
-                if (contractAddress != null) {
+                if (contractAddress != null && tokenDecimals != null) {
                     tokenBalanceResponse = retryIO { async { provider.getTokenBalance(address, contractAddress) } }
                 }
                 Result.Success(EthereumInfoResponse(
-                        balanceResponse.await().result!!.parseAmount(),
-                        tokenBalanceResponse?.await()?.result?.parseAmount(),
+                        balanceResponse.await().result!!.parseAmount(decimals),
+                        tokenBalanceResponse?.await()?.result?.parseAmount(tokenDecimals!!),
                         txCountResponse.await().result?.responseToNumber()?.toLong() ?: 0,
                         pendingTxCountResponse.await().result?.responseToNumber()?.toLong() ?: 0
                 ))
@@ -87,20 +88,19 @@ class EthereumNetworkManager(blockchain: Blockchain) {
         val normalFee = minFee.multiply(BigDecimal(1.2)).setScale(0, RoundingMode.HALF_UP)
         val priorityFee = minFee.multiply(BigDecimal(1.5)).setScale(0, RoundingMode.HALF_UP)
         return listOf(
-                minFee.convertFeeToEth(),
-                normalFee.convertFeeToEth(),
-                priorityFee.convertFeeToEth()
+                minFee.movePointLeft(decimals),
+                normalFee.movePointLeft(decimals),
+                priorityFee.movePointLeft(decimals)
         )
     }
 
     private fun String.responseToNumber(): BigInteger = this.substring(2).toBigInteger(16)
 
-    private fun String.parseAmount(): BigDecimal =
-            this.responseToNumber().toBigDecimal().divide(ETH_IN_WEI.toBigDecimal())
+    private fun String.parseAmount(decimals: Int): BigDecimal =
+            this.responseToNumber().toBigDecimal().movePointLeft(decimals)
 
     private fun BigDecimal.convertFeeToEth(): BigDecimal {
-        return this.divide(ETH_IN_WEI.toBigDecimal())
-                .setScale(12, BigDecimal.ROUND_DOWN).stripTrailingZeros()
+        return this.movePointLeft(decimals).setScale(decimals, BigDecimal.ROUND_DOWN).stripTrailingZeros()
     }
 
 }
