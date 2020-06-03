@@ -1,8 +1,8 @@
 package com.tangem.blockchain.blockchains.ethereum
 
 import android.util.Log
-import com.tangem.blockchain.blockchains.ethereum.network.EthereumNetworkManager
 import com.tangem.blockchain.blockchains.ethereum.network.EthereumInfoResponse
+import com.tangem.blockchain.blockchains.ethereum.network.EthereumNetworkManager
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
@@ -24,7 +24,11 @@ class EthereumWalletManager(
 
     override suspend fun update() {
 
-        val result = networkManager.getInfo(wallet.address, wallet.amounts[AmountType.Token]?.address)
+        val result = networkManager.getInfo(
+                wallet.address,
+                wallet.amounts[AmountType.Token]?.address,
+                wallet.amounts[AmountType.Token]?.decimals
+        )
         when (result) {
             is Result.Failure -> updateError(result.error)
             is Result.Success -> updateWallet(result.data)
