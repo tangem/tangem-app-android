@@ -17,6 +17,15 @@ interface CardReader {
     var scope: CoroutineScope?
 
     /**
+     * Sends data to the card and receives the reply in an asynchronous way using coroutines.
+     *
+     * @param apdu Data to be sent. [CommandApdu] serializes it to a [ByteArray]
+     * @param callback Returns response from the card,
+     * [ResponseApdu] Allows to convert raw data to [Tlv]
+     */
+    suspend fun transceiveApdu(apdu: CommandApdu): CompletionResult<ResponseApdu>
+
+    /**
      * Sends data to the card and receives the reply.
      *
      * @param apdu Data to be sent. [CommandApdu] serializes it to a [ByteArray]
