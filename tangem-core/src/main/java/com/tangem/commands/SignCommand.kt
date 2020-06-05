@@ -99,10 +99,7 @@ class SignCommand(private val hashes: Array<ByteArray>)
         tlvBuilder.append(TlvTag.Cvc, environment.cvc)
 
         addTerminalSignature(environment, dataToSign, tlvBuilder)
-        return CommandApdu(
-                Instruction.Sign, tlvBuilder.serialize(),
-                environment.encryptionMode, environment.encryptionKey
-        )
+        return CommandApdu(Instruction.Sign, tlvBuilder.serialize())
     }
 
     private fun flattenHashes(): ByteArray {
@@ -133,8 +130,7 @@ class SignCommand(private val hashes: Array<ByteArray>)
     }
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): SignResponse {
-        val tlvData = apdu.getTlvData(environment.encryptionKey)
-                ?: throw TangemSdkError.DeserializeApduFailed()
+        val tlvData = apdu.getTlvData() ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
         return SignResponse(
