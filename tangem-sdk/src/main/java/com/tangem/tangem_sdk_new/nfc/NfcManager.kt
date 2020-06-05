@@ -84,11 +84,11 @@ class NfcManager : NfcAdapter.ReaderCallback, ReadingActiveListener {
         nfcAdapter = null
     }
 
-    fun enableReaderMode() {
+    private fun enableReaderMode() {
         nfcAdapter?.enableReaderMode(activity, this, READER_FLAGS, Bundle())
     }
 
-    fun disableReaderMode() {
+    private fun disableReaderMode() {
         nfcAdapter?.disableReaderMode(activity)
     }
 
