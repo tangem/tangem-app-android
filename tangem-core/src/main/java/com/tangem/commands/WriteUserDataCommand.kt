@@ -77,15 +77,12 @@ class WriteUserDataCommand(private val userData: ByteArray? = null, private val 
         if (userProtectedCounter != null || userProtectedData != null)
             builder.append(TlvTag.Pin2, environment.pin2)
 
-        return CommandApdu(
-                Instruction.WriteUserData, builder.serialize(),
-                environment.encryptionMode, environment.encryptionKey
-        )
+        return CommandApdu(Instruction.WriteUserData, builder.serialize())
     }
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): WriteUserDataResponse {
-        val tlvData = apdu.getTlvData(environment.encryptionKey)
-                ?: throw TangemSdkError.DeserializeApduFailed()
+        val tlvData = apdu.getTlvData() ?: throw TangemSdkError.DeserializeApduFailed()
+
         return WriteUserDataResponse(TlvDecoder(tlvData).decode(TlvTag.CardId))
     }
 
