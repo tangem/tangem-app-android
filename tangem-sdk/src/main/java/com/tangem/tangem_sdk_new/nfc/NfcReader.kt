@@ -12,6 +12,8 @@ import com.tangem.common.extensions.toHexString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 
 
 data class NfcTag(val type: TagType, val isoDep: IsoDep?, val nfcV: NfcV? = null)
@@ -61,11 +63,16 @@ class NfcReader : CardReader {
         //TODO: send user cancelled if (cancelled)
     }
 
-    override fun transceiveApdu(apdu: CommandApdu, callback: (response: CompletionResult<ResponseApdu>) -> Unit) {
-        val data = apdu.apduData
+    override suspend fun transceiveApdu(apdu: CommandApdu): CompletionResult<ResponseApdu> =
+        suspendCancellableCoroutine { continuation ->
+            transceiveApdu(apdu) { result ->
+                if (continuation.isActive) continuation.resume(result)
+            }
+        }
 
+    override fun transceiveApdu(apdu: CommandApdu, callback: (response: CompletionResult<ResponseApdu>) -> Unit) {
         val rawResponse: ByteArray? = try {
-            transcieveAndLog(data, callback)
+            transcieveAndLog(apdu.apduData)
         } catch (exception: TagLostException) {
             callback.invoke(CompletionResult.Failure(TangemSdkError.TagLost()))
             nfcTag = null
@@ -82,7 +89,7 @@ class NfcReader : CardReader {
         rawResponse?.let { callback.invoke(CompletionResult.Success(ResponseApdu(it))) }
     }
 
-    private fun transcieveAndLog(data: ByteArray, callback: (response: CompletionResult<ResponseApdu>) -> Unit): ByteArray? {
+    private fun transcieveAndLog(data: ByteArray): ByteArray? {
         Log.i(this::class.simpleName!!, "Sending data to the card, size is ${data.size}")
         Log.v(this::class.simpleName!!, "Raw data that is to be sent to the card: ${data.toHexString()}")
         val rawResponse = nfcTag?.isoDep?.transceive(data)
