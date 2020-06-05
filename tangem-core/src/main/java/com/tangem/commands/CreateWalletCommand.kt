@@ -80,14 +80,11 @@ class CreateWalletCommand : Command<CreateWalletResponse>() {
         tlvBuilder.append(TlvTag.CardId, environment.card?.cardId)
         tlvBuilder.append(TlvTag.Pin2, environment.pin2)
         tlvBuilder.append(TlvTag.Cvc, environment.cvc)
-        return CommandApdu(
-                Instruction.CreateWallet, tlvBuilder.serialize(),
-                environment.encryptionMode, environment.encryptionKey
-        )
+        return CommandApdu(Instruction.CreateWallet, tlvBuilder.serialize())
     }
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): CreateWalletResponse {
-        val tlvData = apdu.getTlvData(environment.encryptionKey)
+        val tlvData = apdu.getTlvData()
                 ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
