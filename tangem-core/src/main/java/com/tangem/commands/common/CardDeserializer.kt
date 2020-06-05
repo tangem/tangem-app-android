@@ -1,6 +1,5 @@
 package com.tangem.commands.common
 
-import com.tangem.SessionEnvironment
 import com.tangem.TangemSdkError
 import com.tangem.commands.Card
 import com.tangem.commands.CardData
@@ -11,9 +10,8 @@ import com.tangem.common.tlv.TlvTag
 
 class CardDeserializer() {
     companion object {
-        fun deserialize(apdu: ResponseApdu, environment: SessionEnvironment): Card {
-            val tlvData = apdu.getTlvData(environment.encryptionKey)
-                    ?: throw TangemSdkError.DeserializeApduFailed()
+        fun deserialize(apdu: ResponseApdu): Card {
+            val tlvData = apdu.getTlvData() ?: throw TangemSdkError.DeserializeApduFailed()
 
             val decoder = TlvDecoder(tlvData)
 
