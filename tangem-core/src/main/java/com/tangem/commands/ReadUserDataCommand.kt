@@ -68,15 +68,11 @@ class ReadUserDataCommand : Command<ReadUserDataResponse>() {
         builder.append(TlvTag.CardId, environment.card?.cardId)
         builder.append(TlvTag.Pin, environment.pin1)
 
-        return CommandApdu(
-                Instruction.ReadUserData, builder.serialize(),
-                environment.encryptionMode, environment.encryptionKey
-        )
+        return CommandApdu(Instruction.ReadUserData, builder.serialize())
     }
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): ReadUserDataResponse {
-        val tlvData = apdu.getTlvData(environment.encryptionKey)
-                ?: throw TangemSdkError.DeserializeApduFailed()
+        val tlvData = apdu.getTlvData() ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
         return ReadUserDataResponse(
