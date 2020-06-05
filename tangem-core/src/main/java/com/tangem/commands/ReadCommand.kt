@@ -390,13 +390,10 @@ class ReadCommand : Command<Card>() {
          */
         tlvBuilder.append(TlvTag.Pin, environment.pin1)
         tlvBuilder.append(TlvTag.TerminalPublicKey, environment.terminalKeys?.publicKey)
-        return CommandApdu(
-                Instruction.Read, tlvBuilder.serialize(),
-                environment.encryptionMode, environment.encryptionKey
-        )
+        return CommandApdu(Instruction.Read, tlvBuilder.serialize())
     }
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): Card {
-        return CardDeserializer.deserialize(apdu, environment)
+        return CardDeserializer.deserialize(apdu)
     }
 }
