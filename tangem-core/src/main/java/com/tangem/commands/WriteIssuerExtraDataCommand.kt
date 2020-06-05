@@ -184,10 +184,7 @@ class WriteIssuerExtraDataCommand(
                 tlvBuilder.append(TlvTag.IssuerDataSignature, finalizingSignature)
             }
         }
-        return CommandApdu(
-                Instruction.WriteIssuerData, tlvBuilder.serialize(),
-                environment.encryptionMode, environment.encryptionKey
-        )
+        return CommandApdu(Instruction.WriteIssuerData, tlvBuilder.serialize())
     }
 
     private fun getDataToWrite(): ByteArray =
@@ -199,8 +196,7 @@ class WriteIssuerExtraDataCommand(
     }
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): WriteIssuerDataResponse {
-        val tlvData = apdu.getTlvData(environment.encryptionKey)
-                ?: throw TangemSdkError.DeserializeApduFailed()
+        val tlvData = apdu.getTlvData() ?: throw TangemSdkError.DeserializeApduFailed()
 
         return WriteIssuerDataResponse(cardId = TlvDecoder(tlvData).decode(TlvTag.CardId)
         )
