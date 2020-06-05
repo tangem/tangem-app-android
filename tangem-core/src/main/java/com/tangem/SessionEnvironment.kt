@@ -42,7 +42,7 @@ data class SessionEnvironment(
 /**
  * All possible encryption modes.
  */
-enum class EncryptionMode(val code: Byte) {
+enum class EncryptionMode(val code: Int) {
     NONE(0x0),
     FAST(0x1),
     STRONG(0x2)
