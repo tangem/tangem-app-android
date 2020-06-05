@@ -47,15 +47,11 @@ class PersonalizeCommand(
     }
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
-        return CommandApdu(
-                Instruction.Personalize,
-                serializePersonalizationData(config),
-                encryptionKey = devPersonalizationKey
-        )
+        return CommandApdu(Instruction.Personalize, serializePersonalizationData(config))
     }
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): Card {
-       return CardDeserializer.deserialize(apdu, environment)
+       return CardDeserializer.deserialize(apdu)
     }
 
     private fun serializePersonalizationData(config: CardConfig): ByteArray {
