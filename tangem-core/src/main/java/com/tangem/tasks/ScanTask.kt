@@ -59,7 +59,7 @@ internal class ScanTask : CardSessionRunnable<Card> {
             when (result) {
                 is CompletionResult.Success -> {
                     try {
-                        val card = CardDeserializer.deserialize(result.data, session.environment)
+                        val card = CardDeserializer.deserialize(result.data)
                         callback(CompletionResult.Success(card))
                     } catch (error: TangemSdkError) {
                         callback(CompletionResult.Failure(error))
