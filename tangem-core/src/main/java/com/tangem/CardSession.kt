@@ -12,14 +12,8 @@ import com.tangem.crypto.EncryptionHelper
 import com.tangem.crypto.FastEncryptionHelper
 import com.tangem.crypto.StrongEncryptionHelper
 import com.tangem.crypto.pbkdf2Hash
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.consumeAsFlow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 
 /**
  * Basic interface for running tasks and [com.tangem.commands.Command] in a [CardSession]
@@ -61,11 +55,11 @@ enum class TagType {
  * If null, a default header and text body will be used.
  */
 class CardSession(
-        val environment: SessionEnvironment,
-        private val reader: CardReader,
-        val viewDelegate: SessionViewDelegate,
-        private var cardId: String? = null,
-        private val initialMessage: Message? = null
+    val environment: SessionEnvironment,
+    private val reader: CardReader,
+    val viewDelegate: SessionViewDelegate,
+    private var cardId: String? = null,
+    private val initialMessage: Message? = null
 ) {
 
     var connectedTag: TagType? = null
@@ -75,7 +69,9 @@ class CardSession(
      */
     private var state = CardSessionState.Inactive
 
-    private val scope = CoroutineScope(Dispatchers.IO)
+    val scope = CoroutineScope(Dispatchers.IO) + CoroutineExceptionHandler { _, ex ->
+        throw ex
+    }
 
     private val tag = this.javaClass.simpleName
 
@@ -86,15 +82,12 @@ class CardSession(
      * @param callback will be triggered with a [CompletionResult] of a session.
      */
     fun <T : CardSessionRunnable<R>, R : CommandResponse> startWithRunnable(
-            runnable: T, callback: (result: CompletionResult<R>) -> Unit) {
+        runnable: T, callback: (result: CompletionResult<R>) -> Unit
+    ) {
 
         start(runnable.performPreflightRead) { session, error ->
             if (error != null) {
                 callback(CompletionResult.Failure(error))
-                return@start
-            }
-            if (runnable is ReadCommand) {
-                callback(CompletionResult.Success(environment.card as R))
                 return@start
             }
 
@@ -121,8 +114,10 @@ class CardSession(
      * Starts a card session and performs preflight [ReadCommand].
      * @param callback: callback with the card session. Can contain [TangemSdkError] if something goes wrong.
      */
-    fun start(performPreflightRead: Boolean = true,
-              callback: (session: CardSession, error: TangemSdkError?) -> Unit) {
+    fun start(
+        performPreflightRead: Boolean = true,
+        callback: (session: CardSession, error: TangemSdkError?) -> Unit
+    ) {
 
         if (state != CardSessionState.Inactive) {
             callback(this, TangemSdkError.Busy())
@@ -133,21 +128,21 @@ class CardSession(
 
         scope.launch {
             reader.tag
-                    .asFlow()
-                    .collect { tagType ->
-                        if (tagType == null && connectedTag != null) {
-                            handleTagLost()
-                        } else if (tagType != null) {
-                            connectedTag = tagType
-                            viewDelegate.onTagConnected()
+                .asFlow()
+                .collect { tagType ->
+                    if (tagType == null && connectedTag != null) {
+                        handleTagLost()
+                    } else if (tagType != null) {
+                        connectedTag = tagType
+                        viewDelegate.onTagConnected()
 
-                            if (tagType == TagType.Nfc && performPreflightRead) {
-                                preflightCheck(callback)
-                            } else {
-                                callback(this@CardSession, null)
-                            }
+                        if (tagType == TagType.Nfc && performPreflightRead) {
+                            preflightCheck(callback)
+                        } else {
+                            callback(this@CardSession, null)
                         }
                     }
+                }
         }
         reader.scope = scope
         reader.startSession()
@@ -164,15 +159,8 @@ class CardSession(
         readCommand.run(this) { result ->
             when (result) {
                 is CompletionResult.Failure -> {
-                    tryHandleError(result.error) { handleErrorResult ->
-                        when (handleErrorResult) {
-                            is CompletionResult.Success -> preflightCheck(callback)
-                            is CompletionResult.Failure -> {
-                                stopWithError(result.error)
-                                callback(this, result.error)
-                            }
-                        }
-                    }
+                    stopWithError(result.error)
+                    callback(this, result.error)
                 }
                 is CompletionResult.Success -> {
                     val receivedCardId = result.data.cardId
@@ -230,65 +218,53 @@ class CardSession(
 
     fun send(apdu: CommandApdu, callback: (result: CompletionResult<ResponseApdu>) -> Unit) {
         val subscription = reader.tag.openSubscription()
-
         scope.launch {
             subscription.consumeAsFlow()
-                    .filterNotNull()
-                    .collect {
-                        reader.transceiveApdu(apdu) { result ->
-                            subscription.cancel()
-                            callback(result)
-                        }
-                    }
-        }
-    }
-
-    private fun tryHandleError(
-            error: TangemSdkError, callback: (result: CompletionResult<Boolean>) -> Unit) {
-
-        when (error) {
-            is TangemSdkError.NeedEncryption -> {
-                Log.i(tag, "Establishing encryption")
-                when (environment.encryptionMode) {
-                    EncryptionMode.NONE -> {
-                        environment.encryptionKey = null
-                        environment.encryptionMode = EncryptionMode.FAST
-                    }
-                    EncryptionMode.FAST -> {
-                        environment.encryptionKey = null
-                        environment.encryptionMode = EncryptionMode.STRONG
-                    }
-                    EncryptionMode.STRONG -> {
-                        Log.e(tag, "Encryption doesn't work")
-                        callback(CompletionResult.Failure(TangemSdkError.NeedEncryption()))
-                    }
+                .filterNotNull()
+                .map { establishEncryption() }
+                .map { apdu.encrypt(environment.encryptionMode, environment.encryptionKey) }
+                .map { encryptedApdu -> reader.transceiveApdu(encryptedApdu) }
+                .catch { error ->
+                    if (error is TangemSdkError) callback(
+                        CompletionResult.Failure(
+                            error
+                        )
+                    )
                 }
-                return establishEncryption(callback)
-            }
-            else -> callback(CompletionResult.Failure(TangemSdkError.UnknownError()))
+                .collect { result ->
+                    subscription.cancel()
+                    callback(result)
+                }
         }
     }
 
-    private fun establishEncryption(callback: (result: CompletionResult<Boolean>) -> Unit) {
+    private suspend fun establishEncryption(): CompletionResult<Boolean> {
+        if (environment.encryptionKey != null) return CompletionResult.Success(true)
         val encryptionHelper: EncryptionHelper =
-                if (environment.encryptionMode == EncryptionMode.STRONG) {
-                    StrongEncryptionHelper()
-                } else {
-                    FastEncryptionHelper()
-                }
-        val openSesssionCommand = OpenSessionCommand(encryptionHelper.keyA)
-        openSesssionCommand.run(this) { result ->
-            when (result) {
-                is CompletionResult.Success -> {
-                    val uid = result.data.uid
-                    val protocolKey = environment.pin1.pbkdf2Hash(uid, 50)
-                    val secret = encryptionHelper.generateSecret(result.data.sessionKeyB)
-                    val sessionKey = (secret + protocolKey).calculateSha256()
-                    environment.encryptionKey = sessionKey
-                    callback(CompletionResult.Success(true))
-                }
-                is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
+            when (environment.encryptionMode) {
+                EncryptionMode.NONE -> return CompletionResult.Success(true)
+                EncryptionMode.FAST -> FastEncryptionHelper()
+                EncryptionMode.STRONG -> StrongEncryptionHelper()
             }
+        val openSesssionCommand = OpenSessionCommand(encryptionHelper.keyA)
+        val apdu = openSesssionCommand.serialize(environment)
+
+        val response = reader.transceiveApdu(apdu)
+        when (response) {
+            is CompletionResult.Success -> {
+                val result = try {
+                    openSesssionCommand.deserialize(environment, response.data)
+                } catch (error: TangemSdkError) {
+                    return CompletionResult.Failure(error)
+                }
+                val uid = result.uid
+                val protocolKey = environment.pin1.pbkdf2Hash(uid, 50)
+                val secret = encryptionHelper.generateSecret(result.sessionKeyB)
+                val sessionKey = (secret + protocolKey).calculateSha256()
+                environment.encryptionKey = sessionKey
+                return CompletionResult.Success(true)
+            }
+            is CompletionResult.Failure -> return CompletionResult.Failure(response.error)
         }
     }
 }
