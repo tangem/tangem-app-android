@@ -10,6 +10,7 @@ import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.extensions.toHexString
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -60,7 +61,7 @@ class NfcReader : CardReader {
     override fun stopSession(cancelled: Boolean) {
         nfcTag = null
         listener?.readingIsActive = false
-        //TODO: send user cancelled if (cancelled)
+        if (cancelled) scope?.cancel()
     }
 
     override suspend fun transceiveApdu(apdu: CommandApdu): CompletionResult<ResponseApdu> =
