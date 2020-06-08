@@ -56,33 +56,4 @@ class CommandApduTest {
         assertThat(commandApdu.apduData)
                 .isEqualTo(expected)
     }
-
-    @Test
-    fun testFlow() {
-        val channel = BroadcastChannel<Int>(1)
-        val flow = GlobalScope.launch {
-            delay(100)
-            channel.send(1)
-            delay(200)
-            channel.send(2)
-        }
-
-        val scope = CoroutineScope(Dispatchers.IO)
-        val scope2 = CoroutineScope(Dispatchers.IO)
-
-        val receiveChannel1 = BroadcastChannel<Int>(1)
-        val receiveChannel2 = BroadcastChannel<Int>(1)
-
-        scope.launch {
-            channel.asFlow().collect { println(it) }
-            channel.asFlow().collect { println(it) }
-        }
-        scope.launch { channel.asFlow().collect { println(it) } }
-
-        runBlocking {
-            delay(1000)
-        }
-
-
-    }
 }
