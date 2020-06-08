@@ -8,8 +8,6 @@ import com.tangem.commands.personalization.entities.Acquirer
 import com.tangem.commands.personalization.entities.CardConfig
 import com.tangem.commands.personalization.entities.Issuer
 import com.tangem.commands.personalization.entities.Manufacturer
-import com.tangem.commands.verifycard.VerifyCardCommand
-import com.tangem.commands.verifycard.VerifyCardResponse
 import com.tangem.common.CompletionResult
 import com.tangem.common.TerminalKeysService
 import com.tangem.crypto.CryptoUtils
@@ -294,11 +292,6 @@ class TangemSdk(
     fun purgeWallet(cardId: String? = null, initialMessage: Message? = null,
                     callback: (result: CompletionResult<PurgeWalletResponse>) -> Unit) {
         startSessionWithRunnable(PurgeWalletCommand(), cardId, initialMessage, callback)
-    }
-
-    fun verify(cardId: String? = null, online: Boolean = true, initialMessage: Message? = null,
-               callback: (result: CompletionResult<VerifyCardResponse>) -> Unit) {
-        startSessionWithRunnable(VerifyCardCommand(online), cardId, initialMessage, callback)
     }
 
     /**
