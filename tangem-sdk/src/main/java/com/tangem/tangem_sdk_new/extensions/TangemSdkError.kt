@@ -40,7 +40,7 @@ fun TangemSdkError.localizedDescription(): Int {
         is TangemSdkError.Pin2OrCvcRequired -> R.string.error_operation
         is TangemSdkError.VerificationFailed -> R.string.error_verification_failed
         is TangemSdkError.DataSizeTooLarge -> R.string.error_data_size_too_large
-        is TangemSdkError.ExendedDataSizeTooLarge -> R.string.error_data_size_too_large_extended
+        is TangemSdkError.ExtendedDataSizeTooLarge -> R.string.error_data_size_too_large_extended
         is TangemSdkError.MissingCounter -> R.string.error_missing_counter
         is TangemSdkError.OverwritingDataIsProhibited -> R.string.error_data_cannot_be_written
         is TangemSdkError.DataCannotBeWritten -> R.string.error_data_cannot_be_written
