@@ -32,89 +32,64 @@ import com.tangem.common.tlv.TlvTag
  * @param issuerDataCounter An optional counter that protect issuer data against replay attack.
  */
 class WriteIssuerExtraDataCommand(
-        private val issuerData: ByteArray,
-        private val startingSignature: ByteArray,
-        private val finalizingSignature: ByteArray,
-        private val issuerDataCounter: Int? = null,
-        private val issuerPublicKey: ByteArray? = null,
-        verifier: IssuerDataVerifier = DefaultIssuerDataVerifier()
+    private val issuerData: ByteArray,
+    private val startingSignature: ByteArray,
+    private val finalizingSignature: ByteArray,
+    private val issuerDataCounter: Int? = null,
+    private val issuerPublicKey: ByteArray? = null,
+    verifier: IssuerDataVerifier = DefaultIssuerDataVerifier()
 ) : Command<WriteIssuerDataResponse>(), IssuerDataVerifier by verifier {
 
     var mode: IssuerDataMode = IssuerDataMode.InitializeWritingExtraData
     var offset: Int = 0
 
-    override fun run(session: CardSession, callback: (result: CompletionResult<WriteIssuerDataResponse>) -> Unit) {
-        val card = session.environment.card
-        if (card == null) {
-            callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
-            return
-        }
-        val publicKey = issuerPublicKey ?: card.issuerPublicKey
-        if (publicKey == null) {
-            callback(CompletionResult.Failure(TangemSdkError.MissingIssuerPubicKey()))
-            return
-        }
-
-        writeIssuerData(session, card.cardId, publicKey) { response ->
-            when (response) {
-                is CompletionResult.Success -> callback(response)
-                is CompletionResult.Failure -> {
-                    if (response.error is TangemSdkError.InvalidParams && isCounterRequired(card)) {
-                        callback(CompletionResult.Failure(TangemSdkError.DataCannotBeWritten()))
-                        return@writeIssuerData
-                    }
-                    if (response.error is TangemSdkError.InvalidState &&
-                            card.settingsMask?.contains(Settings.ProtectIssuerDataAgainstReplay) != false) {
-                        callback(CompletionResult.Failure(TangemSdkError.OverwritingDataIsProhibited()))
-                        return@writeIssuerData
-                    }
-                }
-            }
-        }
+    override fun run(
+        session: CardSession,
+        callback: (result: CompletionResult<WriteIssuerDataResponse>) -> Unit
+    ) {
+        writeIssuerData(session, callback)
     }
 
-    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<WriteIssuerDataResponse>) -> Unit): Boolean {
-        val card = session.environment.card
-        if (card == null) {
-            callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
-            return true
-        }
+    override fun performPreCheck(card: Card): TangemSdkError? {
         val publicKey = issuerPublicKey ?: card.issuerPublicKey
-        if (publicKey == null) {
-            callback(CompletionResult.Failure(TangemSdkError.MissingIssuerPubicKey()))
-            return true
-        }
+        ?: return TangemSdkError.MissingIssuerPubicKey()
 
-        if (session.environment.card?.status == CardStatus.NotPersonalized) {
-            callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
-            return true
+        if (card.status == CardStatus.NotPersonalized) {
+            return TangemSdkError.NotPersonalized()
         }
-        if (session.environment.card?.isActivated == true) {
-            callback(CompletionResult.Failure(TangemSdkError.NotActivated()))
-            return true
+        if (card.isActivated) {
+            return TangemSdkError.NotActivated()
         }
         if (issuerData.size > MAX_SIZE) {
-            callback(CompletionResult.Failure(TangemSdkError.ExendedDataSizeTooLarge()))
-            return true
+            return TangemSdkError.DataSizeTooLarge()
         }
         if (!isCounterValid(issuerDataCounter, card)) {
-            callback(CompletionResult.Failure(TangemSdkError.MissingCounter()))
-            return true
+            return TangemSdkError.MissingCounter()
         }
-        if (!verifySignatures(card.cardId, publicKey)) {
-            callback(CompletionResult.Failure(TangemSdkError.VerificationFailed()))
-            return true
+        if (!verifySignatures(publicKey, card.cardId)) {
+            return TangemSdkError.VerificationFailed()
         }
-        return false
+        return null
+    }
+
+    override fun performAfterCheck(card: Card?, error: TangemSdkError): TangemSdkError? {
+        if (error is TangemSdkError.InvalidParams && isCounterRequired(card)) {
+            return TangemSdkError.DataCannotBeWritten()
+        }
+        if (error is TangemSdkError.InvalidState &&
+            card?.settingsMask?.contains(Settings.ProtectIssuerDataAgainstReplay) == true) {
+            return TangemSdkError.OverwritingDataIsProhibited()
+        }
+        return null
     }
 
     private fun isCounterValid(issuerDataCounter: Int?, card: Card): Boolean =
-            if (isCounterRequired(card)) issuerDataCounter != null else true
+        if (isCounterRequired(card)) issuerDataCounter != null else true
 
-    private fun isCounterRequired(card: Card): Boolean =
-            card.settingsMask?.contains(Settings.ProtectIssuerDataAgainstReplay) != false
+    private fun isCounterRequired(card: Card?): Boolean =
+        card?.settingsMask?.contains(Settings.ProtectIssuerDataAgainstReplay) == true
 
-    private fun verifySignatures(cardId: String, publicKey: ByteArray): Boolean {
+    private fun verifySignatures(publicKey: ByteArray, cardId: String): Boolean {
 
         val firstData = IssuerDataToVerify(cardId, null, issuerDataCounter, issuerData.size)
         val secondData = IssuerDataToVerify(cardId, issuerData, issuerDataCounter)
@@ -124,13 +99,16 @@ class WriteIssuerExtraDataCommand(
     }
 
     private fun writeIssuerData(
-            session: CardSession,
-            cardId: String, publicKey: ByteArray,
-            callback: (result: CompletionResult<WriteIssuerDataResponse>) -> Unit
+        session: CardSession,
+        callback: (result: CompletionResult<WriteIssuerDataResponse>) -> Unit
     ) {
 
         if (mode == IssuerDataMode.WriteExtraData) {
-            session.viewDelegate.onDelay(issuerData.size, offset, WriteIssuerExtraDataCommand.SINGLE_WRITE_SIZE)
+            session.viewDelegate.onDelay(
+                issuerData.size,
+                offset,
+                SINGLE_WRITE_SIZE
+            )
         }
         transceive(session) { result ->
             when (result) {
@@ -138,7 +116,7 @@ class WriteIssuerExtraDataCommand(
                     when (mode) {
                         IssuerDataMode.InitializeWritingExtraData -> {
                             mode = IssuerDataMode.WriteExtraData
-                            writeIssuerData(session, cardId, publicKey, callback)
+                            writeIssuerData(session, callback)
                             return@transceive
                         }
                         IssuerDataMode.WriteExtraData -> {
@@ -146,7 +124,7 @@ class WriteIssuerExtraDataCommand(
                             if (offset >= issuerData.size) {
                                 mode = IssuerDataMode.FinalizeExtraData
                             }
-                            writeIssuerData(session, cardId, publicKey, callback)
+                            writeIssuerData(session, callback)
                             return@transceive
                         }
                         IssuerDataMode.FinalizeExtraData -> {
@@ -155,6 +133,11 @@ class WriteIssuerExtraDataCommand(
                     }
                 }
                 is CompletionResult.Failure -> {
+                    if (session.environment.handleErrors) {
+                        performAfterCheck(session.environment.card, result.error)?.let {
+                            callback(CompletionResult.Failure(it))
+                        }
+                    }
                     callback(CompletionResult.Failure(result.error))
                 }
             }
@@ -188,17 +171,21 @@ class WriteIssuerExtraDataCommand(
     }
 
     private fun getDataToWrite(): ByteArray =
-            issuerData.copyOfRange(offset, offset + calculatePartSize())
+        issuerData.copyOfRange(offset, offset + calculatePartSize())
 
     private fun calculatePartSize(): Int {
         val bytesLeft = issuerData.size - offset
         return if (bytesLeft < SINGLE_WRITE_SIZE) bytesLeft else SINGLE_WRITE_SIZE
     }
 
-    override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): WriteIssuerDataResponse {
+    override fun deserialize(
+        environment: SessionEnvironment,
+        apdu: ResponseApdu
+    ): WriteIssuerDataResponse {
         val tlvData = apdu.getTlvData() ?: throw TangemSdkError.DeserializeApduFailed()
 
-        return WriteIssuerDataResponse(cardId = TlvDecoder(tlvData).decode(TlvTag.CardId)
+        return WriteIssuerDataResponse(
+            cardId = TlvDecoder(tlvData).decode(TlvTag.CardId)
         )
     }
 
