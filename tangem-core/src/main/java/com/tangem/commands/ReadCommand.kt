@@ -1,10 +1,8 @@
 package com.tangem.commands
 
-import com.tangem.CardSession
 import com.tangem.SessionEnvironment
 import com.tangem.TangemSdkError
 import com.tangem.commands.common.CardDeserializer
-import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
@@ -317,6 +315,8 @@ class Card(
 
         /**
          * Whether the card requires issuer’s confirmation of activation.
+         * is "true" if the card requires activation,
+         * is 'false" if the card is activated or does not require activation
          */
         val isActivated: Boolean,
 
@@ -367,17 +367,11 @@ class Card(
  */
 class ReadCommand : Command<Card>() {
 
-    override fun performAfterCheck(session: CardSession, result: CompletionResult<Card>, callback: (result: CompletionResult<Card>) -> Unit): Boolean {
-        when (result) {
-            is CompletionResult.Failure -> {
-                if (result.error is TangemSdkError.InvalidParams) {
-                    callback(CompletionResult.Failure(TangemSdkError.Pin1Required()))
-                    return true
-                }
-                return false
-            }
-            else -> return false
+    override fun performAfterCheck(card: Card?, error: TangemSdkError): TangemSdkError? {
+        if (error is TangemSdkError.InvalidParams) {
+            return TangemSdkError.Pin1Required()
         }
+        return null
     }
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
