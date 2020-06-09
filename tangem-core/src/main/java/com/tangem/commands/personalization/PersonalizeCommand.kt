@@ -9,7 +9,6 @@ import com.tangem.commands.CardStatus
 import com.tangem.commands.Command
 import com.tangem.commands.common.CardDeserializer
 import com.tangem.commands.personalization.entities.*
-import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
@@ -38,12 +37,11 @@ class PersonalizeCommand(
         private val acquirer: Acquirer? = null
 ) : Command<Card>() {
 
-    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<Card>) -> Unit): Boolean {
-        if (session.environment.card?.status != CardStatus.NotPersonalized) {
-            callback(CompletionResult.Failure(TangemSdkError.AlreadyPersonalized()))
-            return true
+    override fun performPreCheck(card: Card): TangemSdkError? {
+        if (card.status != CardStatus.NotPersonalized) {
+            return TangemSdkError.AlreadyPersonalized()
         }
-        return false
+        return null
     }
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
