@@ -72,9 +72,8 @@ class CommandApdu(
         encryptionMode: EncryptionMode,
         encryptionKey: ByteArray?
     ): CommandApdu {
-        if (encryptionMode == EncryptionMode.NONE
-            || encryptionKey == null || p1 != EncryptionMode.NONE.code
-        ) {
+
+        if (encryptionKey == null || p1 != EncryptionMode.NONE.code) {
             return this
         }
         val crc: ByteArray = tlvs.calculateCrc16()
