@@ -70,19 +70,14 @@ class CheckWalletCommand(
         }
     }
 
-    override fun performPreCheck(
-            session: CardSession,
-            callback: (result: CompletionResult<CheckWalletResponse>) -> Unit
-    ): Boolean {
-        if (session.environment.card?.status == CardStatus.NotPersonalized) {
-            callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
-            return true
+    override fun performPreCheck(card: Card): TangemSdkError? {
+        if (card.status == CardStatus.NotPersonalized) {
+            return TangemSdkError.NotPersonalized()
         }
-        if (session.environment.card?.isActivated == true) {
-            callback(CompletionResult.Failure(TangemSdkError.NotActivated()))
-            return true
+        if (card.isActivated) {
+            return TangemSdkError.NotActivated()
         }
-        return false
+        return null
     }
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
