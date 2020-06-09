@@ -5,6 +5,7 @@ import com.tangem.commands.OpenSessionCommand
 import com.tangem.commands.ReadCommand
 import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
+import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.getType
@@ -221,16 +222,10 @@ class CardSession(
         scope.launch {
             subscription.consumeAsFlow()
                 .filterNotNull()
-                .map { establishEncryption() }
+                .map { establishEncryption(apdu.ins) }
                 .map { apdu.encrypt(environment.encryptionMode, environment.encryptionKey) }
                 .map { encryptedApdu -> reader.transceiveApdu(encryptedApdu) }
-                .catch { error ->
-                    if (error is TangemSdkError) callback(
-                        CompletionResult.Failure(
-                            error
-                        )
-                    )
-                }
+                .catch { if (it is TangemSdkError) callback(CompletionResult.Failure(it)) }
                 .collect { result ->
                     subscription.cancel()
                     callback(result)
@@ -238,8 +233,15 @@ class CardSession(
         }
     }
 
-    private suspend fun establishEncryption(): CompletionResult<Boolean> {
+    private suspend fun establishEncryption(ins: Int): CompletionResult<Boolean> {
+
         if (environment.encryptionKey != null) return CompletionResult.Success(true)
+
+        if (ins == Instruction.Personalize.code) {
+            environment.encryptionKey = null
+            return CompletionResult.Success(true)
+        }
+
         val encryptionHelper: EncryptionHelper =
             when (environment.encryptionMode) {
                 EncryptionMode.NONE -> return CompletionResult.Success(true)

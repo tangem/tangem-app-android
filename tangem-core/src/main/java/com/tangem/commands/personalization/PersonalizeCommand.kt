@@ -1,6 +1,6 @@
 package com.tangem.commands.personalization
 
-import com.tangem.CardSession
+import com.tangem.EncryptionMode
 import com.tangem.SessionEnvironment
 import com.tangem.TangemSdkError
 import com.tangem.commands.Card
@@ -46,10 +46,11 @@ class PersonalizeCommand(
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
         return CommandApdu(Instruction.Personalize, serializePersonalizationData(config))
+            .encrypt(EncryptionMode.NONE, devPersonalizationKey)
     }
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): Card {
-       return CardDeserializer.deserialize(apdu)
+       return CardDeserializer.deserialize(apdu.decrypt(devPersonalizationKey))
     }
 
     private fun serializePersonalizationData(config: CardConfig): ByteArray {
