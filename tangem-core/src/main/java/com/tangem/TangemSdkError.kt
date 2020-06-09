@@ -105,7 +105,7 @@ sealed class TangemSdkError(val code: Int) : Exception(code.toString()) {
     class TooManyHashesInOneTransaction : TangemSdkError(40906)
 
     //Write Extra Issuer Data Errors
-    class ExendedDataSizeTooLarge : TangemSdkError(41101)
+    class ExtendedDataSizeTooLarge : TangemSdkError(41101)
 
     //General Errors
     class NotPersonalized() : TangemSdkError(40001)
