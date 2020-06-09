@@ -41,47 +41,46 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
 
     override fun run(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
         Log.i("Command", "Initializing ${this::class.java.simpleName}")
-        if (session.environment.handleErrors) {
-            if (performPreCheck(session, callback)) return
-        }
-        transceive(session) { result ->
-            if (session.environment.handleErrors) {
-                if (performAfterCheck(session, result, callback)) return@transceive
-            }
-            callback(result)
-        }
+        transceive(session, callback)
     }
 
-    open fun performPreCheck(
-        session: CardSession,
-        callback: (result: CompletionResult<T>) -> Unit
-    ): Boolean {
-        return false
-    }
+    open fun performPreCheck(card: Card): TangemSdkError? = null
 
-    open fun performAfterCheck(
-        session: CardSession,
-        result: CompletionResult<T>,
-        callback: (result: CompletionResult<T>) -> Unit
-    ): Boolean {
-        return false
-    }
+    open fun performAfterCheck(card: Card?, error: TangemSdkError): TangemSdkError? = error
 
     fun transceive(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
-        try {
-            val apdu = serialize(session.environment)
-            transceiveApdu(apdu, session) { result ->
-                when (result) {
-                    is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
-                    is CompletionResult.Success -> {
+
+        val card = session.environment.card
+        if (session.environment.handleErrors && card != null) {
+            performPreCheck(card)?.let { error ->
+                callback(CompletionResult.Failure(error))
+                return
+            }
+        }
+
+        val apdu = serialize(session.environment)
+        transceiveApdu(apdu, session) { result ->
+            when (result) {
+                is CompletionResult.Failure -> {
+                    if (session.environment.handleErrors) {
+                        performAfterCheck(session.environment.card, result.error)?.let {
+                            callback(CompletionResult.Failure(it))
+                            return@transceiveApdu
+                        }
+                    }
+                    callback(CompletionResult.Failure(result.error))
+                }
+                is CompletionResult.Success -> {
+                    try {
                         val response = deserialize(session.environment, result.data)
                         callback(CompletionResult.Success(response))
+                    } catch (error: TangemSdkError) {
+                        callback(CompletionResult.Failure(error))
                     }
                 }
             }
-        } catch (error: TangemSdkError) {
-            callback(CompletionResult.Failure(error))
         }
+
     }
 
     private fun transceiveApdu(

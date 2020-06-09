@@ -18,37 +18,37 @@ import java.io.ByteArrayOutputStream
 
 class ReadIssuerExtraDataResponse(
 
-        /**
-         * CID, Unique Tangem card ID number.
-         */
-        val cardId: String,
+    /**
+     * CID, Unique Tangem card ID number.
+     */
+    val cardId: String,
 
-        /**
-         * Size of all Issuer_Extra_Data field.
-         */
-        val size: Int?,
+    /**
+     * Size of all Issuer_Extra_Data field.
+     */
+    val size: Int?,
 
-        /**
-         * Data defined by issuer.
-         */
-        val issuerData: ByteArray,
+    /**
+     * Data defined by issuer.
+     */
+    val issuerData: ByteArray,
 
-        /**
-         * Issuer’s signature of [issuerData] with Issuer Data Private Key (which is kept on card).
-         * Issuer’s signature of SHA256-hashed [cardId] concatenated with [issuerData]:
-         * SHA256([cardId] | [issuerData]).
-         * When flag [Settings.ProtectIssuerDataAgainstReplay] set in [SettingsMask] then signature of
-         * SHA256-hashed CID Issuer_Data concatenated with and [issuerDataCounter]:
-         * SHA256([cardId] | [issuerData] | [issuerDataCounter]).
-         */
-        val issuerDataSignature: ByteArray?,
+    /**
+     * Issuer’s signature of [issuerData] with Issuer Data Private Key (which is kept on card).
+     * Issuer’s signature of SHA256-hashed [cardId] concatenated with [issuerData]:
+     * SHA256([cardId] | [issuerData]).
+     * When flag [Settings.ProtectIssuerDataAgainstReplay] set in [SettingsMask] then signature of
+     * SHA256-hashed CID Issuer_Data concatenated with and [issuerDataCounter]:
+     * SHA256([cardId] | [issuerData] | [issuerDataCounter]).
+     */
+    val issuerDataSignature: ByteArray?,
 
-        /**
-         * An optional counter that protects issuer data against replay attack.
-         * When flag [Settings.ProtectIssuerDataAgainstReplay] set in [SettingsMask]
-         * then this value is mandatory and must increase on each execution of [WriteIssuerDataCommand].
-         */
-        val issuerDataCounter: Int?
+    /**
+     * An optional counter that protects issuer data against replay attack.
+     * When flag [Settings.ProtectIssuerDataAgainstReplay] set in [SettingsMask]
+     * then this value is mandatory and must increase on each execution of [WriteIssuerDataCommand].
+     */
+    val issuerDataCounter: Int?
 ) : CommandResponse
 
 
@@ -60,42 +60,38 @@ class ReadIssuerExtraDataResponse(
  * a series of these commands have to be executed to read the entire Issuer_Extra_Data.
  */
 class ReadIssuerExtraDataCommand(
-        private val issuerPublicKey: ByteArray? = null,
-        verifier: IssuerDataVerifier = DefaultIssuerDataVerifier()
+    private val issuerPublicKey: ByteArray? = null,
+    verifier: IssuerDataVerifier = DefaultIssuerDataVerifier()
 ) : Command<ReadIssuerExtraDataResponse>(), IssuerDataVerifier by verifier {
 
     private val issuerData = ByteArrayOutputStream()
     private var offset: Int = 0
     private var issuerDataSize: Int = 0
 
-    override fun run(session: CardSession, callback: (result: CompletionResult<ReadIssuerExtraDataResponse>) -> Unit) {
-        val card = session.environment.card
-        if (card == null) {
-            callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
-            return
+    override fun performPreCheck(card: Card): TangemSdkError? {
+        if (card.status == CardStatus.NotPersonalized) {
+            return TangemSdkError.NotPersonalized()
         }
-        val publicKey = issuerPublicKey ?: card.issuerPublicKey
-        if (publicKey == null) {
-            callback(CompletionResult.Failure(TangemSdkError.MissingIssuerPubicKey()))
-            return
-        }
-        if (session.environment.card?.status == CardStatus.NotPersonalized) {
-            callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
-            return
-        }
-
-        readIssuerData(session, card.cardId, publicKey, callback)
+        issuerPublicKey ?: card.issuerPublicKey ?: return TangemSdkError.MissingIssuerPubicKey()
+        return null
     }
 
+    override fun run(
+        session: CardSession,
+        callback: (result: CompletionResult<ReadIssuerExtraDataResponse>) -> Unit
+    ) {
+        val publicKey = issuerPublicKey ?: session.environment.card?.issuerPublicKey
+        readIssuerData(session, publicKey!!, callback)
+    }
 
     private fun readIssuerData(
-            session: CardSession,
-            cardId: String, publicKey: ByteArray,
-            callback: (result: CompletionResult<ReadIssuerExtraDataResponse>) -> Unit) {
+        session: CardSession, publicKey: ByteArray,
+        callback: (result: CompletionResult<ReadIssuerExtraDataResponse>) -> Unit
+    ) {
 
         if (issuerDataSize != 0) {
             session.viewDelegate.onDelay(
-                    issuerDataSize, offset, WriteIssuerExtraDataCommand.SINGLE_WRITE_SIZE
+                issuerDataSize, offset, WriteIssuerExtraDataCommand.SINGLE_WRITE_SIZE
             )
         }
 
@@ -112,9 +108,9 @@ class ReadIssuerExtraDataCommand(
                     issuerData.write(result.data.issuerData)
                     if (result.data.issuerDataSignature == null) {
                         offset = issuerData.size()
-                        readIssuerData(session, cardId, publicKey, callback)
+                        readIssuerData(session, publicKey, callback)
                     } else {
-                        completeTask(result.data, cardId, publicKey, callback)
+                        completeTask(result.data, publicKey, callback)
                     }
                 }
                 is CompletionResult.Failure -> {
@@ -124,21 +120,22 @@ class ReadIssuerExtraDataCommand(
         }
     }
 
-    private fun completeTask(data: ReadIssuerExtraDataResponse,
-                             cardId: String, publicKey: ByteArray,
-                             callback: (result: CompletionResult<ReadIssuerExtraDataResponse>) -> Unit) {
+    private fun completeTask(
+        data: ReadIssuerExtraDataResponse, publicKey: ByteArray,
+        callback: (result: CompletionResult<ReadIssuerExtraDataResponse>) -> Unit
+    ) {
         val dataToVerify = IssuerDataToVerify(
-                cardId,
-                issuerData.toByteArray(),
-                data.issuerDataCounter
+            data.cardId,
+            issuerData.toByteArray(),
+            data.issuerDataCounter
         )
         if (verify(publicKey, data.issuerDataSignature!!, dataToVerify)) {
             val finalResult = ReadIssuerExtraDataResponse(
-                    data.cardId,
-                    issuerDataSize,
-                    issuerData.toByteArray(),
-                    data.issuerDataSignature,
-                    data.issuerDataCounter
+                data.cardId,
+                issuerDataSize,
+                issuerData.toByteArray(),
+                data.issuerDataSignature,
+                data.issuerDataCounter
             )
             callback(CompletionResult.Success(finalResult))
         } else {
@@ -155,16 +152,19 @@ class ReadIssuerExtraDataCommand(
         return CommandApdu(Instruction.ReadIssuerData, tlvBuilder.serialize())
     }
 
-    override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): ReadIssuerExtraDataResponse {
+    override fun deserialize(
+        environment: SessionEnvironment,
+        apdu: ResponseApdu
+    ): ReadIssuerExtraDataResponse {
         val tlvData = apdu.getTlvData() ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
         return ReadIssuerExtraDataResponse(
-                cardId = decoder.decode(TlvTag.CardId),
-                size = decoder.decodeOptional(TlvTag.Size),
-                issuerData = decoder.decodeOptional(TlvTag.IssuerData) ?: byteArrayOf(),
-                issuerDataSignature = decoder.decodeOptional(TlvTag.IssuerDataSignature),
-                issuerDataCounter = decoder.decodeOptional(TlvTag.IssuerDataCounter)
+            cardId = decoder.decode(TlvTag.CardId),
+            size = decoder.decodeOptional(TlvTag.Size),
+            issuerData = decoder.decodeOptional(TlvTag.IssuerData) ?: byteArrayOf(),
+            issuerDataSignature = decoder.decodeOptional(TlvTag.IssuerDataSignature),
+            issuerDataCounter = decoder.decodeOptional(TlvTag.IssuerDataCounter)
         )
     }
 
