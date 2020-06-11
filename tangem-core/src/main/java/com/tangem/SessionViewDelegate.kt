@@ -12,7 +12,7 @@ interface SessionViewDelegate {
     /**
      * It is called when user is expected to scan a Tangem Card with an Android device.
      */
-    fun onNfcSessionStarted(cardId: String?, message: Message? = null)
+    fun onSessionStarted(cardId: String?, message: Message? = null)
 
     /**
      * It is called when security delay is triggered by the card.
@@ -32,10 +32,14 @@ interface SessionViewDelegate {
      */
     fun onTagLost()
 
+    fun onTagConnected()
+
+    fun onWrongCard()
+
     /**
      * It is called when NFC session was completed and a user can take the card away from the Android device.
      */
-    fun onNfcSessionCompleted(message: Message? = null)
+    fun onSessionStopped(message: Message? = null)
 
     /**
      * It is called when some error occur during NFC session.
