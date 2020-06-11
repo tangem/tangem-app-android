@@ -1,5 +1,6 @@
 package com.tangem.crypto
 
+import com.tangem.EncryptionMode
 import org.spongycastle.jce.interfaces.ECPublicKey
 import java.security.KeyPair
 import java.security.KeyPairGenerator
@@ -11,6 +12,16 @@ interface EncryptionHelper {
     val keyA: ByteArray
 
     fun generateSecret(keyB: ByteArray): ByteArray
+
+    companion object {
+        fun create(encryptionMode: EncryptionMode): EncryptionHelper? {
+            return when (encryptionMode) {
+                EncryptionMode.NONE -> null
+                EncryptionMode.FAST -> FastEncryptionHelper()
+                EncryptionMode.STRONG -> StrongEncryptionHelper()
+            }
+        }
+    }
 }
 
 class StrongEncryptionHelper : EncryptionHelper {

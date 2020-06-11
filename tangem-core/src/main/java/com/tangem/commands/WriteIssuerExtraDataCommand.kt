@@ -72,7 +72,7 @@ class WriteIssuerExtraDataCommand(
         return null
     }
 
-    override fun performAfterCheck(card: Card?, error: TangemSdkError): TangemSdkError? {
+    override fun mapError(card: Card?, error: TangemSdkError): TangemSdkError {
         if (error is TangemSdkError.InvalidParams && isCounterRequired(card)) {
             return TangemSdkError.DataCannotBeWritten()
         }
@@ -80,7 +80,7 @@ class WriteIssuerExtraDataCommand(
             card?.settingsMask?.contains(Settings.ProtectIssuerDataAgainstReplay) == true) {
             return TangemSdkError.OverwritingDataIsProhibited()
         }
-        return null
+        return error
     }
 
     private fun isCounterValid(issuerDataCounter: Int?, card: Card): Boolean =
@@ -134,7 +134,7 @@ class WriteIssuerExtraDataCommand(
                 }
                 is CompletionResult.Failure -> {
                     if (session.environment.handleErrors) {
-                        performAfterCheck(session.environment.card, result.error)?.let {
+                        mapError(session.environment.card, result.error)?.let {
                             callback(CompletionResult.Failure(it))
                         }
                     }
