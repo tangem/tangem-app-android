@@ -51,11 +51,11 @@ class CreateWalletCommand : Command<CreateWalletResponse>() {
         }
     }
 
-    override fun performAfterCheck(card: Card?, error: TangemSdkError): TangemSdkError? {
+    override fun mapError(card: Card?, error: TangemSdkError): TangemSdkError {
         if (error is TangemSdkError.InvalidParams) {
             return TangemSdkError.Pin2OrCvcRequired()
         }
-        return null
+        return error
     }
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
