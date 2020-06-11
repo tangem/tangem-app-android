@@ -46,7 +46,7 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
 
     open fun performPreCheck(card: Card): TangemSdkError? = null
 
-    open fun performAfterCheck(card: Card?, error: TangemSdkError): TangemSdkError? = error
+    open fun mapError(card: Card?, error: TangemSdkError): TangemSdkError = error
 
     fun transceive(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
 
@@ -63,10 +63,10 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
             when (result) {
                 is CompletionResult.Failure -> {
                     if (session.environment.handleErrors) {
-                        performAfterCheck(session.environment.card, result.error)?.let {
-                            callback(CompletionResult.Failure(it))
-                            return@transceiveApdu
-                        }
+                        val error = mapError(session.environment.card, result.error)
+                        callback(CompletionResult.Failure(error))
+                        return@transceiveApdu
+
                     }
                     callback(CompletionResult.Failure(result.error))
                 }
@@ -98,13 +98,7 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
                     when (responseApdu.statusWord) {
                         StatusWord.ProcessCompleted, StatusWord.Pin1Changed,
                         StatusWord.Pin2Changed, StatusWord.PinsChanged -> {
-                            try {
-                                val decryptedResponseApdu =
-                                    responseApdu.decrypt(session.environment.encryptionKey)
-                                callback(CompletionResult.Success(decryptedResponseApdu))
-                            } catch (error: TangemSdkError) {
-                                callback(CompletionResult.Failure(error))
-                            }
+                            callback(CompletionResult.Success(responseApdu))
                         }
                         StatusWord.NeedPause -> {
                             // NeedPause is returned from the card whenever security delay is triggered.
