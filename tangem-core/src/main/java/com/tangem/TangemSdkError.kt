@@ -29,6 +29,7 @@ sealed class TangemSdkError(val code: Int) : Exception(code.toString()) {
     class DecodingFailedMissingTag : TangemSdkError(20005)
     class DecodingFailedTypeMismatch : TangemSdkError(20006)
     class DecodingFailed : TangemSdkError(20007)
+    class InvalidResponse : TangemSdkError(20008)
 
     /**
      * This error is returned when unknown [StatusWord] is received from a card.
@@ -104,7 +105,7 @@ sealed class TangemSdkError(val code: Int) : Exception(code.toString()) {
     class TooManyHashesInOneTransaction : TangemSdkError(40906)
 
     //Write Extra Issuer Data Errors
-    class ExendedDataSizeTooLarge : TangemSdkError(41101)
+    class ExtendedDataSizeTooLarge : TangemSdkError(41101)
 
     //General Errors
     class NotPersonalized() : TangemSdkError(40001)
