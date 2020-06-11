@@ -10,8 +10,8 @@ import com.tangem.common.tlv.TlvDecoder
 import com.tangem.common.tlv.TlvTag
 
 class OpenSessionResponse(
-        val sessionKeyB: ByteArray,
-        val uid: ByteArray
+    val sessionKeyB: ByteArray,
+    val uid: ByteArray
 ) : CommandResponse
 
 /**
@@ -25,19 +25,21 @@ class OpenSessionCommand(private val sessionKeyA: ByteArray) : Command<OpenSessi
         val tlvBuilder = TlvBuilder()
         tlvBuilder.append(TlvTag.SessionKeyA, sessionKeyA)
         return CommandApdu(
-                Instruction.OpenSession, tlvBuilder.serialize(),
-                encryptionMode = environment.encryptionMode
+            Instruction.OpenSession.code, tlvBuilder.serialize(), 0, environment.encryptionMode.code
         )
     }
 
-    override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): OpenSessionResponse {
+    override fun deserialize(
+        environment: SessionEnvironment,
+        apdu: ResponseApdu
+    ): OpenSessionResponse {
         val tlvData = apdu.getTlvData()
-                ?: throw TangemSdkError.DeserializeApduFailed()
+            ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
         return OpenSessionResponse(
-                sessionKeyB = decoder.decode(TlvTag.SessionKeyB),
-                uid = decoder.decode(TlvTag.Uid)
+            sessionKeyB = decoder.decode(TlvTag.SessionKeyB),
+            uid = decoder.decode(TlvTag.Uid)
         )
     }
 }
