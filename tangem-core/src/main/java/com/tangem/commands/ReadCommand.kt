@@ -367,11 +367,11 @@ class Card(
  */
 class ReadCommand : Command<Card>() {
 
-    override fun performAfterCheck(card: Card?, error: TangemSdkError): TangemSdkError? {
+    override fun mapError(card: Card?, error: TangemSdkError): TangemSdkError {
         if (error is TangemSdkError.InvalidParams) {
             return TangemSdkError.Pin1Required()
         }
-        return null
+        return error
     }
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
