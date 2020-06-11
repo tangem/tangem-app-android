@@ -2,8 +2,10 @@ package com.tangem.tasks
 
 import com.tangem.CardSession
 import com.tangem.CardSessionRunnable
+import com.tangem.TagType
 import com.tangem.TangemSdkError
 import com.tangem.commands.*
+import com.tangem.commands.common.CardDeserializer
 import com.tangem.common.CompletionResult
 
 /**
@@ -13,31 +15,58 @@ import com.tangem.common.CompletionResult
  */
 internal class ScanTask : CardSessionRunnable<Card> {
 
-    override val performPreflightRead = true
+    override val performPreflightRead = false
 
     override fun run(session: CardSession, callback: (result: CompletionResult<Card>) -> Unit) {
 
-        val card = session.environment.card
 
-        if (card == null) {
-            callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
+        if (session.connectedTag == TagType.Slix) {
+            readSlixTag(session, callback)
+            return
+        }
 
-        } else if (card.cardData?.productMask?.contains(Product.Tag) != false) {
-            callback(CompletionResult.Success(card))
+        ReadCommand().run(session) { readResult ->
+            when(readResult) {
+                is CompletionResult.Failure -> callback(readResult)
+                is CompletionResult.Success -> {
+                    val card = readResult.data
+                    session.environment.card = card
+                     if (card.cardData?.productMask?.contains(Product.Tag) != false) {
+                        callback(CompletionResult.Success(card))
 
-        } else if (card.status != CardStatus.Loaded) {
-            callback(CompletionResult.Success(card))
+                    } else if (card.status != CardStatus.Loaded) {
+                        callback(CompletionResult.Success(card))
 
-        } else if (card.curve == null || card.walletPublicKey == null) {
-            callback(CompletionResult.Failure(TangemSdkError.CardError()))
+                    } else if (card.curve == null || card.walletPublicKey == null) {
+                        callback(CompletionResult.Failure(TangemSdkError.CardError()))
 
-        } else {
-            val checkWalletCommand = CheckWalletCommand(card.curve, card.walletPublicKey)
+                    } else {
+                        val checkWalletCommand = CheckWalletCommand(card.curve, card.walletPublicKey)
+                        checkWalletCommand.run(session) { result ->
+                            when (result) {
+                                is CompletionResult.Success -> callback(CompletionResult.Success(card))
+                                is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-            checkWalletCommand.run(session) { result ->
-                when (result) {
-                    is CompletionResult.Success -> callback(CompletionResult.Success(card))
-                    is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
+    private fun readSlixTag(session: CardSession, callback: (result: CompletionResult<Card>) -> Unit) {
+        session.readSlixTag { result ->
+            when (result) {
+                is CompletionResult.Success -> {
+                    try {
+                        val card = CardDeserializer.deserialize(result.data)
+                        callback(CompletionResult.Success(card))
+                    } catch (error: TangemSdkError) {
+                        callback(CompletionResult.Failure(error))
+                    }
+                }
+                is CompletionResult.Failure -> {
+                    callback(CompletionResult.Failure(result.error))
                 }
             }
         }
