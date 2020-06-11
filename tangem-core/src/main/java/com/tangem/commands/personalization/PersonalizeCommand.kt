@@ -1,5 +1,6 @@
 package com.tangem.commands.personalization
 
+import com.tangem.CardSession
 import com.tangem.EncryptionMode
 import com.tangem.SessionEnvironment
 import com.tangem.TangemSdkError
@@ -9,6 +10,7 @@ import com.tangem.commands.CardStatus
 import com.tangem.commands.Command
 import com.tangem.commands.common.CardDeserializer
 import com.tangem.commands.personalization.entities.*
+import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
@@ -37,6 +39,18 @@ class PersonalizeCommand(
         private val acquirer: Acquirer? = null
 ) : Command<Card>() {
 
+    override fun run(session: CardSession, callback: (result: CompletionResult<Card>) -> Unit) {
+        val encryptionMode = session.environment.encryptionMode
+        val encryptionKey = session.environment.encryptionKey
+        session.environment.encryptionMode = EncryptionMode.NONE
+        session.environment.encryptionKey = devPersonalizationKey
+        super.run(session) { result ->
+            session.environment.encryptionMode = encryptionMode
+            session.environment.encryptionKey = encryptionKey
+            callback(result)
+        }
+    }
+
     override fun performPreCheck(card: Card): TangemSdkError? {
         if (card.status != CardStatus.NotPersonalized) {
             return TangemSdkError.AlreadyPersonalized()
@@ -46,11 +60,10 @@ class PersonalizeCommand(
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
         return CommandApdu(Instruction.Personalize, serializePersonalizationData(config))
-            .encrypt(EncryptionMode.NONE, devPersonalizationKey)
     }
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): Card {
-       return CardDeserializer.deserialize(apdu.decrypt(devPersonalizationKey))
+       return CardDeserializer.deserialize(apdu)
     }
 
     private fun serializePersonalizationData(config: CardConfig): ByteArray {
