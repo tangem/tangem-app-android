@@ -1,13 +1,11 @@
 package com.tangem.commands
 
-import com.tangem.CardSession
 import com.tangem.SessionEnvironment
 import com.tangem.TangemSdkError
 import com.tangem.commands.common.DefaultIssuerDataVerifier
 import com.tangem.commands.common.IssuerDataMode
 import com.tangem.commands.common.IssuerDataToVerify
 import com.tangem.commands.common.IssuerDataVerifier
-import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
@@ -16,10 +14,10 @@ import com.tangem.common.tlv.TlvDecoder
 import com.tangem.common.tlv.TlvTag
 
 class WriteIssuerDataResponse(
-        /**
-         * CID, Unique Tangem card ID number.
-         */
-        val cardId: String
+    /**
+     * CID, Unique Tangem card ID number.
+     */
+    val cardId: String
 ) : CommandResponse
 
 /**
@@ -33,75 +31,53 @@ class WriteIssuerDataResponse(
  * @property issuerDataCounter An optional counter that protect issuer data against replay attack.
  */
 class WriteIssuerDataCommand(
-        private val issuerData: ByteArray,
-        private val issuerDataSignature: ByteArray,
-        private val issuerDataCounter: Int? = null,
-        private val issuerPublicKey: ByteArray? = null,
-        verifier: IssuerDataVerifier = DefaultIssuerDataVerifier()
+    private val issuerData: ByteArray,
+    private val issuerDataSignature: ByteArray,
+    private val issuerDataCounter: Int? = null,
+    private val issuerPublicKey: ByteArray? = null,
+    verifier: IssuerDataVerifier = DefaultIssuerDataVerifier()
 ) : Command<WriteIssuerDataResponse>(), IssuerDataVerifier by verifier {
 
-    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<WriteIssuerDataResponse>) -> Unit): Boolean {
-        val card = session.environment.card
-        if (card == null) {
-            callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
-            return true
-        }
+    override fun performPreCheck(card: Card): TangemSdkError? {
         val publicKey = issuerPublicKey ?: card.issuerPublicKey
-        if (publicKey == null) {
-            callback(CompletionResult.Failure(TangemSdkError.MissingIssuerPubicKey()))
-            return true
+        ?: return TangemSdkError.MissingIssuerPubicKey()
+
+        if (card.status == CardStatus.NotPersonalized) {
+            return TangemSdkError.NotPersonalized()
         }
-        if (session.environment.card?.status == CardStatus.NotPersonalized) {
-            callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
-            return true
-        }
-        if (session.environment.card?.isActivated == true) {
-            callback(CompletionResult.Failure(TangemSdkError.NotActivated()))
-            return true
+        if (card.isActivated) {
+            return TangemSdkError.NotActivated()
         }
         if (issuerData.size > MAX_SIZE) {
-            callback(CompletionResult.Failure(TangemSdkError.DataSizeTooLarge()))
-            return true
+            return TangemSdkError.DataSizeTooLarge()
         }
         if (!isCounterValid(issuerDataCounter, card)) {
-            callback(CompletionResult.Failure(TangemSdkError.MissingCounter()))
-            return true
+            return TangemSdkError.MissingCounter()
         }
         if (!verifySignature(publicKey, card.cardId)) {
-            callback(CompletionResult.Failure(TangemSdkError.VerificationFailed()))
-            return true
+            return TangemSdkError.VerificationFailed()
         }
-        return false
+        return null
     }
 
-    override fun performAfterCheck(session: CardSession,
-                                   result: CompletionResult<WriteIssuerDataResponse>,
-                                   callback: (result: CompletionResult<WriteIssuerDataResponse>) -> Unit
-    ): Boolean {
-        when (result) {
-            is CompletionResult.Failure -> {
-                if (result.error is TangemSdkError.InvalidParams &&
-                        isCounterRequired(session.environment.card)) {
-                    callback(CompletionResult.Failure(TangemSdkError.DataCannotBeWritten()))
-                    return true
-                }
-                return false
-            }
-            else -> return false
+    override fun mapError(card: Card?, error: TangemSdkError): TangemSdkError {
+        if (error is TangemSdkError.InvalidParams && isCounterRequired(card)) {
+            return TangemSdkError.DataCannotBeWritten()
         }
+        return error
     }
 
     private fun isCounterValid(issuerDataCounter: Int?, card: Card): Boolean =
-            if (isCounterRequired(card)) issuerDataCounter != null else true
+        if (isCounterRequired(card)) issuerDataCounter != null else true
 
     private fun isCounterRequired(card: Card?): Boolean =
-            card?.settingsMask?.contains(Settings.ProtectIssuerDataAgainstReplay) != false
+        card?.settingsMask?.contains(Settings.ProtectIssuerDataAgainstReplay) == true
 
     private fun verifySignature(publicKey: ByteArray, cardId: String): Boolean {
         return verify(
-                publicKey,
-                issuerDataSignature,
-                IssuerDataToVerify(cardId, issuerData, issuerDataCounter)
+            publicKey,
+            issuerDataSignature,
+            IssuerDataToVerify(cardId, issuerData, issuerDataCounter)
         )
     }
 
@@ -114,19 +90,18 @@ class WriteIssuerDataCommand(
         tlvBuilder.append(TlvTag.IssuerDataSignature, issuerDataSignature)
         tlvBuilder.append(TlvTag.IssuerDataCounter, issuerDataCounter)
 
-        return CommandApdu(
-                Instruction.WriteIssuerData, tlvBuilder.serialize(),
-                environment.encryptionMode, environment.encryptionKey
-        )
+        return CommandApdu(Instruction.WriteIssuerData, tlvBuilder.serialize())
     }
 
-    override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): WriteIssuerDataResponse {
-        val tlvData = apdu.getTlvData(environment.encryptionKey)
-                ?: throw TangemSdkError.DeserializeApduFailed()
+    override fun deserialize(
+        environment: SessionEnvironment,
+        apdu: ResponseApdu
+    ): WriteIssuerDataResponse {
+        val tlvData = apdu.getTlvData() ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
         return WriteIssuerDataResponse(
-                cardId = decoder.decode(TlvTag.CardId)
+            cardId = decoder.decode(TlvTag.CardId)
         )
     }
 
