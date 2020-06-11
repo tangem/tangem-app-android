@@ -15,41 +15,26 @@ import java.io.ByteArrayOutputStream
  */
 class CommandApdu(
 
-        private val ins: Int,
-        private val tlvs: ByteArray,
+    val ins: Int,
+    private val tlvs: ByteArray,
 
-        private val le: Int = 0x00,
+    private val p1: Int,
+    private val p2: Int,
 
-        private val encryptionMode: EncryptionMode = EncryptionMode.NONE,
-        private val encryptionKey: ByteArray? = null,
+    private val le: Int = 0x00,
 
-        private val cla: Int = ISO_CLA) {
+    private val cla: Int = ISO_CLA
+) {
 
     constructor(
-            instruction: Instruction,
-            tlvs: ByteArray,
-            encryptionMode: EncryptionMode = EncryptionMode.NONE,
-            encryptionKey: ByteArray? = null
+        instruction: Instruction,
+        tlvs: ByteArray
     ) : this(
-            instruction.code,
-            tlvs,
-            encryptionMode = encryptionMode,
-            encryptionKey = encryptionKey
+        instruction.code,
+        tlvs,
+        0,
+        0
     )
-
-    private val p1: Int
-    private val p2: Int
-
-    init {
-        if (ins == Instruction.OpenSession.code) {
-            p1 = 0x00
-            p2 = encryptionMode.code.toInt()
-        } else {
-            p1 = encryptionMode.code.toInt()
-            p2 = 0x00
-        }
-    }
-
 
     /**
      * Request converted to a raw data
@@ -62,7 +47,7 @@ class CommandApdu(
 
 
     private fun toBytes(): ByteArray {
-        val data = if (encryptionKey != null) tlvs.encrypt() else tlvs
+        val data =  tlvs
 
         val byteStream = ByteArrayOutputStream()
         byteStream.write(cla)
@@ -83,14 +68,20 @@ class CommandApdu(
     }
 
 
-    private fun ByteArray.encrypt(): ByteArray {
-            val crc: ByteArray = tlvs.calculateCrc16()
-            val stream = ByteArrayOutputStream()
-            stream.write(this.size.toByteArray(2))
-            stream.write(crc)
-            stream.write(this)
-            return stream.toByteArray().encrypt(encryptionKey!!)
+    fun encrypt(
+        encryptionMode: EncryptionMode,
+        encryptionKey: ByteArray?
+    ): CommandApdu {
+
+        if (encryptionKey == null || p1 != EncryptionMode.NONE.code) {
+            return this
         }
+        val crc: ByteArray = tlvs.calculateCrc16()
+        val dataToEncrypt = tlvs.size.toByteArray(2) + crc + tlvs
+        val encryptedData = dataToEncrypt.encrypt(encryptionKey)
+
+        return CommandApdu(ins, encryptedData, encryptionMode.code, p2, le, cla)
+    }
 
     companion object {
         const val ISO_CLA = 0x00
