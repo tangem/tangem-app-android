@@ -1,9 +1,7 @@
 package com.tangem.commands
 
-import com.tangem.CardSession
 import com.tangem.SessionEnvironment
 import com.tangem.TangemSdkError
-import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
@@ -51,16 +49,14 @@ class ReadUserDataResponse(
  */
 class ReadUserDataCommand : Command<ReadUserDataResponse>() {
 
-    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<ReadUserDataResponse>) -> Unit): Boolean {
-        if (session.environment.card?.status == CardStatus.NotPersonalized) {
-            callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
-            return true
+    override fun performPreCheck(card: Card): TangemSdkError? {
+        if (card.status == CardStatus.NotPersonalized) {
+            return TangemSdkError.NotPersonalized()
         }
-        if (session.environment.card?.isActivated == true) {
-            callback(CompletionResult.Failure(TangemSdkError.NotActivated()))
-            return true
+        if (card.isActivated) {
+            return TangemSdkError.NotActivated()
         }
-        return false
+        return null
     }
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
@@ -68,15 +64,11 @@ class ReadUserDataCommand : Command<ReadUserDataResponse>() {
         builder.append(TlvTag.CardId, environment.card?.cardId)
         builder.append(TlvTag.Pin, environment.pin1)
 
-        return CommandApdu(
-                Instruction.ReadUserData, builder.serialize(),
-                environment.encryptionMode, environment.encryptionKey
-        )
+        return CommandApdu(Instruction.ReadUserData, builder.serialize())
     }
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): ReadUserDataResponse {
-        val tlvData = apdu.getTlvData(environment.encryptionKey)
-                ?: throw TangemSdkError.DeserializeApduFailed()
+        val tlvData = apdu.getTlvData() ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
         return ReadUserDataResponse(

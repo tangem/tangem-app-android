@@ -1,9 +1,7 @@
 package com.tangem.commands
 
-import com.tangem.CardSession
 import com.tangem.SessionEnvironment
 import com.tangem.TangemSdkError
-import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
@@ -34,36 +32,24 @@ class WriteUserDataCommand(private val userData: ByteArray? = null, private val 
                            private val userCounter: Int? = null,
                            private val userProtectedCounter: Int? = null) : Command<WriteUserDataResponse>() {
 
-    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<WriteUserDataResponse>) -> Unit): Boolean {
-        if (session.environment.card?.status == CardStatus.NotPersonalized) {
-            callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
-            return true
+    override fun performPreCheck(card: Card): TangemSdkError? {
+        if (card.status == CardStatus.NotPersonalized) {
+            return TangemSdkError.NotPersonalized()
         }
-        if (session.environment.card?.isActivated == true) {
-            callback(CompletionResult.Failure(TangemSdkError.NotActivated()))
-            return true
+        if (card.isActivated) {
+            return TangemSdkError.NotActivated()
         }
         if (userData?.size ?: 0 > MAX_SIZE || userProtectedData?.size ?: 0 > MAX_SIZE) {
-            callback(CompletionResult.Failure(TangemSdkError.DataSizeTooLarge()))
-            return true
+            return TangemSdkError.DataSizeTooLarge()
         }
-        return false
+        return null
     }
 
-    override fun performAfterCheck(session: CardSession,
-                                   result: CompletionResult<WriteUserDataResponse>,
-                                   callback: (result: CompletionResult<WriteUserDataResponse>) -> Unit
-    ): Boolean {
-        when (result) {
-            is CompletionResult.Failure -> {
-                if (result.error is TangemSdkError.InvalidParams) {
-                    callback(CompletionResult.Failure(TangemSdkError.Pin2OrCvcRequired()))
-                    return true
-                }
-                return false
-            }
-            else -> return false
+    override fun mapError(card: Card?, error: TangemSdkError): TangemSdkError {
+        if (error is TangemSdkError.InvalidParams) {
+            return TangemSdkError.Pin2OrCvcRequired()
         }
+        return error
     }
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
@@ -77,15 +63,12 @@ class WriteUserDataCommand(private val userData: ByteArray? = null, private val 
         if (userProtectedCounter != null || userProtectedData != null)
             builder.append(TlvTag.Pin2, environment.pin2)
 
-        return CommandApdu(
-                Instruction.WriteUserData, builder.serialize(),
-                environment.encryptionMode, environment.encryptionKey
-        )
+        return CommandApdu(Instruction.WriteUserData, builder.serialize())
     }
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): WriteUserDataResponse {
-        val tlvData = apdu.getTlvData(environment.encryptionKey)
-                ?: throw TangemSdkError.DeserializeApduFailed()
+        val tlvData = apdu.getTlvData() ?: throw TangemSdkError.DeserializeApduFailed()
+
         return WriteUserDataResponse(TlvDecoder(tlvData).decode(TlvTag.CardId))
     }
 
