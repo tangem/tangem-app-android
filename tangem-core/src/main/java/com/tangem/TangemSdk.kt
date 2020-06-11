@@ -374,7 +374,7 @@ class TangemSdk(
     fun startSession(cardId: String? = null, initialMessage: Message? = null,
             callback: (session: CardSession, error: TangemSdkError?) -> Unit) {
         val cardSession = CardSession(buildEnvironment(), reader, viewDelegate, cardId, initialMessage)
-        Thread().run { cardSession.start(callback) }
+        Thread().run { cardSession.start(callback = callback) }
     }
 
     /**

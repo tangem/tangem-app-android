@@ -70,19 +70,14 @@ class CheckWalletCommand(
         }
     }
 
-    override fun performPreCheck(
-            session: CardSession,
-            callback: (result: CompletionResult<CheckWalletResponse>) -> Unit
-    ): Boolean {
-        if (session.environment.card?.status == CardStatus.NotPersonalized) {
-            callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
-            return true
+    override fun performPreCheck(card: Card): TangemSdkError? {
+        if (card.status == CardStatus.NotPersonalized) {
+            return TangemSdkError.NotPersonalized()
         }
-        if (session.environment.card?.isActivated == true) {
-            callback(CompletionResult.Failure(TangemSdkError.NotActivated()))
-            return true
+        if (card.isActivated) {
+            return TangemSdkError.NotActivated()
         }
-        return false
+        return null
     }
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
@@ -90,15 +85,11 @@ class CheckWalletCommand(
         tlvBuilder.append(TlvTag.Pin, environment.pin1)
         tlvBuilder.append(TlvTag.CardId, environment.card?.cardId)
         tlvBuilder.append(TlvTag.Challenge, challenge)
-        return CommandApdu(
-                Instruction.CheckWallet, tlvBuilder.serialize(),
-                environment.encryptionMode, environment.encryptionKey
-        )
+        return CommandApdu(Instruction.CheckWallet, tlvBuilder.serialize())
     }
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): CheckWalletResponse {
-        val tlvData = apdu.getTlvData(environment.encryptionKey)
-                ?: throw TangemSdkError.DeserializeApduFailed()
+        val tlvData = apdu.getTlvData() ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
         return CheckWalletResponse(

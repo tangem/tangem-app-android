@@ -1,9 +1,7 @@
 package com.tangem.commands
 
-import com.tangem.CardSession
 import com.tangem.SessionEnvironment
 import com.tangem.TangemSdkError
-import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
@@ -20,10 +18,10 @@ import com.tangem.crypto.sign
  * Sums up array elements within all SIGN commands
  */
 class SignResponse(
-        val cardId: String,
-        val signature: ByteArray,
-        val walletRemainingSignatures: Int,
-        val walletSignedHashes: Int
+    val cardId: String,
+    val signature: ByteArray,
+    val walletRemainingSignatures: Int,
+    val walletSignedHashes: Int
 ) : CommandResponse
 
 /**
@@ -32,60 +30,43 @@ class SignResponse(
  * @property hashes Array of transaction hashes.
  * @property cardId CID, Unique Tangem card ID number
  */
-class SignCommand(private val hashes: Array<ByteArray>)
-    : Command<SignResponse>() {
+class SignCommand(private val hashes: Array<ByteArray>) : Command<SignResponse>() {
+// [REDACTED_TODO_COMMENT]
 
     private val hashSizes = if (hashes.isNotEmpty()) hashes.first().size else 0
 
-    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<SignResponse>) -> Unit): Boolean {
-        if (session.environment.card?.status == CardStatus.NotPersonalized) {
-            callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
-            return true
+    override fun performPreCheck(card: Card): TangemSdkError? {
+        if (card.isActivated) {
+            return TangemSdkError.NotActivated()
         }
-        if (session.environment.card?.isActivated == true) {
-            callback(CompletionResult.Failure(TangemSdkError.NotActivated()))
-            return true
+        if (card.walletRemainingSignatures == 0) {
+            return TangemSdkError.NoRemainingSignatures()
         }
-        if (session.environment.card?.status == CardStatus.Purged) {
-            callback(CompletionResult.Failure(TangemSdkError.CardIsPurged()))
-            return true
-        }
-        if (session.environment.card?.status == CardStatus.Empty) {
-            callback(CompletionResult.Failure(TangemSdkError.CardIsEmpty()))
-            return true
-        }
-        if (session.environment.card?.walletRemainingSignatures == 0) {
-            callback(CompletionResult.Failure(TangemSdkError.NoRemainingSignatures()))
-            return true
-        }
-        if (session.environment.card?.signingMethods?.contains(SigningMethod.SignHash) != true) {
-            callback(CompletionResult.Failure(TangemSdkError.SignHashesNotAvailable()))
-            return true
+        if (card.signingMethods?.contains(SigningMethod.SignHash) != true) {
+            return TangemSdkError.SignHashesNotAvailable()
         }
         if (hashSizes == 0) {
-            callback(CompletionResult.Failure(TangemSdkError.EmptyHashes()))
-            return true
+            return TangemSdkError.EmptyHashes()
         }
         if (hashes.any { it.size != hashSizes }) {
-            callback(CompletionResult.Failure(TangemSdkError.HashSizeMustBeEqual()))
-            return true
+            return TangemSdkError.HashSizeMustBeEqual()
         }
-        return false
+
+        return when (card.status) {
+            CardStatus.Loaded -> null
+            CardStatus.Empty -> TangemSdkError.
+            CardIsEmpty()
+            CardStatus.NotPersonalized -> TangemSdkError.NotPersonalized()
+            CardStatus.Purged -> TangemSdkError.CardIsPurged()
+            null -> TangemSdkError.CardError()
+        }
     }
 
-    override fun performAfterCheck(session: CardSession,
-                                   result: CompletionResult<SignResponse>,
-                                   callback: (result: CompletionResult<SignResponse>) -> Unit): Boolean {
-        when (result) {
-            is CompletionResult.Failure -> {
-                if (result.error is TangemSdkError.InvalidParams) {
-                    callback(CompletionResult.Failure(TangemSdkError.Pin2OrCvcRequired()))
-                    return true
-                }
-                return false
-            }
-            else -> return false
+    override fun mapError(card: Card?, error: TangemSdkError): TangemSdkError {
+        if (error is TangemSdkError.InvalidParams) {
+            return TangemSdkError.Pin2OrCvcRequired()
         }
+        return error
     }
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
@@ -99,21 +80,11 @@ class SignCommand(private val hashes: Array<ByteArray>)
         tlvBuilder.append(TlvTag.Cvc, environment.cvc)
 
         addTerminalSignature(environment, dataToSign, tlvBuilder)
-        return CommandApdu(
-                Instruction.Sign, tlvBuilder.serialize(),
-                environment.encryptionMode, environment.encryptionKey
-        )
+        return CommandApdu(Instruction.Sign, tlvBuilder.serialize())
     }
 
     private fun flattenHashes(): ByteArray {
-        checkForErrors()
         return hashes.reduce { arr1, arr2 -> arr1 + arr2 }
-    }
-
-    private fun checkForErrors() {
-        if (hashes.isEmpty()) throw TangemSdkError.EmptyHashes()
-        if (hashes.size > 10) throw TangemSdkError.TooManyHashesInOneTransaction()
-        if (hashes.any { it.size != hashSizes }) throw TangemSdkError.HashSizeMustBeEqual()
     }
 
     /**
@@ -124,7 +95,8 @@ class SignCommand(private val hashes: Array<ByteArray>)
      * (this key should be generated and securily stored by the application).
      */
     private fun addTerminalSignature(
-            environment: SessionEnvironment, dataToSign: ByteArray, tlvBuilder: TlvBuilder) {
+        environment: SessionEnvironment, dataToSign: ByteArray, tlvBuilder: TlvBuilder
+    ) {
         environment.terminalKeys?.let { terminalKeyPair ->
             val signedData = dataToSign.sign(terminalKeyPair.privateKey)
             tlvBuilder.append(TlvTag.TerminalTransactionSignature, signedData)
@@ -133,15 +105,14 @@ class SignCommand(private val hashes: Array<ByteArray>)
     }
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): SignResponse {
-        val tlvData = apdu.getTlvData(environment.encryptionKey)
-                ?: throw TangemSdkError.DeserializeApduFailed()
+        val tlvData = apdu.getTlvData() ?: throw TangemSdkError.DeserializeApduFailed()
 
         val decoder = TlvDecoder(tlvData)
         return SignResponse(
-                cardId = decoder.decode(TlvTag.CardId),
-                signature = decoder.decode(TlvTag.Signature),
-                walletRemainingSignatures = decoder.decode(TlvTag.RemainingSignatures),
-                walletSignedHashes = decoder.decode(TlvTag.SignedHashes)
+            cardId = decoder.decode(TlvTag.CardId),
+            signature = decoder.decode(TlvTag.Signature),
+            walletRemainingSignatures = decoder.decode(TlvTag.RemainingSignatures),
+            walletSignedHashes = decoder.decode(TlvTag.SignedHashes)
         )
     }
 }

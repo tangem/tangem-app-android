@@ -183,7 +183,7 @@ class PersonalizationConfig {
                 signingMethodMaskBuilder.add(SigningMethod.SignRawValidateByIssuerWriteIssuerData)
             }
             if (from.SigningMethod6) {
-                signingMethodMaskBuilder.add(SigningMethod.SignHash)
+                signingMethodMaskBuilder.add(SigningMethod.SignPos)
             }
             return signingMethodMaskBuilder.build()
         }
