@@ -137,7 +137,6 @@ dependencies {
 
     //dependencies for XRP
     implementation files('libs/ripple-core-0.0.1.jar')
-    implementation 'io.xpring:xpring4j:2.2.0'
     //4 dependencies for ripple-core TODO: move to module?
     implementation 'net.i2p.crypto:eddsa:0.3.0'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.61'
