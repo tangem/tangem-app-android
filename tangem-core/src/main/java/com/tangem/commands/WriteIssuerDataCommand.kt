@@ -60,11 +60,11 @@ class WriteIssuerDataCommand(
         return null
     }
 
-    override fun performAfterCheck(card: Card?, error: TangemSdkError): TangemSdkError? {
+    override fun mapError(card: Card?, error: TangemSdkError): TangemSdkError {
         if (error is TangemSdkError.InvalidParams && isCounterRequired(card)) {
             return TangemSdkError.DataCannotBeWritten()
         }
-        return null
+        return error
     }
 
     private fun isCounterValid(issuerDataCounter: Int?, card: Card): Boolean =
