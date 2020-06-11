@@ -54,7 +54,6 @@ android {
         }
     }
     compileOptions {
-        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -81,8 +80,6 @@ dependencies {
     implementation project(':tangem-card-old')
     implementation project(':tangem-sdk-old')
     implementation project(':server-android')
-
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.5'
 
     implementation 'androidx.navigation:navigation-fragment:2.2.2'
     implementation 'androidx.navigation:navigation-ui-ktx:2.2.2'
