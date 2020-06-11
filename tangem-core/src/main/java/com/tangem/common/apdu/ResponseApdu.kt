@@ -39,7 +39,8 @@ class ResponseApdu(private val data: ByteArray) {
     fun decrypt(encryptionKey: ByteArray?): ResponseApdu {
         if (encryptionKey == null) return this
 
-        if (data.size < 18) throw TangemSdkError.InvalidResponse()
+        //nothing to decrypt
+        if (data.size < 18) return this
 
         val responseData = data.copyOf(data.size - 2)
 
