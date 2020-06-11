@@ -10,7 +10,9 @@ import com.ripple.crypto.ecdsa.ECDSASignature;
 import com.ripple.encodings.addresses.Addresses;
 import com.ripple.utils.HashUtils;
 import com.tangem.App;
+import com.tangem.data.network.ServerApiPayId;
 import com.tangem.data.network.ServerApiRipple;
+import com.tangem.data.network.model.PayIdResponse;
 import com.tangem.data.network.model.RippleResponse;
 import com.tangem.tangem_card.data.TangemCard;
 import com.tangem.tangem_card.reader.CardProtocol;
@@ -27,7 +29,13 @@ import com.tangem.wallet.TangemContext;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URL;
 import java.util.Arrays;
+
+import io.reactivex.SingleObserver;
+import io.reactivex.observers.DisposableSingleObserver;
+import io.xpring.xrpl.ClassicAddress;
+import io.xpring.xrpl.Utils;
 
 public class XrpEngine extends CoinEngine {
 
@@ -116,25 +124,31 @@ public class XrpEngine extends CoinEngine {
         if (address == null || address.isEmpty()) {
             return false;
         }
+        if (address.contains("$")) { // PayID
+            String[] addressParts = address.split("\\$");
 
-        if (address.length() < 25) {
-            return false;
-        }
-
-        if (address.length() > 35) {
-            return false;
-        }
-
-        if (!address.startsWith("r")) {
-            return false;
+            if (addressParts.length != 2) {
+                return false;
+            }
+            String addressURL = "https://" + addressParts[1] + "/" + addressParts[0];
+            try {
+                new URL(addressURL).toURI();
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
         }
         try {
             Addresses.decodeAccountID(address);
+            return true;
         } catch (Exception e) {
-            return false;
+            // X-address
+            ClassicAddress classicAddress = Utils.decodeXAddress(address);
+            if (classicAddress == null) {
+                return false;
+            }
+            return !classicAddress.isTest();
         }
-
-        return true;
     }
 
     @Override
@@ -342,7 +356,22 @@ public class XrpEngine extends CoinEngine {
     public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         checkBlockchainDataExists();
 
-        String amount, fee;
+        String amount, fee, destination;
+        Integer destinationTag = null;
+
+        //PayID
+        if (coinData.getResolvedPayIdAddress() != null) {
+            destination = coinData.getResolvedPayIdAddress();
+        } else {
+            destination = targetAddress;
+        }
+
+        //X-address
+        ClassicAddress classicAddress = Utils.decodeXAddress(destination);
+        if (classicAddress != null) {
+            destination = classicAddress.address();
+            destinationTag = classicAddress.tag().get();
+        }
 
         if (IncFee) {
             amount = convertToInternalAmount(amountValue).subtract(convertToInternalAmount(feeValue)).setScale(0).toPlainString();
@@ -363,10 +392,13 @@ public class XrpEngine extends CoinEngine {
 
         // Put `as` AccountID field Account, `Object` o
         payment.as(AccountID.Account, coinData.getWallet());
-        payment.as(AccountID.Destination, targetAddress);
+        payment.as(AccountID.Destination, destination);
         payment.as(com.ripple.core.coretypes.Amount.Amount, amount);
         payment.as(UInt32.Sequence, coinData.getSequence());
         payment.as(com.ripple.core.coretypes.Amount.Fee, fee);
+        if (destinationTag != null) {
+            payment.as(UInt32.DestinationTag, destinationTag);
+        }
 
         XrpSignedTransaction signedTx = payment.prepare(canonisePubKey(ctx.getCard().getWalletPublicKeyRar()));
 
@@ -525,6 +557,7 @@ public class XrpEngine extends CoinEngine {
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
         final ServerApiRipple serverApiRipple = new ServerApiRipple();
+        final ServerApiPayId serverApiPayId = new ServerApiPayId();
 
         ServerApiRipple.ResponseListener rippleListener = new ServerApiRipple.ResponseListener() {
             @Override
@@ -542,7 +575,7 @@ public class XrpEngine extends CoinEngine {
                             coinData.setTargetAccountCreated(true); //expected behaviour, if account exists, there should be no error code -> null pointer
                         }
 
-                        if (serverApiRipple.isRequestsSequenceCompleted()) {
+                        if (serverApiRipple.isRequestsSequenceCompleted() && serverApiPayId.isRequestsSequenceCompleted()) {
                             blockchainRequestsCallbacks.onComplete(!ctx.hasError());
                         } else {
                             blockchainRequestsCallbacks.onProgress();
@@ -566,7 +599,7 @@ public class XrpEngine extends CoinEngine {
                             ctx.setError(e.getMessage());
                         }
 
-                        if (serverApiRipple.isRequestsSequenceCompleted()) {
+                        if (serverApiRipple.isRequestsSequenceCompleted() && serverApiPayId.isRequestsSequenceCompleted()) {
                             blockchainRequestsCallbacks.onComplete(!ctx.hasError());
                         } else {
                             blockchainRequestsCallbacks.onProgress();
@@ -585,9 +618,46 @@ public class XrpEngine extends CoinEngine {
         };
 
         serverApiRipple.setResponseListener(rippleListener);
-
-        serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, targetAddress, "");
         serverApiRipple.requestData(ServerApiRipple.RIPPLE_FEE, "", "");
+
+        if (targetAddress.contains("$")) { // PayID
+
+            SingleObserver<PayIdResponse> observer = new DisposableSingleObserver<PayIdResponse>() {
+                @Override
+                public void onSuccess(PayIdResponse payIdResponse) {
+                    try {
+                        String resolvedAddress = payIdResponse.getAddresses().get(0).getAddressDetails().getAddress();
+
+                        if (validateAddress(resolvedAddress)) {
+                            coinData.setResolvedPayIdAddress(resolvedAddress);
+                            //check if target account is created
+                            serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, resolvedAddress, ""); //TODO: maybe just assume PayID account is created?
+                        } else {
+                            ctx.setError("Unknown address format in PayID response");
+                        }
+                    } catch (Exception e) {
+                        ctx.setError("FAIL payID Exception");
+                    }
+                    if (serverApiRipple.isRequestsSequenceCompleted() && serverApiPayId.isRequestsSequenceCompleted()) {
+                        blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                    } else {
+                        blockchainRequestsCallbacks.onProgress();
+                    }
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    Log.i(TAG, "onFail: " + "payID" + " " + e.getMessage());
+                    ctx.setError(e.getMessage());
+                    blockchainRequestsCallbacks.onComplete(false);
+                }
+            };
+
+            serverApiPayId.getAddress(targetAddress, observer);
+        } else {
+            //check if target account is created
+            serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, targetAddress, "");
+        }
     }
 
     @Override
