@@ -54,18 +54,19 @@ android {
         }
     }
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
     packagingOptions {
         pickFirst('META-INF/proguard/okhttp3.pro')
-        // for one.block:eosiojava:0.1.0
+//         for one.block:eosiojava:0.1.0
         exclude 'lib/x86_64/darwin/libscrypt.dylib'
         exclude 'lib/x86_64/freebsd/libscrypt.so'
         exclude 'lib/x86_64/linux/libscrypt.so'
         exclude 'org.slf4j:slf4j-jdk14:1.7.25'
     }
-    buildToolsVersion '28.0.3'
+    buildToolsVersion '29.0.3'
 }
 
 repositories {
@@ -80,6 +81,8 @@ dependencies {
     implementation project(':tangem-card-old')
     implementation project(':tangem-sdk-old')
     implementation project(':server-android')
+
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.5'
 
     implementation 'androidx.navigation:navigation-fragment:2.2.2'
     implementation 'androidx.navigation:navigation-ui-ktx:2.2.2'
@@ -132,7 +135,9 @@ dependencies {
     implementation 'com.google.firebase:firebase-crashlytics:17.0.0-beta04'
     implementation 'com.google.firebase:firebase-perf:19.0.6'
 
+    //dependencies for XRP
     implementation files('libs/ripple-core-0.0.1.jar')
+    implementation 'io.xpring:xpring4j:2.2.0'
     //4 dependencies for ripple-core TODO: move to module?
     implementation 'net.i2p.crypto:eddsa:0.3.0'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.61'
