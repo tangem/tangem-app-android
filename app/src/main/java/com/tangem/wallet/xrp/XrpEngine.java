@@ -34,8 +34,6 @@ import java.util.Arrays;
 
 import io.reactivex.SingleObserver;
 import io.reactivex.observers.DisposableSingleObserver;
-import io.xpring.xrpl.ClassicAddress;
-import io.xpring.xrpl.Utils;
 
 public class XrpEngine extends CoinEngine {
 
@@ -142,12 +140,7 @@ public class XrpEngine extends CoinEngine {
             Addresses.decodeAccountID(address);
             return true;
         } catch (Exception e) {
-            // X-address
-            ClassicAddress classicAddress = Utils.decodeXAddress(address);
-            if (classicAddress == null) {
-                return false;
-            }
-            return !classicAddress.isTest();
+            return XrpXAddressService.Companion.validate(address);
         }
     }
 
@@ -367,10 +360,10 @@ public class XrpEngine extends CoinEngine {
         }
 
         //X-address
-        ClassicAddress classicAddress = Utils.decodeXAddress(destination);
-        if (classicAddress != null) {
-            destination = classicAddress.address();
-            destinationTag = classicAddress.tag().get();
+        XrpXAddressDecoded decodedXAddress = XrpXAddressService.Companion.decode(destination);
+        if (decodedXAddress != null) {
+            destination = decodedXAddress.getAddress();
+            destinationTag = decodedXAddress.getDestinationTag();
         }
 
         if (IncFee) {
@@ -564,7 +557,7 @@ public class XrpEngine extends CoinEngine {
             public void onSuccess(String method, RippleResponse rippleResponse) {
                 Log.i(TAG, "onSuccess: " + method);
                 switch (method) {
-                    case ServerApiRipple.RIPPLE_ACCOUNT_INFO: {
+                    case ServerApiRipple.RIPPLE_ACCOUNT_INFO: { //check if target account is created
                         try {
                             if (rippleResponse.getResult().getError_code().equals(19)) { // "Account not found"
                                 coinData.setTargetAccountCreated(false);
@@ -630,13 +623,12 @@ public class XrpEngine extends CoinEngine {
 
                         if (validateAddress(resolvedAddress)) {
                             coinData.setResolvedPayIdAddress(resolvedAddress);
-                            //check if target account is created
                             serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, resolvedAddress, ""); //TODO: maybe just assume PayID account is created?
                         } else {
                             ctx.setError("Unknown address format in PayID response");
                         }
                     } catch (Exception e) {
-                        ctx.setError("FAIL payID Exception");
+                        ctx.setError("Unknown response format on PayID request");
                     }
                     if (serverApiRipple.isRequestsSequenceCompleted() && serverApiPayId.isRequestsSequenceCompleted()) {
                         blockchainRequestsCallbacks.onComplete(!ctx.hasError());
@@ -648,15 +640,19 @@ public class XrpEngine extends CoinEngine {
                 @Override
                 public void onError(Throwable e) {
                     Log.i(TAG, "onFail: " + "payID" + " " + e.getMessage());
-                    ctx.setError(e.getMessage());
+                    ctx.setError("PayID error:" + e.getMessage());
                     blockchainRequestsCallbacks.onComplete(false);
                 }
             };
 
             serverApiPayId.getAddress(targetAddress, observer);
         } else {
-            //check if target account is created
-            serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, targetAddress, "");
+            XrpXAddressDecoded xAddressDecoded = XrpXAddressService.Companion.decode(targetAddress);
+            if (xAddressDecoded == null) { // classic address
+                serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, targetAddress, "");
+            } else { // X-address
+                serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, xAddressDecoded.getAddress(), "");
+            }
         }
     }
 
