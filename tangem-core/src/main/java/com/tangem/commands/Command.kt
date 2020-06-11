@@ -2,12 +2,30 @@ package com.tangem.commands
 
 import com.tangem.*
 import com.tangem.common.CompletionResult
-import com.tangem.common.apdu.CommandApdu
-import com.tangem.common.apdu.ResponseApdu
-import com.tangem.common.apdu.StatusWord
-import com.tangem.common.apdu.toTangemSdkError
+import com.tangem.common.apdu.*
 import com.tangem.common.extensions.toInt
 import com.tangem.common.tlv.TlvTag
+
+
+interface ApduSerializable<T : CommandResponse> {
+    /**
+     * Serializes data into an array of [com.tangem.common.tlv.Tlv],
+     * then creates [CommandApdu] with this data.
+     * @param environment [SessionEnvironment] of the current card
+     * @return command data converted to [CommandApdu] that allows to convert it to [ByteArray]
+     * that can be sent to a Tangem card
+     */
+    fun serialize(environment: SessionEnvironment): CommandApdu
+
+    /**
+     * Deserializes data received from a card and stored in [ResponseApdu]
+     * into an array of [com.tangem.common.tlv.Tlv]. Then maps it into a [CommandResponse].
+     * @param environment [SessionEnvironment] of the current card.
+     * @param apdu received data.
+     * @return Card response converted to a [CommandResponse] of a type [T]
+     */
+    fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): T
+}
 
 /**
  * Basic interface for a parsed response from [Command].
@@ -17,88 +35,105 @@ interface CommandResponse
 /**
  * Basic class for Tangem card commands
  */
-abstract class Command<T : CommandResponse> : CardSessionRunnable<T> {
+abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRunnable<T> {
 
     override val performPreflightRead: Boolean = true
 
-    /**
-     * Serializes data into an array of [com.tangem.common.tlv.Tlv],
-     * then creates [CommandApdu] with this data.
-     * @param environment [SessionEnvironment] of the current card
-     * @return command data converted to [CommandApdu] that allows to convert it to [ByteArray]
-     * that can be sent to a Tangem card
-     */
-    abstract fun serialize(environment: SessionEnvironment): CommandApdu
-
-    /**
-     * Deserializes data received from a card and stored in [ResponseApdu]
-     * into an array of [com.tangem.common.tlv.Tlv]. Then maps it into a [CommandResponse].
-     * @param environment [SessionEnvironment] of the current card.
-     * @param apdu received data.
-     * @return Card response converted to a [CommandResponse] of a type [T]
-     */
-    abstract fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): T
-
     override fun run(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
         Log.i("Command", "Initializing ${this::class.java.simpleName}")
-        if (session.environment.handleErrors) {
-            if (performPreCheck(session, callback)) return
-        }
-        transceive(session) { result ->
-            if (session.environment.handleErrors) {
-                if (performAfterCheck(session, result, callback)) return@transceive
-            }
-            callback(result)
-        }
+        transceive(session, callback)
     }
 
-    open fun performPreCheck(session: CardSession,
-                             callback: (result: CompletionResult<T>) -> Unit): Boolean {
-        return false
-    }
+    open fun performPreCheck(card: Card): TangemSdkError? = null
 
-    open fun performAfterCheck(session: CardSession,
-                               result: CompletionResult<T>,
-                               callback: (result: CompletionResult<T>) -> Unit): Boolean {
-        return false
-    }
+    open fun mapError(card: Card?, error: TangemSdkError): TangemSdkError = error
 
     fun transceive(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
-        try {
-            val apdu = serialize(session.environment)
-            transceiveApdu(apdu, session) { result ->
-                when (result) {
-                    is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
-                    is CompletionResult.Success -> {
+
+        val card = session.environment.card
+        if (session.environment.handleErrors && card != null) {
+            performPreCheck(card)?.let { error ->
+                callback(CompletionResult.Failure(error))
+                return
+            }
+        }
+
+        val apdu = serialize(session.environment)
+        transceiveApdu(apdu, session) { result ->
+            when (result) {
+                is CompletionResult.Failure -> {
+                    if (session.environment.handleErrors) {
+                        val error = mapError(session.environment.card, result.error)
+                        callback(CompletionResult.Failure(error))
+                        return@transceiveApdu
+
+                    }
+                    callback(CompletionResult.Failure(result.error))
+                }
+                is CompletionResult.Success -> {
+                    try {
                         val response = deserialize(session.environment, result.data)
                         callback(CompletionResult.Success(response))
+                    } catch (error: TangemSdkError) {
+                        callback(CompletionResult.Failure(error))
                     }
                 }
             }
-        } catch (error: TangemSdkError) {
-            callback(CompletionResult.Failure(error))
         }
+
     }
 
-    private fun transceiveApdu(apdu: CommandApdu, session: CardSession, callback: (result: CompletionResult<ResponseApdu>) -> Unit) {
-        session.send(apdu) { result ->
+    private fun transceiveApdu(
+        apdu: CommandApdu,
+        session: CardSession,
+        callback: (result: CompletionResult<ResponseApdu>) -> Unit
+    ) {
+        Log.i(this::class.simpleName!!, "transieve: ${Instruction.byCode(apdu.ins)}")
 
+        session.send(apdu) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     val responseApdu = result.data
+
                     when (responseApdu.statusWord) {
-                        StatusWord.ProcessCompleted, StatusWord.Pin1Changed, StatusWord.Pin2Changed, StatusWord.PinsChanged
-                        -> callback(CompletionResult.Success(responseApdu))
+                        StatusWord.ProcessCompleted, StatusWord.Pin1Changed,
+                        StatusWord.Pin2Changed, StatusWord.PinsChanged -> {
+                            callback(CompletionResult.Success(responseApdu))
+                        }
                         StatusWord.NeedPause -> {
                             // NeedPause is returned from the card whenever security delay is triggered.
-                            val remainingTime = deserializeSecurityDelay(responseApdu, session.environment)
+                            val remainingTime =
+                                deserializeSecurityDelay(responseApdu)
                             if (remainingTime != null) {
                                 session.viewDelegate.onSecurityDelay(
-                                        remainingTime,
-                                        session.environment.card?.pauseBeforePin2 ?: 0)
+                                    remainingTime,
+                                    session.environment.card?.pauseBeforePin2 ?: 0
+                                )
                             }
-                            Log.i(this::class.simpleName!!, "Nfc command ${this::class.simpleName!!} " +
-                                    "triggered security delay of $remainingTime milliseconds")
+                            Log.i(
+                                this::class.simpleName!!,
+                                "Nfc command ${this::class.simpleName!!} " +
+                                        "triggered security delay of $remainingTime milliseconds"
+                            )
+                            transceiveApdu(apdu, session, callback)
+                        }
+                        StatusWord.NeedEncryption -> {
+                            Log.i(this::class.simpleName!!, "Establishing encryption")
+                            when (session.environment.encryptionMode) {
+                                EncryptionMode.NONE -> {
+                                    session.environment.encryptionKey = null
+                                    session.environment.encryptionMode = EncryptionMode.FAST
+                                }
+                                EncryptionMode.FAST -> {
+                                    session.environment.encryptionKey = null
+                                    session.environment.encryptionMode = EncryptionMode.STRONG
+                                }
+                                EncryptionMode.STRONG -> {
+                                    Log.e(this::class.simpleName!!, "Encryption doesn't work")
+                                    callback(CompletionResult.Failure(TangemSdkError.NeedEncryption()))
+                                    return@send
+                                }
+                            }
                             transceiveApdu(apdu, session, callback)
                         }
                         else -> {
@@ -126,7 +161,9 @@ abstract class Command<T : CommandResponse> : CardSessionRunnable<T> {
      *
      * @return Remaining security delay in milliseconds.
      */
-    private fun deserializeSecurityDelay(responseApdu: ResponseApdu, environment: SessionEnvironment): Int? {
+    private fun deserializeSecurityDelay(
+        responseApdu: ResponseApdu
+    ): Int? {
         val tlv = responseApdu.getTlvData()
         return tlv?.find { it.tag == TlvTag.Pause }?.value?.toInt()
     }
