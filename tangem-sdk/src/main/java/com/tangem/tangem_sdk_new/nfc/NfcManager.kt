@@ -11,6 +11,7 @@ import android.nfc.tech.IsoDep
 import android.os.Build
 import android.os.Bundle
 import com.tangem.Log
+import com.tangem.ReadingActiveListener
 import com.tangem.tangem_sdk_new.ui.NfcEnableDialog
 
 /**
@@ -18,7 +19,16 @@ import com.tangem.tangem_sdk_new.ui.NfcEnableDialog
  * Launches [NfcAdapter], manages it with [Activity] lifecycle,
  * enables and disables Nfc Reading Mode, receives NFC [Tag].
  */
-class NfcManager : NfcAdapter.ReaderCallback {
+class NfcManager : NfcAdapter.ReaderCallback, ReadingActiveListener {
+
+    override var readingIsActive: Boolean = false
+        set(value) {
+            if (value) {
+                disableReaderMode()
+                enableReaderMode()
+            }
+            field = value
+        }
 
     val reader = NfcReader()
     private var activity: Activity? = null
@@ -42,7 +52,7 @@ class NfcManager : NfcAdapter.ReaderCallback {
 
     override fun onTagDiscovered(tag: Tag?) {
         Log.i(this::class.simpleName!!, "Nfc tag is discovered")
-        if (reader.readingActive) reader.onTagDiscovered(tag) else ignoreTag(tag)
+        if (readingIsActive) reader.onTagDiscovered(tag) else ignoreTag(tag)
     }
 
 
@@ -50,11 +60,10 @@ class NfcManager : NfcAdapter.ReaderCallback {
         val filter = IntentFilter(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED)
         activity?.registerReceiver(mBroadcastReceiver, filter)
         handleNfcEnabled(nfcAdapter?.isEnabled == true)
-        reader.manager = this
+        reader.listener = this
     }
 
     private fun handleNfcEnabled(nfcEnabled: Boolean) {
-        reader.nfcEnabled = nfcEnabled
         if (nfcEnabled) {
             enableReaderMode()
             nfcEnableDialog?.cancel()
@@ -67,7 +76,7 @@ class NfcManager : NfcAdapter.ReaderCallback {
     fun onPause() {
         activity?.unregisterReceiver(mBroadcastReceiver)
         disableReaderMode()
-        reader.manager = null
+        reader.listener = null
     }
 
     fun onDestroy() {
@@ -75,11 +84,11 @@ class NfcManager : NfcAdapter.ReaderCallback {
         nfcAdapter = null
     }
 
-    fun enableReaderMode() {
+    private fun enableReaderMode() {
         nfcAdapter?.enableReaderMode(activity, this, READER_FLAGS, Bundle())
     }
 
-    fun disableReaderMode() {
+    private fun disableReaderMode() {
         nfcAdapter?.disableReaderMode(activity)
     }
 
