@@ -5,13 +5,10 @@ import com.tangem.commands.OpenSessionCommand
 import com.tangem.commands.ReadCommand
 import com.tangem.common.CompletionResult
 import com.tangem.common.apdu.CommandApdu
-import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.getType
 import com.tangem.crypto.EncryptionHelper
-import com.tangem.crypto.FastEncryptionHelper
-import com.tangem.crypto.StrongEncryptionHelper
 import com.tangem.crypto.pbkdf2Hash
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -222,9 +219,10 @@ class CardSession(
         scope.launch {
             subscription.consumeAsFlow()
                 .filterNotNull()
-                .map { establishEncryption(apdu.ins) }
+                .map { establishEncryptionIfNeeded() }
                 .map { apdu.encrypt(environment.encryptionMode, environment.encryptionKey) }
                 .map { encryptedApdu -> reader.transceiveApdu(encryptedApdu) }
+                .map { responseApdu -> decrypt(responseApdu) }
                 .catch { if (it is TangemSdkError) callback(CompletionResult.Failure(it)) }
                 .collect { result ->
                     subscription.cancel()
@@ -233,21 +231,14 @@ class CardSession(
         }
     }
 
-    private suspend fun establishEncryption(ins: Int): CompletionResult<Boolean> {
-
-        if (environment.encryptionKey != null) return CompletionResult.Success(true)
-
-        if (ins == Instruction.Personalize.code) {
-            environment.encryptionKey = null
+    private suspend fun establishEncryptionIfNeeded(): CompletionResult<Boolean> {
+        if (environment.encryptionMode == EncryptionMode.NONE || environment.encryptionKey != null) {
             return CompletionResult.Success(true)
         }
 
-        val encryptionHelper: EncryptionHelper =
-            when (environment.encryptionMode) {
-                EncryptionMode.NONE -> return CompletionResult.Success(true)
-                EncryptionMode.FAST -> FastEncryptionHelper()
-                EncryptionMode.STRONG -> StrongEncryptionHelper()
-            }
+        val encryptionHelper = EncryptionHelper.create(environment.encryptionMode)
+            ?: return CompletionResult.Success(true)
+
         val openSesssionCommand = OpenSessionCommand(encryptionHelper.keyA)
         val apdu = openSesssionCommand.serialize(environment)
 
@@ -267,6 +258,21 @@ class CardSession(
                 return CompletionResult.Success(true)
             }
             is CompletionResult.Failure -> return CompletionResult.Failure(response.error)
+        }
+    }
+
+    private fun decrypt(result: CompletionResult<ResponseApdu>): CompletionResult<ResponseApdu> {
+        return when (result) {
+            is CompletionResult.Success -> {
+                try {
+                    CompletionResult.Success(
+                        result.data.decrypt(environment.encryptionKey)
+                    )
+                } catch (error: TangemSdkError) {
+                    return CompletionResult.Failure(error)
+                }
+            }
+            is CompletionResult.Failure -> result
         }
     }
 }
