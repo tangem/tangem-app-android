@@ -12,6 +12,7 @@ import com.ripple.utils.HashUtils;
 import com.tangem.App;
 import com.tangem.data.network.ServerApiPayId;
 import com.tangem.data.network.ServerApiRipple;
+import com.tangem.data.network.model.PayIdAddress;
 import com.tangem.data.network.model.PayIdResponse;
 import com.tangem.data.network.model.RippleResponse;
 import com.tangem.tangem_card.data.TangemCard;
@@ -619,8 +620,14 @@ public class XrpEngine extends CoinEngine {
                 @Override
                 public void onSuccess(PayIdResponse payIdResponse) {
                     try {
-                        String resolvedAddress = payIdResponse.getAddresses().get(0).getAddressDetails().getAddress();
-
+                        String resolvedAddress = null;
+                        for (PayIdAddress address : payIdResponse.getAddresses()) {
+                            if (address.getPaymentNetwork().equals("XRPL") &&
+                                    address.getEnvironment().equals("MAINNET")) {
+                                resolvedAddress = address.getAddressDetails().getAddress();
+                                break;
+                            }
+                        }
                         if (validateAddress(resolvedAddress)) {
                             coinData.setResolvedPayIdAddress(resolvedAddress);
                             serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, resolvedAddress, ""); //TODO: maybe just assume PayID account is created?
