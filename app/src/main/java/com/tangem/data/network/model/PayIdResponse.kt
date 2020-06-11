@@ -8,6 +8,12 @@ data class PayIdResponse(
 )
 
 data class PayIdAddress(
+        @SerializedName("paymentNetwork")
+        var paymentNetwork: String? = null,
+
+        @SerializedName("environment")
+        var environment: String? = null,
+
         @SerializedName("addressDetails")
         var addressDetails: PayIdAddressDetails? = null
 )
