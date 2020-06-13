@@ -630,7 +630,13 @@ public class XrpEngine extends CoinEngine {
                         }
                         if (validateAddress(resolvedAddress)) {
                             coinData.setResolvedPayIdAddress(resolvedAddress);
-                            serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, resolvedAddress, ""); //TODO: maybe just assume PayID account is created?
+
+                            XrpXAddressDecoded xAddressDecoded = XrpXAddressService.Companion.decode(resolvedAddress);
+                            if (xAddressDecoded == null) { // classic address
+                                serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, resolvedAddress, ""); //TODO: maybe just assume PayID account is created?
+                            } else { // X-address
+                                serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, xAddressDecoded.getAddress(), "");
+                            }
                         } else {
                             ctx.setError("Unknown address format in PayID response");
                         }
