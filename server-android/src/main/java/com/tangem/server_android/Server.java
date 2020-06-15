@@ -12,6 +12,7 @@ public class Server {
             static final String VERIFY = URL_TANGEM + "verify";
             static final String VERIFY_AND_GET_INFO = URL_TANGEM + "card/verify-and-get-info";
             static final String ARTWORK = URL_TANGEM + "card/artwork";
+            static final String PAY_ID = ServerURL.API_PAY_ID_TANGEM;
         }
     }
 }
