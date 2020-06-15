@@ -116,6 +116,13 @@
     <string name="loaded_wallet_load_via_qr">Show QR-code</string>
     <string name="loaded_wallet_dialog_show_qr">LOAD</string>
 
+    <string name="loaded_wallet_create_pay_id">Create Pay ID</string>
+    <string name="create_pay_id_create">Create</string>
+    <string name="create_pay_id_empty">Enter Pay ID first</string>
+    <string name="create_pay_id_success">New Pay ID was created</string>
+    <string name="create_pay_id_error">Error creating Pay ID</string>
+
+
     <!-- LoadedWallet Blockchain Engines -->
     <string name="balance_validator_first_line_verified_balance">Verified balance</string>
     <string name="balance_validator_first_line_unknown_balance">Unknown balance</string>
