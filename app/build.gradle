@@ -59,13 +59,13 @@ android {
     }
     packagingOptions {
         pickFirst('META-INF/proguard/okhttp3.pro')
-        // for one.block:eosiojava:0.1.0
+//         for one.block:eosiojava:0.1.0
         exclude 'lib/x86_64/darwin/libscrypt.dylib'
         exclude 'lib/x86_64/freebsd/libscrypt.so'
         exclude 'lib/x86_64/linux/libscrypt.so'
         exclude 'org.slf4j:slf4j-jdk14:1.7.25'
     }
-    buildToolsVersion '28.0.3'
+    buildToolsVersion '29.0.3'
 }
 
 repositories {
@@ -132,6 +132,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-crashlytics:17.0.0-beta04'
     implementation 'com.google.firebase:firebase-perf:19.0.6'
 
+    //dependencies for XRP
     implementation files('libs/ripple-core-0.0.1.jar')
     //4 dependencies for ripple-core TODO: move to module?
     implementation 'net.i2p.crypto:eddsa:0.3.0'
