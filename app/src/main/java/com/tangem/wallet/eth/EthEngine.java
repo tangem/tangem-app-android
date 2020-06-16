@@ -9,10 +9,13 @@ import com.tangem.Constant;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiBlockcypher;
 import com.tangem.data.network.ServerApiInfura;
+import com.tangem.data.network.ServerApiPayId;
 import com.tangem.data.network.model.BlockcypherFee;
 import com.tangem.data.network.model.BlockcypherResponse;
 import com.tangem.data.network.model.BlockcypherTxref;
 import com.tangem.data.network.model.InfuraResponse;
+import com.tangem.data.network.model.PayIdAddress;
+import com.tangem.data.network.model.PayIdResponse;
 import com.tangem.tangem_card.data.TangemCard;
 import com.tangem.tangem_card.tasks.SignTask;
 import com.tangem.util.CryptoUtil;
@@ -33,7 +36,11 @@ import org.bitcoinj.core.ECKey;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.net.URL;
 import java.util.Arrays;
+
+import io.reactivex.SingleObserver;
+import io.reactivex.observers.DisposableSingleObserver;
 
 /**
  * Created by Ilia on 15.02.2018.
@@ -135,6 +142,21 @@ public class EthEngine extends CoinEngine {
     public boolean validateAddress(String address) {
         if (address == null || address.isEmpty()) {
             return false;
+        }
+
+        if (address.contains("$")) { // PayID
+            String[] addressParts = address.split("\\$");
+
+            if (addressParts.length != 2) {
+                return false;
+            }
+            String addressURL = "https://" + addressParts[1] + "/" + addressParts[0];
+            try {
+                new URL(addressURL).toURI();
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
         }
 
         if (!address.startsWith("0x") && !address.startsWith("0X")) {
@@ -266,7 +288,7 @@ public class EthEngine extends CoinEngine {
 
     @Override
     public boolean checkNewTransactionAmount(Amount amount) {
-        if( BuildConfig.FLAVOR== Constant.FLAVOR_TANGEM_CARDANO ) {
+        if (BuildConfig.FLAVOR == Constant.FLAVOR_TANGEM_CARDANO) {
             return true;
         }
         Amount balance = getBalance();
@@ -387,6 +409,14 @@ public class EthEngine extends CoinEngine {
 
         Log.e(TAG, "Construct transaction " + amountValue.toString() + " with fee " + feeValue.toString() + (IncFee ? " including" : " excluding"));
 
+        String destination;
+        //PayID
+        if (coinData.getResolvedPayIdAddress() != null) {
+            destination = coinData.getResolvedPayIdAddress();
+        } else {
+            destination = targetAddress;
+        }
+
         BigInteger nonceValue = coinData.getConfirmedTXCount();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
 
@@ -401,13 +431,12 @@ public class EthEngine extends CoinEngine {
         BigInteger gasLimit = BigInteger.valueOf(21000);
         Integer chainId = this.getChainIdNum();
 
-        String to = targetAddress;
 
-        if (to.startsWith("0x") || to.startsWith("0X")) {
-            to = to.substring(2);
+        if (destination.startsWith("0x") || destination.startsWith("0X")) {
+            destination = destination.substring(2);
         }
 
-        final EthTransaction tx = EthTransaction.create(to, weiAmount, nonceValue, gasPrice, gasLimit, chainId);
+        final EthTransaction tx = EthTransaction.create(destination, weiAmount, nonceValue, gasPrice, gasLimit, chainId);
 
         return new SignTask.TransactionToSign() {
             @Override
@@ -510,7 +539,7 @@ public class EthEngine extends CoinEngine {
                     break;
                 }
 
-                if (serverApiInfura.isRequestsSequenceCompleted()&& serverApiBlockcypher.isRequestsSequenceCompleted()) {
+                if (serverApiInfura.isRequestsSequenceCompleted() && serverApiBlockcypher.isRequestsSequenceCompleted()) {
                     blockchainRequestsCallbacks.onComplete(!ctx.hasError());
                 } else {
                     blockchainRequestsCallbacks.onProgress();
@@ -521,7 +550,7 @@ public class EthEngine extends CoinEngine {
             public void onFail(String method, String message) {
                 Log.e(TAG, "onFail: " + method + " " + message);
                 ctx.setError(message);
-                if (serverApiInfura.isRequestsSequenceCompleted()&& serverApiBlockcypher.isRequestsSequenceCompleted()) {
+                if (serverApiInfura.isRequestsSequenceCompleted() && serverApiBlockcypher.isRequestsSequenceCompleted()) {
                     blockchainRequestsCallbacks.onComplete(false);
                 } else {
                     blockchainRequestsCallbacks.onProgress();
@@ -556,7 +585,7 @@ public class EthEngine extends CoinEngine {
                     Log.e(TAG, "FAIL BLOCKCYPHER_ADDRESS Exception");
                 }
 
-                if (serverApiInfura.isRequestsSequenceCompleted()&& serverApiBlockcypher.isRequestsSequenceCompleted()) {
+                if (serverApiInfura.isRequestsSequenceCompleted() && serverApiBlockcypher.isRequestsSequenceCompleted()) {
                     blockchainRequestsCallbacks.onComplete(!ctx.hasError());
                 } else {
                     blockchainRequestsCallbacks.onProgress();
@@ -565,7 +594,7 @@ public class EthEngine extends CoinEngine {
 
             public void onSuccess(String method, BlockcypherFee blockcypherFee) {
                 Log.e(TAG, "Wrong response type for requestBalanceAndUnspentTransactions");
-                if (serverApiInfura.isRequestsSequenceCompleted()&& serverApiBlockcypher.isRequestsSequenceCompleted()) {
+                if (serverApiInfura.isRequestsSequenceCompleted() && serverApiBlockcypher.isRequestsSequenceCompleted()) {
                     blockchainRequestsCallbacks.onComplete(!ctx.hasError());
                 } else {
                     blockchainRequestsCallbacks.onProgress();
@@ -575,7 +604,7 @@ public class EthEngine extends CoinEngine {
             @Override
             public void onFail(String method, String message) {
                 Log.i(TAG, "onFail: " + method + " " + message);
-                if (serverApiInfura.isRequestsSequenceCompleted()&& serverApiBlockcypher.isRequestsSequenceCompleted()) {
+                if (serverApiInfura.isRequestsSequenceCompleted() && serverApiBlockcypher.isRequestsSequenceCompleted()) {
                     blockchainRequestsCallbacks.onComplete(!ctx.hasError());
                 } else {
                     blockchainRequestsCallbacks.onProgress();
@@ -593,6 +622,8 @@ public class EthEngine extends CoinEngine {
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
         ServerApiInfura serverApiInfura = new ServerApiInfura(ctx.getBlockchain());
+        final ServerApiPayId serverApiPayId = new ServerApiPayId();
+
         // request requestData eth gasPrice listener
         ServerApiInfura.ResponseListener responseListener = new ServerApiInfura.ResponseListener() {
             @Override
@@ -623,7 +654,11 @@ public class EthEngine extends CoinEngine {
                 Log.i(TAG, "normal fee: " + coinData.normalFee.toString());
                 Log.i(TAG, "max fee   : " + coinData.maxFee.toString());
 
-                blockchainRequestsCallbacks.onComplete(true);
+                if (serverApiInfura.isRequestsSequenceCompleted() && serverApiPayId.isRequestsSequenceCompleted()) {
+                    blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                } else {
+                    blockchainRequestsCallbacks.onProgress();
+                }
             }
 
             @Override
@@ -634,6 +669,52 @@ public class EthEngine extends CoinEngine {
         };
         serverApiInfura.setResponseListener(responseListener);
 
+        if (targetAddress.contains("$")) { // PayID
+
+            SingleObserver<PayIdResponse> observer = new DisposableSingleObserver<PayIdResponse>() {
+                @Override
+                public void onSuccess(PayIdResponse payIdResponse) {
+                    try {
+                        String resolvedAddress = null;
+                        for (PayIdAddress address : payIdResponse.getAddresses()) {
+                            if (address.getPaymentNetwork().equals("ETH") &&
+                                    address.getEnvironment().equals("MAINNET")) {
+                                resolvedAddress = address.getAddressDetails().getAddress();
+                                break;
+                            }
+                        }
+                        if (validateAddress(resolvedAddress)) {
+                            coinData.setResolvedPayIdAddress(resolvedAddress);
+                            if (serverApiInfura.isRequestsSequenceCompleted() && serverApiPayId.isRequestsSequenceCompleted()) {
+                                blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                            } else {
+                                blockchainRequestsCallbacks.onProgress();
+                            }
+                        } else {
+                            ctx.setError("Unknown address format in PayID response");
+                            blockchainRequestsCallbacks.onComplete(false);
+                        }
+                    } catch (Exception e) {
+                        ctx.setError("Unknown response format on PayID request");
+                        blockchainRequestsCallbacks.onComplete(false);
+                    }
+                    if (serverApiInfura.isRequestsSequenceCompleted() && serverApiPayId.isRequestsSequenceCompleted()) {
+                        blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                    } else {
+                        blockchainRequestsCallbacks.onProgress();
+                    }
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    Log.i(TAG, "onFail: " + "payID" + " " + e.getMessage());
+                    ctx.setError("PayID error:" + e.getMessage());
+                    blockchainRequestsCallbacks.onComplete(false);
+                }
+            };
+
+            serverApiPayId.getAddress(targetAddress, ctx.getBlockchain(), observer);
+        }
         serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GAS_PRICE, 67, coinData.getWallet(), "", "");
     }
 
@@ -648,7 +729,7 @@ public class EthEngine extends CoinEngine {
             @Override
             public void onSuccess(String method, InfuraResponse infuraResponse) {
                 if (method.equals(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION)) {
-                    if (infuraResponse.getResult()==null || infuraResponse.getResult().isEmpty()) {
+                    if (infuraResponse.getResult() == null || infuraResponse.getResult().isEmpty()) {
                         ctx.setError("Rejected by node: " + infuraResponse.getError());
                         blockchainRequestsCallbacks.onComplete(false);
                     } else {
@@ -675,7 +756,9 @@ public class EthEngine extends CoinEngine {
         serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION, 67, coinData.getWallet(), "", txStr);
     }
 
-    public int pendingTransactionTimeoutInSeconds() { return 10; }
+    public int pendingTransactionTimeoutInSeconds() {
+        return 10;
+    }
 
     @Override
     public boolean needMultipleLinesForBalance() {

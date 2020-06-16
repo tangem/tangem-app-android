@@ -22,6 +22,8 @@ public class BtcData extends CoinData {
     //for blockchain.info
     private boolean hasUnconfirmed = false;
 
+    private String resolvedPayIdAddress = null;
+
     public Unspents getUnspentInputsDescription() {
         try {
             int gatheredUnspents = 0;
@@ -90,6 +92,8 @@ public class BtcData extends CoinData {
         }
         if (B.containsKey("UseBlockcypher")) useBlockcypher = B.getBoolean("UseBlockcypher");
         if (B.containsKey("HasUnconfirmed")) useBlockcypher = B.getBoolean("HasUnconfirmed");
+        if (B.containsKey("ResolvedPayIdAddress")) resolvedPayIdAddress = B.getString("ResolvedPayIdAddress");
+        else resolvedPayIdAddress = null;
     }
 
     @Override
@@ -107,6 +111,7 @@ public class BtcData extends CoinData {
             if (balanceUnconfirmed != null) B.putLong("BalanceUnconfirmed", balanceUnconfirmed);
             if (useBlockcypher) B.putBoolean("UseBlockcypher", true);
             if (hasUnconfirmed) B.putBoolean("HasUnconfirmed", true);
+            if (resolvedPayIdAddress != null) B.putString("ResolvedPayIdAddress", resolvedPayIdAddress);
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());
         }
@@ -119,6 +124,7 @@ public class BtcData extends CoinData {
         balanceUnconfirmed = null;
         unspentTransactions = null;
         hasUnconfirmed = false;
+        resolvedPayIdAddress = null;
     }
 
     public CoinEngine.InternalAmount getBalanceInInternalUnits() {
@@ -159,5 +165,13 @@ public class BtcData extends CoinData {
 
     public void setHasUnconfirmed(boolean hasUnconfirmed) {
         this.hasUnconfirmed = hasUnconfirmed;
+    }
+
+    public String getResolvedPayIdAddress() {
+        return resolvedPayIdAddress;
+    }
+
+    public void setResolvedPayIdAddress(String resolvedPayIdAddress) {
+        this.resolvedPayIdAddress = resolvedPayIdAddress;
     }
 }
