@@ -202,16 +202,15 @@ class ConfirmTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
                 object : CoinEngine.BlockchainRequestsCallbacks {
                     override fun onComplete(success: Boolean) {
                         if (success) {
-                            onProgress()
                             progressBar?.visibility = View.INVISIBLE
                             dtVerified = Date()
+                            doSetFee(rgFee?.checkedRadioButtonId ?: R.id.rbNormalFee)
                         } else {
                             finishWithError(Activity.RESULT_CANCELED, ctx.error)
                         }
                     }
 
                     override fun onProgress() {
-                        doSetFee(rgFee?.checkedRadioButtonId ?: R.id.rbNormalFee)
                     }
 
                     override fun allowAdvance(): Boolean {
