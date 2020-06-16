@@ -123,19 +123,37 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintHeight_min="wrap"
                     app:layout_constraintTop_toBottomOf="@+id/guideline">
-
-                    <TextView
-                        android:id="@+id/tvBlockchain"
+                    
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:layout_marginBottom="10dp"
-                        android:fontFamily="@font/maaxmedium"
-                        android:textAlignment="center"
-                        android:textColor="@color/primary_dark"
-                        android:textSize="18dp"
-                        android:textStyle="normal"
-                        tools:text="Bitcoin" />
+                        android:orientation="horizontal"
+                        android:layout_gravity="center"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/tvBlockchain"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginBottom="10dp"
+                            android:fontFamily="@font/maaxmedium"
+                            android:textAlignment="center"
+                            android:textColor="@color/primary_dark"
+                            android:textSize="18dp"
+                            android:textStyle="normal"
+                            tools:text="Bitcoin" />
+
+                        <ImageView
+                            android:id="@+id/ivPayId"
+                            android:layout_width="80dp"
+                            android:layout_height="30dp"
+                            android:layout_marginStart="24dp"
+                            android:src="@drawable/ic_payid_logo_dark"
+                            android:visibility="gone"/>
+                    </LinearLayout>
+
+
 
                     <TextView
                         android:id="@+id/tvWallet"
