@@ -20,7 +20,7 @@ public enum Blockchain {
     Rootstock("RSK", "RBTC", 1.0, R.drawable.tangem2, "RSK"),
     RootstockToken("RskToken", "RBTC", 1.0, R.drawable.tangem2, "RSK"),
     Cardano("CARDANO", "ADA", 1000000.0, R.drawable.tangem2, "Cardano"),
-    Ripple("XRP", "XRP", 1000000.0, R.drawable.ic_logo_xrp, "XRP"),
+    Ripple("XRP", "XRP", 1000000.0, R.drawable.ic_logo_xrp, "XRP Ledger"),
     Binance("BINANCE", "BNB", 100000000.0, R.drawable.ic_logo_binance, "Binance"),
     BinanceTestNet("BINANCE/test", "BNB", 100000000.0, R.drawable.ic_logo_binance, "Binance Testnet"),
     BinanceAsset("BinanceAsset", "BNB", 100000000.0, R.drawable.ic_logo_binance, "Binance"),
