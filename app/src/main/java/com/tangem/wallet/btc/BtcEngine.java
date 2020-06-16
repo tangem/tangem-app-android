@@ -11,6 +11,7 @@ import com.tangem.data.network.Server;
 import com.tangem.data.network.ServerApiBlockchainInfo;
 import com.tangem.data.network.ServerApiBlockcypher;
 import com.tangem.data.network.ServerApiCommon;
+import com.tangem.data.network.ServerApiPayId;
 import com.tangem.data.network.model.BlockchainInfoAddress;
 import com.tangem.data.network.model.BlockchainInfoAddressAndUnspents;
 import com.tangem.data.network.model.BlockchainInfoInput;
@@ -21,6 +22,8 @@ import com.tangem.data.network.model.BlockcypherFee;
 import com.tangem.data.network.model.BlockcypherResponse;
 import com.tangem.data.network.model.BlockcypherTx;
 import com.tangem.data.network.model.BlockcypherTxref;
+import com.tangem.data.network.model.PayIdAddress;
+import com.tangem.data.network.model.PayIdResponse;
 import com.tangem.tangem_card.data.TangemCard;
 import com.tangem.tangem_card.reader.CardProtocol;
 import com.tangem.tangem_card.tasks.SignTask;
@@ -47,6 +50,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -54,8 +58,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import io.reactivex.CompletableObserver;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
+import io.reactivex.observers.DisposableCompletableObserver;
 import io.reactivex.observers.DisposableSingleObserver;
 import okhttp3.ResponseBody;
 
@@ -152,6 +158,21 @@ public class BtcEngine extends CoinEngine {
     public boolean validateAddress(String address) {
         if (address == null || address.isEmpty()) {
             return false;
+        }
+
+        if (address.contains("$")) { // PayID
+            String[] addressParts = address.split("\\$");
+
+            if (addressParts.length != 2) {
+                return false;
+            }
+            String addressURL = "https://" + addressParts[1] + "/" + addressParts[0];
+            try {
+                new URL(addressURL).toURI();
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
         }
 
         if (address.startsWith("1") || address.startsWith("2") || address.startsWith("3") || address.startsWith("n") || address.startsWith("m")) {
@@ -458,6 +479,14 @@ public class BtcEngine extends CoinEngine {
         String myAddress = ctx.getCoinData().getWallet();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
 
+        String destination;
+        //PayID
+        if (coinData.getResolvedPayIdAddress() != null) {
+            destination = coinData.getResolvedPayIdAddress();
+        } else {
+            destination = targetAddress;
+        }
+
 //        /blockcypher/
 //        for (BtcData.UnspentTransaction utxo : coinData.getUnspentTransactions()) {
 //            unspentOutputs.add(new UnspentOutputInfo(BTCUtils.fromHex(utxo.txID), new Transaction.Script(BTCUtils.fromHex(utxo.script)), utxo.amount, utxo.outputN, -1, utxo.txID, null));
@@ -502,7 +531,7 @@ public class BtcEngine extends CoinEngine {
         final byte[][] bodyHash = new byte[unspentOutputs.size()][];
 
         for (int i = 0; i < unspentOutputs.size(); ++i) {
-            txForSign[i] = BTCUtils.buildTXForSign(myAddress, targetAddress, myAddress, unspentOutputs, i, amount, change);
+            txForSign[i] = BTCUtils.buildTXForSign(myAddress, destination, myAddress, unspentOutputs, i, amount, change);
             bodyHash[i] = Util.calculateSHA256(txForSign[i]);
             bodyDoubleHash[i] = Util.calculateSHA256(bodyHash[i]);
         }
@@ -555,7 +584,7 @@ public class BtcEngine extends CoinEngine {
                     unspentOutputs.get(i).scriptForBuild = DerEncodingUtil.packSignDer(r, s, pbKey);
                 }
 
-                byte[] txForSend = BTCUtils.buildTXForSend(targetAddress, myAddress, unspentOutputs, amountFinal, changeFinal);
+                byte[] txForSend = BTCUtils.buildTXForSend(destination, myAddress, unspentOutputs, amountFinal, changeFinal);
                 notifyOnNeedSendTransaction(txForSend);
                 return txForSend;
             }
@@ -877,14 +906,32 @@ public class BtcEngine extends CoinEngine {
 
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) throws Exception {
-        final int calcSize = calculateEstimatedTransactionSize(targetAddress, amount.toValueString());
-        Log.e(TAG, String.format("Estimated tx size %d", calcSize));
         coinData.minFee = null;
         coinData.maxFee = null;
         coinData.normalFee = null;
 
         if (!coinData.isUseBlockcypher()) {
             final ServerApiCommon serverApiCommon = new ServerApiCommon();
+
+            final Integer[] calcSize = new Integer[1];
+
+            CompletableObserver payIdObserver = new DisposableCompletableObserver() {
+                @Override
+                public void onComplete() {
+                    calcSize[0] = calculateEstimatedTransactionSize(coinData.getResolvedPayIdAddress(), amount.toValueString());
+                    Log.e(TAG, String.format("Estimated tx size %d", calcSize[0]));
+
+                    serverApiCommon.requestBtcEstimatedFee(ServerApiCommon.ESTIMATE_FEE_PRIORITY);
+                    serverApiCommon.requestBtcEstimatedFee(ServerApiCommon.ESTIMATE_FEE_NORMAL);
+                    serverApiCommon.requestBtcEstimatedFee(ServerApiCommon.ESTIMATE_FEE_MINIMAL);
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    ctx.setError(e.getMessage());
+                    blockchainRequestsCallbacks.onComplete(false);
+                }
+            };
 
             final ServerApiCommon.EstimatedFeeListener estimatedFeeListener = new ServerApiCommon.EstimatedFeeListener() {
                 @Override
@@ -898,8 +945,8 @@ public class BtcEngine extends CoinEngine {
                         return;
                     }
 
-                    if (calcSize != 0) {
-                        fee = fee.multiply(new BigDecimal(calcSize)).divide(new BigDecimal(1024), BigDecimal.ROUND_DOWN); // per Kb -> per byte
+                    if (calcSize[0] != 0) {
+                        fee = fee.multiply(new BigDecimal(calcSize[0])).divide(new BigDecimal(1024), BigDecimal.ROUND_DOWN); // per Kb -> per byte
                     } else {
                         if (blockchainRequestsCallbacks.allowAdvance()) {
                             serverApiCommon.requestBtcEstimatedFee(blockCount);
@@ -948,12 +995,37 @@ public class BtcEngine extends CoinEngine {
             };
             serverApiCommon.setBtcEstimatedFeeListener(estimatedFeeListener);
 
-            serverApiCommon.requestBtcEstimatedFee(ServerApiCommon.ESTIMATE_FEE_PRIORITY);
-            serverApiCommon.requestBtcEstimatedFee(ServerApiCommon.ESTIMATE_FEE_NORMAL);
-            serverApiCommon.requestBtcEstimatedFee(ServerApiCommon.ESTIMATE_FEE_MINIMAL);
+            if (targetAddress.contains("$")) { // PayID
+                resolvePayID(targetAddress, payIdObserver);
+            } else {
+                calcSize[0] = calculateEstimatedTransactionSize(targetAddress, amount.toValueString());
+                Log.e(TAG, String.format("Estimated tx size %d", calcSize[0]));
+
+                serverApiCommon.requestBtcEstimatedFee(ServerApiCommon.ESTIMATE_FEE_PRIORITY);
+                serverApiCommon.requestBtcEstimatedFee(ServerApiCommon.ESTIMATE_FEE_NORMAL);
+                serverApiCommon.requestBtcEstimatedFee(ServerApiCommon.ESTIMATE_FEE_MINIMAL);
+            }
 
         } else {
             final ServerApiBlockcypher serverApiBlockcypher = new ServerApiBlockcypher();
+
+            final Integer[] calcSize = new Integer[1];
+
+            CompletableObserver payIdObserver = new DisposableCompletableObserver() {
+                @Override
+                public void onComplete() {
+                    calcSize[0] = calculateEstimatedTransactionSize(coinData.getResolvedPayIdAddress(), amount.toValueString());
+                    Log.e(TAG, String.format("Estimated tx size %d", calcSize[0]));
+
+                    serverApiBlockcypher.requestData(ctx.getBlockchain().getID(), ServerApiBlockcypher.BLOCKCYPHER_FEE, "", "");
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    ctx.setError(e.getMessage());
+                    blockchainRequestsCallbacks.onComplete(false);
+                }
+            };
 
             ServerApiBlockcypher.ResponseListener blockcypherListener = new ServerApiBlockcypher.ResponseListener() {
                 @Override
@@ -970,9 +1042,9 @@ public class BtcEngine extends CoinEngine {
                         BigDecimal normalByteFee = new BigDecimal(blockcypherFee.getMedium_fee_per_kb()).divide(BigDecimal.valueOf(1024));
                         BigDecimal maxByteFee = new BigDecimal(blockcypherFee.getHigh_fee_per_kb()).divide(BigDecimal.valueOf(1024));
 
-                        CoinEngine.InternalAmount minIntAmount = new CoinEngine.InternalAmount(minByteFee.multiply(BigDecimal.valueOf(calcSize)), "satoshi");
-                        CoinEngine.InternalAmount normalIntAmount = new CoinEngine.InternalAmount(normalByteFee.multiply(BigDecimal.valueOf(calcSize)), "satoshi");
-                        CoinEngine.InternalAmount maxIntAmount = new CoinEngine.InternalAmount(maxByteFee.multiply(BigDecimal.valueOf(calcSize)), "satoshi");
+                        CoinEngine.InternalAmount minIntAmount = new CoinEngine.InternalAmount(minByteFee.multiply(BigDecimal.valueOf(calcSize[0])), "satoshi");
+                        CoinEngine.InternalAmount normalIntAmount = new CoinEngine.InternalAmount(normalByteFee.multiply(BigDecimal.valueOf(calcSize[0])), "satoshi");
+                        CoinEngine.InternalAmount maxIntAmount = new CoinEngine.InternalAmount(maxByteFee.multiply(BigDecimal.valueOf(calcSize[0])), "satoshi");
 
                         coinData.minFee = convertToAmount(minIntAmount);
                         coinData.normalFee = convertToAmount(normalIntAmount);
@@ -999,8 +1071,51 @@ public class BtcEngine extends CoinEngine {
 
             serverApiBlockcypher.setResponseListener(blockcypherListener);
 
-            serverApiBlockcypher.requestData(ctx.getBlockchain().getID(), ServerApiBlockcypher.BLOCKCYPHER_FEE, "", "");
+            if (targetAddress.contains("$")) { // PayID
+                resolvePayID(targetAddress, payIdObserver);
+            } else {
+                calcSize[0] = calculateEstimatedTransactionSize(targetAddress, amount.toValueString());
+                Log.e(TAG, String.format("Estimated tx size %d", calcSize[0]));
+
+                serverApiBlockcypher.requestData(ctx.getBlockchain().getID(), ServerApiBlockcypher.BLOCKCYPHER_FEE, "", "");
+            }
         }
+    }
+
+    private void resolvePayID(String targetAddress, CompletableObserver observer) {
+        final ServerApiPayId serverApiPayId = new ServerApiPayId();
+
+        SingleObserver<PayIdResponse> payIdObserver = new DisposableSingleObserver<PayIdResponse>() {
+            @Override
+            public void onSuccess(PayIdResponse payIdResponse) {
+                try {
+                    String resolvedAddress = null;
+                    for (PayIdAddress address : payIdResponse.getAddresses()) {
+                        if (address.getPaymentNetwork().equals("BTC") &&
+                                address.getEnvironment().equals("MAINNET")) {
+                            resolvedAddress = address.getAddressDetails().getAddress();
+                            break;
+                        }
+                    }
+                    if (validateAddress(resolvedAddress)) {
+                        coinData.setResolvedPayIdAddress(resolvedAddress);
+                        observer.onComplete();
+                    } else {
+                        observer.onError(new Exception("Unknown address format in PayID response"));
+                    }
+                } catch (Exception e) {
+                    observer.onError(new Exception("Unknown response format on PayID request"));
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.i(TAG, "onFail: " + "payID" + " " + e.getMessage());
+                observer.onError(new Exception("PayID error:" + e.getMessage()));
+            }
+        };
+
+        serverApiPayId.getAddress(targetAddress, ctx.getBlockchain(), payIdObserver);
     }
 
 
