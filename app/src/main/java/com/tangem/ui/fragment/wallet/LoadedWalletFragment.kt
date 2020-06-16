@@ -25,7 +25,6 @@ import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Blockchain
 import com.tangem.data.dp.PrefsManager
-import com.tangem.server_android.PayIdResponse
 import com.tangem.server_android.Result
 import com.tangem.server_android.ServerApiTangem
 import com.tangem.server_android.model.CardVerifyAndGetInfo
@@ -67,6 +66,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
     companion object {
         val TAG: String = LoadedWalletFragment::class.java.simpleName
         const val PAY_ID_TANGEM = "\$payid.tangem.com"
+        val payIdSupported = setOf(Blockchain.Ripple, Blockchain.Ethereum, Blockchain.Bitcoin)
     }
 
     override val layoutId = R.layout.fr_loaded_wallet
@@ -149,21 +149,26 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         btnExtract.backgroundTintList = inactiveColor
 
         tvWallet.text = ctx.coinData.wallet
-        btnLoadItems = mutableListOf<CharSequence>(
+
+        btnLoadItems = mutableListOf(
             getString(R.string.loaded_wallet_load_via_app),
             getString(R.string.loaded_wallet_load_via_share_address),
             getString(R.string.loaded_wallet_load_via_qr)
             )
-        if (ctx.blockchain == Blockchain.Ripple) {
+
+        if (payIdSupported.contains(ctx.blockchain)) {
+            ivPayId.visibility = View.VISIBLE
+            ivPayId.imageAlpha = 100
+            ivPayId.setOnClickListener { createPayIdDialog() }
+
             viewModel.getPayId(
-                Util.byteArrayToHexString(ctx.card?.cid!!),
-                Util.byteArrayToHexString(ctx.card?.cardPublicKey!!))
+                Util.byteArrayToHexString(ctx.card.cid!!),
+                Util.byteArrayToHexString(ctx.card.cardPublicKey!!))
                 .observe(
-                    viewLifecycleOwner, Observer<Result<PayIdResponse>> { result ->
+                    viewLifecycleOwner, Observer { result ->
                         when (result) {
                             is Result.Success -> {
-                                payId = result.data.payId
-                                btnLoadItems.add(result.data.payId)
+                                onPayIdFound(result.data.payId)
                             }
                             is Result.Failure -> {
                                 (result.error as? HttpException)?.let {
@@ -365,21 +370,21 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
     }
 
     private fun createPayId(payId: String) {
+        val network = if (ctx.blockchain == Blockchain.Ripple) "XRPL" else ctx.blockchain.id
         viewModel.setPayId(
             Util.byteArrayToHexString(ctx.card!!.cid!!),
             Util.byteArrayToHexString(ctx.card!!.cardPublicKey!!),
             payId,
             ctx.coinData.wallet,
-            ctx.blockchain.id
+            network
         )
             .observe(viewLifecycleOwner, Observer { result ->
             when (result) {
                 is Result.Success -> {
-                    this.payId = payId
                     if (btnLoadItems.last() == getString(R.string.loaded_wallet_create_pay_id)) {
                         btnLoadItems.removeAt(btnLoadItems.lastIndex)
                     }
-                    btnLoadItems.add(payId)
+                    onPayIdFound(payId)
                     Toast.makeText(context, getString(R.string.create_pay_id_success), Toast.LENGTH_LONG).show()
                 }
                 is Result.Failure -> {
@@ -387,6 +392,13 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
                 }
             }
         })
+    }
+
+    private fun onPayIdFound(payId: String) {
+        ivPayId.imageAlpha = 255
+        this.payId = payId
+        btnLoadItems.add(payId)
+        ivPayId.setOnClickListener { copyText(payId) }
     }
 
     override fun onPause() {
