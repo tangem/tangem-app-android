@@ -9,6 +9,7 @@ import com.tangem.server_android.PayIdService
 import com.tangem.server_android.Result
 import com.tangem.server_android.SetPayIdResponse
 import com.tangem.wallet.TangemContext
+import kotlinx.coroutines.CoroutineExceptionHandler
 
 class LoadedWalletViewModel : ViewModel() {
     private val serverApiCommon: ServerApiCommon = ServerApiCommon()
@@ -20,7 +21,9 @@ class LoadedWalletViewModel : ViewModel() {
         }
     }
 
-    private val payId: LiveData<Result<PayIdResponse>> = MutableLiveData()
+    private val scope = viewModelScope.coroutineContext + CoroutineExceptionHandler { _, ex ->
+        throw ex
+    }
 
     fun getRateInfo(): LiveData<Float> {
         return rate
@@ -62,7 +65,7 @@ class LoadedWalletViewModel : ViewModel() {
         address: String,
         network: String
     ): LiveData<Result<SetPayIdResponse>> {
-        return liveData(viewModelScope.coroutineContext) {
+        return liveData(scope) {
             emit(
                 payIdService.setPayId(
                     cardId, publicKey, payId, address, network
