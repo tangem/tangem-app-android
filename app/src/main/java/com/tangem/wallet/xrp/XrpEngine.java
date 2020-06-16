@@ -658,7 +658,7 @@ public class XrpEngine extends CoinEngine {
                 }
             };
 
-            serverApiPayId.getAddress(targetAddress, observer);
+            serverApiPayId.getAddress(targetAddress, ctx.getBlockchain(), observer);
         } else {
             XrpXAddressDecoded xAddressDecoded = XrpXAddressService.Companion.decode(targetAddress);
             if (xAddressDecoded == null) { // classic address
