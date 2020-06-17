@@ -14,6 +14,7 @@ import android.os.Build
 import android.os.Bundle
 import android.text.Html
 import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -24,7 +25,7 @@ import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Blockchain
 import com.tangem.data.dp.PrefsManager
-import com.tangem.data.network.ServerApiCommon
+import com.tangem.server_android.Result
 import com.tangem.server_android.ServerApiTangem
 import com.tangem.server_android.model.CardVerifyAndGetInfo
 import com.tangem.tangem_card.data.TangemCard
@@ -49,11 +50,13 @@ import com.tangem.ui.navigation.NavigationResultListener
 import com.tangem.util.LOG
 import com.tangem.util.UtilHelper
 import com.tangem.wallet.*
+import kotlinx.android.synthetic.main.dialog_pay_id.view.*
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
 import kotlinx.android.synthetic.main.layout_btn_details.*
 import kotlinx.android.synthetic.main.layout_tangem_card.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
+import retrofit2.HttpException
 import java.io.InputStream
 import java.util.*
 import kotlin.concurrent.timerTask
@@ -62,6 +65,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         CardProtocol.Notifications, SharedPreferences.OnSharedPreferenceChangeListener {
     companion object {
         val TAG: String = LoadedWalletFragment::class.java.simpleName
+        const val PAY_ID_TANGEM = "\$payid.tangem.com"
     }
 
     override val layoutId = R.layout.fr_loaded_wallet
@@ -69,7 +73,6 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
     private lateinit var viewModel: LoadedWalletViewModel
     private lateinit var ctx: TangemContext
     private lateinit var mpSecondScanSound: MediaPlayer
-    private var serverApiCommon: ServerApiCommon = ServerApiCommon()
     private var serverApiTangem: ServerApiTangem = ServerApiTangem()
     private var lastTag: Tag? = null
     private var lastReadSuccess = true
@@ -111,6 +114,10 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
                 srl.isRefreshing = true
         }
 
+    private var payId: String? = null
+    private lateinit var btnLoadItems: MutableList<CharSequence>
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -127,6 +134,8 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        viewModel = ViewModelProviders.of(this).get(LoadedWalletViewModel::class.java)
+
         mpSecondScanSound = MediaPlayer.create(activity, R.raw.scan_card_sound)
 
         val engine = CoinEngineFactory.create(ctx)
@@ -140,6 +149,21 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
 
         tvWallet.text = ctx.coinData.wallet
 
+        btnLoadItems = mutableListOf(
+            getString(R.string.loaded_wallet_load_via_app),
+            getString(R.string.loaded_wallet_load_via_share_address),
+            getString(R.string.loaded_wallet_load_via_qr)
+            )
+
+        if (ctx.blockchain.isPayIdSupported) {
+            ivPayId.visibility = View.VISIBLE
+            ivPayId.imageAlpha = 100
+            ivPayId.setOnClickListener { createPayIdDialog() }
+
+            getPayIdIfApplicable()
+        }
+
+
         // set listeners
         srl.setOnRefreshListener { refresh() }
 
@@ -149,16 +173,17 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
 
         btnCopy.setOnClickListener { doShareWallet(false) }
 
+
+
         if (Util.bytesToHex(ctx.card?.cid)?.startsWith("10") == true) {
             btnLoad?.visibility = View.GONE
         }
 
         btnLoad.setOnClickListener {
-            val items = arrayOf<CharSequence>(getString(R.string.loaded_wallet_load_via_app), getString(R.string.loaded_wallet_load_via_share_address), getString(R.string.loaded_wallet_load_via_qr))//, getString(R.string.via_cryptonit), getString(R.string.via_kraken))
             val cw = android.view.ContextThemeWrapper(activity, R.style.AlertDialogTheme)
-            val dialog = AlertDialog.Builder(cw).setItems(items
+            val dialog = AlertDialog.Builder(cw).setItems(btnLoadItems.toTypedArray()
             ) { _, which ->
-                when (items[which]) {
+                when (btnLoadItems[which]) {
                     getString(R.string.loaded_wallet_load_via_app) -> {
                         try {
                             val intent = Intent(Intent.ACTION_VIEW, engine.shareWalletUriEx)
@@ -176,22 +201,14 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
                     getString(R.string.loaded_wallet_load_via_qr) -> {
                         ShowQRCodeDialog.show(activity as AppCompatActivity?, engine.shareWalletUriEx.toString())
                     }
-
-                    getString(R.string.loaded_wallet_load_via_cryptonit) -> {
-                        navigateForResult(
-                                Constant.REQUEST_CODE_RECEIVE_TRANSACTION,
-                                R.id.action_loadedWalletFragment_to_prepareCryptonitWithdrawalFragment,
-                                Bundle().apply { ctx.saveToBundle(this) }
-                        )
+                    payId -> {
+                        if (payId == getString(R.string.loaded_wallet_create_pay_id)) {
+                            createPayIdDialog()
+                        } else {
+                            payId?.let { copyText(it) }
+                        }
                     }
 
-                    getString(R.string.loaded_wallet_load_via_kraken) -> {
-                        navigateForResult(
-                                Constant.REQUEST_CODE_RECEIVE_TRANSACTION,
-                                R.id.action_loadedWalletFragment_to_prepareKrakenWithdrawalFragment,
-                                Bundle().apply { ctx.saveToBundle(this) }
-                        )
-                    }
                     else -> {
                     }
                 }
@@ -297,15 +314,100 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         startVerify(lastTag)
 
 
-        viewModel = ViewModelProviders.of(this).get(LoadedWalletViewModel::class.java)
 
         // set rate info to CoinData
-        viewModel.getRateInfo().observe(this, Observer<Float> { rate ->
+        viewModel.getRateInfo().observe(viewLifecycleOwner, Observer<Float> { rate ->
             ctx.coinData.rate = rate
             ctx.coinData.rateAlter = rate
             updateViews()
         })
         viewModel.requestRateInfo(ctx)
+    }
+
+    private fun getPayIdIfApplicable() {
+        if (ctx.blockchain.isPayIdSupported) {
+            viewModel.getPayId(
+                Util.byteArrayToHexString(ctx.card.cid!!),
+                Util.byteArrayToHexString(ctx.card.cardPublicKey!!))
+                .observe(
+                    viewLifecycleOwner, Observer { result ->
+                        when (result) {
+                            is Result.Success -> {
+                                onPayIdFound(result.data.payId)
+                            }
+                            is Result.Failure -> {
+                                (result.error as? HttpException)?.let {
+                                    if (it.code() == 404) {
+                                        val createPayId = getString(R.string.loaded_wallet_create_pay_id)
+                                        payId = createPayId
+                                        if (!btnLoadItems.contains(createPayId)) {
+                                            btnLoadItems.add(createPayId)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    })
+        }
+    }
+
+    private fun createPayIdDialog() {
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_pay_id, null);
+        val alertDialogBuilderUserInput =  AlertDialog.Builder(context);
+        alertDialogBuilderUserInput.setView(dialogView);
+        alertDialogBuilderUserInput
+            .setCancelable(true)
+            .setPositiveButton(getString(R.string.create_pay_id_create)) { dialogBox, _ ->
+                if (dialogView.etPayId.text.isNullOrBlank()) {
+                    Toast.makeText(context, getString(R.string.create_pay_id_empty), Toast.LENGTH_LONG).show()
+                    return@setPositiveButton
+                }
+
+                dialogBox.cancel()
+               createPayId("${dialogView.etPayId.text}$PAY_ID_TANGEM")
+            }
+
+            .setNegativeButton(getString(R.string.general_cancel)){ dialogBox, _ ->
+                dialogBox.cancel()
+            }
+
+        alertDialogBuilderUserInput.create().show()
+    }
+
+    private fun createPayId(payId: String) {
+        val network = if (ctx.blockchain == Blockchain.Ripple) "XRPL" else ctx.blockchain.id
+        viewModel.setPayId(
+            Util.byteArrayToHexString(ctx.card!!.cid!!),
+            Util.byteArrayToHexString(ctx.card!!.cardPublicKey!!),
+            payId,
+            ctx.coinData.wallet,
+            network
+        )
+            .observe(viewLifecycleOwner, Observer { result ->
+            when (result) {
+                is Result.Success -> {
+                    onPayIdFound(payId)
+                    Toast.makeText(context, getString(R.string.create_pay_id_success), Toast.LENGTH_LONG).show()
+                }
+                is Result.Failure -> {
+                    Toast.makeText(context, getString(R.string.create_pay_id_error), Toast.LENGTH_LONG).show()
+                }
+            }
+        })
+    }
+
+    private fun onPayIdFound(payId: String) {
+        updateLoadButtonItemsWithNewPayId(payId)
+        ivPayId.imageAlpha = 255
+        this.payId = payId
+        ivPayId.setOnClickListener { copyText(payId) }
+    }
+
+    private fun updateLoadButtonItemsWithNewPayId(payId: String) {
+        val oldPayId = btnLoadItems.firstOrNull { it.contains(PAY_ID_TANGEM) }
+        btnLoadItems.remove(oldPayId)
+        btnLoadItems.remove(getString(R.string.loaded_wallet_create_pay_id))
+        btnLoadItems.add(payId)
     }
 
     override fun onPause() {
@@ -703,6 +805,10 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         requestCounter = 0
         srl?.isRefreshing = true
 
+        if (payId == null || payId == getString(R.string.loaded_wallet_create_pay_id)) {
+            getPayIdIfApplicable()
+        }
+
         updateViews()
 
         // Bitcoin, Litecoin, BitcoinCash, Stellar
@@ -836,7 +942,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
                 val chooser = Intent.createChooser(intent, getString(R.string.loaded_wallet_chooser_share))
 
                 // verify the intent will resolve to at least one activity
-                if (intent.resolveActivity(activity!!.packageManager) != null) {
+                if (intent.resolveActivity(requireActivity().packageManager) != null) {
                     startActivity(chooser)
                 }
             } else {
@@ -845,11 +951,14 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
                 Toast.makeText(activity, R.string.loaded_wallet_toast_copied, Toast.LENGTH_LONG).show()
             }
         } else {
-            val txtShare = ctx.coinData.wallet
-            val clipboard = activity?.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-            clipboard.primaryClip = ClipData.newPlainText(txtShare, txtShare)
-            Toast.makeText(activity, R.string.loaded_wallet_toast_copied, Toast.LENGTH_LONG).show()
+            copyText(ctx.coinData.wallet)
         }
+    }
+
+    private fun copyText(text: String) {
+        val clipboard = activity?.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.primaryClip = ClipData.newPlainText(text, text)
+        Toast.makeText(activity, R.string.loaded_wallet_toast_copied, Toast.LENGTH_LONG).show()
     }
 
 }
