@@ -1,4 +1,4 @@
-package com.tangem.tangem_sdk_new.extensions
+package com.tangem.common.extensions
 
 fun <T> List<T>.print(delimiter: String = ", ", wrap: Boolean = true): String {
     val builder = StringBuilder()
