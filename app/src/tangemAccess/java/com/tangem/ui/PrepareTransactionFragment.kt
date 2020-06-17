@@ -2,7 +2,6 @@ package com.tangem.ui
 
 import android.app.Activity
 import android.content.Context
-import android.net.Uri
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Build
@@ -13,7 +12,6 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import com.tangem.Constant
-import com.tangem.data.Blockchain
 import com.tangem.ui.activity.MainActivity
 import com.tangem.ui.fragment.BaseFragment
 import com.tangem.ui.fragment.qr.CameraPermissionManager
@@ -24,7 +22,6 @@ import com.tangem.wallet.R
 import com.tangem.wallet.TangemContext
 import kotlinx.android.synthetic.tangemAccess.fragment_prepare_transaction.*
 import java.io.IOException
-import java.util.*
 
 class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, NfcAdapter.ReaderCallback {
     companion object {
@@ -47,6 +44,8 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
         else
             Html.fromHtml(engine!!.balanceHTML)
         tvBalance.text = html
+
+        if (ctx.blockchain.isPayIdSupported) etWallet.hint = getString(R.string.prepare_transaction_hint_address_or_pay_id)
 
         if (!engine.allowSelectFeeInclusion()) {
             rgIncFee.visibility = View.INVISIBLE
@@ -86,7 +85,7 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
         }
 
         btnVerify.setOnClickListener {
-            if (!UtilHelper.isOnline(context!!)) {
+            if (!UtilHelper.isOnline(requireContext())) {
                 Toast.makeText(context, R.string.general_error_no_connection, Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
