@@ -684,11 +684,16 @@ public class EthEngine extends CoinEngine {
                             }
                         }
                         if (validateAddress(resolvedAddress)) {
-                            coinData.setResolvedPayIdAddress(resolvedAddress);
-                            if (serverApiInfura.isRequestsSequenceCompleted() && serverApiPayId.isRequestsSequenceCompleted()) {
-                                blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                            if (resolvedAddress.equals(coinData.getWallet())) {
+                                ctx.setError(R.string.prepare_transaction_error_same_address);
+                                blockchainRequestsCallbacks.onComplete(false);
                             } else {
-                                blockchainRequestsCallbacks.onProgress();
+                                coinData.setResolvedPayIdAddress(resolvedAddress);
+                                if (serverApiInfura.isRequestsSequenceCompleted() && serverApiPayId.isRequestsSequenceCompleted()) {
+                                    blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                                } else {
+                                    blockchainRequestsCallbacks.onProgress();
+                                }
                             }
                         } else {
                             ctx.setError("Unknown address format in PayID response");
