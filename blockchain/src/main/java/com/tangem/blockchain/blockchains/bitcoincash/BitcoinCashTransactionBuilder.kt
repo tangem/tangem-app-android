@@ -2,6 +2,7 @@ package com.tangem.blockchain.blockchains.bitcoincash
 
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinTransactionBuilder
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinUnspentOutput
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.extensions.isZero
@@ -13,8 +14,8 @@ import org.bitcoinj.script.ScriptBuilder
 import java.math.BigDecimal
 import java.math.BigInteger
 
-class BitcoinCashTransactionBuilder(private val walletPublicKey: ByteArray)
-    : BitcoinTransactionBuilder(walletPublicKey) {
+class BitcoinCashTransactionBuilder(private val walletPublicKey: ByteArray, blockchain: Blockchain)
+    : BitcoinTransactionBuilder(walletPublicKey, blockchain) {
 
     private lateinit var transaction: BitcoinCashTransaction
 
@@ -25,7 +26,6 @@ class BitcoinCashTransactionBuilder(private val walletPublicKey: ByteArray)
 
         val change: BigDecimal = calculateChange(transactionData, unspentOutputs!!)
 
-        networkParameters = NetworkParameters.fromID(NetworkParameters.ID_MAINNET)
         transaction = transactionData.toBitcoinCashTransaction(networkParameters, unspentOutputs!!, change)
 
         val hashesForSign: MutableList<ByteArray> = MutableList(transaction.inputs.size) { byteArrayOf() }
