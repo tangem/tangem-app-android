@@ -112,7 +112,7 @@ class SignCommand(private val hashes: Array<ByteArray>)
 
     private fun checkForErrors() {
         if (hashes.isEmpty()) throw TangemSdkError.EmptyHashes()
-        if (hashes.size > 10) throw TangemSdkError.TooManyhHashesInOneTransaction()
+        if (hashes.size > 10) throw TangemSdkError.TooManyHashesInOneTransaction()
         if (hashes.any { it.size != hashSizes }) throw TangemSdkError.HashSizeMustBeEqual()
     }
 
