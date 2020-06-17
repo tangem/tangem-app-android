@@ -19,6 +19,8 @@ public class XrpData extends CoinData {
 
     private Boolean accountNotFound, targetAccountCreated = false;
 
+    private String resolvedPayIdAddress = null;
+
     @Override
     public void loadFromBundle(Bundle B) {
         super.loadFromBundle(B);
@@ -35,6 +37,8 @@ public class XrpData extends CoinData {
         else accountNotFound = false;
         if (B.containsKey("TargetAccountCreated")) targetAccountCreated = B.getBoolean("TargetAccountCreated");
         else targetAccountCreated = false;
+        if (B.containsKey("ResolvedPayIdAddress")) resolvedPayIdAddress = B.getString("ResolvedPayIdAddress");
+        else resolvedPayIdAddress = null;
     }
 
     @Override
@@ -47,6 +51,7 @@ public class XrpData extends CoinData {
             if (reserve != null) B.putLong("Reserve", reserve);
             if (accountNotFound != null) B.putBoolean("AccoundNotFound", accountNotFound);
             if (targetAccountCreated != null) B.putBoolean("TargetAccountCreated", targetAccountCreated);
+            if (resolvedPayIdAddress != null) B.putString("ResolvedPayIdAddress", resolvedPayIdAddress);
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());
         }
@@ -61,6 +66,7 @@ public class XrpData extends CoinData {
         reserve = 20000000L;
         accountNotFound = false;
         targetAccountCreated = false;
+        resolvedPayIdAddress = null;
     }
 
     // balanceUnconfirmed is just the latest balance, it equals balanceConfirmed if no unconfirmed transaction present
@@ -123,5 +129,13 @@ public class XrpData extends CoinData {
 
     public boolean hasUnconfirmed() {
         return hasBalanceInfo() && !balanceConfirmed.equals(balanceUnconfirmed);
+    }
+
+    public String getResolvedPayIdAddress() {
+        return resolvedPayIdAddress;
+    }
+
+    public void setResolvedPayIdAddress(String resolvedPayIdAddress) {
+        this.resolvedPayIdAddress = resolvedPayIdAddress;
     }
 }
