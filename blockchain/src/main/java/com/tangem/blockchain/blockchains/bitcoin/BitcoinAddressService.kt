@@ -1,68 +1,62 @@
 package com.tangem.blockchain.blockchains.bitcoin
 
 
+import com.tangem.blockchain.blockchains.litecoin.LitecoinMainNetParams
 import com.tangem.blockchain.common.AddressService
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.calculateRipemd160
 import com.tangem.common.extensions.calculateSha256
-import org.bitcoinj.core.AddressFormatException
-import org.bitcoinj.core.Base58
-import org.bitcoinj.core.SegwitAddress
+import org.bitcoinj.core.*
 import org.bitcoinj.params.MainNetParams
 import org.bitcoinj.params.TestNet3Params
 import java.security.MessageDigest
 
-class BitcoinAddressService(private val testNet: Boolean = false): AddressService {
+class BitcoinAddressService(private val blockchain: Blockchain) : AddressService {
+
+    private val networkParameters: NetworkParameters = when (blockchain) {
+        Blockchain.Bitcoin -> MainNetParams()
+        Blockchain.BitcoinTestnet -> TestNet3Params()
+        Blockchain.Litecoin -> LitecoinMainNetParams()
+        else -> throw Exception("${blockchain.fullName} blockchain is not supported by ${this::class.simpleName}")
+    }
+
     override fun makeAddress(walletPublicKey: ByteArray): String {
-            val netSelectionByte = if (testNet) 0x6f.toByte() else 0x00.toByte()
-            val hash1 = walletPublicKey.calculateSha256().calculateRipemd160()
-            val hash2 = byteArrayOf(netSelectionByte).plus(hash1).calculateSha256().calculateSha256()
-            val result = byteArrayOf(netSelectionByte) + hash1 + hash2[0] + hash2[1] + hash2[2] + hash2[3]
-            return Base58.encode(result)
-        }
+        val publicKeyHash = walletPublicKey.calculateSha256().calculateRipemd160()
+        val checksum = byteArrayOf(networkParameters.addressHeader.toByte()).plus(publicKeyHash)
+                .calculateSha256().calculateSha256()
+        val result = byteArrayOf(networkParameters.addressHeader.toByte()) + publicKeyHash + checksum.copyOfRange(0, 4)
+        return Base58.encode(result)
+    }
 
-       override fun validate(address: String): Boolean {
-            if (firstLetters.contains(address.first())) {
-                if (testNet && firstLettersNonTestNet.contains(address.first())) return false
-                if (address.length !in 26..35) return false
-                val decoded = address.decodeBase58() ?: return false
-                val hash = recursiveSha256(decoded, 0, 21, 2)
-                return hash.sliceArray(0..3).contentEquals(decoded.sliceArray(21..24))
-            } else {
-                return validateSegwitAddress(address, testNet)
+    override fun validate(address: String): Boolean {
+        return validateLegacyAddress(address) || validateSegwitAddress(address)
+    }
+
+    private fun validateSegwitAddress(address: String): Boolean {
+        return try {
+            when (blockchain) {
+                Blockchain.Bitcoin -> SegwitAddress.fromBech32(MainNetParams(), address)
+                Blockchain.BitcoinTestnet -> SegwitAddress.fromBech32(TestNet3Params(), address)
+                Blockchain.Litecoin -> SegwitAddress.fromBech32(LitecoinMainNetParams(), address)
+                else -> return false
             }
+            true
+        } catch (e: Exception) {
+            false
         }
+    }
 
-        private fun recursiveSha256(data: ByteArray, start: Int, len: Int, recursion: Int): ByteArray {
-            if (recursion == 0) return data
-            val md = MessageDigest.getInstance("SHA-256")
-            md.update(data.sliceArray(start until start + len))
-            return recursiveSha256(md.digest(), 0, 32, recursion - 1)
-        }
-
-        private fun String.decodeBase58(): ByteArray? {
-            return try {
-                Base58.decode(this)
-            } catch (exception: AddressFormatException) {
-                null
+    private fun validateLegacyAddress(address: String): Boolean {
+        return try {
+            when (blockchain) {
+                Blockchain.Bitcoin -> LegacyAddress.fromBase58(MainNetParams(), address)
+                Blockchain.BitcoinTestnet -> LegacyAddress.fromBase58(TestNet3Params(), address)
+                Blockchain.Litecoin -> LegacyAddress.fromBase58(LitecoinMainNetParams(), address)
+                else -> return false
             }
+            true
+        } catch (e: Exception) {
+            false
         }
-
-        private fun validateSegwitAddress(address: String, testNet: Boolean): Boolean {
-            return try {
-                if (testNet) {
-                    SegwitAddress.fromBech32(TestNet3Params(), address)
-                    true
-                } else {
-                    SegwitAddress.fromBech32(MainNetParams(), address)
-                    true
-                }
-            } catch (e: Exception) {
-                false
-            }
-        }
-
-    companion object {
-        private const val firstLetters = "123nm"
-        private const val firstLettersNonTestNet = "13"
     }
 }
