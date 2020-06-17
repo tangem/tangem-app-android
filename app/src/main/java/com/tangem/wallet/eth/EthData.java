@@ -14,6 +14,8 @@ public class EthData extends CoinData {
     private BigInteger countConfirmedTX = null;
     private BigInteger countUnconfirmedTX = BigInteger.valueOf(0);
 
+    private String resolvedPayIdAddress = null;
+
     public BigInteger getConfirmedTXCount() {
         if (countConfirmedTX == null) {
             countConfirmedTX = BigInteger.valueOf(0);
@@ -46,6 +48,7 @@ public class EthData extends CoinData {
     public void clearInfo() {
         super.clearInfo();
         balance = null;
+        resolvedPayIdAddress = null;
     }
 
     public CoinEngine.InternalAmount getBalanceInInternalUnits() {
@@ -57,6 +60,13 @@ public class EthData extends CoinData {
         balance = value;
     }
 
+    public String getResolvedPayIdAddress() {
+        return resolvedPayIdAddress;
+    }
+
+    public void setResolvedPayIdAddress(String resolvedPayIdAddress) {
+        this.resolvedPayIdAddress = resolvedPayIdAddress;
+    }
 
     @Override
     public void loadFromBundle(Bundle B) {
@@ -73,6 +83,8 @@ public class EthData extends CoinData {
             countConfirmedTX = new BigInteger(B.getString("confirmTx"), 16);
         if (B.containsKey("unconfirmTx"))
             countUnconfirmedTX = new BigInteger(B.getString("unconfirmTx"), 16);
+        if (B.containsKey("ResolvedPayIdAddress")) resolvedPayIdAddress = B.getString("ResolvedPayIdAddress");
+        else resolvedPayIdAddress = null;
     }
 
     @Override
@@ -86,6 +98,7 @@ public class EthData extends CoinData {
 
             B.putString("confirmTx", getConfirmedTXCount().toString(16));
             B.putString("unconfirmTx", getUnconfirmedTXCount().toString(16));
+            if (resolvedPayIdAddress != null) B.putString("ResolvedPayIdAddress", resolvedPayIdAddress);
 
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());
