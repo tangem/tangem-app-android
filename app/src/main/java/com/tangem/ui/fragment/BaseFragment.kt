@@ -91,9 +91,15 @@ abstract class BaseFragment : Fragment() {
 
     protected fun navigateBackWithResult(resultCode: Int, data: Bundle? = null,
                                          @IdRes destination: Int = DESTINATION_NOT_SET) {
-        (requireActivity() as MainActivity).viewModel.navigationResult =
+        try {
+            (requireActivity() as MainActivity).viewModel.navigationResult =
                 NavigationResult(requestCode, resultCode, data)
-        return navigateUp(destination)
+            return navigateUp(destination)
+        } catch (e: IllegalArgumentException) {
+            Log.w(this::class.java.simpleName, e.message)
+        } catch (e: IllegalStateException) {
+            Log.w(this::class.java.simpleName, e.message)
+        }
     }
 
     companion object {
