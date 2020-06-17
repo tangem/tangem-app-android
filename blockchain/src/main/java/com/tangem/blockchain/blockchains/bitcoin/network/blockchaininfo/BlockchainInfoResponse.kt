@@ -1,4 +1,4 @@
-package com.tangem.blockchain.blockchains.bitcoin.network.response
+package com.tangem.blockchain.blockchains.bitcoin.network.blockchaininfo
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
