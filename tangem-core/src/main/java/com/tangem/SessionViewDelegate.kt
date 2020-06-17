@@ -40,7 +40,7 @@ interface SessionViewDelegate {
     /**
      * It is called when some error occur during NFC session.
      */
-    fun onError(errorMessage: String)
+    fun onError(error: TangemSdkError)
 
     /**
      * It is called when a user is expected to enter pin code.
