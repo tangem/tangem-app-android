@@ -633,9 +633,19 @@ public class XrpEngine extends CoinEngine {
 
                             XrpXAddressDecoded xAddressDecoded = XrpXAddressService.Companion.decode(resolvedAddress);
                             if (xAddressDecoded == null) { // classic address
-                                serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, resolvedAddress, ""); //TODO: maybe just assume PayID account is created?
+                                if (resolvedAddress.equals(coinData.getWallet())) {
+                                    ctx.setError(R.string.prepare_transaction_error_same_address);
+                                    blockchainRequestsCallbacks.onComplete(false);
+                                } else {
+                                    serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, resolvedAddress, "");
+                                }
                             } else { // X-address
-                                serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, xAddressDecoded.getAddress(), "");
+                                if (xAddressDecoded.getAddress().equals(coinData.getWallet())) {
+                                    ctx.setError(R.string.prepare_transaction_error_same_address);
+                                    blockchainRequestsCallbacks.onComplete(false);
+                                } else {
+                                    serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, xAddressDecoded.getAddress(), "");
+                                }
                             }
                         } else {
                             ctx.setError("Unknown address format in PayID response");
