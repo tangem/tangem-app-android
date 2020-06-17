@@ -66,7 +66,6 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
     companion object {
         val TAG: String = LoadedWalletFragment::class.java.simpleName
         const val PAY_ID_TANGEM = "\$payid.tangem.com"
-        val payIdSupported = setOf(Blockchain.Ripple, Blockchain.Ethereum, Blockchain.Bitcoin)
     }
 
     override val layoutId = R.layout.fr_loaded_wallet
@@ -156,7 +155,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
             getString(R.string.loaded_wallet_load_via_qr)
             )
 
-        if (payIdSupported.contains(ctx.blockchain)) {
+        if (ctx.blockchain.isPayIdSupported) {
             ivPayId.visibility = View.VISIBLE
             ivPayId.imageAlpha = 100
             ivPayId.setOnClickListener { createPayIdDialog() }
