@@ -340,11 +340,11 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
                                     if (it.code() == 404) {
                                         val createPayId = getString(R.string.loaded_wallet_create_pay_id)
                                         payId = createPayId
-                                        btnLoadItems.add(createPayId)
+                                        if (!btnLoadItems.contains(createPayId)) {
+                                            btnLoadItems.add(createPayId)
+                                        }
                                     }
                                 }
-                                ctx.error = result.error?.localizedMessage
-                                refresh()
                             }
                         }
                     })
