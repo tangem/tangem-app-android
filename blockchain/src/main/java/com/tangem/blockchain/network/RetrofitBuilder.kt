@@ -54,3 +54,5 @@ const val API_ADALITE_RESERVE = "https://nodes.southeastasia.cloudapp.azure.com/
 const val API_RIPPLED = "https://s1.ripple.com:51234/"
 const val API_RIPPLED_RESERVE = "https://s2.ripple.com:51234/"
 const val API_BLOCKCHAIR = "https://api.blockchair.com/"
+const val API_TEZOS = "https://teznode.letzbake.com"
+const val API_TEZOS_RESERVE = "https://mainnet.tezrpc.me"
