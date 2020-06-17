@@ -64,7 +64,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.io.File
-import java.util.*
 import kotlin.coroutines.CoroutineContext
 
 class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.ReaderCallback,
@@ -74,6 +73,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
     companion object {
         fun newInstance() = MainFragment()
         val TAG: String = MainFragment::class.java.simpleName
+        const val CARD_SHOP_URI = "https://shop.tangem.com/?afmc=1i&utm_campaign=1i&utm_source=leaddyno&utm_medium=affiliate"
     }
 
     override val layoutId = R.layout.fragment_main
@@ -102,7 +102,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
 
 //        navigateToDestination(R.id.action_main_to_emptyIdFragment)
         // init NFC Antenna
-        nfcDeviceAntenna = NfcDeviceAntennaLocation(context!!, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
+        nfcDeviceAntenna = NfcDeviceAntennaLocation(requireContext(), ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
         nfcDeviceAntenna.init()
 
         // set phone name
@@ -136,7 +136,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
 
         tvBuyCards?.setText(spannable, TextView.BufferType.SPANNABLE)
         llShoppingView?.setOnClickListener {
-            val uri = Uri.parse("https://www.tangemcards.com")
+            val uri = Uri.parse(CARD_SHOP_URI)
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
         }
@@ -342,7 +342,7 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
                     } else {
                         if (cardProtocol.error is CardProtocol.TangemException_ExtendedLengthNotSupported)
                             if (!NoExtendedLengthSupportDialog.allReadyShowed)
-                                NoExtendedLengthSupportDialog().show(activity!!.supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
+                                NoExtendedLengthSupportDialog().show(requireActivity().supportFragmentManager, NoExtendedLengthSupportDialog.TAG)
 
                         lastTag = null
                         ReadCardInfoTask.resetLastReadInfo()
@@ -444,15 +444,15 @@ class MainFragment : BaseFragment(), NavigationResultListener, NfcAdapter.Reader
     }
 
     override fun onReadWait(msec: Int) {
-        WaitSecurityDelayDialog.onReadWait(Objects.requireNonNull(activity) as AppCompatActivity?, msec)
+        WaitSecurityDelayDialog.onReadWait(requireActivity() as AppCompatActivity?, msec)
     }
 
     override fun onReadBeforeRequest(timeout: Int) {
-        WaitSecurityDelayDialog.onReadBeforeRequest(Objects.requireNonNull(activity) as AppCompatActivity?, timeout)
+        WaitSecurityDelayDialog.onReadBeforeRequest(requireActivity() as AppCompatActivity?, timeout)
     }
 
     override fun onReadAfterRequest() {
-        WaitSecurityDelayDialog.onReadAfterRequest(Objects.requireNonNull(activity))
+        WaitSecurityDelayDialog.onReadAfterRequest(requireActivity())
     }
 
     override fun onMenuItemClick(item: MenuItem?): Boolean {
