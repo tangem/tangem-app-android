@@ -343,8 +343,6 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
                                         btnLoadItems.add(createPayId)
                                     }
                                 }
-                                ctx.error = result.error?.localizedMessage
-                                refresh()
                             }
                         }
                     })
