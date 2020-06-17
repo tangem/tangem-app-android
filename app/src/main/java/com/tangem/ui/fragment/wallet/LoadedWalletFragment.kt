@@ -160,28 +160,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
             ivPayId.imageAlpha = 100
             ivPayId.setOnClickListener { createPayIdDialog() }
 
-            viewModel.getPayId(
-                Util.byteArrayToHexString(ctx.card.cid!!),
-                Util.byteArrayToHexString(ctx.card.cardPublicKey!!))
-                .observe(
-                    viewLifecycleOwner, Observer { result ->
-                        when (result) {
-                            is Result.Success -> {
-                                onPayIdFound(result.data.payId)
-                            }
-                            is Result.Failure -> {
-                                (result.error as? HttpException)?.let {
-                                    if (it.code() == 404) {
-                                        val createPayId = getString(R.string.loaded_wallet_create_pay_id)
-                                        payId = createPayId
-                                        btnLoadItems.add(createPayId)
-                                    }
-                                }
-                                ctx.error = result.error?.localizedMessage
-                                refresh()
-                            }
-                        }
-                    })
+            getPayIdIfApplicable()
         }
 
 
@@ -345,6 +324,33 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         viewModel.requestRateInfo(ctx)
     }
 
+    private fun getPayIdIfApplicable() {
+        if (ctx.blockchain.isPayIdSupported) {
+            viewModel.getPayId(
+                Util.byteArrayToHexString(ctx.card.cid!!),
+                Util.byteArrayToHexString(ctx.card.cardPublicKey!!))
+                .observe(
+                    viewLifecycleOwner, Observer { result ->
+                        when (result) {
+                            is Result.Success -> {
+                                onPayIdFound(result.data.payId)
+                            }
+                            is Result.Failure -> {
+                                (result.error as? HttpException)?.let {
+                                    if (it.code() == 404) {
+                                        val createPayId = getString(R.string.loaded_wallet_create_pay_id)
+                                        payId = createPayId
+                                        btnLoadItems.add(createPayId)
+                                    }
+                                }
+                                ctx.error = result.error?.localizedMessage
+                                refresh()
+                            }
+                        }
+                    })
+        }
+    }
+
     private fun createPayIdDialog() {
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_pay_id, null);
         val alertDialogBuilderUserInput =  AlertDialog.Builder(context);
@@ -380,9 +386,6 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
             .observe(viewLifecycleOwner, Observer { result ->
             when (result) {
                 is Result.Success -> {
-                    if (btnLoadItems.last() == getString(R.string.loaded_wallet_create_pay_id)) {
-                        btnLoadItems.removeAt(btnLoadItems.lastIndex)
-                    }
                     onPayIdFound(payId)
                     Toast.makeText(context, getString(R.string.create_pay_id_success), Toast.LENGTH_LONG).show()
                 }
@@ -394,10 +397,17 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
     }
 
     private fun onPayIdFound(payId: String) {
+        updateLoadButtonItemsWithNewPayId(payId)
         ivPayId.imageAlpha = 255
         this.payId = payId
-        btnLoadItems.add(payId)
         ivPayId.setOnClickListener { copyText(payId) }
+    }
+
+    private fun updateLoadButtonItemsWithNewPayId(payId: String) {
+        val oldPayId = btnLoadItems.firstOrNull { it.contains(PAY_ID_TANGEM) }
+        btnLoadItems.remove(oldPayId)
+        btnLoadItems.remove(getString(R.string.loaded_wallet_create_pay_id))
+        btnLoadItems.add(payId)
     }
 
     override fun onPause() {
@@ -794,6 +804,10 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         LOG.w(TAG, "============= START REFRESH")
         requestCounter = 0
         srl?.isRefreshing = true
+
+        if (payId == null || payId == getString(R.string.loaded_wallet_create_pay_id)) {
+            getPayIdIfApplicable()
+        }
 
         updateViews()
 
