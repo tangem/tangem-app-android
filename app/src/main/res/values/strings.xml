@@ -116,6 +116,13 @@
     <string name="loaded_wallet_load_via_qr">Show QR-code</string>
     <string name="loaded_wallet_dialog_show_qr">LOAD</string>
 
+    <string name="loaded_wallet_create_pay_id">Create PayID</string>
+    <string name="create_pay_id_create">Create</string>
+    <string name="create_pay_id_empty">Enter PayID first</string>
+    <string name="create_pay_id_success">New PayID was created</string>
+    <string name="create_pay_id_error">Error creating PayID</string>
+
+
     <!-- LoadedWallet Blockchain Engines -->
     <string name="balance_validator_first_line_verified_balance">Verified balance</string>
     <string name="balance_validator_first_line_unknown_balance">Unknown balance</string>
@@ -182,6 +189,7 @@
 
     <!-- PrepareTransaction -->
     <string name="prepare_transaction_hint_enter_address">enter wallet address</string>
+    <string name="prepare_transaction_hint_address_or_pay_id">Address or PayID</string>
     <string name="prepare_transaction_hint_enter_amount">enter amount</string>
     <string name="prepare_transaction_btn_verify">Verify</string>
     <string name="prepare_transaction_error_not_enough_funds">Not enough funds</string>
