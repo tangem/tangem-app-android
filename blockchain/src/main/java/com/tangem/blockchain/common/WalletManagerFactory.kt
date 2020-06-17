@@ -15,10 +15,15 @@ import com.tangem.blockchain.blockchains.cardano.network.CardanoNetworkManager
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionBuilder
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.ethereum.network.EthereumNetworkManager
+import com.tangem.blockchain.blockchains.litecoin.LitecoinNetworkManager
+import com.tangem.blockchain.blockchains.litecoin.LitecoinWalletManager
 import com.tangem.blockchain.blockchains.stellar.StellarNetworkManager
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionBuilder
 
 import com.tangem.blockchain.blockchains.stellar.StellarWalletManager
+import com.tangem.blockchain.blockchains.tezos.TezosTransactionBuilder
+import com.tangem.blockchain.blockchains.tezos.TezosWalletManager
+import com.tangem.blockchain.blockchains.tezos.network.TezosNetworkManager
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.blockchains.xrp.XrpWalletManager
 import com.tangem.blockchain.blockchains.xrp.network.XrpNetworkManager
@@ -42,22 +47,29 @@ object WalletManagerFactory {
             Blockchain.Bitcoin -> {
                 return BitcoinWalletManager(
                         cardId, wallet,
-                        BitcoinTransactionBuilder(walletPublicKey),
-                        BitcoinNetworkManager()
+                        BitcoinTransactionBuilder(walletPublicKey, blockchain),
+                        BitcoinNetworkManager(blockchain)
                 )
             }
             Blockchain.BitcoinTestnet -> {
                 return BitcoinWalletManager(
                         cardId, wallet,
-                        BitcoinTransactionBuilder(walletPublicKey, true),
-                        BitcoinNetworkManager(true)
+                        BitcoinTransactionBuilder(walletPublicKey, blockchain),
+                        BitcoinNetworkManager(blockchain)
                 )
             }
             Blockchain.BitcoinCash -> {
                 return BitcoinCashWalletManager(
                         cardId, wallet,
-                        BitcoinCashTransactionBuilder(walletPublicKey.toCompressedPublicKey()),
+                        BitcoinCashTransactionBuilder(walletPublicKey.toCompressedPublicKey(), blockchain),
                         BitcoinCashNetworkManager()
+                )
+            }
+            Blockchain.Litecoin -> {
+                return LitecoinWalletManager(
+                        cardId, wallet,
+                        BitcoinTransactionBuilder(walletPublicKey, blockchain),
+                        LitecoinNetworkManager()
                 )
             }
             Blockchain.Ethereum, Blockchain.RSK -> {
@@ -104,7 +116,14 @@ object WalletManagerFactory {
                         BinanceNetworkManager(true)
                 )
             }
-            else -> return null
+            Blockchain.Tezos -> {
+                return TezosWalletManager(
+                        cardId, wallet,
+                        TezosTransactionBuilder(walletPublicKey),
+                        TezosNetworkManager()
+                )
+            }
+            Blockchain.Unknown -> throw Exception("unsupported blockchain")
         }
     }
 
