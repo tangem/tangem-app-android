@@ -2,6 +2,8 @@ package com.tangem.data;
 
 import com.tangem.tangem_sdk.R;
 
+import java.util.EnumSet;
+
 /**
  * Created by dvol on 06.08.2017.
  */
@@ -35,6 +37,8 @@ public enum Blockchain {
     Tezos("TEZOS", "XTZ", 10000000.0, R.drawable.ic_logo_tezos, "Tezos"),
     FlowDemo("FLOW/demo", "", 1.0, R.drawable.tangem2, "Flow demo"),
     TokenEmv("TTW", "ETH", 1.0, R.drawable.ic_logo_ethereum, "Ethereum");
+
+    static private EnumSet<Blockchain> payIdSupported = EnumSet.of(Blockchain.Ripple, Blockchain.Ethereum, Blockchain.Bitcoin);
 
     Blockchain(String ID, String currency, double multiplier, int imageResource, String officialName) {
         mID = ID;
@@ -124,6 +128,10 @@ public enum Blockchain {
                 scheme = "ripple";
         }
         return scheme;
+    }
+
+    public Boolean isPayIdSupported() {
+        return payIdSupported.contains(this);
     }
 
 }
