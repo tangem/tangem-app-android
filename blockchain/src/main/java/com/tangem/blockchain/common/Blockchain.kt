@@ -6,6 +6,7 @@ import com.tangem.blockchain.blockchains.bitcoincash.BitcoinCashAddressService
 import com.tangem.blockchain.blockchains.cardano.CardanoAddressService
 import com.tangem.blockchain.blockchains.ethereum.EthereumAddressService
 import com.tangem.blockchain.blockchains.stellar.StellarAddressService
+import com.tangem.blockchain.blockchains.tezos.TezosAddressService
 import com.tangem.blockchain.blockchains.xrp.XrpAddressService
 
 enum class Blockchain(
@@ -17,17 +18,19 @@ enum class Blockchain(
     Bitcoin("BTC", "BTC", "Bitcoin"),
     BitcoinTestnet("BTC/test", "BTCt", "Bitcoin Testnet"),
     BitcoinCash("BCH", "BCH", "Bitcoin Cash"),
+    Litecoin("LTC", "LTC", "Litecoin"),
     Ethereum("ETH", "ETH", "Ethereum"),
     RSK("RSK", "RBTC", "RSK"),
     Cardano("CARDANO", "ADA", "Cardano"),
     XRP("XRP", "XRP", "XRP Ledger"),
     Binance("BINANCE", "BNB", "Binance"),
     BinanceTestnet("BINANCE/test", "BNBt", "Binance"),
-    Stellar("XLM", "XLM", "Stellar");
+    Stellar("XLM", "XLM", "Stellar"),
+    Tezos("TEZOS", "XTZ", "Tezos");
 
     fun decimals(): Int = when (this) {
-        Bitcoin, BitcoinTestnet, BitcoinCash, Binance, BinanceTestnet -> 8
-        Cardano, XRP -> 6
+        Bitcoin, BitcoinTestnet, BitcoinCash, Binance, BinanceTestnet, Litecoin -> 8
+        Cardano, XRP, Tezos -> 6
         Ethereum, RSK -> 18
         Stellar -> 7
         Unknown -> 0
@@ -43,8 +46,7 @@ enum class Blockchain(
 
     private fun getAddressService(): AddressService = when (this) {
         Unknown -> throw Exception("unsupported blockchain")
-        Bitcoin -> BitcoinAddressService()
-        BitcoinTestnet -> BitcoinAddressService(true)
+        Bitcoin, BitcoinTestnet, Litecoin -> BitcoinAddressService(this)
         BitcoinCash -> BitcoinCashAddressService()
         Ethereum, RSK -> EthereumAddressService()
         Cardano -> CardanoAddressService()
@@ -52,6 +54,7 @@ enum class Blockchain(
         Binance -> BinanceAddressService()
         BinanceTestnet -> BinanceAddressService(true)
         Stellar -> StellarAddressService()
+        Tezos -> TezosAddressService()
     }
 
     fun getShareUri(address: String): String = when (this) {
@@ -63,9 +66,11 @@ enum class Blockchain(
 
     fun getExploreUrl(address: String, token: Token? = null): String = when (this) {
         Binance -> "https://explorer.binance.org/address/$address"
+        BinanceTestnet -> "https://testnet-explorer.binance.org/address/$address"
         Bitcoin -> "https://blockchain.info/address/$address"
         BitcoinTestnet -> "https://live.blockcypher.com/btc-testnet/address/$address"
         BitcoinCash -> "https://blockchair.com/bitcoin-cash/address/$address"
+        Litecoin -> "https://live.blockcypher.com/ltc/address/$address"
         Cardano -> "https://cardanoexplorer.com/address/$address"
         Ethereum -> if (token == null) {
             "https://etherscan.io/address/"
@@ -81,7 +86,8 @@ enum class Blockchain(
         }
         Stellar -> "https://stellar.expert/explorer/public/account/$address"
         XRP -> "https://xrpscan.com/account/$address"
-        else -> throw Exception("Explore URL not defined!")
+        Tezos -> "https://tezblock.io/account/$address"
+        Unknown -> throw Exception("unsupported blockchain")
     }
 
     companion object {
