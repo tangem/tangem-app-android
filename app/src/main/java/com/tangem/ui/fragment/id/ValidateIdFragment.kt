@@ -77,7 +77,7 @@ class ValidateIdFragment : BaseFragment(), NavigationResultListener,
         mpFinishSignSound = MediaPlayer.create(context, R.raw.scan_card_sound)
 
         // init NFC Antenna
-        nfcDeviceAntenna = NfcDeviceAntennaLocation(context!!, ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
+        nfcDeviceAntenna = NfcDeviceAntennaLocation(requireContext(), ivHandCardHorizontal, ivHandCardVertical, llHand, llNfc)
         nfcDeviceAntenna.init()
 
         progressBar.progressTintList = ColorStateList.valueOf(Color.DKGRAY)
@@ -198,7 +198,7 @@ class ValidateIdFragment : BaseFragment(), NavigationResultListener,
     }
 
     override fun onReadStart(cardProtocol: CardProtocol) {
-        rlProgressBar.post { rlProgressBar.visibility = View.VISIBLE }
+        rlProgressBar?.post { rlProgressBar.visibility = View.VISIBLE }
 
         progressBar?.post {
             progressBar?.visibility = View.VISIBLE
@@ -265,7 +265,7 @@ class ValidateIdFragment : BaseFragment(), NavigationResultListener,
                                 NoExtendedLengthSupportDialog().show(requireFragmentManager(), NoExtendedLengthSupportDialog.TAG)
                             }
                         } else {
-                            (activity as MainActivity).toastHelper.showSingleToast(
+                            (activity as? MainActivity)?.toastHelper?.showSingleToast(
                                     context,
                                     getString(R.string.general_notification_scan_again)
                             )
@@ -313,17 +313,17 @@ class ValidateIdFragment : BaseFragment(), NavigationResultListener,
 
     override fun onReadBeforeRequest(timeout: Int) {
         LOG.i(TAG, "onReadBeforeRequest timeout $timeout")
-        WaitSecurityDelayDialog.onReadBeforeRequest(activity!!, timeout)
+        activity?.let { WaitSecurityDelayDialog.onReadBeforeRequest(it, timeout) }
     }
 
     override fun onReadAfterRequest() {
         LOG.i(TAG, "onReadAfterRequest")
-        WaitSecurityDelayDialog.onReadAfterRequest(activity!!)
+        activity?.let { WaitSecurityDelayDialog.onReadAfterRequest(it) }
     }
 
     override fun onReadWait(msec: Int) {
         LOG.i(TAG, "onReadWait msec $msec")
-        WaitSecurityDelayDialog.onReadWait(activity!!, msec)
+        activity?.let { WaitSecurityDelayDialog.onReadWait(it, msec) }
     }
 
 }
