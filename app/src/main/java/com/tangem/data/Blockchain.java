@@ -38,7 +38,7 @@ public enum Blockchain {
     FlowDemo("FLOW/demo", "", 1.0, R.drawable.tangem2, "Flow demo"),
     TokenEmv("TTW", "ETH", 1.0, R.drawable.ic_logo_ethereum, "Ethereum");
 
-    static private EnumSet<Blockchain> payIdSupported = EnumSet.of(Blockchain.Ripple, Blockchain.Ethereum, Blockchain.Bitcoin);
+    static private EnumSet<Blockchain> payIdSupported = EnumSet.of(Blockchain.Ripple, Blockchain.Ethereum, Blockchain.Bitcoin, Blockchain.Token);
 
     Blockchain(String ID, String currency, double multiplier, int imageResource, String officialName) {
         mID = ID;
