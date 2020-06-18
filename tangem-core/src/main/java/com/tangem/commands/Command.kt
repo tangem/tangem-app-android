@@ -41,7 +41,18 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
 
     override fun run(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
         Log.i("Command", "Initializing ${this::class.java.simpleName}")
-        transceive(session, callback)
+
+        if (requiresPin2() && session.environment.isDefaultPin2) {
+            handlePin2(session, callback)
+        } else {
+            transceive(session, callback)
+        }
+
+    }
+
+    private fun Command<*>.requiresPin2(): Boolean {
+        return this is SignCommand || this is PurgeWalletCommand ||
+                this is CreateWalletCommand || this is WriteUserDataCommand
     }
 
     open fun performPreCheck(card: Card): TangemSdkError? = null
@@ -196,6 +207,31 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
                 session.environment.setPin1(SessionEnvironment.DEFAULT_PIN)
                 session.resume()
                 transceive(session, callback)
+            }
+        }
+    }
+
+    private fun handlePin2(
+        session: CardSession,
+        callback: (result: CompletionResult<T>) -> Unit
+    ) {
+        val checkPinCommand = SetPinCommand(session.environment.pin1, session.environment.pin2)
+        checkPinCommand.run(session) { result ->
+            when (result) {
+                is CompletionResult.Failure -> {
+                    session.viewDelegate.onPinRequested { pin2 ->
+                        if (!pin2.isNullOrEmpty()) {
+                            session.environment.setPin2(pin2)
+                            transceive(session, callback)
+                        } else {
+                            session.environment.setPin2(SessionEnvironment.DEFAULT_PIN2)
+                            transceive(session, callback)
+                        }
+                    }
+                }
+                is CompletionResult.Success -> {
+                    transceive(session, callback)
+                }
             }
         }
     }
