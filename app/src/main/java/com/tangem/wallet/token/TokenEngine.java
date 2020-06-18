@@ -10,10 +10,13 @@ import com.tangem.App;
 import com.tangem.data.Blockchain;
 import com.tangem.data.network.ServerApiBlockcypher;
 import com.tangem.data.network.ServerApiInfura;
+import com.tangem.data.network.ServerApiPayId;
 import com.tangem.data.network.model.BlockcypherFee;
 import com.tangem.data.network.model.BlockcypherResponse;
 import com.tangem.data.network.model.BlockcypherTxref;
 import com.tangem.data.network.model.InfuraResponse;
+import com.tangem.data.network.model.PayIdAddress;
+import com.tangem.data.network.model.PayIdResponse;
 import com.tangem.tangem_card.data.TangemCard;
 import com.tangem.tangem_card.tasks.SignTask;
 import com.tangem.util.CryptoUtil;
@@ -34,7 +37,11 @@ import org.bitcoinj.core.ECKey;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.net.URL;
 import java.util.Arrays;
+
+import io.reactivex.SingleObserver;
+import io.reactivex.observers.DisposableSingleObserver;
 
 /**
  * Created by Ilia on 20.03.2018.
@@ -163,6 +170,21 @@ public class TokenEngine extends CoinEngine {
     public boolean validateAddress(String address) {
         if (address == null || address.isEmpty()) {
             return false;
+        }
+
+        if (address.contains("$")) { // PayID
+            String[] addressParts = address.split("\\$");
+
+            if (addressParts.length != 2) {
+                return false;
+            }
+            String addressURL = "https://" + addressParts[1] + "/" + addressParts[0];
+            try {
+                new URL(addressURL).toURI();
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
         }
 
         if (!address.startsWith("0x") && !address.startsWith("0X")) {
@@ -439,10 +461,18 @@ public class TokenEngine extends CoinEngine {
 
     @Override
     public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
-        if (amountValue.getCurrency().equals(this.getBlockchain().getCurrency())) {
-            return constructTransactionCoin(feeValue, amountValue, IncFee, targetAddress);
+        String destination;
+        //PayID
+        if (coinData.getResolvedPayIdAddress() != null) {
+            destination = coinData.getResolvedPayIdAddress();
         } else {
-            return constructTransactionToken(feeValue, amountValue, IncFee, targetAddress);
+            destination = targetAddress;
+        }
+
+        if (amountValue.getCurrency().equals(this.getBlockchain().getCurrency())) {
+            return constructTransactionCoin(feeValue, amountValue, IncFee, destination);
+        } else {
+            return constructTransactionToken(feeValue, amountValue, IncFee, destination);
         }
     }
 
@@ -776,6 +806,8 @@ public class TokenEngine extends CoinEngine {
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
         ServerApiInfura serverApiInfura = new ServerApiInfura();
+        final ServerApiPayId serverApiPayId = new ServerApiPayId();
+
         // request requestData eth gasPrice listener
         ServerApiInfura.ResponseListener responseListener = new ServerApiInfura.ResponseListener() {
             @Override
@@ -826,6 +858,57 @@ public class TokenEngine extends CoinEngine {
         };
         serverApiInfura.setResponseListener(responseListener);
 
+        if (targetAddress.contains("$")) { // PayID
+
+            SingleObserver<PayIdResponse> observer = new DisposableSingleObserver<PayIdResponse>() {
+                @Override
+                public void onSuccess(PayIdResponse payIdResponse) {
+                    try {
+                        String resolvedAddress = null;
+                        for (PayIdAddress address : payIdResponse.getAddresses()) {
+                            if (address.getPaymentNetwork().equals("ETH") &&
+                                    address.getEnvironment().equals("MAINNET")) {
+                                resolvedAddress = address.getAddressDetails().getAddress();
+                                break;
+                            }
+                        }
+                        if (validateAddress(resolvedAddress)) {
+                            if (resolvedAddress.equals(coinData.getWallet())) {
+                                ctx.setError(R.string.prepare_transaction_error_same_address);
+                                blockchainRequestsCallbacks.onComplete(false);
+                            } else {
+                                coinData.setResolvedPayIdAddress(resolvedAddress);
+                                if (serverApiInfura.isRequestsSequenceCompleted() && serverApiPayId.isRequestsSequenceCompleted()) {
+                                    blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                                } else {
+                                    blockchainRequestsCallbacks.onProgress();
+                                }
+                            }
+                        } else {
+                            ctx.setError("Unknown address format in PayID response");
+                            blockchainRequestsCallbacks.onComplete(false);
+                        }
+                    } catch (Exception e) {
+                        ctx.setError("Unknown response format on PayID request");
+                        blockchainRequestsCallbacks.onComplete(false);
+                    }
+                    if (serverApiInfura.isRequestsSequenceCompleted() && serverApiPayId.isRequestsSequenceCompleted()) {
+                        blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                    } else {
+                        blockchainRequestsCallbacks.onProgress();
+                    }
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    Log.i(TAG, "onFail: " + "payID" + " " + e.getMessage());
+                    ctx.setError("PayID error:" + e.getMessage());
+                    blockchainRequestsCallbacks.onComplete(false);
+                }
+            };
+
+            serverApiPayId.getAddress(targetAddress, ctx.getBlockchain(), observer);
+        }
         serverApiInfura.requestData(ServerApiInfura.INFURA_ETH_GAS_PRICE, 67, coinData.getWallet(), "", "");
     }
 
