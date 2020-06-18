@@ -25,6 +25,7 @@ data class SessionEnvironment(
 ) {
 
     var isDefaultPin1: Boolean = Companion.pin1.contentEquals(DEFAULT_PIN.calculateSha256())
+    var isDefaultPin2: Boolean = pin2.contentEquals(DEFAULT_PIN2.calculateSha256())
 
     var pin1: ByteArray = SessionEnvironment.pin1
     private set
