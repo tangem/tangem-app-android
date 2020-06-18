@@ -20,5 +20,8 @@ data class PayIdAddress(
 
 data class PayIdAddressDetails(
         @SerializedName("address")
-        var address: String? = null
+        var address: String? = null,
+
+        @SerializedName("tag")
+        var tag: String? = null
 )
