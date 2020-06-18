@@ -2,7 +2,6 @@ package com.tangem.tangem_sdk_new
 
 import androidx.fragment.app.FragmentActivity
 import com.tangem.*
-import com.tangem.common.CompletionResult
 import com.tangem.tangem_sdk_new.nfc.NfcReader
 import com.tangem.tangem_sdk_new.ui.NfcSessionDialog
 
@@ -69,7 +68,7 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
         postUI { readingDialog?.show(SessionViewDelegateState.Error(error)) }
     }
 
-    override fun onPinRequested(callback: (result: CompletionResult<String>) -> Unit) {
+    override fun onPinRequested(callback: (pin: String?) -> Unit) {
         postUI { readingDialog?.show(SessionViewDelegateState.PinRequested(callback)) }
     }
 
