@@ -40,7 +40,7 @@ public class XrpData extends CoinData {
         if (B.containsKey("ResolvedPayIdAddress")) resolvedPayIdAddress = B.getString("ResolvedPayIdAddress");
         else resolvedPayIdAddress = null;
         if (B.containsKey("ResolvedPayIdTag")) resolvedPayIdTag = B.getString("ResolvedPayIdTag");
-        else resolvedPayIdAddress = null;
+        else resolvedPayIdTag = null;
     }
 
     @Override
