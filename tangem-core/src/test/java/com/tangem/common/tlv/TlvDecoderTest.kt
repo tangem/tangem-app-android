@@ -187,6 +187,6 @@ class TlvDecoderTest {
     fun `map Hex returns correct value`() {
         val cardId: String = tlvMapper.decode(TlvTag.CardId)
         assertThat(cardId)
-                .isEqualTo("cb22000000027374")
+                .isEqualTo("CB22000000027374")
     }
 }
