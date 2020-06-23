@@ -367,6 +367,15 @@ public class XrpEngine extends CoinEngine {
             destinationTag = decodedXAddress.getDestinationTag();
         }
 
+        if (coinData.getResolvedPayIdTag() != null) {
+            int resolvedTag = Integer.parseInt(coinData.getResolvedPayIdTag());
+            if (destinationTag == null || destinationTag == resolvedTag) {
+                destinationTag = resolvedTag;
+            } else { // Different destination tags in PayID response and in X-address
+                throw new IllegalArgumentException("Conflicting destination tags found");
+            }
+        }
+
         if (IncFee) {
             amount = convertToInternalAmount(amountValue).subtract(convertToInternalAmount(feeValue)).setScale(0).toPlainString();
         } else {
@@ -621,15 +630,18 @@ public class XrpEngine extends CoinEngine {
                 public void onSuccess(PayIdResponse payIdResponse) {
                     try {
                         String resolvedAddress = null;
+                        String resolvedTag = null;
                         for (PayIdAddress address : payIdResponse.getAddresses()) {
                             if (address.getPaymentNetwork().equals("XRPL") &&
                                     address.getEnvironment().equals("MAINNET")) {
                                 resolvedAddress = address.getAddressDetails().getAddress();
+                                resolvedTag = address.getAddressDetails().getTag();
                                 break;
                             }
                         }
                         if (validateAddress(resolvedAddress)) {
                             coinData.setResolvedPayIdAddress(resolvedAddress);
+                            coinData.setResolvedPayIdTag(resolvedTag);
 
                             XrpXAddressDecoded xAddressDecoded = XrpXAddressService.Companion.decode(resolvedAddress);
                             if (xAddressDecoded == null) { // classic address
