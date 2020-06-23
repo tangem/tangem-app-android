@@ -37,6 +37,8 @@ class CreateWalletResponse(
  */
 class CreateWalletCommand : Command<CreateWalletResponse>() {
 
+    override val requiresPin2 = true
+
     override fun performPreCheck(card: Card): TangemSdkError? {
         if (card.isActivated) {
             return TangemSdkError.NotActivated()

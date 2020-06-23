@@ -32,6 +32,8 @@ class SignResponse(
  */
 class SignCommand(private val hashes: Array<ByteArray>) : Command<SignResponse>() {
 
+    override val requiresPin2 = true
+
     //TODO: Allow signing more than 10 hashes
 
     private val hashSizes = if (hashes.isNotEmpty()) hashes.first().size else 0
