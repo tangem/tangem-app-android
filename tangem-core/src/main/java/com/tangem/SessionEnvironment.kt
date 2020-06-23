@@ -24,12 +24,12 @@ data class SessionEnvironment(
         val handleErrors: Boolean = true
 ) {
 
-    var isDefaultPin1: Boolean = Companion.pin1.contentEquals(DEFAULT_PIN.calculateSha256())
-    var isDefaultPin2: Boolean = pin2.contentEquals(DEFAULT_PIN2.calculateSha256())
-
     var pin1: ByteArray = SessionEnvironment.pin1
     private set
     get() = SessionEnvironment.pin1
+
+    fun isCurrentPin1Default(): Boolean = Companion.pin1.contentEquals(DEFAULT_PIN.calculateSha256())
+    fun isCurrentPin2Default(): Boolean = pin2.contentEquals(DEFAULT_PIN2.calculateSha256())
 
     fun setPin1(pin1: String) {
         SessionEnvironment.pin1 = pin1.calculateSha256()
