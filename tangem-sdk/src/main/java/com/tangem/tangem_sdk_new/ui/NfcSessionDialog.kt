@@ -1,11 +1,16 @@
 package com.tangem.tangem_sdk_new.ui
 
 import android.animation.ObjectAnimator
+import android.app.Activity
 import android.view.HapticFeedbackConstants
+import android.view.KeyEvent
 import android.view.View
 import android.view.animation.DecelerateInterpolator
+import android.view.inputmethod.InputMethodManager
+import android.widget.TextView
 import androidx.fragment.app.FragmentActivity
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.tangem.Log
 import com.tangem.tangem_sdk_new.R
 import com.tangem.tangem_sdk_new.SessionViewDelegateState
 import com.tangem.tangem_sdk_new.extensions.localizedDescription
@@ -121,11 +126,34 @@ class NfcSessionDialog(val activity: FragmentActivity) : BottomSheetDialog(activ
     }
 
     private fun onPinRequested(state: SessionViewDelegateState.PinRequested) {
-        TODO("To be implemented")
+
+        tvTaskText?.visibility = View.INVISIBLE
+        tvTaskTitle?.visibility = View.INVISIBLE
+        show(flPin)
+
+        performHapticFeedback()
+        etPin?.setOnEditorActionListener { v: TextView?, actionId: Int, event: KeyEvent? ->
+            postUI {
+                if (actionId == KeyEvent.KEYCODE_ENDCALL) {
+                    show(lTouchCard)
+                    tvTaskTitle?.show()
+                    tvTaskText?.show()
+                    val imm: InputMethodManager =
+                        context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(v?.windowToken, 0)
+
+                    v?.text?.toString()?.let { state.callback(it) }
+                }
+            }
+            true
+        }
     }
 
     private fun onTagLost() {
-        if (currentState is SessionViewDelegateState.Success) return
+        if (currentState is SessionViewDelegateState.Success ||
+            currentState is SessionViewDelegateState.PinRequested) {
+            return
+        }
         show(lTouchCard)
         tvTaskTitle?.text = activity.getText(R.string.dialog_ready_to_scan)
         tvTaskText?.text = activity.getText(R.string.dialog_scan_text)
@@ -160,6 +188,7 @@ class NfcSessionDialog(val activity: FragmentActivity) : BottomSheetDialog(activ
         flReading?.show(view.id == flReading.id)
         flError?.show(view.id == flError.id)
         flCompletion?.show(view.id == flCompletion.id)
+        flPin?.show(view.id == flPin.id)
     }
 
     private fun performHapticFeedback() {
