@@ -231,6 +231,14 @@ class CardSession(
         }
     }
 
+    fun pause() {
+        reader.stopSession()
+    }
+
+    fun resume() {
+        reader.startSession()
+    }
+
     private suspend fun establishEncryptionIfNeeded(): CompletionResult<Boolean> {
         if (environment.encryptionMode == EncryptionMode.NONE || environment.encryptionKey != null) {
             return CompletionResult.Success(true)

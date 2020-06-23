@@ -125,7 +125,6 @@ enum class TlvTag(val code: Int) {
     fun valueType(): TlvValueType {
         return when (this) {
             CardId, Batch, CrExKey -> TlvValueType.HexString
-            NewPin, NewPin2, NewPin3 -> TlvValueType.HexStringToHash
             ManufactureId, Firmware, IssuerId, BlockchainId, TokenSymbol, TokenContractAddress ->
                 TlvValueType.Utf8String
             CurveId -> TlvValueType.EllipticCurve
