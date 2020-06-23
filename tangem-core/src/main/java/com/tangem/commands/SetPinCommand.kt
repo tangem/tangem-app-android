@@ -66,7 +66,7 @@ class SetPinCommand(
         tlvBuilder.append(TlvTag.NewPin, newPin1)
         tlvBuilder.append(TlvTag.NewPin2, newPin2)
         tlvBuilder.append(TlvTag.NewPin3, newPin3)
-        return CommandApdu(Instruction.SwapPIN, tlvBuilder.serialize())
+        return CommandApdu(Instruction.SetPin, tlvBuilder.serialize())
     }
 
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): SetPinResponse {
