@@ -15,7 +15,7 @@ enum class Instruction(var code: Int) {
     ReadIssuerData(0xF7),
     CreateWallet(0xF8),
     CheckWallet(0xF9),
-    SwapPIN(0xFA),
+    SetPin(0xFA),
     Sign(0xFB),
     PurgeWallet(0xFC),
     Activate(0xFE),
