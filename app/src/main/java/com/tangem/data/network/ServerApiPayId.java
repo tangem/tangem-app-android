@@ -23,7 +23,9 @@ public class ServerApiPayId {
         switch (blockchain) {
             case Ripple: return "application/xrpl-mainnet+json";
             case Bitcoin: return "application/btc-mainnet+json";
-            case Ethereum: return "application/eth-mainnet+json";
+            case Ethereum:
+            case Token:
+                return "application/eth-mainnet+json";
             default: throw new InvalidParameterException("PayID is not supported for " + blockchain.getOfficialName());
         }
     }
