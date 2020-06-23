@@ -9,7 +9,7 @@ class ByteArrayExtensionsTest {
 
     @Test
     fun `card Id to Hex String`() {
-        val hex = "cb22000000027374"
+        val hex = "CB22000000027374"
         val bytes = byteArrayOf(-53, 34, 0, 0, 0, 2, 115, 116)
         assertThat(bytes.toHexString())
                 .matches(hex)
