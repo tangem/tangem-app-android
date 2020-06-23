@@ -14,7 +14,6 @@ import com.tangem.crypto.CryptoUtils.generatePublicKey
  * @property terminalKeys generated terminal keys used in Linked Terminal feature.
  */
 data class SessionEnvironment(
-        var pin1: ByteArray = DEFAULT_PIN.calculateSha256(),
         var pin2: ByteArray = DEFAULT_PIN2.calculateSha256(),
         var card: Card? = null,
         var terminalKeys: KeyPair? = null,
@@ -25,8 +24,14 @@ data class SessionEnvironment(
         val handleErrors: Boolean = true
 ) {
 
+    var isDefaultPin1: Boolean = Companion.pin1.contentEquals(DEFAULT_PIN.calculateSha256())
+
+    var pin1: ByteArray = SessionEnvironment.pin1
+    private set
+    get() = SessionEnvironment.pin1
+
     fun setPin1(pin1: String) {
-        this.pin1 = pin1.calculateSha256()
+        SessionEnvironment.pin1 = pin1.calculateSha256()
     }
 
     fun setPin2(pin2: String) {
@@ -36,6 +41,8 @@ data class SessionEnvironment(
     companion object {
         const val DEFAULT_PIN = "000000"
         const val DEFAULT_PIN2 = "000"
+
+        var pin1: ByteArray = DEFAULT_PIN.calculateSha256()
     }
 }
 
