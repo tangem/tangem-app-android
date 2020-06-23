@@ -38,21 +38,11 @@ interface CommandResponse
 abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRunnable<T> {
 
     override val performPreflightRead: Boolean = true
+    open val requiresPin2: Boolean = false
 
     override fun run(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
         Log.i("Command", "Initializing ${this::class.java.simpleName}")
-
-        if (requiresPin2() && session.environment.isDefaultPin2) {
-            handlePin2(session, callback)
-        } else {
-            transceive(session, callback)
-        }
-
-    }
-
-    private fun Command<*>.requiresPin2(): Boolean {
-        return this is SignCommand || this is PurgeWalletCommand ||
-                this is CreateWalletCommand || this is WriteUserDataCommand
+        transceive(session, callback)
     }
 
     open fun performPreCheck(card: Card): TangemSdkError? = null
@@ -67,6 +57,11 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
                 callback(CompletionResult.Failure(error))
                 return
             }
+        }
+
+        if (requiresPin2 && session.environment.isCurrentPin2Default()) {
+            handlePin2(session, callback)
+            return
         }
 
         val apdu = serialize(session.environment)
@@ -192,7 +187,7 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
         session: CardSession,
         callback: (result: CompletionResult<T>) -> Unit
     ) {
-        if (!session.environment.isDefaultPin1) {
+        if (!session.environment.isCurrentPin1Default()) {
             session.environment.setPin1(SessionEnvironment.DEFAULT_PIN)
             transceive(session, callback)
             return
@@ -225,7 +220,7 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
                             transceive(session, callback)
                         } else {
                             session.environment.setPin2(SessionEnvironment.DEFAULT_PIN2)
-                            transceive(session, callback)
+                            callback(CompletionResult.Failure(TangemSdkError.Pin2OrCvcRequired()))
                         }
                     }
                 }
