@@ -43,7 +43,8 @@ class PurgeWalletCommand : Command<PurgeWalletResponse>() {
         return when (card.status) {
             CardStatus.Loaded -> null
             CardStatus.NotPersonalized -> TangemSdkError.NotPersonalized()
-            CardStatus.Empty, CardStatus.Purged -> TangemSdkError.CardIsEmpty()
+            CardStatus.Empty -> TangemSdkError.CardIsEmpty()
+            CardStatus.Purged -> TangemSdkError.CardIsPurged()
             null -> TangemSdkError.CardError()
         }
     }
