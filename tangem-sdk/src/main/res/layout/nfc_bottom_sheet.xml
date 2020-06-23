@@ -57,7 +57,6 @@
 
     </LinearLayout>
 
-
     <TextView
         android:id="@+id/tvTaskTitle"
         android:layout_width="wrap_content"
@@ -74,6 +73,37 @@
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:layout_gravity="center" />
+
+    <FrameLayout
+        android:id="@+id/flPin"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_gravity="center"
+        android:visibility="gone">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilPin"
+        android:layout_width="match_parent"
+        android:layout_height="345dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="16dp"
+        android:backgroundTint="#f3f5f6"
+        android:layout_gravity="center"
+        android:gravity="center"
+        app:passwordToggleEnabled="true">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etPin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#f3f5f6"
+            android:hint="Enter PIN"
+            android:inputType="textPassword" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    </FrameLayout>
+
 
     <FrameLayout
         android:id="@+id/flSecurityDelay"
