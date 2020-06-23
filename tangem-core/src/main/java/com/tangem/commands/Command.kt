@@ -38,6 +38,7 @@ interface CommandResponse
 abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRunnable<T> {
 
     override val performPreflightRead: Boolean = true
+    open val requiresPin2: Boolean = false
 
     override fun run(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
         Log.i("Command", "Initializing ${this::class.java.simpleName}")
@@ -56,6 +57,11 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
                 callback(CompletionResult.Failure(error))
                 return
             }
+        }
+
+        if (requiresPin2 && session.environment.isCurrentPin2Default()) {
+            handlePin2(session, callback)
+            return
         }
 
         val apdu = serialize(session.environment)
@@ -181,7 +187,7 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
         session: CardSession,
         callback: (result: CompletionResult<T>) -> Unit
     ) {
-        if (!session.environment.isDefaultPin1) {
+        if (!session.environment.isCurrentPin1Default()) {
             session.environment.setPin1(SessionEnvironment.DEFAULT_PIN)
             transceive(session, callback)
             return
@@ -196,6 +202,31 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
                 session.environment.setPin1(SessionEnvironment.DEFAULT_PIN)
                 session.resume()
                 transceive(session, callback)
+            }
+        }
+    }
+
+    private fun handlePin2(
+        session: CardSession,
+        callback: (result: CompletionResult<T>) -> Unit
+    ) {
+        val checkPinCommand = SetPinCommand(session.environment.pin1, session.environment.pin2)
+        checkPinCommand.run(session) { result ->
+            when (result) {
+                is CompletionResult.Failure -> {
+                    session.viewDelegate.onPinRequested { pin2 ->
+                        if (!pin2.isNullOrEmpty()) {
+                            session.environment.setPin2(pin2)
+                            transceive(session, callback)
+                        } else {
+                            session.environment.setPin2(SessionEnvironment.DEFAULT_PIN2)
+                            callback(CompletionResult.Failure(TangemSdkError.Pin2OrCvcRequired()))
+                        }
+                    }
+                }
+                is CompletionResult.Success -> {
+                    transceive(session, callback)
+                }
             }
         }
     }
