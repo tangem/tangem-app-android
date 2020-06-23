@@ -375,10 +375,10 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
     }
 
     private fun createPayId(payId: String) {
-        val network = if (ctx.blockchain == Blockchain.Ripple) "XRPL" else ctx.blockchain.id
+        val network = if (ctx.blockchain == Blockchain.Ripple) "XRPL" else ctx.blockchain.currency
         viewModel.setPayId(
-            Util.byteArrayToHexString(ctx.card!!.cid!!),
-            Util.byteArrayToHexString(ctx.card!!.cardPublicKey!!),
+            Util.byteArrayToHexString(ctx.card.cid!!),
+            Util.byteArrayToHexString(ctx.card.cardPublicKey!!),
             payId,
             ctx.coinData.wallet,
             network
