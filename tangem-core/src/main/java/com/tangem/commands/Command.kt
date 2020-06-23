@@ -64,6 +64,10 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
                 is CompletionResult.Failure -> {
                     if (session.environment.handleErrors) {
                         val error = mapError(session.environment.card, result.error)
+                        if (error is TangemSdkError.Pin1Required) {
+                            handlePin1(session, callback)
+                            return@transceiveApdu
+                        }
                         callback(CompletionResult.Failure(error))
                         return@transceiveApdu
 
@@ -80,7 +84,6 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
                 }
             }
         }
-
     }
 
     private fun transceiveApdu(
@@ -96,8 +99,10 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
                     val responseApdu = result.data
 
                     when (responseApdu.statusWord) {
-                        StatusWord.ProcessCompleted, StatusWord.Pin1Changed,
-                        StatusWord.Pin2Changed, StatusWord.PinsChanged -> {
+                        StatusWord.ProcessCompleted,
+                        StatusWord.Pin1Changed, StatusWord.Pin2Changed, StatusWord.Pins12Changed,
+                        StatusWord.Pin3Changed, StatusWord.Pins13Changed, StatusWord.Pins23Changed,
+                        StatusWord.Pins123Changed -> {
                             callback(CompletionResult.Success(responseApdu))
                         }
                         StatusWord.NeedPause -> {
@@ -172,4 +177,26 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
         return false
     }
 
+    private fun handlePin1(
+        session: CardSession,
+        callback: (result: CompletionResult<T>) -> Unit
+    ) {
+        if (!session.environment.isDefaultPin1) {
+            session.environment.setPin1(SessionEnvironment.DEFAULT_PIN)
+            transceive(session, callback)
+            return
+        }
+        session.pause()
+        session.viewDelegate.onPinRequested { pin1 ->
+            if (!pin1.isNullOrEmpty()) {
+                session.environment.setPin1(pin1)
+                session.resume()
+                transceive(session, callback)
+            } else {
+                session.environment.setPin1(SessionEnvironment.DEFAULT_PIN)
+                session.resume()
+                transceive(session, callback)
+            }
+        }
+    }
 }
