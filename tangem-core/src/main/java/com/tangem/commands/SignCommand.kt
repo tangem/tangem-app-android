@@ -31,6 +31,8 @@ class SignResponse(
  * @property cardId CID, Unique Tangem card ID number
  */
 class SignCommand(private val hashes: Array<ByteArray>) : Command<SignResponse>() {
+
+    override val requiresPin2 = true
 // [REDACTED_TODO_COMMENT]
 
     private val hashSizes = if (hashes.isNotEmpty()) hashes.first().size else 0

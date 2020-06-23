@@ -29,6 +29,8 @@ class PurgeWalletResponse(
  */
 class PurgeWalletCommand : Command<PurgeWalletResponse>() {
 
+    override val requiresPin2 = true
+
     override fun performPreCheck(card: Card): TangemSdkError? {
         if (card.status == CardStatus.NotPersonalized) {
             return TangemSdkError.NotPersonalized()
