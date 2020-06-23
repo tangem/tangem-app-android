@@ -5,19 +5,27 @@ import com.tangem.TangemSdkError
 /**
  * Part of a response from the card, shows the status of the operation
  */
-enum class StatusWord(val code: Int, val description: String) {
+enum class StatusWord(val code: Int) {
 
-    ProcessCompleted(0x9000, "SW_PROCESS_COMPLETED"),
-    InvalidParams(0x6A86, "SW_INVALID_PARAMS"),
-    ErrorProcessingCommand(0x6286, "SW_ERROR_PROCESSING_COMMAND"),
-    InvalidState(0x6985, "SW_INVALID_STATE"),
-    Pin1Changed(ProcessCompleted.code + 0x0001, "SW_PIN1_CHANGED"),
-    Pin2Changed(ProcessCompleted.code + 0x0002, "SW_PIN2_CHANGED"),
-    PinsChanged(ProcessCompleted.code + 0x0003, "SW_PINS_CHANGED"),
-    InsNotSupported(0x6D00, "SW_INS_NOT_SUPPORTED"),
-    NeedEncryption(0x6982, "SW_NEED_ENCRYPTION"),
-    NeedPause(0x9789, "SW_NEED_PAUSE"),
-    Unknown(0x0000, "SW_UNKNOWN");
+    ProcessCompleted(0x9000),
+    InvalidParams(0x6A86),
+    ErrorProcessingCommand(0x6286),
+    InvalidState(0x6985),
+
+    //PinsNotChanged(0x9000) is equal to ProcessCompleted(0x9000)
+    Pin1Changed(0x9001),
+    Pin2Changed(0x9002),
+    Pins12Changed(0x9003),
+    Pin3Changed(0x9004),
+    Pins13Changed(0x9005),
+    Pins23Changed(0x9006),
+    Pins123Changed(0x9007),
+
+
+    InsNotSupported(0x6D00),
+    NeedEncryption(0x6982),
+    NeedPause(0x9789),
+    Unknown(0x0000);
 
     companion object {
         private val values = values()
@@ -28,7 +36,8 @@ enum class StatusWord(val code: Int, val description: String) {
 fun StatusWord.toTangemSdkError(): TangemSdkError? {
     return when (this) {
         StatusWord.ProcessCompleted, StatusWord.Pin1Changed,
-        StatusWord.Pin2Changed, StatusWord.PinsChanged -> null
+        StatusWord.Pin2Changed,  StatusWord.Pins12Changed, StatusWord.Pin3Changed,
+        StatusWord.Pins13Changed, StatusWord.Pins23Changed, StatusWord.Pins123Changed -> null
         StatusWord.NeedPause -> null
         StatusWord.InvalidParams -> TangemSdkError.InvalidParams()
         StatusWord.ErrorProcessingCommand -> TangemSdkError.ErrorProcessingCommand()
