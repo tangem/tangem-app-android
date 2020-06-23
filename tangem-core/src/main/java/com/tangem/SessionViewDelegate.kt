@@ -1,7 +1,5 @@
 package com.tangem
 
-import com.tangem.common.CompletionResult
-
 /**
  * Allows interaction with users and shows visual elements.
  *
@@ -49,8 +47,7 @@ interface SessionViewDelegate {
     /**
      * It is called when a user is expected to enter pin code.
      */
-    fun onPinRequested(callback: (result: CompletionResult<String>) -> Unit)
-
+    fun onPinRequested(callback: (pin: String?) -> Unit)
 }
 
 /**
