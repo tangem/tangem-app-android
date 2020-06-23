@@ -32,6 +32,8 @@ class WriteUserDataCommand(private val userData: ByteArray? = null, private val 
                            private val userCounter: Int? = null,
                            private val userProtectedCounter: Int? = null) : Command<WriteUserDataResponse>() {
 
+    override val requiresPin2 = true
+
     override fun performPreCheck(card: Card): TangemSdkError? {
         if (card.status == CardStatus.NotPersonalized) {
             return TangemSdkError.NotPersonalized()
