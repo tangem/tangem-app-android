@@ -8,6 +8,8 @@ import com.tangem.commands.personalization.entities.Acquirer
 import com.tangem.commands.personalization.entities.CardConfig
 import com.tangem.commands.personalization.entities.Issuer
 import com.tangem.commands.personalization.entities.Manufacturer
+import com.tangem.commands.verifycard.VerifyCardCommand
+import com.tangem.commands.verifycard.VerifyCardResponse
 import com.tangem.common.CompletionResult
 import com.tangem.common.TerminalKeysService
 import com.tangem.crypto.CryptoUtils
@@ -292,6 +294,27 @@ class TangemSdk(
     fun purgeWallet(cardId: String? = null, initialMessage: Message? = null,
                     callback: (result: CompletionResult<PurgeWalletResponse>) -> Unit) {
         startSessionWithRunnable(PurgeWalletCommand(), cardId, initialMessage, callback)
+    }
+
+    /**
+     * This method launches a [VerifyCardCommand] on a new thread.
+     *
+     * The command to ensures the card has not been counterfeited.
+     * By using standard challenge-response scheme, the card proves possession of CardPrivateKey
+     * that corresponds to CardPublicKey returned by [ReadCommand]. Then the data is sent
+     * to Tangem server to prove that  this card was indeed issued by Tangem.
+     * The online part of the verification is unavailable for DevKit cards.
+     *
+     *
+     * @param cardId CID, Unique Tangem card ID number.
+     * @param online flag that allows disable online verification
+     * @param callback is triggered on the completion of the [VerifyCardCommand] and provides
+     * card response in the form of [VerifyCardResponse] if the task was performed successfully
+     * or [TangemSdkError] in case of an error.
+     */
+    fun verify(cardId: String? = null, online: Boolean = true, initialMessage: Message? = null,
+               callback: (result: CompletionResult<VerifyCardResponse>) -> Unit) {
+        startSessionWithRunnable(VerifyCardCommand(online), cardId, initialMessage, callback)
     }
 
     /**
