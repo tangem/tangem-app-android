@@ -36,6 +36,14 @@ class Config(
          */
         val cardFilter: CardFilter = CardFilter(),
 
-        var handleErrors: Boolean = true
+        var handleErrors: Boolean = true,
+
+        var defaultPin1: String = "000000",
+
+        var defaultPin2: String = "000",
+
+        var savePin1InStaticField: Boolean = true,
+
+        var savePin2InStaticField: Boolean = false
 
 )
