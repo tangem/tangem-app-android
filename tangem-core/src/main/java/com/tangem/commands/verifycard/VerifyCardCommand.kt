@@ -137,7 +137,7 @@ class VerifyCardCommand(private val onlineVerification: Boolean) : Command<Verif
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
-        tlvBuilder.append(TlvTag.Pin, environment.pin1)
+        tlvBuilder.append(TlvTag.Pin, environment.pin1?.value)
         tlvBuilder.append(TlvTag.CardId, environment.card?.cardId)
         tlvBuilder.append(TlvTag.Challenge, challenge)
         return CommandApdu(Instruction.VerifyCard, tlvBuilder.serialize())
