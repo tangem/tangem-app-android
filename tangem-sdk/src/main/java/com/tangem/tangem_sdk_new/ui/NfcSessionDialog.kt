@@ -10,7 +10,6 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import androidx.fragment.app.FragmentActivity
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.tangem.Log
 import com.tangem.tangem_sdk_new.R
 import com.tangem.tangem_sdk_new.SessionViewDelegateState
 import com.tangem.tangem_sdk_new.extensions.localizedDescription
@@ -24,6 +23,9 @@ class NfcSessionDialog(val activity: FragmentActivity) : BottomSheetDialog(activ
     private var currentState: SessionViewDelegateState? = null
 
     fun show(state: SessionViewDelegateState) {
+        if (!this.isShowing) {
+            this.show()
+        }
         when (state) {
             is SessionViewDelegateState.Ready -> onReady(state)
             is SessionViewDelegateState.Success -> onSuccess(state)
@@ -135,14 +137,21 @@ class NfcSessionDialog(val activity: FragmentActivity) : BottomSheetDialog(activ
         etPin?.setOnEditorActionListener { v: TextView?, actionId: Int, event: KeyEvent? ->
             postUI {
                 if (actionId == KeyEvent.KEYCODE_ENDCALL) {
-                    show(lTouchCard)
-                    tvTaskTitle?.show()
-                    tvTaskText?.show()
-                    val imm: InputMethodManager =
-                        context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-                    imm.hideSoftInputFromWindow(v?.windowToken, 0)
+                    if (v?.text.isNullOrBlank()) {
+                        etPin?.error = ""
+                    } else {
+                        show(lTouchCard)
+                        tvTaskTitle?.show()
+                        tvTaskText?.show()
+                        val imm: InputMethodManager =
+                                context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+                        imm.hideSoftInputFromWindow(v?.windowToken, 0)
 
-                    v?.text?.toString()?.let { state.callback(it) }
+                        v?.text.toString().let { pin ->
+                            v?.text = ""
+                            state.callback(pin)
+                        }
+                    }
                 }
             }
             true
