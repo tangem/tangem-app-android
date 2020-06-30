@@ -31,24 +31,44 @@ internal class ScanTask : CardSessionRunnable<Card> {
                 is CompletionResult.Success -> {
                     val card = readResult.data
                     session.environment.card = card
-                     if (card.cardData?.productMask?.contains(Product.Tag) != false) {
-                        callback(CompletionResult.Success(card))
-
-                    } else if (card.status != CardStatus.Loaded) {
-                        callback(CompletionResult.Success(card))
-
-                    } else if (card.curve == null || card.walletPublicKey == null) {
-                        callback(CompletionResult.Failure(TangemSdkError.CardError()))
-
-                    } else {
-                        val checkWalletCommand = CheckWalletCommand(card.curve, card.walletPublicKey)
-                        checkWalletCommand.run(session) { result ->
+                    if (session.environment.pin1 != null && session.environment.pin2 != null) {
+                        val checkPinCommand = SetPinCommand(session.environment.pin1!!.value, session.environment.pin2!!.value)
+                        checkPinCommand.run(session) { result ->
                             when (result) {
-                                is CompletionResult.Success -> callback(CompletionResult.Success(card))
-                                is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
+                                is CompletionResult.Failure -> {
+                                    session.environment.pin2 = null
+                                }
                             }
+                            session.environment.restoreCardValues()
                         }
+                    } else {
+                        runCheckWalletIfNeeded(card, session, callback)
                     }
+
+                }
+            }
+        }
+    }
+
+    private fun runCheckWalletIfNeeded(
+            card: Card, session: CardSession,
+            callback: (result: CompletionResult<Card>) -> Unit
+    ) {
+        if (card.cardData?.productMask?.contains(Product.Tag) != false) {
+            callback(CompletionResult.Success(card))
+
+        } else if (card.status != CardStatus.Loaded) {
+            callback(CompletionResult.Success(card))
+
+        } else if (card.curve == null || card.walletPublicKey == null) {
+            callback(CompletionResult.Failure(TangemSdkError.CardError()))
+
+        } else {
+            val checkWalletCommand = CheckWalletCommand(card.curve, card.walletPublicKey)
+            checkWalletCommand.run(session) { result ->
+                when (result) {
+                    is CompletionResult.Success -> callback(CompletionResult.Success(card))
+                    is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
                 }
             }
         }
