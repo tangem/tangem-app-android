@@ -5,7 +5,6 @@ import android.view.View
 import android.widget.CompoundButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.tangem.SessionEnvironment
 import com.tangem.TangemSdk
 import com.tangem.TangemSdkError
 import com.tangem.common.CompletionResult
@@ -103,7 +102,7 @@ class TestUserDataActivity : AppCompatActivity() {
         chb_with_ud_protected.setOnCheckedChangeListener { buttonView, isChecked -> writeOptions.updateProtectedData(buttonView) }
         chb_with_counter.setOnCheckedChangeListener { buttonView, isChecked -> writeOptions.updateCounter(buttonView) }
         chb_with_protected_counter.setOnCheckedChangeListener { buttonView, isChecked -> writeOptions.updateProtectedCounter(buttonView) }
-        chb_with_pin2.setOnCheckedChangeListener { buttonView, isChecked -> writeOptions.updatePin2(buttonView) }
+//        chb_with_pin2.setOnCheckedChangeListener { buttonView, isChecked -> writeOptions.updatePin2(buttonView) }
     }
 
     private fun showReadWriteSection(show: Boolean) {
@@ -140,8 +139,8 @@ class WriteOptions {
         userProtectedCounter = if (chbx.isChecked) value else null
     }
 
-    fun updatePin2(chbx: CompoundButton) {
-        val value = SessionEnvironment.DEFAULT_PIN2
-        pin2 = if (chbx.isChecked) value else null
-    }
+//    fun updatePin2(chbx: CompoundButton) {
+//        val value = SessionEnvironment.pin1.DEFAULT_PIN2
+//        pin2 = if (chbx.isChecked) value else null
+//    }
 }
