@@ -2,6 +2,7 @@ package com.tangem.commands
 
 import com.tangem.*
 import com.tangem.common.CompletionResult
+import com.tangem.common.PinCode
 import com.tangem.common.apdu.*
 import com.tangem.common.extensions.toInt
 import com.tangem.common.tlv.TlvTag
@@ -50,7 +51,6 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
     open fun mapError(card: Card?, error: TangemSdkError): TangemSdkError = error
 
     fun transceive(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
-
         val card = session.environment.card
         if (session.environment.handleErrors && card != null) {
             performPreCheck(card)?.let { error ->
@@ -58,12 +58,14 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
                 return
             }
         }
-
-        if (requiresPin2 && session.environment.isCurrentPin2Default()) {
+        if (requiresPin2 && session.environment.pin2?.isDefault == true) {
             handlePin2(session, callback)
             return
         }
+        transceiveInternal(session, callback)
+    }
 
+    private fun transceiveInternal(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
         val apdu = serialize(session.environment)
         transceiveApdu(apdu, session) { result ->
             when (result) {
@@ -72,6 +74,10 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
                         val error = mapError(session.environment.card, result.error)
                         if (error is TangemSdkError.Pin1Required) {
                             handlePin1(session, callback)
+                            return@transceiveApdu
+                        }
+                        if (error is TangemSdkError.Pin2OrCvcRequired) {
+                            handlePin2(session, callback)
                             return@transceiveApdu
                         }
                         callback(CompletionResult.Failure(error))
@@ -93,9 +99,9 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
     }
 
     private fun transceiveApdu(
-        apdu: CommandApdu,
-        session: CardSession,
-        callback: (result: CompletionResult<ResponseApdu>) -> Unit
+            apdu: CommandApdu,
+            session: CardSession,
+            callback: (result: CompletionResult<ResponseApdu>) -> Unit
     ) {
         Log.i(this::class.simpleName!!, "transieve: ${Instruction.byCode(apdu.ins)}")
 
@@ -114,17 +120,17 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
                         StatusWord.NeedPause -> {
                             // NeedPause is returned from the card whenever security delay is triggered.
                             val remainingTime =
-                                deserializeSecurityDelay(responseApdu)
+                                    deserializeSecurityDelay(responseApdu)
                             if (remainingTime != null) {
                                 session.viewDelegate.onSecurityDelay(
-                                    remainingTime,
-                                    session.environment.card?.pauseBeforePin2 ?: 0
+                                        remainingTime,
+                                        session.environment.card?.pauseBeforePin2 ?: 0
                                 )
                             }
                             Log.i(
-                                this::class.simpleName!!,
-                                "Nfc command ${this::class.simpleName!!} " +
-                                        "triggered security delay of $remainingTime milliseconds"
+                                    this::class.simpleName!!,
+                                    "Nfc command ${this::class.simpleName!!} " +
+                                            "triggered security delay of $remainingTime milliseconds"
                             )
                             transceiveApdu(apdu, session, callback)
                         }
@@ -149,7 +155,7 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
                         }
                         else -> {
                             val error = responseApdu.statusWord.toTangemSdkError()
-                            if (error != null && !tryHandleError(error)) {
+                            if (error != null) {
                                 callback(CompletionResult.Failure(error))
                             } else {
                                 callback(CompletionResult.Failure(TangemSdkError.UnknownError()))
@@ -173,61 +179,56 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
      * @return Remaining security delay in milliseconds.
      */
     private fun deserializeSecurityDelay(
-        responseApdu: ResponseApdu
+            responseApdu: ResponseApdu
     ): Int? {
         val tlv = responseApdu.getTlvData()
         return tlv?.find { it.tag == TlvTag.Pause }?.value?.toInt()
     }
 
-    private fun tryHandleError(error: TangemSdkError): Boolean {
-        return false
-    }
-
     private fun handlePin1(
-        session: CardSession,
-        callback: (result: CompletionResult<T>) -> Unit
+            session: CardSession,
+            callback: (result: CompletionResult<T>) -> Unit
     ) {
-        if (!session.environment.isCurrentPin1Default()) {
-            session.environment.setPin1(SessionEnvironment.DEFAULT_PIN)
-            transceive(session, callback)
-            return
-        }
         session.pause()
         session.viewDelegate.onPinRequested { pin1 ->
-            if (!pin1.isNullOrEmpty()) {
-                session.environment.setPin1(pin1)
-                session.resume()
-                transceive(session, callback)
-            } else {
-                session.environment.setPin1(SessionEnvironment.DEFAULT_PIN)
-                session.resume()
-                transceive(session, callback)
-            }
+            session.environment.pin1 = PinCode(pin1)
+            session.resume()
+            transceive(session, callback)
         }
     }
 
     private fun handlePin2(
-        session: CardSession,
-        callback: (result: CompletionResult<T>) -> Unit
+            session: CardSession,
+            callback: (result: CompletionResult<T>) -> Unit
     ) {
-        val checkPinCommand = SetPinCommand(session.environment.pin1, session.environment.pin2)
+        val currentPin1 = session.environment.pin1?.value ?: run {
+            callback(CompletionResult.Failure(TangemSdkError.Pin1Required()))
+            return
+        }
+        val currentPin2 = session.environment.pin2?.value ?: run {
+            callback(CompletionResult.Failure(TangemSdkError.Pin2OrCvcRequired()))
+            return
+        }
+
+        val checkPinCommand = SetPinCommand(currentPin1, currentPin2)
         checkPinCommand.run(session) { result ->
             when (result) {
                 is CompletionResult.Failure -> {
-                    session.viewDelegate.onPinRequested { pin2 ->
-                        if (!pin2.isNullOrEmpty()) {
-                            session.environment.setPin2(pin2)
-                            transceive(session, callback)
-                        } else {
-                            session.environment.setPin2(SessionEnvironment.DEFAULT_PIN2)
-                            callback(CompletionResult.Failure(TangemSdkError.Pin2OrCvcRequired()))
-                        }
-                    }
+                    session.environment.pin2 = null
+                    getPin2FromDelegate(session, callback)
                 }
                 is CompletionResult.Success -> {
-                    transceive(session, callback)
+                    transceiveInternal(session, callback)
                 }
             }
+        }
+    }
+
+    private fun getPin2FromDelegate(session: CardSession,
+                                    callback: (result: CompletionResult<T>) -> Unit) {
+        session.viewDelegate.onPinRequested { pin2 ->
+            session.environment.pin2 = PinCode(pin2)
+            transceive(session, callback)
         }
     }
 }
