@@ -47,7 +47,7 @@ interface SessionViewDelegate {
     /**
      * It is called when a user is expected to enter pin code.
      */
-    fun onPinRequested(callback: (pin: String?) -> Unit)
+    fun onPinRequested(callback: (pin: String) -> Unit)
 }
 
 /**
