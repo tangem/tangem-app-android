@@ -61,9 +61,9 @@ class PurgeWalletCommand : Command<PurgeWalletResponse>() {
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
-        tlvBuilder.append(TlvTag.Pin, environment.pin1)
+        tlvBuilder.append(TlvTag.Pin, environment.pin1?.value)
         tlvBuilder.append(TlvTag.CardId, environment.card?.cardId)
-        tlvBuilder.append(TlvTag.Pin2, environment.pin2)
+        tlvBuilder.append(TlvTag.Pin2, environment.pin2?.value)
         return CommandApdu(Instruction.PurgeWallet, tlvBuilder.serialize())
     }
 
