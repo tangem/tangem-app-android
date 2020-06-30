@@ -6,7 +6,6 @@ import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.Instruction
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.apdu.StatusWord
-import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvDecoder
 import com.tangem.common.tlv.TlvTag
@@ -40,28 +39,27 @@ enum class SetPinStatus {
 }
 
 class SetPinResponse(
-    /**
-     * CID, Unique Tangem card ID number.
-     */
-    val cardId: String,
-    /**
-     *
-     */
-    val status: SetPinStatus
+        /**
+         * CID, Unique Tangem card ID number.
+         */
+        val cardId: String,
+        /**
+         *
+         */
+        val status: SetPinStatus
 ) : CommandResponse
 
-
 class SetPinCommand(
-    private val newPin1: ByteArray = SessionEnvironment.DEFAULT_PIN.calculateSha256(),
-    private val newPin2: ByteArray = SessionEnvironment.DEFAULT_PIN2.calculateSha256(),
-    private val newPin3: ByteArray? = null
+        private var newPin1: ByteArray,
+        private var newPin2: ByteArray,
+        private var newPin3: ByteArray? = null
 ) : Command<SetPinResponse>() {
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
-        tlvBuilder.append(TlvTag.Pin, environment.pin1)
+        tlvBuilder.append(TlvTag.Pin, environment.pin1?.value)
         tlvBuilder.append(TlvTag.CardId, environment.card?.cardId)
-        tlvBuilder.append(TlvTag.Pin2, environment.pin2)
+        tlvBuilder.append(TlvTag.Pin2, environment.pin2?.value)
         tlvBuilder.append(TlvTag.Cvc, environment.cvc)
         tlvBuilder.append(TlvTag.NewPin, newPin1)
         tlvBuilder.append(TlvTag.NewPin2, newPin2)
@@ -72,12 +70,13 @@ class SetPinCommand(
     override fun deserialize(environment: SessionEnvironment, apdu: ResponseApdu): SetPinResponse {
         val tlvData = apdu.getTlvData() ?: throw TangemSdkError.DeserializeApduFailed()
 
-        val status = SetPinStatus.fromStatusWord(apdu.statusWord) ?: throw TangemSdkError.DecodingFailed()
+        val status = SetPinStatus.fromStatusWord(apdu.statusWord)
+                ?: throw TangemSdkError.DecodingFailed()
 
         val decoder = TlvDecoder(tlvData)
         return SetPinResponse(
-            cardId = decoder.decode(TlvTag.CardId),
-            status = status
+                cardId = decoder.decode(TlvTag.CardId),
+                status = status
         )
     }
 }

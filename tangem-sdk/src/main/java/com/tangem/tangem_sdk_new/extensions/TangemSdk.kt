@@ -1,7 +1,9 @@
 package com.tangem.tangem_sdk_new.extensions
 
 import androidx.fragment.app.FragmentActivity
+import com.squareup.sqldelight.android.AndroidSqliteDriver
 import com.tangem.Config
+import com.tangem.Database
 import com.tangem.SessionViewDelegate
 import com.tangem.TangemSdk
 import com.tangem.tangem_sdk_new.DefaultSessionViewDelegate
@@ -15,7 +17,8 @@ fun TangemSdk.Companion.init(activity: FragmentActivity, config: Config = Config
     val viewDelegate = DefaultSessionViewDelegate(nfcManager.reader)
     viewDelegate.activity = activity
 
-    val tangemSdk = TangemSdk(nfcManager.reader, viewDelegate, config)
+    val databaseDriver = AndroidSqliteDriver(Database.Schema, activity.applicationContext, "cards.db")
+    val tangemSdk = TangemSdk(nfcManager.reader, viewDelegate, config, databaseDriver)
     tangemSdk.setTerminalKeysService(TerminalKeysStorage(activity.application))
 
     return tangemSdk
@@ -32,7 +35,8 @@ fun TangemSdk.Companion.customInit(
             nfcManager.reader,
             viewDelegate ?: DefaultSessionViewDelegate(nfcManager.reader)
                     .apply { this.activity = activity },
-            config
+            config,
+            AndroidSqliteDriver(Database.Schema, activity.applicationContext, "cards.db")
     )
     tangemSdk.setTerminalKeysService(TerminalKeysStorage(activity.application))
 
