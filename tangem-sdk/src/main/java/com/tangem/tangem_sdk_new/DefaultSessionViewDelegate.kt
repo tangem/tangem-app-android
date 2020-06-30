@@ -19,20 +19,19 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
     }
 
     override fun onSessionStarted(cardId: String?, message: Message?) {
-        postUI { showReadingDialog(activity, cardId, message) }
+        postUI {
+            if (readingDialog == null) createReadingDialog(activity)
+            readingDialog?.show(SessionViewDelegateState.Ready(cardId, message))
+        }
     }
 
-    private fun showReadingDialog(activity: FragmentActivity, cardId: String?, message: Message?) {
+    private fun createReadingDialog(activity: FragmentActivity) {
         val dialogView = activity.layoutInflater.inflate(R.layout.nfc_bottom_sheet, null)
         readingDialog = NfcSessionDialog(activity)
         readingDialog?.setContentView(dialogView)
         readingDialog?.dismissWithAnimation = true
         readingDialog?.create()
-        readingDialog?.setOnShowListener {
-            readingDialog?.show(SessionViewDelegateState.Ready(cardId, message))
-        }
         readingDialog?.setOnCancelListener { reader.stopSession(true) }
-        readingDialog?.show()
     }
 
     override fun onSecurityDelay(ms: Int, totalDurationSeconds: Int) {
@@ -68,7 +67,7 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
         postUI { readingDialog?.show(SessionViewDelegateState.Error(error)) }
     }
 
-    override fun onPinRequested(callback: (pin: String?) -> Unit) {
+    override fun onPinRequested(callback: (pin: String) -> Unit) {
         postUI { readingDialog?.show(SessionViewDelegateState.PinRequested(callback)) }
     }
 
