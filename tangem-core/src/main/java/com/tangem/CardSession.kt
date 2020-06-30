@@ -1,9 +1,11 @@
 package com.tangem
 
+import com.tangem.commands.Command
 import com.tangem.commands.CommandResponse
 import com.tangem.commands.OpenSessionCommand
 import com.tangem.commands.ReadCommand
 import com.tangem.common.CompletionResult
+import com.tangem.common.PinCode
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.extensions.calculateSha256
@@ -27,6 +29,10 @@ interface CardSessionRunnable<T : CommandResponse> {
      * @param callback trigger the callback to complete the task.
      */
     fun run(session: CardSession, callback: (result: CompletionResult<T>) -> Unit)
+}
+
+interface CardSessionStoppedListener {
+    fun onSessionStopped(environment: SessionEnvironment)
 }
 
 enum class CardSessionState {
@@ -61,6 +67,7 @@ class CardSession(
 ) {
 
     var connectedTag: TagType? = null
+    var sessionStoppedListener: CardSessionStoppedListener? = null
 
     /**
      * True if some operation is still in progress.
@@ -74,7 +81,7 @@ class CardSession(
     private val tag = this.javaClass.simpleName
 
     /**
-     * This metod starts a card session, performs preflight [ReadCommand],
+     * This method starts a card session, performs preflight [ReadCommand],
      * invokes [CardSessionRunnable.run] and closes the session.
      * @param runnable [CardSessionRunnable] that will be performed in the session.
      * @param callback will be triggered with a [CompletionResult] of a session.
@@ -82,6 +89,24 @@ class CardSession(
     fun <T : CardSessionRunnable<R>, R : CommandResponse> startWithRunnable(
         runnable: T, callback: (result: CompletionResult<R>) -> Unit
     ) {
+
+        if (environment.pin1 == null) {
+            viewDelegate.onSessionStarted(cardId)
+            viewDelegate.onPinRequested {
+                environment.pin1 = PinCode(it)
+                startWithRunnable(runnable, callback)
+            }
+            return
+        }
+
+        if ((runnable as? Command<R>)?.requiresPin2 == true && environment.pin2 == null) {
+            viewDelegate.onSessionStarted(cardId)
+            viewDelegate.onPinRequested {
+                environment.pin2 = PinCode(it)
+                startWithRunnable(runnable, callback)
+            }
+            return
+        }
 
         start(runnable.performPreflightRead) { session, error ->
             if (error != null) {
@@ -209,6 +234,7 @@ class CardSession(
     }
 
     private fun stopSession() {
+        sessionStoppedListener?.onSessionStopped(environment)
         reader.stopSession()
         state = CardSessionState.Inactive
         scope.cancel()
@@ -259,7 +285,7 @@ class CardSession(
                     return CompletionResult.Failure(error)
                 }
                 val uid = result.uid
-                val protocolKey = environment.pin1.pbkdf2Hash(uid, 50)
+                val protocolKey = environment.pin1!!.value.pbkdf2Hash(uid, 50)
                 val secret = encryptionHelper.generateSecret(result.sessionKeyB)
                 val sessionKey = (secret + protocolKey).calculateSha256()
                 environment.encryptionKey = sessionKey
