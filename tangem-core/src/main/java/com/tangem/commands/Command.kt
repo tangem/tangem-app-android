@@ -190,7 +190,7 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
             callback: (result: CompletionResult<T>) -> Unit
     ) {
         session.pause()
-        session.viewDelegate.onPinRequested { pin1 ->
+        session.viewDelegate.onPinRequested(PinType.Pin1) { pin1 ->
             session.environment.pin1 = PinCode(pin1)
             session.resume()
             transceive(session, callback)
@@ -226,7 +226,7 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
 
     private fun getPin2FromDelegate(session: CardSession,
                                     callback: (result: CompletionResult<T>) -> Unit) {
-        session.viewDelegate.onPinRequested { pin2 ->
+        session.viewDelegate.onPinRequested(PinType.Pin2) { pin2 ->
             session.environment.pin2 = PinCode(pin2)
             transceive(session, callback)
         }
