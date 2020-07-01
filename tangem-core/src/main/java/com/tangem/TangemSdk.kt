@@ -365,6 +365,30 @@ class TangemSdk(
         startSessionWithRunnable(command, null, initialMessage, callback)
     }
 
+    fun changePin1(cardId: String? = null,
+                   pin: ByteArray? = null,
+                    initialMessage: Message? = null,
+                    callback: (result: CompletionResult<SetPinResponse>) -> Unit) {
+        val command = ChangePinCommand(PinType.Pin1, pin)
+        startSessionWithRunnable(command, cardId, initialMessage, callback)
+    }
+
+    fun changePin2(cardId: String? = null,
+                   pin: ByteArray? = null,
+                   initialMessage: Message? = null,
+                   callback: (result: CompletionResult<SetPinResponse>) -> Unit) {
+        val command = ChangePinCommand(PinType.Pin2, pin)
+        startSessionWithRunnable(command, cardId, initialMessage, callback)
+    }
+
+    fun changePin3(cardId: String? = null,
+                   pin: ByteArray? = null,
+                   initialMessage: Message? = null,
+                   callback: (result: CompletionResult<SetPinResponse>) -> Unit) {
+        val command = ChangePinCommand(PinType.Pin3, pin)
+        startSessionWithRunnable(command, cardId, initialMessage, callback)
+    }
+
     /**
      * Allows running a custom bunch of commands in one [CardSession] by creating a custom task.
      * [TangemSdk] will start a card session, perform preflight [ReadCommand],
