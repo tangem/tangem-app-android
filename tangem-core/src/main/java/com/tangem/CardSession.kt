@@ -1,9 +1,6 @@
 package com.tangem
 
-import com.tangem.commands.Command
-import com.tangem.commands.CommandResponse
-import com.tangem.commands.OpenSessionCommand
-import com.tangem.commands.ReadCommand
+import com.tangem.commands.*
 import com.tangem.common.CompletionResult
 import com.tangem.common.PinCode
 import com.tangem.common.apdu.CommandApdu
@@ -92,7 +89,7 @@ class CardSession(
 
         if (environment.pin1 == null) {
             viewDelegate.onSessionStarted(cardId)
-            viewDelegate.onPinRequested {
+            viewDelegate.onPinRequested(PinType.Pin1) {
                 environment.pin1 = PinCode(it)
                 startWithRunnable(runnable, callback)
             }
@@ -101,7 +98,7 @@ class CardSession(
 
         if ((runnable as? Command<R>)?.requiresPin2 == true && environment.pin2 == null) {
             viewDelegate.onSessionStarted(cardId)
-            viewDelegate.onPinRequested {
+            viewDelegate.onPinRequested(PinType.Pin2) {
                 environment.pin2 = PinCode(it)
                 startWithRunnable(runnable, callback)
             }
