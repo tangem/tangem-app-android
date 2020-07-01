@@ -2,6 +2,7 @@ package com.tangem.tangem_sdk_new
 
 import androidx.fragment.app.FragmentActivity
 import com.tangem.*
+import com.tangem.commands.PinType
 import com.tangem.tangem_sdk_new.nfc.NfcReader
 import com.tangem.tangem_sdk_new.ui.NfcSessionDialog
 
@@ -67,8 +68,22 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
         postUI { readingDialog?.show(SessionViewDelegateState.Error(error)) }
     }
 
-    override fun onPinRequested(callback: (pin: String) -> Unit) {
-        postUI { readingDialog?.show(SessionViewDelegateState.PinRequested(callback)) }
+    override fun onPinRequested(pinType: PinType, callback: (pin: String) -> Unit) {
+        val message = when (pinType) {
+            PinType.Pin1 -> activity.getString(R.string.pin_enter_pin_1)
+            PinType.Pin2 -> activity.getString(R.string.pin_enter_pin_2)
+            PinType.Pin3 -> activity.getString(R.string.pin_enter_pin_3)
+        }
+        postUI { readingDialog?.show(SessionViewDelegateState.PinRequested(message, callback)) }
+    }
+
+    override fun onPinChangeRequested(pinType: PinType, callback: (pin: String) -> Unit) {
+        val message = when (pinType) {
+            PinType.Pin1 -> activity.getString(R.string.pin_change_pin_1)
+            PinType.Pin2 -> activity.getString(R.string.pin_change_pin_2)
+            PinType.Pin3 -> activity.getString(R.string.pin_change_pin_3)
+        }
+        postUI { readingDialog?.show(SessionViewDelegateState.PinChangeRequested(message, callback)) }
     }
 
     private fun setLogger() {
