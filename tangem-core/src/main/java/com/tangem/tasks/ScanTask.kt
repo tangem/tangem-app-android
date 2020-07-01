@@ -40,6 +40,7 @@ internal class ScanTask : CardSessionRunnable<Card> {
                                 }
                             }
                             session.environment.restoreCardValues()
+                            runCheckWalletIfNeeded(card, session, callback)
                         }
                     } else {
                         runCheckWalletIfNeeded(card, session, callback)
