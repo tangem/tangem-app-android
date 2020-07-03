@@ -1,8 +1,11 @@
-package com.tangem.commands
+package com.tangem.tasks
 
 import com.tangem.CardSession
 import com.tangem.CardSessionRunnable
+import com.tangem.SessionEnvironment
 import com.tangem.SessionViewDelegate
+import com.tangem.commands.SetPinCommand
+import com.tangem.commands.SetPinResponse
 import com.tangem.common.CompletionResult
 import com.tangem.common.PinCode
 import com.tangem.common.extensions.calculateSha256
@@ -17,15 +20,16 @@ enum class PinType {
     ;
 }
 
-class ChangePinCommand(
+class ChangePinTask(
         private val pinType: PinType,
         private val pin: ByteArray? = null
 ) : CardSessionRunnable<SetPinResponse> {
     override val performPreflightRead = true
+    override val requiresPin2 = false
 
     override fun run(session: CardSession, callback: (result: CompletionResult<SetPinResponse>) -> Unit) {
         session.scope.launch {
-            val pin = this@ChangePinCommand.pin
+            val pin = this@ChangePinTask.pin
                     ?: requestNewPin(pinType, session.viewDelegate).calculateSha256()
             runSetPin(pin, session, callback)
         }
@@ -61,7 +65,12 @@ class ChangePinCommand(
             }
         }
         val command = SetPinCommand(pin1, pin2, pin3)
-        command.run(session, callback)
+        command.run(session) { result ->
+            when (result) {
+                is CompletionResult.Success -> savePin(pin, session.environment)
+                is CompletionResult.Failure -> callback(result)
+            }
+        }
     }
 
     private suspend fun requestPin(pinType: PinType, viewDelegate: SessionViewDelegate): String =
@@ -77,6 +86,14 @@ class ChangePinCommand(
                     if (continuation.isActive) continuation.resume(result)
                 }
             }
+
+    private fun savePin(pin: ByteArray, environment: SessionEnvironment) {
+        when (pinType) {
+            PinType.Pin1 -> environment.pin1 = PinCode(pin, false)
+            PinType.Pin2 -> environment.pin2 = PinCode(pin, false)
+            PinType.Pin3 -> {}
+        }
+    }
 
 
 }
