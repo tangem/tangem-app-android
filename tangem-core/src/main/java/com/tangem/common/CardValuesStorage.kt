@@ -7,7 +7,7 @@ import com.tangem.CardValuesEntityQueries
 import com.tangem.Database
 import com.tangem.SessionEnvironment
 
-interface CardValuesService {
+interface CardValuesStorage {
 
     fun saveValues(environment: SessionEnvironment)
 
@@ -15,7 +15,7 @@ interface CardValuesService {
 
 }
 
-class CardValuesDbService(driver: SqlDriver) : CardValuesService {
+class CardValuesDbStorage(driver: SqlDriver) : CardValuesStorage {
 
     private val cardValuesQueries: CardValuesEntityQueries
 
