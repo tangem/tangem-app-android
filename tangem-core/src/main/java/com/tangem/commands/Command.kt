@@ -6,6 +6,7 @@ import com.tangem.common.PinCode
 import com.tangem.common.apdu.*
 import com.tangem.common.extensions.toInt
 import com.tangem.common.tlv.TlvTag
+import com.tangem.tasks.PinType
 
 
 interface ApduSerializable<T : CommandResponse> {
@@ -39,7 +40,7 @@ interface CommandResponse
 abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRunnable<T> {
 
     override val performPreflightRead: Boolean = true
-    open val requiresPin2: Boolean = false
+    override val requiresPin2: Boolean = false
 
     override fun run(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
         Log.i("Command", "Initializing ${this::class.java.simpleName}")
