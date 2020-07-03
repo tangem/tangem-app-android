@@ -2,9 +2,9 @@ package com.tangem.tangem_sdk_new
 
 import androidx.fragment.app.FragmentActivity
 import com.tangem.*
-import com.tangem.commands.PinType
 import com.tangem.tangem_sdk_new.nfc.NfcReader
 import com.tangem.tangem_sdk_new.ui.NfcSessionDialog
+import com.tangem.tasks.PinType
 
 /**
  * Default implementation of [SessionViewDelegate].
