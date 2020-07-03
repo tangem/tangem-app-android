@@ -11,12 +11,14 @@ import com.tangem.commands.personalization.entities.Issuer
 import com.tangem.commands.personalization.entities.Manufacturer
 import com.tangem.commands.verifycard.VerifyCardCommand
 import com.tangem.commands.verifycard.VerifyCardResponse
-import com.tangem.common.CardValuesDbService
+import com.tangem.common.CardValuesDbStorage
 import com.tangem.common.CompletionResult
 import com.tangem.common.PinCode
 import com.tangem.common.TerminalKeysService
 import com.tangem.crypto.CryptoUtils
+import com.tangem.tasks.ChangePinTask
 import com.tangem.tasks.CreateWalletTask
+import com.tangem.tasks.PinType
 import com.tangem.tasks.ScanTask
 
 /**
@@ -369,7 +371,7 @@ class TangemSdk(
                    pin: ByteArray? = null,
                     initialMessage: Message? = null,
                     callback: (result: CompletionResult<SetPinResponse>) -> Unit) {
-        val command = ChangePinCommand(PinType.Pin1, pin)
+        val command = ChangePinTask(PinType.Pin1, pin)
         startSessionWithRunnable(command, cardId, initialMessage, callback)
     }
 
@@ -377,7 +379,7 @@ class TangemSdk(
                    pin: ByteArray? = null,
                    initialMessage: Message? = null,
                    callback: (result: CompletionResult<SetPinResponse>) -> Unit) {
-        val command = ChangePinCommand(PinType.Pin2, pin)
+        val command = ChangePinTask(PinType.Pin2, pin)
         startSessionWithRunnable(command, cardId, initialMessage, callback)
     }
 
@@ -385,7 +387,7 @@ class TangemSdk(
                    pin: ByteArray? = null,
                    initialMessage: Message? = null,
                    callback: (result: CompletionResult<SetPinResponse>) -> Unit) {
-        val command = ChangePinCommand(PinType.Pin3, pin)
+        val command = ChangePinTask(PinType.Pin3, pin)
         startSessionWithRunnable(command, cardId, initialMessage, callback)
     }
 
@@ -407,16 +409,7 @@ class TangemSdk(
             runnable: CardSessionRunnable<T>, cardId: String? = null, initialMessage: Message? = null,
             callback: (result: CompletionResult<T>) -> Unit) {
         val cardSession = CardSession(buildEnvironment(cardId), reader, viewDelegate, cardId, initialMessage)
-        addSessionStoppedListener(cardSession)
         Thread().run { cardSession.startWithRunnable(runnable, callback) }
-    }
-
-    private fun addSessionStoppedListener(session: CardSession) {
-        session.sessionStoppedListener = object : CardSessionStoppedListener {
-            override fun onSessionStopped(environment: SessionEnvironment) {
-                environment.saveCardValues()
-            }
-        }
     }
 
     /**
@@ -434,7 +427,6 @@ class TangemSdk(
     fun startSession(cardId: String? = null, initialMessage: Message? = null,
                      callback: (session: CardSession, error: TangemSdkError?) -> Unit) {
         val cardSession = CardSession(buildEnvironment(cardId), reader, viewDelegate, cardId, initialMessage)
-        addSessionStoppedListener(cardSession)
         Thread().run { cardSession.start(callback = callback) }
     }
 
@@ -448,7 +440,7 @@ class TangemSdk(
 
     private fun buildEnvironment(cardId: String?): SessionEnvironment {
         return SessionEnvironment(
-                cardId, config, terminalKeysService, CardValuesDbService(sqlDriver)
+                cardId, config, terminalKeysService, CardValuesDbStorage(sqlDriver)
         )
     }
 
