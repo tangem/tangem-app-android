@@ -1,6 +1,8 @@
 package com.tangem
 
-import com.tangem.commands.*
+import com.tangem.commands.CommandResponse
+import com.tangem.commands.OpenSessionCommand
+import com.tangem.commands.ReadCommand
 import com.tangem.common.CompletionResult
 import com.tangem.common.PinCode
 import com.tangem.common.apdu.CommandApdu
@@ -9,6 +11,7 @@ import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.getType
 import com.tangem.crypto.EncryptionHelper
 import com.tangem.crypto.pbkdf2Hash
+import com.tangem.tasks.PinType
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -19,6 +22,8 @@ interface CardSessionRunnable<T : CommandResponse> {
 
     val performPreflightRead: Boolean
 
+    val requiresPin2: Boolean
+
     /**
      * The starting point for custom business logic.
      * Implement this interface and use [TangemSdk.startSessionWithRunnable] to run.
@@ -26,10 +31,6 @@ interface CardSessionRunnable<T : CommandResponse> {
      * @param callback trigger the callback to complete the task.
      */
     fun run(session: CardSession, callback: (result: CompletionResult<T>) -> Unit)
-}
-
-interface CardSessionStoppedListener {
-    fun onSessionStopped(environment: SessionEnvironment)
 }
 
 enum class CardSessionState {
@@ -64,7 +65,6 @@ class CardSession(
 ) {
 
     var connectedTag: TagType? = null
-    var sessionStoppedListener: CardSessionStoppedListener? = null
 
     /**
      * True if some operation is still in progress.
@@ -96,7 +96,7 @@ class CardSession(
             return
         }
 
-        if ((runnable as? Command<R>)?.requiresPin2 == true && environment.pin2 == null) {
+        if (runnable.requiresPin2 && environment.pin2 == null) {
             viewDelegate.onSessionStarted(cardId)
             viewDelegate.onPinRequested(PinType.Pin2) {
                 environment.pin2 = PinCode(it)
@@ -231,7 +231,7 @@ class CardSession(
     }
 
     private fun stopSession() {
-        sessionStoppedListener?.onSessionStopped(environment)
+        environment.saveCardValues()
         reader.stopSession()
         state = CardSessionState.Inactive
         scope.cancel()
