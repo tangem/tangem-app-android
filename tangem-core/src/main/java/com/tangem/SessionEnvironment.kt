@@ -2,7 +2,7 @@ package com.tangem
 
 import com.tangem.commands.Card
 import com.tangem.commands.EllipticCurve
-import com.tangem.common.CardValuesService
+import com.tangem.common.CardValuesStorage
 import com.tangem.common.PinCode
 import com.tangem.common.TerminalKeysService
 import com.tangem.crypto.CryptoUtils.generatePublicKey
@@ -12,14 +12,25 @@ import com.tangem.crypto.CryptoUtils.generatePublicKey
  * Contains data relating to a Tangem card. It is used in constructing all the commands,
  * and commands can return modified [SessionEnvironment].
  *
- * @property card  Current card, read by preflight [com.tangem.commands.ReadCommand].
- * @property terminalKeys generated terminal keys used in Linked Terminal feature.
+ * @param cardId  Card ID, if it is known before tapping the card.
+ * @property config sets a number of parameters for communication with Tangem cards.
+ * @param terminalKeysService is used to retrieve terminal keys used in Linked Terminal feature.
+ * @param cardValuesStorage is used to save and retrieve some values relating to a particular card.
+ *
+ * @property pin1 An access Code, required to get access to a card. A default value is set in [Config]
+ * @property pin2 A code, required to perform particular operations with a card. A default value is set in [Config]
+ * @property terminalKeys generated terminal keys used in Linked Terminal feature
+ * @property cardFilter a property that defines types of card that this SDK will be able to interact with
+ * @property handleErrors if true, the SDK parses internal card errors into concrete [TangemSdkError]
+ * @property encryptionMode preferred [EncryptionMode] for interaction with cards
+ * @property encryptionKey is used for encrypted communication with a card
+ *
  */
 class SessionEnvironment(
         cardId: String?,
         private val config: Config,
-        private val terminalKeysService: TerminalKeysService?,
-        private val cardValuesService: CardValuesService?
+        terminalKeysService: TerminalKeysService?,
+        private val cardValuesStorage: CardValuesStorage?
 ) {
 
     var pin1: PinCode?
@@ -46,7 +57,7 @@ class SessionEnvironment(
 
         encryptionMode = config.encryptionMode
 
-        val cardValues = cardId?.let { cardValuesService?.getValues(cardId) }
+        val cardValues = cardId?.let { cardValuesStorage?.getValues(cardId) }
 
         cardVerification = cardValues?.cardVerification ?: VerificationState.NotVerified
         cardValidation = cardValues?.cardValidation ?: VerificationState.NotVerified
@@ -68,7 +79,7 @@ class SessionEnvironment(
     }
 
     fun restoreCardValues() {
-        val cardValues = this.card?.cardId?.let { cardValuesService?.getValues(it) }
+        val cardValues = this.card?.cardId?.let { cardValuesStorage?.getValues(it) }
         cardVerification = cardValues?.cardVerification ?: VerificationState.NotVerified
         cardValidation = cardValues?.cardValidation ?: VerificationState.NotVerified
         codeVerification = cardValues?.codeVerification ?: VerificationState.NotVerified
@@ -85,7 +96,7 @@ class SessionEnvironment(
             card?.cardId?.let { cardId -> TangemSdk.pin2[cardId] = pin2 }
         }
 
-        cardValuesService?.saveValues(this)
+        cardValuesStorage?.saveValues(this)
     }
 
 }
@@ -106,5 +117,5 @@ class KeyPair(val publicKey: ByteArray, val privateKey: ByteArray) {
 }
 
 enum class VerificationState {
-    Passed, Offline, Failed, NotVerified
+    Passed, Offline, Failed, NotVerified, Cancelled
 }
