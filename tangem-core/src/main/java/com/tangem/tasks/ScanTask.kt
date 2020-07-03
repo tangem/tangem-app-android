@@ -16,6 +16,7 @@ import com.tangem.common.CompletionResult
 internal class ScanTask : CardSessionRunnable<Card> {
 
     override val performPreflightRead = false
+    override val requiresPin2 = false
 
     override fun run(session: CardSession, callback: (result: CompletionResult<Card>) -> Unit) {
 
@@ -31,6 +32,7 @@ internal class ScanTask : CardSessionRunnable<Card> {
                 is CompletionResult.Success -> {
                     val card = readResult.data
                     session.environment.card = card
+                    session.environment.restoreCardValues()
                     if (session.environment.pin1 != null && session.environment.pin2 != null) {
                         val checkPinCommand = SetPinCommand(session.environment.pin1!!.value, session.environment.pin2!!.value)
                         checkPinCommand.run(session) { result ->
@@ -39,7 +41,6 @@ internal class ScanTask : CardSessionRunnable<Card> {
                                     session.environment.pin2 = null
                                 }
                             }
-                            session.environment.restoreCardValues()
                             runCheckWalletIfNeeded(card, session, callback)
                         }
                     } else {
