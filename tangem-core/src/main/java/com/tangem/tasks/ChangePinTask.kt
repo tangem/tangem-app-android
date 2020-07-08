@@ -24,7 +24,6 @@ class ChangePinTask(
         private val pinType: PinType,
         private val pin: ByteArray? = null
 ) : CardSessionRunnable<SetPinResponse> {
-    override val performPreflightRead = true
     override val requiresPin2 = false
 
     override fun run(session: CardSession, callback: (result: CompletionResult<SetPinResponse>) -> Unit) {
@@ -67,7 +66,10 @@ class ChangePinTask(
         val command = SetPinCommand(pin1, pin2, pin3)
         command.run(session) { result ->
             when (result) {
-                is CompletionResult.Success -> savePin(pin, session.environment)
+                is CompletionResult.Success -> {
+                    savePin(pin, session.environment)
+                    callback(result)
+                }
                 is CompletionResult.Failure -> callback(result)
             }
         }
