@@ -2,16 +2,21 @@ package com.tangem.common
 
 import com.squareup.sqldelight.EnumColumnAdapter
 import com.squareup.sqldelight.db.SqlDriver
+import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import com.tangem.CardValues
 import com.tangem.CardValuesEntityQueries
 import com.tangem.Database
-import com.tangem.SessionEnvironment
+import com.tangem.VerificationState
 
 interface CardValuesStorage {
 
-    fun saveValues(environment: SessionEnvironment)
+    fun saveValues(cardId: String,
+                   isPin1Default: Boolean, isPin2Default: Boolean,
+                   cardVerification: VerificationState?,
+                   cardValidation: VerificationState?,
+                   codeVerification: VerificationState?)
 
-    fun getValues(cardId: String) : CardValues?
+    fun getValues(cardId: String): CardValues?
 
 }
 
@@ -28,19 +33,24 @@ class CardValuesDbStorage(driver: SqlDriver) : CardValuesStorage {
         cardValuesQueries = database.cardValuesEntityQueries
     }
 
-    override fun saveValues(environment: SessionEnvironment) {
-        environment.card?.cardId?.let {cardId ->
-            cardValuesQueries.insertOrReplace(
-                    cardId,
-                    environment.pin1?.isDefault ?: false,
-                    environment.pin2?.isDefault ?: false,
-                    environment.cardVerification, environment.cardVerification,
-                    environment.codeVerification
-            )
-        }
+    override fun saveValues(cardId: String,
+                            isPin1Default: Boolean, isPin2Default: Boolean,
+                            cardVerification: VerificationState?,
+                            cardValidation: VerificationState?,
+                            codeVerification: VerificationState?) {
+        cardValuesQueries.insertOrReplace(
+                cardId,
+                isPin1Default, isPin2Default,
+                cardVerification, cardValidation, codeVerification
+        )
     }
 
-    override fun getValues(cardId: String): CardValues?  =
+    override fun getValues(cardId: String): CardValues? =
             cardValuesQueries.selectByCardId(cardId).executeAsOneOrNull()
 
+    companion object {
+        fun initJvm() = CardValuesDbStorage(
+                JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY).also { Database.Schema.create(it) }
+        )
+    }
 }
