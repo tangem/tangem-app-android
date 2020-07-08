@@ -1,6 +1,6 @@
 package com.tangem.tangem_sdk_new
 
-import androidx.fragment.app.FragmentActivity
+import android.app.Activity
 import com.tangem.*
 import com.tangem.tangem_sdk_new.nfc.NfcReader
 import com.tangem.tangem_sdk_new.ui.NfcSessionDialog
@@ -12,7 +12,7 @@ import com.tangem.tasks.PinType
  */
 class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDelegate {
 
-    lateinit var activity: FragmentActivity
+    lateinit var activity: Activity
     private var readingDialog: NfcSessionDialog? = null
 
     init {
@@ -26,7 +26,7 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
         }
     }
 
-    private fun createReadingDialog(activity: FragmentActivity) {
+    private fun createReadingDialog(activity: Activity) {
         val dialogView = activity.layoutInflater.inflate(R.layout.nfc_bottom_sheet, null)
         readingDialog = NfcSessionDialog(activity)
         readingDialog?.setContentView(dialogView)
