@@ -1,6 +1,5 @@
 package com.tangem
 
-import com.squareup.sqldelight.db.SqlDriver
 import com.tangem.commands.*
 import com.tangem.commands.personalization.DepersonalizeCommand
 import com.tangem.commands.personalization.DepersonalizeResponse
@@ -11,7 +10,7 @@ import com.tangem.commands.personalization.entities.Issuer
 import com.tangem.commands.personalization.entities.Manufacturer
 import com.tangem.commands.verifycard.VerifyCardCommand
 import com.tangem.commands.verifycard.VerifyCardResponse
-import com.tangem.common.CardValuesDbStorage
+import com.tangem.common.CardValuesStorage
 import com.tangem.common.CompletionResult
 import com.tangem.common.PinCode
 import com.tangem.common.TerminalKeysService
@@ -31,15 +30,19 @@ import com.tangem.tasks.ScanTask
  * Its default implementation, DefaultCardSessionViewDelegate, is in our tangem-sdk module.
  * @property config allows to change a number of parameters for communication with Tangem cards.
  * Do not change the default values unless you know what you are doing.
+ * @property  terminalKeysService allows to retrieve saved terminal keys.
  */
 class TangemSdk(
         private val reader: CardReader,
         private val viewDelegate: SessionViewDelegate,
         var config: Config = Config(),
-        private val sqlDriver: SqlDriver
+        cardValuesStorage: CardValuesStorage,
+        terminalKeysService: TerminalKeysService? = null
 ) {
 
-    private var terminalKeysService: TerminalKeysService? = null
+    private val environmentService = SessionEnvironmentService(
+            config, terminalKeysService, cardValuesStorage
+    )
 
     init {
         CryptoUtils.initCrypto()
@@ -369,8 +372,8 @@ class TangemSdk(
 
     fun changePin1(cardId: String? = null,
                    pin: ByteArray? = null,
-                    initialMessage: Message? = null,
-                    callback: (result: CompletionResult<SetPinResponse>) -> Unit) {
+                   initialMessage: Message? = null,
+                   callback: (result: CompletionResult<SetPinResponse>) -> Unit) {
         val command = ChangePinTask(PinType.Pin1, pin)
         startSessionWithRunnable(command, cardId, initialMessage, callback)
     }
@@ -408,7 +411,7 @@ class TangemSdk(
     fun <T : CommandResponse> startSessionWithRunnable(
             runnable: CardSessionRunnable<T>, cardId: String? = null, initialMessage: Message? = null,
             callback: (result: CompletionResult<T>) -> Unit) {
-        val cardSession = CardSession(buildEnvironment(cardId), reader, viewDelegate, cardId, initialMessage)
+        val cardSession = CardSession(environmentService, reader, viewDelegate, cardId, initialMessage)
         Thread().run { cardSession.startWithRunnable(runnable, callback) }
     }
 
@@ -426,22 +429,8 @@ class TangemSdk(
      */
     fun startSession(cardId: String? = null, initialMessage: Message? = null,
                      callback: (session: CardSession, error: TangemSdkError?) -> Unit) {
-        val cardSession = CardSession(buildEnvironment(cardId), reader, viewDelegate, cardId, initialMessage)
+        val cardSession = CardSession(environmentService, reader, viewDelegate, cardId, initialMessage)
         Thread().run { cardSession.start(callback = callback) }
-    }
-
-    /**
-     * Allows to set a particular [TerminalKeysService] to retrieve terminal keys.
-     * Default implementation is provided in tangem-sdk module: [TerminalKeysStorage].
-     */
-    fun setTerminalKeysService(terminalKeysService: TerminalKeysService) {
-        this.terminalKeysService = terminalKeysService
-    }
-
-    private fun buildEnvironment(cardId: String?): SessionEnvironment {
-        return SessionEnvironment(
-                cardId, config, terminalKeysService, CardValuesDbStorage(sqlDriver)
-        )
     }
 
     companion object {
