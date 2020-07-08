@@ -1,5 +1,6 @@
 package com.tangem
 
+import com.tangem.commands.Command
 import com.tangem.commands.CommandResponse
 import com.tangem.commands.OpenSessionCommand
 import com.tangem.commands.ReadCommand
@@ -19,8 +20,6 @@ import kotlinx.coroutines.flow.*
  * Basic interface for running tasks and [com.tangem.commands.Command] in a [CardSession]
  */
 interface CardSessionRunnable<T : CommandResponse> {
-
-    val performPreflightRead: Boolean
 
     val requiresPin2: Boolean
 
@@ -57,7 +56,7 @@ enum class TagType {
  * If null, a default header and text body will be used.
  */
 class CardSession(
-    val environment: SessionEnvironment,
+    private val environmentService: SessionEnvironmentService,
     private val reader: CardReader,
     val viewDelegate: SessionViewDelegate,
     private var cardId: String? = null,
@@ -77,6 +76,11 @@ class CardSession(
 
     private val tag = this.javaClass.simpleName
 
+    private var performPreflightRead = true
+    private var pin2Required = false
+
+    val environment = environmentService.createEnvironment(cardId)
+
     /**
      * This method starts a card session, performs preflight [ReadCommand],
      * invokes [CardSessionRunnable.run] and closes the session.
@@ -87,25 +91,10 @@ class CardSession(
         runnable: T, callback: (result: CompletionResult<R>) -> Unit
     ) {
 
-        if (environment.pin1 == null) {
-            viewDelegate.onSessionStarted(cardId)
-            viewDelegate.onPinRequested(PinType.Pin1) {
-                environment.pin1 = PinCode(it)
-                startWithRunnable(runnable, callback)
-            }
-            return
-        }
+        if ((runnable as? Command<*>)?.performPreflightRead == false) performPreflightRead = false
+        pin2Required = runnable.requiresPin2
 
-        if (runnable.requiresPin2 && environment.pin2 == null) {
-            viewDelegate.onSessionStarted(cardId)
-            viewDelegate.onPinRequested(PinType.Pin2) {
-                environment.pin2 = PinCode(it)
-                startWithRunnable(runnable, callback)
-            }
-            return
-        }
-
-        start(runnable.performPreflightRead) { session, error ->
+        start() { session, error ->
             if (error != null) {
                 callback(CompletionResult.Failure(error))
                 return@start
@@ -135,7 +124,6 @@ class CardSession(
      * @param callback: callback with the card session. Can contain [TangemSdkError] if something goes wrong.
      */
     fun start(
-        performPreflightRead: Boolean = true,
         callback: (session: CardSession, error: TangemSdkError?) -> Unit
     ) {
 
@@ -143,6 +131,26 @@ class CardSession(
             callback(this, TangemSdkError.Busy())
             return
         }
+
+
+        if (environment.pin1 == null) {
+            viewDelegate.onSessionStarted(cardId)
+            viewDelegate.onPinRequested(PinType.Pin1) {
+                environment.pin1 = PinCode(it)
+                start(callback)
+            }
+            return
+        }
+
+        if (pin2Required && environment.pin2 == null) {
+            viewDelegate.onSessionStarted(cardId)
+            viewDelegate.onPinRequested(PinType.Pin2) {
+                environment.pin2 = PinCode(it)
+                start(callback)
+            }
+            return
+        }
+
         state = CardSessionState.Active
         viewDelegate.onSessionStarted(cardId)
 
@@ -196,6 +204,7 @@ class CardSession(
                         return@run
                     }
                     environment.card = result.data
+                    environmentService.updateEnvironment(environment, result.data.cardId)
                     cardId = receivedCardId
                     callback(this, null)
                 }
@@ -231,7 +240,7 @@ class CardSession(
     }
 
     private fun stopSession() {
-        environment.saveCardValues()
+        environmentService.saveEnvironmentValues(environment, cardId)
         reader.stopSession()
         state = CardSessionState.Inactive
         scope.cancel()
