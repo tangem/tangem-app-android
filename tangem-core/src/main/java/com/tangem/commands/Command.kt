@@ -39,7 +39,7 @@ interface CommandResponse
  */
 abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRunnable<T> {
 
-    override val performPreflightRead: Boolean = true
+    open val performPreflightRead: Boolean = true
     override val requiresPin2: Boolean = false
 
     override fun run(session: CardSession, callback: (result: CompletionResult<T>) -> Unit) {
@@ -74,10 +74,12 @@ abstract class Command<T : CommandResponse> : ApduSerializable<T>, CardSessionRu
                     if (session.environment.handleErrors) {
                         val error = mapError(session.environment.card, result.error)
                         if (error is TangemSdkError.Pin1Required) {
+                            session.environment.pin1 = null
                             handlePin1(session, callback)
                             return@transceiveApdu
                         }
                         if (error is TangemSdkError.Pin2OrCvcRequired) {
+                            session.environment.pin2 = null
                             handlePin2(session, callback)
                             return@transceiveApdu
                         }
