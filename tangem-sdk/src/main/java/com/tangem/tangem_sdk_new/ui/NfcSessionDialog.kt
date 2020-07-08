@@ -8,7 +8,6 @@ import android.view.View
 import android.view.animation.DecelerateInterpolator
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
-import androidx.fragment.app.FragmentActivity
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.tangem_sdk_new.R
 import com.tangem.tangem_sdk_new.SessionViewDelegateState
@@ -18,7 +17,7 @@ import com.tangem.tangem_sdk_new.postUI
 import kotlinx.android.synthetic.main.layout_touch_card.*
 import kotlinx.android.synthetic.main.nfc_bottom_sheet.*
 
-class NfcSessionDialog(val activity: FragmentActivity) : BottomSheetDialog(activity) {
+class NfcSessionDialog(val activity: Activity) : BottomSheetDialog(activity) {
 
     private var currentState: SessionViewDelegateState? = null
 
