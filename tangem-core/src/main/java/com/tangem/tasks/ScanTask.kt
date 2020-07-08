@@ -15,41 +15,32 @@ import com.tangem.common.CompletionResult
  */
 internal class ScanTask : CardSessionRunnable<Card> {
 
-    override val performPreflightRead = false
     override val requiresPin2 = false
 
     override fun run(session: CardSession, callback: (result: CompletionResult<Card>) -> Unit) {
-
-
         if (session.connectedTag == TagType.Slix) {
             readSlixTag(session, callback)
             return
         }
-
-        ReadCommand().run(session) { readResult ->
-            when(readResult) {
-                is CompletionResult.Failure -> callback(readResult)
-                is CompletionResult.Success -> {
-                    val card = readResult.data
-                    session.environment.card = card
-                    session.environment.restoreCardValues()
-                    if (session.environment.pin1 != null && session.environment.pin2 != null) {
-                        val checkPinCommand = SetPinCommand(session.environment.pin1!!.value, session.environment.pin2!!.value)
-                        checkPinCommand.run(session) { result ->
-                            when (result) {
-                                is CompletionResult.Failure -> {
-                                    session.environment.pin2 = null
-                                }
-                            }
-                            runCheckWalletIfNeeded(card, session, callback)
-                        }
-                    } else {
-                        runCheckWalletIfNeeded(card, session, callback)
-                    }
-
-                }
-            }
+        val card = session.environment.card
+        if (card == null) {
+            callback(CompletionResult.Failure(TangemSdkError.CardError()))
+            return
         }
+        if (session.environment.pin1 != null && session.environment.pin2 != null) {
+            val checkPinCommand = SetPinCommand(session.environment.pin1!!.value, session.environment.pin2!!.value)
+            checkPinCommand.run(session) { result ->
+                when (result) {
+                    is CompletionResult.Failure -> {
+                        session.environment.pin2 = null
+                    }
+                }
+                runCheckWalletIfNeeded(card, session, callback)
+            }
+        } else {
+            runCheckWalletIfNeeded(card, session, callback)
+        }
+
     }
 
     private fun runCheckWalletIfNeeded(
