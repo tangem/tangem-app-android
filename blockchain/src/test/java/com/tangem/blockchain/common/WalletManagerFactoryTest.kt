@@ -1,7 +1,6 @@
 package com.tangem.blockchain.common
 
 import com.google.common.truth.Truth
-import com.tangem.Config
 import com.tangem.SessionEnvironment
 import com.tangem.blockchain.blockchains.binance.BinanceWalletManager
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
@@ -20,7 +19,7 @@ import org.junit.Test
 
 internal class WalletManagerFactoryTest {
 
-    private val sessionEnvironment = SessionEnvironment(null, Config(), null, null)
+    private val sessionEnvironment = SessionEnvironment()
 
     @Test
     fun createBitcoinWalletManager() {
