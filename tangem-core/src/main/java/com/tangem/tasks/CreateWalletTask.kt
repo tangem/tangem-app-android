@@ -11,7 +11,6 @@ import com.tangem.common.CompletionResult
 
 class CreateWalletTask : CardSessionRunnable<CreateWalletResponse> {
 
-    override val performPreflightRead = true
     override val requiresPin2 = false
 
     override fun run(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {

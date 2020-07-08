@@ -19,18 +19,6 @@ class DepersonalizeCommand : Command<DepersonalizeResponse>() {
 
     override val performPreflightRead = false
 
-//    override fun performPreCheck(session: CardSession, callback: (result: CompletionResult<DepersonalizeResponse>) -> Unit): Boolean {
-//        if (session.environment.card?.status == CardStatus.NotPersonalized) {
-//            callback(CompletionResult.Failure(TangemSdkError.NotPersonalized()))
-//            return true
-//        }
-//        if (session.environment.card?.firmwareVersion?.contains("SDK") == false) {
-//            callback(CompletionResult.Failure(TangemSdkError.CannotBeDepersonalized()))
-//            return true
-//        }
-//        return false
-//    }
-
     override fun serialize(environment: SessionEnvironment): CommandApdu {
         return CommandApdu(
                 Instruction.Depersonalize, byteArrayOf()
