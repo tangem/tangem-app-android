@@ -1,7 +1,6 @@
 package com.tangem.common.apdu
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.Config
 import com.tangem.SessionEnvironment
 import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvTag
@@ -10,7 +9,7 @@ import org.junit.Test
 
 class CommandApduTest {
 
-    val sessionEnvironment = SessionEnvironment(null, Config(), null, null)
+    private val sessionEnvironment = SessionEnvironment()
 
     @Test
     fun `simple READ command to bytes`() {
@@ -26,7 +25,7 @@ class CommandApduTest {
 
         assertThat(commandApdu.apduData)
                 .isEqualTo(expected)
-        assertThat(listOf(1, 2)).containsExactlyElementsIn(listOf(1,2))
+        assertThat(listOf(1, 2)).containsExactlyElementsIn(listOf(1, 2))
     }
 
     @Test
