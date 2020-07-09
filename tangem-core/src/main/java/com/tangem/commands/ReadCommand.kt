@@ -1,5 +1,6 @@
 package com.tangem.commands
 
+import com.google.gson.annotations.SerializedName
 import com.tangem.SessionEnvironment
 import com.tangem.TangemSdkError
 import com.tangem.commands.common.CardDeserializer
@@ -64,7 +65,9 @@ class SigningMethodMaskBuilder() {
  * Elliptic curve used for wallet key operations.
  */
 enum class EllipticCurve(val curve: String) {
+    @SerializedName(value = "secp256k1")
     Secp256k1("secp256k1"),
+    @SerializedName(value = "ed25519")
     Ed25519("ed25519");
 
     companion object {
