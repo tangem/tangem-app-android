@@ -145,7 +145,7 @@ class ReadIssuerExtraDataCommand(
 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
         val tlvBuilder = TlvBuilder()
-        tlvBuilder.append(TlvTag.Pin, environment.pin1)
+        tlvBuilder.append(TlvTag.Pin, environment.pin1?.value)
         tlvBuilder.append(TlvTag.CardId, environment.card?.cardId)
         tlvBuilder.append(TlvTag.Mode, IssuerDataMode.ReadExtraData)
         tlvBuilder.append(TlvTag.Offset, offset)
