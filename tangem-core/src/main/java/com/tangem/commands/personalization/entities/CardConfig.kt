@@ -3,6 +3,7 @@ package com.tangem.commands.personalization.entities
 import com.tangem.commands.CardData
 import com.tangem.commands.EllipticCurve
 import com.tangem.commands.SigningMethodMask
+import com.tangem.common.extensions.calculateSha256
 
 data class NdefRecord(
         val type: Type,
@@ -20,15 +21,15 @@ data class NdefRecord(
  * It is a configuration file with all the card settings that are written on the card
  * during [PersonalizeCommand].
  */
-data class CardConfig(
+class CardConfig(
         val issuerName: String? = null,
         val acquirerName: String? = null,
         val series: String? = null,
         val startNumber: Long = 0,
         val count: Int = 0,
-        val pin: String,
-        val pin2: String,
-        val pin3: String,
+        pin: String,
+        pin2: String,
+        pin3: String,
         val hexCrExKey: String?,
         val cvc: String,
         val pauseBeforePin2: Int,
@@ -67,5 +68,10 @@ data class CardConfig(
         val cardData: CardData,
         val ndefRecords: List<NdefRecord>
 ) {
+
+    val pin: ByteArray = pin.calculateSha256()
+    val pin2: ByteArray = pin2.calculateSha256()
+    val pin3: ByteArray = pin3.calculateSha256()
+
     companion object
 }
