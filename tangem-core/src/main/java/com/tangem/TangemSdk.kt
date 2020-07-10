@@ -10,10 +10,14 @@ import com.tangem.commands.personalization.entities.Issuer
 import com.tangem.commands.personalization.entities.Manufacturer
 import com.tangem.commands.verifycard.VerifyCardCommand
 import com.tangem.commands.verifycard.VerifyCardResponse
+import com.tangem.common.CardValuesStorage
 import com.tangem.common.CompletionResult
+import com.tangem.common.PinCode
 import com.tangem.common.TerminalKeysService
 import com.tangem.crypto.CryptoUtils
+import com.tangem.tasks.ChangePinTask
 import com.tangem.tasks.CreateWalletTask
+import com.tangem.tasks.PinType
 import com.tangem.tasks.ScanTask
 
 /**
@@ -26,14 +30,19 @@ import com.tangem.tasks.ScanTask
  * Its default implementation, DefaultCardSessionViewDelegate, is in our tangem-sdk module.
  * @property config allows to change a number of parameters for communication with Tangem cards.
  * Do not change the default values unless you know what you are doing.
+ * @property  terminalKeysService allows to retrieve saved terminal keys.
  */
 class TangemSdk(
         private val reader: CardReader,
         private val viewDelegate: SessionViewDelegate,
-        var config: Config = Config()
+        var config: Config = Config(),
+        cardValuesStorage: CardValuesStorage,
+        terminalKeysService: TerminalKeysService? = null
 ) {
 
-    private var terminalKeysService: TerminalKeysService? = null
+    private val environmentService = SessionEnvironmentService(
+            config, terminalKeysService, cardValuesStorage
+    )
 
     init {
         CryptoUtils.initCrypto()
@@ -203,7 +212,7 @@ class TangemSdk(
             initialMessage: Message? = null,
             callback: (result: CompletionResult<WriteUserDataResponse>) -> Unit
     ) {
-        val command = WriteUserDataCommand(userData = userData,userCounter = userCounter)
+        val command = WriteUserDataCommand(userData = userData, userCounter = userCounter)
         startSessionWithRunnable(command, cardId, initialMessage, callback)
     }
 
@@ -361,6 +370,30 @@ class TangemSdk(
         startSessionWithRunnable(command, null, initialMessage, callback)
     }
 
+    fun changePin1(cardId: String? = null,
+                   pin: ByteArray? = null,
+                   initialMessage: Message? = null,
+                   callback: (result: CompletionResult<SetPinResponse>) -> Unit) {
+        val command = ChangePinTask(PinType.Pin1, pin)
+        startSessionWithRunnable(command, cardId, initialMessage, callback)
+    }
+
+    fun changePin2(cardId: String? = null,
+                   pin: ByteArray? = null,
+                   initialMessage: Message? = null,
+                   callback: (result: CompletionResult<SetPinResponse>) -> Unit) {
+        val command = ChangePinTask(PinType.Pin2, pin)
+        startSessionWithRunnable(command, cardId, initialMessage, callback)
+    }
+
+    fun changePin3(cardId: String? = null,
+                   pin: ByteArray? = null,
+                   initialMessage: Message? = null,
+                   callback: (result: CompletionResult<SetPinResponse>) -> Unit) {
+        val command = ChangePinTask(PinType.Pin3, pin)
+        startSessionWithRunnable(command, cardId, initialMessage, callback)
+    }
+
     /**
      * Allows running a custom bunch of commands in one [CardSession] by creating a custom task.
      * [TangemSdk] will start a card session, perform preflight [ReadCommand],
@@ -378,13 +411,13 @@ class TangemSdk(
     fun <T : CommandResponse> startSessionWithRunnable(
             runnable: CardSessionRunnable<T>, cardId: String? = null, initialMessage: Message? = null,
             callback: (result: CompletionResult<T>) -> Unit) {
-        val cardSession = CardSession(buildEnvironment(), reader, viewDelegate, cardId, initialMessage)
+        val cardSession = CardSession(environmentService, reader, viewDelegate, cardId, initialMessage)
         Thread().run { cardSession.startWithRunnable(runnable, callback) }
     }
 
     /**
      * Allows running  a custom bunch of commands in one [CardSession] with lightweight closure syntax.
-     * Tangem SDK will start a card sesion and perform preflight [ReadCommand].
+     * Tangem SDK will start a card session and perform preflight [ReadCommand].
 
      * @cardId: CID, Unique Tangem card ID number. If not null, the SDK will check that you the card
      * with which you tapped a phone has this [cardId] and SDK will return
@@ -395,27 +428,13 @@ class TangemSdk(
      * then you can use the [CardSession] to interact with a card.
      */
     fun startSession(cardId: String? = null, initialMessage: Message? = null,
-            callback: (session: CardSession, error: TangemSdkError?) -> Unit) {
-        val cardSession = CardSession(buildEnvironment(), reader, viewDelegate, cardId, initialMessage)
+                     callback: (session: CardSession, error: TangemSdkError?) -> Unit) {
+        val cardSession = CardSession(environmentService, reader, viewDelegate, cardId, initialMessage)
         Thread().run { cardSession.start(callback = callback) }
     }
 
-    /**
-     * Allows to set a particular [TerminalKeysService] to retrieve terminal keys.
-     * Default implementation is provided in tangem-sdk module: [TerminalKeysStorage].
-     */
-    fun setTerminalKeysService(terminalKeysService: TerminalKeysService) {
-        this.terminalKeysService = terminalKeysService
+    companion object {
+        var pin1: PinCode? = null
+        val pin2: MutableMap<String, PinCode?> = mutableMapOf()
     }
-
-    private fun buildEnvironment(): SessionEnvironment {
-        val terminalKeys = if (config.linkedTerminal) terminalKeysService?.getKeys() else null
-        return SessionEnvironment(
-                terminalKeys = terminalKeys,
-                cardFilter = config.cardFilter,
-                handleErrors = config.handleErrors
-        )
-    }
-
-    companion object
 }

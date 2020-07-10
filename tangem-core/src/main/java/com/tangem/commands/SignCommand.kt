@@ -74,8 +74,8 @@ class SignCommand(private val hashes: Array<ByteArray>) : Command<SignResponse>(
     override fun serialize(environment: SessionEnvironment): CommandApdu {
         val dataToSign = flattenHashes()
         val tlvBuilder = TlvBuilder()
-        tlvBuilder.append(TlvTag.Pin, environment.pin1)
-        tlvBuilder.append(TlvTag.Pin2, environment.pin2)
+        tlvBuilder.append(TlvTag.Pin, environment.pin1?.value)
+        tlvBuilder.append(TlvTag.Pin2, environment.pin2?.value)
         tlvBuilder.append(TlvTag.CardId, environment.card?.cardId)
         tlvBuilder.append(TlvTag.TransactionOutHashSize, byteArrayOf(hashSizes.toByte()))
         tlvBuilder.append(TlvTag.TransactionOutHash, dataToSign)
