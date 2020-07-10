@@ -36,6 +36,18 @@ class Config(
          */
         val cardFilter: CardFilter = CardFilter(),
 
-        var handleErrors: Boolean = true
+        var handleErrors: Boolean = true,
 
-)
+        var defaultPin1: String = DEFAULT_PIN_1,
+
+        var defaultPin2: String = DEFAULT_PIN_2,
+
+        var savePin1InStaticField: Boolean = true,
+
+        var savePin2InStaticField: Boolean = false
+) {
+        companion object {
+                const val DEFAULT_PIN_1 = "000000"
+                const val DEFAULT_PIN_2 = "000"
+        }
+}
