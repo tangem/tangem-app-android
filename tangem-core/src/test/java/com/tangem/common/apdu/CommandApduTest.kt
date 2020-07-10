@@ -4,20 +4,17 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.SessionEnvironment
 import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvTag
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.BroadcastChannel
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.collect
 import org.junit.Test
 
 
 class CommandApduTest {
 
+    private val sessionEnvironment = SessionEnvironment()
+
     @Test
     fun `simple READ command to bytes`() {
-        val sessionEnvironment = SessionEnvironment()
         val tlvBuilder = TlvBuilder()
-        tlvBuilder.append(TlvTag.Pin, sessionEnvironment.pin1)
+        tlvBuilder.append(TlvTag.Pin, sessionEnvironment.pin1?.value)
         val commandApdu = CommandApdu(
                 Instruction.Read,
                 tlvBuilder.serialize()
@@ -28,18 +25,17 @@ class CommandApduTest {
 
         assertThat(commandApdu.apduData)
                 .isEqualTo(expected)
-        assertThat(listOf(1, 2)).containsExactlyElementsIn(listOf(1,2))
+        assertThat(listOf(1, 2)).containsExactlyElementsIn(listOf(1, 2))
     }
 
     @Test
     fun `READ with terminal key to bytes`() {
-        val sessionEnvironment = SessionEnvironment()
         val terminalPublicKey = byteArrayOf(4, 80, -122, 58, -42, 74, -121, -82, -118, 47, -24, 60,
                 26, -15, -88, 64, 60, -75, 63, 83, -28, -122, -40, 81, 29, -83, -118, 4, -120, 126,
                 91, 35, 82, 44, -44, 112, 36, 52, 83, -94, -103, -6, -98, 119, 35, 119, 22, 16, 58,
                 -68, 17, -95, -33, 56, -123, 94, -42, -14, -18, 24, 126, -100, 88, 43, -90)
         val tlvBuilder = TlvBuilder()
-        tlvBuilder.append(TlvTag.Pin, sessionEnvironment.pin1)
+        tlvBuilder.append(TlvTag.Pin, sessionEnvironment.pin1?.value)
         tlvBuilder.append(TlvTag.TerminalPublicKey, terminalPublicKey)
         val commandApdu = CommandApdu(
                 Instruction.Read,
