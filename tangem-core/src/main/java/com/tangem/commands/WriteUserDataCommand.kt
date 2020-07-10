@@ -57,7 +57,7 @@ class WriteUserDataCommand(private val userData: ByteArray? = null, private val 
     override fun serialize(environment: SessionEnvironment): CommandApdu {
         val builder = TlvBuilder()
         builder.append(TlvTag.CardId, environment.card?.cardId)
-        builder.append(TlvTag.Pin, environment.pin1)
+        builder.append(TlvTag.Pin, environment.pin1?.value)
         builder.append(TlvTag.UserData, userData)
         builder.append(TlvTag.UserCounter, userCounter)
         builder.append(TlvTag.UserProtectedData, userProtectedData)
