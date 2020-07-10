@@ -1,15 +1,18 @@
 package com.tangem
 
+import com.tangem.commands.Command
 import com.tangem.commands.CommandResponse
 import com.tangem.commands.OpenSessionCommand
 import com.tangem.commands.ReadCommand
 import com.tangem.common.CompletionResult
+import com.tangem.common.PinCode
 import com.tangem.common.apdu.CommandApdu
 import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.getType
 import com.tangem.crypto.EncryptionHelper
 import com.tangem.crypto.pbkdf2Hash
+import com.tangem.tasks.PinType
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -18,7 +21,7 @@ import kotlinx.coroutines.flow.*
  */
 interface CardSessionRunnable<T : CommandResponse> {
 
-    val performPreflightRead: Boolean
+    val requiresPin2: Boolean
 
     /**
      * The starting point for custom business logic.
@@ -53,7 +56,7 @@ enum class TagType {
  * If null, a default header and text body will be used.
  */
 class CardSession(
-    val environment: SessionEnvironment,
+    private val environmentService: SessionEnvironmentService,
     private val reader: CardReader,
     val viewDelegate: SessionViewDelegate,
     private var cardId: String? = null,
@@ -73,8 +76,13 @@ class CardSession(
 
     private val tag = this.javaClass.simpleName
 
+    private var performPreflightRead = true
+    private var pin2Required = false
+
+    val environment = environmentService.createEnvironment(cardId)
+
     /**
-     * This metod starts a card session, performs preflight [ReadCommand],
+     * This method starts a card session, performs preflight [ReadCommand],
      * invokes [CardSessionRunnable.run] and closes the session.
      * @param runnable [CardSessionRunnable] that will be performed in the session.
      * @param callback will be triggered with a [CompletionResult] of a session.
@@ -83,7 +91,10 @@ class CardSession(
         runnable: T, callback: (result: CompletionResult<R>) -> Unit
     ) {
 
-        start(runnable.performPreflightRead) { session, error ->
+        if ((runnable as? Command<*>)?.performPreflightRead == false) performPreflightRead = false
+        pin2Required = runnable.requiresPin2
+
+        start() { session, error ->
             if (error != null) {
                 callback(CompletionResult.Failure(error))
                 return@start
@@ -113,7 +124,6 @@ class CardSession(
      * @param callback: callback with the card session. Can contain [TangemSdkError] if something goes wrong.
      */
     fun start(
-        performPreflightRead: Boolean = true,
         callback: (session: CardSession, error: TangemSdkError?) -> Unit
     ) {
 
@@ -121,6 +131,26 @@ class CardSession(
             callback(this, TangemSdkError.Busy())
             return
         }
+
+
+        if (environment.pin1 == null) {
+            viewDelegate.onSessionStarted(cardId)
+            viewDelegate.onPinRequested(PinType.Pin1) {
+                environment.pin1 = PinCode(it)
+                start(callback)
+            }
+            return
+        }
+
+        if (pin2Required && environment.pin2 == null) {
+            viewDelegate.onSessionStarted(cardId)
+            viewDelegate.onPinRequested(PinType.Pin2) {
+                environment.pin2 = PinCode(it)
+                start(callback)
+            }
+            return
+        }
+
         state = CardSessionState.Active
         viewDelegate.onSessionStarted(cardId)
 
@@ -174,6 +204,7 @@ class CardSession(
                         return@run
                     }
                     environment.card = result.data
+                    environmentService.updateEnvironment(environment, result.data.cardId)
                     cardId = receivedCardId
                     callback(this, null)
                 }
@@ -209,6 +240,7 @@ class CardSession(
     }
 
     private fun stopSession() {
+        environmentService.saveEnvironmentValues(environment, cardId)
         reader.stopSession()
         state = CardSessionState.Inactive
         scope.cancel()
@@ -259,7 +291,7 @@ class CardSession(
                     return CompletionResult.Failure(error)
                 }
                 val uid = result.uid
-                val protocolKey = environment.pin1.pbkdf2Hash(uid, 50)
+                val protocolKey = environment.pin1!!.value.pbkdf2Hash(uid, 50)
                 val secret = encryptionHelper.generateSecret(result.sessionKeyB)
                 val sessionKey = (secret + protocolKey).calculateSha256()
                 environment.encryptionKey = sessionKey
