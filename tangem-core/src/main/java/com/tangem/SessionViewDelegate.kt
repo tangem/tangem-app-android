@@ -1,5 +1,7 @@
 package com.tangem
 
+import com.tangem.tasks.PinType
+
 /**
  * Allows interaction with users and shows visual elements.
  *
@@ -47,7 +49,12 @@ interface SessionViewDelegate {
     /**
      * It is called when a user is expected to enter pin code.
      */
-    fun onPinRequested(callback: (pin: String?) -> Unit)
+    fun onPinRequested(pinType: PinType, callback: (pin: String) -> Unit)
+
+    /**
+     * It is called when a user wants to change pin code.
+     */
+    fun onPinChangeRequested(pinType: PinType, callback: (pin: String) -> Unit)
 }
 
 /**
