@@ -62,7 +62,7 @@ class ReadUserDataCommand : Command<ReadUserDataResponse>() {
     override fun serialize(environment: SessionEnvironment): CommandApdu {
         val builder = TlvBuilder()
         builder.append(TlvTag.CardId, environment.card?.cardId)
-        builder.append(TlvTag.Pin, environment.pin1)
+        builder.append(TlvTag.Pin, environment.pin1?.value)
 
         return CommandApdu(Instruction.ReadUserData, builder.serialize())
     }
