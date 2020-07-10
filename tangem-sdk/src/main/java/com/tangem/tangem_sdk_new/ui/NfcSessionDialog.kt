@@ -8,9 +8,7 @@ import android.view.View
 import android.view.animation.DecelerateInterpolator
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
-import androidx.fragment.app.FragmentActivity
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.tangem.Log
 import com.tangem.tangem_sdk_new.R
 import com.tangem.tangem_sdk_new.SessionViewDelegateState
 import com.tangem.tangem_sdk_new.extensions.localizedDescription
@@ -19,11 +17,14 @@ import com.tangem.tangem_sdk_new.postUI
 import kotlinx.android.synthetic.main.layout_touch_card.*
 import kotlinx.android.synthetic.main.nfc_bottom_sheet.*
 
-class NfcSessionDialog(val activity: FragmentActivity) : BottomSheetDialog(activity) {
+class NfcSessionDialog(val activity: Activity) : BottomSheetDialog(activity) {
 
     private var currentState: SessionViewDelegateState? = null
 
     fun show(state: SessionViewDelegateState) {
+        if (!this.isShowing) {
+            this.show()
+        }
         when (state) {
             is SessionViewDelegateState.Ready -> onReady(state)
             is SessionViewDelegateState.Success -> onSuccess(state)
@@ -31,6 +32,7 @@ class NfcSessionDialog(val activity: FragmentActivity) : BottomSheetDialog(activ
             is SessionViewDelegateState.SecurityDelay -> onSecurityDelay(state)
             is SessionViewDelegateState.Delay -> onDelay(state)
             is SessionViewDelegateState.PinRequested -> onPinRequested(state)
+            is SessionViewDelegateState.PinChangeRequested -> onPinChangeRequested(state)
             is SessionViewDelegateState.TagLost -> onTagLost()
             is SessionViewDelegateState.TagConnected -> onTagConnected()
             is SessionViewDelegateState.WrongCard -> onWrongCard()
@@ -50,9 +52,17 @@ class NfcSessionDialog(val activity: FragmentActivity) : BottomSheetDialog(activ
             tvCardId?.show()
             tvCardId?.text = cardId
         }
-        state.message?.let { message ->
-            if (message.body != null) tvTaskText?.text = message.body
-            if (message.header != null) tvTaskTitle?.text = message.header
+
+        if (state.message?.header != null) {
+            tvTaskTitle?.text = state.message.header
+        } else {
+            tvTaskTitle?.text = activity.getText(R.string.dialog_ready_to_scan)
+        }
+        if (state.message?.body != null) {
+            tvTaskText?.text = state.message.body
+        } else {
+            tvTaskText?.text = activity.getText(R.string.dialog_scan_text)
+
         }
     }
 
@@ -130,19 +140,76 @@ class NfcSessionDialog(val activity: FragmentActivity) : BottomSheetDialog(activ
         tvTaskText?.visibility = View.INVISIBLE
         tvTaskTitle?.visibility = View.INVISIBLE
         show(flPin)
+        tilPin.hint = state.message
 
         performHapticFeedback()
         etPin?.setOnEditorActionListener { v: TextView?, actionId: Int, event: KeyEvent? ->
             postUI {
                 if (actionId == KeyEvent.KEYCODE_ENDCALL) {
-                    show(lTouchCard)
-                    tvTaskTitle?.show()
-                    tvTaskText?.show()
-                    val imm: InputMethodManager =
-                        context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-                    imm.hideSoftInputFromWindow(v?.windowToken, 0)
+                    if (v?.text.isNullOrBlank()) {
+                        etPin?.error = activity.getString(R.string.pin_enter_error_empty)
+                    } else {
+                        show(lTouchCard)
+                        tvTaskTitle?.show()
+                        tvTaskText?.show()
+                        val imm: InputMethodManager =
+                                context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+                        imm.hideSoftInputFromWindow(v?.windowToken, 0)
 
-                    v?.text?.toString()?.let { state.callback(it) }
+                        v?.text.toString().let { pin ->
+                            v?.text = ""
+                            state.callback(pin)
+                        }
+                    }
+                }
+            }
+            true
+        }
+    }
+
+    private fun onPinChangeRequested(state: SessionViewDelegateState.PinChangeRequested) {
+
+        tvTaskText?.visibility = View.INVISIBLE
+        tvTaskTitle?.visibility = View.INVISIBLE
+        show(llChangePin)
+
+        tilChangePin.hint = state.message
+        tilChangePinConfirm.hint = activity.getString(R.string.pin_change_confirm)
+
+        performHapticFeedback()
+        etPin?.setOnEditorActionListener { v: TextView?, actionId: Int, event: KeyEvent? ->
+            postUI {
+                if (actionId == KeyEvent.KEYCODE_ENDCALL) {
+                    if (v?.text.isNullOrBlank()) {
+                        etChangePin?.error = activity.getString(R.string.pin_enter_error_empty)
+                    }
+                }
+            }
+            true
+        }
+
+        etChangePinConfirm?.setOnEditorActionListener { v: TextView?, actionId: Int, event: KeyEvent? ->
+            postUI {
+                if (actionId == KeyEvent.KEYCODE_ENDCALL) {
+                    if (v?.text.isNullOrBlank()) {
+                        etChangePin?.error = activity.getString(R.string.pin_enter_error_empty)
+                    } else if (v?.text.toString() != etChangePin?.text.toString()) {
+                        etChangePinConfirm?.error = activity.getString(R.string.pin_change_error)
+                        etChangePin?.error = activity.getString(R.string.pin_change_error)
+                    } else {
+                        show(lTouchCard)
+                        tvTaskTitle?.show()
+                        tvTaskText?.show()
+                        val imm: InputMethodManager =
+                                context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+                        imm.hideSoftInputFromWindow(v?.windowToken, 0)
+
+                        v?.text.toString().let { pin ->
+                            v?.text = ""
+                            etChangePin?.setText("")
+                            state.callback(pin)
+                        }
+                    }
                 }
             }
             true
@@ -151,7 +218,7 @@ class NfcSessionDialog(val activity: FragmentActivity) : BottomSheetDialog(activ
 
     private fun onTagLost() {
         if (currentState is SessionViewDelegateState.Success ||
-            currentState is SessionViewDelegateState.PinRequested) {
+                currentState is SessionViewDelegateState.PinRequested) {
             return
         }
         show(lTouchCard)
@@ -173,7 +240,7 @@ class NfcSessionDialog(val activity: FragmentActivity) : BottomSheetDialog(activ
             )
             performHapticFeedback()
 
-            postUI (2000){
+            postUI(2000) {
                 show(lTouchCard)
                 tvTaskTitle?.text = activity.getText(R.string.dialog_ready_to_scan)
                 tvTaskText?.text = activity.getText(R.string.dialog_scan_text)
@@ -189,6 +256,7 @@ class NfcSessionDialog(val activity: FragmentActivity) : BottomSheetDialog(activ
         flError?.show(view.id == flError.id)
         flCompletion?.show(view.id == flCompletion.id)
         flPin?.show(view.id == flPin.id)
+        llChangePin?.show(view.id == llChangePin.id)
     }
 
     private fun performHapticFeedback() {
