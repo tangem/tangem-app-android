@@ -1,9 +1,10 @@
 package com.tangem.tangem_sdk_new
 
-import androidx.fragment.app.FragmentActivity
+import android.app.Activity
 import com.tangem.*
 import com.tangem.tangem_sdk_new.nfc.NfcReader
 import com.tangem.tangem_sdk_new.ui.NfcSessionDialog
+import com.tangem.tasks.PinType
 
 /**
  * Default implementation of [SessionViewDelegate].
@@ -11,7 +12,7 @@ import com.tangem.tangem_sdk_new.ui.NfcSessionDialog
  */
 class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDelegate {
 
-    lateinit var activity: FragmentActivity
+    lateinit var activity: Activity
     private var readingDialog: NfcSessionDialog? = null
 
     init {
@@ -19,20 +20,19 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
     }
 
     override fun onSessionStarted(cardId: String?, message: Message?) {
-        postUI { showReadingDialog(activity, cardId, message) }
+        postUI {
+            if (readingDialog == null) createReadingDialog(activity)
+            readingDialog?.show(SessionViewDelegateState.Ready(cardId, message))
+        }
     }
 
-    private fun showReadingDialog(activity: FragmentActivity, cardId: String?, message: Message?) {
+    private fun createReadingDialog(activity: Activity) {
         val dialogView = activity.layoutInflater.inflate(R.layout.nfc_bottom_sheet, null)
         readingDialog = NfcSessionDialog(activity)
         readingDialog?.setContentView(dialogView)
         readingDialog?.dismissWithAnimation = true
         readingDialog?.create()
-        readingDialog?.setOnShowListener {
-            readingDialog?.show(SessionViewDelegateState.Ready(cardId, message))
-        }
         readingDialog?.setOnCancelListener { reader.stopSession(true) }
-        readingDialog?.show()
     }
 
     override fun onSecurityDelay(ms: Int, totalDurationSeconds: Int) {
@@ -68,8 +68,22 @@ class DefaultSessionViewDelegate(private val reader: NfcReader) : SessionViewDel
         postUI { readingDialog?.show(SessionViewDelegateState.Error(error)) }
     }
 
-    override fun onPinRequested(callback: (pin: String?) -> Unit) {
-        postUI { readingDialog?.show(SessionViewDelegateState.PinRequested(callback)) }
+    override fun onPinRequested(pinType: PinType, callback: (pin: String) -> Unit) {
+        val message = when (pinType) {
+            PinType.Pin1 -> activity.getString(R.string.pin_enter_pin_1)
+            PinType.Pin2 -> activity.getString(R.string.pin_enter_pin_2)
+            PinType.Pin3 -> activity.getString(R.string.pin_enter_pin_3)
+        }
+        postUI { readingDialog?.show(SessionViewDelegateState.PinRequested(message, callback)) }
+    }
+
+    override fun onPinChangeRequested(pinType: PinType, callback: (pin: String) -> Unit) {
+        val message = when (pinType) {
+            PinType.Pin1 -> activity.getString(R.string.pin_change_pin_1)
+            PinType.Pin2 -> activity.getString(R.string.pin_change_pin_2)
+            PinType.Pin3 -> activity.getString(R.string.pin_change_pin_3)
+        }
+        postUI { readingDialog?.show(SessionViewDelegateState.PinChangeRequested(message, callback)) }
     }
 
     private fun setLogger() {
