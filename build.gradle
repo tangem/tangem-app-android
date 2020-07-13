@@ -22,6 +22,7 @@ allprojects {
         google()
         jcenter()
         maven { url 'https://jitpack.io' }
+        maven { url "https://api.bitbucket.org/2.0/repositories/tangem/maven_repository/src/releases" }
     }
 }
 
