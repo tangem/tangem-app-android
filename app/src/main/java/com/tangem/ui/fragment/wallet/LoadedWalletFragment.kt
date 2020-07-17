@@ -91,7 +91,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
             resources.getColorStateList(R.color.btn_dark)
     }
     private val activeColor: ColorStateList by lazy {
-        val color = if ((Util.bytesToHex(ctx.card?.cid)?.startsWith("10") == true)) {
+        val color = if (ctx.card?.isStart2CoinCard() == true) {
             R.color.start2coin_orange
         } else {
             R.color.colorAccent
@@ -175,7 +175,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
 
 
 
-        if (Util.bytesToHex(ctx.card?.cid)?.startsWith("10") == true) {
+        if (ctx.card?.isStart2CoinCard() == true) {
             btnLoad?.visibility = View.GONE
         }
 
@@ -959,6 +959,10 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         val clipboard = activity?.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.primaryClip = ClipData.newPlainText(text, text)
         Toast.makeText(activity, R.string.loaded_wallet_toast_copied, Toast.LENGTH_LONG).show()
+    }
+
+    private fun TangemCard.isStart2CoinCard(): Boolean {
+        return (Util.bytesToHex(ctx.card?.cid)?.startsWith("1") == true)
     }
 
 }
