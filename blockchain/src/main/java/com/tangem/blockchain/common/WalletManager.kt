@@ -32,7 +32,7 @@ abstract class WalletManager(val cardId: String, var wallet: Wallet) {
     }
 
     private fun validateAmount(amount: Amount): Boolean {
-        return !amount.isAboveZero() &&
+        return amount.isAboveZero() &&
                 wallet.fundsAvailable(amount.type) >= amount.value
     }
 }
