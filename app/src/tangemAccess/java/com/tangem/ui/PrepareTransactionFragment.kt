@@ -17,6 +17,7 @@ import com.tangem.ui.fragment.BaseFragment
 import com.tangem.ui.fragment.qr.CameraPermissionManager
 import com.tangem.ui.navigation.NavigationResultListener
 import com.tangem.util.UtilHelper
+import com.tangem.util.extensions.isStart2CoinCard
 import com.tangem.wallet.CoinEngineFactory
 import com.tangem.wallet.R
 import com.tangem.wallet.TangemContext
@@ -45,7 +46,9 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
             Html.fromHtml(engine!!.balanceHTML)
         tvBalance.text = html
 
-        if (ctx.blockchain.isPayIdSupported) etWallet.hint = getString(R.string.prepare_transaction_hint_address_or_pay_id)
+        if (ctx.blockchain.isPayIdSupported && !ctx.card.isStart2CoinCard()) {
+            etWallet.hint = getString(R.string.prepare_transaction_hint_address_or_pay_id)
+        }
 
         if (!engine.allowSelectFeeInclusion()) {
             rgIncFee.visibility = View.INVISIBLE
