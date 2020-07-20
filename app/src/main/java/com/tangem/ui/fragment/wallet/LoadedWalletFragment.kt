@@ -25,6 +25,8 @@ import com.tangem.App
 import com.tangem.Constant
 import com.tangem.data.Blockchain
 import com.tangem.data.dp.PrefsManager
+import com.tangem.data.getPayIdNetwork
+import com.tangem.data.isPayIdSupported
 import com.tangem.server_android.Result
 import com.tangem.server_android.ServerApiTangem
 import com.tangem.server_android.model.CardVerifyAndGetInfo
@@ -156,7 +158,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
             getString(R.string.loaded_wallet_load_via_qr)
             )
 
-        if (ctx.blockchain.isPayIdSupported && !ctx.card.isStart2CoinCard()) {
+        if (ctx.blockchain.isPayIdSupported() && !ctx.card.isStart2CoinCard()) {
             ivPayId.visibility = View.VISIBLE
             ivPayId.imageAlpha = 100
             ivPayId.setOnClickListener { createPayIdDialog() }
@@ -326,7 +328,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
     }
 
     private fun getPayIdIfApplicable() {
-        if (ctx.blockchain.isPayIdSupported && !ctx.card.isStart2CoinCard()) {
+        if (ctx.blockchain.isPayIdSupported() && !ctx.card.isStart2CoinCard()) {
             viewModel.getPayId(
                 Util.byteArrayToHexString(ctx.card.cid!!),
                 Util.byteArrayToHexString(ctx.card.cardPublicKey!!))
@@ -376,13 +378,11 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
     }
 
     private fun createPayId(payId: String) {
-        val network = if (ctx.blockchain == Blockchain.Ripple) "XRPL" else ctx.blockchain.currency
         viewModel.setPayId(
             Util.byteArrayToHexString(ctx.card.cid!!),
             Util.byteArrayToHexString(ctx.card.cardPublicKey!!),
             payId,
-            ctx.coinData.wallet,
-            network
+            ctx.coinData.wallet, ctx.blockchain.getPayIdNetwork()
         )
             .observe(viewLifecycleOwner, Observer { result ->
             when (result) {
