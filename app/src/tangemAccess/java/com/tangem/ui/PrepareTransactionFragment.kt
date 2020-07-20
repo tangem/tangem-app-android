@@ -12,6 +12,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import com.tangem.Constant
+import com.tangem.data.isPayIdSupported
 import com.tangem.ui.activity.MainActivity
 import com.tangem.ui.fragment.BaseFragment
 import com.tangem.ui.fragment.qr.CameraPermissionManager
@@ -46,7 +47,7 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
             Html.fromHtml(engine!!.balanceHTML)
         tvBalance.text = html
 
-        if (ctx.blockchain.isPayIdSupported && !ctx.card.isStart2CoinCard()) {
+        if (ctx.blockchain.isPayIdSupported() && !ctx.card.isStart2CoinCard()) {
             etWallet.hint = getString(R.string.prepare_transaction_hint_address_or_pay_id)
         }
 
