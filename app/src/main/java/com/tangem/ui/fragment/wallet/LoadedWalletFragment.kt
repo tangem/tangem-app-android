@@ -49,6 +49,7 @@ import com.tangem.ui.fragment.pin.PinSwapFragment
 import com.tangem.ui.navigation.NavigationResultListener
 import com.tangem.util.LOG
 import com.tangem.util.UtilHelper
+import com.tangem.util.extensions.isStart2CoinCard
 import com.tangem.wallet.*
 import kotlinx.android.synthetic.main.dialog_pay_id.view.*
 import kotlinx.android.synthetic.main.fr_loaded_wallet.*
@@ -155,7 +156,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
             getString(R.string.loaded_wallet_load_via_qr)
             )
 
-        if (ctx.blockchain.isPayIdSupported) {
+        if (ctx.blockchain.isPayIdSupported && !ctx.card.isStart2CoinCard()) {
             ivPayId.visibility = View.VISIBLE
             ivPayId.imageAlpha = 100
             ivPayId.setOnClickListener { createPayIdDialog() }
@@ -325,7 +326,7 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
     }
 
     private fun getPayIdIfApplicable() {
-        if (ctx.blockchain.isPayIdSupported) {
+        if (ctx.blockchain.isPayIdSupported && !ctx.card.isStart2CoinCard()) {
             viewModel.getPayId(
                 Util.byteArrayToHexString(ctx.card.cid!!),
                 Util.byteArrayToHexString(ctx.card.cardPublicKey!!))
@@ -960,9 +961,4 @@ class LoadedWalletFragment : BaseFragment(), NavigationResultListener, NfcAdapte
         clipboard.primaryClip = ClipData.newPlainText(text, text)
         Toast.makeText(activity, R.string.loaded_wallet_toast_copied, Toast.LENGTH_LONG).show()
     }
-
-    private fun TangemCard.isStart2CoinCard(): Boolean {
-        return (Util.bytesToHex(ctx.card?.cid)?.startsWith("1") == true)
-    }
-
 }
