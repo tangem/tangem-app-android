@@ -4,8 +4,11 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.tangem.data.Blockchain;
+import com.tangem.data.network.ServerApiPayId;
 import com.tangem.data.network.ServerApiRootstock;
 import com.tangem.data.network.model.InfuraResponse;
+import com.tangem.data.network.model.PayIdAddress;
+import com.tangem.data.network.model.PayIdResponse;
 import com.tangem.wallet.BTCUtils;
 import com.tangem.wallet.CoinEngine;
 import com.tangem.wallet.EthTransaction;
@@ -14,6 +17,10 @@ import com.tangem.wallet.TangemContext;
 import com.tangem.wallet.token.TokenEngine;
 
 import java.math.BigInteger;
+
+import io.reactivex.CompletableObserver;
+import io.reactivex.SingleObserver;
+import io.reactivex.observers.DisposableSingleObserver;
 
 public class RskTokenEngine extends TokenEngine {
 
@@ -158,6 +165,7 @@ public class RskTokenEngine extends TokenEngine {
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
         ServerApiRootstock serverApiRootstock = new ServerApiRootstock();
+        final ServerApiPayId serverApiPayId = new ServerApiPayId();
         // request requestData gasPrice listener
         ServerApiRootstock.ResponseListener responseListener = new ServerApiRootstock.ResponseListener() {
             @Override
@@ -193,7 +201,11 @@ public class RskTokenEngine extends TokenEngine {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                blockchainRequestsCallbacks.onComplete(true);
+                if (serverApiRootstock.isRequestsSequenceCompleted() && serverApiPayId.isRequestsSequenceCompleted()) {
+                    blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                } else {
+                    blockchainRequestsCallbacks.onProgress();
+                }
             }
 
             @Override
@@ -204,6 +216,47 @@ public class RskTokenEngine extends TokenEngine {
         };
         serverApiRootstock.setResponseListener(responseListener);
 
+        if (targetAddress.contains("$")) { // PayID
+
+            SingleObserver<PayIdResponse> observer = new DisposableSingleObserver<PayIdResponse>() {
+                @Override
+                public void onSuccess(PayIdResponse payIdResponse) {
+                    try {
+                        String resolvedAddress = null;
+                        for (PayIdAddress address : payIdResponse.getAddresses()) {
+                            if (address.getPaymentNetwork().equals("RSK") &&
+                                    address.getEnvironment().equals("MAINNET")) {
+                                resolvedAddress = address.getAddressDetails().getAddress();
+                                break;
+                            }
+                        }
+                        if (validateAddress(resolvedAddress)) {
+                            coinData.setResolvedPayIdAddress(resolvedAddress);
+                        } else {
+                            ctx.setError("Unknown address format in PayID response");
+                            blockchainRequestsCallbacks.onComplete(false);
+                        }
+                    } catch (Exception e) {
+                        ctx.setError("Unknown response format on PayID request");
+                        blockchainRequestsCallbacks.onComplete(false);
+                    }
+                    if (serverApiRootstock.isRequestsSequenceCompleted() && serverApiPayId.isRequestsSequenceCompleted()) {
+                        blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                    } else {
+                        blockchainRequestsCallbacks.onProgress();
+                    }
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    Log.i(TAG, "onFail: " + "payID" + " " + e.getMessage());
+                    ctx.setError("PayID error:" + e.getMessage());
+                    blockchainRequestsCallbacks.onComplete(false);
+                }
+            };
+
+            serverApiPayId.getAddress(targetAddress, ctx.getBlockchain(), observer);
+        }
         serverApiRootstock.requestData(ServerApiRootstock.ROOTSTOCK_ETH_GAS_PRICE, 67, coinData.getWallet(), "", "");
     }
 
