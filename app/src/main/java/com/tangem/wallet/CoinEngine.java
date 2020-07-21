@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.text.DecimalFormat;
@@ -392,4 +393,18 @@ public abstract class CoinEngine {
 
     public int pendingTransactionTimeoutInSeconds() { return 30; }
 
+    protected boolean validatePayId(String payId) {
+        String[] addressParts = payId.split("\\$");
+
+        if (addressParts.length != 2) {
+            return false;
+        }
+        String addressURL = "https://" + addressParts[1] + "/" + addressParts[0];
+        try {
+            new URL(addressURL).toURI();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }
