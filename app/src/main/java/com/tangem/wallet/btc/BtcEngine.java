@@ -161,18 +161,7 @@ public class BtcEngine extends CoinEngine {
         }
 
         if (address.contains("$")) { // PayID
-            String[] addressParts = address.split("\\$");
-
-            if (addressParts.length != 2) {
-                return false;
-            }
-            String addressURL = "https://" + addressParts[1] + "/" + addressParts[0];
-            try {
-                new URL(addressURL).toURI();
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
+            return validatePayId(address);
         }
 
         if (address.startsWith("1") || address.startsWith("2") || address.startsWith("3") || address.startsWith("n") || address.startsWith("m")) {
