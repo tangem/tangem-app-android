@@ -16,10 +16,7 @@ private val payIdSupported = EnumSet.of(
         Blockchain.Binance,
         Blockchain.BinanceAsset,
         Blockchain.Rootstock,
-        Blockchain.RootstockToken,
-        Blockchain.Tezos,
-        Blockchain.Eos,
-        Blockchain.Matic
+        Blockchain.RootstockToken
 )
 
 fun Blockchain.isPayIdSupported(): Boolean {
