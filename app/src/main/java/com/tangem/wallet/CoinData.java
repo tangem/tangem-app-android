@@ -58,6 +58,9 @@ public abstract class CoinData {
         if (B.containsKey("sentTransactionsCount")) {
             sentTransactionsCount = B.getInt("sentTransactionsCount");
         }
+
+        if (B.containsKey("ResolvedPayIdAddress")) resolvedPayIdAddress = B.getString("ResolvedPayIdAddress");
+        else resolvedPayIdAddress = null;
     }
 
     public void saveToBundle(Bundle B) {
@@ -76,6 +79,8 @@ public abstract class CoinData {
             B.putString("validationNodeDescription", validationNodeDescription);
 
             B.putInt("sentTransactionsCount", sentTransactionsCount);
+
+            if (resolvedPayIdAddress != null) B.putString("ResolvedPayIdAddress", resolvedPayIdAddress);
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());
         }
@@ -155,6 +160,7 @@ public abstract class CoinData {
         rate = 0f;
         rateAlter = 0f;
         sentTransactionsCount = 0;
+        resolvedPayIdAddress = null;
     }
 
 //    private AtomicInteger failedBalanceRequestCounter;
@@ -212,4 +218,15 @@ public abstract class CoinData {
     public void incSentTransactionsCount() {
         sentTransactionsCount++;
     }
+
+    private String resolvedPayIdAddress = null;
+
+    public String getResolvedPayIdAddress() {
+        return resolvedPayIdAddress;
+    }
+
+    public void setResolvedPayIdAddress(String resolvedPayIdAddress) {
+        this.resolvedPayIdAddress = resolvedPayIdAddress;
+    }
+
 }
