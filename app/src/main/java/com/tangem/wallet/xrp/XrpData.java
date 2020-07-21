@@ -19,7 +19,7 @@ public class XrpData extends CoinData {
 
     private Boolean accountNotFound, targetAccountCreated = false;
 
-    private String resolvedPayIdAddress, resolvedPayIdTag = null;
+    private String resolvedPayIdTag = null;
 
     @Override
     public void loadFromBundle(Bundle B) {
@@ -37,8 +37,6 @@ public class XrpData extends CoinData {
         else accountNotFound = false;
         if (B.containsKey("TargetAccountCreated")) targetAccountCreated = B.getBoolean("TargetAccountCreated");
         else targetAccountCreated = false;
-        if (B.containsKey("ResolvedPayIdAddress")) resolvedPayIdAddress = B.getString("ResolvedPayIdAddress");
-        else resolvedPayIdAddress = null;
         if (B.containsKey("ResolvedPayIdTag")) resolvedPayIdTag = B.getString("ResolvedPayIdTag");
         else resolvedPayIdTag = null;
     }
@@ -53,7 +51,6 @@ public class XrpData extends CoinData {
             if (reserve != null) B.putLong("Reserve", reserve);
             if (accountNotFound != null) B.putBoolean("AccoundNotFound", accountNotFound);
             if (targetAccountCreated != null) B.putBoolean("TargetAccountCreated", targetAccountCreated);
-            if (resolvedPayIdAddress != null) B.putString("ResolvedPayIdAddress", resolvedPayIdAddress);
             if (resolvedPayIdTag != null) B.putString("ResolvedPayIdTag", resolvedPayIdTag);
         } catch (Exception e) {
             Log.e("Can't save to bundle ", e.getMessage());
@@ -69,7 +66,6 @@ public class XrpData extends CoinData {
         reserve = 20000000L;
         accountNotFound = false;
         targetAccountCreated = false;
-        resolvedPayIdAddress = null;
         resolvedPayIdTag = null;
     }
 
@@ -133,14 +129,6 @@ public class XrpData extends CoinData {
 
     public boolean hasUnconfirmed() {
         return hasBalanceInfo() && !balanceConfirmed.equals(balanceUnconfirmed);
-    }
-
-    public String getResolvedPayIdAddress() {
-        return resolvedPayIdAddress;
-    }
-
-    public void setResolvedPayIdAddress(String resolvedPayIdAddress) {
-        this.resolvedPayIdAddress = resolvedPayIdAddress;
     }
 
     public String getResolvedPayIdTag() {
