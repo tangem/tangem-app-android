@@ -6,11 +6,14 @@ import android.util.Log;
 
 import com.tangem.App;
 import com.tangem.data.network.ServerApiBlockchair;
+import com.tangem.data.network.ServerApiPayId;
 import com.tangem.data.network.model.BlockchairAddressData;
 import com.tangem.data.network.model.BlockchairAddressResponse;
 import com.tangem.data.network.model.BlockchairStatsResponse;
 import com.tangem.data.network.model.BlockchairTransactionResponse;
 import com.tangem.data.network.model.BlockchairUnspentOutput;
+import com.tangem.data.network.model.PayIdAddress;
+import com.tangem.data.network.model.PayIdResponse;
 import com.tangem.tangem_card.data.TangemCard;
 import com.tangem.tangem_card.reader.CardProtocol;
 import com.tangem.tangem_card.tasks.SignTask;
@@ -130,6 +133,10 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public boolean validateAddress(String address) {
+        if (address != null && address.contains("$")) { // PayID
+            return validatePayId(address);
+        }
+
         return CashAddr.isValidCashAddress(address);
     }
 
@@ -373,8 +380,16 @@ public class BtcCashEngine extends CoinEngine {
     public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         checkBlockchainDataExists();
 
+        String destination;
+        //PayID
+        if (coinData.getResolvedPayIdAddress() != null) {
+            destination = coinData.getResolvedPayIdAddress();
+        } else {
+            destination = targetAddress;
+        }
+
         String srcLegacyAddress = convertToLegacyAddress(ctx.getCoinData().getWallet());
-        String destLegacyAddress = convertToLegacyAddress(targetAddress);
+        String destLegacyAddress = convertToLegacyAddress(destination);
         byte[] pbKey = ctx.getCard().getWalletPublicKeyRar(); //ALWAYS USING COMPRESS KEY
 
         final ArrayList<UnspentOutputInfo> unspentOutputs = new ArrayList<>();
@@ -576,8 +591,38 @@ public class BtcCashEngine extends CoinEngine {
 
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) throws Exception {
-        final int calcSize = calculateEstimatedTransactionSize(targetAddress, amount.toValueString());
-        Log.e(TAG, String.format("Estimated tx size %d", calcSize));
+
+        CompletableObserver payIdObserver = new DisposableCompletableObserver() {
+            @Override
+            public void onComplete() {
+                int calcSize = calculateEstimatedTransactionSize(coinData.getResolvedPayIdAddress(), amount.toValueString());
+                Log.e(TAG, String.format("Estimated tx size %d", calcSize));
+
+                checkFee(blockchainRequestsCallbacks, calcSize);
+
+                blockchainRequestsCallbacks.onComplete(true);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                ctx.setError(e.getMessage());
+                blockchainRequestsCallbacks.onComplete(false);
+            }
+        };
+
+        if (targetAddress.contains("$")) { // PayID
+            resolvePayID(targetAddress, payIdObserver);
+        } else {
+            int calcSize = calculateEstimatedTransactionSize(targetAddress, amount.toValueString());
+            Log.e(TAG, String.format("Estimated tx size %d", calcSize));
+
+            checkFee(blockchainRequestsCallbacks, calcSize);
+
+            blockchainRequestsCallbacks.onComplete(true);
+        }
+    }
+
+    private void checkFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, int calcSize) {
         coinData.minFee = null;
         coinData.maxFee = null;
         coinData.normalFee = null;
@@ -616,6 +661,42 @@ public class BtcCashEngine extends CoinEngine {
         };
 
         serverApiBlockchair.getStats(statsObserver);
+    }
+
+    private void resolvePayID(String targetAddress, CompletableObserver observer) {
+        final ServerApiPayId serverApiPayId = new ServerApiPayId();
+
+        SingleObserver<PayIdResponse> payIdObserver = new DisposableSingleObserver<PayIdResponse>() {
+            @Override
+            public void onSuccess(PayIdResponse payIdResponse) {
+                try {
+                    String resolvedAddress = null;
+                    for (PayIdAddress address : payIdResponse.getAddresses()) {
+                        if (address.getPaymentNetwork().equals(ctx.getBlockchain().getCurrency()) &&
+                                address.getEnvironment().equals("MAINNET")) {
+                            resolvedAddress = address.getAddressDetails().getAddress();
+                            break;
+                        }
+                    }
+                    if (validateAddress(resolvedAddress)) {
+                        coinData.setResolvedPayIdAddress(resolvedAddress);
+                        observer.onComplete();
+                    } else {
+                        observer.onError(new Exception("Unknown address format in PayID response"));
+                    }
+                } catch (Exception e) {
+                    observer.onError(new Exception("Unknown response format on PayID request"));
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.i(TAG, "onFail: " + "payID" + " " + e.getMessage());
+                observer.onError(new Exception("PayID error:" + e.getMessage()));
+            }
+        };
+
+        serverApiPayId.getAddress(targetAddress, ctx.getBlockchain(), payIdObserver);
     }
 
     @Override
