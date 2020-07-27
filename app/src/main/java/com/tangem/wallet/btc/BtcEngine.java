@@ -1088,10 +1088,10 @@ public class BtcEngine extends CoinEngine {
                     }
                     if (validateAddress(resolvedAddress)) {
                         if (resolvedAddress.equals(coinData.getWallet())) {
-                            observer.onError(new Exception(ctx.getString(R.string.prepare_transaction_error_same_address)));
-                        } else {
                             coinData.setResolvedPayIdAddress(resolvedAddress);
                             observer.onComplete();
+                        } else {
+                            observer.onError(new Exception("Resolved PayID address equals source address"));
                         }
                     } else {
                         observer.onError(new Exception("Unknown address format in PayID response"));
