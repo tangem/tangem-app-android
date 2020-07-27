@@ -9,7 +9,6 @@ import com.tangem.App;
 import com.tangem.Constant;
 import com.tangem.data.local.PendingTransactionsStorage;
 import com.tangem.data.network.ServerApiAdalite;
-import com.tangem.data.network.ServerApiBlockcypher;
 import com.tangem.data.network.ServerApiPayId;
 import com.tangem.data.network.model.AdaliteResponse;
 import com.tangem.data.network.model.AdaliteResponseUtxo;
@@ -821,15 +820,8 @@ public class CardanoEngine extends CoinEngine {
 
             @Override
             public void onSuccess(String method, String stringResponse) {
-                if (method.equals(ServerApiAdalite.ADALITE_SEND)) {
-                    if (stringResponse.equals("\"Transaction sent successfully!\"")) {
-                        ctx.setError(null);
-                        blockchainRequestsCallbacks.onComplete(true);
-                    } else { // TODO: Make check for a valid send response
-                        ctx.setError(stringResponse);
-                        blockchainRequestsCallbacks.onComplete(false);
-                    }
-                }
+                ctx.setError(null);
+                blockchainRequestsCallbacks.onComplete(true);
             }
 
 
