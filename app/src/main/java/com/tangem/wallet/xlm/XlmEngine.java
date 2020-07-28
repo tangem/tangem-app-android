@@ -565,7 +565,7 @@ public class XlmEngine extends CoinEngine {
         CompletableObserver payIdObserver = new DisposableCompletableObserver() {
             @Override
             public void onComplete() {
-                checkTargetAccountCreated(blockchainRequestsCallbacks, targetAddress, amount);
+                checkTargetAccountCreated(blockchainRequestsCallbacks, coinData.getResolvedPayIdAddress(), amount);
             }
 
             @Override
