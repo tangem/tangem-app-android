@@ -604,7 +604,7 @@ public class DucatusEngine extends BtcEngine {
                         }
                     }
                     if (validateAddress(resolvedAddress)) {
-                        if (resolvedAddress.equals(coinData.getWallet())) {
+                        if (!resolvedAddress.equals(coinData.getWallet())) {
                             coinData.setResolvedPayIdAddress(resolvedAddress);
                             observer.onComplete();
                         } else {
