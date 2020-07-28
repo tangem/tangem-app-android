@@ -598,7 +598,7 @@ public class XlmEngine extends CoinEngine {
                         }
                     }
                     if (validateAddress(resolvedAddress)) {
-                        if (resolvedAddress.equals(coinData.getWallet())) {
+                        if (!resolvedAddress.equals(coinData.getWallet())) {
                             coinData.setResolvedPayIdAddress(resolvedAddress);
                             observer.onComplete();
                         } else {
