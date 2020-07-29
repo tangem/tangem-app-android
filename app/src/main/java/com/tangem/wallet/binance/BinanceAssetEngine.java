@@ -531,15 +531,7 @@ public class BinanceAssetEngine extends CoinEngine {
 
     private void checkFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
         try {
-            String baseUrl;
-
-            if (ctx.getBlockchain() == Blockchain.Binance) {
-                baseUrl = Server.ApiBinance.Method.API_V1;
-            } else if (ctx.getBlockchain() == Blockchain.BinanceTestNet) {
-                baseUrl = Server.ApiBinanceTestnet.Method.API_V1;
-            } else {
-                throw new Exception("Invalid blockchain for BinanceEngine");
-            }
+            String baseUrl = Server.ApiBinance.Method.API_V1;
 
             Retrofit retrofitBinance = new Retrofit.Builder()
                     .baseUrl(baseUrl)
