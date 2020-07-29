@@ -161,6 +161,10 @@ public class BinanceAssetEngine extends CoinEngine {
             return false;
         }
 
+        if (address.contains("$")) { // PayID
+            return validatePayId(address);
+        }
+
         try {
             Crypto.decodeAddress(address);
         } catch (Exception e) {
@@ -387,6 +391,14 @@ public class BinanceAssetEngine extends CoinEngine {
     public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         checkBlockchainDataExists();
 
+        String destination;
+        //PayID
+        if (coinData.getResolvedPayIdAddress() != null) {
+            destination = coinData.getResolvedPayIdAddress();
+        } else {
+            destination = targetAddress;
+        }
+
         String amount;
 
         if (IncFee && amountValue.getCurrency().equals(getFeeCurrency())) { //Coin transfer only
@@ -405,7 +417,7 @@ public class BinanceAssetEngine extends CoinEngine {
         Transfer transfer = new Transfer();
         transfer.setCoin(amountValue.getCurrency().equals(getFeeCurrency()) ? getFeeCurrency() : ctx.getCard().getContractAddress());
         transfer.setFromAddress(ctx.getCoinData().getWallet());
-        transfer.setToAddress(targetAddress);
+        transfer.setToAddress(destination);
         transfer.setAmount(amount);
 
         TransactionOption options = TransactionOption.DEFAULT_INSTANCE;
