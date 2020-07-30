@@ -758,8 +758,12 @@ public class LtcEngine extends BtcEngine {
                         }
                     }
                     if (validateAddress(resolvedAddress)) {
-                        coinData.setResolvedPayIdAddress(resolvedAddress);
-                        observer.onComplete();
+                        if (!resolvedAddress.equals(coinData.getWallet())) {
+                            coinData.setResolvedPayIdAddress(resolvedAddress);
+                            observer.onComplete();
+                        } else {
+                            observer.onError(new Exception("Resolved PayID address equals source address"));
+                        }
                     } else {
                         observer.onError(new Exception("Unknown address format in PayID response"));
                     }
