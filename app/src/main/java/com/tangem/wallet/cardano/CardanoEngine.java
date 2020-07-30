@@ -9,10 +9,13 @@ import com.tangem.App;
 import com.tangem.Constant;
 import com.tangem.data.local.PendingTransactionsStorage;
 import com.tangem.data.network.ServerApiAdalite;
+import com.tangem.data.network.ServerApiPayId;
 import com.tangem.data.network.model.AdaliteResponse;
 import com.tangem.data.network.model.AdaliteResponseUtxo;
 import com.tangem.data.network.model.AdaliteTxData;
 import com.tangem.data.network.model.AdaliteUtxoData;
+import com.tangem.data.network.model.PayIdAddress;
+import com.tangem.data.network.model.PayIdResponse;
 import com.tangem.tangem_card.data.TangemCard;
 import com.tangem.tangem_card.tasks.SignTask;
 import com.tangem.tangem_card.util.Util;
@@ -46,6 +49,10 @@ import co.nstant.in.cbor.model.Array;
 import co.nstant.in.cbor.model.ByteString;
 import co.nstant.in.cbor.model.DataItem;
 import co.nstant.in.cbor.model.UnsignedInteger;
+import io.reactivex.CompletableObserver;
+import io.reactivex.SingleObserver;
+import io.reactivex.observers.DisposableCompletableObserver;
+import io.reactivex.observers.DisposableSingleObserver;
 
 import static com.tangem.wallet.Base58.decodeBase58;
 import static com.tangem.wallet.Base58.encodeBase58;
@@ -141,6 +148,10 @@ public class CardanoEngine extends CoinEngine {
     public boolean validateAddress(String address) {
         if (address == null || address.isEmpty()) {
             return false;
+        }
+
+        if (address.contains("$")) { // PayID
+            return validatePayId(address);
         }
 
         byte[] decAddress = Base58.decodeBase58(address);
@@ -399,6 +410,14 @@ public class CardanoEngine extends CoinEngine {
     public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         checkBlockchainDataExists();
 
+        String destination;
+        //PayID
+        if (coinData.getResolvedPayIdAddress() != null) {
+            destination = coinData.getResolvedPayIdAddress();
+        } else {
+            destination = targetAddress;
+        }
+
         String myAddress = ctx.getCoinData().getWallet();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
         List<CardanoData.UnspentOutput> utxoList = coinData.getUnspentOutputs();
@@ -457,7 +476,7 @@ public class CardanoEngine extends CoinEngine {
         }
 
         //1st output
-        DataItem targetAddressItem = new CborDecoder(new ByteArrayInputStream(decodeBase58(targetAddress))).decode().get(0);
+        DataItem targetAddressItem = new CborDecoder(new ByteArrayInputStream(decodeBase58(destination))).decode().get(0);
         outputsArray
                 .addArray()
                 .add(targetAddressItem)
@@ -697,9 +716,40 @@ public class CardanoEngine extends CoinEngine {
 
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
+//        int calcSize = calculateEstimatedTransactionSize(targetAddress, amount);
+        CompletableObserver payIdObserver = new DisposableCompletableObserver() {
+            @Override
+            public void onComplete() {
+                int calcSize = calculateEstimatedTransactionSize(coinData.getResolvedPayIdAddress(), amount);
+                Log.e(TAG, String.format("Estimated tx size %d", calcSize));
+
+                calculateFee(calcSize);
+
+                blockchainRequestsCallbacks.onComplete(true);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                ctx.setError(e.getMessage());
+                blockchainRequestsCallbacks.onComplete(false);
+            }
+        };
+
+        if (targetAddress.contains("$")) { // PayID
+            resolvePayID(targetAddress, payIdObserver);
+        } else {
+            int calcSize = calculateEstimatedTransactionSize(targetAddress, amount);
+            Log.e(TAG, String.format("Estimated tx size %d", calcSize));
+
+            calculateFee(calcSize);
+
+            blockchainRequestsCallbacks.onComplete(true);
+        }
+    }
+
+    private void calculateFee(int calcSize) {
         final double A = 0.155381;
         final double B = 0.000043946;
-        int calcSize = calculateEstimatedTransactionSize(targetAddress, amount);
 
         double fee = A + B * calcSize;
         Amount feeAmount = new Amount(new BigDecimal(fee).setScale(getDecimals(), RoundingMode.UP), getFeeCurrency());
@@ -707,8 +757,46 @@ public class CardanoEngine extends CoinEngine {
         coinData.minFee = feeAmount;
         coinData.normalFee = feeAmount;
         coinData.maxFee = feeAmount;
+    }
 
-        blockchainRequestsCallbacks.onComplete(true);
+    private void resolvePayID(String targetAddress, CompletableObserver observer) {
+        final ServerApiPayId serverApiPayId = new ServerApiPayId();
+
+        SingleObserver<PayIdResponse> payIdObserver = new DisposableSingleObserver<PayIdResponse>() {
+            @Override
+            public void onSuccess(PayIdResponse payIdResponse) {
+                try {
+                    String resolvedAddress = null;
+                    for (PayIdAddress address : payIdResponse.getAddresses()) {
+                        if (address.getPaymentNetwork().equals(ctx.getBlockchain().getCurrency()) &&
+                                address.getEnvironment().equals("MAINNET")) {
+                            resolvedAddress = address.getAddressDetails().getAddress();
+                            break;
+                        }
+                    }
+                    if (validateAddress(resolvedAddress)) {
+                        if (!resolvedAddress.equals(coinData.getWallet())) {
+                            coinData.setResolvedPayIdAddress(resolvedAddress);
+                            observer.onComplete();
+                        } else {
+                            observer.onError(new Exception("Resolved PayID address equals source address"));
+                        }
+                    } else {
+                        observer.onError(new Exception("Unknown address format in PayID response"));
+                    }
+                } catch (Exception e) {
+                    observer.onError(new Exception("Unknown response format on PayID request"));
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.i(TAG, "onFail: " + "payID" + " " + e.getMessage());
+                observer.onError(new Exception("PayID error:" + e.getMessage()));
+            }
+        };
+
+        serverApiPayId.getAddress(targetAddress, ctx.getBlockchain(), payIdObserver);
     }
 
     @Override
@@ -732,15 +820,8 @@ public class CardanoEngine extends CoinEngine {
 
             @Override
             public void onSuccess(String method, String stringResponse) {
-                if (method.equals(ServerApiAdalite.ADALITE_SEND)) {
-                    if (stringResponse.equals("\"Transaction sent successfully!\"")) {
-                        ctx.setError(null);
-                        blockchainRequestsCallbacks.onComplete(true);
-                    } else { // TODO: Make check for a valid send response
-                        ctx.setError(stringResponse);
-                        blockchainRequestsCallbacks.onComplete(false);
-                    }
-                }
+                ctx.setError(null);
+                blockchainRequestsCallbacks.onComplete(true);
             }
 
 
