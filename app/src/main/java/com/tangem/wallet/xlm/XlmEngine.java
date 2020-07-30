@@ -7,8 +7,11 @@ import android.util.Log;
 
 import com.tangem.App;
 import com.tangem.data.Blockchain;
+import com.tangem.data.network.ServerApiPayId;
 import com.tangem.data.network.ServerApiStellar;
 import com.tangem.data.network.StellarRequest;
+import com.tangem.data.network.model.PayIdAddress;
+import com.tangem.data.network.model.PayIdResponse;
 import com.tangem.tangem_card.data.TangemCard;
 import com.tangem.tangem_card.tasks.SignTask;
 import com.tangem.tangem_card.util.Util;
@@ -30,6 +33,11 @@ import org.stellar.sdk.responses.operations.OperationResponse;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+
+import io.reactivex.CompletableObserver;
+import io.reactivex.SingleObserver;
+import io.reactivex.observers.DisposableCompletableObserver;
+import io.reactivex.observers.DisposableSingleObserver;
 
 /**
  * Created by dvol on 7.01.2019.
@@ -123,6 +131,10 @@ public class XlmEngine extends CoinEngine {
 
     @Override
     public boolean validateAddress(String address) {
+        if (address != null && address.contains("$")) { // PayID
+            return validatePayId(address);
+        }
+
         try {
             KeyPair kp = KeyPair.fromAccountId(address);
             // TODO is it possible to check address testNet or not
@@ -356,18 +368,26 @@ public class XlmEngine extends CoinEngine {
 
         StrictMode.setThreadPolicy(policy);
 
+        String destination;
+        //PayID
+        if (coinData.getResolvedPayIdAddress() != null) {
+            destination = coinData.getResolvedPayIdAddress();
+        } else {
+            destination = targetAddress;
+        }
+
         if (IncFee) {
             amountValue = new Amount(amountValue.subtract(feeValue), amountValue.getCurrency());
         }
 
         Operation operation;
         if (coinData.isTargetAccountCreated()) {
-            operation = new PaymentOperation.Builder(KeyPair.fromAccountId(targetAddress), new AssetTypeNative(), amountValue.toValueString()).build();
+            operation = new PaymentOperation.Builder(KeyPair.fromAccountId(destination), new AssetTypeNative(), amountValue.toValueString()).build();
         } else {
             if (amountValue.compareTo(coinData.getReserve()) < 0) {
                 throw new IllegalArgumentException("Target account is not created. Send " + coinData.getReserve().toDescriptionString(getDecimals()) + " or more to create");
             }
-            operation = new CreateAccountOperation.Builder(KeyPair.fromAccountId(targetAddress), amountValue.toValueString()).build();
+            operation = new CreateAccountOperation.Builder(KeyPair.fromAccountId(destination), amountValue.toValueString()).build();
         }
 
         TransactionEx transaction = TransactionEx.buildEx(120, coinData.getAccountResponse(), operation);
@@ -541,7 +561,65 @@ public class XlmEngine extends CoinEngine {
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) throws Exception {
         coinData.minFee = coinData.normalFee = coinData.maxFee = coinData.getBaseFee();
-        checkTargetAccountCreated(blockchainRequestsCallbacks, targetAddress, amount); //TODO: move?
+
+        CompletableObserver payIdObserver = new DisposableCompletableObserver() {
+            @Override
+            public void onComplete() {
+                checkTargetAccountCreated(blockchainRequestsCallbacks, coinData.getResolvedPayIdAddress(), amount);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                ctx.setError(e.getMessage());
+                blockchainRequestsCallbacks.onComplete(false);
+            }
+        };
+
+        if (targetAddress.contains("$")) { // PayID
+            resolvePayID(targetAddress, payIdObserver);
+        } else {
+            checkTargetAccountCreated(blockchainRequestsCallbacks, targetAddress, amount);
+        }
+    }
+
+    private void resolvePayID(String targetAddress, CompletableObserver observer) {
+        final ServerApiPayId serverApiPayId = new ServerApiPayId();
+
+        SingleObserver<PayIdResponse> payIdObserver = new DisposableSingleObserver<PayIdResponse>() {
+            @Override
+            public void onSuccess(PayIdResponse payIdResponse) {
+                try {
+                    String resolvedAddress = null;
+                    for (PayIdAddress address : payIdResponse.getAddresses()) {
+                        if (address.getPaymentNetwork().equals(ctx.getBlockchain().getCurrency()) &&
+                                address.getEnvironment().equals("MAINNET")) {
+                            resolvedAddress = address.getAddressDetails().getAddress();
+                            break;
+                        }
+                    }
+                    if (validateAddress(resolvedAddress)) {
+                        if (!resolvedAddress.equals(coinData.getWallet())) {
+                            coinData.setResolvedPayIdAddress(resolvedAddress);
+                            observer.onComplete();
+                        } else {
+                            observer.onError(new Exception("Resolved PayID address equals source address"));
+                        }
+                    } else {
+                        observer.onError(new Exception("Unknown address format in PayID response"));
+                    }
+                } catch (Exception e) {
+                    observer.onError(new Exception("Unknown response format on PayID request"));
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.i(TAG, "onFail: " + "payID" + " " + e.getMessage());
+                observer.onError(new Exception("PayID error:" + e.getMessage()));
+            }
+        };
+
+        serverApiPayId.getAddress(targetAddress, ctx.getBlockchain(), payIdObserver);
     }
 
     @Override
