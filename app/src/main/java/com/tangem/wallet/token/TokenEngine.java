@@ -877,7 +877,7 @@ public class TokenEngine extends CoinEngine {
                         }
                         if (validateAddress(resolvedAddress)) {
                             if (resolvedAddress.equals(coinData.getWallet())) {
-                                ctx.setError(R.string.prepare_transaction_error_same_address);
+                                ctx.setError("Resolved PayID address equals source address");
                                 blockchainRequestsCallbacks.onComplete(false);
                             } else {
                                 coinData.setResolvedPayIdAddress(resolvedAddress);
