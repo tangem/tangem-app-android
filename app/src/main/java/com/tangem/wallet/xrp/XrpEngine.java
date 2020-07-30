@@ -635,14 +635,14 @@ public class XrpEngine extends CoinEngine {
                             XrpXAddressDecoded xAddressDecoded = XrpXAddressService.Companion.decode(resolvedAddress);
                             if (xAddressDecoded == null) { // classic address
                                 if (resolvedAddress.equals(coinData.getWallet())) {
-                                    ctx.setError(R.string.prepare_transaction_error_same_address);
+                                    ctx.setError("Resolved PayID address equals source address");
                                     blockchainRequestsCallbacks.onComplete(false);
                                 } else {
                                     serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, resolvedAddress, "");
                                 }
                             } else { // X-address
                                 if (xAddressDecoded.getAddress().equals(coinData.getWallet())) {
-                                    ctx.setError(R.string.prepare_transaction_error_same_address);
+                                    ctx.setError("Resolved PayID address equals source address");
                                     blockchainRequestsCallbacks.onComplete(false);
                                 } else {
                                     serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, xAddressDecoded.getAddress(), "");
