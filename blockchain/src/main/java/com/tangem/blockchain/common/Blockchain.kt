@@ -19,6 +19,7 @@ enum class Blockchain(
     BitcoinTestnet("BTC/test", "BTCt", "Bitcoin Testnet"),
     BitcoinCash("BCH", "BCH", "Bitcoin Cash"),
     Litecoin("LTC", "LTC", "Litecoin"),
+    Ducatus("DUC", "DUC", "Ducatus"),
     Ethereum("ETH", "ETH", "Ethereum"),
     RSK("RSK", "RBTC", "RSK"),
     Cardano("CARDANO", "ADA", "Cardano"),
@@ -29,7 +30,7 @@ enum class Blockchain(
     Tezos("TEZOS", "XTZ", "Tezos");
 
     fun decimals(): Int = when (this) {
-        Bitcoin, BitcoinTestnet, BitcoinCash, Binance, BinanceTestnet, Litecoin -> 8
+        Bitcoin, BitcoinTestnet, BitcoinCash, Binance, BinanceTestnet, Litecoin, Ducatus -> 8
         Cardano, XRP, Tezos -> 6
         Ethereum, RSK -> 18
         Stellar -> 7
@@ -45,8 +46,7 @@ enum class Blockchain(
     fun validateAddress(address: String): Boolean = getAddressService().validate(address)
 
     private fun getAddressService(): AddressService = when (this) {
-        Unknown -> throw Exception("unsupported blockchain")
-        Bitcoin, BitcoinTestnet, Litecoin -> BitcoinAddressService(this)
+        Bitcoin, BitcoinTestnet, Litecoin, Ducatus -> BitcoinAddressService(this)
         BitcoinCash -> BitcoinCashAddressService()
         Ethereum, RSK -> EthereumAddressService()
         Cardano -> CardanoAddressService()
@@ -55,6 +55,7 @@ enum class Blockchain(
         BinanceTestnet -> BinanceAddressService(true)
         Stellar -> StellarAddressService()
         Tezos -> TezosAddressService()
+        Unknown -> throw Exception("unsupported blockchain")
     }
 
     fun getShareUri(address: String): String = when (this) {
@@ -71,9 +72,10 @@ enum class Blockchain(
         BitcoinTestnet -> "https://live.blockcypher.com/btc-testnet/address/$address"
         BitcoinCash -> "https://blockchair.com/bitcoin-cash/address/$address"
         Litecoin -> "https://live.blockcypher.com/ltc/address/$address"
+        Ducatus -> "https://insight.ducatus.io/#/DUC/mainnet/address/$address"
         Cardano -> "https://cardanoexplorer.com/address/$address"
         Ethereum -> if (token == null) {
-            "https://etherscan.io/address/"
+            "https://etherscan.io/address/$address"
         } else {
             "https://etherscan.io/token/${token.contractAddress}?a=$address"
         }
