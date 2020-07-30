@@ -23,9 +23,22 @@ public class ServerApiPayId {
         switch (blockchain) {
             case Ripple: return "application/xrpl-mainnet+json";
             case Bitcoin: return "application/btc-mainnet+json";
+            case Litecoin: return "application/ltc-mainnet+json";
+            case Cardano: return "application/ada-mainnet+json";
+            case Ducatus: return "application/duc-mainnet+json";
+            case BitcoinCash: return "application/bch-mainnet+json";
             case Ethereum:
             case Token:
                 return "application/eth-mainnet+json";
+            case Stellar:
+            case StellarAsset:
+                return "application/xlm-mainnet+json";
+            case Binance:
+            case BinanceAsset:
+                return "application/bnb-mainnet+json";
+            case Rootstock:
+            case RootstockToken:
+                return "application/rsk-mainnet+json";
             default: throw new InvalidParameterException("PayID is not supported for " + blockchain.getOfficialName());
         }
     }
