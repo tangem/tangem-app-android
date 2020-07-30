@@ -124,18 +124,7 @@ public class XrpEngine extends CoinEngine {
             return false;
         }
         if (address.contains("$")) { // PayID
-            String[] addressParts = address.split("\\$");
-
-            if (addressParts.length != 2) {
-                return false;
-            }
-            String addressURL = "https://" + addressParts[1] + "/" + addressParts[0];
-            try {
-                new URL(addressURL).toURI();
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
+            return validatePayId(address);
         }
         try {
             Addresses.decodeAccountID(address);
@@ -646,14 +635,14 @@ public class XrpEngine extends CoinEngine {
                             XrpXAddressDecoded xAddressDecoded = XrpXAddressService.Companion.decode(resolvedAddress);
                             if (xAddressDecoded == null) { // classic address
                                 if (resolvedAddress.equals(coinData.getWallet())) {
-                                    ctx.setError(R.string.prepare_transaction_error_same_address);
+                                    ctx.setError("Resolved PayID address equals source address");
                                     blockchainRequestsCallbacks.onComplete(false);
                                 } else {
                                     serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, resolvedAddress, "");
                                 }
                             } else { // X-address
                                 if (xAddressDecoded.getAddress().equals(coinData.getWallet())) {
-                                    ctx.setError(R.string.prepare_transaction_error_same_address);
+                                    ctx.setError("Resolved PayID address equals source address");
                                     blockchainRequestsCallbacks.onComplete(false);
                                 } else {
                                     serverApiRipple.requestData(ServerApiRipple.RIPPLE_ACCOUNT_INFO, xAddressDecoded.getAddress(), "");
