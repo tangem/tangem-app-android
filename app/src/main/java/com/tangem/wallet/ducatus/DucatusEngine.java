@@ -6,9 +6,12 @@ import android.util.Log;
 
 import com.tangem.App;
 import com.tangem.data.network.ServerApiBitcore;
+import com.tangem.data.network.ServerApiPayId;
 import com.tangem.data.network.model.BitcoreBalanceAndUnspents;
 import com.tangem.data.network.model.BitcoreSendResponse;
 import com.tangem.data.network.model.BitcoreUtxo;
+import com.tangem.data.network.model.PayIdAddress;
+import com.tangem.data.network.model.PayIdResponse;
 import com.tangem.tangem_card.data.TangemCard;
 import com.tangem.tangem_card.reader.CardProtocol;
 import com.tangem.tangem_card.tasks.SignTask;
@@ -37,7 +40,9 @@ import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import io.reactivex.CompletableObserver;
 import io.reactivex.SingleObserver;
+import io.reactivex.observers.DisposableCompletableObserver;
 import io.reactivex.observers.DisposableSingleObserver;
 
 public class DucatusEngine extends BtcEngine {
@@ -129,6 +134,10 @@ public class DucatusEngine extends BtcEngine {
     public boolean validateAddress(String address) {
         if (address == null || address.isEmpty()) {
             return false;
+        }
+
+        if (address.contains("$")) { // PayID
+            return validatePayId(address);
         }
 
         if (address.length() < 25) {
@@ -397,6 +406,14 @@ public class DucatusEngine extends BtcEngine {
         ArrayList<UnspentOutputInfo> unspentOutputs = new ArrayList<>();
         checkBlockchainDataExists();
 
+        String destination;
+        //PayID
+        if (coinData.getResolvedPayIdAddress() != null) {
+            destination = coinData.getResolvedPayIdAddress();
+        } else {
+            destination = targetAddress;
+        }
+
         String myAddress = ctx.getCoinData().getWallet();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
 
@@ -430,7 +447,7 @@ public class DucatusEngine extends BtcEngine {
         final byte[][] bodyHash = new byte[unspentOutputs.size()][];
 
         for (int i = 0; i < unspentOutputs.size(); ++i) {
-            txForSign[i] = BTCUtils.buildTXForSign(myAddress, targetAddress, myAddress, unspentOutputs, i, amount, change);
+            txForSign[i] = BTCUtils.buildTXForSign(myAddress, destination, myAddress, unspentOutputs, i, amount, change);
             bodyHash[i] = Util.calculateSHA256(txForSign[i]);
             bodyDoubleHash[i] = Util.calculateSHA256(bodyHash[i]);
         }
@@ -483,7 +500,7 @@ public class DucatusEngine extends BtcEngine {
                     unspentOutputs.get(i).scriptForBuild = DerEncodingUtil.packSignDer(r, s, pbKey);
                 }
 
-                byte[] txForSend = BTCUtils.buildTXForSend(targetAddress, myAddress, unspentOutputs, amountFinal, changeFinal);
+                byte[] txForSend = BTCUtils.buildTXForSend(destination, myAddress, unspentOutputs, amountFinal, changeFinal);
                 notifyOnNeedSendTransaction(txForSend);
                 return txForSend;
             }
@@ -535,14 +552,80 @@ public class DucatusEngine extends BtcEngine {
 
     @Override
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) throws Exception {
-        final int calcSize = calculateEstimatedTransactionSize(targetAddress, amount.toValueString());
-        Log.e(TAG, String.format("Estimated tx size %d", calcSize));
+        CompletableObserver payIdObserver = new DisposableCompletableObserver() {
+            @Override
+            public void onComplete() {
+                int calcSize = calculateEstimatedTransactionSize(coinData.getResolvedPayIdAddress(), amount.toValueString());
+                Log.e(TAG, String.format("Estimated tx size %d", calcSize));
 
+                calculateFee(calcSize);
+
+                blockchainRequestsCallbacks.onComplete(true);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                ctx.setError(e.getMessage());
+                blockchainRequestsCallbacks.onComplete(false);
+            }
+        };
+
+        if (targetAddress.contains("$")) { // PayID
+            resolvePayID(targetAddress, payIdObserver);
+        } else {
+            int calcSize = calculateEstimatedTransactionSize(targetAddress, amount.toValueString());
+            Log.e(TAG, String.format("Estimated tx size %d", calcSize));
+
+            calculateFee(calcSize);
+
+            blockchainRequestsCallbacks.onComplete(true);
+        }
+    }
+
+    private void calculateFee(int calcSize) {
         coinData.minFee = new Amount(BigDecimal.valueOf(calcSize).multiply(BigDecimal.valueOf(0.00000089)), ctx.getBlockchain().getCurrency()); //fee for byte from Ducatus wallet for android
         coinData.normalFee = new Amount(BigDecimal.valueOf(calcSize).multiply(BigDecimal.valueOf(0.00000144)), ctx.getBlockchain().getCurrency());
         coinData.maxFee = new Amount(BigDecimal.valueOf(calcSize).multiply(BigDecimal.valueOf(0.00000350)), ctx.getBlockchain().getCurrency());
+    }
 
-        blockchainRequestsCallbacks.onComplete(true);
+    private void resolvePayID(String targetAddress, CompletableObserver observer) {
+        final ServerApiPayId serverApiPayId = new ServerApiPayId();
+
+        SingleObserver<PayIdResponse> payIdObserver = new DisposableSingleObserver<PayIdResponse>() {
+            @Override
+            public void onSuccess(PayIdResponse payIdResponse) {
+                try {
+                    String resolvedAddress = null;
+                    for (PayIdAddress address : payIdResponse.getAddresses()) {
+                        if (address.getPaymentNetwork().equals(ctx.getBlockchain().getCurrency()) &&
+                                address.getEnvironment().equals("MAINNET")) {
+                            resolvedAddress = address.getAddressDetails().getAddress();
+                            break;
+                        }
+                    }
+                    if (validateAddress(resolvedAddress)) {
+                        if (!resolvedAddress.equals(coinData.getWallet())) {
+                            coinData.setResolvedPayIdAddress(resolvedAddress);
+                            observer.onComplete();
+                        } else {
+                            observer.onError(new Exception("Resolved PayID address equals source address"));
+                        }
+                    } else {
+                        observer.onError(new Exception("Unknown address format in PayID response"));
+                    }
+                } catch (Exception e) {
+                    observer.onError(new Exception("Unknown response format on PayID request"));
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.i(TAG, "onFail: " + "payID" + " " + e.getMessage());
+                observer.onError(new Exception("PayID error:" + e.getMessage()));
+            }
+        };
+
+        serverApiPayId.getAddress(targetAddress, ctx.getBlockchain(), payIdObserver);
     }
 
     @Override
