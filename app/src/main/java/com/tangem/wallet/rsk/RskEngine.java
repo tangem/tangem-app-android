@@ -200,7 +200,17 @@ public class RskEngine extends EthEngine {
                             }
                         }
                         if (validateAddress(resolvedAddress)) {
-                            coinData.setResolvedPayIdAddress(resolvedAddress);
+                            if (resolvedAddress.equals(coinData.getWallet())) {
+                                ctx.setError("Resolved PayID address equals source address");
+                                blockchainRequestsCallbacks.onComplete(false);
+                            } else {
+                                coinData.setResolvedPayIdAddress(resolvedAddress);
+                                if (serverApiRootstock.isRequestsSequenceCompleted() && serverApiPayId.isRequestsSequenceCompleted()) {
+                                    blockchainRequestsCallbacks.onComplete(!ctx.hasError());
+                                } else {
+                                    blockchainRequestsCallbacks.onProgress();
+                                }
+                            }
                         } else {
                             ctx.setError("Unknown address format in PayID response");
                             blockchainRequestsCallbacks.onComplete(false);
