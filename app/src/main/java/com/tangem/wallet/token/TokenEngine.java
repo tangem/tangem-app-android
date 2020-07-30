@@ -209,7 +209,7 @@ public class TokenEngine extends CoinEngine {
         if (coinData == null) return false;
         if (coinData.getBalanceInInternalUnits() == null && coinData.getBalanceAlterInInternalUnits() == null)
             return false;
-        return (coinData.getBalanceInInternalUnits() != null && coinData.getBalanceInInternalUnits().notZero() ) ||
+        return (coinData.getBalanceInInternalUnits() != null && coinData.getBalanceInInternalUnits().notZero()) ||
                 (coinData.getBalanceAlterInInternalUnits() != null && coinData.getBalanceAlterInInternalUnits().notZero());
     }
 
@@ -576,7 +576,10 @@ public class TokenEngine extends CoinEngine {
 
 
         int gasLimitInt = 60000;
-        if (amountValue.getCurrency().equals("DGX") || amountValue.getCurrency().equals("CGT")) {
+        if (amountValue.getCurrency().equals("DGX") ||
+                amountValue.getCurrency().equals("CGT") ||
+                amountValue.getCurrency().equals("AWG")
+        ) {
             gasLimitInt = 300000;
         }
 
@@ -740,7 +743,7 @@ public class TokenEngine extends CoinEngine {
             public void onFail(String method, String message) {
                 Log.e(TAG, "onFail: " + method + " " + message);
                 ctx.setError(message);
-                if (serverApiInfura.isRequestsSequenceCompleted()&& serverApiBlockcypher.isRequestsSequenceCompleted()) {
+                if (serverApiInfura.isRequestsSequenceCompleted() && serverApiBlockcypher.isRequestsSequenceCompleted()) {
                     blockchainRequestsCallbacks.onComplete(false);
                 } else {
                     blockchainRequestsCallbacks.onProgress();
@@ -775,7 +778,7 @@ public class TokenEngine extends CoinEngine {
                     Log.e(TAG, "FAIL BLOCKCYPHER_ADDRESS Exception");
                 }
 
-                if (serverApiInfura.isRequestsSequenceCompleted()&& serverApiBlockcypher.isRequestsSequenceCompleted()) {
+                if (serverApiInfura.isRequestsSequenceCompleted() && serverApiBlockcypher.isRequestsSequenceCompleted()) {
                     blockchainRequestsCallbacks.onComplete(!ctx.hasError());
                 } else {
                     blockchainRequestsCallbacks.onProgress();
@@ -874,7 +877,7 @@ public class TokenEngine extends CoinEngine {
                         }
                         if (validateAddress(resolvedAddress)) {
                             if (resolvedAddress.equals(coinData.getWallet())) {
-                                ctx.setError(R.string.prepare_transaction_error_same_address);
+                                ctx.setError("Resolved PayID address equals source address");
                                 blockchainRequestsCallbacks.onComplete(false);
                             } else {
                                 coinData.setResolvedPayIdAddress(resolvedAddress);
@@ -923,7 +926,7 @@ public class TokenEngine extends CoinEngine {
             @Override
             public void onSuccess(String method, InfuraResponse infuraResponse) {
                 if (method.equals(ServerApiInfura.INFURA_ETH_SEND_RAW_TRANSACTION)) {
-                    if (infuraResponse.getResult()==null || infuraResponse.getResult().isEmpty()) {
+                    if (infuraResponse.getResult() == null || infuraResponse.getResult().isEmpty()) {
                         ctx.setError("Rejected by node: " + infuraResponse.getError());
                         blockchainRequestsCallbacks.onComplete(false);
                     } else {
@@ -961,5 +964,7 @@ public class TokenEngine extends CoinEngine {
         return getBalance().getCurrency().equals(Blockchain.Ethereum.getCurrency());
     }
 
-    public int pendingTransactionTimeoutInSeconds() { return 10; }
+    public int pendingTransactionTimeoutInSeconds() {
+        return 10;
+    }
 }
