@@ -11,7 +11,10 @@ import com.tangem.data.Blockchain;
 import com.tangem.data.network.BinanceApi;
 import com.tangem.data.network.Server;
 import com.tangem.data.network.ServerApiBinance;
+import com.tangem.data.network.ServerApiPayId;
 import com.tangem.data.network.model.BinanceFees;
+import com.tangem.data.network.model.PayIdAddress;
+import com.tangem.data.network.model.PayIdResponse;
 import com.tangem.tangem_card.data.TangemCard;
 import com.tangem.tangem_card.reader.CardProtocol;
 import com.tangem.tangem_card.tasks.SignTask;
@@ -44,6 +47,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.List;
 
+import io.reactivex.CompletableObserver;
+import io.reactivex.SingleObserver;
+import io.reactivex.observers.DisposableCompletableObserver;
+import io.reactivex.observers.DisposableSingleObserver;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -152,6 +159,10 @@ public class BinanceAssetEngine extends CoinEngine {
     public boolean validateAddress(String address) {
         if (address == null || address.isEmpty()) {
             return false;
+        }
+
+        if (address.contains("$")) { // PayID
+            return validatePayId(address);
         }
 
         try {
@@ -380,6 +391,14 @@ public class BinanceAssetEngine extends CoinEngine {
     public SignTask.TransactionToSign constructTransaction(Amount amountValue, Amount feeValue, boolean IncFee, String targetAddress) throws Exception {
         checkBlockchainDataExists();
 
+        String destination;
+        //PayID
+        if (coinData.getResolvedPayIdAddress() != null) {
+            destination = coinData.getResolvedPayIdAddress();
+        } else {
+            destination = targetAddress;
+        }
+
         String amount;
 
         if (IncFee && amountValue.getCurrency().equals(getFeeCurrency())) { //Coin transfer only
@@ -398,7 +417,7 @@ public class BinanceAssetEngine extends CoinEngine {
         Transfer transfer = new Transfer();
         transfer.setCoin(amountValue.getCurrency().equals(getFeeCurrency()) ? getFeeCurrency() : ctx.getCard().getContractAddress());
         transfer.setFromAddress(ctx.getCoinData().getWallet());
-        transfer.setToAddress(targetAddress);
+        transfer.setToAddress(destination);
         transfer.setAmount(amount);
 
         TransactionOption options = TransactionOption.DEFAULT_INSTANCE;
@@ -490,6 +509,27 @@ public class BinanceAssetEngine extends CoinEngine {
     }
 
     public void requestFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks, String targetAddress, Amount amount) {
+        CompletableObserver payIdObserver = new DisposableCompletableObserver() {
+            @Override
+            public void onComplete() {
+                checkFee(blockchainRequestsCallbacks);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                ctx.setError(e.getMessage());
+                blockchainRequestsCallbacks.onComplete(false);
+            }
+        };
+
+        if (targetAddress.contains("$")) { // PayID
+            resolvePayID(targetAddress, payIdObserver);
+        } else {
+            checkFee(blockchainRequestsCallbacks);
+        }
+    }
+
+    private void checkFee(BlockchainRequestsCallbacks blockchainRequestsCallbacks) {
         try {
             String baseUrl = Server.ApiBinance.Method.API_V1;
 
@@ -533,6 +573,46 @@ public class BinanceAssetEngine extends CoinEngine {
             Log.e(TAG, "FAIL Binance fee exception");
             blockchainRequestsCallbacks.onComplete(false);
         }
+    }
+
+    private void resolvePayID(String targetAddress, CompletableObserver observer) {
+        final ServerApiPayId serverApiPayId = new ServerApiPayId();
+
+        SingleObserver<PayIdResponse> payIdObserver = new DisposableSingleObserver<PayIdResponse>() {
+            @Override
+            public void onSuccess(PayIdResponse payIdResponse) {
+                try {
+                    String resolvedAddress = null;
+                    for (PayIdAddress address : payIdResponse.getAddresses()) {
+                        if (address.getPaymentNetwork().equals(ctx.getBlockchain().getCurrency()) &&
+                                address.getEnvironment().equals("MAINNET")) {
+                            resolvedAddress = address.getAddressDetails().getAddress();
+                            break;
+                        }
+                    }
+                    if (validateAddress(resolvedAddress)) {
+                        if (!resolvedAddress.equals(coinData.getWallet())) {
+                            coinData.setResolvedPayIdAddress(resolvedAddress);
+                            observer.onComplete();
+                        } else {
+                            observer.onError(new Exception("Resolved PayID address equals source address"));
+                        }
+                    } else {
+                        observer.onError(new Exception("Unknown address format in PayID response"));
+                    }
+                } catch (Exception e) {
+                    observer.onError(new Exception("Unknown response format on PayID request"));
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.i(TAG, "onFail: " + "payID" + " " + e.getMessage());
+                observer.onError(new Exception("PayID error:" + e.getMessage()));
+            }
+        };
+
+        serverApiPayId.getAddress(targetAddress, ctx.getBlockchain(), payIdObserver);
     }
 
     public void requestSendTransaction(BlockchainRequestsCallbacks blockchainRequestsCallbacks, byte[] txForSend) {
