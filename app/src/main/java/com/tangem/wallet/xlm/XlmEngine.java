@@ -565,7 +565,7 @@ public class XlmEngine extends CoinEngine {
         CompletableObserver payIdObserver = new DisposableCompletableObserver() {
             @Override
             public void onComplete() {
-                checkTargetAccountCreated(blockchainRequestsCallbacks, targetAddress, amount);
+                checkTargetAccountCreated(blockchainRequestsCallbacks, coinData.getResolvedPayIdAddress(), amount);
             }
 
             @Override
@@ -598,8 +598,12 @@ public class XlmEngine extends CoinEngine {
                         }
                     }
                     if (validateAddress(resolvedAddress)) {
-                        coinData.setResolvedPayIdAddress(resolvedAddress);
-                        observer.onComplete();
+                        if (!resolvedAddress.equals(coinData.getWallet())) {
+                            coinData.setResolvedPayIdAddress(resolvedAddress);
+                            observer.onComplete();
+                        } else {
+                            observer.onError(new Exception("Resolved PayID address equals source address"));
+                        }
                     } else {
                         observer.onError(new Exception("Unknown address format in PayID response"));
                     }
