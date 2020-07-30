@@ -12,6 +12,8 @@ import com.tangem.blockchain.blockchains.bitcoincash.BitcoinCashWalletManager
 import com.tangem.blockchain.blockchains.cardano.CardanoTransactionBuilder
 import com.tangem.blockchain.blockchains.cardano.CardanoWalletManager
 import com.tangem.blockchain.blockchains.cardano.network.CardanoNetworkManager
+import com.tangem.blockchain.blockchains.ducatus.DucatusWalletManager
+import com.tangem.blockchain.blockchains.ducatus.network.DucatusNetworkManager
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionBuilder
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.ethereum.network.EthereumNetworkManager
@@ -19,7 +21,6 @@ import com.tangem.blockchain.blockchains.litecoin.LitecoinNetworkManager
 import com.tangem.blockchain.blockchains.litecoin.LitecoinWalletManager
 import com.tangem.blockchain.blockchains.stellar.StellarNetworkManager
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionBuilder
-
 import com.tangem.blockchain.blockchains.stellar.StellarWalletManager
 import com.tangem.blockchain.blockchains.tezos.TezosTransactionBuilder
 import com.tangem.blockchain.blockchains.tezos.TezosWalletManager
@@ -70,6 +71,13 @@ object WalletManagerFactory {
                         cardId, wallet,
                         BitcoinTransactionBuilder(walletPublicKey, blockchain),
                         LitecoinNetworkManager()
+                )
+            }
+            Blockchain.Ducatus -> {
+                return DucatusWalletManager(
+                        cardId, wallet,
+                        BitcoinTransactionBuilder(walletPublicKey, blockchain),
+                        DucatusNetworkManager()
                 )
             }
             Blockchain.Ethereum, Blockchain.RSK -> {
