@@ -153,8 +153,8 @@ public class Bech32 {
         boolean lower = false, upper = false;
         if (str.length() < 8)
             throw new AddressFormatException.InvalidDataLength("Input too short: " + str.length());
-        if (str.length() > 90)
-            throw new AddressFormatException.InvalidDataLength("Input too long: " + str.length());
+//        if (str.length() > 90)
+//            throw new AddressFormatException.InvalidDataLength("Input too long: " + str.length());
         for (int i = 0; i < str.length(); ++i) {
             char c = str.charAt(i);
             if (c < 33 || c > 126) throw new AddressFormatException.InvalidCharacter(c, i);
