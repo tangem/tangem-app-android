@@ -28,6 +28,8 @@ import com.tangem.wallet.CoinData;
 import com.tangem.wallet.CoinEngine;
 import com.tangem.wallet.R;
 import com.tangem.wallet.TangemContext;
+import com.tangem.wallet.binance.client.encoding.Bech32;
+import com.tangem.wallet.binance.client.encoding.Crypto;
 
 import org.spongycastle.crypto.Digest;
 import org.spongycastle.crypto.util.DigestFactory;
@@ -45,6 +47,7 @@ import co.nstant.in.cbor.CborDecoder;
 import co.nstant.in.cbor.CborEncoder;
 import co.nstant.in.cbor.CborException;
 import co.nstant.in.cbor.builder.ArrayBuilder;
+import co.nstant.in.cbor.builder.MapBuilder;
 import co.nstant.in.cbor.model.Array;
 import co.nstant.in.cbor.model.ByteString;
 import co.nstant.in.cbor.model.DataItem;
@@ -62,6 +65,8 @@ public class CardanoEngine extends CoinEngine {
     private static final String TAG = CardanoEngine.class.getSimpleName();
 
     private static final long protocolMagic = 764824073;
+
+    private static final String BECH32_HRP = "addr1";
 
     public CardanoData coinData = null;
 
@@ -152,6 +157,15 @@ public class CardanoEngine extends CoinEngine {
 
         if (address.contains("$")) { // PayID
             return validatePayId(address);
+        }
+
+        if (address.startsWith(BECH32_HRP)) {
+            try {
+                Bech32.decode(address);
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
         }
 
         byte[] decAddress = Base58.decodeBase58(address);
@@ -418,6 +432,14 @@ public class CardanoEngine extends CoinEngine {
             destination = targetAddress;
         }
 
+        byte[] destinationBytes;
+        if (destination.startsWith(BECH32_HRP)) {
+            byte[] decoded = Bech32.decode(destination).getData();
+            destinationBytes = Crypto.convertBits(decoded, 0, decoded.length, 5, 8, false);
+        } else {
+            destinationBytes = decodeBase58(destination);
+        }
+
         String myAddress = ctx.getCoinData().getWallet();
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
         List<CardanoData.UnspentOutput> utxoList = coinData.getUnspentOutputs();
@@ -440,82 +462,76 @@ public class CardanoEngine extends CoinEngine {
         final long amountFinal = amount;
         final long changeFinal = change;
 
+        if (amountFinal < 1000000 || (changeFinal < 1000000 && changeFinal != 0)) {
+            throw new IllegalArgumentException("Sent amount and change cannot be less than 1 ADA");
+        }
+
         //TODO - uncomment
 //        if (amount + fees > fullAmount) {
 //            throw new CardProtocol.TangemException_WrongAmount(String.format("Balance (%d) < change (%d) + amount (%d)", fullAmount, change, amount));
 //        }
 
-        CborBuilder cborBuilder = new CborBuilder();
-        ArrayBuilder<CborBuilder> txArray = cborBuilder.addArray();
-        ArrayBuilder<ArrayBuilder<CborBuilder>> inputsArray = txArray.startArray();
-        ArrayBuilder<ArrayBuilder<CborBuilder>> outputsArray = txArray.startArray();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        MapBuilder<CborBuilder> transactionMap = new CborBuilder().addMap();
 
         //Inputs
+        ArrayBuilder<CborBuilder> inputsArray = new CborBuilder().addArray();
+
         for (CardanoData.UnspentOutput utxo : utxoList) {
-            baos.reset();
-
-            //txID + inputPos
-            new CborEncoder(baos).encode(new CborBuilder()
-                    .addArray()
+            inputsArray.addArray()
                     .add(Util.fromHexString(utxo.txID))
-                    .add(utxo.Index)
-                    .end()
-                    .build());
-            byte[] input = baos.toByteArray();
-
-            DataItem inputItem = new CborBuilder().add(input).build().get(0);
-            inputItem.setTag(24);
-
-            //input type + input
-            inputsArray
-                    .addArray()
-                    .add(0)
-                    .add(inputItem)
-                    .end();
+                    .add(utxo.Index);
         }
 
+        DataItem inputsDataItem = inputsArray.end().build().get(0);
+        DataItem inputsKey = new CborBuilder().add(0).build().get(0);
+        transactionMap.put(inputsKey, inputsDataItem);
+
+
+        ArrayBuilder<CborBuilder> outputsArray = new CborBuilder().addArray();
         //1st output
-        DataItem targetAddressItem = new CborDecoder(new ByteArrayInputStream(decodeBase58(destination))).decode().get(0);
         outputsArray
                 .addArray()
-                .add(targetAddressItem)
-                .add(amountFinal)
-                .end();
+                .add(destinationBytes)
+                .add(amountFinal);
         //2nd output (optional)
         if (changeFinal > 0) {
-            DataItem myAddressItem = new CborDecoder(new ByteArrayInputStream(decodeBase58(myAddress))).decode().get(0);
             outputsArray
                     .addArray()
-                    .add(myAddressItem)
+                    .add(decodeBase58(myAddress))
                     .add(changeFinal)
                     .end();
         }
 
-        inputsArray.end();
-        outputsArray.end();
+        DataItem outputsDataItem = outputsArray.end().build().get(0);
+        DataItem outputsKey = new CborBuilder().add(1).build().get(0);
+        transactionMap.put(outputsKey, outputsDataItem);
 
-        txArray.addMap().end();
+        transactionMap.put(2, fees);
+        transactionMap.put(3, 90000000);
 
-        baos.reset();
-        new CborEncoder(baos).encode(cborBuilder.build());
+        DataItem txBodyDataItem = transactionMap.end().build().get(0);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        new CborEncoder(baos).encode(new CborBuilder().add(txBodyDataItem).build());
         byte[] txBody = baos.toByteArray();
 
-        final Blake2b blake2b = Blake2b.Digest.newInstance(32);//28?
+        final Blake2b blake2b = Blake2b.Digest.newInstance(32);
         byte[] txHash = blake2b.digest(txBody);
 
-        baos.reset();
-        new CborEncoder(baos).encode(new CborBuilder().add(protocolMagic).build());
-        byte[] magic = baos.toByteArray();
-
-        //dataToSign prefix
-        baos.reset();
-        baos.write(new byte[]{(byte) 0x01});
-        baos.write(magic);
-        baos.write(new byte[]{(byte) 0x58, (byte) 0x20});
-
-        baos.write(txHash);
-        byte[] dataToSign = baos.toByteArray();
+//        baos.reset();
+//        new CborEncoder(baos).encode(new CborBuilder().add(protocolMagic).build());
+//        byte[] magic = baos.toByteArray();
+//
+//        //dataToSign prefix
+//        baos.reset();
+//        baos.write(new byte[]{(byte) 0x01});
+//        baos.write(magic);
+//        baos.write(new byte[]{(byte) 0x58, (byte) 0x20});
+//
+//        baos.write(txHash);
+//        byte[] dataToSign = baos.toByteArray();
+        byte[] dataToSign = txHash;
 
 
         return new SignTask.TransactionToSign() {
@@ -549,50 +565,24 @@ public class CardanoEngine extends CoinEngine {
 
             @Override
             public byte[] onSignCompleted(byte[] signFromCard) throws Exception {
-                ByteArrayOutputStream exBaos = new ByteArrayOutputStream();
-                exBaos.write(ctx.getCard().getWalletPublicKey());
-                exBaos.write(BTCUtils.fromHex("0000000000000000000000000000000000000000000000000000000000000000"));
-                byte[] pkExtended = exBaos.toByteArray();
+                CborBuilder signedTxBuilder = new CborBuilder();
+                ArrayBuilder<CborBuilder> txArray = signedTxBuilder.addArray();
+                txArray.add(txBodyDataItem);
+                MapBuilder<ArrayBuilder<CborBuilder>> witnessMap = txArray.addMap();
+                txArray.add((DataItem) null);
 
-                //pubkey + signature
-                baos.reset();
-                new CborEncoder(baos).encode(new CborBuilder()
-                        .addArray()
-                        .add(pkExtended)
+                DataItem witnessDataItem = new CborBuilder().addArray().addArray()
+                        .add(pbKey)
                         .add(signFromCard)
-                        .end()
-                        .build());
-                byte[] witnessBody = baos.toByteArray();
-                DataItem witnessBodyItem = new CborBuilder().add(witnessBody).build().get(0);
-                witnessBodyItem.setTag(24);
+                        .add(BTCUtils.fromHex("0000000000000000000000000000000000000000000000000000000000000000"))
+                        .add(BTCUtils.fromHex("A0"))
+                        .end().end().build().get(0);
 
-                //array of witnesses
-                CborBuilder witnessBuilder = new CborBuilder();
-                ArrayBuilder<CborBuilder> witnessArrayBuilder = witnessBuilder.addArray();
-
-                //witness type + witness body
-                for (CardanoData.UnspentOutput utxo : coinData.getUnspentOutputs()) {
-                    witnessArrayBuilder
-                            .addArray()
-                            .add(0)
-                            .add(witnessBodyItem)
-                            .end();
-                }
+                DataItem witnessKey = new CborBuilder().add(2).build().get(0);
+                witnessMap.put(witnessKey, witnessDataItem);
 
                 baos.reset();
-                new CborEncoder(baos).encode(witnessBuilder.build());
-                byte[] witness = baos.toByteArray();
-
-                baos.reset();
-                baos.write(new byte[]{(byte) 0x82});
-                baos.write(txBody);
-                baos.write(witness);
-//                new CborEncoder(baos).encode(new CborBuilder()
-//                        .addArray()
-//                        .add(txBody)
-//                        .add(witness)
-//                        .end()
-//                        .build());
+                new CborEncoder(baos).encode(signedTxBuilder.build());
                 byte[] txForSend = baos.toByteArray();
                 notifyOnNeedSendTransaction(txForSend);
                 //String hex = BTCUtils.toHex(txForSend);
@@ -601,24 +591,9 @@ public class CardanoEngine extends CoinEngine {
         };
     }
 
-    private int calculateEstimatedTransactionSize(String targetAddress, Amount amount) {
-        Amount feeDummy = new Amount(new BigDecimal(0.2).setScale(getDecimals(), RoundingMode.DOWN), getFeeCurrency());
-        try {
-            OnNeedSendTransaction onNeedSendTransactionBackup = onNeedSendTransaction;
-            onNeedSendTransaction = (tx) -> {
-            }; // empty function to bypass exception
-
-            SignTask.TransactionToSign ttsDummy = constructTransaction(amount, feeDummy, true, targetAddress);
-            byte[] txForSendDummy = ttsDummy.onSignCompleted(new byte[64]);
-
-            onNeedSendTransaction = onNeedSendTransactionBackup;
-            Log.e(TAG, "txForSendDummy.length=" + String.valueOf(txForSendDummy.length));
-            return txForSendDummy.length;
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.e(TAG, "Can't calculate transaction size -> use default!");
-            return 1000;
-        }
+    private int calculateEstimatedTransactionSize(Amount amount) {
+        int outputsNumber = coinData.getBalance() == convertToInternalAmount(amount).longValueExact() ? 1 : 2;
+        return coinData.getUnspentOutputs().size() * 40 + outputsNumber * 65 + 160;
     }
 
     @Override
@@ -720,7 +695,7 @@ public class CardanoEngine extends CoinEngine {
         CompletableObserver payIdObserver = new DisposableCompletableObserver() {
             @Override
             public void onComplete() {
-                int calcSize = calculateEstimatedTransactionSize(coinData.getResolvedPayIdAddress(), amount);
+                int calcSize = calculateEstimatedTransactionSize(amount);
                 Log.e(TAG, String.format("Estimated tx size %d", calcSize));
 
                 calculateFee(calcSize);
@@ -738,7 +713,7 @@ public class CardanoEngine extends CoinEngine {
         if (targetAddress.contains("$")) { // PayID
             resolvePayID(targetAddress, payIdObserver);
         } else {
-            int calcSize = calculateEstimatedTransactionSize(targetAddress, amount);
+            int calcSize = calculateEstimatedTransactionSize(amount);
             Log.e(TAG, String.format("Estimated tx size %d", calcSize));
 
             calculateFee(calcSize);
