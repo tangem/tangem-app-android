@@ -27,7 +27,7 @@ public class ServerApiAdalite {
 
     private int requestsCount = 0;
 
-    private final String adaliteURL1 = "https://explorer3.adalite.io"; //TODO: make random selection, add more?, move
+    private final String adaliteURL1 = "https://explorer2.adalite.io"; //TODO: make random selection, add more?, move
     private final String adaliteURL2 = "https://nodes.southeastasia.cloudapp.azure.com";
 
     private String currentURL = adaliteURL1;
