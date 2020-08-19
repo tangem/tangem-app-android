@@ -5,6 +5,7 @@ import android.text.InputFilter;
 import android.util.Base64;
 import android.util.Log;
 
+import com.google.android.gms.common.util.ArrayUtils;
 import com.tangem.App;
 import com.tangem.Constant;
 import com.tangem.data.local.PendingTransactionsStorage;
@@ -64,9 +65,8 @@ public class CardanoShelleyEngine extends CoinEngine {
 
     private static final String TAG = CardanoShelleyEngine.class.getSimpleName();
 
-    private static final long protocolMagic = 764824073;
-
     private static final String BECH32_HRP = "addr1";
+    private static final byte ADDRESS_HEADER_BYTE = 97;
 
     public CardanoData coinData = null;
 
@@ -316,64 +316,13 @@ public class CardanoShelleyEngine extends CoinEngine {
 
     @Override
     public String calculateAddress(byte[] pkUncompressed) throws CborException, IOException {
+        Blake2b blake2b = Blake2b.Digest.newInstance(28);
+        byte[] publicKeyHash = blake2b.digest(pkUncompressed);
 
-        ByteArrayOutputStream exBaos = new ByteArrayOutputStream();
-        exBaos.write(pkUncompressed);
-        exBaos.write(BTCUtils.fromHex("0000000000000000000000000000000000000000000000000000000000000000"));
-        byte[] pkExtended = exBaos.toByteArray();
+        byte[] addressBytes = ArrayUtils.concatByteArrays(new byte[] {ADDRESS_HEADER_BYTE}, publicKeyHash);
+        byte[] convertedAddressBytes = Crypto.convertBits(addressBytes, 0, addressBytes.length, 8, 5, true);
 
-        exBaos.reset();
-        new CborEncoder(exBaos).encode(new CborBuilder()
-                .addArray()
-                .add(0)
-                .addArray()
-                .add(0)
-                .add(pkExtended)
-                .end()
-                .addMap()
-                .end()
-                .end()
-                .build());
-        byte[] forSha3 = exBaos.toByteArray();
-
-        Digest sha3 = DigestFactory.createSHA3_256();
-        sha3.update(forSha3, 0, forSha3.length);
-        byte[] forBlake = new byte[32];
-        sha3.doFinal(forBlake, 0);
-
-        final Blake2b blake2b = Blake2b.Digest.newInstance(28);
-        byte[] pkHash = blake2b.digest(forBlake);
-
-        //pkHash + attributes
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        new CborEncoder(baos).encode(new CborBuilder()
-                .addArray()
-                .add(pkHash)
-                .addMap()//additional attributes
-                .end()
-                .add(0)//address type
-                .end()
-                .build());
-        byte[] addr = baos.toByteArray();
-
-        final CRC32 crc32 = new CRC32();
-        crc32.update(addr);
-        long checksum = crc32.getValue();
-
-        DataItem addrItem = new CborBuilder().add(addr).build().get(0);
-        addrItem.setTag(24);
-
-        //addr + checksum
-        baos.reset();
-        new CborEncoder(baos).encode(new CborBuilder()
-                .addArray()
-                .add(addrItem)
-                .add(checksum)
-                .end()
-                .build());
-
-        byte[] hexAddress = baos.toByteArray();
-        return encodeBase58(hexAddress);
+        return Bech32.encode("addr", convertedAddressBytes);
     }
 
     @Override
@@ -440,7 +389,10 @@ public class CardanoShelleyEngine extends CoinEngine {
             destinationBytes = decodeBase58(destination);
         }
 
-        String myAddress = ctx.getCoinData().getWallet();
+        String changeAddress = ctx.getCoinData().getWallet();
+        byte[] changeAddressDecoded = Bech32.decode(changeAddress).getData();
+        byte[] changeAddressBytes = Crypto.convertBits(changeAddressDecoded, 0, changeAddressDecoded.length, 5, 8, false);
+
         byte[] pbKey = ctx.getCard().getWalletPublicKey();
         List<CardanoData.UnspentOutput> utxoList = coinData.getUnspentOutputs();
         long fullAmount = coinData.getBalance();
@@ -497,7 +449,7 @@ public class CardanoShelleyEngine extends CoinEngine {
         if (changeFinal > 0) {
             outputsArray
                     .addArray()
-                    .add(decodeBase58(myAddress))
+                    .add(changeAddressBytes)
                     .add(changeFinal)
                     .end();
         }
@@ -574,11 +526,9 @@ public class CardanoShelleyEngine extends CoinEngine {
                 DataItem witnessDataItem = new CborBuilder().addArray().addArray()
                         .add(pbKey)
                         .add(signFromCard)
-                        .add(BTCUtils.fromHex("0000000000000000000000000000000000000000000000000000000000000000"))
-                        .add(BTCUtils.fromHex("A0"))
                         .end().end().build().get(0);
 
-                DataItem witnessKey = new CborBuilder().add(2).build().get(0);
+                DataItem witnessKey = new CborBuilder().add(0).build().get(0);
                 witnessMap.put(witnessKey, witnessDataItem);
 
                 baos.reset();
