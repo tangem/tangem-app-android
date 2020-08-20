@@ -9,6 +9,7 @@ import com.tangem.wallet.btc.BtcEngine
 import com.tangem.wallet.btcmultisig.BtcMultisigEngine
 import com.tangem.wallet.cardano.CardanoData
 import com.tangem.wallet.cardano.CardanoEngine
+import com.tangem.wallet.cardano.CardanoShelleyEngine
 import com.tangem.wallet.ducatus.DucatusEngine
 import com.tangem.wallet.eos.EosEngine
 import com.tangem.wallet.eth.EthEngine
@@ -51,6 +52,7 @@ object CoinEngineFactory {
             Blockchain.Rootstock -> RskEngine()
             Blockchain.RootstockToken -> RskTokenEngine()
             Blockchain.Cardano -> CardanoEngine()
+            Blockchain.CardanoShelley -> CardanoShelleyEngine()
             Blockchain.Ripple -> XrpEngine()
             Blockchain.Binance, Blockchain.BinanceTestNet -> BinanceEngine()
             Blockchain.BinanceAsset -> BinanceAssetEngine()
@@ -91,6 +93,8 @@ object CoinEngineFactory {
                 RskTokenEngine(context)
             else if (Blockchain.Cardano == context.blockchain)
                 CardanoEngine(context)
+            else if (Blockchain.CardanoShelley == context.blockchain)
+                CardanoShelleyEngine(context)
             else if (Blockchain.Ripple == context.blockchain)
                 XrpEngine(context)
             else if (Blockchain.Binance == context.blockchain || Blockchain.BinanceTestNet == context.blockchain)
