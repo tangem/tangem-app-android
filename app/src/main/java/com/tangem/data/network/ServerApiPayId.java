@@ -24,7 +24,9 @@ public class ServerApiPayId {
             case Ripple: return "application/xrpl-mainnet+json";
             case Bitcoin: return "application/btc-mainnet+json";
             case Litecoin: return "application/ltc-mainnet+json";
-            case Cardano: return "application/ada-mainnet+json";
+            case Cardano:
+            case CardanoShelley:
+                return "application/ada-mainnet+json";
             case Ducatus: return "application/duc-mainnet+json";
             case BitcoinCash: return "application/bch-mainnet+json";
             case Ethereum:
