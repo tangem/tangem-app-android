@@ -11,6 +11,7 @@ private val payIdSupported = EnumSet.of(
         Blockchain.Stellar,
         Blockchain.StellarAsset,
         Blockchain.Cardano,
+        Blockchain.CardanoShelley,
         Blockchain.Ducatus,
         Blockchain.BitcoinCash,
         Blockchain.Binance,
