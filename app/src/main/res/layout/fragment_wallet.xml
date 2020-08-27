@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="24dp">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        style="@style/Widget.MaterialComponents.Toolbar.Surface"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:layout_constraintTop_toTopOf="parent"
+        app:navigationIcon="@drawable/ic_baseline_arrow_back_24"
+        app:title="@string/wallet_toolbar_title" />
+
+    <ImageView
+        android:id="@+id/iv_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="38dp"
+        android:layout_marginBottom="12dp"
+        android:adjustViewBounds="true"
+        android:elevation="3dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/card_default"
+        app:layout_constraintTop_toBottomOf="@id/toolbar" />
+
+    <include layout="@layout/card_balance"
+        android:id="@+id/l_card_balance"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        app:layout_constraintTop_toBottomOf="@id/iv_card"
+        />
+
+
+    <include layout="@layout/layout_address"
+        android:id="@+id/l_address"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        app:layout_constraintTop_toBottomOf="@id/l_card_balance"
+        />
+
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_scan"
+        style="@style/TapBlackButton"
+        android:layout_width="93dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginBottom="33dp"
+        android:drawableEnd="@drawable/ic_scan"
+        android:text="@string/wallet_button_scan"
+        app:cornerRadius="4dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_send"
+        style="@style/TapButtonWithIcon"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="7dp"
+        android:layout_marginEnd="30dp"
+        android:layout_marginBottom="33dp"
+        android:drawableEnd="@drawable/ic_send"
+        android:text="@string/wallet_button_send"
+        app:cornerRadius="4dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btn_scan" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
