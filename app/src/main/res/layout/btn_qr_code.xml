@@ -16,6 +16,6 @@
         android:layout_gravity="center"
         android:background="?selectableItemBackgroundBorderless"
         android:padding="4dp"
-        app:srcCompat="@drawable/ic_qr_code" />
+        app:srcCompat="@drawable/ic_qr_code_scan" />
 
 </FrameLayout>
