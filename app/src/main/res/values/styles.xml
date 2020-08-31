@@ -3,8 +3,7 @@
     <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorSecondary">@color/colorSecondary</item>
         <item name="android:textColor">@color/darkGray6</item>
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowDrawsSystemBarBackgrounds">false</item>
@@ -29,6 +28,7 @@
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:letterSpacing">0</item>
+        <item name="android:backgroundTint">@color/tapButtonColor</item>
         <item name="cornerRadius">@dimen/btn_corner_radius</item>
         <item name="android:fontFamily">@font/saira_semi_condensed_regular</item>
     </style>
@@ -39,7 +39,7 @@
     </style>
 
     <style name="TapBlackButton" parent="TapButtonWithIcon">
-        <item name="android:backgroundTint">@color/darkGray6</item>
+        <item name="android:backgroundTint">@color/tapButtonColorBlack</item>
     </style>
 
     <style name="ChipNetworkFee" parent="@style/Widget.MaterialComponents.Chip.Choice">
