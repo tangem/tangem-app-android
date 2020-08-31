@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<manifest xmlns:tools="http://schemas.android.com/tools"
     package="com.tangem.wallet">
 
 
     <application
         tools:ignore="GoogleAppIndexingWarning">
 
-        <provider
-            android:name="com.tangem.data.LogFileProvider"
-            android:authorities="@string/log_file_provider_authorities"
-            android:enabled="true"
-            android:exported="false"
-            android:grantUriPermissions="true" />
+<!--        <provider-->
+<!--            android:name="com.tangem.data.LogFileProvider"-->
+<!--            android:authorities="@string/log_file_provider_authorities"-->
+<!--            android:enabled="true"-->
+<!--            android:exported="false"-->
+<!--            android:grantUriPermissions="true" />-->
 
     </application>
 
