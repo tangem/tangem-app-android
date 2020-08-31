@@ -11,7 +11,7 @@
         android:id="@+id/tilAddressOrPayId"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/extract_address_or_payid"
+        android:hint="@string/send_address_or_payid"
         app:boxBackgroundColor="@android:color/transparent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
