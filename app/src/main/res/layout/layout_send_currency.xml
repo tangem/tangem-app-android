@@ -49,7 +49,7 @@
         android:focusableInTouchMode="true"
         android:fontFamily="sans-serif-light"
         android:textAllCaps="true"
-        android:textColor="@color/colorPrimary"
+        android:textColor="@color/blue"
         android:textSize="32sp"
         app:layout_constraintBottom_toBottomOf="@+id/tilAmount"
         app:layout_constraintEnd_toStartOf="@+id/flArrowUpDown"
@@ -70,7 +70,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingEnd="5dp"
-            android:text="@string/extract_balance"
+            android:text="@string/send_balance"
             android:textColor="@color/darkGray1" />
 
         <TextView
