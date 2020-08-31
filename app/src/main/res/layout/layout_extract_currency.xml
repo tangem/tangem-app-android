@@ -71,21 +71,21 @@
             android:layout_height="wrap_content"
             android:paddingEnd="5dp"
             android:text="@string/extract_balance"
-            android:textColor="@color/text_color_gray_dark" />
+            android:textColor="@color/darkGray1" />
 
         <TextView
             android:id="@+id/tvBalanceCurrency"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingEnd="5dp"
-            android:textColor="@color/text_color_gray_dark"
+            android:textColor="@color/darkGray1"
             tools:text="USD" />
 
         <TextView
             android:id="@+id/tvBalanceAmount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/text_color_gray_dark"
+            android:textColor="@color/darkGray1"
             tools:text="23.45" />
 
     </LinearLayout>
