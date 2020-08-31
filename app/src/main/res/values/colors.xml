@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <color name="colorPrimary">#1ACE80</color>
-    <color name="colorPrimaryLight">#46D799</color>
-    <color name="colorPrimaryVeryLight">#D0F5E5</color>
+    <color name="colorPrimary">#0029FF</color>
+    <color name="colorSecondary">#0022D4</color>
+    <color name="accent">#1ACE80</color>
+
+    <color name="tapButtonColor">@color/accent</color>
+    <color name="tapButtonColorBlack">@color/darkGray6</color>
 
     <color name="success">#5AC461</color>
     <color name="error">#C4291C</color>
@@ -25,9 +28,10 @@
     <color name="lightGray5">#D1D1D6</color>
     <color name="lightGray6">#F2F2F7</color>
 
-    <color name="separatorGrey">#1F000000</color>
+    <color name="separatorGrey1">#1F000000</color>
+    <color name="separatorGrey2">#14212121</color>
 
-    <color name="blue">#0022D4</color>
+    <color name="blue">@color/colorSecondary</color>
     <color name="blue1">#0029FF</color>
     <color name="blue2">#1F50FF</color>
     <color name="blue3">#CBE4FF</color>
