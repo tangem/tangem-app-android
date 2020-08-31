@@ -30,7 +30,7 @@
         android:paddingTop="4dp"
         android:paddingEnd="16dp"
         android:paddingBottom="16dp"
-        android:textColor="@color/colorPrimary"
+        android:textColor="@color/accent"
         android:textSize="12sp"
         app:drawableStartCompat="@drawable/ic_ok"
         app:layout_constraintStart_toStartOf="parent"
