@@ -20,4 +20,17 @@
     <string name="wallet_account_not_created">Account is not created</string>
     <string name="wallet_tokens">Tokens</string>
 
+
+    <string name="send_address_or_payid">Address or PayID</string>
+    <string name="send_network_fee">Network fee</string>
+    <string name="send_network_chip_fee_low">Low</string>
+    <string name="send_network_chip_fee_normal">Normal</string>
+    <string name="send_network_chip_fee_priority">Priority</string>
+    <string name="send_btn_send">Send</string>
+    <string name="send_total">Total</string>
+    <string name="send_total_amount">Amount</string>
+    <string name="send_total_fee">Fee</string>
+    <string name="send_total_will_be_sent">will be sent</string>
+    <string name="send_balance">Balance:</string>
+
 </resources>
