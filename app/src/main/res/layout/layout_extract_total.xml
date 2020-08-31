@@ -42,7 +42,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="@string/extract_total_fee"
-        android:textColor="@color/text_color_gray_dark"
+        android:textColor="@color/darkGray1"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvAmount" />
@@ -52,7 +52,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="5dp"
-        android:textColor="@color/text_color_gray_dark"
+        android:textColor="@color/darkGray1"
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@+id/tvFeeCurrency"
         app:layout_constraintTop_toTopOf="@+id/tvFeeCurrency"
@@ -63,7 +63,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAllCaps="true"
-        android:textColor="@color/text_color_gray_dark"
+        android:textColor="@color/darkGray1"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/tvFee"
@@ -74,7 +74,7 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginTop="10dp"
-        android:background="@color/delimiter_color"
+        android:background="@color/separatorGrey2"
         app:layout_constraintTop_toBottomOf="@+id/tvFee"
         tools:layout_editor_absoluteX="0dp" />
 
@@ -116,7 +116,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="5dp"
-        android:textColor="@color/text_color_gray_light"
+        android:textColor="@color/lightGray4"
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@+id/tvSentCurrency"
         app:layout_constraintTop_toTopOf="@+id/tvWillBeSent"
@@ -127,7 +127,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="5dp"
-        android:textColor="@color/text_color_gray_light"
+        android:textColor="@color/lightGray4"
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@+id/tvWillBeSent"
         app:layout_constraintTop_toTopOf="@+id/tvWillBeSent"
@@ -139,7 +139,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:text="@string/extract_total_will_be_sent"
-        android:textColor="@color/text_color_gray_light"
+        android:textColor="@color/lightGray4"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvTotal" />
 
