@@ -54,7 +54,7 @@
                 android:textColor="@color/darkGray6"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                app:drawableEndCompat="@drawable/ic_arrow"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_address" />
 
@@ -81,7 +81,7 @@
                 android:background="@drawable/ic_btn_round_background"
                 android:elevation="3dp"
                 android:padding="10dp"
-                android:src="@drawable/ic_qrcode"
+                android:src="@drawable/ic_qr_code_create"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -114,7 +114,7 @@
                 android:textColor="@color/darkGray6"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                app:drawableEndCompat="@drawable/ic_arrow"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/v_payid_divider" />
 
