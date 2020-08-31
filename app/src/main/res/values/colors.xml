@@ -25,7 +25,8 @@
     <color name="lightGray5">#D1D1D6</color>
     <color name="lightGray6">#F2F2F7</color>
 
-    <color name="separatorGrey">#1F000000</color>
+    <color name="separatorGrey1">#1F000000</color>
+    <color name="separatorGrey2">#14212121</color>
 
     <color name="blue">#0022D4</color>
     <color name="blue1">#0029FF</color>
