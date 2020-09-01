@@ -6,6 +6,11 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
+import com.tangem.blockchain.common.Blockchain
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 import java.util.*
 
 
@@ -27,4 +32,23 @@ fun String.toQrCode(): Bitmap {
         }
     }
     return bmp
+}
+
+fun BigDecimal.toFormattedString(blockchain: Blockchain): String {
+    val symbols = DecimalFormatSymbols(Locale.US)
+    symbols.decimalSeparator = '.'
+    val df = DecimalFormat()
+    df.decimalFormatSymbols = symbols
+    df.maximumFractionDigits = blockchain.decimals()
+    df.minimumFractionDigits = 0
+    df.isGroupingUsed = false
+    val bd = BigDecimal(unscaledValue(), scale())
+    bd.setScale(blockchain.decimals(), BigDecimal.ROUND_DOWN)
+    return df.format(bd)
+}
+
+fun BigDecimal.toFiatString(rateValue: BigDecimal): String? {
+    var fiatValue = rateValue.multiply(this)
+    fiatValue = fiatValue.setScale(2, RoundingMode.DOWN)
+    return "≈ USD  $fiatValue"
 }
