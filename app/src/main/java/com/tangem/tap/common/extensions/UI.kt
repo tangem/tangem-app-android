@@ -29,14 +29,17 @@ fun View.show(show: Boolean) {
 }
 
 fun View.show() {
+    if (this.visibility == View.VISIBLE) return
     this.visibility = View.VISIBLE
 }
 
 fun View.hide() {
+    if (this.visibility == View.GONE) return
     this.visibility = View.GONE
 }
 
 fun View.makeInvisible() {
+    if (this.visibility == View.INVISIBLE) return
     this.visibility = View.INVISIBLE
 }
 
