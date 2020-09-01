@@ -22,6 +22,10 @@
 
     <string name="wallet_dialog_pay_id_button">Create PayID</string>
     <string name="wallet_create_payid_empty">Enter desired PayID first</string>
+    <string name="wallet_dialog_pay_id_hint">PayID name</string>
+    <string name="wallet_pay_id_address">$payid.tangem.com</string>
+    <string name="wallet_dialog_pay_id_description">Your PayID is information unique to you, like your phone number, email or ABN.</string>
+
 
     <string name="error_payid_already_created">This PayID already exists. Try a different one.</string>
     <string name="error_creating_payid">Error response while creating PayID.</string>
