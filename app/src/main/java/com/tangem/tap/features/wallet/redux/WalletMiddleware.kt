@@ -13,6 +13,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.isPayIdSupported
+import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -44,6 +45,36 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
                         }
                         withContext(Dispatchers.Main) {
                             store.dispatch(WalletAction.LoadWallet.Success(walletManager.wallet))
+                        }
+                    }
+                }
+                is WalletAction.LoadFiatRate -> {
+                    scope.launch {
+                        val blockchainCurrency = store.state.globalState.walletManager?.wallet?.blockchain?.currency
+                        val tokenCurrency = store.state.globalState.walletManager?.wallet?.token?.symbol
+
+                        val blockchainRate = blockchainCurrency?.let { CoinMarketCapService().getRate(it) }
+                        val tokenRate = tokenCurrency?.let { CoinMarketCapService().getRate(it) }
+
+                        withContext(Dispatchers.Main) {
+                            when (blockchainRate) {
+                                is Result.Success -> {
+                                    store.dispatch(GlobalAction.SetFiatRate(blockchainCurrency to blockchainRate.data)
+                                    )
+                                    store.dispatch(WalletAction.LoadFiatRate.Success(blockchainCurrency to blockchainRate.data)
+                                    )
+                                }
+                                is Result.Failure, null -> store.dispatch(WalletAction.LoadFiatRate.Failure)
+                            }
+                            when (tokenRate) {
+                                is Result.Success -> {
+                                    store.dispatch(GlobalAction.SetFiatRate(tokenCurrency to tokenRate.data)
+                                    )
+                                    store.dispatch(WalletAction.LoadFiatRate.Success(tokenCurrency to tokenRate.data)
+                                    )
+                                }
+                                is Result.Failure, null -> store.dispatch(WalletAction.LoadFiatRate.Failure)
+                            }
                         }
                     }
                 }
@@ -107,6 +138,7 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
                                     store.dispatch(GlobalAction.LoadCard(result.data.card))
                                     store.dispatch(GlobalAction.LoadWalletManager(result.data.walletManager))
                                     store.dispatch(WalletAction.LoadWallet)
+                                    store.dispatch(WalletAction.LoadFiatRate)
                                     store.dispatch(WalletAction.LoadPayId)
                                 }
                             }
