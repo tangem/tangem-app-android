@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.CardFilter
 import com.tangem.Config
+import com.tangem.Log
 import com.tangem.TangemSdk
 import com.tangem.common.extensions.CardType
 import com.tangem.tangem_sdk_new.extensions.init
@@ -18,6 +19,8 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.lang.ref.WeakReference
 import java.util.*
 import kotlin.coroutines.CoroutineContext
@@ -32,7 +35,13 @@ val scope = CoroutineScope(coroutineContext)
 
 
 private fun initCoroutineExceptionHandler(): CoroutineExceptionHandler {
-    return CoroutineExceptionHandler { _, throwable -> throw throwable }
+    return CoroutineExceptionHandler { _, throwable ->
+        val sw = StringWriter()
+        throwable.printStackTrace(PrintWriter(sw))
+        val exceptionAsString: String = sw.toString()
+        Log.e("TangemSdk", exceptionAsString)
+        throw throwable
+    }
 }
 
 class MainActivity : AppCompatActivity() {
