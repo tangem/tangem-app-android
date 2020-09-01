@@ -2,25 +2,32 @@ package com.tangem.tap.features.wallet.redux
 
 import android.content.Context
 import com.tangem.blockchain.common.Wallet
-import com.tangem.blockchain.common.WalletManager
+import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
+import com.tangem.tap.domain.TapError
 import com.tangem.wallet.R
 import org.rekotlin.Action
 
 sealed class WalletAction : Action {
-    data class LoadWallet(val walletManager: WalletManager) : WalletAction() {
+    object LoadWallet : WalletAction() {
         data class Success(val wallet: Wallet): WalletAction()
         object Failure: WalletAction()
     }
-    data class LoadPayId(val address: String) : WalletAction() {
-        object Success: WalletAction()
+    object LoadPayId : WalletAction() {
+        data class Success(val payId: String): WalletAction()
+        object NotCreated: WalletAction()
         object Failure: WalletAction()
     }
     object Scan : WalletAction()
     object Send : WalletAction()
     object CreatePayId : WalletAction() {
-        object Success: WalletAction()
-        object Failure: WalletAction()
+        data class CompleteCreatingPayId(val payId: String): WalletAction()
+        data class Success(val payId: String): WalletAction()
+        object EmptyField: WalletAction(), ErrorAction {
+            override val error = TapError.PayIdEmptyField
+        }
+        class Failure(override val error: TapError) : WalletAction(), ErrorAction
+        object Cancel: WalletAction()
     }
     data class CopyAddress(val context: Context) : WalletAction() {
         object Success : WalletAction(), NotificationAction {
