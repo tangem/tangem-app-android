@@ -5,13 +5,16 @@ import android.net.Uri
 import androidx.core.content.ContextCompat.startActivity
 import com.tangem.common.CompletionResult
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.rekotlin.Middleware
 
 val homeMiddleware: Middleware<AppState> = { dispatch, state ->
@@ -21,10 +24,15 @@ val homeMiddleware: Middleware<AppState> = { dispatch, state ->
                 is HomeAction.ReadCard -> {
                     scope.launch {
                         val result = tangemSdkManager.scanNote()
-                        when (result) {
-                            is CompletionResult.Success -> {
-                                store.dispatch(WalletAction.LoadWallet(result.data.walletManager))
-                                store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
+                        withContext(Dispatchers.Main) {
+                            when (result) {
+                                is CompletionResult.Success -> {
+                                    store.dispatch(GlobalAction.LoadCard(result.data.card))
+                                    store.dispatch(GlobalAction.LoadWalletManager(result.data.walletManager))
+                                    store.dispatch(WalletAction.LoadWallet)
+                                    store.dispatch(WalletAction.LoadPayId)
+                                    store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
+                                }
                             }
                         }
                     }
