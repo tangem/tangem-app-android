@@ -14,7 +14,7 @@ class QrDialog(context: Context) : Dialog(context) {
         this.setContentView(R.layout.dialog_qrcode)
     }
 
-    fun show(qrCode: Bitmap, shareUrl: String) {
+    fun showQr(qrCode: Bitmap, shareUrl: String) {
         this.setOnDismissListener { store.dispatch(WalletAction.HideQrCode) }
         this.btn_done?.setOnClickListener { store.dispatch(WalletAction.HideQrCode) }
 
@@ -22,5 +22,4 @@ class QrDialog(context: Context) : Dialog(context) {
         this.iv_qrcode?.setImageBitmap(qrCode)
         super.show()
     }
-
 }
