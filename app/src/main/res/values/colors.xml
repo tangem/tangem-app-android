@@ -21,6 +21,7 @@
 
     <color name="backgroundGray">#F9F9FA</color>
     <color name="buttonGray">#F4F5F6</color>
+    <color name="textGray">#DE000000</color>
 
 
     <color name="lightGray1">#F8F8FB</color>
