@@ -15,11 +15,6 @@ enum class PayIdState {
     Error
 }
 
-data class PayIdData(
-    val address: String? = null,
-    val state: PayIdState? = null
-)
-
 enum class BalanceStatus {
     VerifiedOnline,
     Unreachable,
@@ -36,7 +31,8 @@ data class BalanceWidgetData(
 
 data class TokenData(
         val amount: String,
-        val tokenSymbol: String
+        val tokenSymbol: String,
+        val fiatAmount: String? = null
 )
 
 
@@ -58,6 +54,7 @@ class BalanceWidget(
             BalanceStatus.VerifiedOnline -> {
                 fragment.tv_currency.text = data.currency
                 fragment.tv_amount.text = data.amount
+                fragment.tv_fiat_amount.show()
                 fragment.tv_fiat_amount.text = data.fiatAmount
                 showStatus(R.id.tv_status_verified)
 
@@ -65,6 +62,7 @@ class BalanceWidget(
                     fragment.l_token.show()
                     fragment.l_token.tv_token_symbol.text = data.token.tokenSymbol
                     fragment.l_token.tv_token_amount.text = data.token.amount
+                    fragment.l_token.tv_token_fiat_amount.text = data.token.fiatAmount
                 } else {
                     fragment.l_token.hide()
 
