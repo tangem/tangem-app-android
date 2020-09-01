@@ -7,10 +7,15 @@ import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.wallet.R
 import org.rekotlin.Action
+import java.math.BigDecimal
 
 sealed class WalletAction : Action {
     object LoadWallet : WalletAction() {
         data class Success(val wallet: Wallet): WalletAction()
+        object Failure: WalletAction()
+    }
+    object LoadFiatRate : WalletAction() {
+        data class Success(val fiatRates: Pair<String, BigDecimal>) : WalletAction()
         object Failure: WalletAction()
     }
     object LoadPayId : WalletAction() {
