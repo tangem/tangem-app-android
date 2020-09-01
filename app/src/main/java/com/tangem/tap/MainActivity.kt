@@ -1,7 +1,10 @@
 package com.tangem.tap
 
+import android.app.Activity
 import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.CardFilter
 import com.tangem.Config
@@ -75,5 +78,16 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         store.dispatch(NavigationAction.ActivityDestroyed)
         super.onDestroy()
+    }
+}
+
+fun setTranslucent(activity: Activity, translucent: Boolean) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        val w = activity.getWindow();
+        if (translucent) {
+            w.setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS, WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        } else {
+            w.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        }
     }
 }
