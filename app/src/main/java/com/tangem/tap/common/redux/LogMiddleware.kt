@@ -1,6 +1,5 @@
-package com.tangem.tap.features.send.redux
+package com.tangem.tap.common.redux
 
-import com.tangem.tap.common.redux.AppState
 import org.rekotlin.Middleware
 import timber.log.Timber
 
