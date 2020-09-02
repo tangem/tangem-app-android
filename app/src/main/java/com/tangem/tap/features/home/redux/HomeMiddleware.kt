@@ -30,6 +30,7 @@ val homeMiddleware: Middleware<AppState> = { dispatch, state ->
                                     store.dispatch(GlobalAction.LoadCard(result.data.card))
                                     store.dispatch(GlobalAction.LoadWalletManager(result.data.walletManager))
                                     store.dispatch(WalletAction.LoadWallet)
+                                    store.dispatch(WalletAction.LoadFiatRate)
                                     store.dispatch(WalletAction.LoadPayId)
                                     store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
                                 }
