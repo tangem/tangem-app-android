@@ -6,6 +6,7 @@ import com.tangem.commands.CommandResponse
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.CardType
 import com.tangem.tangem_sdk_new.extensions.init
+import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.domain.tasks.ScanNoteTask
 import kotlinx.coroutines.Dispatchers
@@ -23,12 +24,18 @@ class TangemSdkManager(val activity: ComponentActivity) {
         return runTaskAsyncReturnOnMain(ScanNoteTask())
     }
 
+    suspend fun createWallet(): CompletionResult<ScanNoteResponse> {
+        return runTaskAsyncReturnOnMain(CreateWalletAndRescanTask())
+    }
+
     private suspend fun <T : CommandResponse> runTaskAsync(
             runnable: CardSessionRunnable<T>, cardId: String? = null, initialMessage: Message? = null
     ): CompletionResult<T> =
-            suspendCoroutine { continuation ->
-                tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage) { result ->
-                    continuation.resume(result)
+            withContext(Dispatchers.IO) {
+                suspendCoroutine { continuation ->
+                    tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage) { result ->
+                        continuation.resume(result)
+                    }
                 }
             }
 
