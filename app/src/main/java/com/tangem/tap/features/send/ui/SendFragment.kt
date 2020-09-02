@@ -27,8 +27,8 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         chipGroup.setOnCheckedChangeListener { group, checkedId ->
             store.dispatch(FeeLayout.ChangeSelectedFee(checkedId))
         }
-        swLorem.setOnCheckedChangeListener { btn, isChecked ->
-            store.dispatch(FeeLayout.ChangeLoremState(isChecked))
+        swIncludeFee.setOnCheckedChangeListener { btn, isChecked ->
+            store.dispatch(FeeLayout.ChangeIncludeFee(isChecked))
         }
     }
 
