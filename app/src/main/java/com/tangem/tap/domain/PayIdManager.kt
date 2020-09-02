@@ -4,39 +4,43 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.commands.common.network.Result
 import com.tangem.tap.network.payid.PayIdService
 import com.tangem.tap.network.payid.SetPayIdResponse
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import java.util.*
 
 class PayIdManager {
     private val payIdService = PayIdService()
 
-    suspend fun getPayId(cardId: String, publicKey: String): Result<String?> {
+    suspend fun getPayId(cardId: String, publicKey: String): Result<String?> = withContext(Dispatchers.IO) {
         val result = payIdService.getPayId(cardId, publicKey)
         when (result) {
-            is Result.Success -> return Result.Success(result.data.payId)
+            is Result.Success -> return@withContext Result.Success(result.data.payId)
             is Result.Failure -> {
                 (result.error as? HttpException)?.let {
-                    if (it.code() == 404) return Result.Success(null)
+                    if (it.code() == 404) return@withContext Result.Success(null)
                 }
-                return result
+                return@withContext result
             }
         }
     }
 
+
     suspend fun setPayId(
             cardId: String, publicKey: String, payId: String, address: String, blockchain: Blockchain
-    ): Result<SetPayIdResponse> {
+    ): Result<SetPayIdResponse> = withContext(Dispatchers.IO) {
         val result = payIdService.setPayId(cardId, publicKey, payId, address, blockchain.getPayIdNetwork())
         when (result) {
-            is Result.Success -> return result
+            is Result.Success -> return@withContext result
             is Result.Failure -> {
                 (result.error as? HttpException)?.let {
-                    if (it.code() == 409) return Result.Failure(TapError.PayIdAlreadyCreated)
+                    if (it.code() == 409) return@withContext Result.Failure(TapError.PayIdAlreadyCreated)
                 }
-                return result
+                return@withContext result
             }
         }
     }
+
 
     private fun Blockchain.getPayIdNetwork(): String {
         return when (this) {
