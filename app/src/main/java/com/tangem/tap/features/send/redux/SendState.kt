@@ -17,5 +17,5 @@ class NoneState : StateType
 data class FeeLayoutState(
         val visibility: Int = View.GONE,
         val selectedFeeId: Int = R.id.chipNormal,
-        val swLoremIsChecked: Boolean = false
+        val includeFeeIsChecked: Boolean = false
 ) : StateType
