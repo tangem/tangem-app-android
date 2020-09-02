@@ -5,6 +5,7 @@ import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.features.send.redux.SendRelease
 import com.tangem.tap.store
 import kotlinx.android.synthetic.main.fragment_wallet.*
 import org.rekotlin.StoreSubscriber
@@ -41,5 +42,10 @@ abstract class BaseStoreFragment(layoutId: Int) : Fragment(layoutId) {
     override fun onStop() {
         storeSubscribersList.forEach { store.unsubscribe(it) }
         super.onStop()
+    }
+
+    override fun onDestroy() {
+        store.dispatch(SendRelease)
+        super.onDestroy()
     }
 }
