@@ -3,11 +3,12 @@ package com.tangem.tap.features.send.ui.stateSubscribers
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionManager
+import com.tangem.tap.features.send.redux.AddressPayIDState
 import com.tangem.tap.features.send.redux.FeeLayoutState
 import com.tangem.tap.features.send.redux.SendState
 import kotlinx.android.synthetic.main.btn_expand_collapse.*
+import kotlinx.android.synthetic.main.layout_send_address_payid.*
 import kotlinx.android.synthetic.main.layout_send_network_fee.*
-import timber.log.Timber
 
 /**
 * [REDACTED_AUTHOR]
@@ -17,11 +18,15 @@ class SendStateSubscriber(fragment: Fragment) : FragmentStateSubscriber<SendStat
     override fun updateWithNewState(fg: Fragment, state: SendState) {
         when (state.lastChangedStateType) {
             is FeeLayoutState -> handleFeeLayoutState(fg, state.feeLayoutState)
+            is AddressPayIDState -> handleAddressPayIdState(fg, state.addressPayIDState)
         }
     }
 
+    private fun handleAddressPayIdState(fg: Fragment, state: AddressPayIDState) {
+        fg.etAddressOrPayId.setText(state.value)
+    }
+
     private fun handleFeeLayoutState(fg: Fragment, layoutState: FeeLayoutState) {
-        Timber.d("handleFeeLayoutState")
         if (fg.llFeeContainer.visibility != layoutState.visibility) {
             val rotationAngle = if (fg.imvExpandCollapse.rotation == 0f) 180f else 0f
             fg.imvExpandCollapse.rotation = rotationAngle

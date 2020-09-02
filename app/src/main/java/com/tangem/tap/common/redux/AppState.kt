@@ -5,7 +5,7 @@ import com.tangem.tap.common.redux.navigation.NavigationState
 import com.tangem.tap.common.redux.navigation.navigationMiddleware
 import com.tangem.tap.features.home.redux.homeMiddleware
 import com.tangem.tap.features.send.redux.SendState
-import com.tangem.tap.features.send.redux.logMiddleware
+import com.tangem.tap.features.send.redux.sendMiddleware
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.walletMiddleware
 import org.rekotlin.Middleware
@@ -22,7 +22,7 @@ data class AppState(
         fun getMiddleware(): List<Middleware<AppState>> {
             return listOf(
                 logMiddleware, navigationMiddleware, notificationsMiddleware,
-                homeMiddleware, walletMiddleware,
+                homeMiddleware, walletMiddleware, sendMiddleware
             )
         }
     }
