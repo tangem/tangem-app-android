@@ -8,7 +8,6 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.scope
@@ -37,6 +36,17 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
                 is WalletAction.LoadFiatRate -> {
                     scope.launch {
                         store.state.globalState.tapWalletManager.loadFiatRate()
+                    }
+                }
+                is WalletAction.CreateWallet -> {
+                    scope.launch {
+                        val result = tangemSdkManager.createWallet()
+                        when (result) {
+                            is CompletionResult.Success -> {
+                                store.state.globalState.tapWalletManager.onCardScanned(result.data)
+                            }
+
+                        }
                     }
                 }
                 is WalletAction.CreatePayId.CompleteCreatingPayId -> {
@@ -68,13 +78,7 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
                         val result = tangemSdkManager.scanNote()
                         when (result) {
                             is CompletionResult.Success -> {
-                                withContext(Dispatchers.Main) {
-                                    store.dispatch(GlobalAction.LoadCard(result.data.card))
-                                    store.dispatch(GlobalAction.LoadWalletManager(result.data.walletManager))
-                                    store.dispatch(WalletAction.LoadWallet)
-                                    store.dispatch(WalletAction.LoadFiatRate)
-                                    store.dispatch(WalletAction.LoadPayId)
-                                }
+                                store.state.globalState.tapWalletManager.onCardScanned(result.data)
                             }
                         }
                     }
