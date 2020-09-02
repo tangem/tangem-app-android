@@ -60,13 +60,33 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun newState(state: WalletState) {
         if (activity == null) return
 
-        state.wallet?.address?.let { tv_address.text = it }
-        tv_explore?.setOnClickListener {
-            store.dispatch(WalletAction.ExploreAddress(requireContext()))
+        if (state.wallet?.address != null) {
+            l_address?.show()
+            tv_address.text = state.wallet.address
+            tv_explore?.setOnClickListener {
+                store.dispatch(WalletAction.ExploreAddress(requireContext()))
+            }
+        } else {
+            l_address?.hide()
         }
+
 
         btn_copy.setOnClickListener { store.dispatch(WalletAction.CopyAddress(requireContext())) }
         btn_show_qr.setOnClickListener { store.dispatch(WalletAction.ShowQrCode) }
+
+        val buttonTitle = when (state.mainButton) {
+            is WalletMainButton.SendButton -> R.string.wallet_button_send
+            is WalletMainButton.CreateWalletButton -> R.string.wallet_button_create_wallet
+        }
+        btn_main.text = getString(buttonTitle)
+        btn_main.isEnabled = state.mainButton.enabled
+
+        btn_main.setOnClickListener {
+            when (state.mainButton) {
+                is WalletMainButton.SendButton -> TODO()
+                is WalletMainButton.CreateWalletButton -> store.dispatch(WalletAction.CreateWallet)
+            }
+        }
 
         if (state.qrCode != null && state.wallet?.shareUrl != null) {
             qrDialog = QrDialog(requireContext())
