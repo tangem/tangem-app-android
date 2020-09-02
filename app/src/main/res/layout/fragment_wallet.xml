@@ -56,7 +56,7 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_send"
+        android:id="@+id/btn_main"
         style="@style/TapButtonWithIcon"
         android:layout_width="0dp"
         android:layout_height="48dp"
