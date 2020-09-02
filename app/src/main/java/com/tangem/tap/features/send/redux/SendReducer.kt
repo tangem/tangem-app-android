@@ -31,8 +31,8 @@ class SendReducer {
                     val result = state.copy(selectedFeeId = action.id)
                     updateLastState(sendState.copy(feeLayoutState = result), result)
                 }
-                is FeeLayout.ChangeLoremState -> {
-                    val result = state.copy(swLoremIsChecked = action.isChecked)
+                is FeeLayout.ChangeIncludeFee -> {
+                    val result = state.copy(includeFeeIsChecked = action.isChecked)
                     updateLastState(sendState.copy(feeLayoutState = result), result)
                 }
             }
