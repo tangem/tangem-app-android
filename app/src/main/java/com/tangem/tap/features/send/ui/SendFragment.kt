@@ -1,13 +1,19 @@
 package com.tangem.tap.features.send.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import com.tangem.tap.common.extensions.getFromClipboard
+import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
 import com.tangem.tap.features.send.BaseStoreFragment
-import com.tangem.tap.features.send.redux.FeeLayout
+import com.tangem.tap.features.send.redux.AddressPayIdActionUI.SetAddressOrPayId
+import com.tangem.tap.features.send.redux.FeeActionUI.*
 import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
 import com.tangem.tap.features.send.ui.stateSubscribers.WalletStateSubscriber
 import com.tangem.tap.store
 import com.tangem.wallet.R
+import kotlinx.android.synthetic.main.btn_paste.*
+import kotlinx.android.synthetic.main.btn_qr_code.*
 import kotlinx.android.synthetic.main.layout_send_network_fee.*
 
 /**
@@ -22,13 +28,20 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         super.onViewCreated(view, savedInstanceState)
 
         flExpandCollapse.setOnClickListener {
-            store.dispatch(FeeLayout.ToggleFeeLayoutVisibility)
+            store.dispatch(ToggleFeeLayoutVisibility)
         }
         chipGroup.setOnCheckedChangeListener { group, checkedId ->
-            store.dispatch(FeeLayout.ChangeSelectedFee(checkedId))
+            store.dispatch(ChangeSelectedFee(checkedId))
         }
         swIncludeFee.setOnCheckedChangeListener { btn, isChecked ->
-            store.dispatch(FeeLayout.ChangeIncludeFee(isChecked))
+            store.dispatch(ChangeIncludeFee(isChecked))
+        }
+
+        imvPaste.setOnClickListener {
+            store.dispatch(SetAddressOrPayId(requireContext().getFromClipboard()))
+        }
+        imvQrCode.setOnClickListener {
+            requireActivity().startActivity(Intent(requireContext(), ScanQrCodeActivity::class.java))
         }
     }
 
