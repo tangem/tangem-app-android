@@ -2,6 +2,7 @@ package com.tangem.tap.features.wallet.redux
 
 import android.graphics.Bitmap
 import com.tangem.blockchain.common.Wallet
+import com.tangem.tap.common.entities.Button
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import org.rekotlin.StateType
 
@@ -12,7 +13,8 @@ data class WalletState(
         val currencyData: BalanceWidgetData = BalanceWidgetData(),
         val payIdData: PayIdData = PayIdData(),
         val qrCode: Bitmap? = null,
-        val creatingPayIdState: CreatingPayIdState? = null
+        val creatingPayIdState: CreatingPayIdState? = null,
+        val mainButton: WalletMainButton = WalletMainButton.SendButton(false)
 ) : StateType
 
 
@@ -26,3 +28,8 @@ data class PayIdData(
 )
 
 enum class CreatingPayIdState { EnterPayId, Waiting }
+
+sealed class WalletMainButton(enabled: Boolean) : Button(enabled) {
+    class SendButton(enabled: Boolean) : WalletMainButton(enabled)
+    class CreateWalletButton(enabled: Boolean) : WalletMainButton(enabled)
+}
