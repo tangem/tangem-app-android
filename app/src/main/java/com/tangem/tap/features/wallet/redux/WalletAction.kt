@@ -43,4 +43,5 @@ sealed class WalletAction : Action {
     object HideQrCode : WalletAction()
     data class ExploreAddress(val context: Context) : WalletAction()
     object CreateWallet : WalletAction()
+    object EmptyWallet : WalletAction()
 }
