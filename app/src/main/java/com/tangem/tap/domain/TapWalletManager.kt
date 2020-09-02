@@ -6,6 +6,7 @@ import com.tangem.commands.common.network.Result
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.TapConfig
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.features.wallet.redux.PayIdState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
@@ -47,12 +48,26 @@ class TapWalletManager {
         handleFiatRatesResult(results)
     }
 
+    suspend fun onCardScanned(data: ScanNoteResponse) {
+        withContext(Dispatchers.Main) {
+            store.dispatch(GlobalAction.LoadCard(data.card))
+            if (data.walletManager != null) {
+                store.dispatch(GlobalAction.LoadWalletManager(data.walletManager))
+                store.dispatch(WalletAction.LoadWallet)
+                store.dispatch(WalletAction.LoadFiatRate)
+                store.dispatch(WalletAction.LoadPayId)
+            } else {
+                store.dispatch(WalletAction.EmptyWallet)
+            }
+        }
+    }
+
     private suspend fun updateWallet(walletManager: WalletManager) {
         val result = try {
             walletManager.update()
             Result.Success(walletManager.wallet)
-        } catch (exeption: Exception) {
-            Result.Failure(exeption)
+        } catch (exception: Exception) {
+            Result.Failure(exception)
         }
         handleUpdateWalletResult(result)
     }
