@@ -30,8 +30,8 @@ class SendStateSubscriber(fragment: Fragment) : FragmentStateSubscriber<SendStat
             fg.llFeeContainer.visibility = layoutState.visibility
         }
 
-        if (fg.swLorem.isChecked != layoutState.swLoremIsChecked) {
-            fg.swLorem.isChecked = layoutState.swLoremIsChecked
+        if (fg.swIncludeFee.isChecked != layoutState.includeFeeIsChecked) {
+            fg.swIncludeFee.isChecked = layoutState.includeFeeIsChecked
         }
 
         if (fg.chipGroup.checkedChipId != layoutState.selectedFeeId) {
