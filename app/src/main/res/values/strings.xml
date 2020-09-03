@@ -12,12 +12,15 @@
     <string name="wallet_toolbar_title" translatable="false">Tangem Tap</string>
     <string name="wallet_button_scan">Scan</string>
     <string name="wallet_button_send">Send</string>
+    <string name="wallet_button_create_wallet">Create Wallet</string>
     <string name="wallet_explore_address">Explore address</string>
     <string name="wallet_create_payid">Create PayID</string>
     <string name="wallet_verified_balance">Verified Balance</string>
     <string name="wallet_blockchain_is_unreachable">Blockchain is unreachable</string>
     <string name="wallet_balance_is_loading">Balance is loading…</string>
     <string name="wallet_account_not_created">Account is not created</string>
+    <string name="wallet_empty_card">Empty Card</string>
+    <string name="wallet_empty_card_description">Create wallet to start using Tangem card</string>
     <string name="wallet_tokens">Tokens</string>
 
     <string name="wallet_dialog_pay_id_button">Create PayID</string>
