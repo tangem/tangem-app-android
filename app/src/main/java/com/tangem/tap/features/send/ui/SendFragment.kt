@@ -8,6 +8,7 @@ import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
 import com.tangem.tap.features.send.BaseStoreFragment
 import com.tangem.tap.features.send.redux.AddressPayIdActionUI.SetAddressOrPayId
 import com.tangem.tap.features.send.redux.FeeActionUI.*
+import com.tangem.tap.features.send.redux.ReleaseSendState
 import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
 import com.tangem.tap.features.send.ui.stateSubscribers.WalletStateSubscriber
 import com.tangem.tap.store
@@ -55,6 +56,11 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
         storeSubscribersList.add(walletSubscriber)
         storeSubscribersList.add(sendSubscriber)
+    }
+
+    override fun onDestroy() {
+        store.dispatch(ReleaseSendState)
+        super.onDestroy()
     }
 }
 
