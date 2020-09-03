@@ -21,13 +21,7 @@ data class AddressPayIDState(
         val value: String? = null,
         val payIDWalletAddress: String? = null,
         val error: String? = null,
-) : StateType {
-    fun isPayIDAddress(): Boolean = isPayIDAddress(value)
-
-    companion object {
-        fun isPayIDAddress(value: String?): Boolean = value?.contains("\$payid.tangem.com") ?: false
-    }
-}
+) : StateType
 
 data class FeeLayoutState(
         val visibility: Int = View.GONE,
