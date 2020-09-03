@@ -51,6 +51,8 @@ class PayIdManager {
     }
 
     companion object {
+        val payIdRegExp = "^[a-z0-9!#@%&*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#@%&*+/=?^_`{|}~-]+)*\\\$(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z-]*[a-z0-9])?|(?:[0-9]{1,3}\\.){3}[0-9]{1,3})\$".toRegex()
+
         val payIdSupported: EnumSet<Blockchain> = EnumSet.of(
                 Blockchain.XRP,
                 Blockchain.Ethereum,
@@ -63,6 +65,8 @@ class PayIdManager {
                 Blockchain.Binance,
                 Blockchain.RSK,
         )
+
+        fun isPayId(value: String?): Boolean = value?.contains(payIdRegExp) ?: false
     }
 }
 
