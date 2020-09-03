@@ -52,6 +52,7 @@ fun walletReducer(action: Action, state: AppState): WalletState {
                     state = ProgressState.Done, wallet = action.wallet,
                     currencyData = BalanceWidgetData(
                             BalanceStatus.VerifiedOnline, action.wallet.blockchain.fullName,
+                            currencySymbol = action.wallet.blockchain.currency,
                             amount?.toFormattedString(action.wallet.blockchain),
                             token = tokenData,
                             fiatAmount = fiatAmount
@@ -59,6 +60,24 @@ fun walletReducer(action: Action, state: AppState): WalletState {
                     mainButton = WalletMainButton.SendButton(sendButtonEnabled)
             )
         }
+        is WalletAction.LoadWallet.NoAccount -> {
+            val wallet = state.globalState.walletManager?.wallet
+            newState = newState.copy(
+                    state = ProgressState.Done, wallet = wallet,
+                    currencyData = BalanceWidgetData(
+                            BalanceStatus.NoAccount, wallet?.blockchain?.fullName,
+                            currencySymbol = wallet?.blockchain?.currency,
+                            amountToCreateAccount = action.amountToCreateAccount
+                    )
+            )
+        }
+        is WalletAction.LoadWallet.Failure -> newState = newState.copy(
+                state = ProgressState.Done,
+                currencyData = newState.currencyData.copy(
+                        status = BalanceStatus.Unreachable,
+                        errorMessage = action.errorMessage
+                )
+        )
         is WalletAction.LoadFiatRate.Success -> {
             val rate = action.fiatRates.second
             val currency = action.fiatRates.first
@@ -77,10 +96,6 @@ fun walletReducer(action: Action, state: AppState): WalletState {
                     token = newState.currencyData.token?.copy(fiatAmount = tokenFiatAmount)
             ))
         }
-        is WalletAction.LoadWallet.Failure -> newState = newState.copy(
-                state = ProgressState.Done,
-                currencyData = newState.currencyData.copy(status = BalanceStatus.Unreachable)
-        )
         is WalletAction.ShowQrCode -> {
             newState = newState.copy(qrCode = newState.wallet?.shareUrl?.toQrCode())
         }
