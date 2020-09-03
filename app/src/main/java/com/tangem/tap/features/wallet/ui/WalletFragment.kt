@@ -6,6 +6,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.redux.PayIdState
@@ -54,6 +55,9 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
         btn_scan.setOnClickListener {
             store.dispatch(WalletAction.Scan)
+        }
+        btn_main.setOnClickListener {
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
         }
     }
 
