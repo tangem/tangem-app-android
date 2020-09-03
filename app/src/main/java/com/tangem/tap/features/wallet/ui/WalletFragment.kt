@@ -56,7 +56,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         btn_scan.setOnClickListener {
             store.dispatch(WalletAction.Scan)
         }
-        btn_send.setOnClickListener {
+        btn_main.setOnClickListener {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
         }
     }
