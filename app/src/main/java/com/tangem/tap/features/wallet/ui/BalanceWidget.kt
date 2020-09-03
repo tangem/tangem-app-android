@@ -5,7 +5,9 @@ import androidx.fragment.app.Fragment
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.wallet.R
+import kotlinx.android.synthetic.main.card_balance.*
 import kotlinx.android.synthetic.main.layout_balance.*
+import kotlinx.android.synthetic.main.layout_balance_error.*
 import kotlinx.android.synthetic.main.layout_token.view.*
 
 enum class PayIdState {
@@ -18,7 +20,8 @@ enum class PayIdState {
 enum class BalanceStatus {
     VerifiedOnline,
     Unreachable,
-    Loading
+    Loading,
+    EmptyCard
 }
 
 data class BalanceWidgetData(
@@ -45,6 +48,8 @@ class BalanceWidget(
 
         when (data.status) {
             BalanceStatus.Loading -> {
+                fragment.l_balance.show()
+                fragment.l_balance_error.hide()
                 fragment.tv_currency.text = data.currency
                 fragment.tv_amount.text = "-"
                 fragment.tv_fiat_amount.hide()
@@ -52,6 +57,8 @@ class BalanceWidget(
                 fragment.l_token.hide()
             }
             BalanceStatus.VerifiedOnline -> {
+                fragment.l_balance.show()
+                fragment.l_balance_error.hide()
                 fragment.tv_currency.text = data.currency
                 fragment.tv_amount.text = data.amount
                 fragment.tv_fiat_amount.show()
@@ -70,9 +77,16 @@ class BalanceWidget(
 
             }
             BalanceStatus.Unreachable -> {
+                fragment.l_balance.show()
+                fragment.l_balance_error.hide()
                 fragment.l_token.hide()
                 showStatus(R.id.tv_status_error)
-
+            }
+            BalanceStatus.EmptyCard -> {
+                fragment.l_balance.hide()
+                fragment.l_balance_error.show()
+                fragment.tv_error_title.text = fragment.getText(R.string.wallet_empty_card)
+                fragment.tv_error_descriptions.text = fragment.getText(R.string.wallet_empty_card_description)
 
             }
         }
