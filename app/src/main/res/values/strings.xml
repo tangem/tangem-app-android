@@ -36,11 +36,13 @@
     <string name="error_creating_payid">Error response while creating PayID.</string>
 
 
+    <string name="send_title">Send</string>
     <string name="send_address_or_payid">Address or PayID</string>
-    <string name="send_network_fee">Network fee</string>
-    <string name="send_network_chip_fee_low">Low</string>
-    <string name="send_network_chip_fee_normal">Normal</string>
-    <string name="send_network_chip_fee_priority">Priority</string>
+    <string name="send_fee">Network fee</string>
+    <string name="send_fee_include">Include fee</string>
+    <string name="send_fee_low">Low</string>
+    <string name="send_fee_normal">Normal</string>
+    <string name="send_fee_priority">Priority</string>
     <string name="send_btn_send">Send</string>
     <string name="send_total">Total</string>
     <string name="send_total_amount">Amount</string>
