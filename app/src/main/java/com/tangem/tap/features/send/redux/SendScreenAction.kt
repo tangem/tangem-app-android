@@ -8,7 +8,7 @@ import org.rekotlin.Action
 interface SendScreenAction : Action
 interface SendScreenActionUI : SendScreenAction
 
-object SendRelease : Action
+object ReleaseSendState : Action
 
 sealed class FeeActionUI : SendScreenActionUI {
     object ToggleFeeLayoutVisibility : FeeActionUI()
