@@ -2,6 +2,7 @@ package com.tangem.tap.features.send.redux
 
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.isPayIdSupported
 import com.tangem.tap.features.send.redux.AddressPayIdActionUI.SetAddressOrPayId
 import com.tangem.tap.scope
@@ -39,7 +40,7 @@ internal class AddressPayIdHandler {
         val walletManager = store.state.globalState.walletManager ?: return
         val clipboardData = data ?: return
 
-        if (AddressPayIDState.isPayIDAddress(clipboardData)) {
+        if (PayIdManager.isPayId(clipboardData)) {
             if (walletManager.wallet.blockchain.isPayIdSupported()) {
                 store.dispatch(AddressPayIdAction.Verification.PayIdNotSupportedByBlockchain)
             } else {
