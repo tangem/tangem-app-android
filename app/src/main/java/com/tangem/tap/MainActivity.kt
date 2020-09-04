@@ -36,6 +36,9 @@ private val coroutineContext: CoroutineContext
     get() = Job() + Dispatchers.IO + initCoroutineExceptionHandler()
 val scope = CoroutineScope(coroutineContext)
 
+private val mainCoroutineContext: CoroutineContext
+    get() = Job() + Dispatchers.Main
+val mainScope = CoroutineScope(mainCoroutineContext)
 
 private fun initCoroutineExceptionHandler(): CoroutineExceptionHandler {
     return CoroutineExceptionHandler { _, throwable ->
