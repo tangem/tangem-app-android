@@ -45,7 +45,7 @@
         layout="@layout/btn_qr_code"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="@+id/tilAddressOrPayId"
+        android:layout_marginTop="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/tilAddressOrPayId" />
 
