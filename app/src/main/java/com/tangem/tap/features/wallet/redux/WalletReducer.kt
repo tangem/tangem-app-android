@@ -2,6 +2,7 @@ package com.tangem.tap.features.wallet.redux
 
 import com.tangem.blockchain.common.AmountType
 import com.tangem.common.extensions.isZero
+import com.tangem.tap.common.extensions.toBitmap
 import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.common.extensions.toQrCode
@@ -95,6 +96,12 @@ fun walletReducer(action: Action, state: AppState): WalletState {
                     fiatAmount = fiatAmount,
                     token = newState.currencyData.token?.copy(fiatAmount = tokenFiatAmount)
             ))
+        }
+        is WalletAction.LoadArtwork -> {
+            newState = newState.copy(cardImage = null)
+        }
+        is WalletAction.LoadArtwork.Success -> {
+            newState = newState.copy(cardImage = action.artwork.toBitmap())
         }
         is WalletAction.ShowQrCode -> {
             newState = newState.copy(qrCode = newState.wallet?.shareUrl?.toQrCode())
