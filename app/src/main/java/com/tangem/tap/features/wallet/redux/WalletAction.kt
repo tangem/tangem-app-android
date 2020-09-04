@@ -10,9 +10,11 @@ import org.rekotlin.Action
 import java.math.BigDecimal
 
 sealed class WalletAction : Action {
+
     object LoadWallet : WalletAction() {
         data class Success(val wallet: Wallet): WalletAction()
-        object Failure: WalletAction()
+        data class NoAccount(val amountToCreateAccount: Int): WalletAction()
+        data class Failure(val errorMessage: String? = null): WalletAction()
     }
     object LoadFiatRate : WalletAction() {
         data class Success(val fiatRates: Pair<String, BigDecimal>) : WalletAction()
