@@ -2,7 +2,9 @@ package com.tangem.tap.domain
 
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.commands.Card
 import com.tangem.commands.common.network.Result
+import com.tangem.commands.common.network.TangemService
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.TapConfig
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -19,6 +21,7 @@ import java.math.BigDecimal
 class TapWalletManager {
     private val payIdManager = PayIdManager()
     private val coinMarketCapService = CoinMarketCapService()
+    private val tangemService = TangemService()
 
     suspend fun loadWalletData() {
         val walletManager = store.state.globalState.walletManager
@@ -27,6 +30,19 @@ class TapWalletManager {
             return
         }
         updateWallet(walletManager)
+    }
+
+    suspend fun loadArtwork(card: Card, artworkId: String) {
+        val result =
+                tangemService.getArtwork(card.cardId, card.cardPublicKey!!.toHexString(), artworkId)
+        withContext(Dispatchers.Main) {
+            when (result) {
+                is Result.Success -> {
+                    store.dispatch(WalletAction.LoadArtwork.Success(result.data.byteStream().readBytes()))
+                }
+                is Result.Failure -> store.dispatch(WalletAction.LoadArtwork.Failure)
+            }
+        }
     }
 
     suspend fun loadPayId() {
@@ -53,6 +69,9 @@ class TapWalletManager {
             store.dispatch(GlobalAction.LoadCard(data.card))
             if (data.walletManager != null) {
                 store.dispatch(GlobalAction.LoadWalletManager(data.walletManager))
+                data.verifyResponse?.artworkInfo?.id?.let {
+                    store.dispatch(WalletAction.LoadArtwork(data.card, it))
+                }
                 store.dispatch(WalletAction.LoadWallet)
                 store.dispatch(WalletAction.LoadFiatRate)
                 store.dispatch(WalletAction.LoadPayId)
