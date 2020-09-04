@@ -38,6 +38,13 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
                         store.state.globalState.tapWalletManager.loadFiatRate()
                     }
                 }
+                is WalletAction.LoadArtwork -> {
+                    scope.launch {
+                        store.state.globalState.tapWalletManager.loadArtwork(
+                                action.card, action.artworkId
+                        )
+                    }
+                }
                 is WalletAction.CreateWallet -> {
                     scope.launch {
                         val result = tangemSdkManager.createWallet()
