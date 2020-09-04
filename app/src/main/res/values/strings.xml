@@ -38,7 +38,7 @@
     <string name="error_payid_not_registere">PayID not registered</string>
     <string name="error_payid_request_failed">PayID request failed</string>
     <string name="error_address_invalid_or_unsupported">Address is invalid or unsupported by blockchain</string>
-    <string name="error_address_same_as_wallet">Address is invalid or unsupported by blockchain</string>
+    <string name="error_address_same_as_wallet">Address is the same as wallet address</string>
 
 
     <string name="send_title">Send</string>
