@@ -56,9 +56,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         btn_scan.setOnClickListener {
             store.dispatch(WalletAction.Scan)
         }
-        btn_main.setOnClickListener {
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
-        }
     }
 
     override fun newState(state: WalletState) {
@@ -87,7 +84,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
         btn_main.setOnClickListener {
             when (state.mainButton) {
-                is WalletMainButton.SendButton -> TODO()
+                is WalletMainButton.SendButton -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
                 is WalletMainButton.CreateWalletButton -> store.dispatch(WalletAction.CreateWallet)
             }
         }
