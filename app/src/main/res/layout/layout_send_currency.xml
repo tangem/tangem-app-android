@@ -26,6 +26,7 @@
             android:inputType="numberDecimal"
             android:paddingStart="0dp"
             android:paddingEnd="96dp"
+            android:text="0"
             android:textSize="32sp"
             tools:text="139" />
 
