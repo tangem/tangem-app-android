@@ -16,14 +16,31 @@ sealed class FeeActionUI : SendScreenActionUI {
     class ChangeIncludeFee(val isChecked: Boolean) : FeeActionUI()
 }
 
+// shortness AddressOrPayId = APid
 sealed class AddressPayIdActionUI : SendScreenActionUI {
-    data class SetAddressOrPayId(val data: CharSequence?) : AddressPayIdActionUI()
+    data class SetAddressOrPayId(val data: String) : AddressPayIdActionUI()
 }
 
-sealed class AddressPayIdAction : SendScreenAction {
-    object Verification : AddressPayIdAction() {
-        object PayIdNotSupportedByBlockchain : AddressPayIdAction()
-        object Failed : AddressPayIdAction()
-        data class Success(val payIdWalletAddress: String) : AddressPayIdAction()
+sealed class AddressPayIdVerifyAction : SendScreenAction {
+    enum class FailReason {
+        NONE,
+        IS_NOT_PAY_ID,
+        PAY_ID_UNSUPPORTED_BY_BLOCKCHAIN,
+        PAY_ID_NOT_REGISTERED,
+        PAY_ID_REQUEST_FAILED,
+        ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN,
+        ADDRESS_SAME_AS_WALLET
+    }
+
+    data class ProcessedButNotVerifiedAddressPayId(val data: String) : AddressPayIdVerifyAction()
+
+    sealed class PayIdVerification : AddressPayIdVerifyAction() {
+        data class Failed(val payId: String, val reason: FailReason) : PayIdVerification()
+        data class Success(val payId: String, val payIdWalletAddress: String) : PayIdVerification()
+    }
+
+    sealed class AddressVerification : AddressPayIdVerifyAction() {
+        data class Failed(val address: String, val reason: FailReason) : AddressVerification()
+        data class Success(val address: String) : AddressVerification()
     }
 }
