@@ -2,6 +2,7 @@ package com.tangem.tap.features.wallet.redux
 
 import android.content.Context
 import com.tangem.blockchain.common.Wallet
+import com.tangem.commands.Card
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError
@@ -23,6 +24,10 @@ sealed class WalletAction : Action {
     object LoadPayId : WalletAction() {
         data class Success(val payId: String): WalletAction()
         object NotCreated: WalletAction()
+        object Failure: WalletAction()
+    }
+    data class LoadArtwork(val card: Card, val artworkId: String) : WalletAction() {
+        data class Success(val artwork: ByteArray) : WalletAction()
         object Failure: WalletAction()
     }
     object Scan : WalletAction()
