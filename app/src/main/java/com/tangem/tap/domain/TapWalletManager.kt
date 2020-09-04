@@ -23,7 +23,7 @@ class TapWalletManager {
     suspend fun loadWalletData() {
         val walletManager = store.state.globalState.walletManager
         if (walletManager == null) {
-            store.dispatch(WalletAction.LoadWallet.Failure)
+            store.dispatch(WalletAction.LoadWallet.Failure())
             return
         }
         updateWallet(walletManager)
@@ -69,18 +69,28 @@ class TapWalletManager {
         } catch (exception: Exception) {
             Result.Failure(exception)
         }
-        handleUpdateWalletResult(result)
+        handleUpdateWalletResult(result, walletManager)
     }
 
-    private suspend fun handleUpdateWalletResult(result: Result<Wallet>) {
+    private suspend fun handleUpdateWalletResult(result: Result<Wallet>, walletManager: WalletManager) {
         withContext(Dispatchers.Main) {
             when (result) {
                 is Result.Success -> store.dispatch(WalletAction.LoadWallet.Success(result.data))
-                is Result.Failure -> store.dispatch(WalletAction.LoadWallet.Failure)
+                is Result.Failure -> {
+                    val error = result.error
+                    val blockchain = walletManager.wallet.blockchain
+                    if (error != null && blockchain.isNoAccountError(error)) {
+                        val amountToCreateAccount = blockchain.amountToCreateAccount()
+                        if (amountToCreateAccount != null) {
+                            store.dispatch(WalletAction.LoadWallet.NoAccount(amountToCreateAccount))
+                            return@withContext
+                        }
+                    }
+                    store.dispatch(WalletAction.LoadWallet.Failure(result.error?.localizedMessage))
+                }
             }
         }
     }
-
 
 
     private suspend fun loadPayIdIfNeeded(): Result<String?>? {

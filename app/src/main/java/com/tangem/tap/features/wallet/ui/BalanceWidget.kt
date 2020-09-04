@@ -21,15 +21,19 @@ enum class BalanceStatus {
     VerifiedOnline,
     Unreachable,
     Loading,
+    NoAccount,
     EmptyCard
 }
 
 data class BalanceWidgetData(
         val status: BalanceStatus? = null,
         val currency: String? = null,
+        val currencySymbol: String? = null,
         val amount: String? = null,
         val fiatAmount: String? = null,
-        val token: TokenData? = null
+        val token: TokenData? = null,
+        val amountToCreateAccount: Int? = null,
+        val errorMessage: String? = null
 )
 
 data class TokenData(
@@ -87,7 +91,16 @@ class BalanceWidget(
                 fragment.l_balance_error.show()
                 fragment.tv_error_title.text = fragment.getText(R.string.wallet_empty_card)
                 fragment.tv_error_descriptions.text = fragment.getText(R.string.wallet_empty_card_description)
-
+            }
+            BalanceStatus.NoAccount -> {
+                fragment.l_balance.hide()
+                fragment.l_balance_error.show()
+                fragment.tv_error_title.text = fragment.getText(R.string.wallet_no_account)
+                fragment.tv_error_descriptions.text =
+                        fragment.getString(
+                                R.string.wallet_no_account_description,
+                                data.amountToCreateAccount?.toString(), data.currencySymbol
+                        )
             }
         }
     }
