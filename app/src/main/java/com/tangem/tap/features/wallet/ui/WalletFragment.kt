@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
+import com.tangem.tap.common.extensions.getDrawable
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -56,9 +57,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         btn_scan.setOnClickListener {
             store.dispatch(WalletAction.Scan)
         }
-        btn_main.setOnClickListener {
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
-        }
     }
 
     override fun newState(state: WalletState) {
@@ -74,6 +72,12 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             l_address?.hide()
         }
 
+        if (state.cardImage != null) {
+            iv_card.setImageBitmap(state.cardImage)
+        } else {
+            iv_card.setImageDrawable(getDrawable(R.drawable.card_default))
+        }
+
 
         btn_copy.setOnClickListener { store.dispatch(WalletAction.CopyAddress(requireContext())) }
         btn_show_qr.setOnClickListener { store.dispatch(WalletAction.ShowQrCode) }
@@ -87,7 +91,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
         btn_main.setOnClickListener {
             when (state.mainButton) {
-                is WalletMainButton.SendButton -> TODO()
+                is WalletMainButton.SendButton -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
                 is WalletMainButton.CreateWalletButton -> store.dispatch(WalletAction.CreateWallet)
             }
         }
