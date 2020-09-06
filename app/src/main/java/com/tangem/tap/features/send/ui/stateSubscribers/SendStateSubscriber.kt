@@ -40,14 +40,25 @@ class SendStateSubscriber(fragment: Fragment) : FragmentStateSubscriber<SendStat
             else context.getString(resId)
         }
 
-        val parsedError = parseError(fg.tilAddressOrPayId.context, state.error)
-        fg.tilAddressOrPayId.error = parsedError
-        fg.tilAddressOrPayId.isErrorEnabled = parsedError != null
-        fg.tilAddressOrPayId.helperText = state.walletAddress
-        fg.tilAddressOrPayId.isHelperTextEnabled = state.isPayIdState() && parsedError == null
-        if (fg.etAddressOrPayId.text?.toString() != state.etFieldValue) {
-            fg.etAddressOrPayId.setText(state.etFieldValue)
-            if (fg.etAddressOrPayId.isFocused) fg.etAddressOrPayId.setSelection(state.etFieldValue?.length ?: 0)
+        val et = fg.etAddressOrPayId
+        val til = fg.tilAddressOrPayId
+        val parsedError = parseError(til.context, state.error)
+
+        til.error = parsedError
+        til.isErrorEnabled = parsedError != null
+        til.helperText = state.walletAddress
+        til.isHelperTextEnabled = state.isPayIdState() && parsedError == null
+
+        // prevent cycling
+        if (state.etFieldValue == null || et.text?.toString() == state.etFieldValue) return
+
+        // prevent cursor jumping while editing
+        if (et.isFocused) {
+            val prevSelection = et.selectionStart
+            et.setText(state.etFieldValue)
+            et.setSelection(prevSelection)
+        } else {
+            et.setText(state.etFieldValue)
         }
     }
 
