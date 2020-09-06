@@ -57,10 +57,10 @@ private fun handleAddressPayIdAction(
         state: AddressPayIDState
 ): SendState {
     val result = when (action) {
-        is PayIdVerification.Success -> state.copyPayIdWalletAddress(action.payId, action.payIdWalletAddress)
-        is PayIdVerification.Failed -> state.copyPaiIdError(action.payId, action.reason)
-        is AddressVerification.Success -> state.copyWalletAddress(action.address)
-        is AddressVerification.Failed -> state.copyError(action.address, action.reason)
+        is PayIdVerification.SetPayIdWalletAddress -> state.copyPayIdWalletAddress(action.payId, action.payIdWalletAddress)
+        is PayIdVerification.SetError -> state.copyPaiIdError(action.payId, action.reason)
+        is AddressVerification.SetWalletAddress -> state.copyWalletAddress(action.address)
+        is AddressVerification.SetError -> state.copyError(action.address, action.reason)
     }
     return updateLastState(sendState.copy(addressPayIDState = result), result)
 }
