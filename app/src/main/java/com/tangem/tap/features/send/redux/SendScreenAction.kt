@@ -19,6 +19,8 @@ sealed class FeeActionUI : SendScreenActionUI {
 // shortness AddressOrPayId = APid
 sealed class AddressPayIdActionUI : SendScreenActionUI {
     data class SetAddressOrPayId(val data: String) : AddressPayIdActionUI()
+    data class SetTruncateHandler(val handler: (String) -> String) : AddressPayIdActionUI()
+    data class TruncateOrRestore(val truncate: Boolean) : AddressPayIdActionUI()
 }
 
 sealed class AddressPayIdVerifyAction : SendScreenAction {
@@ -31,8 +33,6 @@ sealed class AddressPayIdVerifyAction : SendScreenAction {
         ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN,
         ADDRESS_SAME_AS_WALLET
     }
-
-    data class ProcessedButNotVerifiedAddressPayId(val data: String) : AddressPayIdVerifyAction()
 
     sealed class PayIdVerification : AddressPayIdVerifyAction() {
         data class Failed(val payId: String, val reason: FailReason) : PayIdVerification()

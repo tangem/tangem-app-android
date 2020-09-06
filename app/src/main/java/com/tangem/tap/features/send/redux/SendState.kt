@@ -19,25 +19,57 @@ class NoneState : StateType
 
 data class AddressPayIDState(
         val etFieldValue: String? = null,
+        val normalFieldValue: String? = null,
+        val truncatedFieldValue: String? = null,
         val walletAddress: String? = null,
         val error: AddressPayIdVerifyAction.FailReason? = null,
+        val truncateHandler: ((String) -> String)? = null
 ) : StateType {
 
-    fun isPayIdState():Boolean = walletAddress != null && walletAddress != etFieldValue
+    fun isPayIdState(): Boolean = walletAddress != null && walletAddress != normalFieldValue
 
     fun copyWalletAddress(address: String): AddressPayIDState {
-        return this.copy(etFieldValue = address, walletAddress = address, error = null)
+        val truncated = truncateHandler?.invoke(address) ?: address
+        return this.copy(
+                etFieldValue = address,
+                normalFieldValue = address,
+                truncatedFieldValue = truncated,
+                walletAddress = address,
+                error = null
+        )
     }
+
     fun copyError(address: String, error: AddressPayIdVerifyAction.FailReason): AddressPayIDState {
-        return this.copy(etFieldValue = address, error = error, walletAddress = null)
+        val truncated = truncateHandler?.invoke(address) ?: address
+        return this.copy(
+                etFieldValue = address,
+                normalFieldValue = address,
+                truncatedFieldValue = truncated,
+                error = error,
+                walletAddress = null
+        )
     }
 
     fun copyPayIdWalletAddress(payId: String, address: String): AddressPayIDState {
-        return this.copy(etFieldValue = payId, walletAddress = address, error = null)
+        val truncated = truncateHandler?.invoke(address) ?: address
+        return this.copy(
+                etFieldValue = payId,
+                normalFieldValue = payId,
+                truncatedFieldValue = truncated,
+                walletAddress = address,
+                error = null
+        )
     }
 
     fun copyPaiIdError(payId: String, error: AddressPayIdVerifyAction.FailReason): AddressPayIDState {
-        return this.copy(etFieldValue = payId, error = error, walletAddress = null)
+        val truncated = truncateHandler?.invoke(payId) ?: payId
+        return this.copy(
+                etFieldValue = payId,
+                normalFieldValue = payId,
+                truncatedFieldValue = truncated,
+                error = error,
+                walletAddress = null
+        )
     }
 }
 
