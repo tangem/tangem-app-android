@@ -44,14 +44,13 @@ private fun handleSendAction(action: Action) {
 internal class AddressPayIdHandler {
     fun handle(data: String) {
         val walletManager = store.state.globalState.walletManager ?: return
+        if (data == store.state.sendState.addressPayIDState.etFieldValue) return
 
         if (isPayId(data)) {
             verifyPayId(data, walletManager)
-            store.dispatch(ProcessedButNotVerifiedAddressPayId(data))
         } else {
             val supposedAddress = extractAddressFromShareUri(data)
             store.dispatch(PayIdVerification.Failed(supposedAddress, FailReason.IS_NOT_PAY_ID))
-            store.dispatch(ProcessedButNotVerifiedAddressPayId(supposedAddress))
             verifyAddress(walletManager, supposedAddress)
         }
     }
