@@ -50,7 +50,7 @@ internal class AddressPayIdHandler {
             verifyPayId(data, walletManager)
         } else {
             val supposedAddress = extractAddressFromShareUri(data)
-            store.dispatch(PayIdVerification.Failed(supposedAddress, FailReason.IS_NOT_PAY_ID))
+            store.dispatch(PayIdVerification.SetError(supposedAddress, FailReason.IS_NOT_PAY_ID))
             verifyAddress(walletManager, supposedAddress)
         }
     }
@@ -58,7 +58,7 @@ internal class AddressPayIdHandler {
     private fun verifyPayId(payId: String, walletManager: WalletManager) {
         val blockchain = walletManager.wallet.blockchain
         if (!blockchain.isPayIdSupported()) {
-            store.dispatch(PayIdVerification.Failed(payId, FailReason.PAY_ID_UNSUPPORTED_BY_BLOCKCHAIN))
+            store.dispatch(PayIdVerification.SetError(payId, FailReason.PAY_ID_UNSUPPORTED_BY_BLOCKCHAIN))
             return
         }
 
@@ -69,17 +69,17 @@ internal class AddressPayIdHandler {
                     is Result.Success -> {
                         val address = result.data.getAddress()
                         if (address == null) {
-                            store.dispatch(PayIdVerification.Failed(payId, FailReason.PAY_ID_NOT_REGISTERED))
+                            store.dispatch(PayIdVerification.SetError(payId, FailReason.PAY_ID_NOT_REGISTERED))
                             return@withContext
                         }
                         val failReason = isValidBlockchainAddressAndNotTheSameAsWallet(walletManager.wallet, address)
 
-                        val actionToSend = if (failReason == FailReason.NONE) PayIdVerification.Success(payId, address)
-                        else AddressVerification.Failed(payId, failReason)
+                        val actionToSend = if (failReason == FailReason.NONE) PayIdVerification.SetPayIdWalletAddress(payId, address)
+                        else AddressVerification.SetError(payId, failReason)
                         store.dispatch(actionToSend)
                     }
                     is Result.Failure -> {
-                        store.dispatch(PayIdVerification.Failed(payId, FailReason.PAY_ID_REQUEST_FAILED))
+                        store.dispatch(PayIdVerification.SetError(payId, FailReason.PAY_ID_REQUEST_FAILED))
                     }
                 }
 
@@ -89,8 +89,8 @@ internal class AddressPayIdHandler {
 
     private fun verifyAddress(walletManager: WalletManager, supposedAddress: String) {
         val failReason = isValidBlockchainAddressAndNotTheSameAsWallet(walletManager.wallet, supposedAddress)
-        val actionToSend = if (failReason == FailReason.NONE) AddressVerification.Success(supposedAddress)
-        else AddressVerification.Failed(supposedAddress, failReason)
+        val actionToSend = if (failReason == FailReason.NONE) AddressVerification.SetWalletAddress(supposedAddress)
+        else AddressVerification.SetError(supposedAddress, failReason)
 
         store.dispatch(actionToSend)
     }
