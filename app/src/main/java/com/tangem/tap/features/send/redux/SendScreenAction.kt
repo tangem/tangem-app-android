@@ -35,12 +35,12 @@ sealed class AddressPayIdVerifyAction : SendScreenAction {
     }
 
     sealed class PayIdVerification : AddressPayIdVerifyAction() {
-        data class Failed(val payId: String, val reason: FailReason) : PayIdVerification()
-        data class Success(val payId: String, val payIdWalletAddress: String) : PayIdVerification()
+        data class SetError(val payId: String, val reason: FailReason) : PayIdVerification()
+        data class SetPayIdWalletAddress(val payId: String, val payIdWalletAddress: String) : PayIdVerification()
     }
 
     sealed class AddressVerification : AddressPayIdVerifyAction() {
-        data class Failed(val address: String, val reason: FailReason) : AddressVerification()
-        data class Success(val address: String) : AddressVerification()
+        data class SetError(val address: String, val reason: FailReason) : AddressVerification()
+        data class SetWalletAddress(val address: String) : AddressVerification()
     }
 }
