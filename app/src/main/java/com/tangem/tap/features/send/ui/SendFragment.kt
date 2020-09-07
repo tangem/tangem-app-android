@@ -9,8 +9,8 @@ import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
 import com.tangem.tap.common.text.truncateMiddleWith
 import com.tangem.tap.features.send.BaseStoreFragment
-import com.tangem.tap.features.send.redux.AddressPayIdActionUI.*
-import com.tangem.tap.features.send.redux.FeeActionUI.*
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi.*
+import com.tangem.tap.features.send.redux.FeeActionUi.*
 import com.tangem.tap.features.send.redux.ReleaseSendState
 import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
 import com.tangem.tap.mainScope
@@ -46,7 +46,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         }
         etAddressOrPayId.inputedTextAsFlow()
                 .debounce(400)
-                .filter { store.state.sendState.addressPayIDState.etFieldValue != it }
+                .filter { store.state.sendState.addressPayIdState.etFieldValue != it }
                 .onEach { store.dispatch(SetAddressOrPayId(it)) }
                 .launchIn(mainScope)
 
