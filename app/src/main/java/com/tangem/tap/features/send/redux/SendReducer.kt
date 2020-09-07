@@ -1,10 +1,10 @@
 package com.tangem.tap.features.send.redux
 
 import android.view.View
-import com.tangem.tap.features.send.redux.AddressPayIdActionUI.*
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi.*
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.AddressVerification
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.PayIdVerification
-import com.tangem.tap.features.send.redux.FeeActionUI.*
+import com.tangem.tap.features.send.redux.FeeActionUi.*
 import org.rekotlin.Action
 import org.rekotlin.StateType
 import timber.log.Timber
@@ -28,17 +28,17 @@ private fun internalReduce(incomingAction: Action, sendState: SendState): SendSt
     val action = incomingAction as? SendScreenAction ?: return sendState
 
     return when (action) {
-        is AddressPayIdActionUI -> handleAddressPayIdActionUI(action, sendState, sendState.addressPayIDState)
-        is AddressPayIdVerifyAction -> handleAddressPayIdAction(action, sendState, sendState.addressPayIDState)
-        is FeeActionUI -> handleFeeActionUI(action, sendState, sendState.feeLayoutState)
+        is AddressPayIdActionUi -> handleAddressPayIdActionUi(action, sendState, sendState.addressPayIdState)
+        is AddressPayIdVerifyAction -> handleAddressPayIdAction(action, sendState, sendState.addressPayIdState)
+        is FeeActionUi -> handleFeeActionUi(action, sendState, sendState.feeLayoutState)
         else -> sendState
     }
 }
 
-fun handleAddressPayIdActionUI(
-        action: AddressPayIdActionUI,
+fun handleAddressPayIdActionUi(
+        action: AddressPayIdActionUi,
         sendState: SendState,
-        state: AddressPayIDState
+        state: AddressPayIdState
 ): SendState {
     val result = when (action) {
         is SetAddressOrPayId -> state
@@ -48,13 +48,13 @@ fun handleAddressPayIdActionUI(
             else state.copy(etFieldValue = state.normalFieldValue)
         }
     }
-    return updateLastState(sendState.copy(addressPayIDState = result), result)
+    return updateLastState(sendState.copy(addressPayIdState = result), result)
 }
 
 private fun handleAddressPayIdAction(
         action: AddressPayIdVerifyAction,
         sendState: SendState,
-        state: AddressPayIDState
+        state: AddressPayIdState
 ): SendState {
     val result = when (action) {
         is PayIdVerification.SetPayIdWalletAddress -> state.copyPayIdWalletAddress(action.payId, action.payIdWalletAddress)
@@ -62,10 +62,10 @@ private fun handleAddressPayIdAction(
         is AddressVerification.SetWalletAddress -> state.copyWalletAddress(action.address)
         is AddressVerification.SetError -> state.copyError(action.address, action.reason)
     }
-    return updateLastState(sendState.copy(addressPayIDState = result), result)
+    return updateLastState(sendState.copy(addressPayIdState = result), result)
 }
 
-private fun handleFeeActionUI(action: FeeActionUI, sendState: SendState, state: FeeLayoutState): SendState {
+private fun handleFeeActionUi(action: FeeActionUi, sendState: SendState, state: FeeLayoutState): SendState {
     val result = when (action) {
         is ToggleFeeLayoutVisibility -> {
             state.copy(visibility = if (state.visibility == View.VISIBLE) View.GONE else View.VISIBLE)
