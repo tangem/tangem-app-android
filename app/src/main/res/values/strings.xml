@@ -36,6 +36,13 @@
     <string name="error_payid_already_created">This PayID already exists. Try a different one.</string>
     <string name="error_creating_payid">Error response while creating PayID.</string>
 
+    <string name="error_payid_verification_failed">PayID verification failed</string>
+    <string name="error_payid_unsupported_by_blockchain">PayID unsupported by blockchain</string>
+    <string name="error_payid_not_registere">PayID not registered</string>
+    <string name="error_payid_request_failed">PayID request failed</string>
+    <string name="error_address_invalid_or_unsupported">Address is invalid or unsupported by blockchain</string>
+    <string name="error_address_same_as_wallet">Address is the same as wallet address</string>
+
 
     <string name="send_title">Send</string>
     <string name="send_address_or_payid">Address or PayID</string>
