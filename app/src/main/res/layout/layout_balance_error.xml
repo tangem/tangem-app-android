@@ -9,12 +9,12 @@
         android:id="@+id/iv_balance_error"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_width="26dp"
-        android:layout_height="26dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:scaleType="fitXY"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:src="@drawable/ic_baseline_error_outline_24" />
+        android:src="@drawable/ic_warning" />
 
     <TextView
         android:id="@+id/tv_error_title"
@@ -23,7 +23,7 @@
         tools:text="@string/wallet_account_not_created"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingStart="18dp"
+        android:paddingStart="16dp"
         android:paddingTop="16dp"
         android:paddingEnd="16dp"
         android:textSize="20sp"
@@ -36,7 +36,7 @@
         tools:text="Load10+ XLM to create account"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingStart="18dp"
+        android:paddingStart="16dp"
         android:paddingTop="4dp"
         android:paddingEnd="16dp"
         android:paddingBottom="16dp"
