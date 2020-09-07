@@ -4,7 +4,7 @@ import android.content.Context
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionManager
-import com.tangem.tap.features.send.redux.AddressPayIDState
+import com.tangem.tap.features.send.redux.AddressPayIdState
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.FailReason
 import com.tangem.tap.features.send.redux.FeeLayoutState
 import com.tangem.tap.features.send.redux.SendState
@@ -21,11 +21,11 @@ class SendStateSubscriber(fragment: Fragment) : FragmentStateSubscriber<SendStat
     override fun updateWithNewState(fg: Fragment, state: SendState) {
         when (state.lastChangedStateType) {
             is FeeLayoutState -> handleFeeLayoutState(fg, state.feeLayoutState)
-            is AddressPayIDState -> handleAddressPayIdState(fg, state.addressPayIDState)
+            is AddressPayIdState -> handleAddressPayIdState(fg, state.addressPayIdState)
         }
     }
 
-    private fun handleAddressPayIdState(fg: Fragment, state: AddressPayIDState) {
+    private fun handleAddressPayIdState(fg: Fragment, state: AddressPayIdState) {
         fun parseError(context: Context, error: FailReason?): String? {
             val resId = when (error) {
                 FailReason.IS_NOT_PAY_ID -> R.string.error_payid_verification_failed
