@@ -24,7 +24,7 @@ class TapWalletManager {
     private val tangemService = TangemService()
 
     suspend fun loadWalletData() {
-        val walletManager = store.state.globalState.walletManager
+        val walletManager = store.state.globalState.scanNoteResponse?.walletManager
         if (walletManager == null) {
             store.dispatch(WalletAction.LoadWallet.Failure())
             return
@@ -38,7 +38,9 @@ class TapWalletManager {
         withContext(Dispatchers.Main) {
             when (result) {
                 is Result.Success -> {
-                    store.dispatch(WalletAction.LoadArtwork.Success(result.data.byteStream().readBytes()))
+                    store.dispatch(WalletAction.LoadArtwork.Success(
+                            artworkId, result.data.byteStream().readBytes())
+                    )
                 }
                 is Result.Failure -> store.dispatch(WalletAction.LoadArtwork.Failure)
             }
@@ -51,8 +53,9 @@ class TapWalletManager {
     }
 
     suspend fun loadFiatRate() {
-        val blockchainCurrency = store.state.globalState.walletManager?.wallet?.blockchain?.currency
-        val tokenCurrency = store.state.globalState.walletManager?.wallet?.token?.symbol
+        val wallet = store.state.globalState.scanNoteResponse?.walletManager?.wallet
+        val blockchainCurrency = wallet?.blockchain?.currency
+        val tokenCurrency = wallet?.token?.symbol
 
         val blockchainRate = blockchainCurrency?.let { coinMarketCapService.getRate(it) }
         val tokenRate = tokenCurrency?.let { coinMarketCapService.getRate(it) }
@@ -66,9 +69,8 @@ class TapWalletManager {
 
     suspend fun onCardScanned(data: ScanNoteResponse) {
         withContext(Dispatchers.Main) {
-            store.dispatch(GlobalAction.LoadCard(data.card))
+            store.dispatch(GlobalAction.SaveScanNoteResponse(data))
             if (data.walletManager != null) {
-                store.dispatch(GlobalAction.LoadWalletManager(data.walletManager))
                 data.verifyResponse?.artworkInfo?.id?.let {
                     store.dispatch(WalletAction.LoadArtwork(data.card, it))
                 }
@@ -113,13 +115,14 @@ class TapWalletManager {
 
 
     private suspend fun loadPayIdIfNeeded(): Result<String?>? {
+        val scanNoteResponse = store.state.globalState.scanNoteResponse
         if (!TapConfig.usePayId ||
                 store.state.walletState.payIdData.payIdState == PayIdState.Disabled ||
-                store.state.globalState.walletManager?.wallet?.blockchain?.isPayIdSupported() == false) {
+                scanNoteResponse?.walletManager?.wallet?.blockchain?.isPayIdSupported() == false) {
             return null
         }
-        val cardId = store.state.globalState.card?.cardId
-        val publicKey = store.state.globalState.card?.cardPublicKey
+        val cardId = scanNoteResponse?.card?.cardId
+        val publicKey = scanNoteResponse?.card?.cardPublicKey
         if (cardId == null || publicKey == null) {
             return null
         }
