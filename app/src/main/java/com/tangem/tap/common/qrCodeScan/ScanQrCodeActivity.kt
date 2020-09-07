@@ -1,6 +1,7 @@
 package com.tangem.tap.common.qrCodeScan
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -9,14 +10,17 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.zxing.Result
 import com.otaliastudios.cameraview.CameraView.PERMISSION_REQUEST_CODE
-import com.tangem.tap.features.send.redux.AddressPayIdActionUI
-import com.tangem.tap.store
 import me.dm7.barcodescanner.zxing.ZXingScannerView
 
 /**
 [REDACTED_AUTHOR]
  */
 class ScanQrCodeActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
+    companion object {
+        val SCAN_QR_REQUEST_CODE = 1001
+        val SCAN_RESULT = "scanResult"
+    }
+
     private lateinit var mScannerView: ZXingScannerView
 
     override fun onCreate(state: Bundle?) {
@@ -40,7 +44,7 @@ class ScanQrCodeActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
     }
 
     override fun handleResult(result: Result) {
-        store.dispatch(AddressPayIdActionUI.SetAddressOrPayId(result.text))
+        setResult(SCAN_QR_REQUEST_CODE, Intent().apply { putExtra(SCAN_RESULT, result.text) })
         finish()
     }
 
