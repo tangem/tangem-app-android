@@ -10,15 +10,13 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
     var newState = state.globalState
 
     when (action) {
-        is GlobalAction.LoadCard -> newState = newState.copy(card = action.card)
+        is GlobalAction.SaveScanNoteResponse ->
+            newState = newState.copy(scanNoteResponse = action.scanNoteResponse)
         is GlobalAction.SetFiatRate -> {
             val rates = newState.fiatRates.rates.toMutableMap()
             rates[action.fiatRates.first] = action.fiatRates.second
             newState = newState.copy(fiatRates = FiatRates(rates))
         }
-        is GlobalAction.LoadWalletManager ->
-            newState = newState.copy(walletManager = action.walletManager)
-
     }
     return newState
 }
