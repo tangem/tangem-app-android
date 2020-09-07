@@ -2,7 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/fl_balance"
+    android:id="@+id/fl_address"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:minWidth="300dp">
@@ -19,6 +19,7 @@
         android:elevation="3dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cl_address"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -57,31 +58,53 @@
                 app:layout_constraintTop_toBottomOf="@id/tv_address" />
 
 
-            <ImageButton
+            <FrameLayout
                 android:id="@+id/btn_copy"
                 android:layout_width="43dp"
                 android:layout_height="43dp"
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="16dp"
-                android:background="@drawable/ic_btn_round_background"
+                android:background="@drawable/shape_ellipse"
+                android:clickable="true"
+                android:focusable="true"
                 android:elevation="3dp"
-                android:padding="10dp"
-                android:src="@drawable/ic_copy"
                 app:layout_constraintEnd_toStartOf="@id/btn_show_qr"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent">
 
-            <ImageButton
+                <ImageView
+                    android:id="@+id/iv_copy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:background="?selectableItemBackgroundBorderless"
+                    android:padding="5dp"
+                    app:srcCompat="@drawable/ic_copy" />
+
+            </FrameLayout>
+
+            <FrameLayout
                 android:id="@+id/btn_show_qr"
                 android:layout_width="43dp"
                 android:layout_height="43dp"
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="16dp"
-                android:background="@drawable/ic_btn_round_background"
+                android:background="@drawable/shape_ellipse"
+                android:clickable="true"
+                android:focusable="true"
                 android:elevation="3dp"
-                android:padding="10dp"
-                android:src="@drawable/ic_qr_code_create"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ImageView
+                    android:id="@+id/iv_qr"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:background="?selectableItemBackgroundBorderless"
+                    android:padding="2dp"
+                    app:srcCompat="@drawable/ic_qr_code_show" />
+
+            </FrameLayout>
 
             <View
                 android:id="@+id/v_payid_divider"
