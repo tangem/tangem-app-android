@@ -25,6 +25,8 @@
     <string name="wallet_no_account">Account is not created</string>
     <string name="wallet_no_account_description">Load %1s+ %2s to create account</string>
     <string name="wallet_tokens">Tokens</string>
+    <string name="wallet_pending_transaction_incoming">Receiving %1s %2s from </string>
+    <string name="wallet_pending_transaction_outcoming">Sending %1s %2s to </string>
 
     <string name="wallet_dialog_pay_id_button">Create PayID</string>
     <string name="wallet_create_payid_empty">Enter desired PayID first</string>
