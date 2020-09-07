@@ -7,7 +7,7 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.PayIdManager.Companion.isPayId
 import com.tangem.tap.domain.isPayIdSupported
-import com.tangem.tap.features.send.redux.AddressPayIdActionUI.SetAddressOrPayId
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi.SetAddressOrPayId
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.*
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -33,7 +33,7 @@ private fun handleSendAction(action: Action) {
     val sendAction = action as? SendScreenActionUI ?: return
 
     when (sendAction) {
-        is AddressPayIdActionUI -> {
+        is AddressPayIdActionUi -> {
             when (sendAction) {
                 is SetAddressOrPayId -> AddressPayIdHandler().handle(sendAction.data)
             }
@@ -44,7 +44,7 @@ private fun handleSendAction(action: Action) {
 internal class AddressPayIdHandler {
     fun handle(data: String) {
         val walletManager = store.state.globalState.walletManager ?: return
-        if (data == store.state.sendState.addressPayIDState.etFieldValue) return
+        if (data == store.state.sendState.addressPayIdState.etFieldValue) return
 
         if (isPayId(data)) {
             verifyPayId(data, walletManager)
