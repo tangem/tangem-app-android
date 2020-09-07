@@ -70,12 +70,15 @@
         android:layout_marginBottom="33dp"
         android:text="@string/home_button_yes"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btn_shop"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_shop"
         style="@style/TapBlackButton"
-        android:layout_width="0dp"
+        android:layout_width="200dp"
         android:layout_height="48dp"
         android:layout_marginStart="7dp"
         android:layout_marginEnd="30dp"
@@ -84,6 +87,7 @@
         app:icon="@drawable/ic_shop"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/btn_yes" />
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/btn_yes" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
