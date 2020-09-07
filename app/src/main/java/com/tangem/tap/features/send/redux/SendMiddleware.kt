@@ -1,13 +1,19 @@
 package com.tangem.tap.features.send.redux
 
+import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.commands.common.network.Result
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.PayIdManager
+import com.tangem.tap.domain.PayIdManager.Companion.isPayId
 import com.tangem.tap.domain.isPayIdSupported
-import com.tangem.tap.features.send.redux.AddressPayIdActionUI.SetAddressOrPayId
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi.SetAddressOrPayId
+import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.*
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.rekotlin.Action
 import org.rekotlin.Middleware
 
@@ -27,61 +33,84 @@ private fun handleSendAction(action: Action) {
     val sendAction = action as? SendScreenActionUI ?: return
 
     when (sendAction) {
-        is AddressPayIdActionUI -> {
+        is AddressPayIdActionUi -> {
             when (sendAction) {
-                is SetAddressOrPayId -> AddressPayIdHandler().handle(sendAction.data?.toString())
+                is SetAddressOrPayId -> AddressPayIdHandler().handle(sendAction.data)
             }
         }
     }
 }
 
 internal class AddressPayIdHandler {
-    fun handle(data: String?) {
+    fun handle(data: String) {
         val walletManager = store.state.globalState.walletManager ?: return
-        val clipboardData = data ?: return
+        if (data == store.state.sendState.addressPayIdState.etFieldValue) return
 
-        if (PayIdManager.isPayId(clipboardData)) {
-            if (walletManager.wallet.blockchain.isPayIdSupported()) {
-                store.dispatch(AddressPayIdAction.Verification.PayIdNotSupportedByBlockchain)
-            } else {
-                scope.launch {
-                    val response = verifyPayID(walletManager, clipboardData)
-                    if (response == null) {
-                        store.dispatch(AddressPayIdAction.Verification.Failed)
-                    } else {
-                        val address = "some address D:" // extract from response
-                        store.dispatch(AddressPayIdAction.Verification.Success(address))
-                    }
-                }
-            }
+        if (isPayId(data)) {
+            verifyPayId(data, walletManager)
         } else {
-
+            val supposedAddress = extractAddressFromShareUri(data)
+            store.dispatch(PayIdVerification.SetError(supposedAddress, FailReason.IS_NOT_PAY_ID))
+            verifyAddress(walletManager, supposedAddress)
         }
     }
 
-    private suspend fun verifyPayID(walletManager: WalletManager, payID: String?): String? {
-        val cardId = walletManager.cardId
-        val publicKey = store.state.globalState.card?.cardPublicKey
+    private fun verifyPayId(payId: String, walletManager: WalletManager) {
+        val blockchain = walletManager.wallet.blockchain
+        if (!blockchain.isPayIdSupported()) {
+            store.dispatch(PayIdVerification.SetError(payId, FailReason.PAY_ID_UNSUPPORTED_BY_BLOCKCHAIN))
+            return
+        }
 
-//        val result = PayIdManager().getPayId(cardId, publicKey.toHexString())
-//        withContext(Dispatchers.Main) {
-//            when (result) {
-//                is Result.Success -> {
-//                    val payId = result.data
-//                    if (payId == null) {
-//                        store.dispatch(WalletAction.LoadPayId.NotCreated)
-//                    } else {
-//                        store.dispatch(WalletAction.LoadPayId.Success(payId))
-//                    }
-//                }
-//                is Result.Failure -> store.dispatch(WalletAction.LoadPayId.Failure)
-//            }
-//        }
-        return null
+        scope.launch {
+            val result = PayIdManager().verifyPayId(payId, blockchain)
+            withContext(Dispatchers.Main) {
+                when (result) {
+                    is Result.Success -> {
+                        val address = result.data.getAddress()
+                        if (address == null) {
+                            store.dispatch(PayIdVerification.SetError(payId, FailReason.PAY_ID_NOT_REGISTERED))
+                            return@withContext
+                        }
+                        val failReason = isValidBlockchainAddressAndNotTheSameAsWallet(walletManager.wallet, address)
+
+                        val actionToSend = if (failReason == FailReason.NONE) PayIdVerification.SetPayIdWalletAddress(payId, address)
+                        else AddressVerification.SetError(payId, failReason)
+                        store.dispatch(actionToSend)
+                    }
+                    is Result.Failure -> {
+                        store.dispatch(PayIdVerification.SetError(payId, FailReason.PAY_ID_REQUEST_FAILED))
+                    }
+                }
+
+            }
+        }
     }
 
-    private suspend fun verifyWalletAddress(payID: String?): Boolean {
-        val isRealAddress = true
-        return isRealAddress
+    private fun verifyAddress(walletManager: WalletManager, supposedAddress: String) {
+        val failReason = isValidBlockchainAddressAndNotTheSameAsWallet(walletManager.wallet, supposedAddress)
+        val actionToSend = if (failReason == FailReason.NONE) AddressVerification.SetWalletAddress(supposedAddress)
+        else AddressVerification.SetError(supposedAddress, failReason)
+
+        store.dispatch(actionToSend)
+    }
+
+    private fun isValidBlockchainAddressAndNotTheSameAsWallet(wallet: Wallet, address: String): FailReason {
+        return if (wallet.blockchain.validateAddress(address)) {
+            if (wallet.address != address) {
+                FailReason.NONE
+            } else {
+                FailReason.ADDRESS_SAME_AS_WALLET
+            }
+        } else {
+            FailReason.ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN
+        }
+    }
+// [REDACTED_TODO_COMMENT]
+    private fun extractAddressFromShareUri(shareUri: String): String {
+        val sharePrefix = listOf("bitcoin:", "ethereum:", "ripple:")
+        val prefixes = sharePrefix.filter { shareUri.contains(it) }
+        return if (prefixes.isEmpty()) shareUri
+        else shareUri.replace(prefixes[0], "")
     }
 }
