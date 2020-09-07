@@ -24,6 +24,10 @@ fun Fragment.getDrawable(@DrawableRes drawableResId: Int): Drawable? {
     return ContextCompat.getDrawable(requireContext(), drawableResId)
 }
 
+fun Context.getDrawableCompat(@DrawableRes drawableResId: Int): Drawable? {
+    return ContextCompat.getDrawable(this, drawableResId)
+}
+
 fun View.show(show: Boolean) {
     if (show) this.visibility = View.VISIBLE else this.visibility = View.GONE
 }
