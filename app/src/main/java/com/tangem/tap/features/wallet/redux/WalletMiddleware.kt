@@ -58,9 +58,9 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
                 }
                 is WalletAction.CreatePayId.CompleteCreatingPayId -> {
                     scope.launch {
-                        val cardId = store.state.globalState.card?.cardId
+                        val cardId = store.state.globalState.scanNoteResponse?.card?.cardId
                         val wallet = store.state.walletState.wallet
-                        val publicKey = store.state.globalState.card?.cardPublicKey
+                        val publicKey = store.state.globalState.scanNoteResponse?.card?.cardPublicKey
                         if (cardId != null && wallet != null && publicKey != null) {
                             val result = PayIdManager().setPayId(
                                     cardId, publicKey.toHexString(),
@@ -90,14 +90,21 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
                         }
                     }
                 }
+                is WalletAction.LoadData -> {
+                    scope.launch {
+                        store.state.globalState.scanNoteResponse?.let {
+                            store.state.globalState.tapWalletManager.onCardScanned(it)
+                        }
+                    }
+                }
                 is WalletAction.CopyAddress -> {
-                    store.state.walletState.wallet?.address?.let {
+                    store.state.walletState.addressData?.address?.let {
                         action.context.copyToClipboard(it)
                         store.dispatch(WalletAction.CopyAddress.Success)
                     }
                 }
                 is WalletAction.ExploreAddress -> {
-                    val uri = Uri.parse(store.state.walletState.wallet?.exploreUrl)
+                    val uri = Uri.parse(store.state.walletState.addressData?.exploreUrl)
                     val intent = Intent(Intent.ACTION_VIEW, uri)
                     ContextCompat.startActivity(action.context, intent, null)
                 }
