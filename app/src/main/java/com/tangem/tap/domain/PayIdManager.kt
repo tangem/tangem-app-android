@@ -3,7 +3,9 @@ package com.tangem.tap.domain
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.commands.common.network.Result
 import com.tangem.tap.network.payid.PayIdService
+import com.tangem.tap.network.payid.PayIdVerifyService
 import com.tangem.tap.network.payid.SetPayIdResponse
+import com.tangem.tap.network.payid.VerifyPayIdResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
@@ -41,13 +43,19 @@ class PayIdManager {
         }
     }
 
+    suspend fun verifyPayId(payId: String, blockchain: Blockchain): Result<VerifyPayIdResponse> = withContext(Dispatchers.IO) {
+        val splitPayId = payId.split("\$")
+        val user = splitPayId[0]
+        val baseUrl = "https://${splitPayId[1]}/"
+        return@withContext PayIdVerifyService(baseUrl).verifyAddress(user, blockchain.getPayIdNetwork())
+    }
 
     private fun Blockchain.getPayIdNetwork(): String {
         return when (this) {
             Blockchain.XRP -> "XRPL"
             Blockchain.RSK -> "RSK"
             else -> this.currency
-        }
+        }.toLowerCase()
     }
 
     companion object {
