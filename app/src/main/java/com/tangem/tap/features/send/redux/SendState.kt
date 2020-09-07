@@ -11,13 +11,13 @@ import org.rekotlin.StateType
 data class SendState(
         val walletManager: WalletManager? = null,
         val lastChangedStateType: StateType = NoneState(),
-        val addressPayIDState: AddressPayIDState = AddressPayIDState(),
+        val addressPayIdState: AddressPayIdState = AddressPayIdState(),
         val feeLayoutState: FeeLayoutState = FeeLayoutState()
 ) : StateType
 
 class NoneState : StateType
 
-data class AddressPayIDState(
+data class AddressPayIdState(
         val etFieldValue: String? = null,
         val normalFieldValue: String? = null,
         val truncatedFieldValue: String? = null,
@@ -28,7 +28,7 @@ data class AddressPayIDState(
 
     fun isPayIdState(): Boolean = walletAddress != null && walletAddress != normalFieldValue
 
-    fun copyWalletAddress(address: String): AddressPayIDState {
+    fun copyWalletAddress(address: String): AddressPayIdState {
         val truncated = truncateHandler?.invoke(address) ?: address
         return this.copy(
                 etFieldValue = address,
@@ -39,7 +39,7 @@ data class AddressPayIDState(
         )
     }
 
-    fun copyError(address: String, error: AddressPayIdVerifyAction.FailReason): AddressPayIDState {
+    fun copyError(address: String, error: AddressPayIdVerifyAction.FailReason): AddressPayIdState {
         val truncated = truncateHandler?.invoke(address) ?: address
         return this.copy(
                 etFieldValue = address,
@@ -50,7 +50,7 @@ data class AddressPayIDState(
         )
     }
 
-    fun copyPayIdWalletAddress(payId: String, address: String): AddressPayIDState {
+    fun copyPayIdWalletAddress(payId: String, address: String): AddressPayIdState {
         val truncated = truncateHandler?.invoke(address) ?: address
         return this.copy(
                 etFieldValue = payId,
@@ -61,7 +61,7 @@ data class AddressPayIDState(
         )
     }
 
-    fun copyPaiIdError(payId: String, error: AddressPayIdVerifyAction.FailReason): AddressPayIDState {
+    fun copyPaiIdError(payId: String, error: AddressPayIdVerifyAction.FailReason): AddressPayIdState {
         val truncated = truncateHandler?.invoke(payId) ?: payId
         return this.copy(
                 etFieldValue = payId,
