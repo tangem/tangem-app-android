@@ -43,7 +43,7 @@ private fun handleSendAction(action: Action) {
 
 internal class AddressPayIdHandler {
     fun handle(data: String) {
-        val walletManager = store.state.globalState.walletManager ?: return
+        val walletManager = store.state.globalState.scanNoteResponse?.walletManager ?: return
         if (data == store.state.sendState.addressPayIdState.etFieldValue) return
 
         if (isPayId(data)) {
