@@ -8,8 +8,9 @@ import org.rekotlin.StateType
 
 data class WalletState(
         val state: ProgressState = ProgressState.Done,
-        val cardImage: Bitmap? = null,
+        val cardImage: Artwork? = null,
         val wallet: Wallet? = null,
+        val addressData: AddressData? = null,
         val currencyData: BalanceWidgetData = BalanceWidgetData(),
         val payIdData: PayIdData = PayIdData(),
         val qrCode: Bitmap? = null,
@@ -33,3 +34,14 @@ sealed class WalletMainButton(enabled: Boolean) : Button(enabled) {
     class SendButton(enabled: Boolean) : WalletMainButton(enabled)
     class CreateWalletButton(enabled: Boolean) : WalletMainButton(enabled)
 }
+
+data class AddressData(
+        val address: String,
+        val shareUrl: String,
+        val exploreUrl: String
+)
+
+data class Artwork(
+        val artworkId: String,
+        val artwork: Bitmap
+)
