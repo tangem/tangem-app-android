@@ -49,7 +49,7 @@
         android:textColor="@color/warning"
         android:textSize="12sp"
         android:visibility="gone"
-        app:drawableStartCompat="@drawable/ic_baseline_error_outline_24"
+        app:drawableStartCompat="@drawable/ic_warning_small"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_currency" />
 
@@ -70,17 +70,36 @@
 
     <TextView
         android:id="@+id/tv_amount"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:paddingTop="16dp"
+        android:textColor="@color/darkGray6"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:gravity="end"
+        app:layout_constraintEnd_toStartOf="@id/tv_currency_symbol"
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintStart_toEndOf="@id/tv_currency"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="0.43" />
+
+    <TextView
+        android:id="@+id/tv_currency_symbol"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingStart="16dp"
+        android:layout_marginEnd="16dp"
         android:paddingTop="16dp"
-        android:paddingEnd="16dp"
         android:textColor="@color/darkGray6"
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintStart_toEndOf="@id/tv_amount"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="0.43 BTC" />
+        tools:text="BTC" />
 
     <TextView
         android:id="@+id/tv_fiat_amount"
