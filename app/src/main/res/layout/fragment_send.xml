@@ -31,7 +31,7 @@
                 android:layout_marginTop="14dp" />
 
             <include
-                layout="@layout/layout_send_currency"
+                layout="@layout/layout_send_amount"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp" />
