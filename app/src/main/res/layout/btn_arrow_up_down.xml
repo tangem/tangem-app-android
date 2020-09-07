@@ -4,7 +4,6 @@
     android:id="@+id/flArrowUpDown"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
     android:background="@drawable/shape_ellipse"
     android:backgroundTint="@android:color/transparent"
     android:clickable="true"
