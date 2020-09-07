@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import com.tangem.tap.common.extensions.getDrawable
 import com.tangem.tap.common.extensions.hide
@@ -25,6 +26,9 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     private var qrDialog: QrDialog? = null
     private var payIdDialog: PayIdDialog? = null
+
+    private lateinit var viewAdapter: PendingTransactionsAdapter
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,7 +59,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
         toolbar.setNavigationOnClickListener {
             store.dispatch(NavigationAction.PopBackTo())
         }
@@ -63,7 +66,16 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         btn_scan.setOnClickListener {
             store.dispatch(WalletAction.Scan)
         }
+        setupTransactionsRecyclerView()
     }
+
+
+    private fun setupTransactionsRecyclerView() {
+        viewAdapter = PendingTransactionsAdapter()
+        rv_pending_transaction.layoutManager = LinearLayoutManager(context)
+        rv_pending_transaction.adapter = viewAdapter
+    }
+
 
     override fun newState(state: WalletState) {
         if (activity == null) return
@@ -75,6 +87,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         setupButtons(state)
         setupAddressCard(state)
         setupCardImage(state.cardImage?.artwork)
+
+        viewAdapter.submitList(state.pendingTransactions)
 
         if (state.qrCode != null && state.addressData?.shareUrl != null) {
             if (qrDialog == null) qrDialog = QrDialog(requireContext())
