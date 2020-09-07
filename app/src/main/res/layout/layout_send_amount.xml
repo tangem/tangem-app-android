@@ -32,29 +32,42 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <include
-        android:id="@+id/flArrowUpDown"
-        layout="@layout/btn_arrow_up_down"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        app:layout_constraintBottom_toBottomOf="@+id/tvCurrency"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <TextView
+    <TextSwitcher
         android:id="@+id/tvCurrency"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
         android:layout_marginBottom="12dp"
-        android:layout_weight="1"
-        android:focusableInTouchMode="true"
-        android:fontFamily="sans-serif-light"
-        android:textAllCaps="true"
-        android:textColor="@color/blue"
-        android:textSize="32sp"
+        android:inAnimation="@anim/slide_in_up"
+        android:outAnimation="@anim/slide_out_down"
         app:layout_constraintBottom_toBottomOf="@+id/tilAmount"
-        app:layout_constraintEnd_toStartOf="@+id/flArrowUpDown"
-        tools:text="usd" />
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:drawablePadding="10dp"
+            android:fontFamily="sans-serif-light"
+            android:text="usd"
+            android:textAllCaps="true"
+            android:textColor="@color/blue"
+            android:textSize="32sp"
+            app:drawableEndCompat="@drawable/ic_arrows_up_down" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:drawablePadding="10dp"
+            android:fontFamily="sans-serif-light"
+            android:text="btc"
+            android:textAllCaps="true"
+            android:textColor="@color/blue"
+            android:textSize="32sp"
+            app:drawableEndCompat="@drawable/ic_arrows_up_down" />
+
+    </TextSwitcher>
 
     <LinearLayout
         android:id="@+id/balanceContainer"
