@@ -37,7 +37,7 @@ private fun handleSendAction(action: Action) {
 
 internal class AddressPayIdHandler {
     fun handle(data: String?) {
-        val walletManager = store.state.globalState.walletManager ?: return
+        val walletManager = store.state.globalState.scanNoteResponse?.walletManager ?: return
         val clipboardData = data ?: return
 
         if (PayIdManager.isPayId(clipboardData)) {
@@ -61,7 +61,7 @@ internal class AddressPayIdHandler {
 
     private suspend fun verifyPayID(walletManager: WalletManager, payID: String?): String? {
         val cardId = walletManager.cardId
-        val publicKey = store.state.globalState.card?.cardPublicKey
+        val publicKey = store.state.globalState.scanNoteResponse?.card?.cardPublicKey
 
 //        val result = PayIdManager().getPayId(cardId, publicKey.toHexString())
 //        withContext(Dispatchers.Main) {

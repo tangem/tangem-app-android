@@ -1,9 +1,11 @@
 package com.tangem.tap.features.wallet.ui
 
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
+import androidx.transition.TransitionInflater
 import com.tangem.tap.common.extensions.getDrawable
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
@@ -18,6 +20,7 @@ import kotlinx.android.synthetic.main.fragment_wallet.*
 import kotlinx.android.synthetic.main.layout_address.*
 import org.rekotlin.StoreSubscriber
 
+
 class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<WalletState> {
 
     private var qrDialog: QrDialog? = null
@@ -30,6 +33,9 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                 store.dispatch(NavigationAction.PopBackTo())
             }
         })
+        val inflater = TransitionInflater.from(requireContext())
+        enterTransition = inflater.inflateTransition(R.transition.slide_right)
+        exitTransition = inflater.inflateTransition(R.transition.fade)
     }
 
     override fun onStart() {
@@ -62,59 +68,26 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun newState(state: WalletState) {
         if (activity == null) return
 
-        if (state.wallet?.address != null) {
-            l_address?.show()
-            tv_address.text = state.wallet.address
-            tv_explore?.setOnClickListener {
-                store.dispatch(WalletAction.ExploreAddress(requireContext()))
-            }
-        } else {
-            l_address?.hide()
+        srl_wallet.setOnRefreshListener {
+            store.dispatch(WalletAction.LoadData)
         }
 
-        if (state.cardImage != null) {
-            iv_card.setImageBitmap(state.cardImage)
-        } else {
-            iv_card.setImageDrawable(getDrawable(R.drawable.card_default))
-        }
+        setupButtons(state)
+        setupAddressCard(state)
+        setupCardImage(state.cardImage?.artwork)
 
-
-        btn_copy.setOnClickListener { store.dispatch(WalletAction.CopyAddress(requireContext())) }
-        btn_show_qr.setOnClickListener { store.dispatch(WalletAction.ShowQrCode) }
-
-        val buttonTitle = when (state.mainButton) {
-            is WalletMainButton.SendButton -> R.string.wallet_button_send
-            is WalletMainButton.CreateWalletButton -> R.string.wallet_button_create_wallet
-        }
-        btn_main.text = getString(buttonTitle)
-        btn_main.isEnabled = state.mainButton.enabled
-
-        btn_main.setOnClickListener {
-            when (state.mainButton) {
-                is WalletMainButton.SendButton -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
-                is WalletMainButton.CreateWalletButton -> store.dispatch(WalletAction.CreateWallet)
-            }
-        }
-
-        if (state.qrCode != null && state.wallet?.shareUrl != null) {
-            qrDialog = QrDialog(requireContext())
-            qrDialog?.showQr(state.qrCode, state.wallet.shareUrl)
+        if (state.qrCode != null && state.addressData?.shareUrl != null) {
+            if (qrDialog == null) qrDialog = QrDialog(requireContext())
+            qrDialog?.showQr(state.qrCode, state.addressData.shareUrl)
         } else {
             qrDialog?.dismiss()
         }
 
-        when (state.state) {
-            ProgressState.Loading -> {
-                l_balance.show()
-                BalanceWidget(this, state.currencyData).setup()
-            }
-            ProgressState.Done -> {
-                l_balance.show()
-                BalanceWidget(this, state.currencyData).setup()
-            }
-            ProgressState.Error -> {
+        l_balance.show()
+        BalanceWidget(this, state.currencyData).setup()
 
-            }
+        if (state.state == ProgressState.Done) {
+            srl_wallet.isRefreshing = false
         }
 
         when (state.payIdData.payIdState) {
@@ -150,5 +123,43 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
     }
 
+    private fun setupButtons(state: WalletState) {
+        btn_copy.setOnClickListener { store.dispatch(WalletAction.CopyAddress(requireContext())) }
+        btn_show_qr.setOnClickListener { store.dispatch(WalletAction.ShowQrCode) }
+
+        val buttonTitle = when (state.mainButton) {
+            is WalletMainButton.SendButton -> R.string.wallet_button_send
+            is WalletMainButton.CreateWalletButton -> R.string.wallet_button_create_wallet
+        }
+        btn_main.text = getString(buttonTitle)
+        btn_main.isEnabled = state.mainButton.enabled
+
+        btn_main.setOnClickListener {
+            when (state.mainButton) {
+                is WalletMainButton.SendButton -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
+                is WalletMainButton.CreateWalletButton -> store.dispatch(WalletAction.CreateWallet)
+            }
+        }
+    }
+
+    private fun setupAddressCard(state: WalletState) {
+        if (state.addressData != null) {
+            l_address?.show()
+            tv_address.text = state.addressData.address
+            tv_explore?.setOnClickListener {
+                store.dispatch(WalletAction.ExploreAddress(requireContext()))
+            }
+        } else {
+            l_address?.hide()
+        }
+    }
+
+    private fun setupCardImage(cardImage: Bitmap?) {
+        if (cardImage != null) {
+            iv_card.setImageBitmap(cardImage)
+        } else {
+            iv_card.setImageDrawable(getDrawable(R.drawable.card_default))
+        }
+    }
 
 }
