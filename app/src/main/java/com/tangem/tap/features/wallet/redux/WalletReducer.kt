@@ -7,6 +7,7 @@ import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
@@ -37,7 +38,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             } else {
                 AddressData(wallet.address, wallet.shareUrl, wallet.exploreUrl)
             }
-           val  currentArtworkId = state.globalState.scanNoteResponse?.verifyResponse?.artworkInfo?.id
+            val currentArtworkId = state.globalState.scanNoteResponse?.verifyResponse?.artworkInfo?.id
             val cardImage = if (newState.cardImage?.artworkId == currentArtworkId) {
                 newState.cardImage
             } else {
@@ -61,7 +62,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 val tokenFiatRate = state.globalState.fiatRates.getRateForCryptoCurrency(token.currencySymbol)
                 val tokenFiatAmount = tokenFiatRate?.let { token.value?.toFiatString(it) }
                 TokenData(
-                        token.value?.toFormattedString(action.wallet.blockchain) ?: "",
+                        token.value?.toFormattedString(token.decimals) ?: "",
                         token.currencySymbol, tokenFiatAmount)
             } else {
                 null
@@ -70,16 +71,20 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             val fiatRate = state.globalState.fiatRates.getRateForCryptoCurrency(action.wallet.blockchain.currency)
             val fiatAmount = fiatRate?.let { amount?.toFiatString(it) }
 
+            val pendingTransactions = action.wallet.transactions
+                    .toPendingTransactions(action.wallet.address)
+
             val sendButtonEnabled = amount?.isZero() == false || token?.value?.isZero() == false
             newState = newState.copy(
                     state = ProgressState.Done, wallet = action.wallet,
                     currencyData = BalanceWidgetData(
                             BalanceStatus.VerifiedOnline, action.wallet.blockchain.fullName,
                             currencySymbol = action.wallet.blockchain.currency,
-                            amount?.toFormattedString(action.wallet.blockchain),
+                            amount?.toFormattedString(action.wallet.blockchain.decimals()),
                             token = tokenData,
                             fiatAmount = fiatAmount
                     ),
+                    pendingTransactions = pendingTransactions,
                     mainButton = WalletMainButton.SendButton(sendButtonEnabled)
             )
         }
