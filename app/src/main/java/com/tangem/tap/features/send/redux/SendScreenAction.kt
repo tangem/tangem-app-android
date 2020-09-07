@@ -10,17 +10,17 @@ interface SendScreenActionUI : SendScreenAction
 
 object ReleaseSendState : Action
 
-sealed class FeeActionUI : SendScreenActionUI {
-    object ToggleFeeLayoutVisibility : FeeActionUI()
-    data class ChangeSelectedFee(val id: Int) : FeeActionUI()
-    class ChangeIncludeFee(val isChecked: Boolean) : FeeActionUI()
+sealed class FeeActionUi : SendScreenActionUI {
+    object ToggleFeeLayoutVisibility : FeeActionUi()
+    data class ChangeSelectedFee(val id: Int) : FeeActionUi()
+    class ChangeIncludeFee(val isChecked: Boolean) : FeeActionUi()
 }
 
 // shortness AddressOrPayId = APid
-sealed class AddressPayIdActionUI : SendScreenActionUI {
-    data class SetAddressOrPayId(val data: String) : AddressPayIdActionUI()
-    data class SetTruncateHandler(val handler: (String) -> String) : AddressPayIdActionUI()
-    data class TruncateOrRestore(val truncate: Boolean) : AddressPayIdActionUI()
+sealed class AddressPayIdActionUi : SendScreenActionUI {
+    data class SetAddressOrPayId(val data: String) : AddressPayIdActionUi()
+    data class SetTruncateHandler(val handler: (String) -> String) : AddressPayIdActionUi()
+    data class TruncateOrRestore(val truncate: Boolean) : AddressPayIdActionUi()
 }
 
 sealed class AddressPayIdVerifyAction : SendScreenAction {
