@@ -17,7 +17,8 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -56,17 +57,33 @@
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="24dp" />
 
-            <com.google.android.material.button.MaterialButton
-                style="@style/TapButtonWithIcon"
-                android:layout_width="200dp"
-                android:layout_height="48dp"
-                android:layout_gravity="end"
-                android:layout_marginEnd="16dp"
+            <LinearLayout
+                android:id="@+id/llBottomButtonContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="30dp"
+                android:layout_marginEnd="30dp"
                 android:layout_marginBottom="33dp"
-                android:fontFamily="@font/saira_semi_condensed_regular"
-                android:text="@string/send_btn_send"
-                app:icon="@drawable/ic_arrow_right" />
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="100dp"
+                    android:layout_height="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    style="@style/TapButtonWithIcon"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="end"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/saira_semi_condensed_regular"
+                    android:text="@string/send_btn_send"
+                    app:icon="@drawable/ic_arrow_right" />
+
+            </LinearLayout>
+
         </LinearLayout>
+
     </ScrollView>
 
 </LinearLayout>
