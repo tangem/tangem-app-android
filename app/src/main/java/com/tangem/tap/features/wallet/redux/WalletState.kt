@@ -3,6 +3,7 @@ package com.tangem.tap.features.wallet.redux
 import android.graphics.Bitmap
 import com.tangem.blockchain.common.Wallet
 import com.tangem.tap.common.entities.Button
+import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import org.rekotlin.StateType
 
@@ -10,6 +11,7 @@ data class WalletState(
         val state: ProgressState = ProgressState.Done,
         val cardImage: Artwork? = null,
         val wallet: Wallet? = null,
+        val pendingTransactions: List<PendingTransaction> = emptyList(),
         val addressData: AddressData? = null,
         val currencyData: BalanceWidgetData = BalanceWidgetData(),
         val payIdData: PayIdData = PayIdData(),
