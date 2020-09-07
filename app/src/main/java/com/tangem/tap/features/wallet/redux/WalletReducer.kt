@@ -12,7 +12,13 @@ import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
 import org.rekotlin.Action
 
-fun walletReducer(action: Action, state: AppState): WalletState {
+class WalletReducer {
+    companion object {
+        fun reduce(action: Action, state: AppState): WalletState = internalReduce(action, state)
+    }
+}
+
+private fun internalReduce(action: Action, state: AppState): WalletState {
 
     if (action !is WalletAction) return state.walletState
 
@@ -24,15 +30,31 @@ fun walletReducer(action: Action, state: AppState): WalletState {
                 currencyData = BalanceWidgetData(BalanceStatus.EmptyCard),
                 mainButton = WalletMainButton.CreateWalletButton(true)
         )
-        is WalletAction.LoadWallet -> newState = WalletState(
-                state = ProgressState.Loading,
-                currencyData = BalanceWidgetData(
-                        BalanceStatus.Loading,
-                        state.globalState.walletManager?.wallet?.blockchain?.fullName
-                ),
-                mainButton = WalletMainButton.SendButton(false)
+        is WalletAction.LoadWallet -> {
+            val wallet = state.globalState.scanNoteResponse?.walletManager?.wallet
+            val addressData = if (wallet == null) {
+                null
+            } else {
+                AddressData(wallet.address, wallet.shareUrl, wallet.exploreUrl)
+            }
+           val  currentArtworkId = state.globalState.scanNoteResponse?.verifyResponse?.artworkInfo?.id
+            val cardImage = if (newState.cardImage?.artworkId == currentArtworkId) {
+                newState.cardImage
+            } else {
+                null
+            }
+            newState = WalletState(
+                    state = ProgressState.Loading,
+                    cardImage = cardImage,
+                    currencyData = BalanceWidgetData(
+                            BalanceStatus.Loading,
+                            wallet?.blockchain?.fullName
+                    ),
+                    addressData = addressData,
+                    mainButton = WalletMainButton.SendButton(false)
 
-        )
+            )
+        }
         is WalletAction.LoadWallet.Success -> {
             val token = action.wallet.amounts[AmountType.Token]
             val tokenData = if (token != null) {
@@ -62,7 +84,7 @@ fun walletReducer(action: Action, state: AppState): WalletState {
             )
         }
         is WalletAction.LoadWallet.NoAccount -> {
-            val wallet = state.globalState.walletManager?.wallet
+            val wallet = state.globalState.scanNoteResponse?.walletManager?.wallet
             newState = newState.copy(
                     state = ProgressState.Done, wallet = wallet,
                     currencyData = BalanceWidgetData(
@@ -85,26 +107,26 @@ fun walletReducer(action: Action, state: AppState): WalletState {
             val fiatAmount = if (currency == newState.wallet?.blockchain?.currency) {
                 newState.wallet?.amounts?.get(AmountType.Coin)?.value?.toFiatString(rate)
             } else {
-                null
+                newState.currencyData.fiatAmount
             }
             val tokenFiatAmount = if (currency == newState.wallet?.token?.symbol) {
                 newState.wallet?.amounts?.get(AmountType.Token)?.value?.toFiatString(rate)
             } else {
-                null
+                newState.currencyData.token?.fiatAmount
             }
             newState = newState.copy(currencyData = newState.currencyData.copy(
                     fiatAmount = fiatAmount,
                     token = newState.currencyData.token?.copy(fiatAmount = tokenFiatAmount)
             ))
         }
-        is WalletAction.LoadArtwork -> {
-            newState = newState.copy(cardImage = null)
-        }
+//        is WalletAction.LoadArtwork -> {
+//            newState = newState.copy(cardImage = null)
+//        }
         is WalletAction.LoadArtwork.Success -> {
-            newState = newState.copy(cardImage = action.artwork.toBitmap())
+            newState = newState.copy(cardImage = Artwork(action.artworkId, action.artwork.toBitmap()))
         }
         is WalletAction.ShowQrCode -> {
-            newState = newState.copy(qrCode = newState.wallet?.shareUrl?.toQrCode())
+            newState = newState.copy(qrCode = newState.addressData?.shareUrl?.toQrCode())
         }
         is WalletAction.HideQrCode -> {
             newState = newState.copy(qrCode = null)
