@@ -6,7 +6,6 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
-import com.tangem.blockchain.common.Blockchain
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -34,16 +33,16 @@ fun String.toQrCode(): Bitmap {
     return bmp
 }
 
-fun BigDecimal.toFormattedString(blockchain: Blockchain): String {
+fun BigDecimal.toFormattedString(decimals: Int): String {
     val symbols = DecimalFormatSymbols(Locale.US)
     symbols.decimalSeparator = '.'
     val df = DecimalFormat()
     df.decimalFormatSymbols = symbols
-    df.maximumFractionDigits = blockchain.decimals()
+    df.maximumFractionDigits = decimals
     df.minimumFractionDigits = 0
     df.isGroupingUsed = false
     val bd = BigDecimal(unscaledValue(), scale())
-    bd.setScale(blockchain.decimals(), BigDecimal.ROUND_DOWN)
+    bd.setScale(decimals, BigDecimal.ROUND_DOWN)
     return df.format(bd)
 }
 
