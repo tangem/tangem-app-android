@@ -1,9 +1,9 @@
 package com.tangem.tap.common.redux
 
 import com.tangem.tap.common.redux.global.globalReducer
-import com.tangem.tap.common.redux.navigation.navigationReducer
+import com.tangem.tap.common.redux.navigation.NavigationReducer
 import com.tangem.tap.features.send.redux.SendReducer
-import com.tangem.tap.features.wallet.redux.walletReducer
+import com.tangem.tap.features.wallet.redux.WalletReducer
 import org.rekotlin.Action
 
 fun appReducer(action: Action, state: AppState?): AppState {
@@ -11,9 +11,9 @@ fun appReducer(action: Action, state: AppState?): AppState {
     if (action is AppAction.RestoreState) return action.state
 
     return AppState(
-        navigationState = navigationReducer(action, state),
+        navigationState = NavigationReducer.reduce(action, state),
         globalState = globalReducer(action, state),
-        walletState = walletReducer(action, state),
+        walletState = WalletReducer.reduce(action, state),
         sendState = SendReducer.reduce(action, state.sendState)
     )
 }
