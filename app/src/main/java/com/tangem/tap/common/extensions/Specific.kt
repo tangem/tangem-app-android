@@ -42,7 +42,7 @@ fun BigDecimal.toFormattedString(decimals: Int): String {
     df.minimumFractionDigits = 0
     df.isGroupingUsed = false
     val bd = BigDecimal(unscaledValue(), scale())
-    bd.setScale(decimals, BigDecimal.ROUND_DOWN)
+    bd.setScale(decimals, RoundingMode.DOWN)
     return df.format(bd)
 }
 
@@ -51,3 +51,5 @@ fun BigDecimal.toFiatString(rateValue: BigDecimal): String? {
     fiatValue = fiatValue.setScale(2, RoundingMode.DOWN)
     return "≈ USD  $fiatValue"
 }
+
+fun BigDecimal.stripZeroPlainString(): String = this.stripTrailingZeros().toPlainString()
