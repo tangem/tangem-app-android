@@ -10,6 +10,7 @@ import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.network.NetworkStateChanged
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -90,7 +91,7 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
                         }
                     }
                 }
-                is WalletAction.LoadData -> {
+                is WalletAction.LoadData, is NetworkStateChanged -> {
                     scope.launch {
                         store.state.globalState.scanNoteResponse?.let {
                             store.state.globalState.tapWalletManager.onCardScanned(it)
