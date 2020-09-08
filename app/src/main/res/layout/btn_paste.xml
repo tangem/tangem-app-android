@@ -10,7 +10,6 @@
     android:clickable="true"
     android:focusable="true">
 
-    <!-- padding was added nice ripple effect -->
     <ImageView
         android:id="@+id/imvPaste"
         android:layout_width="wrap_content"
