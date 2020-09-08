@@ -29,7 +29,7 @@
                 layout="@layout/layout_send_address_payid"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp" />
+                android:layout_marginTop="16dp" />
 
             <include
                 layout="@layout/layout_send_amount"
@@ -71,11 +71,13 @@
                     android:layout_height="1dp" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSend"
                     style="@style/TapButtonWithIcon"
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_gravity="end"
                     android:layout_weight="1"
+                    android:enabled="false"
                     android:fontFamily="@font/saira_semi_condensed_regular"
                     android:text="@string/send_btn_send"
                     app:icon="@drawable/ic_arrow_right" />
