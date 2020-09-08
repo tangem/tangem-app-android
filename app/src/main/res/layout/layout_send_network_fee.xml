@@ -75,7 +75,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="8dp"
-            android:text="" />
+            android:text="@string/send_fee_include" />
 
     </LinearLayout>
 
