@@ -3,6 +3,8 @@
     <string name="app_name" translatable="false">Tangem Tap</string>
 
     <string name="notification_address_copied">Address was successfully copied</string>
+    <string name="notification_no_internet">No internet connection</string>
+    <string name="notification_no_internet_retry">Retry</string>
     <string name="generic_done">Done</string>
 
     <string name="home_do_you_have_card">Welcome to Tangem.\nDo you have one of our cards?</string>
