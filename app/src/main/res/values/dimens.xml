@@ -31,4 +31,6 @@
 
     <dimen name="btn_corner_radius">4dp</dimen>
 
+    <dimen name="text_size_amount_to_send">32sp</dimen>
+
 </resources>
