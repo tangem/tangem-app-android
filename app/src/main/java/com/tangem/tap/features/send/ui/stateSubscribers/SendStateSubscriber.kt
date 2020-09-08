@@ -12,6 +12,7 @@ import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.FailReason
 import com.tangem.tap.features.send.redux.AmountState
 import com.tangem.tap.features.send.redux.FeeLayoutState
 import com.tangem.tap.features.send.redux.SendState
+import com.tangem.tap.features.send.ui.FeeUiHelper
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.btn_expand_collapse.*
@@ -74,13 +75,12 @@ class SendStateSubscriber(fragment: Fragment) : FragmentStateSubscriber<SendStat
             fg.llFeeContainer.visibility = layoutState.visibility
         }
 
-        if (fg.swIncludeFee.isChecked != layoutState.includeFeeIsChecked) {
-            fg.swIncludeFee.isChecked = layoutState.includeFeeIsChecked
+        if (fg.swIncludeFee.isChecked != layoutState.feeIsIncluded) {
+            fg.swIncludeFee.isChecked = layoutState.feeIsIncluded
         }
 
-        if (fg.chipGroup.checkedChipId != layoutState.selectedFeeId) {
-            fg.chipGroup.check(layoutState.selectedFeeId)
-        }
+        val chipId = FeeUiHelper.feeToId(layoutState.feeType)
+        if (fg.chipGroup.checkedChipId != chipId) fg.chipGroup.check(chipId)
     }
 
     private fun handleAmountState(fg: Fragment, state: AmountState) {
