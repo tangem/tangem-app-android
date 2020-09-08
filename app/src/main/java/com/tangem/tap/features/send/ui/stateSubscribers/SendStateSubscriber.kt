@@ -1,16 +1,23 @@
 package com.tangem.tap.features.send.ui.stateSubscribers
 
 import android.content.Context
+import android.util.TypedValue
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.transition.TransitionManager
+import com.tangem.tap.common.extensions.beginDelayedTransition
+import com.tangem.tap.common.extensions.enableError
+import com.tangem.tap.common.extensions.update
 import com.tangem.tap.features.send.redux.AddressPayIdState
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.FailReason
+import com.tangem.tap.features.send.redux.AmountState
 import com.tangem.tap.features.send.redux.FeeLayoutState
 import com.tangem.tap.features.send.redux.SendState
+import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.btn_expand_collapse.*
+import kotlinx.android.synthetic.main.fragment_send.*
 import kotlinx.android.synthetic.main.layout_send_address_payid.*
+import kotlinx.android.synthetic.main.layout_send_amount.*
 import kotlinx.android.synthetic.main.layout_send_network_fee.*
 
 /**
@@ -22,7 +29,10 @@ class SendStateSubscriber(fragment: Fragment) : FragmentStateSubscriber<SendStat
         when (state.lastChangedStateType) {
             is FeeLayoutState -> handleFeeLayoutState(fg, state.feeLayoutState)
             is AddressPayIdState -> handleAddressPayIdState(fg, state.addressPayIdState)
+            is AmountState -> handleAmountState(fg, state.amountState)
         }
+
+        fg.btnSend.isEnabled = state.sendButtonIsEnabled
     }
 
     private fun handleAddressPayIdState(fg: Fragment, state: AddressPayIdState) {
@@ -50,16 +60,9 @@ class SendStateSubscriber(fragment: Fragment) : FragmentStateSubscriber<SendStat
         til.isHelperTextEnabled = state.isPayIdState() && parsedError == null
 
         // prevent cycling
-        if (state.etFieldValue == null || et.text?.toString() == state.etFieldValue) return
+        if (state.etFieldValue == null) return
 
-        // prevent cursor jumping while editing
-        if (et.isFocused) {
-            val prevSelection = et.selectionStart
-            et.setText(state.etFieldValue)
-            et.setSelection(prevSelection)
-        } else {
-            et.setText(state.etFieldValue)
-        }
+        et.update(state.etFieldValue)
     }
 
     private fun handleFeeLayoutState(fg: Fragment, layoutState: FeeLayoutState) {
@@ -67,7 +70,7 @@ class SendStateSubscriber(fragment: Fragment) : FragmentStateSubscriber<SendStat
             val rotationAngle = if (fg.imvExpandCollapse.rotation == 0f) 180f else 0f
             fg.imvExpandCollapse.rotation = rotationAngle
 
-            (fg.llFeeContainer.parent?.parent as? ViewGroup)?.let { TransitionManager.beginDelayedTransition(it) }
+            (fg.llFeeContainer.parent?.parent as? ViewGroup)?.beginDelayedTransition()
             fg.llFeeContainer.visibility = layoutState.visibility
         }
 
@@ -78,5 +81,34 @@ class SendStateSubscriber(fragment: Fragment) : FragmentStateSubscriber<SendStat
         if (fg.chipGroup.checkedChipId != layoutState.selectedFeeId) {
             fg.chipGroup.check(layoutState.selectedFeeId)
         }
+    }
+
+    private fun handleAmountState(fg: Fragment, state: AmountState) {
+        fg.tilAmountToSend.enableError(state.amountIsOverBalance)
+
+        val amountToSend = state.etAmountFieldValue
+        fg.tvAmountToSendShadow.text = amountToSend
+        if (amountToSend.length > 10) {
+            // post is needed to wait for text size changes
+            fg.tvAmountToSendShadow.post {
+                fg.etAmountToSend.setTextSize(TypedValue.COMPLEX_UNIT_PX, fg.tvAmountToSendShadow.textSize - 2)
+                fg.etAmountToSend.update(amountToSend)
+                if (!state.cursorAtTheSamePosition) fg.etAmountToSend.setSelection(amountToSend.length)
+            }
+        } else {
+            val textSize = fg.resources.getDimension(R.dimen.text_size_amount_to_send)
+            fg.tvAmountToSendShadow.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
+            fg.etAmountToSend.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
+            fg.etAmountToSend.update(amountToSend)
+            if (!state.cursorAtTheSamePosition) fg.etAmountToSend.setSelection(amountToSend.length)
+        }
+
+        fg.tvAmountCurrency.update(state.mainCurrency.displayedValue)
+        (fg as? SendFragment)?.let { it.saveMainCurrency(state.mainCurrency.value) }
+
+        val balanceText = fg.getString(R.string.send_balance,
+                state.mainCurrency.displayedValue,
+                state.balance.toPlainString())
+        fg.tvBalance.update(balanceText)
     }
 }
