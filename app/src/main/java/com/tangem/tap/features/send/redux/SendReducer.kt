@@ -176,8 +176,8 @@ private fun handleFeeActionUi(action: FeeActionUi, sendState: SendState, state: 
         is ToggleFeeLayoutVisibility -> {
             state.copy(visibility = if (state.visibility == View.VISIBLE) View.GONE else View.VISIBLE)
         }
-        is ChangeSelectedFee -> state.copy(selectedFeeId = action.id)
-        is ChangeIncludeFee -> state.copy(includeFeeIsChecked = action.isChecked)
+        is ChangeSelectedFee -> state.copy(feeType = action.feeType)
+        is ChangeIncludeFee -> state.copy(feeIsIncluded = action.isIncluded)
     }
     return updateLastState(sendState.copy(feeLayoutState = result), result)
 }
