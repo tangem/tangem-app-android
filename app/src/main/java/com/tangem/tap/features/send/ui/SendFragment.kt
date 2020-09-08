@@ -17,6 +17,7 @@ import com.tangem.tap.features.send.BaseStoreFragment
 import com.tangem.tap.features.send.redux.AddressPayIdActionUi.*
 import com.tangem.tap.features.send.redux.AmountActionUi.*
 import com.tangem.tap.features.send.redux.FeeActionUi.*
+import com.tangem.tap.features.send.redux.FeeType
 import com.tangem.tap.features.send.redux.MainCurrencyType
 import com.tangem.tap.features.send.redux.ReleaseSendState
 import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
@@ -132,7 +133,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             store.dispatch(ToggleFeeLayoutVisibility)
         }
         chipGroup.setOnCheckedChangeListener { group, checkedId ->
-            store.dispatch(ChangeSelectedFee(checkedId))
+            store.dispatch(ChangeSelectedFee(FeeUiHelper.idToFee(checkedId)))
         }
         swIncludeFee.setOnCheckedChangeListener { btn, isChecked ->
             store.dispatch(ChangeIncludeFee(isChecked))
@@ -170,6 +171,27 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 fun EditText.inputedTextAsFlow(): Flow<String> = callbackFlow {
     val watcher = addTextChangedListener { editable -> offer(editable?.toString() ?: "") }
     awaitClose { removeTextChangedListener(watcher) }
+}
+
+class FeeUiHelper {
+    companion object {
+        fun feeToId(fee: FeeType): Int {
+            return when (fee) {
+                FeeType.LOW -> R.id.chipLow
+                FeeType.NORMAL -> R.id.chipNormal
+                FeeType.PRIORITY -> R.id.chipPriority
+            }
+        }
+
+        fun idToFee(id: Int): FeeType {
+            return when (id) {
+                R.id.chipLow -> FeeType.LOW
+                R.id.chipNormal -> FeeType.NORMAL
+                R.id.chipPriority -> FeeType.PRIORITY
+                else -> FeeType.NORMAL
+            }
+        }
+    }
 }
 
 
