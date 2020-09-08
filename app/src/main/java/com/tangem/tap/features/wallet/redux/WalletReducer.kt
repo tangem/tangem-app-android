@@ -31,6 +31,23 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 currencyData = BalanceWidgetData(BalanceStatus.EmptyCard),
                 mainButton = WalletMainButton.CreateWalletButton(true)
         )
+        is WalletAction.LoadData.NoInternetConnection -> {
+            val wallet = state.globalState.scanNoteResponse?.walletManager?.wallet
+            val addressData = if (wallet == null) {
+                null
+            } else {
+                AddressData(wallet.address, wallet.shareUrl, wallet.exploreUrl)
+            }
+            newState = WalletState(
+                    state = ProgressState.Error,
+                    error = ErrorType.NoInternetConnection,
+                    addressData = addressData,
+                    currencyData = BalanceWidgetData(
+                            status = BalanceStatus.Unreachable,
+                            currency = wallet?.blockchain?.fullName),
+                    mainButton = WalletMainButton.SendButton(false)
+            )
+        }
         is WalletAction.LoadWallet -> {
             val wallet = state.globalState.scanNoteResponse?.walletManager?.wallet
             val addressData = if (wallet == null) {
