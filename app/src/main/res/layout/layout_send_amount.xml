@@ -7,40 +7,70 @@
     android:layout_height="wrap_content"
     app:layout_constraintTop_toBottomOf="@+id/tilAddressOrPayId">
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/tilAmount"
+    <FrameLayout
+        android:id="@+id/flAmountToSend"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        app:boxBackgroundColor="@android:color/transparent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etAmount"
+        <FrameLayout
+            android:id="@+id/flShadow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-light"
-            android:inputType="numberDecimal"
-            android:paddingStart="0dp"
-            android:paddingEnd="96dp"
-            android:text="0"
-            android:textSize="32sp"
-            tools:text="139" />
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:focusable="false"
+            android:visibility="invisible">
 
-    </com.google.android.material.textfield.TextInputLayout>
+            <TextView
+                android:id="@+id/tvAmountToSendShadow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:focusable="false"
+                android:fontFamily="sans-serif-light"
+                android:maxLines="1"
+                android:paddingStart="0dp"
+                android:paddingEnd="96dp"
+                android:textSize="@dimen/text_size_amount_to_send"
+                app:autoSizeTextType="uniform" />
+
+        </FrameLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilAmountToSend"
+            android:layout_width="match_parent"
+            android:layout_height="82dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            app:boxBackgroundColor="@android:color/transparent"
+            app:errorIconDrawable="@null">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etAmountToSend"
+                android:layout_width="match_parent"
+                android:layout_height="82dp"
+                android:fontFamily="sans-serif-light"
+                android:inputType="numberDecimal"
+                android:paddingStart="0dp"
+                android:paddingEnd="96dp"
+                android:textSize="@dimen/text_size_amount_to_send"
+                tools:text="139" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+    </FrameLayout>
 
     <TextSwitcher
-        android:id="@+id/tvCurrency"
+        android:id="@+id/tvAmountCurrency"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="12dp"
         android:inAnimation="@anim/slide_in_up"
         android:outAnimation="@anim/slide_out_down"
-        app:layout_constraintBottom_toBottomOf="@+id/tilAmount"
+        app:layout_constraintBottom_toBottomOf="@+id/flAmountToSend"
         app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
@@ -49,7 +79,6 @@
             android:layout_gravity="end"
             android:drawablePadding="10dp"
             android:fontFamily="sans-serif-light"
-            android:text="usd"
             android:textAllCaps="true"
             android:textColor="@color/blue"
             android:textSize="32sp"
@@ -61,7 +90,6 @@
             android:layout_gravity="end"
             android:drawablePadding="10dp"
             android:fontFamily="sans-serif-light"
-            android:text="btc"
             android:textAllCaps="true"
             android:textColor="@color/blue"
             android:textSize="32sp"
@@ -69,39 +97,29 @@
 
     </TextSwitcher>
 
-    <LinearLayout
-        android:id="@+id/balanceContainer"
+    <TextSwitcher
+        android:id="@+id/tvBalance"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
-        android:orientation="horizontal"
+        android:inAnimation="@anim/slide_in_right"
+        android:outAnimation="@android:anim/slide_out_right"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tilAmount">
+        app:layout_constraintTop_toBottomOf="@+id/flAmountToSend">
 
         <TextView
-            android:id="@+id/tvBalance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingEnd="5dp"
-            android:text="@string/send_balance"
+            android:layout_gravity="end"
             android:textColor="@color/darkGray1" />
 
         <TextView
-            android:id="@+id/tvBalanceCurrency"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingEnd="5dp"
-            android:textColor="@color/darkGray1"
-            tools:text="USD" />
+            android:layout_gravity="end"
+            android:textColor="@color/darkGray1" />
 
-        <TextView
-            android:id="@+id/tvBalanceAmount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/darkGray1"
-            tools:text="23.45" />
-
-    </LinearLayout>
+    </TextSwitcher>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
