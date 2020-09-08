@@ -50,6 +50,6 @@ sealed class AmountActionUi : SendScreenActionUi {
 // Fee
 sealed class FeeActionUi : SendScreenActionUi {
     object ToggleFeeLayoutVisibility : FeeActionUi()
-    data class ChangeSelectedFee(val id: Int) : FeeActionUi()
-    class ChangeIncludeFee(val isChecked: Boolean) : FeeActionUi()
+    data class ChangeSelectedFee(val feeType: FeeType) : FeeActionUi()
+    class ChangeIncludeFee(val isIncluded: Boolean) : FeeActionUi()
 }
