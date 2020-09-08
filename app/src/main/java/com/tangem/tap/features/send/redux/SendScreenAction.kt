@@ -6,19 +6,13 @@ import org.rekotlin.Action
 * [REDACTED_AUTHOR]
  */
 interface SendScreenAction : Action
-interface SendScreenActionUI : SendScreenAction
+interface SendScreenActionUi : SendScreenAction
 
 object ReleaseSendState : Action
 
-sealed class FeeActionUi : SendScreenActionUI {
-    object ToggleFeeLayoutVisibility : FeeActionUi()
-    data class ChangeSelectedFee(val id: Int) : FeeActionUi()
-    class ChangeIncludeFee(val isChecked: Boolean) : FeeActionUi()
-}
-
-// shortness AddressOrPayId = APid
-sealed class AddressPayIdActionUi : SendScreenActionUI {
-    data class SetAddressOrPayId(val data: String) : AddressPayIdActionUi()
+// Address or PayId
+sealed class AddressPayIdActionUi : SendScreenActionUi {
+    data class ChangeAddressOrPayId(val data: String) : AddressPayIdActionUi()
     data class SetTruncateHandler(val handler: (String) -> String) : AddressPayIdActionUi()
     data class TruncateOrRestore(val truncate: Boolean) : AddressPayIdActionUi()
 }
@@ -43,4 +37,19 @@ sealed class AddressPayIdVerifyAction : SendScreenAction {
         data class SetError(val address: String, val reason: FailReason) : AddressVerification()
         data class SetWalletAddress(val address: String) : AddressVerification()
     }
+}
+
+// Amount to send
+sealed class AmountActionUi : SendScreenActionUi {
+    object SetMaxAmount : AmountActionUi()
+    data class ChangeAmountToSend(val data: String) : AmountActionUi()
+    data class SetMainCurrency(val mainCurrency: MainCurrencyType) : AmountActionUi()
+    object ToggleMainCurrency : AmountActionUi()
+}
+
+// Fee
+sealed class FeeActionUi : SendScreenActionUi {
+    object ToggleFeeLayoutVisibility : FeeActionUi()
+    data class ChangeSelectedFee(val id: Int) : FeeActionUi()
+    class ChangeIncludeFee(val isChecked: Boolean) : FeeActionUi()
 }
