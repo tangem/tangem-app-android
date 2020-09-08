@@ -10,13 +10,6 @@ import kotlinx.android.synthetic.main.layout_balance.*
 import kotlinx.android.synthetic.main.layout_balance_error.*
 import kotlinx.android.synthetic.main.layout_token.view.*
 
-enum class PayIdState {
-    Loading,
-    NotCreated,
-    Loaded,
-    Error
-}
-
 enum class BalanceStatus {
     VerifiedOnline,
     Unreachable,
@@ -54,12 +47,14 @@ class BalanceWidget(
             BalanceStatus.Loading -> {
                 fragment.l_balance.show()
                 fragment.l_balance_error.hide()
+                fragment.tv_fiat_amount.hide()
+                fragment.l_token.hide()
+
                 fragment.tv_currency.text = data.currency
                 fragment.tv_currency_symbol.text = "-"
                 fragment.tv_amount.text = ""
-                fragment.tv_fiat_amount.hide()
+
                 showStatus(R.id.tv_status_loading)
-                fragment.l_token.hide()
             }
             BalanceStatus.VerifiedOnline -> {
                 fragment.l_balance.show()
@@ -78,14 +73,18 @@ class BalanceWidget(
                     fragment.l_token.tv_token_fiat_amount.text = data.token.fiatAmount
                 } else {
                     fragment.l_token.hide()
-
                 }
-
             }
             BalanceStatus.Unreachable -> {
                 fragment.l_balance.show()
                 fragment.l_balance_error.hide()
                 fragment.l_token.hide()
+                fragment.tv_fiat_amount.hide()
+
+                fragment.tv_currency.text = data.currency
+                fragment.tv_currency_symbol.text = "-"
+                fragment.tv_amount.text = ""
+
                 showStatus(R.id.tv_status_error)
             }
             BalanceStatus.EmptyCard -> {
@@ -113,14 +112,3 @@ class BalanceWidget(
         fragment.tv_status_verified.show(viewRes == R.id.tv_status_verified)
     }
 }
-
-
-enum class BalanceErrorWidgetState {
-    NoAccount,
-    NoWallet,
-    BlockchainError
-}
-
-class BalanceErrorWidget(
-
-)
