@@ -1,18 +1,20 @@
 package com.tangem.tap.features.send.redux
 
 import android.view.View
-import com.tangem.blockchain.common.WalletManager
+import com.tangem.tap.common.entities.TapCurrency
 import com.tangem.wallet.R
 import org.rekotlin.StateType
+import java.math.BigDecimal
 
 /**
 [REDACTED_AUTHOR]
  */
 data class SendState(
-        val walletManager: WalletManager? = null,
         val lastChangedStateType: StateType = NoneState(),
         val addressPayIdState: AddressPayIdState = AddressPayIdState(),
-        val feeLayoutState: FeeLayoutState = FeeLayoutState()
+        val amountState: AmountState = AmountState(),
+        val feeLayoutState: FeeLayoutState = FeeLayoutState(),
+        val sendButtonIsEnabled: Boolean = false
 ) : StateType
 
 class NoneState : StateType
@@ -72,6 +74,24 @@ data class AddressPayIdState(
         )
     }
 }
+
+enum class MainCurrencyType {
+    FIAT, CRYPTO
+}
+
+data class Value<T>(
+        val value: T,
+        val displayedValue: String
+)
+
+data class AmountState(
+        val etAmountFieldValue: String = BigDecimal.ZERO.toPlainString(),
+        val cursorAtTheSamePosition: Boolean = true,
+        val amountToSendCrypto: BigDecimal = BigDecimal.ZERO,
+        val balance: BigDecimal = BigDecimal.ZERO,
+        val mainCurrency: Value<MainCurrencyType> = Value(MainCurrencyType.FIAT, TapCurrency.main),
+        val amountIsOverBalance: Boolean = false
+) : StateType
 
 data class FeeLayoutState(
         val visibility: Int = View.GONE,
