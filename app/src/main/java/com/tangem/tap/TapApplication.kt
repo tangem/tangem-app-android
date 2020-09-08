@@ -21,6 +21,6 @@ class TapApplication : Application() {
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
-        NetworkConnectivity(store, this)
+        NetworkConnectivity.createInstance(store, this)
     }
 }
