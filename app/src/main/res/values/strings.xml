@@ -58,6 +58,7 @@
     <string name="send_total_amount">Amount</string>
     <string name="send_total_fee">Fee</string>
     <string name="send_total_will_be_sent">will be sent</string>
-    <string name="send_balance">Balance:</string>
+    <string name="send_balance">Balance: %1s %2s</string>
+    <string name="send_set_maximum_amount">Maximum amount</string>
 
 </resources>
