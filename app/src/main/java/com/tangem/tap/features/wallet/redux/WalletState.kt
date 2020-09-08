@@ -9,6 +9,7 @@ import org.rekotlin.StateType
 
 data class WalletState(
         val state: ProgressState = ProgressState.Done,
+        val error: ErrorType? = null,
         val cardImage: Artwork? = null,
         val wallet: Wallet? = null,
         val pendingTransactions: List<PendingTransaction> = emptyList(),
@@ -22,6 +23,8 @@ data class WalletState(
 
 
 enum class ProgressState { Loading, Done, Error }
+
+enum class ErrorType { NoInternetConnection }
 
 enum class PayIdState { Disabled, Loading, NotCreated, Created, ErrorLoading }
 
