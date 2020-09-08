@@ -11,6 +11,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.features.wallet.redux.PayIdState
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
@@ -71,6 +72,10 @@ class TapWalletManager {
         withContext(Dispatchers.Main) {
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
             if (data.walletManager != null) {
+                if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
+                    store.dispatch(WalletAction.LoadData.NoInternetConnection)
+                    return@withContext
+                }
                 data.verifyResponse?.artworkInfo?.id?.let {
                     store.dispatch(WalletAction.LoadArtwork(data.card, it))
                 }
