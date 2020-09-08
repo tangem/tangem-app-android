@@ -10,7 +10,6 @@ import android.os.Build
 import android.text.Spannable
 import android.text.style.ForegroundColorSpan
 import android.util.TypedValue
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
@@ -132,11 +131,4 @@ fun Context.shareText(text: String) {
 
 fun Fragment.shareText(text: String) {
     requireContext().shareText(text)
-}
-
-fun ViewGroup.inflate(viewToInflate: Int, rootView: ViewGroup?, parent: ViewGroup) {
-    if (rootView == null) {
-        val inflatedView = LayoutInflater.from(context).inflate(viewToInflate, rootView)
-        parent.addView(inflatedView)
-    }
 }
