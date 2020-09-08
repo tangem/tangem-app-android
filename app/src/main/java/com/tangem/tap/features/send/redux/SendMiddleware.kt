@@ -7,8 +7,10 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.PayIdManager.Companion.isPayId
 import com.tangem.tap.domain.isPayIdSupported
-import com.tangem.tap.features.send.redux.AddressPayIdActionUi.SetAddressOrPayId
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi.ChangeAddressOrPayId
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.*
+import com.tangem.tap.features.send.redux.AmountActionUi.SetMainCurrency
+import com.tangem.tap.features.send.redux.AmountActionUi.ToggleMainCurrency
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
@@ -30,12 +32,23 @@ val sendMiddleware: Middleware<AppState> = { dispatch, appState ->
 }
 
 private fun handleSendAction(action: Action) {
-    val sendAction = action as? SendScreenActionUI ?: return
+    val sendAction = action as? SendScreenActionUi ?: return
 
     when (sendAction) {
         is AddressPayIdActionUi -> {
             when (sendAction) {
-                is SetAddressOrPayId -> AddressPayIdHandler().handle(sendAction.data)
+                is ChangeAddressOrPayId -> AddressPayIdHandler().handle(sendAction.data)
+            }
+        }
+        is AmountActionUi -> {
+            when (sendAction) {
+                is ToggleMainCurrency -> {
+                    if (store.state.sendState.amountState.mainCurrency.value == MainCurrencyType.FIAT) {
+                        store.dispatch(SetMainCurrency(MainCurrencyType.CRYPTO))
+                    } else {
+                        store.dispatch(SetMainCurrency(MainCurrencyType.FIAT))
+                    }
+                }
             }
         }
     }
