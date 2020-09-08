@@ -7,13 +7,13 @@ import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
+import com.google.android.material.snackbar.Snackbar
 import com.tangem.tap.common.extensions.getDrawable
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.wallet.redux.*
-import com.tangem.tap.features.wallet.redux.PayIdState
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.card_balance.*
@@ -26,6 +26,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     private var qrDialog: QrDialog? = null
     private var payIdDialog: PayIdDialog? = null
+    private var snackbar: Snackbar? = null
 
     private lateinit var viewAdapter: PendingTransactionsAdapter
 
@@ -84,6 +85,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             store.dispatch(WalletAction.LoadData)
         }
 
+        setupNoInternetHandling(state)
+
         setupButtons(state)
         setupAddressCard(state)
         setupCardImage(state.cardImage?.artwork)
@@ -134,6 +137,22 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                 payIdDialog?.dismiss()
                 payIdDialog = null
             }
+        }
+    }
+
+    private fun setupNoInternetHandling(state: WalletState) {
+        if (state.state == ProgressState.Error) {
+            if (state.error == ErrorType.NoInternetConnection) {
+                srl_wallet?.isRefreshing = false
+                snackbar = Snackbar.make(
+                        coordinator_wallet, getString(R.string.notification_no_internet),
+                        Snackbar.LENGTH_INDEFINITE
+                ).setAction(getString(R.string.notification_no_internet_retry))
+                { store.dispatch(WalletAction.LoadData) }
+                        .also { it.show() }
+            }
+        } else {
+            snackbar?.dismiss()
         }
     }
 
