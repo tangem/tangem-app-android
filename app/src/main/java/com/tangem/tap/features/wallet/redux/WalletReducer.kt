@@ -7,6 +7,7 @@ import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
@@ -31,22 +32,33 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 currencyData = BalanceWidgetData(BalanceStatus.EmptyCard),
                 mainButton = WalletMainButton.CreateWalletButton(true)
         )
-        is WalletAction.LoadData.NoInternetConnection -> {
-            val wallet = state.globalState.scanNoteResponse?.walletManager?.wallet
-            val addressData = if (wallet == null) {
-                null
-            } else {
-                AddressData(wallet.address, wallet.shareUrl, wallet.exploreUrl)
+        is WalletAction.LoadData.Failure -> {
+            when (action.error) {
+                is TapError.NoInternetConnection -> {
+                    val wallet = state.globalState.scanNoteResponse?.walletManager?.wallet
+                    val addressData = if (wallet == null) {
+                        null
+                    } else {
+                        AddressData(wallet.address, wallet.shareUrl, wallet.exploreUrl)
+                    }
+                    newState = WalletState(
+                            state = ProgressState.Error,
+                            error = ErrorType.NoInternetConnection,
+                            addressData = addressData,
+                            currencyData = BalanceWidgetData(
+                                    status = BalanceStatus.Unreachable,
+                                    currency = wallet?.blockchain?.fullName),
+                            mainButton = WalletMainButton.SendButton(false)
+                    )
+                }
+                is TapError.UnknownBlockchain -> {
+                    newState = WalletState(
+                            state = ProgressState.Done,
+                            currencyData = BalanceWidgetData(BalanceStatus.UnknownBlockchain)
+                    )
+                }
             }
-            newState = WalletState(
-                    state = ProgressState.Error,
-                    error = ErrorType.NoInternetConnection,
-                    addressData = addressData,
-                    currencyData = BalanceWidgetData(
-                            status = BalanceStatus.Unreachable,
-                            currency = wallet?.blockchain?.fullName),
-                    mainButton = WalletMainButton.SendButton(false)
-            )
+
         }
         is WalletAction.LoadWallet -> {
             val wallet = state.globalState.scanNoteResponse?.walletManager?.wallet
