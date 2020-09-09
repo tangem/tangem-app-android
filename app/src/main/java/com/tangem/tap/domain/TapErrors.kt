@@ -8,4 +8,5 @@ sealed class TapError(@StringRes val localizedMessage: Int): Throwable() {
     object PayIdCreatingError: TapError(R.string.error_creating_payid)
     object PayIdEmptyField: TapError(R.string.wallet_create_payid_empty)
     object UnknownBlockchain: TapError(R.string.wallet_unknown_blockchain)
+    object NoInternetConnection: TapError(R.string.notification_no_internet)
 }
