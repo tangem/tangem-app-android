@@ -3,6 +3,7 @@ package com.tangem.tap.domain
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.commands.Card
+import com.tangem.commands.CardStatus
 import com.tangem.commands.common.network.Result
 import com.tangem.commands.common.network.TangemService
 import com.tangem.common.extensions.toHexString
@@ -73,7 +74,7 @@ class TapWalletManager {
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
             if (data.walletManager != null) {
                 if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
-                    store.dispatch(WalletAction.LoadData.NoInternetConnection)
+                    store.dispatch(WalletAction.LoadData.Failure(TapError.NoInternetConnection))
                     return@withContext
                 }
                 data.verifyResponse?.artworkInfo?.id?.let {
@@ -82,8 +83,10 @@ class TapWalletManager {
                 store.dispatch(WalletAction.LoadWallet)
                 store.dispatch(WalletAction.LoadFiatRate)
                 store.dispatch(WalletAction.LoadPayId)
-            } else {
+            } else if (data.card.status == CardStatus.Empty){
                 store.dispatch(WalletAction.EmptyWallet)
+            } else {
+                store.dispatch(WalletAction.LoadData.Failure(TapError.UnknownBlockchain))
             }
         }
     }
