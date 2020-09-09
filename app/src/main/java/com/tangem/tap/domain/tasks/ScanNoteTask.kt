@@ -6,7 +6,6 @@ import com.tangem.TangemSdkError
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.commands.Card
-import com.tangem.commands.CardStatus
 import com.tangem.commands.CommandResponse
 import com.tangem.commands.verifycard.VerifyCardCommand
 import com.tangem.commands.verifycard.VerifyCardResponse
@@ -24,12 +23,11 @@ class ScanNoteTask : CardSessionRunnable<ScanNoteResponse> {
     override fun run(session: CardSession, callback: (result: CompletionResult<ScanNoteResponse>) -> Unit) {
         val card = session.environment.card
         card ?: return callback(CompletionResult.Failure(TangemSdkError.CardError()))
-        if (card.status == CardStatus.Empty) {
+        val walletManager = try {
+            WalletManagerFactory.makeWalletManager(card)
+        } catch (exception: Exception) {
             return callback(CompletionResult.Success(ScanNoteResponse(null, card)))
         }
-        val walletManager = WalletManagerFactory.makeWalletManager(card)
-                ?: return callback(CompletionResult.Failure(TangemSdkError.CardError()))
-
         VerifyCardCommand(true).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
@@ -48,10 +46,10 @@ class ScanNoteTask : CardSessionRunnable<ScanNoteResponse> {
 
 fun Card?.toScanNoteCompletionResult(): CompletionResult<ScanNoteResponse> {
     this ?: return CompletionResult.Failure(TangemSdkError.CardError())
-    if (this.status == CardStatus.Empty) {
+    val walletManager = try {
+        WalletManagerFactory.makeWalletManager(this)
+    } catch (exception: Exception) {
         return CompletionResult.Success(ScanNoteResponse(null, this))
     }
-    val walletManager = WalletManagerFactory.makeWalletManager(this)
-            ?: return CompletionResult.Failure(TangemSdkError.CardError())
     return CompletionResult.Success(ScanNoteResponse(walletManager, this))
 }
