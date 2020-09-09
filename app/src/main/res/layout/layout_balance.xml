@@ -54,6 +54,26 @@
         app:layout_constraintTop_toBottomOf="@id/tv_currency" />
 
     <TextView
+        android:id="@+id/tv_status_error_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="16dp"
+        android:textColor="@color/darkGray2"
+        android:textSize="12sp"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_status_error" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/group_error"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="tv_status_error, tv_status_error_message" />
+
+    <TextView
         android:id="@+id/tv_status_loading"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
