@@ -19,7 +19,8 @@
     <string name="wallet_create_payid">Create PayID</string>
     <string name="wallet_verified_balance">Verified Balance</string>
     <string name="wallet_blockchain_is_unreachable">Blockchain is unreachable</string>
-    <string name="wallet_unknown_blockchain">Uh oh!\nYour Tangem card was made to work with a different application. Please see the name and instructions on your card, and install the correct app.</string>
+    <string name="wallet_unknown_blockchain">Your Tangem card was made to work with a different application. Please see the name and instructions on your card, and install the correct app.</string>
+    <string name="wallet_unknown_blockchain_title">Uh oh!</string>
     <string name="wallet_balance_is_loading">Balance is loading…</string>
     <string name="wallet_account_not_created">Account is not created</string>
     <string name="wallet_empty_card">Empty Card</string>
