@@ -15,7 +15,8 @@ enum class BalanceStatus {
     Unreachable,
     Loading,
     NoAccount,
-    EmptyCard
+    EmptyCard,
+    UnknownBlockchain
 }
 
 data class BalanceWidgetData(
@@ -84,8 +85,9 @@ class BalanceWidget(
                 fragment.tv_currency.text = data.currency
                 fragment.tv_currency_symbol.text = "-"
                 fragment.tv_amount.text = ""
+                fragment.tv_status_error_message.text = data.errorMessage
 
-                showStatus(R.id.tv_status_error)
+                showStatus(R.id.group_error)
             }
             BalanceStatus.EmptyCard -> {
                 fragment.l_balance.hide()
@@ -103,11 +105,18 @@ class BalanceWidget(
                                 data.amountToCreateAccount?.toString(), data.currencySymbol
                         )
             }
+            BalanceStatus.UnknownBlockchain -> {
+                fragment.l_balance.hide()
+                fragment.l_balance_error.show()
+                fragment.tv_error_title.text = fragment.getText(R.string.wallet_unknown_blockchain_title)
+                fragment.tv_error_descriptions.text =
+                        fragment.getString(R.string.wallet_unknown_blockchain)
+            }
         }
     }
 
     private fun showStatus(@IdRes viewRes: Int) {
-        fragment.tv_status_error.show(viewRes == R.id.tv_status_error)
+        fragment.group_error.show(viewRes == R.id.group_error)
         fragment.tv_status_loading.show(viewRes == R.id.tv_status_loading)
         fragment.tv_status_verified.show(viewRes == R.id.tv_status_verified)
     }
