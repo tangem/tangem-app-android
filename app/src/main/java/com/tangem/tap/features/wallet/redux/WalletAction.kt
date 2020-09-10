@@ -13,7 +13,7 @@ import java.math.BigDecimal
 sealed class WalletAction : Action {
 
     object LoadData : WalletAction() {
-        object NoInternetConnection : WalletAction()
+        data class Failure(val error: TapError): WalletAction()
     }
 
     object LoadWallet : WalletAction() {
