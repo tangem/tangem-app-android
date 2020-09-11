@@ -1,5 +1,6 @@
 package com.tangem.tap.features.send.redux
 
+import com.tangem.blockchain.common.Amount
 import org.rekotlin.Action
 
 /**
@@ -9,6 +10,10 @@ interface SendScreenAction : Action
 interface SendScreenActionUi : SendScreenAction
 
 object ReleaseSendState : Action
+
+data class PrepareSendScreen(
+        val amount: Amount
+) : SendScreenAction
 
 // Address or PayId
 sealed class AddressPayIdActionUi : SendScreenActionUi {
