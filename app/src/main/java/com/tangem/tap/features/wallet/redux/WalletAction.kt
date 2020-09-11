@@ -1,6 +1,7 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.content.Context
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Wallet
 import com.tangem.commands.Card
 import com.tangem.tap.common.redux.ErrorAction
@@ -39,7 +40,10 @@ sealed class WalletAction : Action {
     }
 
     object Scan : WalletAction()
-    object Send : WalletAction()
+    data class Send(val amount: Amount? = null) : WalletAction() {
+        object ChooseCurrency : WalletAction()
+        object Cancel : WalletAction()
+    }
     object CreatePayId : WalletAction() {
         data class CompleteCreatingPayId(val payId: String) : WalletAction()
         data class Success(val payId: String) : WalletAction()
