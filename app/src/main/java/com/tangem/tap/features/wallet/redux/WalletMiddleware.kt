@@ -8,8 +8,11 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.common.redux.navigation.AppScreen
+import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.network.NetworkStateChanged
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -60,7 +63,7 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
                 is WalletAction.CreatePayId.CompleteCreatingPayId -> {
                     scope.launch {
                         val cardId = store.state.globalState.scanNoteResponse?.card?.cardId
-                        val wallet = store.state.walletState.wallet
+                        val wallet = store.state.globalState.scanNoteResponse?.walletManager?.wallet
                         val publicKey = store.state.globalState.scanNoteResponse?.card?.cardPublicKey
                         if (cardId != null && wallet != null && publicKey != null) {
                             val result = PayIdManager().setPayId(
@@ -109,7 +112,23 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
                     val intent = Intent(Intent.ACTION_VIEW, uri)
                     ContextCompat.startActivity(action.context, intent, null)
                 }
-
+                is WalletAction.Send -> {
+                    if (action.amount != null) {
+                        store.dispatch(PrepareSendScreen(action.amount))
+                        store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
+                    } else {
+                        if (store.state.walletState.wallet?.amounts?.size ?: 0 > 1) {
+                            store.dispatch(WalletAction.Send.ChooseCurrency)
+                        } else {
+                            val amount = store.state.walletState.wallet?.amounts?.toList()
+                                    ?.get(0)?.second
+                            if (amount != null) {
+                                store.dispatch(PrepareSendScreen(amount))
+                                store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
+                            }
+                        }
+                    }
+                }
             }
             next(action)
         }
