@@ -1,5 +1,6 @@
 package com.tangem.tap.features.wallet.ui
 
+import android.app.Dialog
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.View
@@ -11,9 +12,11 @@ import com.google.android.material.snackbar.Snackbar
 import com.tangem.tap.common.extensions.getDrawable
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
-import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
+import com.tangem.tap.features.wallet.ui.dialogs.PayIdDialog
+import com.tangem.tap.features.wallet.ui.dialogs.QrDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.card_balance.*
@@ -24,8 +27,7 @@ import org.rekotlin.StoreSubscriber
 
 class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<WalletState> {
 
-    private var qrDialog: QrDialog? = null
-    private var payIdDialog: PayIdDialog? = null
+    private var dialog: Dialog? = null
     private var snackbar: Snackbar? = null
 
     private lateinit var viewAdapter: PendingTransactionsAdapter
@@ -93,12 +95,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
         viewAdapter.submitList(state.pendingTransactions)
 
-        if (state.qrCode != null && state.addressData?.shareUrl != null) {
-            if (qrDialog == null) qrDialog = QrDialog(requireContext())
-            qrDialog?.showQr(state.qrCode, state.addressData.shareUrl)
-        } else {
-            qrDialog?.dismiss()
-        }
+        handleDialogs(state.walletDialog)
 
         l_balance.show()
         BalanceWidget(this, state.currencyData).setup()
@@ -123,19 +120,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
             }
             PayIdState.ErrorLoading -> {
-            }
-        }
-
-        when (state.creatingPayIdState) {
-            CreatingPayIdState.EnterPayId -> {
-                if (payIdDialog == null) payIdDialog = PayIdDialog(requireContext())
-                payIdDialog?.show()
-                payIdDialog?.stopProgress()
-            }
-            CreatingPayIdState.Waiting -> payIdDialog?.showProgress()
-            null -> {
-                payIdDialog?.dismiss()
-                payIdDialog = null
             }
         }
     }
@@ -169,7 +153,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
         btn_main.setOnClickListener {
             when (state.mainButton) {
-                is WalletMainButton.SendButton -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
+                is WalletMainButton.SendButton -> store.dispatch(WalletAction.Send())
                 is WalletMainButton.CreateWalletButton -> store.dispatch(WalletAction.CreateWallet)
             }
         }
@@ -192,6 +176,38 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             iv_card.setImageBitmap(cardImage)
         } else {
             iv_card.setImageDrawable(getDrawable(R.drawable.card_default))
+        }
+    }
+
+    private fun handleDialogs(walletDialog: WalletDialog?) {
+        when (walletDialog) {
+            is WalletDialog.QrDialog -> {
+                if (walletDialog.qrCode != null && walletDialog.shareUrl != null) {
+                    if (dialog == null) dialog = QrDialog(requireContext()).apply {
+                        this.showQr(walletDialog.qrCode, walletDialog.shareUrl)
+                    }
+                }
+            }
+            is WalletDialog.CreatePayIdDialog -> {
+                when (walletDialog.creatingPayIdState) {
+                    CreatingPayIdState.EnterPayId -> {
+                        if (dialog == null) dialog = PayIdDialog(requireContext()).apply {
+                            this.show()
+                            this.stopProgress()
+                        }
+                    }
+                    CreatingPayIdState.Waiting -> (dialog as? PayIdDialog)?.showProgress()
+                }
+            }
+            is WalletDialog.SelectAmountToSendDialog -> {
+                if (dialog == null) dialog = AmountToSendDialog(requireContext()).apply {
+                    this.show(walletDialog.amounts)
+                }
+            }
+            null -> {
+                dialog?.dismiss()
+                dialog = null
+            }
         }
     }
 
