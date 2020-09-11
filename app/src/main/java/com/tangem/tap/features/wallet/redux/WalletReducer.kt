@@ -153,17 +153,19 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     token = newState.currencyData.token?.copy(fiatAmount = tokenFiatAmount)
             ))
         }
-//        is WalletAction.LoadArtwork -> {
-//            newState = newState.copy(cardImage = null)
-//        }
         is WalletAction.LoadArtwork.Success -> {
             newState = newState.copy(cardImage = Artwork(action.artworkId, action.artwork.toBitmap()))
         }
         is WalletAction.ShowQrCode -> {
-            newState = newState.copy(qrCode = newState.addressData?.shareUrl?.toQrCode())
+            newState = newState.copy(
+                    walletDialog = WalletDialog.QrDialog(
+                            newState.addressData?.shareUrl?.toQrCode(),
+                            newState.addressData?.shareUrl
+                    )
+            )
         }
         is WalletAction.HideQrCode -> {
-            newState = newState.copy(qrCode = null)
+            newState = newState.copy(walletDialog = null)
         }
         is WalletAction.LoadPayId.Success -> newState = newState.copy(
                 payIdData = PayIdData(PayIdState.Created, action.payId)
@@ -172,17 +174,25 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 payIdData = PayIdData(PayIdState.NotCreated, null)
         )
         is WalletAction.CreatePayId, is WalletAction.CreatePayId.Failure ->
-            newState = newState.copy(creatingPayIdState = CreatingPayIdState.EnterPayId)
+            newState = newState.copy(
+                    walletDialog = WalletDialog.CreatePayIdDialog(CreatingPayIdState.EnterPayId)
+            )
         is WalletAction.CreatePayId.CompleteCreatingPayId -> newState = newState.copy(
-                creatingPayIdState = CreatingPayIdState.Waiting
+                walletDialog = WalletDialog.CreatePayIdDialog(CreatingPayIdState.Waiting)
         )
         is WalletAction.CreatePayId.Success -> newState = newState.copy(
                 payIdData = PayIdData(PayIdState.Created, action.payId),
-                creatingPayIdState = null
+                walletDialog = null
         )
-        is WalletAction.CreatePayId.Cancel -> newState = newState.copy(
-                creatingPayIdState = null
-        )
+        is WalletAction.CreatePayId.Cancel -> newState = newState.copy(walletDialog = null)
+        is WalletAction.Send.ChooseCurrency -> {
+            val amounts = newState.wallet?.amounts?.toList()?.unzip()?.second
+            newState = newState.copy(
+                    walletDialog = WalletDialog.SelectAmountToSendDialog(amounts)
+            )
+        }
+        is WalletAction.Send.Cancel -> newState = newState.copy(walletDialog = null)
+
     }
     return newState
 }
