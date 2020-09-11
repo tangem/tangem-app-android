@@ -10,14 +10,14 @@ import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.layout_pending_transaction.view.*
+import kotlinx.android.synthetic.main.item_pending_transaction.view.*
 
 class PendingTransactionsAdapter
     : ListAdapter<PendingTransaction, PendingTransactionsAdapter.TransactionsViewHolder>(DiffUtilCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransactionsViewHolder {
         val layout = LayoutInflater.from(parent.context)
-                .inflate(R.layout.layout_pending_transaction, parent, false)
+                .inflate(R.layout.item_pending_transaction, parent, false)
         return TransactionsViewHolder(layout)
     }
 
@@ -26,8 +26,6 @@ class PendingTransactionsAdapter
     }
 
     object DiffUtilCallback : DiffUtil.ItemCallback<PendingTransaction>() {
-
-
         override fun areContentsTheSame(
                 oldItem: PendingTransaction, newItem: PendingTransaction
         ) = oldItem == newItem
@@ -35,7 +33,6 @@ class PendingTransactionsAdapter
         override fun areItemsTheSame(
                 oldItem: PendingTransaction, newItem: PendingTransaction
         ) = oldItem == newItem
-
     }
 
 
@@ -58,5 +55,4 @@ class PendingTransactionsAdapter
             view.iv_pending_transaction.setImageDrawable(view.context.getDrawableCompat(image))
         }
     }
-
 }
