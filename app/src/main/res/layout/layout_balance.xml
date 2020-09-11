@@ -68,9 +68,9 @@
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/group_error"
-        android:visibility="gone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:visibility="gone"
         app:constraint_referenced_ids="tv_status_error, tv_status_error_message" />
 
     <TextView
@@ -91,19 +91,24 @@
     <TextView
         android:id="@+id/tv_amount"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginEnd="4dp"
         android:ellipsize="end"
+        android:gravity="end|bottom"
         android:maxLines="1"
         android:paddingTop="16dp"
         android:textColor="@color/darkGray6"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:gravity="end"
+        app:autoSizeMaxTextSize="20sp"
+        app:autoSizeMinTextSize="12sp"
+        app:autoSizeStepGranularity="1sp"
+        app:autoSizeTextType="uniform"
         app:layout_constraintEnd_toStartOf="@id/tv_currency_symbol"
         app:layout_constraintHorizontal_weight="1"
         app:layout_constraintStart_toEndOf="@id/tv_currency"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/tv_currency_symbol"
         tools:text="0.43" />
 
     <TextView
