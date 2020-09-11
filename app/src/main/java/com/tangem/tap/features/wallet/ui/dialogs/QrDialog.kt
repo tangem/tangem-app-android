@@ -1,4 +1,4 @@
-package com.tangem.tap.features.wallet.ui
+package com.tangem.tap.features.wallet.ui.dialogs
 
 import android.app.Dialog
 import android.content.Context
