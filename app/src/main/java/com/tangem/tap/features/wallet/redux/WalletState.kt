@@ -1,6 +1,7 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.graphics.Bitmap
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Wallet
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.features.wallet.models.PendingTransaction
@@ -16,10 +17,15 @@ data class WalletState(
         val addressData: AddressData? = null,
         val currencyData: BalanceWidgetData = BalanceWidgetData(),
         val payIdData: PayIdData = PayIdData(),
-        val qrCode: Bitmap? = null,
-        val creatingPayIdState: CreatingPayIdState? = null,
+        val walletDialog: WalletDialog? = null,
         val mainButton: WalletMainButton = WalletMainButton.SendButton(false)
 ) : StateType
+
+sealed class WalletDialog {
+    data class QrDialog(val qrCode: Bitmap?, val shareUrl: String?) : WalletDialog()
+    data class CreatePayIdDialog(val creatingPayIdState: CreatingPayIdState?) : WalletDialog()
+    data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog()
+}
 
 
 enum class ProgressState { Loading, Done, Error }
