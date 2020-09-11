@@ -4,6 +4,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import com.tangem.tap.common.redux.navigation.AppScreen
+import com.tangem.tap.features.details.ui.DetailsFragment
 import com.tangem.tap.features.home.HomeFragment
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
@@ -36,5 +37,6 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.Home -> HomeFragment()
         AppScreen.Wallet -> WalletFragment()
         AppScreen.Send -> SendFragment()
+        AppScreen.Details -> DetailsFragment()
     }
 }
