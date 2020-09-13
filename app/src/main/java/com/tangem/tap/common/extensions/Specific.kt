@@ -53,3 +53,18 @@ fun BigDecimal.toFiatString(rateValue: BigDecimal): String? {
 }
 
 fun BigDecimal.stripZeroPlainString(): String = this.stripTrailingZeros().toPlainString()
+
+fun BigDecimal.isPositive(): Boolean = this.compareTo(BigDecimal.ZERO) == 1
+fun BigDecimal.isNegative(): Boolean = this.compareTo(BigDecimal.ZERO) == -1
+fun BigDecimal.isGreaterThan(value: BigDecimal): Boolean = this.compareTo(value) == 1
+fun BigDecimal.isLessThan(value: BigDecimal): Boolean = this.compareTo(value) == -1
+
+fun BigDecimal.isGreaterThanOrEqual(value: BigDecimal): Boolean {
+    val compareResult = this.compareTo(value)
+    return compareResult == 1 || compareResult == 0
+}
+
+fun BigDecimal.isLessThanOrEqual(value: BigDecimal): Boolean {
+    val compareResult = this.compareTo(value)
+    return compareResult == -1 || compareResult == 0
+}
