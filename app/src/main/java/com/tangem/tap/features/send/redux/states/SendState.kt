@@ -17,7 +17,7 @@ import java.math.BigDecimal
 data class SendState(
         val amount: Amount? = null,
         val walletManager: WalletManager? = null,
-        val currencyConverter: CurrencyConverter = CurrencyConverter(BigDecimal.ZERO),
+        val currencyConverter: CurrencyConverter = CurrencyConverter(BigDecimal.ONE),
         val lastChangedStateType: StateType = NoneState(),
         val addressPayIdState: AddressPayIdState = AddressPayIdState(),
         val amountState: AmountState = AmountState(),
