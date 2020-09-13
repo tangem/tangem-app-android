@@ -1,6 +1,8 @@
 package com.tangem.tap.features.send.redux
 
 import com.tangem.blockchain.common.Amount
+import com.tangem.tap.common.redux.ErrorAction
+import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import org.rekotlin.Action
@@ -94,4 +96,23 @@ sealed class FeeAction : SendScreenAction {
 
 sealed class ReceiptAction : SendScreenAction {
     object RefreshReceipt : ReceiptAction()
+}
+
+sealed class SendActionUi : SendScreenActionUi {
+    object SendAmountToRecipient : SendScreenActionUi
+}
+
+sealed class SendAction : SendScreenAction {
+    enum class Error {
+        INSUFFICIENT_BALANCE, BLOCKCHAIN_INTERNAL
+    }
+
+    object SendSuccess : SendAction()
+
+    data class SendError(val sendError: Error) : SendAction(), ErrorAction {
+        override val error: TapError = when (sendError) {
+            Error.INSUFFICIENT_BALANCE -> TapError.InsufficientBalance
+            Error.BLOCKCHAIN_INTERNAL -> TapError.BlockchainInternalError
+        }
+    }
 }
