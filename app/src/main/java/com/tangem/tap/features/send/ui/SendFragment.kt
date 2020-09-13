@@ -23,6 +23,7 @@ import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.FeeActionUi.*
 import com.tangem.tap.features.send.redux.ReceiptAction
 import com.tangem.tap.features.send.redux.ReleaseSendState
+import com.tangem.tap.features.send.redux.SendActionUi
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
@@ -31,6 +32,7 @@ import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.btn_paste.*
 import kotlinx.android.synthetic.main.btn_qr_code.*
+import kotlinx.android.synthetic.main.fragment_send.*
 import kotlinx.android.synthetic.main.layout_send_address_payid.*
 import kotlinx.android.synthetic.main.layout_send_amount.*
 import kotlinx.android.synthetic.main.layout_send_fee.*
@@ -52,6 +54,10 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         setupAddressOrPayIdLayout()
         setupAmountLayout()
         setupFeeLayout()
+
+        btnSend.setOnClickListener {
+            store.dispatch(SendActionUi.SendAmountToRecipient)
+        }
     }
 
     private fun setupAddressOrPayIdLayout() {
