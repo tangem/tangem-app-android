@@ -2,10 +2,13 @@
 
     <string name="app_name" translatable="false">Tangem Tap</string>
 
+    <string name="generic_done">Done</string>
+    <string name="generic_retry">Retry</string>
+    <string name="generic_and">and</string>
+
     <string name="notification_address_copied">Address was successfully copied</string>
     <string name="notification_no_internet">No internet connection</string>
-    <string name="notification_no_internet_retry">Retry</string>
-    <string name="generic_done">Done</string>
+    <string name="notification_no_internet_retry">@string/generic_retry</string>
 
     <string name="home_do_you_have_card">Welcome to Tangem.\nDo you have one of our cards?</string>
     <string name="home_button_yes">Yes!</string>
@@ -47,6 +50,9 @@
     <string name="error_payid_request_failed">PayID request failed</string>
     <string name="error_address_invalid_or_unsupported">Address is invalid or unsupported by blockchain</string>
     <string name="error_address_same_as_wallet">Address is the same as wallet address</string>
+    <string name="error_fee_request_failed">Network fee request is failed</string>
+    <string name="error_fee_greater_than_amount">FEE_GREATER_THAN_AMOUNT</string>
+    <string name="error_amount_with_fee_greater_than_balance">AMOUNT_WITH_FEE_GREATER_THAN_BALANCE</string>
 
 
     <string name="send_title">Send</string>
