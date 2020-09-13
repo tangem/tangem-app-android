@@ -51,8 +51,10 @@
     <string name="error_address_invalid_or_unsupported">Address is invalid or unsupported by blockchain</string>
     <string name="error_address_same_as_wallet">Address is the same as wallet address</string>
     <string name="error_fee_request_failed">Network fee request is failed</string>
-    <string name="error_fee_greater_than_amount">FEE_GREATER_THAN_AMOUNT</string>
-    <string name="error_amount_with_fee_greater_than_balance">AMOUNT_WITH_FEE_GREATER_THAN_BALANCE</string>
+    <string name="error_fee_greater_than_amount">Fee greater than amount</string>
+    <string name="error_amount_with_fee_greater_than_balance">Amount with fee greater than balance</string>
+    <string name="error_insufficient_balance">Insufficient balance</string>
+    <string name="error_blockchain_internal">Blockchain internal error</string>
 
 
     <string name="send_title">Send</string>
