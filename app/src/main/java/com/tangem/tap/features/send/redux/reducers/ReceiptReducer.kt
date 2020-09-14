@@ -30,14 +30,14 @@ class ReceiptReducer : SendInternalReducer {
 
         val layoutType = determineLayoutType(amountState.mainCurrency.value, amountState.typeOfAmount)
         val symbols = determineSymbols(wallet)
+        val showBlank = !sendState.isReadyToSend()
         val result = state.copy(
                 visibleTypeOfReceipt = layoutType,
                 mainCurrencyType = sendState.amountState.mainCurrency,
-                mainLayoutIsVisible = sendState.isReadyToSend(),
-                fiat = createFiatType(converter, amountState, feeState, symbols),
-                crypto = createCryptoType(converter, amountState, feeState, symbols),
-                tokenFiat = createTokenFiatType(converter, amountState, feeState, symbols),
-                tokenCrypto = createTokenCryptoType(converter, amountState, feeState, symbols)
+                fiat = createFiatType(converter, amountState, feeState, symbols, showBlank),
+                crypto = createCryptoType(converter, amountState, feeState, symbols, showBlank),
+                tokenFiat = createTokenFiatType(converter, amountState, feeState, symbols, showBlank),
+                tokenCrypto = createTokenCryptoType(converter, amountState, feeState, symbols, showBlank)
         )
         return updateLastState(sendState.copy(receiptState = result), result)
     }
@@ -46,10 +46,15 @@ class ReceiptReducer : SendInternalReducer {
             converter: CurrencyConverter,
             amountState: AmountState,
             feeState: FeeState,
-            symbols: ReceiptSymbols
+            symbols: ReceiptSymbols,
+            showBlank: Boolean
     ): ReceiptFiat {
         val feeCrypto = feeState.getCurrentFee()
         val feeFiat = converter.toFiat(feeCrypto)
+
+        if (showBlank) {
+            return ReceiptFiat("0", feeFiat.stripZeroPlainString(), feeFiat.stripZeroPlainString(), "0", symbols)
+        }
 
         return if (feeState.feeIsIncluded) {
             val amountFiat = converter.toFiat(amountState.amountToSendCrypto.minus(feeCrypto))
@@ -79,9 +84,14 @@ class ReceiptReducer : SendInternalReducer {
             converter: CurrencyConverter,
             amountState: AmountState,
             feeState: FeeState,
-            symbols: ReceiptSymbols
+            symbols: ReceiptSymbols,
+            showBlank: Boolean
     ): ReceiptCrypto {
         val feeCrypto = feeState.getCurrentFee()
+
+        if (showBlank) {
+            return ReceiptCrypto("0", feeCrypto.stripZeroPlainString(), "0", converter.toFiat(feeCrypto).stripZeroPlainString(), "0", symbols)
+        }
 
         if (feeState.feeIsIncluded) {
             return ReceiptCrypto(
@@ -109,11 +119,17 @@ class ReceiptReducer : SendInternalReducer {
             converter: CurrencyConverter,
             amountState: AmountState,
             feeState: FeeState,
-            symbols: ReceiptSymbols
+            symbols: ReceiptSymbols,
+            showBlank: Boolean
     ): ReceiptTokenFiat {
         val feeCrypto = feeState.getCurrentFee()
         val amountFiat = converter.toFiat(amountState.amountToSendCrypto)
         val feeFiat = converter.toFiat(feeCrypto)
+
+        if (showBlank) {
+            return ReceiptTokenFiat("0", feeFiat.stripZeroPlainString(), "0", "0", "0", symbols)
+        }
+
         return ReceiptTokenFiat(
                 amountFiat = amountFiat.stripZeroPlainString(),
                 feeFiat = feeFiat.stripZeroPlainString(),
@@ -128,10 +144,15 @@ class ReceiptReducer : SendInternalReducer {
             converter: CurrencyConverter,
             amountState: AmountState,
             feeState: FeeState,
-            symbols: ReceiptSymbols
+            symbols: ReceiptSymbols,
+            showBlank: Boolean
     ): ReceiptTokenCrypto {
         val feeCrypto = feeState.getCurrentFee()
         val totalFiat = converter.toFiat(amountState.amountToSendCrypto).plus(converter.toFiat(feeCrypto))
+        if (showBlank) {
+            return ReceiptTokenCrypto("0", feeCrypto.stripZeroPlainString(), "0", symbols)
+        }
+
         return ReceiptTokenCrypto(
                 amountToken = amountState.amountToSendCrypto.stripZeroPlainString(),
                 feeCrypto = feeCrypto.stripZeroPlainString(),
