@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Wallet
 import com.tangem.tap.common.CurrencyConverter
 import com.tangem.tap.common.entities.TapCurrency
+import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.features.send.redux.ReceiptAction.RefreshReceipt
 import com.tangem.tap.features.send.redux.SendScreenAction
 import com.tangem.tap.features.send.redux.states.*
@@ -54,10 +55,10 @@ class ReceiptReducer : SendInternalReducer {
             val amountFiat = converter.toFiat(amountState.amountToSendCrypto.minus(feeCrypto))
             val totalFiat = converter.toFiat(amountState.amountToSendCrypto)
             ReceiptFiat(
-                    amountFiat = amountFiat,
-                    feeFiat = feeFiat,
-                    totalFiat = totalFiat,
-                    willSentCrypto = amountState.amountToSendCrypto.stripTrailingZeros(),
+                    amountFiat = amountFiat.stripZeroPlainString(),
+                    feeFiat = feeFiat.stripZeroPlainString(),
+                    totalFiat = totalFiat.stripZeroPlainString(),
+                    willSentCrypto = amountState.amountToSendCrypto.stripZeroPlainString(),
                     symbols = symbols
             )
         } else {
@@ -65,10 +66,10 @@ class ReceiptReducer : SendInternalReducer {
             val amountFiat = converter.toFiat(amountState.amountToSendCrypto)
             val totalFiat = converter.toFiat(totalAmountCrypto)
             ReceiptFiat(
-                    amountFiat = amountFiat,
-                    feeFiat = feeFiat,
-                    totalFiat = totalFiat,
-                    willSentCrypto = totalAmountCrypto.stripTrailingZeros(),
+                    amountFiat = amountFiat.stripZeroPlainString(),
+                    feeFiat = feeFiat.stripZeroPlainString(),
+                    totalFiat = totalFiat.stripZeroPlainString(),
+                    willSentCrypto = totalAmountCrypto.stripZeroPlainString(),
                     symbols = symbols
             )
         }
@@ -84,19 +85,21 @@ class ReceiptReducer : SendInternalReducer {
 
         if (feeState.feeIsIncluded) {
             return ReceiptCrypto(
-                    amountCrypto = amountState.amountToSendCrypto.minus(feeCrypto).stripTrailingZeros(),
-                    feeCrypto = feeCrypto.stripTrailingZeros(),
-                    totalCrypto = amountState.amountToSendCrypto.stripTrailingZeros(),
-                    willSentFiat = converter.toFiat(amountState.amountToSendCrypto),
+                    amountCrypto = amountState.amountToSendCrypto.minus(feeCrypto).stripZeroPlainString(),
+                    feeCrypto = feeCrypto.stripZeroPlainString(),
+                    totalCrypto = amountState.amountToSendCrypto.stripZeroPlainString(),
+                    feeFiat = converter.toFiat(feeCrypto).stripZeroPlainString(),
+                    willSentFiat = converter.toFiat(amountState.amountToSendCrypto).stripZeroPlainString(),
                     symbols = symbols
             )
         } else {
             val totalCrypto = amountState.amountToSendCrypto.plus(feeCrypto)
             return ReceiptCrypto(
-                    amountCrypto = amountState.amountToSendCrypto.stripTrailingZeros(),
-                    feeCrypto = feeCrypto.stripTrailingZeros(),
-                    totalCrypto = totalCrypto.stripTrailingZeros(),
-                    willSentFiat = converter.toFiat(totalCrypto),
+                    amountCrypto = amountState.amountToSendCrypto.stripZeroPlainString(),
+                    feeCrypto = feeCrypto.stripZeroPlainString(),
+                    totalCrypto = totalCrypto.stripZeroPlainString(),
+                    feeFiat = converter.toFiat(feeCrypto).stripZeroPlainString(),
+                    willSentFiat = converter.toFiat(totalCrypto).stripZeroPlainString(),
                     symbols = symbols
             )
         }
@@ -112,11 +115,11 @@ class ReceiptReducer : SendInternalReducer {
         val amountFiat = converter.toFiat(amountState.amountToSendCrypto)
         val feeFiat = converter.toFiat(feeCrypto)
         return ReceiptTokenFiat(
-                amountFiat = amountFiat,
-                feeFiat = feeFiat,
-                totalFiat = amountFiat.plus(feeFiat),
-                willSentTokenCrypto = amountState.amountToSendCrypto.stripTrailingZeros(),
-                willSentFeeCrypto = feeCrypto.stripTrailingZeros(),
+                amountFiat = amountFiat.stripZeroPlainString(),
+                feeFiat = feeFiat.stripZeroPlainString(),
+                totalFiat = amountFiat.plus(feeFiat).stripZeroPlainString(),
+                willSentTokenCrypto = amountState.amountToSendCrypto.stripZeroPlainString(),
+                willSentFeeCrypto = feeCrypto.stripZeroPlainString(),
                 symbols = symbols
         )
     }
@@ -130,9 +133,9 @@ class ReceiptReducer : SendInternalReducer {
         val feeCrypto = feeState.getCurrentFee()
         val totalFiat = converter.toFiat(amountState.amountToSendCrypto).plus(converter.toFiat(feeCrypto))
         return ReceiptTokenCrypto(
-                amountToken = amountState.amountToSendCrypto.stripTrailingZeros(),
-                feeCrypto = feeCrypto.stripTrailingZeros(),
-                totalFiat = totalFiat.stripTrailingZeros(),
+                amountToken = amountState.amountToSendCrypto.stripZeroPlainString(),
+                feeCrypto = feeCrypto.stripZeroPlainString(),
+                totalFiat = totalFiat.stripZeroPlainString(),
                 symbols = symbols
         )
     }
