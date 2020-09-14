@@ -1,7 +1,5 @@
 package com.tangem.tap.features.send.redux.states
 
-import org.rekotlin.StateType
-
 // Shows only one type of the layout
 enum class ReceiptLayoutType {
     UNKNOWN, FIAT, CRYPTO, TOKEN_FIAT, TOKEN_CRYPTO
@@ -14,7 +12,8 @@ data class ReceiptState(
         val tokenFiat: ReceiptTokenFiat? = null,
         val tokenCrypto: ReceiptTokenCrypto? = null,
         val mainCurrencyType: Value<MainCurrencyType>? = null,
-) : StateType
+        override val stateId: StateId = StateId.RECEIPT
+) : SendScreenState
 
 data class ReceiptSymbols(
         val fiat: String,
