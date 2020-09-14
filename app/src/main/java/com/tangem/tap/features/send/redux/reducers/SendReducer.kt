@@ -3,10 +3,10 @@ package com.tangem.tap.features.send.redux.reducers
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.tap.common.CurrencyConverter
 import com.tangem.tap.features.send.redux.*
+import com.tangem.tap.features.send.redux.states.IdStateHolder
 import com.tangem.tap.features.send.redux.states.SendState
 import com.tangem.tap.store
 import org.rekotlin.Action
-import org.rekotlin.StateType
 import timber.log.Timber
 import java.math.BigDecimal
 
@@ -34,7 +34,7 @@ class SendReducer {
 
 
             val newState = reducer.handle(action, sendState).copy(sendButtonIsEnabled = sendState.isReadyToSend())
-            Timber.i("${newState.lastChangedStateType}.")
+            Timber.i("${newState.lastChangedStates}.")
 
             return newState
         }
@@ -63,5 +63,7 @@ private class PrepareSendScreenStatesReducer : SendInternalReducer {
     }
 }
 
-internal fun updateLastState(sendState: SendState, lastChangedState: StateType): SendState =
-        sendState.copy(lastChangedStateType = lastChangedState)
+internal fun updateLastState(sendState: SendState, lastChangedState: IdStateHolder): SendState {
+    sendState.lastChangedStates.add(lastChangedState.stateId)
+    return sendState
+}
