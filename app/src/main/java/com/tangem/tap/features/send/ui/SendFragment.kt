@@ -30,8 +30,6 @@ import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
 import com.tangem.tap.mainScope
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.btn_paste.*
-import kotlinx.android.synthetic.main.btn_qr_code.*
 import kotlinx.android.synthetic.main.fragment_send.*
 import kotlinx.android.synthetic.main.layout_send_address_payid.*
 import kotlinx.android.synthetic.main.layout_send_amount.*
