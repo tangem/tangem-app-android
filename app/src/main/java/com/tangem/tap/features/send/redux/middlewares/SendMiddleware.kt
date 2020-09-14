@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.common.CompletionResult
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.send.redux.AddressPayIdActionUi.ChangeAddressOrPayId
+import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.*
 import com.tangem.tap.features.send.redux.AmountActionUi.CheckAmountToSend
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
 import com.tangem.tap.features.send.redux.SendAction
@@ -22,6 +23,18 @@ val sendMiddleware: Middleware<AppState> = { dispatch, appState ->
         { action ->
             when (action) {
                 is ChangeAddressOrPayId -> AddressPayIdMiddleware().handle(action.data, appState(), dispatch)
+                is VerifyClipboard -> {
+                    AddressPayIdMiddleware().handle(action.data, appState()){
+                        when(it) {
+                            is AddressVerification.SetWalletAddress, is PayIdVerification.SetPayIdWalletAddress -> {
+                                dispatch(ChangePasteBtnEnableState(true))
+                            }
+                            is AddressVerification.SetError, is PayIdVerification.SetError -> {
+                                dispatch(ChangePasteBtnEnableState(false))
+                            }
+                        }
+                    }
+                }
                 is CheckAmountToSend -> AmountMiddleware().handle(action.data, appState(), dispatch)
                 is RequestFee -> RequestFeeMiddleware().handle(appState(), dispatch)
                 is SendActionUi.SendAmountToRecipient -> verifyAndSendTransaction(appState(), dispatch)
