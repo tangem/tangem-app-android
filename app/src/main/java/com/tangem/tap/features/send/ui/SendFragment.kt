@@ -4,30 +4,38 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.core.view.postDelayed
 import androidx.core.widget.addTextChangedListener
+import com.tangem.tangem_sdk_new.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.entities.TapCurrency
 import com.tangem.tap.common.extensions.getFromClipboard
+import com.tangem.tap.common.extensions.setOnImeActionListener
 import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
 import com.tangem.tap.common.snackBar.MaxAmountSnackbar
 import com.tangem.tap.common.text.truncateMiddleWith
 import com.tangem.tap.features.send.BaseStoreFragment
 import com.tangem.tap.features.send.redux.AddressPayIdActionUi.*
 import com.tangem.tap.features.send.redux.AmountActionUi.*
+import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.FeeActionUi.*
-import com.tangem.tap.features.send.redux.MainCurrencyType
+import com.tangem.tap.features.send.redux.ReceiptAction
 import com.tangem.tap.features.send.redux.ReleaseSendState
+import com.tangem.tap.features.send.redux.SendActionUi
+import com.tangem.tap.features.send.redux.states.FeeType
+import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
 import com.tangem.tap.mainScope
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.btn_paste.*
 import kotlinx.android.synthetic.main.btn_qr_code.*
+import kotlinx.android.synthetic.main.fragment_send.*
 import kotlinx.android.synthetic.main.layout_send_address_payid.*
 import kotlinx.android.synthetic.main.layout_send_amount.*
-import kotlinx.android.synthetic.main.layout_send_network_fee.*
+import kotlinx.android.synthetic.main.layout_send_fee.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
@@ -46,6 +54,10 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         setupAddressOrPayIdLayout()
         setupAmountLayout()
         setupFeeLayout()
+
+        btnSend.setOnClickListener {
+            store.dispatch(SendActionUi.SendAmountToRecipient)
+        }
     }
 
     private fun setupAddressOrPayIdLayout() {
@@ -54,15 +66,19 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         etAddressOrPayId.setOnFocusChangeListener { v, hasFocus ->
             store.dispatch(TruncateOrRestore(!hasFocus))
         }
-        etAddressOrPayId.inputedTextAsFlow()
+        etAddressOrPayId.inputtedTextAsFlow()
                 .debounce(400)
                 .filter { store.state.sendState.addressPayIdState.etFieldValue != it }
-                .onEach { store.dispatch(ChangeAddressOrPayId(it)) }
+                .onEach {
+                    store.dispatch(ChangeAddressOrPayId(it))
+                    store.dispatch(FeeAction.RequestFee)
+                }
                 .launchIn(mainScope)
 
         imvPaste.setOnClickListener {
             store.dispatch(ChangeAddressOrPayId(requireContext().getFromClipboard()?.toString() ?: ""))
             store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
+            store.dispatch(FeeAction.RequestFee)
         }
         imvQrCode.setOnClickListener {
             startActivityForResult(
@@ -78,13 +94,22 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         val scannedCode = data?.getStringExtra(ScanQrCodeActivity.SCAN_RESULT) ?: ""
         store.dispatch(ChangeAddressOrPayId(scannedCode))
         store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
+        view?.postDelayed(200) { store.dispatch(FeeAction.RequestFee) }
     }
 
     private fun setupAmountLayout() {
         store.dispatch(SetMainCurrency(restoreMainCurrency()))
-        tvAmountCurrency.setOnClickListener { store.dispatch(ToggleMainCurrency) }
+        tvAmountCurrency.setOnClickListener {
+            store.dispatch(ToggleMainCurrency)
+            store.dispatch(ReceiptAction.RefreshReceipt)
+        }
 
-        val maxAmountSnackbar = MaxAmountSnackbar.make(etAmountToSend) { store.dispatch(SetMaxAmount) }
+        val maxAmountSnackbar = MaxAmountSnackbar.make(etAmountToSend) {
+            etAmountToSend.clearFocus()
+            etAmountToSend.postDelayed(200) { etAmountToSend.hideSoftKeyboard() }
+            store.dispatch(SetMaxAmount)
+            store.dispatch(CheckAmountToSend())
+        }
         var snackbarControlledByChangingFocus = false
         keyboardObserver = KeyboardObserver(requireActivity())
         keyboardObserver.registerListener { isShow ->
@@ -103,7 +128,6 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
                 etAmountToSend.postDelayed(200) {
                     maxAmountSnackbar.show()
                     snackbarControlledByChangingFocus = false
-
                 }
             } else {
                 etAmountToSend.postDelayed(350) {
@@ -120,33 +144,44 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             if (!hasFocus && etAmountToSend.text?.toString() == "") etAmountToSend.setText("0")
         }
 
-        etAmountToSend.inputedTextAsFlow()
+        etAmountToSend.inputtedTextAsFlow()
                 .debounce(400)
-                .filter { store.state.sendState.amountState.etAmountFieldValue != it }
-                .onEach { store.dispatch(ChangeAmountToSend(it)) }
+                .filter { store.state.sendState.amountState.viewAmountValue != it && it.isNotEmpty() }
+                .onEach { store.dispatch(CheckAmountToSend(it)) }
                 .launchIn(mainScope)
+
+        etAmountToSend.setOnImeActionListener(EditorInfo.IME_ACTION_DONE) {
+            it.hideSoftKeyboard()
+            it.clearFocus()
+        }
     }
 
     private fun setupFeeLayout() {
         flExpandCollapse.setOnClickListener {
-            store.dispatch(ToggleFeeLayoutVisibility)
+            store.dispatch(ToggleControlsVisibility)
         }
         chipGroup.setOnCheckedChangeListener { group, checkedId ->
-            store.dispatch(ChangeSelectedFee(checkedId))
+            if (checkedId == -1) return@setOnCheckedChangeListener
+
+            store.dispatch(ChangeSelectedFee(FeeUiHelper.idToFee(checkedId)))
+            store.dispatch(CheckAmountToSend())
         }
         swIncludeFee.setOnCheckedChangeListener { btn, isChecked ->
             store.dispatch(ChangeIncludeFee(isChecked))
+            store.dispatch(CheckAmountToSend())
         }
     }
 
     override fun subscribeToStore() {
         store.subscribe(sendSubscriber) { appState ->
-            appState.skipRepeats { oldState, newState -> oldState == newState }.select { it.sendState }
+            appState.skipRepeats { oldState, newState ->
+                oldState.sendState == newState.sendState
+            }.select { it.sendState }
         }
         storeSubscribersList.add(sendSubscriber)
     }
 
-    fun restoreMainCurrency(): MainCurrencyType {
+    private fun restoreMainCurrency(): MainCurrencyType {
         val sp = requireContext().getSharedPreferences("SendScreen", Context.MODE_PRIVATE)
         val mainCurrency = sp.getString("mainCurrency", TapCurrency.main)
         val foundType = MainCurrencyType.values()
@@ -167,9 +202,31 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 }
 
 @ExperimentalCoroutinesApi
-fun EditText.inputedTextAsFlow(): Flow<String> = callbackFlow {
+fun EditText.inputtedTextAsFlow(): Flow<String> = callbackFlow {
     val watcher = addTextChangedListener { editable -> offer(editable?.toString() ?: "") }
     awaitClose { removeTextChangedListener(watcher) }
+}
+
+class FeeUiHelper {
+    companion object {
+        fun feeToId(fee: FeeType): Int {
+            return when (fee) {
+                FeeType.SINGLE -> 0
+                FeeType.LOW -> R.id.chipLow
+                FeeType.NORMAL -> R.id.chipNormal
+                FeeType.PRIORITY -> R.id.chipPriority
+            }
+        }
+
+        fun idToFee(id: Int): FeeType {
+            return when (id) {
+                R.id.chipLow -> FeeType.LOW
+                R.id.chipNormal -> FeeType.NORMAL
+                R.id.chipPriority -> FeeType.PRIORITY
+                else -> FeeType.NORMAL
+            }
+        }
+    }
 }
 
 
