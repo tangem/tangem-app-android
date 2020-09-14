@@ -5,8 +5,8 @@ import com.tangem.tap.common.redux.navigation.NavigationState
 import com.tangem.tap.common.redux.navigation.navigationMiddleware
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.home.redux.homeMiddleware
-import com.tangem.tap.features.send.redux.SendState
-import com.tangem.tap.features.send.redux.sendMiddleware
+import com.tangem.tap.features.send.redux.middlewares.sendMiddleware
+import com.tangem.tap.features.send.redux.states.SendState
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.walletMiddleware
 import org.rekotlin.Middleware
