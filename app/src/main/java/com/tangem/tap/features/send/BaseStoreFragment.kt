@@ -20,7 +20,7 @@ abstract class BaseStoreFragment(layoutId: Int) : Fragment(layoutId) {
 
     abstract fun subscribeToStore()
 
-    private lateinit var mainView: View
+    protected lateinit var mainView: View
     protected val storeSubscribersList = mutableListOf<StoreSubscriber<*>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
