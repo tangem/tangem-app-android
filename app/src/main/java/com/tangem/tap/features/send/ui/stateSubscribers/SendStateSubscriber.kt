@@ -2,7 +2,6 @@ package com.tangem.tap.features.send.ui.stateSubscribers
 
 import android.content.Context
 import android.text.SpannableStringBuilder
-import android.util.TypedValue
 import android.view.ViewGroup
 import androidx.core.text.bold
 import com.tangem.tap.common.extensions.beginDelayedTransition
@@ -94,21 +93,23 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
         fg.etAmountToSend.filters = arrayOf(DecimalDigitsInputFilter(12, state.maxLengthOfAmount))
         val amountToSend = state.viewAmountValue
-        fg.tvAmountToSendShadow.text = amountToSend
-        if (amountToSend.length > 10) {
+        fg.etAmountToSend.update(amountToSend)
+
+//        fg.tvAmountToSendShadow.text = amountToSend
+//        if (amountToSend.length > 10) {
             // post is needed to wait for text size changes
-            fg.tvAmountToSendShadow.post {
-                fg.etAmountToSend.setTextSize(TypedValue.COMPLEX_UNIT_PX, fg.tvAmountToSendShadow.textSize - 2)
-                fg.etAmountToSend.update(amountToSend)
-                if (!state.cursorAtTheSamePosition) fg.etAmountToSend.setSelection(amountToSend.length)
-            }
-        } else {
-            val textSize = fg.resources.getDimension(R.dimen.text_size_amount_to_send)
-            fg.tvAmountToSendShadow.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
-            fg.etAmountToSend.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
-            fg.etAmountToSend.update(amountToSend)
-            if (!state.cursorAtTheSamePosition) fg.etAmountToSend.setSelection(amountToSend.length)
-        }
+//            fg.tvAmountToSendShadow.post {
+//                fg.etAmountToSend.setTextSize(TypedValue.COMPLEX_UNIT_PX, fg.tvAmountToSendShadow.textSize - 2)
+//                fg.etAmountToSend.update(amountToSend)
+//                if (!state.cursorAtTheSamePosition) fg.etAmountToSend.setSelection(amountToSend.length)
+//            }
+//        } else {
+//            val textSize = fg.resources.getDimension(R.dimen.text_size_amount_to_send)
+//            fg.tvAmountToSendShadow.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
+//            fg.etAmountToSend.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
+//            fg.etAmountToSend.update(amountToSend)
+//            if (!state.cursorAtTheSamePosition) fg.etAmountToSend.setSelection(amountToSend.length)
+//        }
 
         fg.tvAmountCurrency.update(state.mainCurrency.displayedValue)
         (fg as? SendFragment)?.saveMainCurrency(state.mainCurrency.value)
