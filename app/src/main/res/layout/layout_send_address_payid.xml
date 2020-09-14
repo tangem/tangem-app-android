@@ -35,7 +35,7 @@
         android:id="@+id/flPaste"
         android:layout_width="@dimen/btn_rounded_size"
         android:layout_height="@dimen/btn_rounded_size"
-        android:layout_marginEnd="12dp"
+        android:layout_marginEnd="8dp"
         android:background="@drawable/shape_ellipse"
         app:layout_constraintBottom_toBottomOf="@+id/flQrCode"
         app:layout_constraintEnd_toStartOf="@+id/flQrCode"
@@ -48,7 +48,7 @@
             android:layout_gravity="center"
             android:background="?selectableItemBackgroundBorderless"
             android:padding="6dp"
-            app:srcCompat="@drawable/ic_paste" />
+            app:srcCompat="@drawable/paste_selector" />
 
     </FrameLayout>
 
