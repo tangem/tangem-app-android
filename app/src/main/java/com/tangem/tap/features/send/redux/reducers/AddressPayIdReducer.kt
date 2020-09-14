@@ -36,6 +36,8 @@ class AddressPayIdReducer : SendInternalReducer {
             is PayIdVerification.SetError -> state.copyPayIdError(action.payId, action.error)
             is AddressVerification.SetWalletAddress -> state.copyWalletAddress(action.address)
             is AddressVerification.SetError -> state.copyError(action.address, action.error)
+            is AddressPayIdVerifyAction.ChangePasteBtnEnableState -> state.copy(pasteIsEnabled = action.isEnabled)
+            is AddressPayIdVerifyAction.VerifyClipboard -> state
         }
         return updateLastState(sendState.copy(addressPayIdState = result), result)
     }
