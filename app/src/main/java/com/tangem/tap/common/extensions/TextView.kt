@@ -27,10 +27,20 @@ fun EditText.update(text: String?) {
     else setSelection(cursorPosition)
 }
 
-fun TextSwitcher.update(text: String?) {
+fun EditText.setOnImeActionListener(action: Int, handler: (EditText) -> Unit) {
+    this.setOnEditorActionListener { view, actionId, event ->
+        if (actionId == action) {
+            handler.invoke(this)
+            return@setOnEditorActionListener true
+        }
+        return@setOnEditorActionListener false
+    }
+}
+
+fun TextSwitcher.update(text: CharSequence?) {
     val textView = this.currentView as? TextView ?: return
 
-    if (textView.text?.toString() != text) this.setText(text)
+    if (textView.text?.toString() != text?.toString()) this.setText(text)
 }
 
 // By default the TextInputLayout didn't activates the error state if the message is empty or null
