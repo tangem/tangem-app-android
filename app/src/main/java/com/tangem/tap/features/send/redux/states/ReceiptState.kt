@@ -14,7 +14,6 @@ data class ReceiptState(
         val tokenFiat: ReceiptTokenFiat? = null,
         val tokenCrypto: ReceiptTokenCrypto? = null,
         val mainCurrencyType: Value<MainCurrencyType>? = null,
-        val mainLayoutIsVisible: Boolean = false,
 ) : StateType
 
 data class ReceiptSymbols(
