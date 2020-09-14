@@ -37,6 +37,9 @@ sealed class AddressPayIdVerifyAction : SendScreenAction {
         ADDRESS_SAME_AS_WALLET
     }
 
+    data class VerifyClipboard(val data: String?) : AddressPayIdVerifyAction()
+    data class ChangePasteBtnEnableState(val isEnabled: Boolean): AddressPayIdVerifyAction()
+
     sealed class PayIdVerification : AddressPayIdVerifyAction() {
         data class SetError(val payId: String, val error: Error) : PayIdVerification()
         data class SetPayIdWalletAddress(val payId: String, val payIdWalletAddress: String) : PayIdVerification()
