@@ -177,7 +177,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                         .bold { append(receipt.willSentCrypto) }.append(" ")
                         .append(receipt.symbols.crypto).append(" ")
                         .append(getString(R.string.send_total_will_be_sent))
-                totalLayout.tvWillBeSentValue.update(willSent)
+                totalLayout.tvWillBeSentValue.update(willSent.toString())
 
             }
             ReceiptLayoutType.CRYPTO -> {
@@ -197,7 +197,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                             append(" (fee: ${receipt.feeFiat} ")
                             append(receipt.symbols.fiat).append(")")
                         }
-                totalLayout.tvWillBeSentValue.update(willSent)
+                totalLayout.tvWillBeSentValue.update(willSent.toString())
             }
             ReceiptLayoutType.TOKEN_FIAT -> {
                 val receipt = state.tokenFiat ?: return
@@ -219,7 +219,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                             append(receipt.willSentFeeCrypto).append(" ")
                         }
                         .append(mainLayout.context.getString(R.string.send_total_will_be_sent))
-                totalLayout.tvWillBeSentValue.update(willSent)
+                totalLayout.tvWillBeSentValue.update(willSent.toString())
             }
             ReceiptLayoutType.TOKEN_CRYPTO -> {
                 val receipt = state.tokenCrypto ?: return
@@ -236,7 +236,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                             append(receipt.totalFiat).append(" ")
                             append(receipt.symbols.fiat)
                         }
-                totalTokenLayout.tvTotalTokenCryptoValue.update(willSent)
+                totalTokenLayout.tvTotalTokenCryptoValue.update(willSent.toString())
             }
         }
     }
