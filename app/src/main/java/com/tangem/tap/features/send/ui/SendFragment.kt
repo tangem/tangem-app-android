@@ -92,12 +92,12 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
         store.dispatch(ChangeAddressOrPayId(scannedCode))
         store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
-        mainView.postDelayed(200) { store.dispatch(FeeAction.RequestFee) }
+        store.dispatch(FeeAction.RequestFee)
     }
 
     private fun setupAmountLayout() {
         store.dispatch(SetMainCurrency(restoreMainCurrency()))
-        mainView.postDelayed(200) { store.dispatch(ReceiptAction.RefreshReceipt) }
+        store.dispatch(ReceiptAction.RefreshReceipt)
 
         tvAmountCurrency.setOnClickListener {
             store.dispatch(ToggleMainCurrency)
