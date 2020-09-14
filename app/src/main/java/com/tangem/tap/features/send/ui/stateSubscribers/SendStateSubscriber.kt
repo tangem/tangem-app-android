@@ -9,6 +9,7 @@ import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.enableError
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.update
+import com.tangem.tap.common.text.DecimalDigitsInputFilter
 import com.tangem.tap.features.send.BaseStoreFragment
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
 import com.tangem.tap.features.send.redux.AmountAction
@@ -91,6 +92,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             }
         }
 
+        fg.etAmountToSend.filters = arrayOf(DecimalDigitsInputFilter(12, state.maxLengthOfAmount))
         val amountToSend = state.viewAmountValue
         fg.tvAmountToSendShadow.text = amountToSend
         if (amountToSend.length > 10) {
