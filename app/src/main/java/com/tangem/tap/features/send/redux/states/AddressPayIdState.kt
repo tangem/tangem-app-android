@@ -9,7 +9,8 @@ data class AddressPayIdState(
         val truncatedFieldValue: String? = null,
         val recipientWalletAddress: String? = null,
         val error: AddressPayIdVerifyAction.Error? = null,
-        val truncateHandler: ((String) -> String)? = null
+        val truncateHandler: ((String) -> String)? = null,
+        val pasteIsEnabled: Boolean = false
 ) : StateType {
 
     fun isReady(): Boolean = error == null && recipientWalletAddress?.isNotEmpty() ?: false
