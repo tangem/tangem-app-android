@@ -162,7 +162,6 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         val totalTokenLayout = fg.flTotalTokenCrypto as ViewGroup
         fun getString(id: Int): String = mainLayout.context.getString(id)
 
-        mainLayout.show(state.mainLayoutIsVisible)
         when (state.visibleTypeOfReceipt) {
             ReceiptLayoutType.FIAT -> {
                 val receipt = state.fiat ?: return
