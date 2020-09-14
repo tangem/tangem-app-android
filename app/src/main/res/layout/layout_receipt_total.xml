@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/llTotalContainer"
+    android:layout_width="match_parent"
+    android:layout_height="64dp"
+    android:gravity="center_vertical"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/llTotal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/tvTotal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:text="@string/send_total"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextSwitcher
+                android:id="@+id/tvTotalValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:inAnimation="@anim/slide_in_right"
+                android:outAnimation="@android:anim/slide_out_right">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:textAllCaps="true"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    tools:text="usd" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:textAllCaps="true"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    tools:text="usd" />
+            </TextSwitcher>
+
+        </FrameLayout>
+
+        <TextSwitcher
+            android:id="@+id/tvWillBeSentValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:inAnimation="@anim/slide_in_right"
+            android:outAnimation="@android:anim/slide_out_right">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="4dp"
+                android:text="@string/send_total_will_be_sent"
+                android:textColor="@color/darkGray1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="4dp"
+                android:text="@string/send_total_will_be_sent"
+                android:textColor="@color/darkGray1" />
+        </TextSwitcher>
+
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/flTotalTokenCrypto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvTotalTokenCrypto"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:text="@string/send_total"
+            android:textColor="@color/darkGray1"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextSwitcher
+            android:id="@+id/tvTotalTokenCryptoValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:inAnimation="@anim/slide_in_right"
+            android:outAnimation="@android:anim/slide_out_right">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:textAllCaps="true"
+                android:textColor="@color/darkGray1"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="usd" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:textAllCaps="true"
+                android:textColor="@color/darkGray1"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="usd" />
+
+        </TextSwitcher>
+
+
+    </FrameLayout>
+
+</LinearLayout>
