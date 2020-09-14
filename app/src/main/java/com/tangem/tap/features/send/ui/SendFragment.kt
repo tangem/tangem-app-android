@@ -92,6 +92,8 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         if (requestCode != ScanQrCodeActivity.SCAN_QR_REQUEST_CODE) return
 
         val scannedCode = data?.getStringExtra(ScanQrCodeActivity.SCAN_RESULT) ?: ""
+        if (scannedCode.isEmpty()) return
+
         store.dispatch(ChangeAddressOrPayId(scannedCode))
         store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
         view?.postDelayed(200) { store.dispatch(FeeAction.RequestFee) }
