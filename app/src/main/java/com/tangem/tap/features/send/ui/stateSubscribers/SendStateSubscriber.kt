@@ -42,6 +42,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         }
 
         fg.btnSend.isEnabled = state.sendButtonIsEnabled
+        fg.imvPaste.isEnabled = state.addressPayIdState.pasteIsEnabled
     }
 
     private fun handleAddressPayIdState(fg: BaseStoreFragment, state: AddressPayIdState) {
