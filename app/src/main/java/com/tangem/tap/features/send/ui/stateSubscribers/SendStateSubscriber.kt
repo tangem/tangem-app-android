@@ -166,12 +166,12 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
                 totalLayout.show(true)
                 totalTokenLayout.show(false)
-                fg.tvReceiptAmountValue.update("${receipt.amountFiat.toPlainString()} ${receipt.symbols.fiat}")
-                fg.tvReceiptFeeValue.update("${receipt.feeFiat.toPlainString()} ${receipt.symbols.fiat}")
-                totalLayout.tvTotalValue.update("${receipt.totalFiat.toPlainString()} ${receipt.symbols.fiat}")
+                fg.tvReceiptAmountValue.update("${receipt.amountFiat} ${receipt.symbols.fiat}")
+                fg.tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
+                totalLayout.tvTotalValue.update("${receipt.totalFiat} ${receipt.symbols.fiat}")
 
                 val willSent = SpannableStringBuilder()
-                        .bold { append(receipt.willSentCrypto.toPlainString()) }.append(" ")
+                        .bold { append(receipt.willSentCrypto) }.append(" ")
                         .append(receipt.symbols.crypto).append(" ")
                         .append(getString(R.string.send_total_will_be_sent))
                 totalLayout.tvWillBeSentValue.update(willSent)
@@ -182,17 +182,17 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
                 totalLayout.show(true)
                 totalTokenLayout.show(false)
-                fg.tvReceiptAmountValue.update("${receipt.amountCrypto.toPlainString()} ${receipt.symbols.crypto}")
-                fg.tvReceiptFeeValue.update("${receipt.feeCrypto.toPlainString()} ${receipt.symbols.crypto}")
-                totalLayout.tvTotalValue.update("${receipt.totalCrypto.toPlainString()} ${receipt.symbols.crypto}")
+                fg.tvReceiptAmountValue.update("${receipt.amountCrypto} ${receipt.symbols.crypto}")
+                fg.tvReceiptFeeValue.update("${receipt.feeCrypto} ${receipt.symbols.crypto}")
+                totalLayout.tvTotalValue.update("${receipt.totalCrypto} ${receipt.symbols.crypto}")
 
                 val willSent = SpannableStringBuilder()
                         .bold {
-                            append(getString(R.string.sign_rough))
-                            append(" ")
-                            append(receipt.willSentFiat.toPlainString())
-                            append(" ")
+                            append(getString(R.string.sign_rough)).append(" ")
+                            append(receipt.willSentFiat).append(" ")
                             append(receipt.symbols.fiat)
+                            append(" (fee: ${receipt.feeFiat} ")
+                            append(receipt.symbols.fiat).append(")")
                         }
                 totalLayout.tvWillBeSentValue.update(willSent)
             }
@@ -201,19 +201,19 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
                 totalLayout.show(true)
                 totalTokenLayout.show(false)
-                fg.tvReceiptAmountValue.update("${receipt.amountFiat.toPlainString()} ${receipt.symbols.fiat}")
-                fg.tvReceiptFeeValue.update("${receipt.feeFiat.toPlainString()} ${receipt.symbols.fiat}")
-                totalLayout.tvTotalValue.update("${receipt.totalFiat.toPlainString()} ${receipt.symbols.fiat}")
+                fg.tvReceiptAmountValue.update("${receipt.amountFiat} ${receipt.symbols.fiat}")
+                fg.tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
+                totalLayout.tvTotalValue.update("${receipt.totalFiat} ${receipt.symbols.fiat}")
 
                 val willSent = SpannableStringBuilder()
                         .bold {
                             append(receipt.symbols.token)
                             append(" ")
-                            append(receipt.willSentFeeCrypto.toPlainString())
+                            append(receipt.willSentFeeCrypto)
                         }.append(" ").append(getString(R.string.generic_and)).append(" ")
                         .bold {
                             append(receipt.symbols.crypto).append(" ")
-                            append(receipt.willSentFeeCrypto.toPlainString()).append(" ")
+                            append(receipt.willSentFeeCrypto).append(" ")
                         }
                         .append(mainLayout.context.getString(R.string.send_total_will_be_sent))
                 totalLayout.tvWillBeSentValue.update(willSent)
@@ -224,15 +224,13 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 totalLayout.show(false)
                 totalTokenLayout.show(true)
 
-                fg.tvReceiptAmountValue.update("${receipt.amountToken.toPlainString()} ${receipt.symbols.token}")
-                fg.tvReceiptFeeValue.update("${receipt.feeCrypto.toPlainString()} ${receipt.symbols.crypto}")
+                fg.tvReceiptAmountValue.update("${receipt.amountToken} ${receipt.symbols.token}")
+                fg.tvReceiptFeeValue.update("${receipt.feeCrypto} ${receipt.symbols.crypto}")
 
                 val willSent = SpannableStringBuilder()
                         .bold {
-                            append(getString(R.string.sign_rough))
-                            append(" ")
-                            append(receipt.totalFiat.toPlainString())
-                            append(" ")
+                            append(getString(R.string.sign_rough)).append(" ")
+                            append(receipt.totalFiat).append(" ")
                             append(receipt.symbols.fiat)
                         }
                 totalTokenLayout.tvTotalTokenCryptoValue.update(willSent)
