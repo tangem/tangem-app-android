@@ -34,15 +34,17 @@ import kotlinx.android.synthetic.main.layout_send_receipt.*
 class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber<SendState>(fragment) {
 
     override fun updateWithNewState(fg: BaseStoreFragment, state: SendState) {
-        when (state.lastChangedStateType) {
-            is FeeState -> handleFeeState(fg, state.feeState)
-            is AddressPayIdState -> handleAddressPayIdState(fg, state.addressPayIdState)
-            is AmountState -> handleAmountState(fg, state.amountState)
-            is ReceiptState -> handleReceiptState(fg, state.receiptState)
+        val lastChangedStates = state.lastChangedStates.toList()
+        state.lastChangedStates.clear()
+        lastChangedStates.forEach {
+            when (it) {
+                StateId.ADDRESS_PAY_ID -> handleAddressPayIdState(fg, state.addressPayIdState)
+                StateId.AMOUNT -> handleAmountState(fg, state.amountState)
+                StateId.FEE -> handleFeeState(fg, state.feeState)
+                StateId.RECEIPT -> handleReceiptState(fg, state.receiptState)
+            }
         }
-
         fg.btnSend.isEnabled = state.sendButtonIsEnabled
-        fg.imvPaste.isEnabled = state.addressPayIdState.pasteIsEnabled
     }
 
     private fun handleAddressPayIdState(fg: BaseStoreFragment, state: AddressPayIdState) {
@@ -59,6 +61,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             return if (resId == null) null
             else context.getString(resId)
         }
+        fg.imvPaste.isEnabled = state.pasteIsEnabled
 
         val et = fg.etAddressOrPayId
         val til = fg.tilAddressOrPayId
