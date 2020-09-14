@@ -1,7 +1,12 @@
 package com.tangem.tap.features.send.redux
 
 import com.tangem.blockchain.common.Amount
+import com.tangem.tap.common.redux.ErrorAction
+import com.tangem.tap.domain.TapError
+import com.tangem.tap.features.send.redux.states.FeeType
+import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import org.rekotlin.Action
+import java.math.BigDecimal
 
 /**
 [REDACTED_AUTHOR]
@@ -12,7 +17,7 @@ interface SendScreenActionUi : SendScreenAction
 object ReleaseSendState : Action
 
 data class PrepareSendScreen(
-        val amount: Amount
+        val amount: Amount,
 ) : SendScreenAction
 
 // Address or PayId
@@ -23,8 +28,7 @@ sealed class AddressPayIdActionUi : SendScreenActionUi {
 }
 
 sealed class AddressPayIdVerifyAction : SendScreenAction {
-    enum class FailReason {
-        NONE,
+    enum class Error {
         IS_NOT_PAY_ID,
         PAY_ID_UNSUPPORTED_BY_BLOCKCHAIN,
         PAY_ID_NOT_REGISTERED,
@@ -34,12 +38,12 @@ sealed class AddressPayIdVerifyAction : SendScreenAction {
     }
 
     sealed class PayIdVerification : AddressPayIdVerifyAction() {
-        data class SetError(val payId: String, val reason: FailReason) : PayIdVerification()
+        data class SetError(val payId: String, val error: Error) : PayIdVerification()
         data class SetPayIdWalletAddress(val payId: String, val payIdWalletAddress: String) : PayIdVerification()
     }
 
     sealed class AddressVerification : AddressPayIdVerifyAction() {
-        data class SetError(val address: String, val reason: FailReason) : AddressVerification()
+        data class SetError(val address: String, val error: Error) : AddressVerification()
         data class SetWalletAddress(val address: String) : AddressVerification()
     }
 }
@@ -47,14 +51,68 @@ sealed class AddressPayIdVerifyAction : SendScreenAction {
 // Amount to send
 sealed class AmountActionUi : SendScreenActionUi {
     object SetMaxAmount : AmountActionUi()
-    data class ChangeAmountToSend(val data: String) : AmountActionUi()
+    data class CheckAmountToSend(val data: String? = null) : AmountActionUi()
     data class SetMainCurrency(val mainCurrency: MainCurrencyType) : AmountActionUi()
     object ToggleMainCurrency : AmountActionUi()
 }
 
+sealed class AmountAction : SendScreenAction {
+    enum class Error {
+        FEE_GREATER_THAN_AMOUNT,
+        AMOUNT_WITH_FEE_GREATER_THAN_BALANCE
+    }
+
+    sealed class AmountVerification : AmountAction() {
+        data class SetAmount(val amount: BigDecimal) : AmountVerification()
+        data class SetError(val amount: BigDecimal, val error: Error) : AmountVerification()
+    }
+}
+
 // Fee
 sealed class FeeActionUi : SendScreenActionUi {
-    object ToggleFeeLayoutVisibility : FeeActionUi()
-    data class ChangeSelectedFee(val id: Int) : FeeActionUi()
-    class ChangeIncludeFee(val isChecked: Boolean) : FeeActionUi()
+    object ToggleControlsVisibility : FeeActionUi()
+    data class ChangeSelectedFee(val feeType: FeeType) : FeeActionUi()
+    class ChangeIncludeFee(val isIncluded: Boolean) : FeeActionUi()
+}
+
+sealed class FeeAction : SendScreenAction {
+    enum class Error {
+        ADDRESS_OR_AMOUNT_IS_EMPTY,
+        REQUEST_FAILED
+    }
+
+    object RequestFee : FeeAction()
+    sealed class FeeCalculation : FeeAction() {
+        data class SetFeeResult(val fee: List<Amount>) : FeeCalculation()
+        data class SetFeeError(val error: Error) : FeeCalculation()
+    }
+
+    data class ChangeLayoutVisibility(
+            val main: Boolean? = null,
+            val controls: Boolean? = null,
+            val chipGroup: Boolean? = null,
+    ) : FeeAction()
+}
+
+sealed class ReceiptAction : SendScreenAction {
+    object RefreshReceipt : ReceiptAction()
+}
+
+sealed class SendActionUi : SendScreenActionUi {
+    object SendAmountToRecipient : SendScreenActionUi
+}
+
+sealed class SendAction : SendScreenAction {
+    enum class Error {
+        INSUFFICIENT_BALANCE, BLOCKCHAIN_INTERNAL
+    }
+
+    object SendSuccess : SendAction()
+
+    data class SendError(val sendError: Error) : SendAction(), ErrorAction {
+        override val error: TapError = when (sendError) {
+            Error.INSUFFICIENT_BALANCE -> TapError.InsufficientBalance
+            Error.BLOCKCHAIN_INTERNAL -> TapError.BlockchainInternalError
+        }
+    }
 }
