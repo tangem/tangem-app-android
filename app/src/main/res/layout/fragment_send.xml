@@ -75,24 +75,24 @@
 
             <LinearLayout
                 android:id="@+id/llBottomButtonContainer"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center"
                 android:layout_marginStart="30dp"
                 android:layout_marginEnd="30dp"
                 android:layout_marginBottom="33dp"
                 android:orientation="horizontal">
 
-                <View
+                <Space
                     android:layout_width="100dp"
-                    android:layout_height="1dp" />
+                    android:layout_height="wrap_content" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSend"
                     style="@style/TapButtonWithIcon"
-                    android:layout_width="0dp"
+                    android:layout_width="200dp"
                     android:layout_height="48dp"
                     android:layout_gravity="end"
-                    android:layout_weight="1"
                     android:enabled="false"
                     android:fontFamily="@font/saira_semi_condensed_regular"
                     android:text="@string/send_btn_send"
