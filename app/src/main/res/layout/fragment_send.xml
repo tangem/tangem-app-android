@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginTop="24dp"
@@ -39,23 +40,28 @@
 
             <include
                 android:id="@+id/clNetworkFee"
-                layout="@layout/layout_send_network_fee"
+                layout="@layout/layout_send_fee"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp" />
+                android:layout_marginTop="16dp"
+                android:visibility="gone"
+                tools:visibility="visible" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:minHeight="1dp" />
 
             <include
-                android:id="@+id/clNetworkFee"
-                layout="@layout/layout_send_total"
+                android:id="@+id/clReceiptContainer"
+                layout="@layout/layout_send_receipt"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="24dp" />
+                android:layout_marginTop="32dp"
+                android:layout_marginBottom="24dp"
+                android:visibility="gone"
+                tools:visibility="visible" />
 
             <LinearLayout
                 android:id="@+id/llBottomButtonContainer"
