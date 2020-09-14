@@ -14,6 +14,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.core.text.toSpannable
 import androidx.fragment.app.Fragment
@@ -27,17 +28,26 @@ fun Context.getDrawableCompat(@DrawableRes drawableResId: Int): Drawable? {
     return ContextCompat.getDrawable(this, drawableResId)
 }
 
-fun View.show(show: Boolean) {
-    if (show) this.visibility = View.VISIBLE else this.visibility = View.GONE
+fun View.getString(@StringRes id: Int): String {
+    return context.getString(id)
 }
 
-fun View.show() {
+fun View.show(show: Boolean, invokeBeforeStateChanged: (() -> Unit)? = null) {
+    return if (show) this.show(invokeBeforeStateChanged)
+    else this.hide(invokeBeforeStateChanged)
+}
+
+fun View.show(invokeBeforeStateChanged: (() -> Unit)? = null) {
     if (this.visibility == View.VISIBLE) return
+
+    invokeBeforeStateChanged?.invoke()
     this.visibility = View.VISIBLE
 }
 
-fun View.hide() {
+fun View.hide(invokeBeforeStateChanged: (() -> Unit)? = null) {
     if (this.visibility == View.GONE) return
+
+    invokeBeforeStateChanged?.invoke()
     this.visibility = View.GONE
 }
 
