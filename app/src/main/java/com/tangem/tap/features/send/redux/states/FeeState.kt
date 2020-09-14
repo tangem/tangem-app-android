@@ -2,7 +2,6 @@ package com.tangem.tap.features.send.redux.states
 
 import com.tangem.blockchain.common.Amount
 import com.tangem.tap.features.send.redux.FeeAction
-import org.rekotlin.StateType
 import java.math.BigDecimal
 
 /**
@@ -20,8 +19,9 @@ data class FeeState(
         val mainLayoutIsVisible: Boolean = false,
         val controlsLayoutIsVisible: Boolean = true,
         val feeChipGroupIsVisible: Boolean = true,
-        val error: FeeAction.Error? = null
-) : StateType {
+        val error: FeeAction.Error? = null,
+        override val stateId: StateId = StateId.FEE
+) : SendScreenState {
     fun isReady(): Boolean = error == null && currentFee != null
 
     fun getCurrentFee(): BigDecimal = currentFee?.value?.value ?: BigDecimal.ZERO
