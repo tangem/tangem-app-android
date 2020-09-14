@@ -1,11 +1,15 @@
 package com.tangem.tap.features.send
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
+import com.google.android.material.snackbar.Snackbar
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.store
+import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_wallet.*
 import org.rekotlin.StoreSubscriber
 
@@ -16,6 +20,7 @@ abstract class BaseStoreFragment(layoutId: Int) : Fragment(layoutId) {
 
     abstract fun subscribeToStore()
 
+    private lateinit var mainView: View
     protected val storeSubscribersList = mutableListOf<StoreSubscriber<*>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,6 +30,11 @@ abstract class BaseStoreFragment(layoutId: Int) : Fragment(layoutId) {
                 store.dispatch(NavigationAction.PopBackTo())
             }
         })
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        mainView = super.onCreateView(inflater, container, savedInstanceState)!!
+        return mainView
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -41,5 +51,13 @@ abstract class BaseStoreFragment(layoutId: Int) : Fragment(layoutId) {
     override fun onStop() {
         storeSubscribersList.forEach { store.unsubscribe(it) }
         super.onStop()
+    }
+
+    fun showRetrySnackbar(message: String, action: () -> Unit) {
+        val snackbar = Snackbar.make(mainView, message, Snackbar.LENGTH_INDEFINITE)
+        snackbar.setAction(getString(R.string.generic_retry)) {
+            snackbar.dismiss()
+            action()
+        }.show()
     }
 }
