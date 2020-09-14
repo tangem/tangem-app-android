@@ -2,7 +2,7 @@ package com.tangem.tap.common.redux
 
 import com.tangem.tap.common.redux.global.globalReducer
 import com.tangem.tap.common.redux.navigation.NavigationReducer
-import com.tangem.tap.features.send.redux.SendReducer
+import com.tangem.tap.features.send.redux.reducers.SendReducer
 import com.tangem.tap.features.wallet.redux.WalletReducer
 import org.rekotlin.Action
 
