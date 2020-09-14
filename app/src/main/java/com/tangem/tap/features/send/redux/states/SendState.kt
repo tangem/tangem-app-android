@@ -32,6 +32,11 @@ data class SendState(
     }
 
     fun addressPayIdIsReady(): Boolean = store.state.sendState.addressPayIdState.isReady()
+
+    fun getDecimals(type: MainCurrencyType): Int = when (type) {
+        MainCurrencyType.FIAT -> 2
+        MainCurrencyType.CRYPTO -> amount?.decimals ?: 0
+    }
 }
 
 class NoneState : StateType
@@ -44,6 +49,7 @@ data class AmountState(
         val amountToSendCrypto: BigDecimal = BigDecimal.ZERO,
         val balanceCrypto: BigDecimal = BigDecimal.ZERO,
         val cursorAtTheSamePosition: Boolean = true,
+        val maxLengthOfAmount: Int = 2,
         val error: AmountAction.Error? = null
 ) : StateType {
     fun isReady(): Boolean = error == null && !amountToSendCrypto.isZero()
