@@ -96,11 +96,13 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
         store.dispatch(ChangeAddressOrPayId(scannedCode))
         store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
-        view?.postDelayed(200) { store.dispatch(FeeAction.RequestFee) }
+        mainView.postDelayed(200) { store.dispatch(FeeAction.RequestFee) }
     }
 
     private fun setupAmountLayout() {
         store.dispatch(SetMainCurrency(restoreMainCurrency()))
+        mainView.postDelayed(200) { store.dispatch(ReceiptAction.RefreshReceipt) }
+
         tvAmountCurrency.setOnClickListener {
             store.dispatch(ToggleMainCurrency)
             store.dispatch(ReceiptAction.RefreshReceipt)
@@ -142,7 +144,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         val prevFocusChangeListener = etAmountToSend.onFocusChangeListener
         etAmountToSend.setOnFocusChangeListener { v, hasFocus ->
             prevFocusChangeListener.onFocusChange(v, hasFocus)
-            if (hasFocus && etAmountToSend.text?.toString() == "0") etAmountToSend.setText("")
+//            if (hasFocus && etAmountToSend.text?.toString() == "0") etAmountToSend.setText("")
             if (!hasFocus && etAmountToSend.text?.toString() == "") etAmountToSend.setText("0")
         }
 
