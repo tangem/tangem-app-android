@@ -18,7 +18,6 @@
         android:layout_gravity="center"
         android:background="?selectableItemBackgroundBorderless"
         android:padding="5dp"
-        android:rotation="180"
         app:srcCompat="@drawable/ic_angle_bracket_up" />
 
 </FrameLayout>
