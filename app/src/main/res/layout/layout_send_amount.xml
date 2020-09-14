@@ -41,7 +41,7 @@
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilAmountToSend"
             android:layout_width="match_parent"
-            android:layout_height="82dp"
+            android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             app:boxBackgroundColor="@android:color/transparent"
@@ -66,12 +66,12 @@
         android:id="@+id/tvAmountCurrency"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="26dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="12dp"
         android:inAnimation="@anim/slide_in_up"
         android:outAnimation="@anim/slide_out_down"
-        app:layout_constraintBottom_toBottomOf="@+id/flAmountToSend"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:layout_width="wrap_content"
@@ -82,7 +82,8 @@
             android:textAllCaps="true"
             android:textColor="@color/blue"
             android:textSize="32sp"
-            app:drawableEndCompat="@drawable/ic_arrows_up_down" />
+            app:drawableEndCompat="@drawable/ic_arrows_up_down"
+            tools:text="USD" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -112,13 +113,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:textColor="@color/darkGray1" />
+            android:textColor="@color/darkGray1"
+            android:textSize="16sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:textColor="@color/darkGray1" />
+            android:textColor="@color/darkGray1"
+            android:textSize="16sp" />
 
     </TextSwitcher>
 
