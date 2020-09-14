@@ -17,13 +17,10 @@ import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
 import com.tangem.tap.common.snackBar.MaxAmountSnackbar
 import com.tangem.tap.common.text.truncateMiddleWith
 import com.tangem.tap.features.send.BaseStoreFragment
+import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.AddressPayIdActionUi.*
 import com.tangem.tap.features.send.redux.AmountActionUi.*
-import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.FeeActionUi.*
-import com.tangem.tap.features.send.redux.ReceiptAction
-import com.tangem.tap.features.send.redux.ReleaseSendState
-import com.tangem.tap.features.send.redux.SendActionUi
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
@@ -60,6 +57,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     private fun setupAddressOrPayIdLayout() {
         store.dispatch(SetTruncateHandler { etAddressOrPayId.truncateMiddleWith(it, " *** ") })
+        store.dispatch(AddressPayIdVerifyAction.VerifyClipboard(requireContext().getFromClipboard()?.toString()))
 
         etAddressOrPayId.setOnFocusChangeListener { v, hasFocus ->
             store.dispatch(TruncateOrRestore(!hasFocus))
