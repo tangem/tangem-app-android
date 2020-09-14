@@ -44,7 +44,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
-            app:boxBackgroundColor="@android:color/transparent"
+            app:boxBackgroundColor="@color/backgroundLightGray"
             app:errorIconDrawable="@null">
 
             <com.google.android.material.textfield.TextInputEditText
