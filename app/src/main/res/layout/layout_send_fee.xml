@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:text="@string/send_fee"
-        android:textSize="13sp"
+        android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="@+id/flExpandCollapse"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -27,11 +27,10 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
-        android:id="@+id/llFeeContainer"
+        android:id="@+id/llFeeControlsContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/flExpandCollapse">
@@ -43,6 +42,7 @@
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:translationY="-8dp"
+            app:selectionRequired="true"
             app:singleLine="true"
             app:singleSelection="true">
 
@@ -75,9 +75,9 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="8dp"
-            android:text="@string/send_fee_include" />
+            android:text="@string/send_fee_include"
+            android:textSize="13sp" />
 
     </LinearLayout>
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
