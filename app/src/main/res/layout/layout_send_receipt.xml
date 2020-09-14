@@ -17,32 +17,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextSwitcher
+    <TextView
         android:id="@+id/tvReceiptAmountValue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:inAnimation="@anim/slide_in_right"
-        android:outAnimation="@android:anim/slide_out_right"
+        android:layout_gravity="end"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:textAllCaps="true"
-            android:textStyle="bold"
-            tools:text="75.00 usd" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:textAllCaps="true"
-            android:textStyle="bold"
-            tools:text="75.00 usd" />
-
-    </TextSwitcher>
+        app:layout_constraintTop_toTopOf="parent"
+        android:textAllCaps="true"
+        android:textStyle="bold"
+        tools:text="75.00 usd" />
 
     <TextView
         android:id="@+id/tvReceiptFee"
@@ -55,34 +39,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvReceiptAmount" />
 
-    <TextSwitcher
+    <TextView
         android:id="@+id/tvReceiptFeeValue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:inAnimation="@anim/slide_in_right"
-        android:outAnimation="@android:anim/slide_out_right"
+        android:layout_gravity="end"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/tvReceiptFee">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:textAllCaps="true"
-            android:textColor="@color/darkGray1"
-            android:textStyle="bold"
-            tools:text="0.03 usd" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:textAllCaps="true"
-            android:textColor="@color/darkGray1"
-            android:textStyle="bold"
-            tools:text="0.03 usd" />
-
-    </TextSwitcher>
+        app:layout_constraintTop_toTopOf="@+id/tvReceiptFee"
+        android:textAllCaps="true"
+        android:textColor="@color/darkGray1"
+        android:textStyle="bold"
+        tools:text="0.03 usd" />
 
     <View
         android:id="@+id/delimiter"
