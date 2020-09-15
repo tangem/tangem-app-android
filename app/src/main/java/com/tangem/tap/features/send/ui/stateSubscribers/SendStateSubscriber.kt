@@ -9,6 +9,7 @@ import com.tangem.tap.common.extensions.enableError
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.update
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
+import com.tangem.tap.common.toggleWidget.ProgressState
 import com.tangem.tap.features.send.BaseStoreFragment
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
 import com.tangem.tap.features.send.redux.AmountAction
@@ -44,7 +45,22 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 StateId.RECEIPT -> handleReceiptState(fg, state.receiptState)
             }
         }
-        fg.btnSend.isEnabled = state.sendButtonIsEnabled
+
+        val sendFragment = (fg as? SendFragment) ?: return
+        when (state.sendButtonState) {
+            SendButtonState.ENABLED -> {
+                fg.btnSend.isEnabled = true
+                sendFragment.sendBtn.setState(ProgressState.None(), true)
+            }
+            SendButtonState.DISABLED -> {
+                fg.btnSend.isEnabled = false
+                sendFragment.sendBtn.setState(ProgressState.None(), true)
+            }
+            SendButtonState.PROGRESS -> {
+                fg.btnSend.isEnabled = true
+                sendFragment.sendBtn.setState(ProgressState.Progress(), true)
+            }
+        }
     }
 
     private fun handleAddressPayIdState(fg: BaseStoreFragment, state: AddressPayIdState) {
@@ -101,7 +117,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
 //        fg.tvAmountToSendShadow.text = amountToSend
 //        if (amountToSend.length > 10) {
-            // post is needed to wait for text size changes
+//            post is needed to wait for text size changes
 //            fg.tvAmountToSendShadow.post {
 //                fg.etAmountToSend.setTextSize(TypedValue.COMPLEX_UNIT_PX, fg.tvAmountToSendShadow.textSize - 2)
 //                fg.etAmountToSend.update(amountToSend)
