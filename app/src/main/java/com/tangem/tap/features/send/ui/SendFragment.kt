@@ -8,14 +8,17 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.core.view.postDelayed
 import androidx.core.widget.addTextChangedListener
+import com.tangem.merchant.common.toggleWidget.ToggleWidget
 import com.tangem.tangem_sdk_new.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.entities.TapCurrency
+import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.extensions.setOnImeActionListener
 import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
 import com.tangem.tap.common.snackBar.MaxAmountSnackbar
 import com.tangem.tap.common.text.truncateMiddleWith
+import com.tangem.tap.common.toggleWidget.*
 import com.tangem.tap.features.send.BaseStoreFragment
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.AddressPayIdActionUi.*
@@ -40,12 +43,21 @@ import kotlinx.coroutines.flow.*
  */
 class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
+    lateinit var sendBtn: ToggleWidget
+
+    private fun initSendButtonStates() {
+        sendBtn = ToggleWidget(flSendButtonContainer, btnSend, progress, ProgressState.None())
+        sendBtn.setupSendButtonStateModifiers(requireContext())
+        sendBtn.setState(ProgressState.None())
+    }
+
     private val sendSubscriber = SendStateSubscriber(this)
     private lateinit var keyboardObserver: KeyboardObserver
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        initSendButtonStates()
         setupAddressOrPayIdLayout()
         setupAmountLayout()
         setupFeeLayout()
@@ -98,10 +110,12 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     private fun setupAmountLayout() {
         store.dispatch(SetMainCurrency(restoreMainCurrency()))
         store.dispatch(ReceiptAction.RefreshReceipt)
+        store.dispatch(SendAction.ChangeSendButtonState(store.state.sendState.getButtonState()))
 
         tvAmountCurrency.setOnClickListener {
             store.dispatch(ToggleMainCurrency)
             store.dispatch(ReceiptAction.RefreshReceipt)
+            store.dispatch(SendAction.ChangeSendButtonState(store.state.sendState.getButtonState()))
         }
 
         val maxAmountSnackbar = MaxAmountSnackbar.make(etAmountToSend) {
@@ -229,6 +243,16 @@ class FeeUiHelper {
     }
 }
 
-
+private fun ToggleWidget.setupSendButtonStateModifiers(context: Context) {
+    mainViewModifiers.clear()
+    mainViewModifiers.add(ReplaceTextStateModifier(context.getString(R.string.send_btn_send), ""))
+    mainViewModifiers.add(
+            TextViewDrawableStateModifier(
+                    context.getDrawableCompat(R.drawable.ic_arrow_right), null, TextViewDrawableStateModifier.RIGHT
+            ))
+    mainViewModifiers.add(ClickableStateModifier())
+    toggleViewModifiers.clear()
+    toggleViewModifiers.add(ShowHideStateModifier())
+}
 
 
