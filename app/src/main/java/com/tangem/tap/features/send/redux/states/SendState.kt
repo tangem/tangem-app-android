@@ -34,7 +34,7 @@ data class SendState(
         val amountState: AmountState = AmountState(),
         val feeState: FeeState = FeeState(),
         val receiptState: ReceiptState = ReceiptState(),
-        val sendButtonIsEnabled: Boolean = false,
+        val sendButtonState: SendButtonState = SendButtonState.DISABLED,
         override val stateId: StateId = StateId.SEND_SCREEN
 ) : SendScreenState {
 
@@ -49,6 +49,12 @@ data class SendState(
         MainCurrencyType.FIAT -> 2
         MainCurrencyType.CRYPTO -> amount?.decimals ?: 0
     }
+
+    fun getButtonState(): SendButtonState = if (isReadyToSend()) SendButtonState.ENABLED else SendButtonState.DISABLED
+}
+
+enum class SendButtonState {
+    ENABLED, DISABLED, PROGRESS
 }
 
 data class AmountState(
