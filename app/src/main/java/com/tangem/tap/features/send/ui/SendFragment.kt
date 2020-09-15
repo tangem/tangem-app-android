@@ -68,7 +68,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     }
 
     private fun setupAddressOrPayIdLayout() {
-        store.dispatch(SetTruncateHandler { etAddressOrPayId.truncateMiddleWith(it, " *** ") })
+        store.dispatch(SetTruncateHandler { etAddressOrPayId.truncateMiddleWith(it, "...") })
         store.dispatch(AddressPayIdVerifyAction.VerifyClipboard(requireContext().getFromClipboard()?.toString()))
 
         etAddressOrPayId.setOnFocusChangeListener { v, hasFocus ->
