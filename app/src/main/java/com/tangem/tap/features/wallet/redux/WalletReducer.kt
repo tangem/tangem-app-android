@@ -86,10 +86,11 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             )
         }
         is WalletAction.LoadWallet.Success -> {
+            val fiatCurrencySymbol = state.globalState.appCurrency
             val token = action.wallet.amounts[AmountType.Token]
             val tokenData = if (token != null) {
-                val tokenFiatRate = state.globalState.fiatRates.getRateForCryptoCurrency(token.currencySymbol)
-                val tokenFiatAmount = tokenFiatRate?.let { token.value?.toFiatString(it) }
+                val tokenFiatRate = state.globalState.conversionRates.getRate(token.currencySymbol)
+                val tokenFiatAmount = tokenFiatRate?.let { token.value?.toFiatString(it, fiatCurrencySymbol) }
                 TokenData(
                         token.value?.toFormattedString(token.decimals) ?: "",
                         token.currencySymbol, tokenFiatAmount)
@@ -97,8 +98,8 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 null
             }
             val amount = action.wallet.amounts[AmountType.Coin]?.value
-            val fiatRate = state.globalState.fiatRates.getRateForCryptoCurrency(action.wallet.blockchain.currency)
-            val fiatAmount = fiatRate?.let { amount?.toFiatString(it) }
+            val fiatRate = state.globalState.conversionRates.getRate(action.wallet.blockchain.currency)
+            val fiatAmount = fiatRate?.let { amount?.toFiatString(it, fiatCurrencySymbol) }
 
             val pendingTransactions = action.wallet.transactions
                     .toPendingTransactions(action.wallet.address)
@@ -135,16 +136,24 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                         errorMessage = action.errorMessage
                 )
         )
+        is WalletAction.LoadFiatRate -> {
+            newState.copy(currencyData = newState.currencyData.copy(
+                    fiatAmount = null,
+                    token = newState.currencyData.token?.copy(fiatAmount = null))
+            )
+        }
         is WalletAction.LoadFiatRate.Success -> {
-            val rate = action.fiatRates.second
+            val rate = action.fiatRates.second ?: return newState
             val currency = action.fiatRates.first
             val fiatAmount = if (currency == newState.wallet?.blockchain?.currency) {
-                newState.wallet?.amounts?.get(AmountType.Coin)?.value?.toFiatString(rate)
+                newState.wallet?.amounts?.get(AmountType.Coin)?.value
+                        ?.toFiatString(rate, state.globalState.appCurrency)
             } else {
                 newState.currencyData.fiatAmount
             }
             val tokenFiatAmount = if (currency == newState.wallet?.token?.symbol) {
-                newState.wallet?.amounts?.get(AmountType.Token)?.value?.toFiatString(rate)
+                newState.wallet?.amounts?.get(AmountType.Token)?.value
+                        ?.toFiatString(rate, state.globalState.appCurrency)
             } else {
                 newState.currencyData.token?.fiatAmount
             }
