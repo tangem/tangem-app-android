@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.core.content.ContextCompat.startActivity
 import com.tangem.common.CompletionResult
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.scope
@@ -25,6 +26,7 @@ val homeMiddleware: Middleware<AppState> = { dispatch, state ->
                         withContext(Dispatchers.Main) {
                             when (result) {
                                 is CompletionResult.Success -> {
+                                    store.dispatch(GlobalAction.RestoreAppCurrency)
                                     store.state.globalState.tapWalletManager.onCardScanned(result.data)
                                     store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
                                 }
