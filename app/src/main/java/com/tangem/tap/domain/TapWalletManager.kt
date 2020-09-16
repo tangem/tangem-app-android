@@ -8,6 +8,8 @@ import com.tangem.commands.common.network.Result
 import com.tangem.commands.common.network.TangemService
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.TapConfig
+import com.tangem.tap.common.redux.global.CryptoCurrencyName
+import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.features.wallet.redux.PayIdState
@@ -54,15 +56,15 @@ class TapWalletManager {
         result?.let { handlePayIdResult(it) }
     }
 
-    suspend fun loadFiatRate() {
+    suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName) {
         val wallet = store.state.globalState.scanNoteResponse?.walletManager?.wallet
         val blockchainCurrency = wallet?.blockchain?.currency
         val tokenCurrency = wallet?.token?.symbol
 
-        val blockchainRate = blockchainCurrency?.let { coinMarketCapService.getRate(it) }
-        val tokenRate = tokenCurrency?.let { coinMarketCapService.getRate(it) }
+        val blockchainRate = blockchainCurrency?.let { coinMarketCapService.getRate(it, fiatCurrency) }
+        val tokenRate = tokenCurrency?.let { coinMarketCapService.getRate(it, fiatCurrency) }
 
-        val results = mutableListOf<Pair<String, Result<BigDecimal>?>>()
+        val results = mutableListOf<Pair<CryptoCurrencyName, Result<BigDecimal>?>>()
         if (blockchainCurrency != null) results.add(blockchainCurrency to blockchainRate)
         if (tokenCurrency != null) results.add(tokenCurrency to tokenRate)
 
@@ -83,7 +85,7 @@ class TapWalletManager {
                 store.dispatch(WalletAction.LoadWallet)
                 store.dispatch(WalletAction.LoadFiatRate)
                 store.dispatch(WalletAction.LoadPayId)
-            } else if (data.card.status == CardStatus.Empty){
+            } else if (data.card.status == CardStatus.Empty) {
                 store.dispatch(WalletAction.EmptyWallet)
             } else {
                 store.dispatch(WalletAction.LoadData.Failure(TapError.UnknownBlockchain))
@@ -153,7 +155,7 @@ class TapWalletManager {
         }
     }
 
-    private suspend fun handleFiatRatesResult(results: List<Pair<String, Result<BigDecimal>?>>) {
+    private suspend fun handleFiatRatesResult(results: List<Pair<CryptoCurrencyName, Result<BigDecimal>?>>) {
         withContext(Dispatchers.Main) {
             results.map {
                 when (it.second) {
