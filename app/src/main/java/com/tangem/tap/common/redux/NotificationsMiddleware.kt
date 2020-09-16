@@ -1,5 +1,6 @@
 package com.tangem.tap.common.redux
 
+import android.widget.Toast
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.tap.domain.TapError
@@ -32,6 +33,12 @@ class NotificationsHandler(coordinatorLayout: CoordinatorLayout) {
             showNotification(it.context.getString(message))
         }
     }
+
+    fun showToastNotification(message: Int) {
+        baseLayout.get()?.let {
+            Toast.makeText(it.context, it.context.getString(message), Toast.LENGTH_LONG).show()
+        }
+    }
 }
 
 val notificationsMiddleware: Middleware<AppState> = { dispatch, state ->
@@ -40,12 +47,19 @@ val notificationsMiddleware: Middleware<AppState> = { dispatch, state ->
             if (action is NotificationAction) {
                 notificationsHandler?.showNotification(action.messageResource)
             }
+            if (action is ToastNotificationAction) {
+                notificationsHandler?.showToastNotification(action.messageResource)
+            }
             if (action is ErrorAction) {
                 notificationsHandler?.showNotification(action.error.localizedMessage)
             }
             next(action)
         }
     }
+}
+
+interface ToastNotificationAction : Action {
+    val messageResource: Int
 }
 
 interface NotificationAction : Action {
