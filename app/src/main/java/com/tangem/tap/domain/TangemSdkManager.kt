@@ -2,8 +2,6 @@ package com.tangem.tap.domain
 
 import androidx.activity.ComponentActivity
 import com.tangem.*
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.WalletManager
 import com.tangem.commands.CommandResponse
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.CardType
@@ -11,7 +9,6 @@ import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.domain.tasks.ScanNoteTask
-import com.tangem.tap.domain.tasks.SendTask
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.*
@@ -29,21 +26,6 @@ class TangemSdkManager(val activity: ComponentActivity) {
 
     suspend fun createWallet(): CompletionResult<ScanNoteResponse> {
         return runTaskAsyncReturnOnMain(CreateWalletAndRescanTask())
-    }
-
-    suspend fun send(
-            walletManager: WalletManager,
-            recipientAddress: String,
-            amountToSend: Amount,
-            feeAmount: Amount
-    ): CompletionResult<CommandResponse> {
-        return withContext(Dispatchers.IO) {
-            suspendCoroutine { continuation ->
-                tangemSdk.startSessionWithRunnable(SendTask(walletManager, recipientAddress, amountToSend, feeAmount)) {
-                    continuation.resume(it)
-                }
-            }
-        }
     }
 
     private suspend fun <T : CommandResponse> runTaskAsync(
