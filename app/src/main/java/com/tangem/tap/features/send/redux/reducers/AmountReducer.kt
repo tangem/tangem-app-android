@@ -43,6 +43,7 @@ class AmountReducer : SendInternalReducer {
                                 viewAmountValue = fiatToSend.stripZeroPlainString(),
                                 viewBalanceValue = converter.toFiat(state.balanceCrypto).stripZeroPlainString(),
                                 mainCurrency = Value(MainCurrencyType.FIAT, TapCurrency.main),
+                                maxLengthOfAmount = sendState.getDecimals(action.mainCurrency),
                                 cursorAtTheSamePosition = false
                         )
                     }
@@ -52,6 +53,7 @@ class AmountReducer : SendInternalReducer {
                                 viewAmountValue = state.amountToSendCrypto.stripZeroPlainString(),
                                 viewBalanceValue = state.balanceCrypto.stripZeroPlainString(),
                                 mainCurrency = mainCurrency,
+                                maxLengthOfAmount = sendState.getDecimals(action.mainCurrency),
                                 cursorAtTheSamePosition = false
                         )
                     }
