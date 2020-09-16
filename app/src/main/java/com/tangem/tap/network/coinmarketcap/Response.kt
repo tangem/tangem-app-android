@@ -5,21 +5,14 @@ import com.squareup.moshi.JsonClass
 import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
-data class RateInfoResponse(
-        val status: Status,
-        val data: RateData
-)
+class RateInfoResponse : CoinMarketResponse<RateData>()
 
 @JsonClass(generateAdapter = true)
 data class RateData(
-        val quote: Quote
-)
-
-@JsonClass(generateAdapter = true)
-data class Quote(
-        @Json(name = "USD")
-        val usd: CurrencyRate
-)
+        val quote: Map<String, CurrencyRate>
+) {
+    fun getRate(): BigDecimal = quote.values.first().price
+}
 
 @JsonClass(generateAdapter = true)
 data class CurrencyRate(
@@ -38,4 +31,21 @@ data class Status(
         @Json(name = "credit_count")
         val creditCount: Int,
         val notice: String?
+)
+
+@JsonClass(generateAdapter = true)
+class FiatMapResponse : CoinMarketResponse<List<FiatCurrency>>()
+
+@JsonClass(generateAdapter = true)
+open class CoinMarketResponse<T : Any> {
+    lateinit var status: Status
+    lateinit var data: T
+}
+
+@JsonClass(generateAdapter = true)
+data class FiatCurrency(
+        val id: Int,
+        val name: String,
+        val sign: String,
+        val symbol: String
 )
