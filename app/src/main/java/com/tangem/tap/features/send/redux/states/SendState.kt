@@ -14,17 +14,29 @@ import java.math.BigDecimal
 /**
 [REDACTED_AUTHOR]
  */
+
+interface IdStateHolder {
+    val stateId: StateId
+}
+
+enum class StateId {
+    SEND_SCREEN, ADDRESS_PAY_ID, AMOUNT, FEE, RECEIPT
+}
+
+interface SendScreenState : StateType, IdStateHolder
+
 data class SendState(
         val amount: Amount? = null,
         val walletManager: WalletManager? = null,
         val currencyConverter: CurrencyConverter = CurrencyConverter(BigDecimal.ONE),
-        val lastChangedStateType: StateType = NoneState(),
+        val lastChangedStates: LinkedHashSet<StateId> = linkedSetOf(),
         val addressPayIdState: AddressPayIdState = AddressPayIdState(),
         val amountState: AmountState = AmountState(),
         val feeState: FeeState = FeeState(),
         val receiptState: ReceiptState = ReceiptState(),
-        val sendButtonIsEnabled: Boolean = false,
-) : StateType {
+        val sendButtonState: SendButtonState = SendButtonState.DISABLED,
+        override val stateId: StateId = StateId.SEND_SCREEN
+) : SendScreenState {
 
     fun isReadyToSend(): Boolean {
         val sendState = store.state.sendState
@@ -32,9 +44,18 @@ data class SendState(
     }
 
     fun addressPayIdIsReady(): Boolean = store.state.sendState.addressPayIdState.isReady()
+
+    fun getDecimals(type: MainCurrencyType): Int = when (type) {
+        MainCurrencyType.FIAT -> 2
+        MainCurrencyType.CRYPTO -> amount?.decimals ?: 0
+    }
+
+    fun getButtonState(): SendButtonState = if (isReadyToSend()) SendButtonState.ENABLED else SendButtonState.DISABLED
 }
 
-class NoneState : StateType
+enum class SendButtonState {
+    ENABLED, DISABLED, PROGRESS
+}
 
 data class AmountState(
         val viewAmountValue: String = BigDecimal.ZERO.toPlainString(),
@@ -44,8 +65,10 @@ data class AmountState(
         val amountToSendCrypto: BigDecimal = BigDecimal.ZERO,
         val balanceCrypto: BigDecimal = BigDecimal.ZERO,
         val cursorAtTheSamePosition: Boolean = true,
-        val error: AmountAction.Error? = null
-) : StateType {
+        val maxLengthOfAmount: Int = 2,
+        val error: AmountAction.Error? = null,
+        override val stateId: StateId = StateId.AMOUNT
+) : SendScreenState {
     fun isReady(): Boolean = error == null && !amountToSendCrypto.isZero()
 }
 
