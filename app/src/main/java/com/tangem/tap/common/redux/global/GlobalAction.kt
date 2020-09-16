@@ -7,5 +7,11 @@ import java.math.BigDecimal
 sealed class GlobalAction : Action {
 
     data class SaveScanNoteResponse(val scanNoteResponse: ScanNoteResponse) : GlobalAction()
-    data class SetFiatRate(val fiatRates: Pair<String, BigDecimal>) : GlobalAction()
+    data class SetFiatRate(
+            val fiatRates: Pair<CryptoCurrencyName, BigDecimal>
+    ) : GlobalAction()
+    data class ChangeAppCurrency(val appCurrency: FiatCurrencyName) : GlobalAction()
+    object RestoreAppCurrency : GlobalAction() {
+        data class Success(val appCurrency: FiatCurrencyName) : GlobalAction()
+    }
 }
