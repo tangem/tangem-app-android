@@ -30,6 +30,7 @@
     <dimen name="size_progress_bar_big">135dp</dimen>
 
     <dimen name="btn_corner_radius">4dp</dimen>
+    <dimen name="btn_rounded_size">44dp</dimen>
 
     <dimen name="text_size_amount_to_send">32sp</dimen>
 
