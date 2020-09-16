@@ -60,8 +60,8 @@
 
             <FrameLayout
                 android:id="@+id/btn_copy"
-                android:layout_width="43dp"
-                android:layout_height="43dp"
+                android:layout_width="@dimen/btn_rounded_size"
+                android:layout_height="@dimen/btn_rounded_size"
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="16dp"
                 android:background="@drawable/shape_ellipse"
@@ -84,8 +84,8 @@
 
             <FrameLayout
                 android:id="@+id/btn_show_qr"
-                android:layout_width="43dp"
-                android:layout_height="43dp"
+                android:layout_width="@dimen/btn_rounded_size"
+                android:layout_height="@dimen/btn_rounded_size"
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="16dp"
                 android:background="@drawable/shape_ellipse"
