@@ -48,7 +48,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingBottom="14dp"
-                android:text="Card ID"
+                android:text="@string/details_card_id"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
 
@@ -71,7 +71,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingBottom="14dp"
-                android:text="Issuer"
+                android:text="@string/details_issuer"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
                 app:layout_constraintStart_toStartOf="parent"
@@ -92,8 +92,7 @@
                 android:id="@+id/tv_signed_hashes_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingBottom="14dp"
-                android:text="Signed"
+                android:text="@string/details_signed_hashes"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
                 app:layout_constraintStart_toStartOf="parent"
@@ -103,12 +102,135 @@
                 android:id="@+id/tv_signed_hashes"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingBottom="14dp"
                 android:textColor="@color/darkGray1"
                 android:textSize="16sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_issuer"
                 tools:text="48 hashes" />
+
+            <TextView
+                android:id="@+id/tv_settings_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40dp"
+                android:paddingBottom="4dp"
+                android:text="@string/details_settings"
+                android:textAllCaps="true"
+                android:textColor="@color/colorSecondary"
+                android:textSize="13sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_signed_hashes_title" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/separatorGrey2"
+                app:layout_constraintTop_toBottomOf="@id/tv_settings_title" />
+
+            <TextView
+                android:id="@+id/tv_app_currency"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:drawablePadding="15dp"
+                android:textColor="@color/darkGray1"
+                android:textSize="16sp"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_settings_title"
+                tools:text="USD" />
+
+            <TextView
+                android:id="@+id/tv_app_currency_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:text="@string/details_currency"
+                android:textColor="@color/darkGray6"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_settings_title" />
+
+<!--            <androidx.constraintlayout.widget.Group-->
+<!--                android:id="@+id/group_app_currency"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                app:constraint_referenced_ids="tv_app_currency_title, tv_app_currency" />-->
+
+            <TextView
+                android:id="@+id/tv_card_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:paddingBottom="4dp"
+                android:text="@string/details_card"
+                android:textAllCaps="true"
+                android:textColor="@color/colorSecondary"
+                android:textSize="13sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_app_currency_title" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/separatorGrey2"
+                app:layout_constraintTop_toBottomOf="@id/tv_card_title" />
+
+            <TextView
+                android:id="@+id/tv_validate_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="10dp"
+                android:paddingBottom="7dp"
+                android:drawablePadding="15dp"
+                android:textColor="@color/darkGray6"
+                android:textSize="16sp"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_card_title"
+                android:text="@string/details_validate_card" />
+
+            <TextView
+                android:id="@+id/tv_security"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingTop="7dp"
+                android:paddingBottom="7dp"
+                android:drawablePadding="15dp"
+                android:textColor="@color/darkGray1"
+                android:textSize="16sp"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_validate_card"
+                tools:text="Long Tap" />
+
+            <TextView
+                android:id="@+id/tv_security_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="7dp"
+                android:paddingBottom="7dp"
+                android:text="@string/details_manage_security"
+                android:textColor="@color/darkGray6"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_validate_card" />
+
+
+            <TextView
+                android:id="@+id/tv_erase_wallet"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="10dp"
+                android:paddingBottom="7dp"
+                android:drawablePadding="15dp"
+                android:textColor="@color/darkGray6"
+                android:textSize="16sp"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_security_title"
+                android:text="@string/details_erase_wallet" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
