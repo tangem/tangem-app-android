@@ -6,6 +6,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -14,6 +15,8 @@ import kotlinx.android.synthetic.main.fragment_wallet.toolbar
 import org.rekotlin.StoreSubscriber
 
 class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<DetailsState> {
+
+    var currencySelectionDialog = CurrencySelectionDialog()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,9 +53,6 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
     }
 
 
-
-
-
     override fun newState(state: DetailsState) {
         if (activity == null) return
 
@@ -62,6 +62,29 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             tv_issuer.text = state.cardInfo.issuer
             tv_signed_hashes.text = state.cardInfo.signedHashes.toString()
         }
+
+        tv_erase_wallet.setOnClickListener {
+            store.dispatch(DetailsAction.EraseWallet.Check)
+            store.dispatch(DetailsAction.EraseWallet.Proceed)
+        }
+
+        tv_app_currency.text = state.appCurrencyState.fiatCurrencyName
+
+        tv_app_currency_title.setOnClickListener {
+            store.dispatch(DetailsAction.AppCurrencyAction.ChooseAppCurrency)
+        }
+
+        if (state.appCurrencyState.showAppCurrencyDialog &&
+                !state.appCurrencyState.fiatCurrencies.isNullOrEmpty()) {
+            currencySelectionDialog.show(
+                    state.appCurrencyState.fiatCurrencies,
+                    state.appCurrencyState.fiatCurrencyName,
+                    requireContext()
+            )
+        } else {
+            currencySelectionDialog.clear()
+        }
+
     }
 
 }
