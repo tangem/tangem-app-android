@@ -44,7 +44,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
-            app:boxBackgroundColor="@android:color/transparent"
+            app:boxBackgroundColor="@color/backgroundLightGray"
             app:errorIconDrawable="@null">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -62,67 +62,33 @@
 
     </FrameLayout>
 
-    <TextSwitcher
+    <TextView
         android:id="@+id/tvAmountCurrency"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="26dp"
+        android:layout_gravity="end"
+        android:layout_marginTop="28dp"
         android:layout_marginEnd="16dp"
-        android:inAnimation="@anim/slide_in_up"
-        android:outAnimation="@anim/slide_out_down"
+        android:drawablePadding="10dp"
+        android:fontFamily="sans-serif-light"
+        android:textAllCaps="true"
+        android:textColor="@color/blue"
+        android:textSize="32sp"
+        app:drawableEndCompat="@drawable/ic_arrows_up_down"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="USD" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:drawablePadding="10dp"
-            android:fontFamily="sans-serif-light"
-            android:textAllCaps="true"
-            android:textColor="@color/blue"
-            android:textSize="32sp"
-            app:drawableEndCompat="@drawable/ic_arrows_up_down"
-            tools:text="USD" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:drawablePadding="10dp"
-            android:fontFamily="sans-serif-light"
-            android:textAllCaps="true"
-            android:textColor="@color/blue"
-            android:textSize="32sp"
-            app:drawableEndCompat="@drawable/ic_arrows_up_down" />
-
-    </TextSwitcher>
-
-    <TextSwitcher
+    <TextView
         android:id="@+id/tvBalance"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="end"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
-        android:inAnimation="@anim/slide_in_right"
-        android:outAnimation="@android:anim/slide_out_right"
+        android:textColor="@color/darkGray1"
+        android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/flAmountToSend">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:textColor="@color/darkGray1"
-            android:textSize="16sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:textColor="@color/darkGray1"
-            android:textSize="16sp" />
-
-    </TextSwitcher>
+        app:layout_constraintTop_toBottomOf="@+id/flAmountToSend" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
