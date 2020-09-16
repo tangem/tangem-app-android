@@ -2,9 +2,12 @@ package com.tangem.tap.features.send.redux
 
 import com.tangem.blockchain.common.Amount
 import com.tangem.tap.common.redux.ErrorAction
+import com.tangem.tap.common.redux.ToastNotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
+import com.tangem.tap.features.send.redux.states.SendButtonState
+import com.tangem.wallet.R
 import org.rekotlin.Action
 import java.math.BigDecimal
 
@@ -36,6 +39,9 @@ sealed class AddressPayIdVerifyAction : SendScreenAction {
         ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN,
         ADDRESS_SAME_AS_WALLET
     }
+
+    data class VerifyClipboard(val data: String?) : AddressPayIdVerifyAction()
+    data class ChangePasteBtnEnableState(val isEnabled: Boolean) : AddressPayIdVerifyAction()
 
     sealed class PayIdVerification : AddressPayIdVerifyAction() {
         data class SetError(val payId: String, val error: Error) : PayIdVerification()
@@ -103,16 +109,11 @@ sealed class SendActionUi : SendScreenActionUi {
 }
 
 sealed class SendAction : SendScreenAction {
-    enum class Error {
-        INSUFFICIENT_BALANCE, BLOCKCHAIN_INTERNAL
+
+    data class ChangeSendButtonState(val state: SendButtonState) : SendAction()
+    object SendSuccess : SendAction(), ToastNotificationAction {
+        override val messageResource: Int = R.string.send_transaction_complete
     }
 
-    object SendSuccess : SendAction()
-
-    data class SendError(val sendError: Error) : SendAction(), ErrorAction {
-        override val error: TapError = when (sendError) {
-            Error.INSUFFICIENT_BALANCE -> TapError.InsufficientBalance
-            Error.BLOCKCHAIN_INTERNAL -> TapError.BlockchainInternalError
-        }
-    }
+    data class SendError(override val error: TapError) : SendAction(), ErrorAction
 }
