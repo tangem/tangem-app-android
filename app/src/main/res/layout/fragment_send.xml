@@ -1,25 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/coordinator_wallet"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginTop="24dp"
+    android:background="@color/backgroundLightGray"
     android:orientation="vertical">
 
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar"
         style="@style/Widget.MaterialComponents.Toolbar.Surface"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        app:layout_constraintTop_toTopOf="parent"
-        app:navigationIcon="@drawable/ic_baseline_arrow_back_24"
-        app:title="@string/send_title" />
+        android:layout_height="wrap_content"
+        android:background="@color/backgroundLightGray"
+        android:fitsSystemWindows="true"
+        app:liftOnScroll="true">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:navigationIcon="@drawable/ic_baseline_arrow_back_24"
+            app:title="@string/send_title" />
+
+    </com.google.android.material.appbar.AppBarLayout>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -60,33 +71,49 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
                 android:layout_marginBottom="24dp"
-                android:visibility="gone"
-                tools:visibility="visible" />
+                tools:visibility="gone" />
 
             <LinearLayout
                 android:id="@+id/llBottomButtonContainer"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="30dp"
-                android:layout_marginEnd="30dp"
-                android:layout_marginBottom="33dp"
+                android:layout_gravity="center"
+                android:layout_marginStart="18dp"
+                android:layout_marginEnd="18dp"
                 android:orientation="horizontal">
 
-                <View
-                    android:layout_width="100dp"
-                    android:layout_height="1dp" />
+                <Space
+                    android:layout_width="100.5dp"
+                    android:layout_height="wrap_content" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnSend"
-                    style="@style/TapButtonWithIcon"
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_gravity="end"
-                    android:layout_weight="1"
-                    android:enabled="false"
-                    android:fontFamily="@font/saira_semi_condensed_regular"
-                    android:text="@string/send_btn_send"
-                    app:icon="@drawable/ic_arrow_right" />
+                <FrameLayout
+                    android:id="@+id/flSendButtonContainer"
+                    android:layout_width="wrap_content"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="33dp"
+                    android:clipToPadding="false"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSend"
+                        style="@style/TapButtonWithIcon"
+                        android:layout_width="200dp"
+                        android:layout_height="48dp"
+                        android:fontFamily="@font/saira_semi_condensed_regular"
+                        android:text="@string/send_btn_send"
+                        app:icon="@drawable/ic_arrow_right" />
+
+                    <ProgressBar
+                        android:id="@+id/progress"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:layout_gravity="center"
+                        android:elevation="18dp"
+                        android:indeterminate="true"
+                        android:indeterminateTint="@color/backgroundLightGray" />
+
+                </FrameLayout>
 
             </LinearLayout>
 
@@ -94,4 +121,4 @@
 
     </ScrollView>
 
-</LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
