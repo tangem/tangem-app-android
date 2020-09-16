@@ -6,6 +6,8 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
+import com.tangem.tap.common.redux.global.FiatCurrencyName
+import com.tangem.tap.network.coinmarketcap.FiatCurrency
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -46,10 +48,10 @@ fun BigDecimal.toFormattedString(decimals: Int): String {
     return df.format(bd)
 }
 
-fun BigDecimal.toFiatString(rateValue: BigDecimal): String? {
+fun BigDecimal.toFiatString(rateValue: BigDecimal, fiatCurrencyName: FiatCurrencyName): String? {
     var fiatValue = rateValue.multiply(this)
     fiatValue = fiatValue.setScale(2, RoundingMode.DOWN)
-    return "≈ USD  $fiatValue"
+    return "≈ ${fiatCurrencyName}  $fiatValue"
 }
 
 fun BigDecimal.stripZeroPlainString(): String = this.stripTrailingZeros().toPlainString()
@@ -68,3 +70,5 @@ fun BigDecimal.isLessThanOrEqual(value: BigDecimal): Boolean {
     val compareResult = this.compareTo(value)
     return compareResult == -1 || compareResult == 0
 }
+
+fun FiatCurrency.toFormattedString(): String = "${this.name} (${this.symbol}) - ${this.sign}"
