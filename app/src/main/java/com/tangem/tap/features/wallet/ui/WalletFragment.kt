@@ -156,10 +156,10 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             is WalletMainButton.SendButton -> R.string.wallet_button_send
             is WalletMainButton.CreateWalletButton -> R.string.wallet_button_create_wallet
         }
-        btn_main.text = getString(buttonTitle)
-        btn_main.isEnabled = state.mainButton.enabled
+        btn_confirm.text = getString(buttonTitle)
+        btn_confirm.isEnabled = state.mainButton.enabled
 
-        btn_main.setOnClickListener {
+        btn_confirm.setOnClickListener {
             when (state.mainButton) {
                 is WalletMainButton.SendButton -> store.dispatch(WalletAction.Send())
                 is WalletMainButton.CreateWalletButton -> store.dispatch(WalletAction.CreateWallet)
@@ -223,7 +223,10 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         return when (item.itemId) {
             R.id.details_menu -> {
                 store.state.globalState.scanNoteResponse?.card?.let { card ->
-                    store.dispatch(DetailsAction.SetCard(card))
+                    store.dispatch(DetailsAction.PrepareScreen(
+                            card, store.state.walletState.wallet,
+                            store.state.globalState.appCurrency
+                    ))
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.Details))
                     true
                 }
