@@ -42,7 +42,7 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
                 }
                 is WalletAction.LoadFiatRate -> {
                     scope.launch {
-                        store.state.globalState.tapWalletManager.loadFiatRate()
+                        store.state.globalState.tapWalletManager.loadFiatRate(store.state.globalState.appCurrency)
                     }
                 }
                 is WalletAction.LoadArtwork -> {

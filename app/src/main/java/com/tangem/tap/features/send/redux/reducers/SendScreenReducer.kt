@@ -65,7 +65,7 @@ private class PrepareSendScreenStatesReducer : SendInternalReducer {
     }
 
     private fun createCurrencyConverter(walletManager: WalletManager): CurrencyConverter {
-        val rate = store.state.globalState.fiatRates.getRateForCryptoCurrency(walletManager.wallet.blockchain.currency)
+        val rate = store.state.globalState.conversionRates.getRate(walletManager.wallet.blockchain.currency)
         return if (rate == null) CurrencyConverter(BigDecimal.ONE) else CurrencyConverter(rate)
     }
 }
