@@ -12,8 +12,13 @@ interface CoinMarketCapApi {
     @GET("v1/tools/price-conversion")
     suspend fun getRateInfo(
             @Query("amount") amount: Int,
-            @Query("symbol") cryptoId: String
+            @Query("symbol") cryptoCurrencyName: String,
+            @Query("convert") fiatCurrencyName: String? = null
     ): RateInfoResponse
+
+    @GET("v1/fiat/map")
+    suspend fun getFiatMap(): FiatMapResponse
+
 
     companion object {
         private const val baseUrl = "https://pro-api.coinmarketcap.com/"
