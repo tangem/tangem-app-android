@@ -7,6 +7,7 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.isPayIdSupported
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.*
+import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.scope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -63,6 +64,7 @@ internal class AddressPayIdMiddleware {
 
                         if (failReason == null) {
                             dispatch(PayIdVerification.SetPayIdWalletAddress(payId, address))
+                            dispatch(FeeAction.RequestFee)
                         } else {
                             dispatch(AddressVerification.SetError(payId, failReason))
                         }
