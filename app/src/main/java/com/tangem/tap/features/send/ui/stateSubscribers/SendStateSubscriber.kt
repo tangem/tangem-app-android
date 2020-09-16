@@ -2,13 +2,14 @@ package com.tangem.tap.features.send.ui.stateSubscribers
 
 import android.content.Context
 import android.text.SpannableStringBuilder
-import android.util.TypedValue
 import android.view.ViewGroup
 import androidx.core.text.bold
 import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.enableError
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.update
+import com.tangem.tap.common.text.DecimalDigitsInputFilter
+import com.tangem.tap.common.toggleWidget.ProgressState
 import com.tangem.tap.features.send.BaseStoreFragment
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
 import com.tangem.tap.features.send.redux.AmountAction
@@ -34,14 +35,32 @@ import kotlinx.android.synthetic.main.layout_send_receipt.*
 class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber<SendState>(fragment) {
 
     override fun updateWithNewState(fg: BaseStoreFragment, state: SendState) {
-        when (state.lastChangedStateType) {
-            is FeeState -> handleFeeState(fg, state.feeState)
-            is AddressPayIdState -> handleAddressPayIdState(fg, state.addressPayIdState)
-            is AmountState -> handleAmountState(fg, state.amountState)
-            is ReceiptState -> handleReceiptState(fg, state.receiptState)
+        val lastChangedStates = state.lastChangedStates.toList()
+        state.lastChangedStates.clear()
+        lastChangedStates.forEach {
+            when (it) {
+                StateId.ADDRESS_PAY_ID -> handleAddressPayIdState(fg, state.addressPayIdState)
+                StateId.AMOUNT -> handleAmountState(fg, state.amountState)
+                StateId.FEE -> handleFeeState(fg, state.feeState)
+                StateId.RECEIPT -> handleReceiptState(fg, state.receiptState)
+            }
         }
 
-        fg.btnSend.isEnabled = state.sendButtonIsEnabled
+        val sendFragment = (fg as? SendFragment) ?: return
+        when (state.sendButtonState) {
+            SendButtonState.ENABLED -> {
+                fg.btnSend.isEnabled = true
+                sendFragment.sendBtn.setState(ProgressState.None(), true)
+            }
+            SendButtonState.DISABLED -> {
+                fg.btnSend.isEnabled = false
+                sendFragment.sendBtn.setState(ProgressState.None(), true)
+            }
+            SendButtonState.PROGRESS -> {
+                fg.btnSend.isEnabled = true
+                sendFragment.sendBtn.setState(ProgressState.Progress(), true)
+            }
+        }
     }
 
     private fun handleAddressPayIdState(fg: BaseStoreFragment, state: AddressPayIdState) {
@@ -58,6 +77,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             return if (resId == null) null
             else context.getString(resId)
         }
+        fg.imvPaste.isEnabled = state.pasteIsEnabled
 
         val et = fg.etAddressOrPayId
         val til = fg.tilAddressOrPayId
@@ -91,22 +111,25 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             }
         }
 
+        fg.etAmountToSend.filters = arrayOf(DecimalDigitsInputFilter(12, state.maxLengthOfAmount))
         val amountToSend = state.viewAmountValue
-        fg.tvAmountToSendShadow.text = amountToSend
-        if (amountToSend.length > 10) {
-            // post is needed to wait for text size changes
-            fg.tvAmountToSendShadow.post {
-                fg.etAmountToSend.setTextSize(TypedValue.COMPLEX_UNIT_PX, fg.tvAmountToSendShadow.textSize - 2)
-                fg.etAmountToSend.update(amountToSend)
-                if (!state.cursorAtTheSamePosition) fg.etAmountToSend.setSelection(amountToSend.length)
-            }
-        } else {
-            val textSize = fg.resources.getDimension(R.dimen.text_size_amount_to_send)
-            fg.tvAmountToSendShadow.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
-            fg.etAmountToSend.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
-            fg.etAmountToSend.update(amountToSend)
-            if (!state.cursorAtTheSamePosition) fg.etAmountToSend.setSelection(amountToSend.length)
-        }
+        fg.etAmountToSend.update(amountToSend)
+
+//        fg.tvAmountToSendShadow.text = amountToSend
+//        if (amountToSend.length > 10) {
+//            post is needed to wait for text size changes
+//            fg.tvAmountToSendShadow.post {
+//                fg.etAmountToSend.setTextSize(TypedValue.COMPLEX_UNIT_PX, fg.tvAmountToSendShadow.textSize - 2)
+//                fg.etAmountToSend.update(amountToSend)
+//                if (!state.cursorAtTheSamePosition) fg.etAmountToSend.setSelection(amountToSend.length)
+//            }
+//        } else {
+//            val textSize = fg.resources.getDimension(R.dimen.text_size_amount_to_send)
+//            fg.tvAmountToSendShadow.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
+//            fg.etAmountToSend.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
+//            fg.etAmountToSend.update(amountToSend)
+//            if (!state.cursorAtTheSamePosition) fg.etAmountToSend.setSelection(amountToSend.length)
+//        }
 
         fg.tvAmountCurrency.update(state.mainCurrency.displayedValue)
         (fg as? SendFragment)?.saveMainCurrency(state.mainCurrency.value)
@@ -159,22 +182,21 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         val totalTokenLayout = fg.flTotalTokenCrypto as ViewGroup
         fun getString(id: Int): String = mainLayout.context.getString(id)
 
-        mainLayout.show(state.mainLayoutIsVisible)
         when (state.visibleTypeOfReceipt) {
             ReceiptLayoutType.FIAT -> {
                 val receipt = state.fiat ?: return
 
                 totalLayout.show(true)
                 totalTokenLayout.show(false)
-                fg.tvReceiptAmountValue.update("${receipt.amountFiat.toPlainString()} ${receipt.symbols.fiat}")
-                fg.tvReceiptFeeValue.update("${receipt.feeFiat.toPlainString()} ${receipt.symbols.fiat}")
-                totalLayout.tvTotalValue.update("${receipt.totalFiat.toPlainString()} ${receipt.symbols.fiat}")
+                fg.tvReceiptAmountValue.update("${receipt.amountFiat} ${receipt.symbols.fiat}")
+                fg.tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
+                totalLayout.tvTotalValue.update("${receipt.totalFiat} ${receipt.symbols.fiat}")
 
                 val willSent = SpannableStringBuilder()
-                        .bold { append(receipt.willSentCrypto.toPlainString()) }.append(" ")
+                        .bold { append(receipt.willSentCrypto) }.append(" ")
                         .append(receipt.symbols.crypto).append(" ")
                         .append(getString(R.string.send_total_will_be_sent))
-                totalLayout.tvWillBeSentValue.update(willSent)
+                totalLayout.tvWillBeSentValue.update(willSent.toString())
 
             }
             ReceiptLayoutType.CRYPTO -> {
@@ -182,41 +204,41 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
                 totalLayout.show(true)
                 totalTokenLayout.show(false)
-                fg.tvReceiptAmountValue.update("${receipt.amountCrypto.toPlainString()} ${receipt.symbols.crypto}")
-                fg.tvReceiptFeeValue.update("${receipt.feeCrypto.toPlainString()} ${receipt.symbols.crypto}")
-                totalLayout.tvTotalValue.update("${receipt.totalCrypto.toPlainString()} ${receipt.symbols.crypto}")
+                fg.tvReceiptAmountValue.update("${receipt.amountCrypto} ${receipt.symbols.crypto}")
+                fg.tvReceiptFeeValue.update("${receipt.feeCrypto} ${receipt.symbols.crypto}")
+                totalLayout.tvTotalValue.update("${receipt.totalCrypto} ${receipt.symbols.crypto}")
 
                 val willSent = SpannableStringBuilder()
                         .bold {
-                            append(getString(R.string.sign_rough))
-                            append(" ")
-                            append(receipt.willSentFiat.toPlainString())
-                            append(" ")
+                            append(getString(R.string.sign_rough)).append(" ")
+                            append(receipt.willSentFiat).append(" ")
                             append(receipt.symbols.fiat)
+                            append(" (fee: ${receipt.feeFiat} ")
+                            append(receipt.symbols.fiat).append(")")
                         }
-                totalLayout.tvWillBeSentValue.update(willSent)
+                totalLayout.tvWillBeSentValue.update(willSent.toString())
             }
             ReceiptLayoutType.TOKEN_FIAT -> {
                 val receipt = state.tokenFiat ?: return
 
                 totalLayout.show(true)
                 totalTokenLayout.show(false)
-                fg.tvReceiptAmountValue.update("${receipt.amountFiat.toPlainString()} ${receipt.symbols.fiat}")
-                fg.tvReceiptFeeValue.update("${receipt.feeFiat.toPlainString()} ${receipt.symbols.fiat}")
-                totalLayout.tvTotalValue.update("${receipt.totalFiat.toPlainString()} ${receipt.symbols.fiat}")
+                fg.tvReceiptAmountValue.update("${receipt.amountFiat} ${receipt.symbols.fiat}")
+                fg.tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
+                totalLayout.tvTotalValue.update("${receipt.totalFiat} ${receipt.symbols.fiat}")
 
                 val willSent = SpannableStringBuilder()
                         .bold {
                             append(receipt.symbols.token)
                             append(" ")
-                            append(receipt.willSentFeeCrypto.toPlainString())
+                            append(receipt.willSentFeeCrypto)
                         }.append(" ").append(getString(R.string.generic_and)).append(" ")
                         .bold {
                             append(receipt.symbols.crypto).append(" ")
-                            append(receipt.willSentFeeCrypto.toPlainString()).append(" ")
+                            append(receipt.willSentFeeCrypto).append(" ")
                         }
                         .append(mainLayout.context.getString(R.string.send_total_will_be_sent))
-                totalLayout.tvWillBeSentValue.update(willSent)
+                totalLayout.tvWillBeSentValue.update(willSent.toString())
             }
             ReceiptLayoutType.TOKEN_CRYPTO -> {
                 val receipt = state.tokenCrypto ?: return
@@ -224,18 +246,16 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 totalLayout.show(false)
                 totalTokenLayout.show(true)
 
-                fg.tvReceiptAmountValue.update("${receipt.amountToken.toPlainString()} ${receipt.symbols.token}")
-                fg.tvReceiptFeeValue.update("${receipt.feeCrypto.toPlainString()} ${receipt.symbols.crypto}")
+                fg.tvReceiptAmountValue.update("${receipt.amountToken} ${receipt.symbols.token}")
+                fg.tvReceiptFeeValue.update("${receipt.feeCrypto} ${receipt.symbols.crypto}")
 
                 val willSent = SpannableStringBuilder()
                         .bold {
-                            append(getString(R.string.sign_rough))
-                            append(" ")
-                            append(receipt.totalFiat.toPlainString())
-                            append(" ")
+                            append(getString(R.string.sign_rough)).append(" ")
+                            append(receipt.totalFiat).append(" ")
                             append(receipt.symbols.fiat)
                         }
-                totalTokenLayout.tvTotalTokenCryptoValue.update(willSent)
+                totalTokenLayout.tvTotalTokenCryptoValue.update(willSent.toString())
             }
         }
     }
