@@ -44,6 +44,7 @@
     <string name="error_payid_already_created">This PayID already exists. Try a different one.</string>
     <string name="error_creating_payid">Error response while creating PayID.</string>
 
+    <string name="error_unknown">Unknown error</string>
     <string name="error_payid_verification_failed">PayID verification failed</string>
     <string name="error_payid_unsupported_by_blockchain">PayID unsupported by blockchain</string>
     <string name="error_payid_not_registere">PayID not registered</string>
@@ -71,6 +72,7 @@
     <string name="send_total_will_be_sent">will be sent</string>
     <string name="send_balance">Balance: %1s %2s</string>
     <string name="send_set_maximum_amount">Maximum amount</string>
+    <string name="send_transaction_complete">Transaction was signed and sent to the blockchain</string>
 
     <string name="details_toolbar_title">Details</string>
 

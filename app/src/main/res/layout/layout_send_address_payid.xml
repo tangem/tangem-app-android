@@ -12,7 +12,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:hint="@string/send_address_or_payid"
-        app:boxBackgroundColor="@android:color/transparent"
+        app:boxBackgroundColor="@color/backgroundLightGray"
         app:errorIconDrawable="@null"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -31,23 +31,45 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <include
+    <FrameLayout
         android:id="@+id/flPaste"
-        layout="@layout/btn_paste"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="12dp"
+        android:layout_width="@dimen/btn_rounded_size"
+        android:layout_height="@dimen/btn_rounded_size"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/shape_ellipse"
         app:layout_constraintBottom_toBottomOf="@+id/flQrCode"
         app:layout_constraintEnd_toStartOf="@+id/flQrCode"
-        app:layout_constraintTop_toTopOf="@+id/flQrCode" />
+        app:layout_constraintTop_toTopOf="@+id/flQrCode">
 
-    <include
+        <ImageView
+            android:id="@+id/imvPaste"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="?selectableItemBackgroundBorderless"
+            android:padding="6dp"
+            app:srcCompat="@drawable/paste_selector" />
+
+    </FrameLayout>
+
+    <FrameLayout
         android:id="@+id/flQrCode"
-        layout="@layout/btn_qr_code"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
+        android:layout_width="@dimen/btn_rounded_size"
+        android:layout_height="@dimen/btn_rounded_size"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/shape_ellipse"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/tilAddressOrPayId" />
+        app:layout_constraintTop_toTopOf="@+id/tilAddressOrPayId">
+
+        <ImageView
+            android:id="@+id/imvQrCode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="?selectableItemBackgroundBorderless"
+            android:padding="5dp"
+            app:srcCompat="@drawable/ic_qr_code_scan" />
+
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
