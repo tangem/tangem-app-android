@@ -1,7 +1,6 @@
 package com.tangem.tap.features.send.redux.states
 
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction
-import org.rekotlin.StateType
 
 data class AddressPayIdState(
         val etFieldValue: String? = null,
@@ -9,8 +8,10 @@ data class AddressPayIdState(
         val truncatedFieldValue: String? = null,
         val recipientWalletAddress: String? = null,
         val error: AddressPayIdVerifyAction.Error? = null,
-        val truncateHandler: ((String) -> String)? = null
-) : StateType {
+        val truncateHandler: ((String) -> String)? = null,
+        val pasteIsEnabled: Boolean = false,
+        override val stateId: StateId = StateId.ADDRESS_PAY_ID
+) : SendScreenState {
 
     fun isReady(): Boolean = error == null && recipientWalletAddress?.isNotEmpty() ?: false
 
