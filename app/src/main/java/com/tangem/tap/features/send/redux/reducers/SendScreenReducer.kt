@@ -54,13 +54,13 @@ private class EmptyReducer : SendInternalReducer {
 
 private class PrepareSendScreenStatesReducer : SendInternalReducer {
     override fun handle(action: SendScreenAction, sendState: SendState): SendState {
-        val amount = (action as PrepareSendScreen).amount
+        val amount = (action as PrepareSendScreen).tokenAmount ?: action.coinAmount
         val walletManager = store.state.globalState.scanNoteResponse!!.walletManager!!
         return sendState.copy(
                 amount = amount,
                 walletManager = walletManager,
                 currencyConverter = createCurrencyConverter(walletManager),
-                amountState = sendState.amountState.copy(balanceCrypto = amount.value ?: BigDecimal.ZERO)
+                amountState = sendState.amountState.copy(balanceCrypto = amount?.value ?: BigDecimal.ZERO)
         )
     }
 
