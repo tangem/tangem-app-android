@@ -5,6 +5,6 @@ package com.tangem.tap.common.entities
  */
 class TapCurrency {
     companion object{
-        val main = "USD"
+        const val DEFAULT_FIAT_CURRENCY = "USD"
     }
 }

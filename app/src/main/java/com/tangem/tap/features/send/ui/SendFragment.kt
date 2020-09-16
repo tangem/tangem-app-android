@@ -197,7 +197,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     private fun restoreMainCurrency(): MainCurrencyType {
         val sp = requireContext().getSharedPreferences("SendScreen", Context.MODE_PRIVATE)
-        val mainCurrency = sp.getString("mainCurrency", TapCurrency.main)
+        val mainCurrency = sp.getString("mainCurrency", TapCurrency.DEFAULT_FIAT_CURRENCY)
         val foundType = MainCurrencyType.values()
                 .firstOrNull { it.name.toLowerCase() == mainCurrency!!.toLowerCase() } ?: MainCurrencyType.FIAT
         return foundType
