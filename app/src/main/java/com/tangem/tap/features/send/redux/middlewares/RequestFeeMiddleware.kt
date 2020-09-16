@@ -9,6 +9,7 @@ import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.ReceiptAction
+import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.scope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -29,6 +30,7 @@ class RequestFeeMiddleware {
             dispatch(FeeAction.FeeCalculation.SetFeeError(FeeAction.Error.ADDRESS_OR_AMOUNT_IS_EMPTY))
             dispatch(FeeAction.ChangeLayoutVisibility(main = false, controls = true, chipGroup = true))
             dispatch(ReceiptAction.RefreshReceipt)
+            dispatch(SendAction.ChangeSendButtonState(sendState.getButtonState()))
             return
         }
 
@@ -67,6 +69,7 @@ class RequestFeeMiddleware {
                     }
                 }
                 dispatch(ReceiptAction.RefreshReceipt)
+                dispatch(SendAction.ChangeSendButtonState(sendState.getButtonState()))
             }
         }
 

@@ -17,7 +17,12 @@ import org.rekotlin.DispatchFunction
 [REDACTED_AUTHOR]
  */
 internal class AddressPayIdMiddleware {
-    fun handle(data: String, appState: AppState?, dispatch: DispatchFunction) {
+    fun handle(data: String?, appState: AppState?, dispatch: DispatchFunction) {
+        if (data == null) {
+            dispatch(AddressVerification.SetError("", Error.ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN))
+            return
+        }
+
         val sendState = appState?.sendState ?: return
         val walletManager = sendState.walletManager ?: return
         if (data == sendState.addressPayIdState.etFieldValue) return
