@@ -6,6 +6,7 @@ import com.tangem.tap.common.extensions.isGreaterThanOrEqual
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.send.redux.AmountAction
 import com.tangem.tap.features.send.redux.ReceiptAction
+import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.store
 import org.rekotlin.Action
@@ -43,6 +44,7 @@ class AmountMiddleware {
             dispatch(AmountAction.AmountVerification.SetError(checkResult.amount, checkResult.error))
         }
         dispatch(ReceiptAction.RefreshReceipt)
+        dispatch(SendAction.ChangeSendButtonState(sendState.getButtonState()))
     }
 
 }
