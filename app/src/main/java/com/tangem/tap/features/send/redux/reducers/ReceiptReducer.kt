@@ -3,11 +3,11 @@ package com.tangem.tap.features.send.redux.reducers
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Wallet
 import com.tangem.tap.common.CurrencyConverter
-import com.tangem.tap.common.entities.TapCurrency
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.features.send.redux.ReceiptAction.RefreshReceipt
 import com.tangem.tap.features.send.redux.SendScreenAction
 import com.tangem.tap.features.send.redux.states.*
+import com.tangem.tap.store
 
 /**
 [REDACTED_AUTHOR]
@@ -163,7 +163,7 @@ class ReceiptReducer : SendInternalReducer {
 
     private fun determineSymbols(wallet: Wallet): ReceiptSymbols {
         return ReceiptSymbols(
-                fiat = TapCurrency.main,
+                fiat = store.state.globalState.appCurrency,
                 crypto = wallet.blockchain.currency,
                 token = wallet.amounts[AmountType.Token]?.currencySymbol
         )
