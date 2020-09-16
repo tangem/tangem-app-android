@@ -3,6 +3,8 @@ package com.tangem.tap.features.wallet.redux
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.ContextCompat
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
 import com.tangem.commands.common.network.Result
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
@@ -20,6 +22,7 @@ import com.tangem.tap.tangemSdkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.rekotlin.Action
 import org.rekotlin.Middleware
 
 
@@ -113,24 +116,32 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
                     ContextCompat.startActivity(action.context, intent, null)
                 }
                 is WalletAction.Send -> {
-                    if (action.amount != null) {
-                        store.dispatch(PrepareSendScreen(action.amount))
+                    val newAction = prepareSendAction(action.amount)
+                    store.dispatch(newAction)
+                    if (newAction is PrepareSendScreen) {
                         store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
-                    } else {
-                        if (store.state.walletState.wallet?.amounts?.size ?: 0 > 1) {
-                            store.dispatch(WalletAction.Send.ChooseCurrency)
-                        } else {
-                            val amount = store.state.walletState.wallet?.amounts?.toList()
-                                    ?.get(0)?.second
-                            if (amount != null) {
-                                store.dispatch(PrepareSendScreen(amount))
-                                store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
-                            }
-                        }
                     }
                 }
             }
             next(action)
+        }
+    }
+}
+
+
+private fun prepareSendAction(amount: Amount?): Action {
+    return if (amount != null) {
+        if (amount.type == AmountType.Token) {
+            PrepareSendScreen(store.state.walletState.wallet?.amounts?.get(AmountType.Coin), amount)
+        } else {
+            PrepareSendScreen(amount)
+        }
+    } else {
+        if (store.state.walletState.wallet?.amounts?.size ?: 0 > 1) {
+            WalletAction.Send.ChooseCurrency
+        } else {
+            val amountToSend = store.state.walletState.wallet?.amounts?.toList()?.get(0)?.second
+            PrepareSendScreen(amountToSend)
         }
     }
 }
