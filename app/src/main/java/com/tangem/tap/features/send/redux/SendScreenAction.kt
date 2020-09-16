@@ -20,7 +20,8 @@ interface SendScreenActionUi : SendScreenAction
 object ReleaseSendState : Action
 
 data class PrepareSendScreen(
-        val amount: Amount,
+        val coinAmount: Amount?,
+        val tokenAmount: Amount? = null
 ) : SendScreenAction
 
 // Address or PayId
