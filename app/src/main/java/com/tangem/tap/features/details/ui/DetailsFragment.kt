@@ -16,7 +16,7 @@ import org.rekotlin.StoreSubscriber
 
 class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<DetailsState> {
 
-    var currencySelectionDialog = CurrencySelectionDialog()
+    private var currencySelectionDialog = CurrencySelectionDialog()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
