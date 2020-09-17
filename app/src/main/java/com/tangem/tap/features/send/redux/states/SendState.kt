@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.CurrencyConverter
+import com.tangem.tap.common.entities.TapCurrency
 import com.tangem.tap.features.send.redux.AmountAction
 import com.tangem.tap.store
 import org.rekotlin.StateType
@@ -59,7 +60,7 @@ enum class SendButtonState {
 data class AmountState(
         val viewAmountValue: String = BigDecimal.ZERO.toPlainString(),
         val viewBalanceValue: String = BigDecimal.ZERO.toPlainString(),
-        val mainCurrency: Value<MainCurrencyType> = Value(MainCurrencyType.FIAT, store.state.globalState.appCurrency),
+        val mainCurrency: Value<MainCurrencyType> = Value(MainCurrencyType.FIAT, TapCurrency.DEFAULT_FIAT_CURRENCY),
         val typeOfAmount: AmountType = AmountType.Coin,
         val amountToSendCrypto: BigDecimal = BigDecimal.ZERO,
         val balanceCrypto: BigDecimal = BigDecimal.ZERO,
