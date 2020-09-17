@@ -3,6 +3,8 @@ package com.tangem.tap.domain
 import androidx.activity.ComponentActivity
 import com.tangem.*
 import com.tangem.commands.CommandResponse
+import com.tangem.commands.PurgeWalletCommand
+import com.tangem.commands.PurgeWalletResponse
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.CardType
 import com.tangem.tangem_sdk_new.extensions.init
@@ -26,6 +28,10 @@ class TangemSdkManager(val activity: ComponentActivity) {
 
     suspend fun createWallet(): CompletionResult<ScanNoteResponse> {
         return runTaskAsyncReturnOnMain(CreateWalletAndRescanTask())
+    }
+
+    suspend fun eraseWallet(): CompletionResult<PurgeWalletResponse> {
+        return runTaskAsyncReturnOnMain(PurgeWalletCommand())
     }
 
     private suspend fun <T : CommandResponse> runTaskAsync(
