@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.commands.Card
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
+import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.domain.TapError
 import com.tangem.wallet.R
 import org.rekotlin.Action
@@ -24,7 +25,7 @@ sealed class WalletAction : Action {
     }
 
     object LoadFiatRate : WalletAction() {
-        data class Success(val fiatRates: Pair<String, BigDecimal>) : WalletAction()
+        data class Success(val fiatRates: Pair<CryptoCurrencyName, BigDecimal?>) : WalletAction()
         object Failure : WalletAction()
     }
 
