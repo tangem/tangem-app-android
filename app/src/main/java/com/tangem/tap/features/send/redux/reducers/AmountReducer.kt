@@ -2,7 +2,6 @@ package com.tangem.tap.features.send.redux.reducers
 
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.CurrencyConverter
-import com.tangem.tap.common.entities.TapCurrency
 import com.tangem.tap.common.extensions.isNegative
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.features.send.redux.AmountAction
@@ -13,6 +12,7 @@ import com.tangem.tap.features.send.redux.states.AmountState
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.redux.states.SendState
 import com.tangem.tap.features.send.redux.states.Value
+import com.tangem.tap.store
 import java.math.BigDecimal
 
 /**
@@ -42,7 +42,7 @@ class AmountReducer : SendInternalReducer {
                         state.copy(
                                 viewAmountValue = fiatToSend.stripZeroPlainString(),
                                 viewBalanceValue = converter.toFiat(state.balanceCrypto).stripZeroPlainString(),
-                                mainCurrency = Value(MainCurrencyType.FIAT, TapCurrency.main),
+                                mainCurrency = Value(MainCurrencyType.FIAT, store.state.globalState.appCurrency),
                                 maxLengthOfAmount = sendState.getDecimals(action.mainCurrency),
                                 cursorAtTheSamePosition = false
                         )
