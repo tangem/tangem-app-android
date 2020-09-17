@@ -60,7 +60,7 @@ enum class SendButtonState {
 data class AmountState(
         val viewAmountValue: String = BigDecimal.ZERO.toPlainString(),
         val viewBalanceValue: String = BigDecimal.ZERO.toPlainString(),
-        val mainCurrency: Value<MainCurrencyType> = Value(MainCurrencyType.FIAT, TapCurrency.main),
+        val mainCurrency: Value<MainCurrencyType> = Value(MainCurrencyType.FIAT, TapCurrency.DEFAULT_FIAT_CURRENCY),
         val typeOfAmount: AmountType = AmountType.Coin,
         val amountToSendCrypto: BigDecimal = BigDecimal.ZERO,
         val balanceCrypto: BigDecimal = BigDecimal.ZERO,
