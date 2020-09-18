@@ -4,6 +4,8 @@ import android.graphics.Bitmap
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Wallet
 import com.tangem.tap.common.entities.Button
+import com.tangem.tap.common.extensions.toBitmap
+import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import org.rekotlin.StateType
@@ -22,7 +24,10 @@ data class WalletState(
 ) : StateType
 
 sealed class WalletDialog {
-    data class QrDialog(val qrCode: Bitmap?, val shareUrl: String?) : WalletDialog()
+    data class QrDialog(
+            val qrCode: Bitmap?, val shareUrl: String?, val currencyName: CryptoCurrencyName?
+    ) : WalletDialog()
+
     data class CreatePayIdDialog(val creatingPayIdState: CreatingPayIdState?) : WalletDialog()
     data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog()
 }
@@ -54,5 +59,8 @@ data class AddressData(
 
 data class Artwork(
         val artworkId: String,
-        val artwork: Bitmap
-)
+        val artwork: Bitmap? = null,
+        val artworkResId: Int? = null
+) {
+    constructor(artworkId: String, artworkBytes: ByteArray) : this(artworkId, artworkBytes.toBitmap())
+}
