@@ -45,10 +45,18 @@ class PreferencesStorage(applicationContext: Application) {
         return preferences.edit().putString(FIAT_CURRENCIES_KEY, json).apply()
     }
 
+    fun isFirstLaunch(): Boolean {
+        val isFirst = preferences.contains(FIRST_LAUNCH_CHECK_KEY)
+        if (isFirst) preferences.edit().putInt(FIRST_LAUNCH_CHECK_KEY, System.currentTimeMillis().toInt()).apply()
+
+        return isFirst
+    }
+
     companion object {
         private const val PREFERENCES_NAME = "tapPrefs"
         private const val APP_CURRENCY_KEY = "appCurrency"
         private const val FIAT_CURRENCIES_KEY = "fiatCurrencies"
+        private const val FIRST_LAUNCH_CHECK_KEY = "firstLaunchCheck"
     }
 
 }
