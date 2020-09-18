@@ -48,6 +48,10 @@ fun BigDecimal.toFormattedString(decimals: Int): String {
     return df.format(bd)
 }
 
+fun BigDecimal.toFormattedCurrencyString(decimals: Int, currency: String): String {
+    return "${this.toFormattedString(decimals)} $currency"
+}
+
 fun BigDecimal.toFiatString(rateValue: BigDecimal, fiatCurrencyName: FiatCurrencyName): String? {
     var fiatValue = rateValue.multiply(this)
     fiatValue = fiatValue.setScale(2, RoundingMode.DOWN)
