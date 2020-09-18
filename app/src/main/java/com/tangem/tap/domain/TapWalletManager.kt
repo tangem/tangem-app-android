@@ -12,6 +12,7 @@ import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.tasks.ScanNoteResponse
+import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.features.wallet.redux.PayIdState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
@@ -43,8 +44,8 @@ class TapWalletManager {
             when (result) {
                 is Result.Success -> {
                     store.dispatch(WalletAction.LoadArtwork.Success(
-                            artworkId, result.data.byteStream().readBytes())
-                    )
+                            Artwork(artworkId, result.data.byteStream().readBytes())
+                    ))
                 }
                 is Result.Failure -> store.dispatch(WalletAction.LoadArtwork.Failure)
             }
@@ -74,21 +75,22 @@ class TapWalletManager {
     suspend fun onCardScanned(data: ScanNoteResponse) {
         withContext(Dispatchers.Main) {
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
+            val artworkId = data.verifyResponse?.artworkInfo?.id
             if (data.walletManager != null) {
                 if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
                     store.dispatch(WalletAction.LoadData.Failure(TapError.NoInternetConnection))
                     return@withContext
                 }
-                data.verifyResponse?.artworkInfo?.id?.let {
-                    store.dispatch(WalletAction.LoadArtwork(data.card, it))
-                }
                 store.dispatch(WalletAction.LoadWallet)
+                store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
                 store.dispatch(WalletAction.LoadFiatRate)
                 store.dispatch(WalletAction.LoadPayId)
             } else if (data.card.status == CardStatus.Empty) {
                 store.dispatch(WalletAction.EmptyWallet)
+                store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
             } else {
                 store.dispatch(WalletAction.LoadData.Failure(TapError.UnknownBlockchain))
+                store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
             }
         }
     }
