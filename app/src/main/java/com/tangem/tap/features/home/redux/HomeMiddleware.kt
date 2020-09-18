@@ -8,6 +8,7 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -20,6 +21,11 @@ val homeMiddleware: Middleware<AppState> = { dispatch, state ->
     { next ->
         { action ->
             when (action) {
+                is HomeAction.CheckIfFirstLaunch -> {
+                    store.dispatch(
+                            HomeAction.CheckIfFirstLaunch.Result(preferencesStorage.isFirstLaunch())
+                    )
+                }
                 is HomeAction.ReadCard -> {
                     scope.launch {
                         val result = tangemSdkManager.scanNote()
