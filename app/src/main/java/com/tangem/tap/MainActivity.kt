@@ -16,6 +16,7 @@ import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TangemSdkManager
+import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -67,9 +68,8 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         notificationsHandler = NotificationsHandler(fragment_container)
         if (supportFragmentManager.backStackEntryCount == 0) {
-            store.dispatch(
-                    NavigationAction.NavigateTo(AppScreen.Home)
-            )
+            store.dispatch(HomeAction.CheckIfFirstLaunch)
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
         }
     }
 
