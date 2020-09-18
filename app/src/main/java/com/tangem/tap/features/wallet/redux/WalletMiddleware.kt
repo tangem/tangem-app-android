@@ -19,6 +19,7 @@ import com.tangem.tap.network.NetworkStateChanged
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -46,11 +47,19 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
                     }
                 }
                 is WalletAction.LoadArtwork -> {
-                    scope.launch {
-                        store.state.globalState.tapWalletManager.loadArtwork(
-                                action.card, action.artworkId
-                        )
+                    if (action.artworkId != null) {
+                        scope.launch {
+                            store.state.globalState.tapWalletManager.loadArtwork(
+                                    action.card, action.artworkId
+                            )
+                        }
+                    } else {
+                        val artworkRes = R.drawable.card_default
+                        store.dispatch(WalletAction.LoadArtwork.Success(Artwork(
+                                artworkId = artworkRes.toString(), artworkResId = artworkRes
+                        )))
                     }
+
                 }
                 is WalletAction.CreateWallet -> {
                     scope.launch {
