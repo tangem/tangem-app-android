@@ -31,7 +31,7 @@
         android:paddingEnd="16dp"
         android:text="@string/wallet_verified_balance"
         android:textColor="@color/accent"
-        android:textSize="12sp"
+        android:textSize="14sp"
         android:visibility="gone"
         app:drawableStartCompat="@drawable/ic_ok"
         app:layout_constraintStart_toStartOf="parent"
@@ -47,7 +47,7 @@
         android:paddingEnd="16dp"
         android:text="@string/wallet_blockchain_is_unreachable"
         android:textColor="@color/warning"
-        android:textSize="12sp"
+        android:textSize="14sp"
         android:visibility="gone"
         app:drawableStartCompat="@drawable/ic_warning_small"
         app:layout_constraintStart_toStartOf="parent"
@@ -61,7 +61,7 @@
         android:paddingTop="4dp"
         android:paddingEnd="16dp"
         android:textColor="@color/darkGray2"
-        android:textSize="12sp"
+        android:textSize="14sp"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_status_error" />
@@ -83,7 +83,7 @@
         android:paddingEnd="16dp"
         android:text="@string/wallet_balance_is_loading"
         android:textColor="@color/darkGray6"
-        android:textSize="12sp"
+        android:textSize="13sp"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_currency" />
@@ -92,7 +92,7 @@
         android:id="@+id/tv_amount"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginEnd="4dp"
+        android:layout_marginEnd="16dp"
         android:ellipsize="end"
         android:gravity="end|bottom"
         android:maxLines="1"
@@ -104,27 +104,12 @@
         app:autoSizeMinTextSize="12sp"
         app:autoSizeStepGranularity="1sp"
         app:autoSizeTextType="uniform"
-        app:layout_constraintEnd_toStartOf="@id/tv_currency_symbol"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_weight="1"
         app:layout_constraintStart_toEndOf="@id/tv_currency"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="@id/tv_currency_symbol"
-        tools:text="0.43" />
-
-    <TextView
-        android:id="@+id/tv_currency_symbol"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:paddingTop="16dp"
-        android:textColor="@color/darkGray6"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_weight="1"
-        app:layout_constraintStart_toEndOf="@id/tv_amount"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="BTC" />
+        app:layout_constraintBottom_toBottomOf="@id/tv_currency"
+        tools:text="0.43 BTC" />
 
     <TextView
         android:id="@+id/tv_fiat_amount"
@@ -134,10 +119,23 @@
         android:paddingTop="4dp"
         android:paddingEnd="16dp"
         android:textColor="@color/darkGray2"
-        android:textSize="12sp"
+        android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_amount"
         tools:text="USD 3 588" />
+
+    <TextView
+        android:id="@+id/tv_placeholder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="16dp"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_amount"
+        tools:text="USD 3 588"
+        android:visibility="invisible"/>
 
 
     <include
