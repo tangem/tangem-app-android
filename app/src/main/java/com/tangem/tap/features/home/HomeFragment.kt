@@ -30,7 +30,6 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
 
     override fun newState(state: HomeState) {
         if (activity == null) return
-requireContext().cacheDir
         if (state.firstLaunch) {
             tv_home_description.text = getText(R.string.home_do_you_have_card)
             btn_shop.text = getText(R.string.home_button_no_card)
