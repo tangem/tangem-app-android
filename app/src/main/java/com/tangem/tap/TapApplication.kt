@@ -19,11 +19,10 @@ lateinit var preferencesStorage: PreferencesStorage
 class TapApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        preferencesStorage = PreferencesStorage(this)
-
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
         NetworkConnectivity.createInstance(store, this)
+        preferencesStorage = PreferencesStorage(this)
     }
 }
