@@ -53,7 +53,7 @@
             android:paddingTop="12dp"
             android:text="@string/wallet_pay_id_address"
             android:textColor="@color/darkGray4"
-            android:textSize="13sp"
+            android:textSize="14sp"
             app:layout_constraintBottom_toBottomOf="@id/til_payid"
             app:layout_constraintStart_toEndOf="@id/til_payid"
             app:layout_constraintTop_toTopOf="@id/til_payid" />
@@ -65,7 +65,7 @@
             android:paddingStart="24dp"
             android:paddingEnd="24dp"
             android:text="@string/wallet_dialog_pay_id_description"
-            android:textColor="@color/darkGray4"
+            android:textColor="@color/darkGray1"
             android:textSize="13sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -85,7 +85,7 @@
             android:paddingBottom="8dp"
             android:text="@string/wallet_dialog_pay_id_button"
             android:textColor="@color/blue"
-            android:textSize="16sp"
+            android:textSize="14sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
