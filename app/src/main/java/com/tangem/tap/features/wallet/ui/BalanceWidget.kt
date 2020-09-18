@@ -52,7 +52,6 @@ class BalanceWidget(
                 fragment.l_token.hide()
 
                 fragment.tv_currency.text = data.currency
-                fragment.tv_currency_symbol.text = "-"
                 fragment.tv_amount.text = ""
 
                 showStatus(R.id.tv_status_loading)
@@ -62,7 +61,6 @@ class BalanceWidget(
                 fragment.l_balance_error.hide()
                 fragment.tv_currency.text = data.currency
                 fragment.tv_amount.text = data.amount
-                fragment.tv_currency_symbol.text = data.currencySymbol
                 fragment.tv_fiat_amount.show()
                 fragment.tv_fiat_amount.text = data.fiatAmount
                 showStatus(R.id.tv_status_verified)
@@ -83,7 +81,6 @@ class BalanceWidget(
                 fragment.tv_fiat_amount.hide()
 
                 fragment.tv_currency.text = data.currency
-                fragment.tv_currency_symbol.text = "-"
                 fragment.tv_amount.text = ""
                 fragment.tv_status_error_message.text = data.errorMessage
 
