@@ -12,17 +12,17 @@
         android:layout_marginBottom="2dp"
         android:text="@string/wallet_tokens"
         android:textColor="@color/darkGray1"
-        android:textSize="12sp"
+        android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <View
         android:id="@+id/v_token_background"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="0dp"
         android:background="@color/backgroundGray"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_token_title" />
+        app:layout_constraintTop_toBottomOf="@id/tv_token_title"
+        app:layout_constraintBottom_toBottomOf="@id/tv_token_fiat_amount"/>
 
     <TextView
         android:id="@+id/tv_token_symbol"
@@ -32,7 +32,7 @@
         android:paddingTop="8dp"
         android:paddingEnd="8dp"
         android:textColor="@color/darkGray6"
-        android:textSize="13sp"
+        android:textSize="14sp"
         app:layout_constraintStart_toStartOf="@id/v_token_background"
         app:layout_constraintTop_toTopOf="@id/v_token_background"
         tools:text="Noddle" />
@@ -45,7 +45,7 @@
         android:paddingTop="8dp"
         android:paddingEnd="8dp"
         android:textColor="@color/darkGray6"
-        android:textSize="13sp"
+        android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="@id/v_token_background"
         app:layout_constraintTop_toTopOf="@id/v_token_background"
         tools:text="12.345 NDL" />
@@ -57,9 +57,9 @@
         android:paddingStart="16dp"
         android:paddingTop="2dp"
         android:paddingEnd="8dp"
-        android:paddingBottom="6dp"
+        android:paddingBottom="8dp"
         android:textColor="@color/darkGray2"
-        android:textSize="12sp"
+        android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="@id/v_token_background"
         app:layout_constraintTop_toBottomOf="@id/tv_token_amount"
         tools:text="USD 3 588" />
