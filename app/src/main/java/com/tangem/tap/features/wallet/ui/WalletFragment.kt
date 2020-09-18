@@ -1,12 +1,13 @@
 package com.tangem.tap.features.wallet.ui
 
 import android.app.Dialog
-import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -35,6 +36,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     private var dialog: Dialog? = null
     private var snackbar: Snackbar? = null
+    private var artworkId: String? = null
 
     private lateinit var viewAdapter: PendingTransactionsAdapter
 
@@ -99,7 +101,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
         setupButtons(state)
         setupAddressCard(state)
-        setupCardImage(state.cardImage?.artwork)
+        setupCardImage(state.cardImage)
 
         viewAdapter.submitList(state.pendingTransactions)
 
@@ -179,12 +181,26 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
     }
 
-    private fun setupCardImage(cardImage: Bitmap?) {
-        if (cardImage != null) {
-            iv_card.setImageBitmap(cardImage)
-        } else {
-            iv_card.setImageDrawable(getDrawable(R.drawable.card_default))
+    private fun setupCardImage(cardImage: Artwork?) {
+        if (cardImage?.artwork != null) {
+            if (cardImage.artworkId != this.artworkId) {
+                prepareShowingCardImage(cardImage.artworkId)
+                iv_card.setImageBitmap(cardImage.artwork)
+            }
+        } else if (cardImage?.artworkResId != null) {
+            if (cardImage.artworkId != this.artworkId) {
+                prepareShowingCardImage(cardImage.artworkId)
+                iv_card.setImageDrawable(getDrawable(cardImage.artworkResId))
+            }
         }
+    }
+
+    private fun prepareShowingCardImage(artworkId: String) {
+            this.artworkId = artworkId
+            val fadeInAnimation: Animation = AlphaAnimation(0.0f, 1.0f)
+            fadeInAnimation.duration = 400
+            iv_card.startAnimation(fadeInAnimation)
+            iv_card_tangem_logo.hide()
     }
 
     private fun handleDialogs(walletDialog: WalletDialog?) {
@@ -192,7 +208,9 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             is WalletDialog.QrDialog -> {
                 if (walletDialog.qrCode != null && walletDialog.shareUrl != null) {
                     if (dialog == null) dialog = QrDialog(requireContext()).apply {
-                        this.showQr(walletDialog.qrCode, walletDialog.shareUrl)
+                        this.showQr(
+                                walletDialog.qrCode, walletDialog.shareUrl, walletDialog.currencyName
+                        )
                     }
                 }
             }
