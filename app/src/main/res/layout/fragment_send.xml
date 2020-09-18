@@ -73,32 +73,37 @@
                 android:layout_marginBottom="24dp"
                 tools:visibility="gone" />
 
-            <LinearLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/llBottomButtonContainer"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginStart="18dp"
-                android:layout_marginEnd="18dp"
                 android:orientation="horizontal">
 
-                <Space
-                    android:layout_width="100.5dp"
-                    android:layout_height="wrap_content" />
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/guideline"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintGuide_percent="0.37" />
 
                 <FrameLayout
                     android:id="@+id/flSendButtonContainer"
-                    android:layout_width="wrap_content"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp"
+                    android:layout_width="0dp"
                     android:paddingBottom="33dp"
                     android:clipToPadding="false"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    app:layout_constraintStart_toEndOf="@+id/guideline"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:layout_marginEnd="30dp"
+                    android:layout_marginStart="8dp">
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnSend"
                         style="@style/TapButtonWithIcon"
-                        android:layout_width="200dp"
+                        android:layout_width="match_parent"
                         android:layout_height="48dp"
                         android:fontFamily="@font/saira_semi_condensed_regular"
                         android:text="@string/send_btn_send"
@@ -115,7 +120,7 @@
 
                 </FrameLayout>
 
-            </LinearLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
         </LinearLayout>
 
