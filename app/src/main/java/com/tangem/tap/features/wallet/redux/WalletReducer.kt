@@ -2,8 +2,8 @@ package com.tangem.tap.features.wallet.redux
 
 import com.tangem.blockchain.common.AmountType
 import com.tangem.common.extensions.isZero
-import com.tangem.tap.common.extensions.toBitmap
 import com.tangem.tap.common.extensions.toFiatString
+import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.AppState
@@ -98,6 +98,9 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 null
             }
             val amount = action.wallet.amounts[AmountType.Coin]?.value
+            val formattedAmount = amount?.toFormattedCurrencyString(
+                    action.wallet.blockchain.decimals(),
+                    action.wallet.blockchain.currency)
             val fiatRate = state.globalState.conversionRates.getRate(action.wallet.blockchain.currency)
             val fiatAmount = fiatRate?.let { amount?.toFiatString(it, fiatCurrencySymbol) }
 
@@ -110,7 +113,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     currencyData = BalanceWidgetData(
                             BalanceStatus.VerifiedOnline, action.wallet.blockchain.fullName,
                             currencySymbol = action.wallet.blockchain.currency,
-                            amount?.toFormattedString(action.wallet.blockchain.decimals()),
+                            formattedAmount,
                             token = tokenData,
                             fiatAmount = fiatAmount
                     ),
@@ -163,13 +166,14 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             ))
         }
         is WalletAction.LoadArtwork.Success -> {
-            newState = newState.copy(cardImage = Artwork(action.artworkId, action.artwork.toBitmap()))
+            newState = newState.copy(cardImage = action.artwork)
         }
         is WalletAction.ShowQrCode -> {
             newState = newState.copy(
                     walletDialog = WalletDialog.QrDialog(
                             newState.addressData?.shareUrl?.toQrCode(),
-                            newState.addressData?.shareUrl
+                            newState.addressData?.shareUrl,
+                            newState.currencyData.currency
                     )
             )
         }
