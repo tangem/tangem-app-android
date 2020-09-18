@@ -12,8 +12,11 @@
     <string name="notification_no_internet_retry">@string/generic_retry</string>
 
     <string name="home_do_you_have_card">Welcome to Tangem.\nDo you have one of our cards?</string>
+    <string name="home_welcome_back">Welcome back to Tangem Tap. \nScan your card to start.</string>
     <string name="home_button_yes">Yes!</string>
-    <string name="home_button_shop">No. Go to shop</string>
+    <string name="home_button_scan">Scan card</string>
+    <string name="home_button_shop">Shop</string>
+    <string name="home_button_no_card">No</string>
 
     <string name="wallet_toolbar_title" translatable="false">Tangem Tap</string>
     <string name="wallet_button_scan">Scan</string>
@@ -40,6 +43,7 @@
     <string name="wallet_dialog_pay_id_hint">PayID name</string>
     <string name="wallet_pay_id_address" translatable="false">$payid.tangem.com</string>
     <string name="wallet_dialog_pay_id_description">Your PayID is information unique to you, like your phone number, email or ABN.</string>
+    <string name="wallet_dialog_qr_code_header">%s wallet</string>
 
 
     <string name="error_payid_already_created">This PayID already exists. Try a different one.</string>
