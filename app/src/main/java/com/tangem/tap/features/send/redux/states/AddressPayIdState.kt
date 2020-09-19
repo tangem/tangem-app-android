@@ -40,7 +40,7 @@ data class AddressPayIdState(
     }
 
     fun copyPayIdWalletAddress(payId: String, address: String): AddressPayIdState {
-        val truncated = truncateHandler?.invoke(address) ?: address
+        val truncated = truncateHandler?.invoke(payId) ?: address
         return this.copy(
                 etFieldValue = payId,
                 normalFieldValue = payId,
