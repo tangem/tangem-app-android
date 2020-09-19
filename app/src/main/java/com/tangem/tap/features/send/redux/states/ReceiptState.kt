@@ -11,9 +11,10 @@ data class ReceiptState(
         val crypto: ReceiptCrypto? = null,
         val tokenFiat: ReceiptTokenFiat? = null,
         val tokenCrypto: ReceiptTokenCrypto? = null,
-        val mainCurrencyType: Value<MainCurrencyType>? = null,
-        override val stateId: StateId = StateId.RECEIPT
-) : SendScreenState
+        val mainCurrencyType: Value<MainCurrencyType>? = null
+) : SendScreenState {
+    override val stateId: StateId = StateId.RECEIPT
+}
 
 data class ReceiptSymbols(
         val fiat: String,
@@ -40,7 +41,7 @@ data class ReceiptCrypto(
 
 data class ReceiptTokenCrypto(
         val amountToken: String,
-        val feeCrypto: String,
+        val feeCoin: String,
         val totalFiat: String,
         val symbols: ReceiptSymbols
 )
@@ -49,7 +50,7 @@ data class ReceiptTokenFiat(
         val amountFiat: String,
         val feeFiat: String,
         val totalFiat: String,
-        val willSentTokenCrypto: String,
-        val willSentFeeCrypto: String,
+        val willSentToken: String,
+        val willSentFeeCoin: String,
         val symbols: ReceiptSymbols
 )
