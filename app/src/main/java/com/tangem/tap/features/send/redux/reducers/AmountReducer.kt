@@ -1,7 +1,6 @@
 package com.tangem.tap.features.send.redux.reducers
 
 import com.tangem.common.extensions.isZero
-import com.tangem.tap.common.CurrencyConverter
 import com.tangem.tap.common.extensions.isNegative
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.features.send.redux.AmountAction
@@ -11,8 +10,6 @@ import com.tangem.tap.features.send.redux.SendScreenAction
 import com.tangem.tap.features.send.redux.states.AmountState
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.redux.states.SendState
-import com.tangem.tap.features.send.redux.states.Value
-import com.tangem.tap.store
 import java.math.BigDecimal
 
 /**
@@ -26,7 +23,6 @@ class AmountReducer : SendInternalReducer {
     }
 
     private fun handleUiAction(action: AmountActionUi, sendState: SendState, state: AmountState): SendState {
-        val converter = sendState.currencyConverter
         val result = when (action) {
             is ToggleMainCurrency -> {
                 val type = if (state.mainCurrency.value == MainCurrencyType.FIAT) MainCurrencyType.CRYPTO
@@ -38,21 +34,21 @@ class AmountReducer : SendInternalReducer {
                 when (action.mainCurrency) {
                     MainCurrencyType.FIAT -> {
                         val fiatToSend = if (state.amountToSendCrypto.isZero()) BigDecimal.ZERO
-                        else converter.toFiat(state.amountToSendCrypto)
+                        else sendState.convertToFiat(state.amountToSendCrypto)
+                        val rescaledBalance = sendState.convertToFiat(state.balanceCrypto, true)
                         state.copy(
                                 viewAmountValue = fiatToSend.stripZeroPlainString(),
-                                viewBalanceValue = converter.toFiat(state.balanceCrypto).stripZeroPlainString(),
-                                mainCurrency = Value(MainCurrencyType.FIAT, store.state.globalState.appCurrency),
+                                viewBalanceValue = rescaledBalance.stripZeroPlainString(),
+                                mainCurrency = state.createMainCurrencyValue(action.mainCurrency),
                                 maxLengthOfAmount = sendState.getDecimals(action.mainCurrency),
                                 cursorAtTheSamePosition = false
                         )
                     }
                     MainCurrencyType.CRYPTO -> {
-                        val mainCurrency = Value(MainCurrencyType.CRYPTO, sendState.amount?.currencySymbol ?: "null")
                         state.copy(
                                 viewAmountValue = state.amountToSendCrypto.stripZeroPlainString(),
                                 viewBalanceValue = state.balanceCrypto.stripZeroPlainString(),
-                                mainCurrency = mainCurrency,
+                                mainCurrency = state.createMainCurrencyValue(action.mainCurrency),
                                 maxLengthOfAmount = sendState.getDecimals(action.mainCurrency),
                                 cursorAtTheSamePosition = false
                         )
@@ -69,7 +65,7 @@ class AmountReducer : SendInternalReducer {
                 }
 
                 val etFieldValue = if (state.mainCurrency.value == MainCurrencyType.CRYPTO) maxAmount
-                else converter.toFiat(maxAmount)
+                else sendState.convertToFiat(maxAmount)
                 state.copy(
                         viewAmountValue = etFieldValue.stripZeroPlainString(),
                         amountToSendCrypto = maxAmount,
@@ -83,25 +79,21 @@ class AmountReducer : SendInternalReducer {
     }
 
     private fun handleAction(action: AmountAction, sendState: SendState, state: AmountState): SendState {
-        val decimals = sendState.amount?.decimals ?: return sendState
-
         val result = when (action) {
             is AmountAction.AmountVerification.SetAmount -> {
-                setAmount(sendState.currencyConverter, decimals, action.amount, state)
+                setAmount(sendState, action.amount, state)
             }
             is AmountAction.AmountVerification.SetError -> {
-                setAmount(sendState.currencyConverter, decimals, action.amount, state).copy(error = action.error)
+                setAmount(sendState, action.amount, state).copy(error = action.error)
             }
         }
-
         return updateLastState(sendState.copy(amountState = result), result)
-
     }
 
-    private fun setAmount(converter: CurrencyConverter, decimals: Int, amount: BigDecimal, state: AmountState): AmountState {
+    private fun setAmount(sendState: SendState, amount: BigDecimal, state: AmountState): AmountState {
         return when (state.mainCurrency.value) {
             MainCurrencyType.FIAT -> {
-                val amountCrypto = converter.toCrypto(amount, decimals).stripTrailingZeros()
+                val amountCrypto = sendState.convertToCrypto(amount)
                 state.copy(
                         viewAmountValue = amount.stripZeroPlainString(),
                         amountToSendCrypto = amountCrypto,
