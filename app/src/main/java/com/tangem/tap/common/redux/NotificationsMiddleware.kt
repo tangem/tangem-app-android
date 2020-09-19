@@ -3,7 +3,9 @@ package com.tangem.tap.common.redux
 import android.widget.Toast
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.google.android.material.snackbar.Snackbar
+import com.tangem.tap.domain.MultiMessageError
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.assembleErrorIds
 import com.tangem.tap.notificationsHandler
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -39,19 +41,30 @@ class NotificationsHandler(coordinatorLayout: CoordinatorLayout) {
             Toast.makeText(it.context, it.context.getString(message), Toast.LENGTH_LONG).show()
         }
     }
+
+    fun showNotification(errorList: List<Int>, builder: (List<String>) -> String) {
+        val context = baseLayout.get()?.context ?: return
+
+        val message = builder(errorList.map { context.getString(it) })
+        showNotification(message)
+    }
 }
 
 val notificationsMiddleware: Middleware<AppState> = { dispatch, state ->
     { next ->
         { action ->
-            if (action is NotificationAction) {
-                notificationsHandler?.showNotification(action.messageResource)
-            }
-            if (action is ToastNotificationAction) {
-                notificationsHandler?.showToastNotification(action.messageResource)
-            }
-            if (action is ErrorAction) {
-                notificationsHandler?.showNotification(action.error.localizedMessage)
+            when (action) {
+                is NotificationAction -> notificationsHandler?.showNotification(action.messageResource)
+                is ToastNotificationAction -> notificationsHandler?.showToastNotification(action.messageResource)
+                is ErrorAction -> {
+                    when (action.error) {
+                        is MultiMessageError -> {
+                            val multiError = action.error as MultiMessageError
+                            notificationsHandler?.showNotification(multiError.assembleErrorIds(), multiError.builder)
+                        }
+                        else -> notificationsHandler?.showNotification(action.error.localizedMessage)
+                    }
+                }
             }
             next(action)
         }
