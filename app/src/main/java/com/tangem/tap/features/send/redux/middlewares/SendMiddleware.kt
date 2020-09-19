@@ -59,7 +59,7 @@ private fun verifyAndSendTransaction(appState: AppState?, dispatch: (Action) -> 
     val recipientAddress = sendState.addressPayIdState.recipientWalletAddress!!
 
     val feeAmount = Amount(sendState.feeState.getCurrentFee(), blockchain)
-    val amountToSend = Amount(sendState.amountState.amountToSendCrypto, blockchain, recipientAddress)
+    val amountToSend = Amount(sendState.getTotalAmountToSend(), blockchain, recipientAddress)
 
     val txSender = walletManager as TransactionSender
 
