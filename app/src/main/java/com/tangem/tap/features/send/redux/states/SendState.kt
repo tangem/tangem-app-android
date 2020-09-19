@@ -74,6 +74,11 @@ data class SendState(
     }
 
     fun getButtonState(): SendButtonState = if (isReadyToSend()) SendButtonState.ENABLED else SendButtonState.DISABLED
+
+    fun getTotalAmountToSend(value: BigDecimal = amountState.amountToSendCrypto): BigDecimal {
+        val needToExtractFee = amountState.isCoinAmount() && feeState.feeIsIncluded
+        return if (needToExtractFee) value.minus(feeState.getCurrentFee()) else value
+    }
 }
 
 enum class SendButtonState {
