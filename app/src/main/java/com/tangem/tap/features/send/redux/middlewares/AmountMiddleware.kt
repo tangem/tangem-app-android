@@ -31,13 +31,10 @@ class AmountMiddleware {
         if (inputValue.isZero() && sendState.amountState.amountToSendCrypto.isZero()) return
 
         val inputCrypto = sendState.convertInputValueToCrypto(inputValue)
-        val fee = sendState.feeState.getCurrentFee()
+        val feeCrypto = sendState.feeState.getCurrentFee()
 
-        val needToExtractFee = sendState.amountState.isCoinAmount() && sendState.feeState.feeIsIncluded
-        val totalToSend = if (needToExtractFee) inputCrypto.minus(fee) else inputCrypto
-
-        val feeAmount = Amount(fee, walletManager.wallet.blockchain)
-        val totalAmount = Amount(totalToSend, walletManager.wallet.blockchain)
+        val feeAmount = Amount(feeCrypto, walletManager.wallet.blockchain)
+        val totalAmount = Amount(sendState.getTotalAmountToSend(inputCrypto), walletManager.wallet.blockchain)
 
         val transactionErrors = walletManager.validateTransaction(totalAmount, feeAmount)
         if (transactionErrors.isEmpty()) {
