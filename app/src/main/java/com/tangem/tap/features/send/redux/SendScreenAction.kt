@@ -64,14 +64,9 @@ sealed class AmountActionUi : SendScreenActionUi {
 }
 
 sealed class AmountAction : SendScreenAction {
-    enum class Error {
-        FEE_GREATER_THAN_AMOUNT,
-        AMOUNT_WITH_FEE_GREATER_THAN_BALANCE
-    }
-
     sealed class AmountVerification : AmountAction() {
         data class SetAmount(val amount: BigDecimal) : AmountVerification()
-        data class SetError(val amount: BigDecimal, val error: Error) : AmountVerification()
+        data class SetError(val amount: BigDecimal, val error: TapError) : AmountVerification()
     }
 }
 
