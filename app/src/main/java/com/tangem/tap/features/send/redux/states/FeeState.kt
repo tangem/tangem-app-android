@@ -19,9 +19,12 @@ data class FeeState(
         val mainLayoutIsVisible: Boolean = false,
         val controlsLayoutIsVisible: Boolean = false,
         val feeChipGroupIsVisible: Boolean = true,
+        val includeFeeSwitcherIsEnabled: Boolean = true,
         val error: FeeAction.Error? = null,
-        override val stateId: StateId = StateId.FEE
 ) : SendScreenState {
+
+    override val stateId: StateId = StateId.FEE
+
     fun isReady(): Boolean = error == null && currentFee != null
 
     fun getCurrentFee(): BigDecimal = currentFee?.value?.value ?: BigDecimal.ZERO
