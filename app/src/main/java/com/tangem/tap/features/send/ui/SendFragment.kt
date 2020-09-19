@@ -16,6 +16,7 @@ import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.extensions.setOnImeActionListener
 import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
+import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.snackBar.MaxAmountSnackbar
 import com.tangem.tap.common.text.truncateMiddleWith
 import com.tangem.tap.common.toggleWidget.*
@@ -56,6 +57,11 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        if (store.state.sendState.hasInitializationError) {
+            store.dispatch(NavigationAction.PopBackTo())
+            return
+        }
 
         initSendButtonStates()
         setupAddressOrPayIdLayout()
@@ -187,6 +193,8 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     }
 
     override fun subscribeToStore() {
+        if (store.state.sendState.hasInitializationError) return
+
         store.subscribe(sendSubscriber) { appState ->
             appState.skipRepeats { oldState, newState ->
                 oldState.sendState == newState.sendState
