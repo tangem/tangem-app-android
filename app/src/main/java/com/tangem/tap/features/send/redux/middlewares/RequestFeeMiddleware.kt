@@ -60,7 +60,7 @@ class RequestFeeMiddleware {
                                 dispatch(FeeAction.ChangeLayoutVisibility(main = true, chipGroup = false))
                             }
                         } else {
-                            dispatch(FeeAction.ChangeLayoutVisibility(main = true, controls = true, chipGroup = true))
+                            dispatch(FeeAction.ChangeLayoutVisibility(main = true, chipGroup = true))
                         }
                     }
                     is Result.Failure -> {
