@@ -3,12 +3,14 @@ package com.tangem.tap.features.send.redux.middlewares
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionError
 import com.tangem.common.extensions.isZero
+import com.tangem.tap.common.extensions.isNegative
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.send.redux.AmountAction
+import com.tangem.tap.features.send.redux.AmountActionUi
 import com.tangem.tap.features.send.redux.ReceiptAction
 import com.tangem.tap.features.send.redux.SendAction
-import com.tangem.tap.store
+import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import org.rekotlin.Action
 import java.math.BigDecimal
 
@@ -17,12 +19,20 @@ import java.math.BigDecimal
  */
 class AmountMiddleware {
 
-    fun handle(rawData: String?, appState: AppState?, dispatch: (Action) -> Unit) {
-        val sendState = appState?.sendState ?: return
-        val walletManager = sendState.walletManager ?: return
+    fun handle(action: AmountActionUi, appState: AppState?, dispatch: (Action) -> Unit) {
+        when (action) {
+            is AmountActionUi.HandleUserInput -> handleUserInput(action.proposedAmount, appState, dispatch)
+            is AmountActionUi.CheckAmountToSend -> checkAmountToSend(appState, dispatch)
+            is AmountActionUi.SetMaxAmount -> setMaxAmount(appState, dispatch)
+            is AmountActionUi.ToggleMainCurrency -> toggleMainCurrency(appState, dispatch)
+            is AmountActionUi.SetMainCurrency -> return
+        }
+    }
 
-        val rawData = rawData ?: store.state.sendState.amountState.viewAmountValue
-        val data = if (rawData == ".") "0.0" else rawData
+    private fun handleUserInput(data: String, appState: AppState?, dispatch: (Action) -> Unit) {
+        val sendState = appState?.sendState ?: return
+
+        val data = if (data == ".") "0.0" else data
         val inputValue = when {
             data.isEmpty() || data == "0" -> BigDecimal.ZERO
             else -> BigDecimal(data)
@@ -30,7 +40,17 @@ class AmountMiddleware {
 
         if (inputValue.isZero() && sendState.amountState.amountToSendCrypto.isZero()) return
 
-        val inputCrypto = sendState.convertInputValueToCrypto(inputValue)
+        dispatch(AmountAction.SetAmount(inputValue, true))
+        dispatch(AmountActionUi.CheckAmountToSend)
+    }
+
+    private fun checkAmountToSend(appState: AppState?, dispatch: (Action) -> Unit, isUserInput: Boolean = false) {
+        val sendState = appState?.sendState ?: return
+        val walletManager = sendState.walletManager ?: return
+
+        val inputCrypto = sendState.amountState.amountToSendCrypto
+        if (sendState.amountState.viewAmountValue.value == "0" && inputCrypto.isZero()) return
+
         val feeCrypto = sendState.feeState.getCurrentFee()
 
         val feeAmount = Amount(feeCrypto, walletManager.wallet.blockchain)
@@ -38,7 +58,7 @@ class AmountMiddleware {
 
         val transactionErrors = walletManager.validateTransaction(totalAmount, feeAmount)
         if (transactionErrors.isEmpty()) {
-            dispatch(AmountAction.AmountVerification.SetAmount(inputValue))
+            dispatch(AmountAction.SetAmountError(null))
         } else {
             val tapErrors = transactionErrors.map {
                 when (it) {
@@ -53,10 +73,36 @@ class AmountMiddleware {
                 }
             }
             val error = TapError.ValidateTransactionErrors(tapErrors) { it.joinToString("\r\n") }
-            dispatch(AmountAction.AmountVerification.SetError(inputValue, error))
+            dispatch(AmountAction.SetAmountError(error))
         }
         dispatch(ReceiptAction.RefreshReceipt)
         dispatch(SendAction.ChangeSendButtonState(sendState.getButtonState()))
     }
 
+    private fun setMaxAmount(appState: AppState?, dispatch: (Action) -> Unit) {
+        val sendState = appState?.sendState ?: return
+        val amountState = sendState.amountState
+
+        val maxAmount = if (sendState.feeState.feeIsIncluded) {
+            amountState.balanceCrypto
+        } else {
+            val balanceExtractFee = amountState.balanceCrypto.minus(sendState.feeState.getCurrentFee())
+            if (balanceExtractFee.isNegative()) BigDecimal.ZERO
+            else balanceExtractFee
+        }
+
+        val currentCurrencyValue = if (amountState.mainCurrency.type == MainCurrencyType.CRYPTO) maxAmount
+        else sendState.convertToFiat(maxAmount)
+
+        dispatch(AmountAction.SetAmount(currentCurrencyValue, false))
+    }
+
+    private fun toggleMainCurrency(appState: AppState?, dispatch: (Action) -> Unit) {
+        val amountState = appState?.sendState?.amountState ?: return
+
+        val type = if (amountState.mainCurrency.type == MainCurrencyType.FIAT) MainCurrencyType.CRYPTO
+        else MainCurrencyType.FIAT
+
+        dispatch(AmountActionUi.SetMainCurrency(type))
+    }
 }
