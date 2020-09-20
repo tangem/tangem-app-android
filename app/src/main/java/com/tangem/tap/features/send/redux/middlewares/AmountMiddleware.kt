@@ -21,7 +21,7 @@ class AmountMiddleware {
 
     fun handle(action: AmountActionUi, appState: AppState?, dispatch: (Action) -> Unit) {
         when (action) {
-            is AmountActionUi.HandleUserInput -> handleUserInput(action.proposedAmount, appState, dispatch)
+            is AmountActionUi.HandleUserInput -> handleUserInput(action.data, appState, dispatch)
             is AmountActionUi.CheckAmountToSend -> checkAmountToSend(appState, dispatch)
             is AmountActionUi.SetMaxAmount -> setMaxAmount(appState, dispatch)
             is AmountActionUi.ToggleMainCurrency -> toggleMainCurrency(appState, dispatch)
@@ -44,7 +44,7 @@ class AmountMiddleware {
         dispatch(AmountActionUi.CheckAmountToSend)
     }
 
-    private fun checkAmountToSend(appState: AppState?, dispatch: (Action) -> Unit, isUserInput: Boolean = false) {
+    private fun checkAmountToSend(appState: AppState?, dispatch: (Action) -> Unit) {
         val sendState = appState?.sendState ?: return
         val walletManager = sendState.walletManager ?: return
 
