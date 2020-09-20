@@ -8,9 +8,9 @@ import com.tangem.tap.features.send.redux.AmountActionUi
 import com.tangem.tap.features.send.redux.AmountActionUi.SetMainCurrency
 import com.tangem.tap.features.send.redux.SendScreenAction
 import com.tangem.tap.features.send.redux.states.AmountState
+import com.tangem.tap.features.send.redux.states.InputViewValue
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.redux.states.SendState
-import com.tangem.tap.features.send.redux.states.ViewAmountValue
 import java.math.BigDecimal
 
 /**
@@ -32,7 +32,7 @@ class AmountReducer : SendInternalReducer {
                         else sendState.convertToFiat(state.amountToSendCrypto)
                         val rescaledBalance = sendState.convertToFiat(state.balanceCrypto, true)
                         state.copy(
-                                viewAmountValue = ViewAmountValue(fiatToSend.stripZeroPlainString()),
+                                viewAmountValue = InputViewValue(fiatToSend.stripZeroPlainString()),
                                 viewBalanceValue = rescaledBalance.stripZeroPlainString(),
                                 mainCurrency = state.createMainCurrency(action.mainCurrency),
                                 maxLengthOfAmount = sendState.getDecimals(action.mainCurrency),
@@ -41,7 +41,7 @@ class AmountReducer : SendInternalReducer {
                     }
                     MainCurrencyType.CRYPTO -> {
                         state.copy(
-                                viewAmountValue = ViewAmountValue(state.amountToSendCrypto.stripZeroPlainString()),
+                                viewAmountValue = InputViewValue(state.amountToSendCrypto.stripZeroPlainString()),
                                 viewBalanceValue = state.balanceCrypto.stripZeroPlainString(),
                                 mainCurrency = state.createMainCurrency(action.mainCurrency),
                                 maxLengthOfAmount = sendState.getDecimals(action.mainCurrency),
@@ -63,7 +63,7 @@ class AmountReducer : SendInternalReducer {
                     MainCurrencyType.FIAT -> {
                         val amountCrypto = sendState.convertToCrypto(action.amount)
                         state.copy(
-                                viewAmountValue = ViewAmountValue(action.amount.scaleToFiat(false).stripZeroPlainString(), action.isUserInput),
+                                viewAmountValue = InputViewValue(action.amount.scaleToFiat(false).stripZeroPlainString(), action.isUserInput),
                                 amountToSendCrypto = amountCrypto,
                                 cursorAtTheSamePosition = true,
                                 error = null
@@ -71,7 +71,7 @@ class AmountReducer : SendInternalReducer {
                     }
                     MainCurrencyType.CRYPTO -> {
                         state.copy(
-                                viewAmountValue = ViewAmountValue(action.amount.stripZeroPlainString(), action.isUserInput),
+                                viewAmountValue = InputViewValue(action.amount.stripZeroPlainString(), action.isUserInput),
                                 amountToSendCrypto = action.amount,
                                 cursorAtTheSamePosition = true,
                                 error = null
