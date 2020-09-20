@@ -67,7 +67,6 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
     private fun handleAddressPayIdState(fg: BaseStoreFragment, state: AddressPayIdState) {
         fun parseError(context: Context, error: Error?): String? {
             val resId = when (error) {
-                Error.IS_NOT_PAY_ID -> R.string.error_payid_verification_failed
                 Error.PAY_ID_UNSUPPORTED_BY_BLOCKCHAIN -> R.string.error_payid_unsupported_by_blockchain
                 Error.PAY_ID_NOT_REGISTERED -> R.string.error_payid_not_registere
                 Error.PAY_ID_REQUEST_FAILED -> R.string.error_payid_request_failed
@@ -90,10 +89,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         til.helperText = state.recipientWalletAddress
         til.isHelperTextEnabled = state.isPayIdState() && parsedError == null
 
-        // prevent cycling
-        if (state.etFieldValue == null) return
-
-        et.update(state.etFieldValue)
+        if (!state.viewFieldValue.isFromUserInput) et.update(state.viewFieldValue.value)
     }
 
     private fun handleAmountState(fg: BaseStoreFragment, state: AmountState) {
@@ -116,7 +112,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
         fg.etAmountToSend.filters = arrayOf(DecimalDigitsInputFilter(12, state.maxLengthOfAmount))
         val amountToSend = state.viewAmountValue
-        if (!amountToSend.isUserInput) fg.etAmountToSend.update(amountToSend.value)
+        if (!amountToSend.isFromUserInput) fg.etAmountToSend.update(amountToSend.value)
 
 //        fg.tvAmountToSendShadow.text = amountToSend
 //        if (amountToSend.length > 10) {
