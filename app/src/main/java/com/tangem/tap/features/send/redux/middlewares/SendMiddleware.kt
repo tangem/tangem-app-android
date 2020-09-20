@@ -9,7 +9,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.send.redux.AddressPayIdActionUi.ChangeAddressOrPayId
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.*
-import com.tangem.tap.features.send.redux.AmountActionUi.CheckAmountToSend
+import com.tangem.tap.features.send.redux.AmountActionUi
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.send.redux.SendActionUi
@@ -42,7 +42,7 @@ val sendMiddleware: Middleware<AppState> = { dispatch, appState ->
                         }
                     }
                 }
-                is CheckAmountToSend -> AmountMiddleware().handle(action.data, appState(), dispatch)
+                is AmountActionUi -> AmountMiddleware().handle(action, appState(), dispatch)
                 is RequestFee -> RequestFeeMiddleware().handle(appState(), dispatch)
                 is SendActionUi.SendAmountToRecipient -> verifyAndSendTransaction(appState(), dispatch)
             }
