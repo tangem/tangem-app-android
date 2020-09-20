@@ -28,7 +28,7 @@ class RequestFeeMiddleware {
 
         if (!sendState.addressPayIdIsReady()) {
             dispatch(FeeAction.FeeCalculation.SetFeeError(FeeAction.Error.ADDRESS_OR_AMOUNT_IS_EMPTY))
-            dispatch(FeeAction.ChangeLayoutVisibility(main = false, controls = true, chipGroup = true))
+            dispatch(FeeAction.ChangeLayoutVisibility(main = false, chipGroup = true))
             dispatch(ReceiptAction.RefreshReceipt)
             dispatch(SendAction.ChangeSendButtonState(sendState.getButtonState()))
             return
