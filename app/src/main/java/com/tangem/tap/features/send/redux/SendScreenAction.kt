@@ -57,17 +57,16 @@ sealed class AddressPayIdVerifyAction : SendScreenAction {
 
 // Amount to send
 sealed class AmountActionUi : SendScreenActionUi {
+    data class HandleUserInput(val proposedAmount: String) : AmountActionUi()
+    object CheckAmountToSend : AmountActionUi()
     object SetMaxAmount : AmountActionUi()
-    data class CheckAmountToSend(val data: String? = null) : AmountActionUi()
     data class SetMainCurrency(val mainCurrency: MainCurrencyType) : AmountActionUi()
     object ToggleMainCurrency : AmountActionUi()
 }
 
 sealed class AmountAction : SendScreenAction {
-    sealed class AmountVerification : AmountAction() {
-        data class SetAmount(val amount: BigDecimal) : AmountVerification()
-        data class SetError(val amount: BigDecimal, val error: TapError) : AmountVerification()
-    }
+    data class SetAmount(val amount: BigDecimal, val isUserInput: Boolean) : AmountAction()
+    data class SetAmountError(val error: TapError?) : AmountAction()
 }
 
 // Fee
