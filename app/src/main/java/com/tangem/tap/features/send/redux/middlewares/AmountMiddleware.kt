@@ -3,7 +3,6 @@ package com.tangem.tap.features.send.redux.middlewares
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionError
 import com.tangem.common.extensions.isZero
-import com.tangem.tap.common.extensions.isNegative
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.send.redux.AmountAction
@@ -49,7 +48,11 @@ class AmountMiddleware {
         val walletManager = sendState.walletManager ?: return
 
         val inputCrypto = sendState.amountState.amountToSendCrypto
-        if (sendState.amountState.viewAmountValue.value == "0" && inputCrypto.isZero()) return
+        if (sendState.amountState.viewAmountValue.value == "0" && inputCrypto.isZero()) {
+            dispatch(ReceiptAction.RefreshReceipt)
+            dispatch(SendAction.ChangeSendButtonState(sendState.getButtonState()))
+            return
+        }
 
         val feeCrypto = sendState.feeState.getCurrentFee()
 
@@ -87,8 +90,9 @@ class AmountMiddleware {
             amountState.balanceCrypto
         } else {
             val balanceExtractFee = amountState.balanceCrypto.minus(sendState.feeState.getCurrentFee())
-            if (balanceExtractFee.isNegative()) BigDecimal.ZERO
-            else balanceExtractFee
+//            if (balanceExtractFee.isNegative()) BigDecimal.ZERO
+//            else balanceExtractFee
+            balanceExtractFee
         }
 
         val currentCurrencyValue = if (amountState.mainCurrency.type == MainCurrencyType.CRYPTO) maxAmount
