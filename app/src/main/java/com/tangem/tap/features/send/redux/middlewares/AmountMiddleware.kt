@@ -3,6 +3,7 @@ package com.tangem.tap.features.send.redux.middlewares
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionError
 import com.tangem.common.extensions.isZero
+import com.tangem.tap.common.extensions.isNegative
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.send.redux.AmountAction
@@ -86,19 +87,17 @@ class AmountMiddleware {
         val sendState = appState?.sendState ?: return
         val amountState = sendState.amountState
 
-        val maxAmount = if (sendState.feeState.feeIsIncluded) {
-            amountState.balanceCrypto
+        val maxAmount = if (sendState.feeState.feeIsIncluded) amountState.balanceCrypto
+        else amountState.balanceCrypto.minus(sendState.feeState.getCurrentFee())
+
+        if (maxAmount.isNegative()) {
+            dispatch(AmountAction.SetAmountError(TapError.FeeExceedsBalance))
         } else {
-            val balanceExtractFee = amountState.balanceCrypto.minus(sendState.feeState.getCurrentFee())
-//            if (balanceExtractFee.isNegative()) BigDecimal.ZERO
-//            else balanceExtractFee
-            balanceExtractFee
+            val currentCurrencyValue = if (amountState.mainCurrency.type == MainCurrencyType.CRYPTO) maxAmount
+            else sendState.convertToFiat(maxAmount)
+
+            dispatch(AmountAction.SetAmount(currentCurrencyValue, false))
         }
-
-        val currentCurrencyValue = if (amountState.mainCurrency.type == MainCurrencyType.CRYPTO) maxAmount
-        else sendState.convertToFiat(maxAmount)
-
-        dispatch(AmountAction.SetAmount(currentCurrencyValue, false))
     }
 
     private fun toggleMainCurrency(appState: AppState?, dispatch: (Action) -> Unit) {
