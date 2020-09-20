@@ -104,7 +104,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             val fiatRate = state.globalState.conversionRates.getRate(action.wallet.blockchain.currency)
             val fiatAmount = fiatRate?.let { amount?.toFiatString(it, fiatCurrencySymbol) }
 
-            val pendingTransactions = action.wallet.transactions
+            val pendingTransactions = action.wallet.recentTransactions
                     .toPendingTransactions(action.wallet.address)
 
             val sendButtonEnabled = amount?.isZero() == false || token?.value?.isZero() == false
