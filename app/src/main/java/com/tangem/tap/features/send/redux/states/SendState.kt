@@ -63,14 +63,7 @@ data class SendState(
 
     fun convertToFiat(value: BigDecimal, scaleWithPrecision: Boolean = false): BigDecimal {
         val converter = getConverter()
-        return if (scaleWithPrecision) converter.toFiat(value) else converter.toFiatWithPrecision(value)
-    }
-
-    fun convertInputValueToCrypto(inputValue: BigDecimal): BigDecimal {
-        return when (amountState.mainCurrency.value) {
-            MainCurrencyType.FIAT -> convertToCrypto(inputValue)
-            MainCurrencyType.CRYPTO -> inputValue
-        }
+        return if (!scaleWithPrecision) converter.toFiat(value) else converter.toFiatWithPrecision(value)
     }
 
     fun getButtonState(): SendButtonState = if (isReadyToSend()) SendButtonState.ENABLED else SendButtonState.DISABLED
@@ -88,9 +81,9 @@ enum class SendButtonState {
 data class AmountState(
         val walletAmount: Amount? = null,
         val typeOfAmount: AmountType = AmountType.Coin,
-        val viewAmountValue: String = BigDecimal.ZERO.toPlainString(),
+        val viewAmountValue: ViewAmountValue = ViewAmountValue(BigDecimal.ZERO.toPlainString()),
         val viewBalanceValue: String = BigDecimal.ZERO.toPlainString(),
-        val mainCurrency: Value<MainCurrencyType> = Value(MainCurrencyType.FIAT, TapCurrency.DEFAULT_FIAT_CURRENCY),
+        val mainCurrency: MainCurrency = MainCurrency(MainCurrencyType.FIAT, TapCurrency.DEFAULT_FIAT_CURRENCY),
         val amountToSendCrypto: BigDecimal = BigDecimal.ZERO,
         val balanceCrypto: BigDecimal = BigDecimal.ZERO,
         val cursorAtTheSamePosition: Boolean = true,
@@ -104,19 +97,20 @@ data class AmountState(
 
     fun isCoinAmount(): Boolean = typeOfAmount == AmountType.Coin
 
-    fun createMainCurrencyValue(type: MainCurrencyType): Value<MainCurrencyType> {
+    fun createMainCurrency(type: MainCurrencyType): MainCurrency {
         return when (type) {
-            MainCurrencyType.FIAT -> Value(type, store.state.globalState.appCurrency)
-            MainCurrencyType.CRYPTO -> Value(type, walletAmount?.currencySymbol ?: "NONE")
+            MainCurrencyType.FIAT -> MainCurrency(type, store.state.globalState.appCurrency)
+            MainCurrencyType.CRYPTO -> MainCurrency(type, walletAmount?.currencySymbol ?: "NONE")
         }
     }
 }
 
+data class ViewAmountValue(val value: String, val isUserInput: Boolean = false)
 enum class MainCurrencyType {
     FIAT, CRYPTO
 }
 
-data class Value<T>(
-        val value: T,
-        val displayedValue: String
+data class MainCurrency(
+        val type: MainCurrencyType,
+        val currencySymbol: String
 )

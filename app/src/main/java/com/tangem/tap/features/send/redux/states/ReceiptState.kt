@@ -11,7 +11,7 @@ data class ReceiptState(
         val crypto: ReceiptCrypto? = null,
         val tokenFiat: ReceiptTokenFiat? = null,
         val tokenCrypto: ReceiptTokenCrypto? = null,
-        val mainCurrencyType: Value<MainCurrencyType>? = null
+        val mainCurrency: MainCurrency? = null
 ) : SendScreenState {
     override val stateId: StateId = StateId.RECEIPT
 }
