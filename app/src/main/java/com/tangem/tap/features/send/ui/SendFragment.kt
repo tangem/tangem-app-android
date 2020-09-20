@@ -75,22 +75,22 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     private fun setupAddressOrPayIdLayout() {
         store.dispatch(SetTruncateHandler { etAddressOrPayId.truncateMiddleWith(it, "...") })
-        store.dispatch(AddressPayIdVerifyAction.VerifyClipboard(requireContext().getFromClipboard()?.toString()))
+        store.dispatch(CheckClipboard(requireContext().getFromClipboard()?.toString()))
 
         etAddressOrPayId.setOnFocusChangeListener { v, hasFocus ->
             store.dispatch(TruncateOrRestore(!hasFocus))
         }
         etAddressOrPayId.inputtedTextAsFlow()
                 .debounce(400)
-                .filter { store.state.sendState.addressPayIdState.etFieldValue != it }
+                .filter { store.state.sendState.addressPayIdState.viewFieldValue.value != it }
                 .onEach {
-                    store.dispatch(ChangeAddressOrPayId(it))
+                    store.dispatch(AddressPayIdActionUi.HandleUserInput(it))
                     store.dispatch(FeeAction.RequestFee)
                 }
                 .launchIn(mainScope)
 
         imvPaste.setOnClickListener {
-            store.dispatch(ChangeAddressOrPayId(requireContext().getFromClipboard()?.toString() ?: ""))
+            store.dispatch(PasteAddressPayId(requireContext().getFromClipboard()?.toString() ?: ""))
             store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
             store.dispatch(FeeAction.RequestFee)
         }
@@ -108,7 +108,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         val scannedCode = data?.getStringExtra(ScanQrCodeActivity.SCAN_RESULT) ?: ""
         if (scannedCode.isEmpty()) return
 
-        store.dispatch(ChangeAddressOrPayId(scannedCode))
+        store.dispatch(PasteAddressPayId(scannedCode))
         store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
         store.dispatch(FeeAction.RequestFee)
     }
@@ -167,7 +167,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         etAmountToSend.inputtedTextAsFlow()
                 .debounce(400)
                 .filter { store.state.sendState.amountState.viewAmountValue.value != it && it.isNotEmpty() }
-                .onEach { store.dispatch(HandleUserInput(it)) }
+                .onEach { store.dispatch(AmountActionUi.HandleUserInput(it)) }
                 .launchIn(mainScope)
 
         etAmountToSend.setOnImeActionListener(EditorInfo.IME_ACTION_DONE) {
