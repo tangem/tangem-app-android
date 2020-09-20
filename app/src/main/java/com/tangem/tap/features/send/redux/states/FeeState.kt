@@ -14,7 +14,7 @@ enum class FeeType {
 data class FeeState(
         val selectedFeeType: FeeType = FeeType.NORMAL,
         val feeList: List<Amount>? = null,
-        val currentFee: Value<Amount>? = null,
+        val currentFee: Amount? = null,
         val feeIsIncluded: Boolean = false,
         val mainLayoutIsVisible: Boolean = false,
         val controlsLayoutIsVisible: Boolean = false,
@@ -27,5 +27,5 @@ data class FeeState(
 
     fun isReady(): Boolean = error == null && currentFee != null
 
-    fun getCurrentFee(): BigDecimal = currentFee?.value?.value ?: BigDecimal.ZERO
+    fun getCurrentFee(): BigDecimal = currentFee?.value ?: BigDecimal.ZERO
 }
