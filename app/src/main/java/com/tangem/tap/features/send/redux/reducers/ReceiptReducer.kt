@@ -30,12 +30,12 @@ class ReceiptReducer : SendInternalReducer {
         val amountState = sendState.amountState
         val feeState = sendState.feeState
 
-        val layoutType = determineLayoutType(amountState.mainCurrency.value, sendState.amountState.typeOfAmount)
+        val layoutType = determineLayoutType(amountState.mainCurrency.type, sendState.amountState.typeOfAmount)
         val symbols = determineSymbols(wallet)
         val showBlank = !sendState.isReadyToSend()
         val result = state.copy(
                 visibleTypeOfReceipt = layoutType,
-                mainCurrencyType = sendState.amountState.mainCurrency,
+                mainCurrency = sendState.amountState.mainCurrency,
                 fiat = createFiatType(coinConverter, amountState, feeState, symbols, showBlank),
                 crypto = createCryptoType(coinConverter, amountState, feeState, symbols, showBlank),
                 tokenFiat = createTokenFiatType(coinConverter, tokenConverter, amountState, feeState, symbols, showBlank),
@@ -111,7 +111,7 @@ class ReceiptReducer : SendInternalReducer {
                     feeCrypto = feeCrypto.stripZeroPlainString(),
                     totalCrypto = totalCrypto.stripZeroPlainString(),
                     feeFiat = feeFiat.stripZeroPlainString(),
-                    willSentFiat = converter.toFiat(totalCrypto).stripZeroPlainString(),
+                    willSentFiat = converter.toFiatWithPrecision(totalCrypto).stripZeroPlainString(),
                     symbols = symbols
             )
         }
