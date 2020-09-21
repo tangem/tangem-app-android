@@ -68,34 +68,27 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 
-        <Space
-            android:id="@+id/space"
-            android:layout_width="93dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="30dp"
-            android:layout_marginTop="30dp"
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/btn_confirm"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintHorizontal_chainStyle="packed"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintVertical_bias="1" />
+            app:layout_constraintGuide_percent="0.37" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_confirm"
             style="@style/TapBlackButton"
-            android:layout_width="200dp"
+            android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_marginStart="7dp"
             android:layout_marginTop="30dp"
             android:layout_marginEnd="30dp"
             tools:text="@string/wallet_button_send"
             tools:icon="@drawable/ic_send"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/guideline"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/space"
-            app:layout_constraintVertical_bias="1" />
+            app:layout_constraintBottom_toBottomOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
