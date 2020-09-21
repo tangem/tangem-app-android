@@ -3,7 +3,6 @@ package com.tangem.tap.features.send.redux.middlewares
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionError
 import com.tangem.common.extensions.isZero
-import com.tangem.tap.common.extensions.isNegative
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.send.redux.AmountAction
@@ -31,16 +30,19 @@ class AmountMiddleware {
 
     private fun handleUserInput(data: String, appState: AppState?, dispatch: (Action) -> Unit) {
         val sendState = appState?.sendState ?: return
+        val amountState = sendState.amountState
 
         val data = if (data == ".") "0.0" else data
         val inputValue = when {
             data.isEmpty() || data == "0" -> BigDecimal.ZERO
             else -> BigDecimal(data)
         }
+        if (inputValue.isZero() && amountState.amountToSendCrypto.isZero()) return
 
-        if (inputValue.isZero() && sendState.amountState.amountToSendCrypto.isZero()) return
+        val inputValueCrypto = if (amountState.mainCurrency.type == MainCurrencyType.CRYPTO) inputValue
+        else sendState.convertToCrypto(inputValue)
 
-        dispatch(AmountAction.SetAmount(inputValue, true))
+        dispatch(AmountAction.SetAmount(inputValueCrypto, true))
         dispatch(AmountActionUi.CheckAmountToSend)
     }
 
@@ -84,20 +86,9 @@ class AmountMiddleware {
     }
 
     private fun setMaxAmount(appState: AppState?, dispatch: (Action) -> Unit) {
-        val sendState = appState?.sendState ?: return
-        val amountState = sendState.amountState
+        val amountState = appState?.sendState?.amountState ?: return
 
-        val maxAmount = if (sendState.feeState.feeIsIncluded) amountState.balanceCrypto
-        else amountState.balanceCrypto.minus(sendState.feeState.getCurrentFee())
-
-        if (maxAmount.isNegative()) {
-            dispatch(AmountAction.SetAmountError(TapError.FeeExceedsBalance))
-        } else {
-            val currentCurrencyValue = if (amountState.mainCurrency.type == MainCurrencyType.CRYPTO) maxAmount
-            else sendState.convertToFiat(maxAmount)
-
-            dispatch(AmountAction.SetAmount(currentCurrencyValue, false))
-        }
+        dispatch(AmountAction.SetAmount(amountState.balanceCrypto, false))
     }
 
     private fun toggleMainCurrency(appState: AppState?, dispatch: (Action) -> Unit) {
