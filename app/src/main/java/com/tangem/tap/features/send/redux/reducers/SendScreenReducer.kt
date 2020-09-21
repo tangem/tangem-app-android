@@ -1,6 +1,6 @@
 package com.tangem.tap.features.send.redux.reducers
 
-import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.AmountType
 import com.tangem.tap.common.CurrencyConverter
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.states.IdStateHolder
@@ -54,19 +54,34 @@ private class EmptyReducer : SendInternalReducer {
 
 private class PrepareSendScreenStatesReducer : SendInternalReducer {
     override fun handle(action: SendScreenAction, sendState: SendState): SendState {
-        val amount = (action as PrepareSendScreen).tokenAmount ?: action.coinAmount
+        val prepareAction = action as PrepareSendScreen
         val walletManager = store.state.globalState.scanNoteResponse!!.walletManager!!
+        val walletAmount = prepareAction.tokenAmount ?: prepareAction.coinAmount!!
+        val decimals = walletAmount.decimals
+
+        val coinConverter = createCurrencyConverter(walletManager.wallet.blockchain.currency, decimals)
+        val tokenConverter = createCurrencyConverter(prepareAction.tokenAmount?.currencySymbol ?: "", decimals)
+        if (coinConverter == null || (walletAmount.type == AmountType.Token && tokenConverter == null)) {
+            return sendState.copy(hasInitializationError = true)
+        }
         return sendState.copy(
-                amount = amount,
                 walletManager = walletManager,
-                currencyConverter = createCurrencyConverter(walletManager),
-                amountState = sendState.amountState.copy(balanceCrypto = amount?.value ?: BigDecimal.ZERO)
+                coinConverter = coinConverter,
+                tokenConverter = tokenConverter ?: CurrencyConverter(BigDecimal.ONE, decimals),
+                amountState = sendState.amountState.copy(
+                        walletAmount = walletAmount,
+                        typeOfAmount = walletAmount.type,
+                        balanceCrypto = walletAmount.value ?: BigDecimal.ZERO
+                ),
+                feeState = sendState.feeState.copy(
+                        includeFeeSwitcherIsEnabled = walletAmount.type == AmountType.Coin
+                )
         )
     }
 
-    private fun createCurrencyConverter(walletManager: WalletManager): CurrencyConverter {
-        val rate = store.state.globalState.conversionRates.getRate(walletManager.wallet.blockchain.currency)
-        return if (rate == null) CurrencyConverter(BigDecimal.ONE) else CurrencyConverter(rate)
+    private fun createCurrencyConverter(currency: String, decimals: Int): CurrencyConverter? {
+        val rate = store.state.globalState.conversionRates.getRate(currency)
+        return if (rate == null) null else CurrencyConverter(rate, decimals)
     }
 }
 

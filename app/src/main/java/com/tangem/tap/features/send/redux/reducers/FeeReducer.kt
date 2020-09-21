@@ -2,14 +2,12 @@ package com.tangem.tap.features.send.redux.reducers
 
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.extensions.isAboveZero
-import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.FeeActionUi
 import com.tangem.tap.features.send.redux.SendScreenAction
 import com.tangem.tap.features.send.redux.states.FeeState
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.SendState
-import com.tangem.tap.features.send.redux.states.Value
 
 /**
 * [REDACTED_AUTHOR]
@@ -86,9 +84,10 @@ class FeeReducer : SendInternalReducer {
         return updateLastState(sendState.copy(feeState = result), result)
     }
 
-    private fun createValueOfFeeAmount(feeType: FeeType, list: List<Amount>?): Value<Amount>? {
+    private fun createValueOfFeeAmount(feeType: FeeType, list: List<Amount>?): Amount? {
         if (list == null || list.isEmpty()) return null
-        val feeAmount = if (list.size == 1) {
+
+        return if (list.size == 1) {
             if (!list[0].isAboveZero()) return null
 
             list[0]
@@ -100,8 +99,6 @@ class FeeReducer : SendInternalReducer {
                 FeeType.PRIORITY -> list[2]
             }
         }
-
-        return Value(feeAmount, feeAmount.value?.stripZeroPlainString() ?: "")
     }
 
     private fun getCurrentFeeType(state: FeeState): FeeType {

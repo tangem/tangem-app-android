@@ -16,6 +16,7 @@ import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.extensions.setOnImeActionListener
 import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
+import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.snackBar.MaxAmountSnackbar
 import com.tangem.tap.common.text.truncateMiddleWith
 import com.tangem.tap.common.toggleWidget.*
@@ -57,6 +58,11 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        if (store.state.sendState.hasInitializationError) {
+            store.dispatch(NavigationAction.PopBackTo())
+            return
+        }
+
         initSendButtonStates()
         setupAddressOrPayIdLayout()
         setupAmountLayout()
@@ -69,22 +75,22 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     private fun setupAddressOrPayIdLayout() {
         store.dispatch(SetTruncateHandler { etAddressOrPayId.truncateMiddleWith(it, "...") })
-        store.dispatch(AddressPayIdVerifyAction.VerifyClipboard(requireContext().getFromClipboard()?.toString()))
+        store.dispatch(CheckClipboard(requireContext().getFromClipboard()?.toString()))
 
         etAddressOrPayId.setOnFocusChangeListener { v, hasFocus ->
             store.dispatch(TruncateOrRestore(!hasFocus))
         }
         etAddressOrPayId.inputtedTextAsFlow()
                 .debounce(400)
-                .filter { store.state.sendState.addressPayIdState.etFieldValue != it }
+                .filter { store.state.sendState.addressPayIdState.viewFieldValue.value != it }
                 .onEach {
-                    store.dispatch(ChangeAddressOrPayId(it))
+                    store.dispatch(AddressPayIdActionUi.HandleUserInput(it))
                     store.dispatch(FeeAction.RequestFee)
                 }
                 .launchIn(mainScope)
 
         imvPaste.setOnClickListener {
-            store.dispatch(ChangeAddressOrPayId(requireContext().getFromClipboard()?.toString() ?: ""))
+            store.dispatch(PasteAddressPayId(requireContext().getFromClipboard()?.toString() ?: ""))
             store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
             store.dispatch(FeeAction.RequestFee)
         }
@@ -102,7 +108,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         val scannedCode = data?.getStringExtra(ScanQrCodeActivity.SCAN_RESULT) ?: ""
         if (scannedCode.isEmpty()) return
 
-        store.dispatch(ChangeAddressOrPayId(scannedCode))
+        store.dispatch(PasteAddressPayId(scannedCode))
         store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
         store.dispatch(FeeAction.RequestFee)
     }
@@ -122,7 +128,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             etAmountToSend.clearFocus()
             etAmountToSend.postDelayed(200) { etAmountToSend.hideSoftKeyboard() }
             store.dispatch(SetMaxAmount)
-            store.dispatch(CheckAmountToSend())
+            store.dispatch(CheckAmountToSend)
         }
         var snackbarControlledByChangingFocus = false
         keyboardObserver = KeyboardObserver(requireActivity())
@@ -154,14 +160,14 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         val prevFocusChangeListener = etAmountToSend.onFocusChangeListener
         etAmountToSend.setOnFocusChangeListener { v, hasFocus ->
             prevFocusChangeListener.onFocusChange(v, hasFocus)
-//            if (hasFocus && etAmountToSend.text?.toString() == "0") etAmountToSend.setText("")
+            if (hasFocus && etAmountToSend.text?.toString() == "0") etAmountToSend.setText("")
             if (!hasFocus && etAmountToSend.text?.toString() == "") etAmountToSend.setText("0")
         }
 
         etAmountToSend.inputtedTextAsFlow()
                 .debounce(400)
-                .filter { store.state.sendState.amountState.viewAmountValue != it && it.isNotEmpty() }
-                .onEach { store.dispatch(CheckAmountToSend(it)) }
+                .filter { store.state.sendState.amountState.viewAmountValue.value != it && it.isNotEmpty() }
+                .onEach { store.dispatch(AmountActionUi.HandleUserInput(it)) }
                 .launchIn(mainScope)
 
         etAmountToSend.setOnImeActionListener(EditorInfo.IME_ACTION_DONE) {
@@ -178,15 +184,17 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             if (checkedId == -1) return@setOnCheckedChangeListener
 
             store.dispatch(ChangeSelectedFee(FeeUiHelper.idToFee(checkedId)))
-            store.dispatch(CheckAmountToSend())
+            store.dispatch(CheckAmountToSend)
         }
         swIncludeFee.setOnCheckedChangeListener { btn, isChecked ->
             store.dispatch(ChangeIncludeFee(isChecked))
-            store.dispatch(CheckAmountToSend())
+            store.dispatch(CheckAmountToSend)
         }
     }
 
     override fun subscribeToStore() {
+        if (store.state.sendState.hasInitializationError) return
+
         store.subscribe(sendSubscriber) { appState ->
             appState.skipRepeats { oldState, newState ->
                 oldState.sendState == newState.sendState

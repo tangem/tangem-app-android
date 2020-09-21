@@ -1,14 +1,16 @@
 package com.tangem.tap.features.send.redux.middlewares
 
-import com.tangem.tap.common.CurrencyConverter
-import com.tangem.tap.common.extensions.isGreaterThan
-import com.tangem.tap.common.extensions.isGreaterThanOrEqual
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.TransactionError
+import com.tangem.common.extensions.isZero
+import com.tangem.tap.common.extensions.isNegative
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.send.redux.AmountAction
+import com.tangem.tap.features.send.redux.AmountActionUi
 import com.tangem.tap.features.send.redux.ReceiptAction
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
-import com.tangem.tap.store
 import org.rekotlin.Action
 import java.math.BigDecimal
 
@@ -17,83 +19,93 @@ import java.math.BigDecimal
  */
 class AmountMiddleware {
 
-    fun handle(rawData: String?, appState: AppState?, dispatch: (Action) -> Unit) {
+    fun handle(action: AmountActionUi, appState: AppState?, dispatch: (Action) -> Unit) {
+        when (action) {
+            is AmountActionUi.HandleUserInput -> handleUserInput(action.data, appState, dispatch)
+            is AmountActionUi.CheckAmountToSend -> checkAmountToSend(appState, dispatch)
+            is AmountActionUi.SetMaxAmount -> setMaxAmount(appState, dispatch)
+            is AmountActionUi.ToggleMainCurrency -> toggleMainCurrency(appState, dispatch)
+            is AmountActionUi.SetMainCurrency -> return
+        }
+    }
+
+    private fun handleUserInput(data: String, appState: AppState?, dispatch: (Action) -> Unit) {
         val sendState = appState?.sendState ?: return
 
-        val rawData = rawData ?: store.state.sendState.amountState.viewAmountValue
-        val data = if (rawData == ".") "0.0" else rawData
-        val proposedAmountValue = when {
+        val data = if (data == ".") "0.0" else data
+        val inputValue = when {
             data.isEmpty() || data == "0" -> BigDecimal.ZERO
             else -> BigDecimal(data)
         }
 
-        val balanceCrypto = sendState.amount?.value ?: BigDecimal.ZERO
-        val amountChecker = when (sendState.amountState.mainCurrency.value) {
-            MainCurrencyType.FIAT -> FiatAmountChecker(balanceCrypto, sendState.currencyConverter)
-            MainCurrencyType.CRYPTO -> CryptoAmountChecker(balanceCrypto)
+        if (inputValue.isZero() && sendState.amountState.amountToSendCrypto.isZero()) return
+
+        dispatch(AmountAction.SetAmount(inputValue, true))
+        dispatch(AmountActionUi.CheckAmountToSend)
+    }
+
+    private fun checkAmountToSend(appState: AppState?, dispatch: (Action) -> Unit) {
+        val sendState = appState?.sendState ?: return
+        val walletManager = sendState.walletManager ?: return
+
+        val inputCrypto = sendState.amountState.amountToSendCrypto
+        if (sendState.amountState.viewAmountValue.value == "0" && inputCrypto.isZero()) {
+            dispatch(ReceiptAction.RefreshReceipt)
+            dispatch(SendAction.ChangeSendButtonState(sendState.getButtonState()))
+            return
         }
 
-        val checkResult = amountChecker.check(
-                proposedAmountValue,
-                sendState.feeState.getCurrentFee(),
-                sendState.feeState.feeIsIncluded
-        )
-        if (checkResult.error == null) {
-            dispatch(AmountAction.AmountVerification.SetAmount(checkResult.amount))
+        val feeCrypto = sendState.feeState.getCurrentFee()
+
+        val feeAmount = Amount(feeCrypto, walletManager.wallet.blockchain)
+        val totalAmount = Amount(sendState.getTotalAmountToSend(inputCrypto), walletManager.wallet.blockchain)
+
+        val transactionErrors = walletManager.validateTransaction(totalAmount, feeAmount)
+        if (transactionErrors.isEmpty()) {
+            dispatch(AmountAction.SetAmountError(null))
         } else {
-            dispatch(AmountAction.AmountVerification.SetError(checkResult.amount, checkResult.error))
+            val tapErrors = transactionErrors.map {
+                when (it) {
+                    TransactionError.AmountExceedsBalance -> TapError.AmountExceedsBalance
+                    TransactionError.FeeExceedsBalance -> TapError.FeeExceedsBalance
+                    TransactionError.TotalExceedsBalance -> TapError.TotalExceedsBalance
+                    TransactionError.InvalidAmountValue -> TapError.InvalidAmountValue
+                    TransactionError.InvalidFeeValue -> TapError.InvalidFeeValue
+                    TransactionError.DustAmount -> TapError.DustAmount
+                    TransactionError.DustChange -> TapError.DustChang
+                    else -> TapError.UnknownError
+                }
+            }
+            val error = TapError.ValidateTransactionErrors(tapErrors) { it.joinToString("\r\n") }
+            dispatch(AmountAction.SetAmountError(error))
         }
         dispatch(ReceiptAction.RefreshReceipt)
         dispatch(SendAction.ChangeSendButtonState(sendState.getButtonState()))
     }
 
-}
+    private fun setMaxAmount(appState: AppState?, dispatch: (Action) -> Unit) {
+        val sendState = appState?.sendState ?: return
+        val amountState = sendState.amountState
 
-interface AmountChecker {
-    data class Result(val amount: BigDecimal, val error: AmountAction.Error? = null)
+        val maxAmount = if (sendState.feeState.feeIsIncluded) amountState.balanceCrypto
+        else amountState.balanceCrypto.minus(sendState.feeState.getCurrentFee())
 
-    fun check(value: BigDecimal, feeCrypto: BigDecimal, feeIsIncluded: Boolean): Result
-}
-
-abstract class BaseAmountChecker(
-        protected val balanceCrypto: BigDecimal
-) : AmountChecker {
-
-    override fun check(value: BigDecimal, feeCrypto: BigDecimal, feeIsIncluded: Boolean): AmountChecker.Result {
-        val convertedFee = convert(feeCrypto)
-        val convertedBalance = convert(balanceCrypto)
-        if (feeIsIncluded) {
-            return if (value.isGreaterThan(convertedFee)) {
-                if (convertedBalance.isGreaterThanOrEqual(value)) {
-                    AmountChecker.Result(value)
-                } else {
-                    AmountChecker.Result(value, AmountAction.Error.FEE_GREATER_THAN_AMOUNT)
-                }
-            } else {
-                AmountChecker.Result(value, AmountAction.Error.AMOUNT_WITH_FEE_GREATER_THAN_BALANCE)
-            }
+        if (maxAmount.isNegative()) {
+            dispatch(AmountAction.SetAmountError(TapError.FeeExceedsBalance))
         } else {
-            val amountWithFee = value.plus(convertedFee)
-            return if (convertedBalance.isGreaterThanOrEqual(amountWithFee)) {
-                AmountChecker.Result(value)
-            } else {
-                AmountChecker.Result(value, AmountAction.Error.AMOUNT_WITH_FEE_GREATER_THAN_BALANCE)
-            }
+            val currentCurrencyValue = if (amountState.mainCurrency.type == MainCurrencyType.CRYPTO) maxAmount
+            else sendState.convertToFiat(maxAmount)
+
+            dispatch(AmountAction.SetAmount(currentCurrencyValue, false))
         }
     }
 
-    protected abstract fun convert(value: BigDecimal): BigDecimal
-}
+    private fun toggleMainCurrency(appState: AppState?, dispatch: (Action) -> Unit) {
+        val amountState = appState?.sendState?.amountState ?: return
 
-class CryptoAmountChecker(
-        balanceCrypto: BigDecimal
-) : BaseAmountChecker(balanceCrypto) {
-    override fun convert(value: BigDecimal): BigDecimal = value
-}
+        val type = if (amountState.mainCurrency.type == MainCurrencyType.FIAT) MainCurrencyType.CRYPTO
+        else MainCurrencyType.FIAT
 
-class FiatAmountChecker(
-        balanceCrypto: BigDecimal,
-        private val converter: CurrencyConverter
-) : BaseAmountChecker(balanceCrypto) {
-    override fun convert(value: BigDecimal): BigDecimal = converter.toFiat(value)
+        dispatch(AmountActionUi.SetMainCurrency(type))
+    }
 }
