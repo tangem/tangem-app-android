@@ -63,7 +63,9 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
                 }
                 is WalletAction.CreateWallet -> {
                     scope.launch {
-                        val result = tangemSdkManager.createWallet()
+                        val result = tangemSdkManager.createWallet(
+                                store.state.globalState.scanNoteResponse?.card?.cardId
+                        )
                         when (result) {
                             is CompletionResult.Success -> {
                                 store.state.globalState.tapWalletManager.onCardScanned(result.data)
