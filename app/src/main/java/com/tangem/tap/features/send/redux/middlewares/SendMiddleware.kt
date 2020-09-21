@@ -41,14 +41,12 @@ val sendMiddleware: Middleware<AppState> = { dispatch, appState ->
 private fun verifyAndSendTransaction(appState: AppState?, dispatch: (Action) -> Unit) {
     val sendState = appState?.sendState ?: return
     val walletManager = appState.globalState.scanNoteResponse?.walletManager ?: return
+    val recipientAddress = sendState.addressPayIdState.recipientWalletAddress ?: return
+    val typedAmount = sendState.amountState.amountToExtract ?: return
 
-    val blockchain = walletManager.wallet.blockchain
-    val recipientAddress = sendState.addressPayIdState.recipientWalletAddress!!
-
-    val feeAmount = Amount(sendState.feeState.getCurrentFee(), blockchain)
-    val amountToSend = Amount(sendState.getTotalAmountToSend(), blockchain, recipientAddress)
-
-    val txSender = walletManager as TransactionSender
+    val feeAmount = Amount(sendState.feeState.getCurrentFee(), walletManager.wallet.blockchain)
+    val totalToSend = sendState.getTotalAmountToSend()
+    val amountToSend = Amount(typedAmount.currencySymbol, totalToSend, recipientAddress, typedAmount.decimals, typedAmount.type)
 
     val verifyResult = walletManager.validateTransaction(amountToSend, feeAmount)
     if (verifyResult.isNotEmpty()) {
@@ -59,7 +57,7 @@ private fun verifyAndSendTransaction(appState: AppState?, dispatch: (Action) -> 
     dispatch(SendAction.ChangeSendButtonState(SendButtonState.PROGRESS))
     val txData = walletManager.createTransaction(amountToSend, feeAmount, recipientAddress)
     scope.launch {
-        val result = txSender.send(txData, Signer(tangemSdk))
+        val result = (walletManager as TransactionSender).send(txData, Signer(tangemSdk))
         withContext(Dispatchers.Main) {
             when (result) {
                 is SimpleResult.Success -> {
