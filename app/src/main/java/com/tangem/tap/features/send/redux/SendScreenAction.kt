@@ -26,14 +26,16 @@ data class PrepareSendScreen(
 
 // Address or PayId
 sealed class AddressPayIdActionUi : SendScreenActionUi {
-    data class ChangeAddressOrPayId(val data: String) : AddressPayIdActionUi()
+    data class HandleUserInput(val data: String) : AddressPayIdActionUi()
+    data class PasteAddressPayId(val data: String) : AddressPayIdActionUi()
+    data class CheckClipboard(val data: String?) : AddressPayIdActionUi()
+    object CheckAddressPayId: AddressPayIdActionUi()
     data class SetTruncateHandler(val handler: (String) -> String) : AddressPayIdActionUi()
     data class TruncateOrRestore(val truncate: Boolean) : AddressPayIdActionUi()
 }
 
 sealed class AddressPayIdVerifyAction : SendScreenAction {
     enum class Error {
-        IS_NOT_PAY_ID,
         PAY_ID_UNSUPPORTED_BY_BLOCKCHAIN,
         PAY_ID_NOT_REGISTERED,
         PAY_ID_REQUEST_FAILED,
@@ -41,38 +43,31 @@ sealed class AddressPayIdVerifyAction : SendScreenAction {
         ADDRESS_SAME_AS_WALLET
     }
 
-    data class VerifyClipboard(val data: String?) : AddressPayIdVerifyAction()
     data class ChangePasteBtnEnableState(val isEnabled: Boolean) : AddressPayIdVerifyAction()
 
     sealed class PayIdVerification : AddressPayIdVerifyAction() {
-        data class SetError(val payId: String, val error: Error) : PayIdVerification()
-        data class SetPayIdWalletAddress(val payId: String, val payIdWalletAddress: String) : PayIdVerification()
+        data class SetPayIdError(val error: Error?) : PayIdVerification()
+        data class SetPayIdWalletAddress(val payId: String, val payIdWalletAddress: String, val isUserInput: Boolean) : PayIdVerification()
     }
 
     sealed class AddressVerification : AddressPayIdVerifyAction() {
-        data class SetError(val address: String, val error: Error) : AddressVerification()
-        data class SetWalletAddress(val address: String) : AddressVerification()
+        data class SetAddressError(val error: Error?) : AddressVerification()
+        data class SetWalletAddress(val address: String, val isUserInput: Boolean) : AddressVerification()
     }
 }
 
 // Amount to send
 sealed class AmountActionUi : SendScreenActionUi {
+    data class HandleUserInput(val data: String) : AmountActionUi()
+    object CheckAmountToSend : AmountActionUi()
     object SetMaxAmount : AmountActionUi()
-    data class CheckAmountToSend(val data: String? = null) : AmountActionUi()
     data class SetMainCurrency(val mainCurrency: MainCurrencyType) : AmountActionUi()
     object ToggleMainCurrency : AmountActionUi()
 }
 
 sealed class AmountAction : SendScreenAction {
-    enum class Error {
-        FEE_GREATER_THAN_AMOUNT,
-        AMOUNT_WITH_FEE_GREATER_THAN_BALANCE
-    }
-
-    sealed class AmountVerification : AmountAction() {
-        data class SetAmount(val amount: BigDecimal) : AmountVerification()
-        data class SetError(val amount: BigDecimal, val error: Error) : AmountVerification()
-    }
+    data class SetAmount(val amount: BigDecimal, val isUserInput: Boolean) : AmountAction()
+    data class SetAmountError(val error: TapError?) : AmountAction()
 }
 
 // Fee
