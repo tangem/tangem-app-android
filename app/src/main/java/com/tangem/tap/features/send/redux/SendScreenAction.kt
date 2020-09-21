@@ -66,7 +66,7 @@ sealed class AmountActionUi : SendScreenActionUi {
 }
 
 sealed class AmountAction : SendScreenAction {
-    data class SetAmount(val amount: BigDecimal, val isUserInput: Boolean) : AmountAction()
+    data class SetAmount(val amountCrypto: BigDecimal, val isUserInput: Boolean) : AmountAction()
     data class SetAmountError(val error: TapError?) : AmountAction()
 }
 
