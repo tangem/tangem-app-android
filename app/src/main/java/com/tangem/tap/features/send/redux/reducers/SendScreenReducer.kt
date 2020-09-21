@@ -61,13 +61,10 @@ private class PrepareSendScreenStatesReducer : SendInternalReducer {
 
         val coinConverter = createCurrencyConverter(walletManager.wallet.blockchain.currency, decimals)
         val tokenConverter = createCurrencyConverter(prepareAction.tokenAmount?.currencySymbol ?: "", decimals)
-        if (coinConverter == null || (walletAmount.type == AmountType.Token && tokenConverter == null)) {
-            return sendState.copy(hasInitializationError = true)
-        }
         return sendState.copy(
                 walletManager = walletManager,
                 coinConverter = coinConverter,
-                tokenConverter = tokenConverter ?: CurrencyConverter(BigDecimal.ONE, decimals),
+                tokenConverter = tokenConverter,
                 amountState = sendState.amountState.copy(
                         walletAmount = walletAmount,
                         typeOfAmount = walletAmount.type,
