@@ -56,16 +56,16 @@ data class SendState(
         else coinConverter!!.toCrypto(value)
     }
 
+    fun convertFiatToToken(value: BigDecimal): BigDecimal {
+        return if (!this.tokenIsConvertible()) value
+        else tokenConverter!!.toCrypto(value)
+    }
+
     fun convertCoinToFiat(value: BigDecimal, scaleWithPrecision: Boolean = false): BigDecimal {
         if (!this.coinIsConvertible()) return value
 
         val converter = coinConverter!!
         return if (!scaleWithPrecision) converter.toFiat(value) else converter.toFiatWithPrecision(value)
-    }
-
-    fun convertFiatToToken(value: BigDecimal): BigDecimal {
-        return if (!this.tokenIsConvertible()) value
-        else tokenConverter!!.toCrypto(value)
     }
 
     fun convertTokenToFiat(value: BigDecimal, scaleWithPrecision: Boolean = false): BigDecimal {
@@ -75,11 +75,25 @@ data class SendState(
         return if (!scaleWithPrecision) converter.toFiat(value) else converter.toFiatWithPrecision(value)
     }
 
+    fun convertFiatToExtractCrypto(fiatValue: BigDecimal): BigDecimal = when (amountState.typeOfAmount) {
+        AmountType.Coin -> convertFiatToCoin(fiatValue)
+        AmountType.Token -> convertFiatToToken(fiatValue)
+        AmountType.Reserve -> fiatValue
+    }
+
+    fun convertExtractCryptoToFiat(cryptoValue: BigDecimal, scaleWithPrecision: Boolean = false): BigDecimal {
+        return when (amountState.typeOfAmount) {
+            AmountType.Coin -> convertCoinToFiat(cryptoValue, scaleWithPrecision)
+            AmountType.Token -> convertTokenToFiat(cryptoValue, scaleWithPrecision)
+            AmountType.Reserve -> cryptoValue
+        }
+    }
+
     fun getButtonState(): SendButtonState = if (isReadyToSend()) SendButtonState.ENABLED else SendButtonState.DISABLED
 
     fun getTotalAmountToSend(value: BigDecimal = amountState.amountToSendCrypto): BigDecimal {
         val needToExtractFee = amountState.isCoinAmount() && feeState.feeIsIncluded
-        return if (needToExtractFee) value.minus(feeState.getCurrentFee()) else value
+        return if (needToExtractFee) value.minus(feeState.getCurrentFeeValue()) else value
     }
 
     fun coinIsConvertible(): Boolean = coinConverter != null
