@@ -1,6 +1,7 @@
 package com.tangem.tap.features.send.redux.middlewares
 
 import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionError
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.redux.AppState
@@ -40,7 +41,11 @@ class AmountMiddleware {
         if (inputValue.isZero() && amountState.amountToSendCrypto.isZero()) return
 
         val inputValueCrypto = if (amountState.mainCurrency.type == MainCurrencyType.CRYPTO) inputValue
-        else sendState.convertToCrypto(inputValue)
+        else when (amountState.typeOfAmount) {
+            AmountType.Coin -> sendState.convertFiatToCoin(inputValue)
+            AmountType.Token -> sendState.convertFiatToToken(inputValue)
+            else -> inputValue
+        }
 
         dispatch(AmountAction.SetAmount(inputValueCrypto, true))
         dispatch(AmountActionUi.CheckAmountToSend)
@@ -93,6 +98,7 @@ class AmountMiddleware {
 
     private fun toggleMainCurrency(appState: AppState?, dispatch: (Action) -> Unit) {
         val amountState = appState?.sendState?.amountState ?: return
+        if (!appState.sendState.coinIsConvertible()) return
 
         val type = if (amountState.mainCurrency.type == MainCurrencyType.FIAT) MainCurrencyType.CRYPTO
         else MainCurrencyType.FIAT
