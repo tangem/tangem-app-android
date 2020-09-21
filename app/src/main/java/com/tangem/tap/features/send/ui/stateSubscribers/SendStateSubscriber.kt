@@ -10,9 +10,10 @@ import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.update
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
 import com.tangem.tap.common.toggleWidget.ProgressState
+import com.tangem.tap.domain.MultiMessageError
+import com.tangem.tap.domain.assembleErrorIds
 import com.tangem.tap.features.send.BaseStoreFragment
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
-import com.tangem.tap.features.send.redux.AmountAction
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.states.*
 import com.tangem.tap.features.send.ui.FeeUiHelper
@@ -66,7 +67,6 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
     private fun handleAddressPayIdState(fg: BaseStoreFragment, state: AddressPayIdState) {
         fun parseError(context: Context, error: Error?): String? {
             val resId = when (error) {
-                Error.IS_NOT_PAY_ID -> R.string.error_payid_verification_failed
                 Error.PAY_ID_UNSUPPORTED_BY_BLOCKCHAIN -> R.string.error_payid_unsupported_by_blockchain
                 Error.PAY_ID_NOT_REGISTERED -> R.string.error_payid_not_registere
                 Error.PAY_ID_REQUEST_FAILED -> R.string.error_payid_request_failed
@@ -89,31 +89,30 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         til.helperText = state.recipientWalletAddress
         til.isHelperTextEnabled = state.isPayIdState() && parsedError == null
 
-        // prevent cycling
-        if (state.etFieldValue == null) return
-
-        et.update(state.etFieldValue)
+        if (!state.viewFieldValue.isFromUserInput) et.update(state.viewFieldValue.value)
     }
 
     private fun handleAmountState(fg: BaseStoreFragment, state: AmountState) {
-        when (state.error) {
-            AmountAction.Error.FEE_GREATER_THAN_AMOUNT -> {
-                fg.amountContainer.parent?.beginDelayedTransition()
-                fg.tilAmountToSend.enableError(true, fg.getString(R.string.error_fee_greater_than_amount))
+        if (state.error != null) {
+            val context = fg.requireContext()
+            val message = when (state.error) {
+                is MultiMessageError -> {
+                    val multiError = state.error as MultiMessageError
+                    val messageList = multiError.assembleErrorIds().map { context.getString(it) }
+                    multiError.builder(messageList)
+                }
+                else -> context.getString(state.error.localizedMessage)
             }
-            AmountAction.Error.AMOUNT_WITH_FEE_GREATER_THAN_BALANCE -> {
-                fg.amountContainer.parent?.beginDelayedTransition()
-                fg.tilAmountToSend.enableError(true, fg.getString(R.string.error_amount_with_fee_greater_than_balance))
-            }
-            null -> {
-                if (fg.tilAmountToSend.isErrorEnabled) fg.amountContainer.parent?.beginDelayedTransition()
-                fg.tilAmountToSend.enableError(false)
-            }
+            fg.amountContainer.parent?.beginDelayedTransition()
+            fg.tilAmountToSend.enableError(true, message)
+        } else {
+            if (fg.tilAmountToSend.isErrorEnabled) fg.amountContainer.parent?.beginDelayedTransition()
+            fg.tilAmountToSend.enableError(false)
         }
 
         fg.etAmountToSend.filters = arrayOf(DecimalDigitsInputFilter(12, state.maxLengthOfAmount))
         val amountToSend = state.viewAmountValue
-        fg.etAmountToSend.update(amountToSend)
+        if (!amountToSend.isFromUserInput) fg.etAmountToSend.update(amountToSend.value)
 
 //        fg.tvAmountToSendShadow.text = amountToSend
 //        if (amountToSend.length > 10) {
@@ -131,11 +130,11 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 //            if (!state.cursorAtTheSamePosition) fg.etAmountToSend.setSelection(amountToSend.length)
 //        }
 
-        fg.tvAmountCurrency.update(state.mainCurrency.displayedValue)
-        (fg as? SendFragment)?.saveMainCurrency(state.mainCurrency.value)
+        fg.tvAmountCurrency.update(state.mainCurrency.currencySymbol)
+        (fg as? SendFragment)?.saveMainCurrency(state.mainCurrency.type)
 
         val balanceText = fg.getString(R.string.send_balance,
-                state.mainCurrency.displayedValue,
+                state.mainCurrency.currencySymbol,
                 state.viewBalanceValue)
         fg.tvBalance.update(balanceText)
     }
@@ -162,6 +161,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             }
         }
 
+        fg.swIncludeFee.isEnabled = state.includeFeeSwitcherIsEnabled
         if (fg.swIncludeFee.isChecked != state.feeIsIncluded) {
             fg.swIncludeFee.isChecked = state.feeIsIncluded
         }
@@ -182,6 +182,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         val totalTokenLayout = fg.flTotalTokenCrypto as ViewGroup
         fun getString(id: Int): String = mainLayout.context.getString(id)
 
+        val rough = getString(R.string.sign_rough)
         when (state.visibleTypeOfReceipt) {
             ReceiptLayoutType.FIAT -> {
                 val receipt = state.fiat ?: return
@@ -190,7 +191,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 totalTokenLayout.show(false)
                 fg.tvReceiptAmountValue.update("${receipt.amountFiat} ${receipt.symbols.fiat}")
                 fg.tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
-                totalLayout.tvTotalValue.update("${receipt.totalFiat} ${receipt.symbols.fiat}")
+                totalLayout.tvTotalValue.update("$rough ${receipt.totalFiat} ${receipt.symbols.fiat}")
 
                 val willSent = SpannableStringBuilder()
                         .bold { append(receipt.willSentCrypto) }.append(" ")
@@ -210,7 +211,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
                 val willSent = SpannableStringBuilder()
                         .bold {
-                            append(getString(R.string.sign_rough)).append(" ")
+                            append(rough).append(" ")
                             append(receipt.willSentFiat).append(" ")
                             append(receipt.symbols.fiat)
                             append(" (fee: ${receipt.feeFiat} ")
@@ -231,11 +232,11 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                         .bold {
                             append(receipt.symbols.token)
                             append(" ")
-                            append(receipt.willSentFeeCrypto)
+                            append(receipt.willSentToken)
                         }.append(" ").append(getString(R.string.generic_and)).append(" ")
                         .bold {
                             append(receipt.symbols.crypto).append(" ")
-                            append(receipt.willSentFeeCrypto).append(" ")
+                            append(receipt.willSentFeeCoin).append(" ")
                         }
                         .append(mainLayout.context.getString(R.string.send_total_will_be_sent))
                 totalLayout.tvWillBeSentValue.update(willSent.toString())
@@ -247,7 +248,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 totalTokenLayout.show(true)
 
                 fg.tvReceiptAmountValue.update("${receipt.amountToken} ${receipt.symbols.token}")
-                fg.tvReceiptFeeValue.update("${receipt.feeCrypto} ${receipt.symbols.crypto}")
+                fg.tvReceiptFeeValue.update("${receipt.feeCoin} ${receipt.symbols.crypto}")
 
                 val willSent = SpannableStringBuilder()
                         .bold {
