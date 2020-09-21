@@ -6,6 +6,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
+import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.network.coinmarketcap.FiatCurrency
 import java.math.BigDecimal
@@ -58,7 +59,27 @@ fun BigDecimal.toFiatString(rateValue: BigDecimal, fiatCurrencyName: FiatCurrenc
     return "≈ ${fiatCurrencyName}  $fiatValue"
 }
 
+fun FiatCurrency.toFormattedString(): String = "${this.name} (${this.symbol}) - ${this.sign}"
+
 fun BigDecimal.stripZeroPlainString(): String = this.stripTrailingZeros().toPlainString()
+
+// 0.00 -> 0.00
+// 0.00002345 -> 0.00002
+// 1.00002345 -> 1.00
+// 1.45002345 -> 1.45
+fun BigDecimal.scaleToFiat(applyPrecision: Boolean = false): BigDecimal {
+    if (this.isZero()) return this
+
+    val scaledFiat = this.setScale(2, RoundingMode.DOWN)
+    return if (scaledFiat.isZero() && applyPrecision) this.setPrecision(1)
+    else scaledFiat
+
+}
+
+fun BigDecimal.setPrecision(precision: Int, roundingMode: RoundingMode = RoundingMode.DOWN): BigDecimal {
+    if (precision == precision() || scale() <= precision) return this
+    return this.setScale(scale() - precision() + precision, roundingMode)
+}
 
 fun BigDecimal.isPositive(): Boolean = this.compareTo(BigDecimal.ZERO) == 1
 fun BigDecimal.isNegative(): Boolean = this.compareTo(BigDecimal.ZERO) == -1
@@ -74,5 +95,3 @@ fun BigDecimal.isLessThanOrEqual(value: BigDecimal): Boolean {
     val compareResult = this.compareTo(value)
     return compareResult == -1 || compareResult == 0
 }
-
-fun FiatCurrency.toFormattedString(): String = "${this.name} (${this.symbol}) - ${this.sign}"
