@@ -1,7 +1,6 @@
 package com.tangem.tap.features.send.redux.reducers
 
 import com.tangem.common.extensions.isZero
-import com.tangem.tap.common.extensions.scaleToFiat
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.features.send.redux.AmountAction
 import com.tangem.tap.features.send.redux.AmountActionUi
@@ -59,25 +58,14 @@ class AmountReducer : SendInternalReducer {
     private fun handleAction(action: AmountAction, sendState: SendState, state: AmountState): SendState {
         val result = when (action) {
             is AmountAction.SetAmount -> {
-                when (state.mainCurrency.type) {
-                    MainCurrencyType.FIAT -> {
-                        val amountCrypto = sendState.convertToCrypto(action.amount)
-                        state.copy(
-                                viewAmountValue = InputViewValue(action.amount.scaleToFiat(false).stripZeroPlainString(), action.isUserInput),
-                                amountToSendCrypto = amountCrypto,
-                                cursorAtTheSamePosition = true,
-                                error = null
-                        )
-                    }
-                    MainCurrencyType.CRYPTO -> {
-                        state.copy(
-                                viewAmountValue = InputViewValue(action.amount.stripZeroPlainString(), action.isUserInput),
-                                amountToSendCrypto = action.amount,
-                                cursorAtTheSamePosition = true,
-                                error = null
-                        )
-                    }
-                }
+                val amount = if (state.mainCurrency.type == MainCurrencyType.CRYPTO) action.amountCrypto
+                else sendState.convertToFiat(action.amountCrypto, true)
+                state.copy(
+                        viewAmountValue = InputViewValue(amount.stripZeroPlainString(), action.isUserInput),
+                        amountToSendCrypto = action.amountCrypto,
+                        cursorAtTheSamePosition = true,
+                        error = null
+                )
             }
             is AmountAction.SetAmountError -> {
                 state.copy(error = action.error)
