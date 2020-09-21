@@ -1,7 +1,6 @@
 package com.tangem.tap.features.send.redux.middlewares
 
 import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionError
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.redux.AppState
@@ -41,11 +40,7 @@ class AmountMiddleware {
         if (inputValue.isZero() && amountState.amountToSendCrypto.isZero()) return
 
         val inputValueCrypto = if (amountState.mainCurrency.type == MainCurrencyType.CRYPTO) inputValue
-        else when (amountState.typeOfAmount) {
-            AmountType.Coin -> sendState.convertFiatToCoin(inputValue)
-            AmountType.Token -> sendState.convertFiatToToken(inputValue)
-            else -> inputValue
-        }
+        else sendState.convertFiatToExtractCrypto(inputValue)
 
         dispatch(AmountAction.SetAmount(inputValueCrypto, true))
         dispatch(AmountActionUi.CheckAmountToSend)
@@ -54,6 +49,7 @@ class AmountMiddleware {
     private fun checkAmountToSend(appState: AppState?, dispatch: (Action) -> Unit) {
         val sendState = appState?.sendState ?: return
         val walletManager = sendState.walletManager ?: return
+        val typedAmount = sendState.amountState.amountToExtract ?: return
 
         val inputCrypto = sendState.amountState.amountToSendCrypto
         if (sendState.amountState.viewAmountValue.value == "0" && inputCrypto.isZero()) {
@@ -62,12 +58,8 @@ class AmountMiddleware {
             return
         }
 
-        val feeCrypto = sendState.feeState.getCurrentFee()
-
-        val feeAmount = Amount(feeCrypto, walletManager.wallet.blockchain)
-        val totalAmount = Amount(sendState.getTotalAmountToSend(inputCrypto), walletManager.wallet.blockchain)
-
-        val transactionErrors = walletManager.validateTransaction(totalAmount, feeAmount)
+        val amountToSend = Amount(typedAmount, sendState.getTotalAmountToSend(inputCrypto))
+        val transactionErrors = walletManager.validateTransaction(amountToSend, sendState.feeState.currentFee)
         if (transactionErrors.isEmpty()) {
             dispatch(AmountAction.SetAmountError(null))
         } else {
