@@ -5,6 +5,7 @@ import com.tangem.commands.Settings
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.redux.AppState
 import org.rekotlin.Action
+import java.util.*
 
 class DetailsReducer {
     companion object {
@@ -13,28 +14,45 @@ class DetailsReducer {
 }
 
 private fun internalReduce(action: Action, state: AppState): DetailsState {
-
     if (action !is DetailsAction) return state.detailsState
 
-    var detailsState = state.detailsState
-    when (action) {
+    val detailsState = state.detailsState
+    return when (action) {
         is DetailsAction.PrepareScreen -> {
-            detailsState = DetailsState(
-                    card = action.card, wallet = action.wallet,
-                    cardInfo = action.card.toCardInfo(),
-                    appCurrencyState = AppCurrencyState(
-                            action.fiatCurrencyName
-                    )
-            )
+            handlePrepareScreen(action, detailsState)
         }
         is DetailsAction.EraseWallet -> {
-            detailsState = handleEraseWallet(action, detailsState)
+            handleEraseWallet(action, detailsState)
         }
         is DetailsAction.AppCurrencyAction -> {
-            detailsState = handleAppCurrencyAction(action, detailsState)
+            handleAppCurrencyAction(action, detailsState)
+        }
+        is DetailsAction.ManageSecurity -> {
+            handleSecurityAction(action, detailsState)
         }
     }
-    return detailsState
+}
+
+private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: DetailsState): DetailsState {
+    val securityOption = when {
+        action.card.isPin1Default == false -> {
+            SecurityOption.AccessCode
+        }
+        action.card.isPin2Default == false -> {
+            SecurityOption.PassCode
+        }
+        else -> {
+            SecurityOption.LongTap
+        }
+    }
+    return DetailsState(
+            card = action.card, wallet = action.wallet,
+            cardInfo = action.card.toCardInfo(),
+            appCurrencyState = AppCurrencyState(
+                    action.fiatCurrencyName
+            ),
+            securityScreenState = SecurityScreenState(currentOption = securityOption)
+    )
 }
 
 private fun handleEraseWallet(action: DetailsAction.EraseWallet, state: DetailsState): DetailsState {
@@ -84,6 +102,55 @@ private fun handleAppCurrencyAction(
                     )
             )
         }
+        else -> state
+    }
+}
+
+private fun handleSecurityAction(
+        action: DetailsAction.ManageSecurity, state: DetailsState
+): DetailsState {
+    return when (action) {
+        is DetailsAction.ManageSecurity.OpenSecurity -> {
+            val prohibitDefaultPin = state.card?.settingsMask?.contains(Settings.ProhibitDefaultPIN1) == true
+            val allowSetPin1 = state.card?.settingsMask?.contains(Settings.AllowSetPIN1) != false
+            val allowSetPin2 = state.card?.settingsMask?.contains(Settings.AllowSetPIN2) != false
+            val isDefaultPin1 = state.card?.isPin1Default != false
+            val isDefaultPin2 = state.card?.isPin2Default != false
+
+            val allowedSecurityOptions = EnumSet.noneOf(SecurityOption::class.java)
+            if ((isDefaultPin1 && isDefaultPin2) || !prohibitDefaultPin) {
+                allowedSecurityOptions.add(SecurityOption.LongTap)
+            }
+            if (allowSetPin1 && (isDefaultPin2 || !prohibitDefaultPin)) {
+                allowedSecurityOptions.add(SecurityOption.AccessCode)
+            }
+            if (allowSetPin2 && (isDefaultPin1 || !prohibitDefaultPin)) {
+                allowedSecurityOptions.add(SecurityOption.AccessCode)
+            }
+
+            state.copy(securityScreenState = state.securityScreenState?.copy(
+                    allowedOptions = allowedSecurityOptions
+            ))
+        }
+        is DetailsAction.ManageSecurity.SelectOption -> {
+            state.copy(securityScreenState = state.securityScreenState?.copy(
+                    selectedOption = action.option
+            ))
+        }
+        is DetailsAction.ManageSecurity.ConfirmSelection -> {
+            val confirmScreenState = when (action.option) {
+                SecurityOption.LongTap -> ConfirmScreenState.LongTap
+                SecurityOption.PassCode -> ConfirmScreenState.PassCode
+                SecurityOption.AccessCode -> ConfirmScreenState.AccessCode
+            }
+            state.copy(confirmScreenState = confirmScreenState)
+        }
+        is DetailsAction.ManageSecurity.SaveChanges.Success -> {
+            state.copy(securityScreenState = state.securityScreenState?.copy(
+                    currentOption = state.securityScreenState.selectedOption
+            ))
+        }
+
         else -> state
     }
 }
