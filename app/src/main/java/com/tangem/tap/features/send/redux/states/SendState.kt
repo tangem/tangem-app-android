@@ -48,7 +48,7 @@ data class SendState(
 
     fun getDecimals(type: MainCurrencyType): Int = when (type) {
         MainCurrencyType.FIAT -> 2
-        MainCurrencyType.CRYPTO -> amountState.walletAmount?.decimals ?: 0
+        MainCurrencyType.CRYPTO -> amountState.amountToExtract?.decimals ?: 0
     }
 
     fun convertFiatToCoin(value: BigDecimal): BigDecimal {
@@ -99,7 +99,7 @@ enum class SendButtonState {
 }
 
 data class AmountState(
-        val walletAmount: Amount? = null,
+        val amountToExtract: Amount? = null,
         val typeOfAmount: AmountType = AmountType.Coin,
         val viewAmountValue: InputViewValue = InputViewValue(BigDecimal.ZERO.toPlainString()),
         val viewBalanceValue: String = BigDecimal.ZERO.toPlainString(),
@@ -118,10 +118,10 @@ data class AmountState(
     fun isCoinAmount(): Boolean = typeOfAmount == AmountType.Coin
 
     fun createMainCurrency(type: MainCurrencyType, canSwitched: Boolean): MainCurrency {
-        return if (!canSwitched) MainCurrency(type, walletAmount?.currencySymbol ?: "NONE", false)
+        return if (!canSwitched) MainCurrency(type, amountToExtract?.currencySymbol ?: "NONE", false)
         else when (type) {
             MainCurrencyType.FIAT -> MainCurrency(type, store.state.globalState.appCurrency)
-            MainCurrencyType.CRYPTO -> MainCurrency(type, walletAmount?.currencySymbol ?: "NONE")
+            MainCurrencyType.CRYPTO -> MainCurrency(type, amountToExtract?.currencySymbol ?: "NONE")
         }
     }
 }
