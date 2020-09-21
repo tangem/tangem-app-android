@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.Action
 import org.rekotlin.Middleware
+import timber.log.Timber
 
 /**
 [REDACTED_AUTHOR]
@@ -43,10 +44,9 @@ private fun verifyAndSendTransaction(appState: AppState?, dispatch: (Action) -> 
     val walletManager = appState.globalState.scanNoteResponse?.walletManager ?: return
     val recipientAddress = sendState.addressPayIdState.recipientWalletAddress ?: return
     val typedAmount = sendState.amountState.amountToExtract ?: return
+    val feeAmount = sendState.feeState.currentFee ?: return
 
-    val feeAmount = Amount(sendState.feeState.getCurrentFee(), walletManager.wallet.blockchain)
-    val totalToSend = sendState.getTotalAmountToSend()
-    val amountToSend = Amount(typedAmount.currencySymbol, totalToSend, recipientAddress, typedAmount.decimals, typedAmount.type)
+    val amountToSend = Amount(typedAmount, sendState.getTotalAmountToSend())
 
     val verifyResult = walletManager.validateTransaction(amountToSend, feeAmount)
     if (verifyResult.isNotEmpty()) {
@@ -57,6 +57,7 @@ private fun verifyAndSendTransaction(appState: AppState?, dispatch: (Action) -> 
     dispatch(SendAction.ChangeSendButtonState(SendButtonState.PROGRESS))
     val txData = walletManager.createTransaction(amountToSend, feeAmount, recipientAddress)
     scope.launch {
+        walletManager.update()
         val result = (walletManager as TransactionSender).send(txData, Signer(tangemSdk))
         withContext(Dispatchers.Main) {
             when (result) {
@@ -76,6 +77,7 @@ private fun verifyAndSendTransaction(appState: AppState?, dispatch: (Action) -> 
                                     // user was cancelled the operation by closing the Sdk bottom sheet
                                 }
                                 else -> {
+                                    Timber.e(result.error)
                                     dispatch(SendAction.SendError(TapError.BlockchainInternalError))
                                 }
                             }
