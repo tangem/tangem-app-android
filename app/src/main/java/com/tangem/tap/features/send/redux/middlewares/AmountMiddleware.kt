@@ -39,8 +39,11 @@ class AmountMiddleware {
         }
         if (inputValue.isZero() && amountState.amountToSendCrypto.isZero()) return
 
-        val inputValueCrypto = if (amountState.mainCurrency.type == MainCurrencyType.CRYPTO) inputValue
-        else sendState.convertFiatToExtractCrypto(inputValue)
+        val inputValueCrypto = if (amountState.mainCurrency.type == MainCurrencyType.CRYPTO) {
+            inputValue
+        } else {
+            sendState.convertFiatToExtractCrypto(inputValue)
+        }
 
         dispatch(AmountAction.SetAmount(inputValueCrypto, true))
         dispatch(AmountActionUi.CheckAmountToSend)
@@ -92,8 +95,11 @@ class AmountMiddleware {
         val amountState = appState?.sendState?.amountState ?: return
         if (!appState.sendState.coinIsConvertible()) return
 
-        val type = if (amountState.mainCurrency.type == MainCurrencyType.FIAT) MainCurrencyType.CRYPTO
-        else MainCurrencyType.FIAT
+        val type = if (amountState.mainCurrency.type == MainCurrencyType.FIAT) {
+            MainCurrencyType.CRYPTO
+        } else {
+            MainCurrencyType.FIAT
+        }
 
         dispatch(AmountActionUi.SetMainCurrency(type))
     }
