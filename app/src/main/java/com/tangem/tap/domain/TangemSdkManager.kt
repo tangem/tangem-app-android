@@ -2,11 +2,10 @@ package com.tangem.tap.domain
 
 import androidx.activity.ComponentActivity
 import com.tangem.*
-import com.tangem.commands.CommandResponse
-import com.tangem.commands.PurgeWalletCommand
-import com.tangem.commands.PurgeWalletResponse
+import com.tangem.commands.*
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.CardType
+import com.tangem.common.extensions.calculateSha256
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.ScanNoteResponse
@@ -26,12 +25,28 @@ class TangemSdkManager(val activity: ComponentActivity) {
         return runTaskAsyncReturnOnMain(ScanNoteTask())
     }
 
-    suspend fun createWallet(): CompletionResult<ScanNoteResponse> {
-        return runTaskAsyncReturnOnMain(CreateWalletAndRescanTask())
+    suspend fun createWallet(cardId: String?): CompletionResult<ScanNoteResponse> {
+        return runTaskAsyncReturnOnMain(CreateWalletAndRescanTask(), cardId)
     }
 
-    suspend fun eraseWallet(): CompletionResult<PurgeWalletResponse> {
-        return runTaskAsyncReturnOnMain(PurgeWalletCommand())
+    suspend fun eraseWallet(cardId: String?): CompletionResult<PurgeWalletResponse> {
+        return runTaskAsyncReturnOnMain(PurgeWalletCommand(), cardId)
+    }
+
+    suspend fun setPasscode(cardId: String?): CompletionResult<SetPinResponse> {
+        return runTaskAsyncReturnOnMain(SetPinCommand.setPin1(null), cardId)
+    }
+
+    suspend fun setAccessCode(cardId: String?): CompletionResult<SetPinResponse> {
+        return runTaskAsyncReturnOnMain(SetPinCommand.setPin2(null), cardId)
+    }
+
+    suspend fun setLongTap(cardId: String?): CompletionResult<SetPinResponse> {
+        return runTaskAsyncReturnOnMain(SetPinCommand(
+                pinType = PinType.Pin1,
+                newPin1 = tangemSdk.config.defaultPin1.calculateSha256(),
+                newPin2 = tangemSdk.config.defaultPin2.calculateSha256()
+        ), cardId)
     }
 
     private suspend fun <T : CommandResponse> runTaskAsync(
