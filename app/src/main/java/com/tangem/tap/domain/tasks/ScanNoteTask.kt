@@ -18,7 +18,7 @@ data class ScanNoteResponse(
         val verifyResponse: VerifyCardResponse? = null
 ) : CommandResponse
 
-class ScanNoteTask : CardSessionRunnable<ScanNoteResponse> {
+class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteResponse> {
     override val requiresPin2 = false
 
     override fun run(session: CardSession, callback: (result: CompletionResult<ScanNoteResponse>) -> Unit) {
@@ -27,7 +27,8 @@ class ScanNoteTask : CardSessionRunnable<ScanNoteResponse> {
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
 
                 is CompletionResult.Success -> {
-                    val card = result.data
+                    val card = this.card ?: result.data
+
                     val walletManager = try {
                         WalletManagerFactory.makeWalletManager(card)
                     } catch (exception: Exception) {
@@ -49,14 +50,4 @@ class ScanNoteTask : CardSessionRunnable<ScanNoteResponse> {
             }
         }
     }
-}
-
-fun Card?.toScanNoteCompletionResult(): CompletionResult<ScanNoteResponse> {
-    this ?: return CompletionResult.Failure(TangemSdkError.CardError())
-    val walletManager = try {
-        WalletManagerFactory.makeWalletManager(this)
-    } catch (exception: Exception) {
-        return CompletionResult.Success(ScanNoteResponse(null, this))
-    }
-    return CompletionResult.Success(ScanNoteResponse(walletManager, this))
 }
