@@ -85,6 +85,7 @@ class BalanceWidget(
                 fragment.tv_status_error_message.text = data.errorMessage
 
                 showStatus(R.id.group_error)
+                fragment.tv_status_error_message.show(!data.errorMessage.isNullOrBlank())
             }
             BalanceStatus.EmptyCard -> {
                 fragment.l_balance.hide()
