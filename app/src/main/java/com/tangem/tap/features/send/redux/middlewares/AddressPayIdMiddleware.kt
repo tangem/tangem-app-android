@@ -128,8 +128,7 @@ internal class AddressPayIdMiddleware {
     private fun extractAddressFromShareUri(shareUri: String): String {
         val sharePrefix = listOf("bitcoin:", "ethereum:", "ripple:")
         val prefixes = sharePrefix.filter { shareUri.contains(it) }
-        return if (prefixes.isEmpty()) shareUri
-        else shareUri.replace(prefixes[0], "")
+        return if (prefixes.isEmpty()) shareUri else shareUri.replace(prefixes[0], "")
     }
 
     private fun verifyClipboard(input: String?, appState: AppState?, dispatch: DispatchFunction) {
