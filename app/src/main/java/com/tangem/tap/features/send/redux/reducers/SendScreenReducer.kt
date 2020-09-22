@@ -56,25 +56,22 @@ private class PrepareSendScreenStatesReducer : SendInternalReducer {
     override fun handle(action: SendScreenAction, sendState: SendState): SendState {
         val prepareAction = action as PrepareSendScreen
         val walletManager = store.state.globalState.scanNoteResponse!!.walletManager!!
-        val walletAmount = prepareAction.tokenAmount ?: prepareAction.coinAmount!!
-        val decimals = walletAmount.decimals
+        val amountToExtract = prepareAction.tokenAmount ?: prepareAction.coinAmount!!
+        val decimals = amountToExtract.decimals
 
         val coinConverter = createCurrencyConverter(walletManager.wallet.blockchain.currency, decimals)
         val tokenConverter = createCurrencyConverter(prepareAction.tokenAmount?.currencySymbol ?: "", decimals)
-        if (coinConverter == null || (walletAmount.type == AmountType.Token && tokenConverter == null)) {
-            return sendState.copy(hasInitializationError = true)
-        }
         return sendState.copy(
                 walletManager = walletManager,
                 coinConverter = coinConverter,
-                tokenConverter = tokenConverter ?: CurrencyConverter(BigDecimal.ONE, decimals),
+                tokenConverter = tokenConverter,
                 amountState = sendState.amountState.copy(
-                        walletAmount = walletAmount,
-                        typeOfAmount = walletAmount.type,
-                        balanceCrypto = walletAmount.value ?: BigDecimal.ZERO
+                        amountToExtract = amountToExtract,
+                        typeOfAmount = amountToExtract.type,
+                        balanceCrypto = amountToExtract.value ?: BigDecimal.ZERO
                 ),
                 feeState = sendState.feeState.copy(
-                        includeFeeSwitcherIsEnabled = walletAmount.type == AmountType.Coin
+                        includeFeeSwitcherIsEnabled = amountToExtract.type == AmountType.Coin
                 )
         )
     }
