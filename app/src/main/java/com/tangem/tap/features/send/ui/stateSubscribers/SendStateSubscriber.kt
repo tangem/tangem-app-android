@@ -15,6 +15,7 @@ import com.tangem.tap.domain.assembleErrorIds
 import com.tangem.tap.features.send.BaseStoreFragment
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
 import com.tangem.tap.features.send.redux.FeeAction
+import com.tangem.tap.features.send.redux.reducers.ReceiptReducer
 import com.tangem.tap.features.send.redux.states.*
 import com.tangem.tap.features.send.ui.FeeUiHelper
 import com.tangem.tap.features.send.ui.SendFragment
@@ -74,8 +75,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 Error.ADDRESS_SAME_AS_WALLET -> R.string.error_address_same_as_wallet
                 else -> null
             }
-            return if (resId == null) null
-            else context.getString(resId)
+            return if (resId == null) null else context.getString(resId)
         }
         fg.imvPaste.isEnabled = state.pasteIsEnabled
 
@@ -183,6 +183,8 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         fun getString(id: Int): String = mainLayout.context.getString(id)
 
         val rough = getString(R.string.sign_rough)
+        fun roughOrEmpty(value: String): String = if (value == ReceiptReducer.EMPTY) value else "$rough $value"
+
         when (state.visibleTypeOfReceipt) {
             ReceiptLayoutType.FIAT -> {
                 val receipt = state.fiat ?: return
@@ -191,7 +193,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 totalTokenLayout.show(false)
                 fg.tvReceiptAmountValue.update("${receipt.amountFiat} ${receipt.symbols.fiat}")
                 fg.tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
-                totalLayout.tvTotalValue.update("$rough ${receipt.totalFiat} ${receipt.symbols.fiat}")
+                totalLayout.tvTotalValue.update("${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}")
 
                 val willSent = SpannableStringBuilder()
                         .bold { append(receipt.willSentCrypto) }.append(" ")
@@ -211,8 +213,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
                 val willSent = SpannableStringBuilder()
                         .bold {
-                            append(rough).append(" ")
-                            append(receipt.willSentFiat).append(" ")
+                            append(roughOrEmpty(receipt.willSentFiat)).append(" ")
                             append(receipt.symbols.fiat)
                             append(" (fee: ${receipt.feeFiat} ")
                             append(receipt.symbols.fiat).append(")")
@@ -226,7 +227,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 totalTokenLayout.show(false)
                 fg.tvReceiptAmountValue.update("${receipt.amountFiat} ${receipt.symbols.fiat}")
                 fg.tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
-                totalLayout.tvTotalValue.update("${receipt.totalFiat} ${receipt.symbols.fiat}")
+                totalLayout.tvTotalValue.update("${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}")
 
                 val willSent = SpannableStringBuilder()
                         .bold {
@@ -252,8 +253,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
                 val willSent = SpannableStringBuilder()
                         .bold {
-                            append(getString(R.string.sign_rough)).append(" ")
-                            append(receipt.totalFiat).append(" ")
+                            append(roughOrEmpty(receipt.totalFiat)).append(" ")
                             append(receipt.symbols.fiat)
                         }
                 totalTokenLayout.tvTotalTokenCryptoValue.update(willSent.toString())
