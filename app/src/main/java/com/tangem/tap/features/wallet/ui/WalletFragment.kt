@@ -3,18 +3,17 @@ package com.tangem.tap.features.wallet.ui
 import android.app.Dialog
 import android.os.Bundle
 import android.view.Menu
+import android.view.Menu.NONE
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import android.view.animation.AlphaAnimation
-import android.view.animation.Animation
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
-import com.tangem.tap.common.extensions.getDrawable
+import com.squareup.picasso.Picasso
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -36,7 +35,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     private var dialog: Dialog? = null
     private var snackbar: Snackbar? = null
-    private var artworkId: String? = null
 
     private lateinit var viewAdapter: PendingTransactionsAdapter
 
@@ -92,6 +90,12 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     override fun newState(state: WalletState) {
         if (activity == null) return
+
+        if (!state.showDetails) {
+            toolbar.menu.removeItem(R.id.details_menu)
+        } else if (toolbar.menu.findItem(R.id.details_menu) == null) {
+            toolbar.menu.add(R.menu.wallet, R.id.details_menu, NONE, R.string.details_toolbar_title)
+        }
 
         srl_wallet.setOnRefreshListener {
             store.dispatch(WalletAction.LoadData)
@@ -182,25 +186,15 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     }
 
     private fun setupCardImage(cardImage: Artwork?) {
-        if (cardImage?.artwork != null) {
-            if (cardImage.artworkId != this.artworkId) {
-                prepareShowingCardImage(cardImage.artworkId)
-                iv_card.setImageBitmap(cardImage.artwork)
-            }
-        } else if (cardImage?.artworkResId != null) {
-            if (cardImage.artworkId != this.artworkId) {
-                prepareShowingCardImage(cardImage.artworkId)
-                iv_card.setImageDrawable(getDrawable(cardImage.artworkResId))
-            }
+        val address = cardImage?.artworkId ?: cardImage?.artworkResId
+        val picassoRequest = when (address) {
+            is String -> Picasso.get().load(address)
+            is Int -> Picasso.get().load(address)
+            else -> null
         }
-    }
-
-    private fun prepareShowingCardImage(artworkId: String) {
-            this.artworkId = artworkId
-            val fadeInAnimation: Animation = AlphaAnimation(0.0f, 1.0f)
-            fadeInAnimation.duration = 400
-            iv_card.startAnimation(fadeInAnimation)
-            iv_card_tangem_logo.hide()
+        picassoRequest?.placeholder(R.drawable.card_placeholder)
+                ?.error(R.drawable.card_placeholder)
+                ?.into(iv_card)
     }
 
     private fun handleDialogs(walletDialog: WalletDialog?) {
@@ -255,7 +249,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.wallet, menu)
+        if (store.state.walletState.showDetails) inflater.inflate(R.menu.wallet, menu)
     }
 
 }

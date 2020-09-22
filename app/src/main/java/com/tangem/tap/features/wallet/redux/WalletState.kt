@@ -21,7 +21,11 @@ data class WalletState(
         val payIdData: PayIdData = PayIdData(),
         val walletDialog: WalletDialog? = null,
         val mainButton: WalletMainButton = WalletMainButton.SendButton(false)
-) : StateType
+) : StateType {
+    val showDetails: Boolean =
+            currencyData.status != com.tangem.tap.features.wallet.ui.BalanceStatus.EmptyCard &&
+                    currencyData.status != com.tangem.tap.features.wallet.ui.BalanceStatus.UnknownBlockchain
+}
 
 sealed class WalletDialog {
     data class QrDialog(
@@ -58,7 +62,7 @@ data class AddressData(
 )
 
 data class Artwork(
-        val artworkId: String,
+        val artworkId: String? = null,
         val artwork: Bitmap? = null,
         val artworkResId: Int? = null
 ) {
