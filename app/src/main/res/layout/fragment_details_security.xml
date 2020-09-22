@@ -64,7 +64,7 @@
             android:paddingEnd="60dp"
             android:textColor="@color/darkGray1"
             app:layout_constraintTop_toBottomOf="@id/tv_long_tap_title"
-            android:text="Caution: When having the switch on, all data will be encrypted and kept from being stolen."
+            android:text="@string/details_manage_security_long_tap_description"
             android:textSize="13sp"
             />
 
@@ -109,7 +109,7 @@
             android:paddingEnd="60dp"
             android:textColor="@color/darkGray1"
             app:layout_constraintTop_toBottomOf="@id/tv_passcode_title"
-            android:text="Caution: When having the switch on, all data will be encrypted and kept from being stolen."
+            android:text="@string/details_manage_security_passcode_description"
             android:textSize="13sp"
             />
 
@@ -155,7 +155,7 @@
             android:paddingEnd="60dp"
             android:textColor="@color/darkGray1"
             app:layout_constraintTop_toBottomOf="@id/tv_access_code_title"
-            android:text="Caution: When having the switch on, all data will be encrypted and kept from being stolen."
+            android:text="@string/details_manage_security_access_code_description"
             android:textSize="13sp"
             />
 
