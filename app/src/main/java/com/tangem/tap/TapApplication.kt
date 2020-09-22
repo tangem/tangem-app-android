@@ -1,6 +1,7 @@
 package com.tangem.tap
 
 import android.app.Application
+import com.tangem.tap.common.images.PicassoHelper
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.network.NetworkConnectivity
@@ -24,5 +25,6 @@ class TapApplication : Application() {
         }
         NetworkConnectivity.createInstance(store, this)
         preferencesStorage = PreferencesStorage(this)
+        PicassoHelper.initPicassoWithCaching(this)
     }
 }
