@@ -52,13 +52,11 @@ data class SendState(
     }
 
     fun convertFiatToCoin(value: BigDecimal): BigDecimal {
-        return if (!this.coinIsConvertible()) value
-        else coinConverter!!.toCrypto(value)
+        return if (!this.coinIsConvertible()) value else coinConverter!!.toCrypto(value)
     }
 
     fun convertFiatToToken(value: BigDecimal): BigDecimal {
-        return if (!this.tokenIsConvertible()) value
-        else tokenConverter!!.toCrypto(value)
+        return if (!this.tokenIsConvertible()) value else tokenConverter!!.toCrypto(value)
     }
 
     fun convertCoinToFiat(value: BigDecimal, scaleWithPrecision: Boolean = false): BigDecimal {
