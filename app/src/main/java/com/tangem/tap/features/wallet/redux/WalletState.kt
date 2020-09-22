@@ -62,7 +62,7 @@ data class AddressData(
 )
 
 data class Artwork(
-        val artworkId: String,
+        val artworkId: String? = null,
         val artwork: Bitmap? = null,
         val artworkResId: Int? = null
 ) {
