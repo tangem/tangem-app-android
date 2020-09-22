@@ -24,8 +24,7 @@ class AddressPayIdReducer : SendInternalReducer {
             is AddressPayIdActionUi.HandleUserInput -> state
             is AddressPayIdActionUi.SetTruncateHandler -> state.copy(truncateHandler = action.handler)
             is AddressPayIdActionUi.TruncateOrRestore -> {
-                val value = if (action.truncate) state.truncatedFieldValue ?: ""
-                else state.normalFieldValue ?: ""
+                val value = if (action.truncate) state.truncatedFieldValue ?: "" else state.normalFieldValue ?: ""
                 state.copy(viewFieldValue = state.viewFieldValue.copy(value = value))
             }
             is AddressPayIdActionUi.PasteAddressPayId -> return sendState
