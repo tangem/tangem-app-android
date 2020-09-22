@@ -41,4 +41,18 @@ sealed class DetailsAction : Action {
         data class SelectAppCurrency(val fiatCurrencyName: FiatCurrencyName): AppCurrencyAction()
     }
 
+    sealed class ManageSecurity : DetailsAction() {
+        object OpenSecurity : ManageSecurity()
+        data class SelectOption(val option: SecurityOption) : ManageSecurity()
+        object SaveChanges : ManageSecurity() {
+            object Success : ManageSecurity()
+            object Failure : ManageSecurity()
+        }
+        data class ConfirmSelection(val option: SecurityOption) : ManageSecurity() {
+            object AlreadySet: ManageSecurity(), NotificationAction {
+                override val messageResource = R.string.details_notification_security_option_already_active
+            }
+        }
+    }
+
 }
