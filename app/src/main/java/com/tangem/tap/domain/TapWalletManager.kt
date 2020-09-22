@@ -2,17 +2,14 @@ package com.tangem.tap.domain
 
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.commands.Card
 import com.tangem.commands.CardStatus
 import com.tangem.commands.common.network.Result
-import com.tangem.commands.common.network.TangemService
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.TapConfig
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.tasks.ScanNoteResponse
-import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.features.wallet.redux.PayIdState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
@@ -26,7 +23,6 @@ import java.math.BigDecimal
 class TapWalletManager {
     private val payIdManager = PayIdManager()
     private val coinMarketCapService = CoinMarketCapService()
-    private val tangemService = TangemService()
 
     suspend fun loadWalletData() {
         val walletManager = store.state.globalState.scanNoteResponse?.walletManager
@@ -35,21 +31,6 @@ class TapWalletManager {
             return
         }
         updateWallet(walletManager)
-    }
-
-    suspend fun loadArtwork(card: Card, artworkId: String) {
-        val result =
-                tangemService.getArtwork(card.cardId, card.cardPublicKey!!.toHexString(), artworkId)
-        withContext(Dispatchers.Main) {
-            when (result) {
-                is Result.Success -> {
-                    store.dispatch(WalletAction.LoadArtwork.Success(
-                            Artwork(artworkId, result.data.byteStream().readBytes())
-                    ))
-                }
-                is Result.Failure -> store.dispatch(WalletAction.LoadArtwork.Failure)
-            }
-        }
     }
 
     suspend fun loadPayId() {
