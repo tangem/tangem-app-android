@@ -75,8 +75,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 Error.ADDRESS_SAME_AS_WALLET -> R.string.error_address_same_as_wallet
                 else -> null
             }
-            return if (resId == null) null
-            else context.getString(resId)
+            return if (resId == null) null else context.getString(resId)
         }
         fg.imvPaste.isEnabled = state.pasteIsEnabled
 
