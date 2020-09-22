@@ -110,15 +110,20 @@ class DetailsMiddleware {
                 }
                 is DetailsAction.ManageSecurity.ConfirmSelection -> {
                     if (action.option != store.state.detailsState.securityScreenState?.currentOption) {
-                        store.dispatch(NavigationAction.NavigateTo(AppScreen.DetailsConfirm))
+                        if (action.option == SecurityOption.LongTap) {
+                            store.dispatch(DetailsAction.ManageSecurity.SaveChanges)
+                        } else {
+                            store.dispatch(NavigationAction.NavigateTo(AppScreen.DetailsConfirm))
+                        }
                     } else {
                         store.dispatch(DetailsAction.ManageSecurity.ConfirmSelection.AlreadySet)
                     }
                 }
                 is DetailsAction.ManageSecurity.SaveChanges -> {
                     val cardId = store.state.detailsState.card?.cardId
+                    val selectedOption = store.state.detailsState.securityScreenState?.selectedOption
                     scope.launch {
-                        val result = when (store.state.detailsState.securityScreenState?.selectedOption) {
+                        val result = when (selectedOption) {
                             SecurityOption.LongTap -> tangemSdkManager.setLongTap(cardId)
                             SecurityOption.PassCode -> tangemSdkManager.setPasscode(cardId)
                             SecurityOption.AccessCode -> tangemSdkManager.setAccessCode(cardId)
@@ -127,7 +132,9 @@ class DetailsMiddleware {
                         withContext(Dispatchers.Main) {
                             when (result) {
                                 is CompletionResult.Success -> {
-                                    store.dispatch(NavigationAction.PopBackTo())
+                                    if (selectedOption != SecurityOption.LongTap) {
+                                        store.dispatch(NavigationAction.PopBackTo())
+                                    }
                                     store.dispatch(DetailsAction.ManageSecurity.SaveChanges.Success)
                                 }
                                 is CompletionResult.Failure, null ->
