@@ -2,6 +2,7 @@ package com.tangem.tap.features.wallet.redux
 
 import com.tangem.blockchain.common.AmountType
 import com.tangem.common.extensions.isZero
+import com.tangem.common.extensions.toHexString
 import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.common.extensions.toFormattedString
@@ -12,6 +13,8 @@ import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
+import com.tangem.tap.store
+import com.tangem.wallet.R
 import org.rekotlin.Action
 
 class WalletReducer {
@@ -165,8 +168,18 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     token = newState.currencyData.token?.copy(fiatAmount = tokenFiatAmount)
             ))
         }
-        is WalletAction.LoadArtwork.Success -> {
-            newState = newState.copy(cardImage = action.artwork)
+        is WalletAction.LoadArtwork -> {
+// [REDACTED_TODO_COMMENT]
+            var artworkAddress = "https://verify.tangem.com/card/artwork"
+            artworkAddress += "?artworkId=${action.artworkId}"
+            artworkAddress += "&CID=${store.state.globalState.scanNoteResponse?.card?.cardId}"
+            artworkAddress += "&publicKey=${store.state.globalState.scanNoteResponse?.card?.cardPublicKey?.toHexString()}"
+            val artwork = if (action.artworkId != null) {
+                Artwork(artworkId = artworkAddress)
+            } else {
+                Artwork(artworkResId = R.drawable.card_default)
+            }
+            newState = newState.copy(cardImage = artwork)
         }
         is WalletAction.ShowQrCode -> {
             newState = newState.copy(
