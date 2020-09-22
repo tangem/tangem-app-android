@@ -27,5 +27,5 @@ data class FeeState(
 
     fun isReady(): Boolean = error == null && currentFee != null
 
-    fun getCurrentFee(): BigDecimal = currentFee?.value ?: BigDecimal.ZERO
+    fun getCurrentFeeValue(): BigDecimal = currentFee?.value ?: BigDecimal.ZERO
 }
