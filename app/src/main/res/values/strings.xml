@@ -100,6 +100,9 @@
     <string name="details_manage_security_long_tap">Long Tap</string>
     <string name="details_manage_security_passcode">Passcode</string>
     <string name="details_manage_security_access_code">Access Code</string>
+    <string name="details_manage_security_long_tap_description">This mechanism protects against proximity attack on a card. It will enforce a delay between reception and execution of a command. After the first signed transaction this phone will be linked with the card and transactions will be signed immediately.</string>
+    <string name="details_manage_security_passcode_description">Before execution of any command entailing a change of the card state you will have to enter the passcode.</string>
+    <string name="details_manage_security_access_code_description">You will have to submit the correct access code before scanning the card.</string>
     <string name="details_erase_wallet_warning">This action is irreversible. If, after deleting the wallet, someone sends funds to it, then you will not be able to withdraw them.</string>
     <string name="details_manage_security_warning">If you forget the code, you will lose the ability to use the card. There is no way to recover or change your code if you lose it.
 </string>
