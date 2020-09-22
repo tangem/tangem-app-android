@@ -8,6 +8,7 @@ import androidx.transition.TransitionInflater
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
+import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_details.*
@@ -73,6 +74,18 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         tv_app_currency_title.setOnClickListener {
             store.dispatch(DetailsAction.AppCurrencyAction.ChooseAppCurrency)
         }
+
+        tv_security_title.setOnClickListener {
+            store.dispatch(DetailsAction.ManageSecurity.OpenSecurity)
+        }
+
+        val currentSecurity = when (state.securityScreenState?.currentOption) {
+            SecurityOption.LongTap -> R.string.details_manage_security_long_tap
+            SecurityOption.PassCode -> R.string.details_manage_security_passcode
+            SecurityOption.AccessCode -> R.string.details_manage_security_access_code
+            null -> null
+        }
+        currentSecurity?.let { tv_security.text = getString(it) }
 
         if (state.appCurrencyState.showAppCurrencyDialog &&
                 !state.appCurrencyState.fiatCurrencies.isNullOrEmpty()) {
