@@ -18,63 +18,133 @@ import kotlinx.coroutines.withContext
 import org.rekotlin.Middleware
 
 class DetailsMiddleware {
+    private val eraseWalletMiddleware = EraseWalletMiddleware()
+    private val appCurrencyMiddleware = AppCurrencyMiddleware()
+    private val manageSecurityMiddleware = ManageSecurityMiddleware()
     val detailsMiddleware: Middleware<AppState> = { dispatch, state ->
         { next ->
             { action ->
                 when (action) {
-                    is DetailsAction.PrepareScreen -> {
-                        scope.launch {
-                            val loadedCurrencies = preferencesStorage.getFiatCurrencies()
-                            if (loadedCurrencies.isNullOrEmpty()) {
-                                val response = CoinMarketCapService().getFiatCurrencies()
-                                withContext(Dispatchers.Main) {
-                                    when (response) {
-                                        is Result.Success -> {
-                                            preferencesStorage.saveFiatCurrencies(response.data)
-                                            store.dispatch(DetailsAction.AppCurrencyAction.SetCurrencies(response.data))
-                                        }
+                    is DetailsAction.PrepareScreen -> prepareData()
+                    is DetailsAction.EraseWallet -> eraseWalletMiddleware.handle(action)
+                    is DetailsAction.AppCurrencyAction -> appCurrencyMiddleware.handle(action)
+                    is DetailsAction.ManageSecurity -> manageSecurityMiddleware.handle(action)
+                }
+                next(action)
+            }
+        }
+    }
+
+    private fun prepareData() {
+        scope.launch {
+            val loadedCurrencies = preferencesStorage.getFiatCurrencies()
+            if (loadedCurrencies.isNullOrEmpty()) {
+                val response = CoinMarketCapService().getFiatCurrencies()
+                withContext(Dispatchers.Main) {
+                    when (response) {
+                        is Result.Success -> {
+                            preferencesStorage.saveFiatCurrencies(response.data)
+                            store.dispatch(DetailsAction.AppCurrencyAction.SetCurrencies(response.data))
+                        }
+                    }
+                }
+            } else {
+                withContext(Dispatchers.Main) {
+                    store.dispatch(DetailsAction.AppCurrencyAction.SetCurrencies(loadedCurrencies))
+                }
+            }
+        }
+    }
+
+    class EraseWalletMiddleware() {
+        fun handle(action: DetailsAction.EraseWallet) {
+            when (action) {
+                is DetailsAction.EraseWallet.Proceed -> {
+                    when (store.state.detailsState.eraseWalletState) {
+                        EraseWalletState.Allowed ->
+                            store.dispatch(NavigationAction.NavigateTo(AppScreen.DetailsConfirm))
+                        EraseWalletState.NotAllowedByCard ->
+                            store.dispatch(DetailsAction.EraseWallet.Proceed.NotAllowedByCard)
+                        EraseWalletState.NotEmpty ->
+                            store.dispatch(DetailsAction.EraseWallet.Proceed.NotEmpty)
+                    }
+                }
+                is DetailsAction.EraseWallet.Cancel -> {
+                    store.dispatch(NavigationAction.PopBackTo())
+                }
+                is DetailsAction.EraseWallet.Confirm -> {
+                    scope.launch {
+                        val result = tangemSdkManager.eraseWallet(
+                                store.state.detailsState.card?.cardId
+                        )
+                        withContext(Dispatchers.Main) {
+                            when (result) {
+                                is CompletionResult.Success -> {
+                                    store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    class AppCurrencyMiddleware {
+        fun handle(action: DetailsAction.AppCurrencyAction) {
+            when (action) {
+                is DetailsAction.AppCurrencyAction.SelectAppCurrency -> {
+                    preferencesStorage.saveAppCurrency(action.fiatCurrencyName)
+                    store.dispatch(GlobalAction.ChangeAppCurrency(action.fiatCurrencyName))
+                    store.dispatch(WalletAction.LoadFiatRate)
+                }
+            }
+        }
+    }
+
+    class ManageSecurityMiddleware {
+        fun handle(action: DetailsAction.ManageSecurity) {
+            when (action) {
+                is DetailsAction.ManageSecurity.OpenSecurity -> {
+                    store.dispatch(NavigationAction.NavigateTo(AppScreen.DetailsSecurity))
+                }
+                is DetailsAction.ManageSecurity.ConfirmSelection -> {
+                    if (action.option != store.state.detailsState.securityScreenState?.currentOption) {
+                        if (action.option == SecurityOption.LongTap) {
+                            store.dispatch(DetailsAction.ManageSecurity.SaveChanges)
+                        } else {
+                            store.dispatch(NavigationAction.NavigateTo(AppScreen.DetailsConfirm))
+                        }
+                    } else {
+                        store.dispatch(DetailsAction.ManageSecurity.ConfirmSelection.AlreadySet)
+                    }
+                }
+                is DetailsAction.ManageSecurity.SaveChanges -> {
+                    val cardId = store.state.detailsState.card?.cardId
+                    val selectedOption = store.state.detailsState.securityScreenState?.selectedOption
+                    scope.launch {
+                        val result = when (selectedOption) {
+                            SecurityOption.LongTap -> tangemSdkManager.setLongTap(cardId)
+                            SecurityOption.PassCode -> tangemSdkManager.setPasscode(cardId)
+                            SecurityOption.AccessCode -> tangemSdkManager.setAccessCode(cardId)
+                            else -> null
+                        }
+                        withContext(Dispatchers.Main) {
+                            when (result) {
+                                is CompletionResult.Success -> {
+                                    if (selectedOption != SecurityOption.LongTap) {
+                                        store.dispatch(NavigationAction.PopBackTo())
                                     }
+                                    store.dispatch(DetailsAction.ManageSecurity.SaveChanges.Success)
                                 }
-                            } else {
-                                withContext(Dispatchers.Main) {
-                                    store.dispatch(DetailsAction.AppCurrencyAction.SetCurrencies(loadedCurrencies))
-                                }
+                                is CompletionResult.Failure, null ->
+                                    store.dispatch(DetailsAction.ManageSecurity.SaveChanges.Failure)
                             }
                         }
 
                     }
-                    is DetailsAction.EraseWallet.Proceed -> {
-                        when (store.state.detailsState.eraseWalletState) {
-                            EraseWalletState.Allowed ->
-                                store.dispatch(NavigationAction.NavigateTo(AppScreen.DetailsConfirm))
-                            EraseWalletState.NotAllowedByCard ->
-                                store.dispatch(DetailsAction.EraseWallet.Proceed.NotAllowedByCard)
-                            EraseWalletState.NotEmpty ->
-                                store.dispatch(DetailsAction.EraseWallet.Proceed.NotEmpty)
-                        }
-                    }
-                    is DetailsAction.EraseWallet.Cancel -> {
-                        store.dispatch(NavigationAction.PopBackTo())
-                    }
-                    is DetailsAction.EraseWallet.Confirm -> {
-                        scope.launch {
-                            val result = tangemSdkManager.eraseWallet()
-                            withContext(Dispatchers.Main) {
-                                when (result) {
-                                    is CompletionResult.Success -> {
-                                        store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    is DetailsAction.AppCurrencyAction.SelectAppCurrency -> {
-                        preferencesStorage.saveAppCurrency(action.fiatCurrencyName)
-                        store.dispatch(GlobalAction.ChangeAppCurrency(action.fiatCurrencyName))
-                        store.dispatch(WalletAction.LoadFiatRate)
-                    }
+
                 }
-                next(action)
             }
         }
     }
