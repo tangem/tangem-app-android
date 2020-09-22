@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.Action
 import org.rekotlin.Middleware
+import timber.log.Timber
 
 /**
 [REDACTED_AUTHOR]
@@ -41,14 +42,11 @@ val sendMiddleware: Middleware<AppState> = { dispatch, appState ->
 private fun verifyAndSendTransaction(appState: AppState?, dispatch: (Action) -> Unit) {
     val sendState = appState?.sendState ?: return
     val walletManager = appState.globalState.scanNoteResponse?.walletManager ?: return
+    val recipientAddress = sendState.addressPayIdState.recipientWalletAddress ?: return
+    val typedAmount = sendState.amountState.amountToExtract ?: return
+    val feeAmount = sendState.feeState.currentFee ?: return
 
-    val blockchain = walletManager.wallet.blockchain
-    val recipientAddress = sendState.addressPayIdState.recipientWalletAddress!!
-
-    val feeAmount = Amount(sendState.feeState.getCurrentFee(), blockchain)
-    val amountToSend = Amount(sendState.getTotalAmountToSend(), blockchain, recipientAddress)
-
-    val txSender = walletManager as TransactionSender
+    val amountToSend = Amount(typedAmount, sendState.getTotalAmountToSend())
 
     val verifyResult = walletManager.validateTransaction(amountToSend, feeAmount)
     if (verifyResult.isNotEmpty()) {
@@ -59,7 +57,8 @@ private fun verifyAndSendTransaction(appState: AppState?, dispatch: (Action) -> 
     dispatch(SendAction.ChangeSendButtonState(SendButtonState.PROGRESS))
     val txData = walletManager.createTransaction(amountToSend, feeAmount, recipientAddress)
     scope.launch {
-        val result = txSender.send(txData, Signer(tangemSdk))
+        walletManager.update()
+        val result = (walletManager as TransactionSender).send(txData, Signer(tangemSdk))
         withContext(Dispatchers.Main) {
             when (result) {
                 is SimpleResult.Success -> {
@@ -78,6 +77,7 @@ private fun verifyAndSendTransaction(appState: AppState?, dispatch: (Action) -> 
                                     // user was cancelled the operation by closing the Sdk bottom sheet
                                 }
                                 else -> {
+                                    Timber.e(result.error)
                                     dispatch(SendAction.SendError(TapError.BlockchainInternalError))
                                 }
                             }
