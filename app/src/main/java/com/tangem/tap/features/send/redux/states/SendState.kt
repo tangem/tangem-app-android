@@ -27,15 +27,14 @@ interface SendScreenState : StateType, IdStateHolder
 
 data class SendState(
         val walletManager: WalletManager? = null,
-        val coinConverter: CurrencyConverter = CurrencyConverter(BigDecimal.ONE, 2),
-        val tokenConverter: CurrencyConverter = CurrencyConverter(BigDecimal.ONE, 2),
+        val coinConverter: CurrencyConverter? = null,
+        val tokenConverter: CurrencyConverter? = null,
         val lastChangedStates: LinkedHashSet<StateId> = linkedSetOf(),
         val addressPayIdState: AddressPayIdState = AddressPayIdState(),
         val amountState: AmountState = AmountState(),
         val feeState: FeeState = FeeState(),
         val receiptState: ReceiptState = ReceiptState(),
-        val sendButtonState: SendButtonState = SendButtonState.DISABLED,
-        val hasInitializationError: Boolean = false
+        val sendButtonState: SendButtonState = SendButtonState.DISABLED
 ) : SendScreenState {
 
     override val stateId: StateId = StateId.SEND_SCREEN
@@ -49,28 +48,61 @@ data class SendState(
 
     fun getDecimals(type: MainCurrencyType): Int = when (type) {
         MainCurrencyType.FIAT -> 2
-        MainCurrencyType.CRYPTO -> amountState.walletAmount?.decimals ?: 0
+        MainCurrencyType.CRYPTO -> amountState.amountToExtract?.decimals ?: 0
     }
 
-    fun getConverter(): CurrencyConverter {
-        return if (amountState.typeOfAmount == AmountType.Coin) coinConverter
-        else tokenConverter
+    fun convertFiatToCoin(value: BigDecimal): BigDecimal {
+        return if (!this.coinIsConvertible()) value else coinConverter!!.toCrypto(value)
     }
 
-    fun convertToCrypto(value: BigDecimal): BigDecimal {
-        return getConverter().toCrypto(value)
+    fun convertFiatToToken(value: BigDecimal): BigDecimal {
+        return if (!this.tokenIsConvertible()) value else tokenConverter!!.toCrypto(value)
     }
 
-    fun convertToFiat(value: BigDecimal, scaleWithPrecision: Boolean = false): BigDecimal {
-        val converter = getConverter()
+    fun convertCoinToFiat(value: BigDecimal, scaleWithPrecision: Boolean = false): BigDecimal {
+        if (!this.coinIsConvertible()) return value
+
+        val converter = coinConverter!!
         return if (!scaleWithPrecision) converter.toFiat(value) else converter.toFiatWithPrecision(value)
+    }
+
+    fun convertTokenToFiat(value: BigDecimal, scaleWithPrecision: Boolean = false): BigDecimal {
+        if (!this.tokenIsConvertible()) return value
+
+        val converter = tokenConverter!!
+        return if (!scaleWithPrecision) converter.toFiat(value) else converter.toFiatWithPrecision(value)
+    }
+
+    fun convertFiatToExtractCrypto(fiatValue: BigDecimal): BigDecimal = when (amountState.typeOfAmount) {
+        AmountType.Coin -> convertFiatToCoin(fiatValue)
+        AmountType.Token -> convertFiatToToken(fiatValue)
+        AmountType.Reserve -> fiatValue
+    }
+
+    fun convertExtractCryptoToFiat(cryptoValue: BigDecimal, scaleWithPrecision: Boolean = false): BigDecimal {
+        return when (amountState.typeOfAmount) {
+            AmountType.Coin -> convertCoinToFiat(cryptoValue, scaleWithPrecision)
+            AmountType.Token -> convertTokenToFiat(cryptoValue, scaleWithPrecision)
+            AmountType.Reserve -> cryptoValue
+        }
     }
 
     fun getButtonState(): SendButtonState = if (isReadyToSend()) SendButtonState.ENABLED else SendButtonState.DISABLED
 
     fun getTotalAmountToSend(value: BigDecimal = amountState.amountToSendCrypto): BigDecimal {
         val needToExtractFee = amountState.isCoinAmount() && feeState.feeIsIncluded
-        return if (needToExtractFee) value.minus(feeState.getCurrentFee()) else value
+        return if (needToExtractFee) value.minus(feeState.getCurrentFeeValue()) else value
+    }
+
+    fun coinIsConvertible(): Boolean = coinConverter != null
+    fun tokenIsConvertible(): Boolean = tokenConverter != null
+
+    fun mainCurrencyCanBeSwitched(): Boolean {
+        return when (amountState.typeOfAmount) {
+            AmountType.Coin -> coinIsConvertible()
+            AmountType.Token -> tokenIsConvertible()
+            AmountType.Reserve -> false
+        }
     }
 }
 
@@ -79,7 +111,7 @@ enum class SendButtonState {
 }
 
 data class AmountState(
-        val walletAmount: Amount? = null,
+        val amountToExtract: Amount? = null,
         val typeOfAmount: AmountType = AmountType.Coin,
         val viewAmountValue: InputViewValue = InputViewValue(BigDecimal.ZERO.toPlainString()),
         val viewBalanceValue: String = BigDecimal.ZERO.toPlainString(),
@@ -97,10 +129,11 @@ data class AmountState(
 
     fun isCoinAmount(): Boolean = typeOfAmount == AmountType.Coin
 
-    fun createMainCurrency(type: MainCurrencyType): MainCurrency {
-        return when (type) {
+    fun createMainCurrency(type: MainCurrencyType, canSwitched: Boolean): MainCurrency {
+        return if (!canSwitched) MainCurrency(type, amountToExtract?.currencySymbol ?: "NONE", false)
+        else when (type) {
             MainCurrencyType.FIAT -> MainCurrency(type, store.state.globalState.appCurrency)
-            MainCurrencyType.CRYPTO -> MainCurrency(type, walletAmount?.currencySymbol ?: "NONE")
+            MainCurrencyType.CRYPTO -> MainCurrency(type, amountToExtract?.currencySymbol ?: "NONE")
         }
     }
 }
@@ -112,5 +145,6 @@ enum class MainCurrencyType {
 
 data class MainCurrency(
         val type: MainCurrencyType,
-        val currencySymbol: String
+        val currencySymbol: String,
+        val isEnabled: Boolean = true
 )
