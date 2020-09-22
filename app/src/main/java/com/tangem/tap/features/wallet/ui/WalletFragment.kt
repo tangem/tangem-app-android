@@ -35,7 +35,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     private var dialog: Dialog? = null
     private var snackbar: Snackbar? = null
-    private var artworkId: String? = null
 
     private lateinit var viewAdapter: PendingTransactionsAdapter
 
@@ -187,25 +186,15 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     }
 
     private fun setupCardImage(cardImage: Artwork?) {
-        if (cardImage?.artwork != null) {
-            if (cardImage.artworkId != this.artworkId) {
-                prepareShowingCardImage(cardImage.artworkId)
-                iv_card.setImageBitmap(cardImage.artwork)
-            }
-        } else if (cardImage?.artworkResId != null) {
-            if (cardImage.artworkId != this.artworkId) {
-                prepareShowingCardImage(cardImage.artworkId)
-                iv_card.setImageDrawable(getDrawable(cardImage.artworkResId))
-            }
+        val address = cardImage?.artworkId ?: cardImage?.artworkResId
+        val picassoRequest = when (address) {
+            is String -> Picasso.get().load(address)
+            is Int -> Picasso.get().load(address)
+            else -> null
         }
-    }
-
-    private fun prepareShowingCardImage(artworkId: String) {
-            this.artworkId = artworkId
-            val fadeInAnimation: Animation = AlphaAnimation(0.0f, 1.0f)
-            fadeInAnimation.duration = 400
-            iv_card.startAnimation(fadeInAnimation)
-            iv_card_tangem_logo.hide()
+        picassoRequest?.placeholder(R.drawable.card_placeholder)
+                ?.error(R.drawable.card_placeholder)
+                ?.into(iv_card)
     }
 
     private fun handleDialogs(walletDialog: WalletDialog?) {
