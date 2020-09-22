@@ -3,7 +3,6 @@ package com.tangem.tap.features.send.redux.middlewares
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionError
 import com.tangem.common.extensions.isZero
-import com.tangem.tap.common.extensions.isNegative
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.send.redux.AmountAction
@@ -31,22 +30,29 @@ class AmountMiddleware {
 
     private fun handleUserInput(data: String, appState: AppState?, dispatch: (Action) -> Unit) {
         val sendState = appState?.sendState ?: return
+        val amountState = sendState.amountState
 
         val data = if (data == ".") "0.0" else data
         val inputValue = when {
             data.isEmpty() || data == "0" -> BigDecimal.ZERO
             else -> BigDecimal(data)
         }
+        if (inputValue.isZero() && amountState.amountToSendCrypto.isZero()) return
 
-        if (inputValue.isZero() && sendState.amountState.amountToSendCrypto.isZero()) return
+        val inputValueCrypto = if (amountState.mainCurrency.type == MainCurrencyType.CRYPTO) {
+            inputValue
+        } else {
+            sendState.convertFiatToExtractCrypto(inputValue)
+        }
 
-        dispatch(AmountAction.SetAmount(inputValue, true))
+        dispatch(AmountAction.SetAmount(inputValueCrypto, true))
         dispatch(AmountActionUi.CheckAmountToSend)
     }
 
     private fun checkAmountToSend(appState: AppState?, dispatch: (Action) -> Unit) {
         val sendState = appState?.sendState ?: return
         val walletManager = sendState.walletManager ?: return
+        val typedAmount = sendState.amountState.amountToExtract ?: return
 
         val inputCrypto = sendState.amountState.amountToSendCrypto
         if (sendState.amountState.viewAmountValue.value == "0" && inputCrypto.isZero()) {
@@ -55,12 +61,8 @@ class AmountMiddleware {
             return
         }
 
-        val feeCrypto = sendState.feeState.getCurrentFee()
-
-        val feeAmount = Amount(feeCrypto, walletManager.wallet.blockchain)
-        val totalAmount = Amount(sendState.getTotalAmountToSend(inputCrypto), walletManager.wallet.blockchain)
-
-        val transactionErrors = walletManager.validateTransaction(totalAmount, feeAmount)
+        val amountToSend = Amount(typedAmount, sendState.getTotalAmountToSend(inputCrypto))
+        val transactionErrors = walletManager.validateTransaction(amountToSend, sendState.feeState.currentFee)
         if (transactionErrors.isEmpty()) {
             dispatch(AmountAction.SetAmountError(null))
         } else {
@@ -84,27 +86,20 @@ class AmountMiddleware {
     }
 
     private fun setMaxAmount(appState: AppState?, dispatch: (Action) -> Unit) {
-        val sendState = appState?.sendState ?: return
-        val amountState = sendState.amountState
+        val amountState = appState?.sendState?.amountState ?: return
 
-        val maxAmount = if (sendState.feeState.feeIsIncluded) amountState.balanceCrypto
-        else amountState.balanceCrypto.minus(sendState.feeState.getCurrentFee())
-
-        if (maxAmount.isNegative()) {
-            dispatch(AmountAction.SetAmountError(TapError.FeeExceedsBalance))
-        } else {
-            val currentCurrencyValue = if (amountState.mainCurrency.type == MainCurrencyType.CRYPTO) maxAmount
-            else sendState.convertToFiat(maxAmount)
-
-            dispatch(AmountAction.SetAmount(currentCurrencyValue, false))
-        }
+        dispatch(AmountAction.SetAmount(amountState.balanceCrypto, false))
     }
 
     private fun toggleMainCurrency(appState: AppState?, dispatch: (Action) -> Unit) {
         val amountState = appState?.sendState?.amountState ?: return
+        if (!appState.sendState.coinIsConvertible()) return
 
-        val type = if (amountState.mainCurrency.type == MainCurrencyType.FIAT) MainCurrencyType.CRYPTO
-        else MainCurrencyType.FIAT
+        val type = if (amountState.mainCurrency.type == MainCurrencyType.FIAT) {
+            MainCurrencyType.CRYPTO
+        } else {
+            MainCurrencyType.FIAT
+        }
 
         dispatch(AmountActionUi.SetMainCurrency(type))
     }
