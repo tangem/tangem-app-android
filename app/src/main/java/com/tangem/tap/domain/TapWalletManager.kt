@@ -9,6 +9,8 @@ import com.tangem.tap.TapConfig
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.domain.extensions.amountToCreateAccount
+import com.tangem.tap.domain.extensions.isNoAccountError
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.features.wallet.redux.PayIdState
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -30,12 +32,34 @@ class TapWalletManager {
             store.dispatch(WalletAction.LoadWallet.Failure())
             return
         }
-        updateWallet(walletManager)
+        loadWallet(walletManager)
     }
 
     suspend fun loadPayId() {
         val result = loadPayIdIfNeeded()
         result?.let { handlePayIdResult(it) }
+    }
+
+    suspend fun updateWallet() {
+        val walletManager = store.state.globalState.scanNoteResponse?.walletManager
+        if (walletManager == null) {
+            store.dispatch(WalletAction.UpdateWallet.Failure())
+            return
+        }
+        val result = try {
+            walletManager.update()
+            Result.Success(walletManager.wallet)
+        } catch (exception: Exception) {
+            Result.Failure(exception)
+        }
+        withContext(Dispatchers.Main) {
+            when (result) {
+                is Result.Success -> store.dispatch(WalletAction.UpdateWallet.Success(result.data))
+                is Result.Failure ->
+                    store.dispatch(WalletAction.UpdateWallet.Failure(result.error?.localizedMessage))
+            }
+        }
+
     }
 
     suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName) {
@@ -76,7 +100,7 @@ class TapWalletManager {
         }
     }
 
-    private suspend fun updateWallet(walletManager: WalletManager) {
+    private suspend fun loadWallet(walletManager: WalletManager) {
         val result = try {
             walletManager.update()
             Result.Success(walletManager.wallet)
