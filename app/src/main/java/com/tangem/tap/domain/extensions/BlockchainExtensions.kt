@@ -1,4 +1,4 @@
-package com.tangem.tap.domain
+package com.tangem.tap.domain.extensions
 
 import com.tangem.blockchain.common.Blockchain
 import org.stellar.sdk.requests.ErrorResponse
