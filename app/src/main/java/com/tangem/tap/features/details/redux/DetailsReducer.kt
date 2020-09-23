@@ -2,8 +2,8 @@ package com.tangem.tap.features.details.redux
 
 import com.tangem.commands.Card
 import com.tangem.commands.Settings
-import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.domain.extensions.toSendableAmounts
 import org.rekotlin.Action
 import java.util.*
 
@@ -60,7 +60,7 @@ private fun handleEraseWallet(action: DetailsAction.EraseWallet, state: DetailsS
         DetailsAction.EraseWallet.Check -> {
             val notAllowedByCard = state.card?.settingsMask?.contains(Settings.ProhibitPurgeWallet) == true
             val notEmpty = state.wallet?.recentTransactions?.isNullOrEmpty() != true ||
-                    state.wallet.amounts.toList().unzip().second.map { it.value?.isZero() }.contains(false)
+                    state.wallet.amounts.toSendableAmounts().isNotEmpty()
             val eraseWalletState = when {
                 notAllowedByCard -> EraseWalletState.NotAllowedByCard
                 notEmpty -> EraseWalletState.NotEmpty
