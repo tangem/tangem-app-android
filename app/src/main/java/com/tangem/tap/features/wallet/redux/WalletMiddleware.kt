@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.core.content.ContextCompat
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Wallet
 import com.tangem.commands.common.network.Result
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
@@ -14,12 +15,14 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.network.NetworkStateChanged
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.Action
@@ -58,6 +61,11 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
                         }
                     }
                 }
+                is WalletAction.UpdateWallet -> {
+                    scope.launch { store.state.globalState.tapWalletManager.updateWallet() }
+                }
+                is WalletAction.UpdateWallet.Success -> setupWalletUpdate(action.wallet)
+                is WalletAction.LoadWallet.Success -> setupWalletUpdate(action.wallet)
                 is WalletAction.CreatePayId.CompleteCreatingPayId -> {
                     scope.launch {
                         val cardId = store.state.globalState.scanNoteResponse?.card?.cardId
@@ -123,6 +131,17 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
     }
 }
 
+private fun setupWalletUpdate(wallet: Wallet) {
+    if (!wallet.recentTransactions.isNullOrEmpty()) {
+        scope.launch(Dispatchers.IO) {
+            delay(10000)
+            withContext(Dispatchers.Main) {
+                store.dispatch(WalletAction.UpdateWallet)
+            }
+        }
+    }
+}
+
 
 private fun prepareSendAction(amount: Amount?): Action {
     return if (amount != null) {
@@ -132,10 +151,11 @@ private fun prepareSendAction(amount: Amount?): Action {
             PrepareSendScreen(amount)
         }
     } else {
-        if (store.state.walletState.wallet?.amounts?.size ?: 0 > 1) {
-            WalletAction.Send.ChooseCurrency
+        val amounts = store.state.walletState.wallet?.amounts?.toSendableAmounts()
+        if (amounts?.size ?: 0 > 1) {
+            WalletAction.Send.ChooseCurrency(amounts)
         } else {
-            val amountToSend = store.state.walletState.wallet?.amounts?.toList()?.get(0)?.second
+            val amountToSend = amounts?.first()
             PrepareSendScreen(amountToSend)
         }
     }
