@@ -44,14 +44,24 @@ class PendingTransactionsAdapter
                 PendingTransactionType.Incoming -> R.string.wallet_pending_transaction_incoming
                 PendingTransactionType.Outcoming -> R.string.wallet_pending_transaction_outcoming
             }
+            val transactionAddressRes = when (transaction.type) {
+                PendingTransactionType.Incoming -> R.string.wallet_pending_transaction_incoming_address
+                PendingTransactionType.Outcoming -> R.string.wallet_pending_transaction_outcoming_address
+            }
             val image = when (transaction.type) {
                 PendingTransactionType.Incoming -> R.drawable.ic_arrow_down
                 PendingTransactionType.Outcoming -> R.drawable.ic_arrow_right
             }
-            view.tv_pending_transaction.text = view.context.getString(
-                    transactionDescriptionRes, transaction.amount, transaction.currency
-            )
-            view.tv_pending_transaction_address.text = transaction.address
+            view.tv_pending_transaction.text = view.context.getString(transactionDescriptionRes)
+
+            transaction.amount?.let { view.tv_pending_transaction_amount.text = "$it " }
+            view.tv_pending_transaction_currency.text = "${transaction.currency}"
+
+            if (transaction.address != null) {
+                view.tv_pending_transaction_address.text =
+                        view.context.getString(transactionAddressRes, transaction.address)
+            }
+
             view.iv_pending_transaction.setImageDrawable(view.context.getDrawableCompat(image))
         }
     }
