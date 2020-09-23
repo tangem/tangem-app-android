@@ -46,7 +46,7 @@ class PreferencesStorage(applicationContext: Application) {
     }
 
     fun isFirstLaunch(): Boolean {
-        val isFirst = preferences.contains(FIRST_LAUNCH_CHECK_KEY)
+        val isFirst = !preferences.contains(FIRST_LAUNCH_CHECK_KEY)
         if (isFirst) preferences.edit().putInt(FIRST_LAUNCH_CHECK_KEY, System.currentTimeMillis().toInt()).apply()
 
         return isFirst
