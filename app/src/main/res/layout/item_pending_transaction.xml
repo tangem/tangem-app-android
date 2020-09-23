@@ -36,8 +36,23 @@
                 android:id="@+id/tv_pending_transaction"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="Receiving 0.001 BTS from "
+                tools:text="Receiving "
                 android:textSize="12sp"/>
+
+            <TextView
+                android:id="@+id/tv_pending_transaction_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="0.001 "
+                android:textSize="12sp"/>
+
+            <TextView
+                android:id="@+id/tv_pending_transaction_currency"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="BTS"
+                android:textSize="12sp"/>
+
 
             <TextView
                 android:id="@+id/tv_pending_transaction_address"
@@ -47,7 +62,7 @@
                 android:singleLine="true"
                 android:textSize="12sp"
                 android:paddingStart="2dp"
-                tools:text="0x4313bcd3425235bda1232141"/>
+                tools:text=" from 0x4313bcd3425235bda1232141"/>
 
         </LinearLayout>
 

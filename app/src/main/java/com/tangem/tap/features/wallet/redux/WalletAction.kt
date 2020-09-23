@@ -24,6 +24,11 @@ sealed class WalletAction : Action {
         data class Failure(val errorMessage: String? = null) : WalletAction()
     }
 
+    object UpdateWallet : WalletAction() {
+        data class Success(val wallet: Wallet) : WalletAction()
+        data class Failure(val errorMessage: String? = null) : WalletAction()
+    }
+
     object LoadFiatRate : WalletAction() {
         data class Success(val fiatRates: Pair<CryptoCurrencyName, BigDecimal?>) : WalletAction()
         object Failure : WalletAction()
@@ -42,7 +47,7 @@ sealed class WalletAction : Action {
 
     object Scan : WalletAction()
     data class Send(val amount: Amount? = null) : WalletAction() {
-        object ChooseCurrency : WalletAction()
+        data class ChooseCurrency(val amounts: List<Amount>?) : WalletAction()
         object Cancel : WalletAction()
     }
     object CreatePayId : WalletAction() {
