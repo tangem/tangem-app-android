@@ -13,6 +13,7 @@ import com.tangem.tap.features.send.redux.FeeAction.RequestFee
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.send.redux.SendActionUi
 import com.tangem.tap.features.send.redux.states.SendButtonState
+import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
 import com.tangem.tap.tangemSdk
 import kotlinx.coroutines.Dispatchers
@@ -63,6 +64,7 @@ private fun verifyAndSendTransaction(appState: AppState?, dispatch: (Action) -> 
             when (result) {
                 is SimpleResult.Success -> {
                     dispatch(SendAction.SendSuccess)
+                    dispatch(WalletAction.UpdateWallet)
                     dispatch(NavigationAction.PopBackTo())
                 }
                 is SimpleResult.Failure -> {
