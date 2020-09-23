@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Wallet
 import com.tangem.tap.common.entities.Button
-import com.tangem.tap.common.extensions.toBitmap
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
@@ -65,6 +64,4 @@ data class Artwork(
         val artworkId: String? = null,
         val artwork: Bitmap? = null,
         val artworkResId: Int? = null
-) {
-    constructor(artworkId: String, artworkBytes: ByteArray) : this(artworkId, artworkBytes.toBitmap())
-}
+)
