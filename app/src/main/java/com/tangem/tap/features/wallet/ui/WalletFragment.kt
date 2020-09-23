@@ -108,6 +108,11 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         setupCardImage(state.cardImage)
 
         viewAdapter.submitList(state.pendingTransactions)
+        if (state.pendingTransactions.isEmpty()) {
+            rv_pending_transaction.hide()
+        } else {
+            rv_pending_transaction.show()
+        }
 
         handleDialogs(state.walletDialog)
 
