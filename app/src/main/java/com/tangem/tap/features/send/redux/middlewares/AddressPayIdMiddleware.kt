@@ -127,7 +127,7 @@ internal class AddressPayIdMiddleware {
 
     //TODO: move to the blockchainSDK
     private fun extractAddressFromShareUri(shareUri: String): String {
-        val sharePrefix = listOf("bitcoin:", "ethereum:", "ripple:")
+        val sharePrefix = listOf("bitcoin:", "ethereum:", "ripple:", "litecoin:")
         val prefixes = sharePrefix.filter { shareUri.contains(it) }
         return if (prefixes.isEmpty()) shareUri else shareUri.replace(prefixes[0], "")
     }
