@@ -47,9 +47,9 @@ internal class AddressPayIdMiddleware {
     }
 
     private fun setAddressAndCheck(data: String, isUserInput: Boolean, dispatch: (Action) -> Unit) {
-        val data = data.toLowerCase()
-        if (PayIdManager.isPayId(data)) {
-            dispatch(SetPayIdWalletAddress(data, "", isUserInput))
+        val potentialPayId = data.toLowerCase()
+        if (PayIdManager.isPayId(potentialPayId)) {
+            dispatch(SetPayIdWalletAddress(potentialPayId, "", isUserInput))
         } else {
             dispatch(SetWalletAddress(data, isUserInput))
         }
