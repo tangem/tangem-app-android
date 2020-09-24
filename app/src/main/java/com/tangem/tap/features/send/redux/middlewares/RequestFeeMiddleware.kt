@@ -1,7 +1,6 @@
 package com.tangem.tap.features.send.redux.middlewares
 
 import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.extensions.Result
@@ -34,15 +33,11 @@ class RequestFeeMiddleware {
             return
         }
 
+        val typedAmount = sendState.amountState.amountToExtract ?: return
         val recipientAddress = sendState.addressPayIdState.recipientWalletAddress!!
-        val amountState = sendState.amountState
-        val cryptoSendToRecipient = amountState.amountToSendCrypto
-        val recipientAmount = if (amountState.typeOfAmount == AmountType.Coin) {
-            Amount(cryptoSendToRecipient, walletManager.wallet.blockchain, type = AmountType.Coin)
-        } else {
-            Amount(cryptoSendToRecipient, walletManager.wallet.blockchain, recipientAddress, AmountType.Token)
-        }
+        val cryptoSendToRecipient = sendState.amountState.amountToSendCrypto
 
+        val recipientAmount = Amount(typedAmount, cryptoSendToRecipient)
         val txSender = walletManager as TransactionSender
         scope.launch {
             val feeResult = txSender.getFee(recipientAmount, recipientAddress)
