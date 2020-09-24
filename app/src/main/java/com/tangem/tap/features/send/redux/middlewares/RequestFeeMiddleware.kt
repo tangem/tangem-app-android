@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.features.send.redux.AmountActionUi
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.ReceiptAction
 import com.tangem.tap.features.send.redux.SendAction
@@ -63,8 +64,7 @@ class RequestFeeMiddleware {
                         dispatch(FeeAction.ChangeLayoutVisibility(main = false, controls = false, chipGroup = false))
                     }
                 }
-                dispatch(ReceiptAction.RefreshReceipt)
-                dispatch(SendAction.ChangeSendButtonState(sendState.getButtonState()))
+                dispatch(AmountActionUi.CheckAmountToSend)
             }
         }
 
