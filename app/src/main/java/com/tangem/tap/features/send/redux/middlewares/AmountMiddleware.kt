@@ -5,10 +5,7 @@ import com.tangem.blockchain.common.TransactionError
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.features.send.redux.AmountAction
-import com.tangem.tap.features.send.redux.AmountActionUi
-import com.tangem.tap.features.send.redux.ReceiptAction
-import com.tangem.tap.features.send.redux.SendAction
+import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import org.rekotlin.Action
 import java.math.BigDecimal
@@ -46,7 +43,7 @@ class AmountMiddleware {
         }
 
         dispatch(AmountAction.SetAmount(inputValueCrypto, true))
-        dispatch(AmountActionUi.CheckAmountToSend)
+        dispatch(FeeAction.RequestFee)
     }
 
     private fun checkAmountToSend(appState: AppState?, dispatch: (Action) -> Unit) {
@@ -89,6 +86,7 @@ class AmountMiddleware {
         val amountState = appState?.sendState?.amountState ?: return
 
         dispatch(AmountAction.SetAmount(amountState.balanceCrypto, false))
+        dispatch(FeeAction.RequestFee)
     }
 
     private fun toggleMainCurrency(appState: AppState?, dispatch: (Action) -> Unit) {
