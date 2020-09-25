@@ -2,6 +2,7 @@ package com.tangem.tap.domain
 
 import androidx.annotation.StringRes
 import com.tangem.wallet.R
+import java.math.BigDecimal
 
 interface TapErrors
 interface MultiMessageError : TapErrors {
@@ -24,7 +25,9 @@ sealed class TapError(@StringRes val localizedMessage: Int) : Throwable(), TapEr
     object InvalidAmountValue : TapError(R.string.invalid_amount_value)
     object InvalidFeeValue : TapError(R.string.invalid_fee_value)
     object DustAmount : TapError(R.string.dust_amount)
-    object DustChang : TapError(R.string.dust_change)
+    object DustChange : TapError(R.string.dust_change)
+    object CreateAccountUnderfunded : TapError(R.string.create_account_underfunded)
+
     data class ValidateTransactionErrors(
             override val errorList: List<TapError>,
             override val builder: (List<String>) -> String
