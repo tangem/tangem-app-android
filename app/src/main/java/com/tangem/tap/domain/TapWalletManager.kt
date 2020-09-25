@@ -79,7 +79,9 @@ class TapWalletManager {
 
     suspend fun onCardScanned(data: ScanNoteResponse) {
         withContext(Dispatchers.Main) {
+            store.dispatch(WalletAction.ResetState)
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
+            store.dispatch(WalletAction.CheckIfWarningNeeded)
             val artworkId = data.verifyResponse?.artworkInfo?.id
             if (data.walletManager != null) {
                 if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
