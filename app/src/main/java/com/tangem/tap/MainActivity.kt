@@ -1,6 +1,9 @@
 package com.tangem.tap
 
+import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.nfc.NfcAdapter
+import android.nfc.Tag
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.CardFilter
@@ -68,6 +71,24 @@ class MainActivity : AppCompatActivity() {
                 store.state.globalState.scanNoteResponse == null) {
             store.dispatch(HomeAction.CheckIfFirstLaunch)
             store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
+        }
+        handleBackgroundScan(intent)
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        handleBackgroundScan(intent)
+    }
+
+    private fun handleBackgroundScan(intent: Intent?) {
+        if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action ||
+                        NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action
+                        )) {
+            val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
+            if (tag != null) {
+                intent.action = null
+                store.dispatch(HomeAction.ReadCard)
+            }
         }
     }
 
