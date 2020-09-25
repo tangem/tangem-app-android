@@ -68,6 +68,7 @@
     <string name="invalid_fee_value">invalid_fee_value</string>
     <string name="dust_amount">dust_amount</string>
     <string name="dust_change">dust_change</string>
+    <string name="create_account_underfunded">Target account is not created. Send more than base reserve to create</string>
 
     <string name="send_title">Send</string>
     <string name="send_address_or_payid">Address or PayID</string>
