@@ -1,6 +1,7 @@
 package com.tangem.tap.domain.extensions
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Token
 import org.stellar.sdk.requests.ErrorResponse
 
 
@@ -14,10 +15,12 @@ fun Blockchain.isNoAccountError(exception: Throwable): Boolean {
     }
 }
 
-fun Blockchain.amountToCreateAccount(): Int? {
+fun Blockchain.amountToCreateAccount(token: Token? = null): Double? {
     return when (this) {
-        Blockchain.Stellar -> 1
-        Blockchain.XRP -> 20
+        Blockchain.Stellar ->  if (token?.symbol == NODL) 1.5 else 1.toDouble()
+        Blockchain.XRP -> 20.toDouble()
         else -> null
     }
 }
+
+private const val NODL = "NODL"
