@@ -125,7 +125,7 @@ private fun handleSecurityAction(
                 allowedSecurityOptions.add(SecurityOption.AccessCode)
             }
             if (allowSetPin2 && (isDefaultPin1 || !prohibitDefaultPin)) {
-                allowedSecurityOptions.add(SecurityOption.AccessCode)
+                allowedSecurityOptions.add(SecurityOption.PassCode)
             }
 
             state.copy(securityScreenState = state.securityScreenState?.copy(
