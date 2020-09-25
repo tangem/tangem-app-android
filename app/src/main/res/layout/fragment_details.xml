@@ -178,20 +178,6 @@
                 app:layout_constraintTop_toBottomOf="@id/tv_card_title" />
 
             <TextView
-                android:id="@+id/tv_validate_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingTop="10dp"
-                android:paddingBottom="7dp"
-                android:drawablePadding="15dp"
-                android:textColor="@color/darkGray6"
-                android:textSize="16sp"
-                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_card_title"
-                android:text="@string/details_validate_card" />
-
-            <TextView
                 android:id="@+id/tv_security"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -202,7 +188,7 @@
                 android:textSize="16sp"
                 app:drawableEndCompat="@drawable/ic_angle_bracket_right"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_validate_card"
+                app:layout_constraintTop_toBottomOf="@id/tv_card_title"
                 tools:text="Long Tap" />
 
             <TextView
@@ -215,7 +201,7 @@
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_validate_card" />
+                app:layout_constraintTop_toBottomOf="@id/tv_card_title" />
 
 
             <TextView
@@ -235,6 +221,5 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.core.widget.NestedScrollView>
-
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
