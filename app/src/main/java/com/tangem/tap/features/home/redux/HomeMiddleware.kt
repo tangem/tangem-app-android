@@ -34,7 +34,7 @@ val homeMiddleware: Middleware<AppState> = { dispatch, state ->
                                 is CompletionResult.Success -> {
                                     store.dispatch(GlobalAction.RestoreAppCurrency)
                                     store.state.globalState.tapWalletManager.onCardScanned(result.data)
-                                    store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
+                                    navigateToWallet()
                                 }
                             }
                         }
@@ -48,6 +48,20 @@ val homeMiddleware: Middleware<AppState> = { dispatch, state ->
             }
             next(action)
         }
+    }
+}
+
+private fun navigateToWallet() {
+    if (store.state.navigationState.backStack.isNotEmpty()) {
+        val currentScreen = store.state.navigationState.backStack.last()
+        if (currentScreen == AppScreen.Home) {
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
+        } else if (currentScreen != AppScreen.Wallet) {
+            store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
+        }
+    } else {
+        store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
     }
 }
 
