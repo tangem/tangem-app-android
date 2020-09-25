@@ -34,11 +34,11 @@ class TangemSdkManager(val activity: ComponentActivity) {
     }
 
     suspend fun setPasscode(cardId: String?): CompletionResult<SetPinResponse> {
-        return runTaskAsyncReturnOnMain(SetPinCommand.setPin1(null), cardId)
+        return runTaskAsyncReturnOnMain(SetPinCommand.setPin2(null), cardId)
     }
 
     suspend fun setAccessCode(cardId: String?): CompletionResult<SetPinResponse> {
-        return runTaskAsyncReturnOnMain(SetPinCommand.setPin2(null), cardId)
+        return runTaskAsyncReturnOnMain(SetPinCommand.setPin1(null), cardId)
     }
 
     suspend fun setLongTap(cardId: String?): CompletionResult<SetPinResponse> {
