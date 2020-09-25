@@ -31,7 +31,8 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
     var newState = state.walletState
 
     when (action) {
-        is WalletAction.EmptyWallet -> newState = WalletState(
+        is WalletAction.ResetState -> newState = WalletState()
+        is WalletAction.EmptyWallet -> newState = newState.copy(
                 state = ProgressState.Done,
                 currencyData = BalanceWidgetData(BalanceStatus.EmptyCard),
                 mainButton = WalletMainButton.CreateWalletButton(true)
@@ -45,7 +46,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     } else {
                         AddressData(wallet.address, wallet.shareUrl, wallet.exploreUrl)
                     }
-                    newState = WalletState(
+                    newState = newState.copy(
                             state = ProgressState.Error,
                             error = ErrorType.NoInternetConnection,
                             addressData = addressData,
@@ -56,7 +57,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     )
                 }
                 is TapError.UnknownBlockchain -> {
-                    newState = WalletState(
+                    newState = newState.copy(
                             state = ProgressState.Done,
                             currencyData = BalanceWidgetData(BalanceStatus.UnknownBlockchain)
                     )
@@ -77,7 +78,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             } else {
                 null
             }
-            newState = WalletState(
+            newState = newState.copy(
                     state = ProgressState.Loading,
                     cardImage = cardImage,
                     currencyData = BalanceWidgetData(
@@ -109,7 +110,9 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                         errorMessage = action.errorMessage
                 )
         )
+        is WalletAction.UpdateWallet -> newState = newState.copy(updatingWallet = true)
         is WalletAction.UpdateWallet.Success -> newState = onWalletLoaded(action.wallet, newState)
+        is WalletAction.UpdateWallet.Failure -> newState = newState.copy(updatingWallet = false)
         is WalletAction.LoadFiatRate -> {
             newState.copy(currencyData = newState.currencyData.copy(
                     fiatAmount = null,
@@ -158,7 +161,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     )
             )
         }
-        is WalletAction.HideQrCode -> {
+        is WalletAction.HideDialog -> {
             newState = newState.copy(walletDialog = null)
         }
         is WalletAction.LoadPayId.Success -> newState = newState.copy(
@@ -185,7 +188,12 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             )
         }
         is WalletAction.Send.Cancel -> newState = newState.copy(walletDialog = null)
-
+        is WalletAction.ShowWarning ->
+            newState = newState.copy(walletDialog = WalletDialog.WarningDialog(action.warningType))
+        is WalletAction.NeedToCheckHashesCountOnline ->
+            newState = newState.copy(hashesCountVerified = false)
+        is WalletAction.ConfirmHashesCount ->
+            newState = newState.copy(hashesCountVerified = true)
     }
     return newState
 }
@@ -223,6 +231,7 @@ private fun onWalletLoaded(wallet: Wallet, walletState: WalletState): WalletStat
                     fiatAmount = fiatAmount
             ),
             pendingTransactions = pendingTransactions,
+            updatingWallet = false,
             mainButton = WalletMainButton.SendButton(sendButtonEnabled)
     )
 }
