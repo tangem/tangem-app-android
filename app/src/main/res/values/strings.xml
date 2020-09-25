@@ -6,6 +6,7 @@
     <string name="generic_cancel">Cancel</string>
     <string name="generic_retry">Retry</string>
     <string name="generic_and">and</string>
+    <string name="generic_warning">Warning</string>
 
     <string name="notification_address_copied">Address was successfully copied</string>
     <string name="notification_no_internet">No internet connection</string>
@@ -13,7 +14,7 @@
 
     <string name="home_do_you_have_card">Welcome to Tangem.\nDo you have one of our cards?</string>
     <string name="home_welcome_back">Welcome back to Tangem Tap. \nScan your card to start.</string>
-    <string name="home_button_yes">Yes!</string>
+    <string name="home_button_yes">Yes. Scan it!</string>
     <string name="home_button_scan">Scan card</string>
     <string name="home_button_shop">Shop</string>
     <string name="home_button_no_card">No</string>
@@ -47,9 +48,14 @@
     <string name="wallet_dialog_pay_id_description">Your PayID is information unique to you, like your phone number, email or ABN.</string>
     <string name="wallet_dialog_qr_code_header">%s wallet</string>
 
+    <string name="wallet_warning_dev_card">The card you scanned is a development card. Don\'t accept it as a payment.</string>
+    <string name="warning_card_signed_transactions">Warning: This card has been already topped up and signed transactions in the past.
+        Consider immediate withdrawal of all funds if you have received this card from an untrusted source.</string>
 
     <string name="error_payid_already_created">This PayID already exists. Try a different one.</string>
     <string name="error_creating_payid">Error response while creating PayID.</string>
+
+    <string name="error_card_for_different_app">This card it is not designed to work with Tangem Tap</string>
 
     <string name="error_unknown">Unknown error</string>
     <string name="error_payid_verification_failed">PayID verification failed</string>
