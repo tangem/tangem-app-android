@@ -118,9 +118,9 @@ class TapWalletManager {
                     val error = result.error
                     val blockchain = walletManager.wallet.blockchain
                     if (error != null && blockchain.isNoAccountError(error)) {
-                        val amountToCreateAccount = blockchain.amountToCreateAccount()
+                        val amountToCreateAccount = blockchain.amountToCreateAccount(walletManager.wallet.token)
                         if (amountToCreateAccount != null) {
-                            store.dispatch(WalletAction.LoadWallet.NoAccount(amountToCreateAccount))
+                            store.dispatch(WalletAction.LoadWallet.NoAccount(amountToCreateAccount.toString()))
                             return@withContext
                         }
                     }
