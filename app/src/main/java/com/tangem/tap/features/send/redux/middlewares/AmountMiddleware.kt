@@ -71,7 +71,7 @@ class AmountMiddleware {
                     TransactionError.InvalidAmountValue -> TapError.InvalidAmountValue
                     TransactionError.InvalidFeeValue -> TapError.InvalidFeeValue
                     TransactionError.DustAmount -> TapError.DustAmount
-                    TransactionError.DustChange -> TapError.DustChang
+                    TransactionError.DustChange -> TapError.DustChange
                     else -> TapError.UnknownError
                 }
             }
