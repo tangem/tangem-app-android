@@ -1,6 +1,7 @@
 package com.tangem.tap.features.send.redux.middlewares
 
 import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.CreateAccountUnderfunded
 import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.extensions.Signer
 import com.tangem.blockchain.extensions.SimpleResult
@@ -69,6 +70,9 @@ private fun verifyAndSendTransaction(appState: AppState?, dispatch: (Action) -> 
                 }
                 is SimpleResult.Failure -> {
                     when (result.error) {
+                        is CreateAccountUnderfunded ->
+                            dispatch(SendAction.SendError(TapError.CreateAccountUnderfunded))
+
                         is Throwable -> {
                             val message = (result.error as Throwable).message
                             when {
