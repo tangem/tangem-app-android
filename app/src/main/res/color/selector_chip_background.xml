@@ -4,7 +4,7 @@
 <item android:alpha="0.1" android:color="?attr/colorSecondary" android:state_enabled="true" android:state_selected="true" />
 <item android:alpha="0.1" android:color="?attr/colorSecondary" android:state_checked="true" android:state_enabled="true" />
 
-<item android:color="@android:color/transparent" android:state_enabled="true" />
-<item android:color="@android:color/transparent" />
+<item android:color="@color/backgroundLightGray" android:state_enabled="true" />
+<item android:color="@color/backgroundLightGray" />
 
 </selector>
