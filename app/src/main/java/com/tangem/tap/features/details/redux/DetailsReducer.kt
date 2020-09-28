@@ -111,11 +111,16 @@ private fun handleSecurityAction(
 ): DetailsState {
     return when (action) {
         is DetailsAction.ManageSecurity.OpenSecurity -> {
-            val prohibitDefaultPin = state.card?.settingsMask?.contains(Settings.ProhibitDefaultPIN1) == true
-            val allowSetPin1 = state.card?.settingsMask?.contains(Settings.AllowSetPIN1) != false
-            val allowSetPin2 = state.card?.settingsMask?.contains(Settings.AllowSetPIN2) != false
-            val isDefaultPin1 = state.card?.isPin1Default != false
-            val isDefaultPin2 = state.card?.isPin2Default != false
+            if (state.card?.isPin2Default == null) {
+                return state.copy(securityScreenState = state.securityScreenState?.copy(
+                        allowedOptions = EnumSet.noneOf(SecurityOption::class.java)
+                ))
+            }
+            val prohibitDefaultPin = state.card.settingsMask?.contains(Settings.ProhibitDefaultPIN1) == true
+            val allowSetPin1 = state.card.settingsMask?.contains(Settings.AllowSetPIN1) != false
+            val allowSetPin2 = state.card.settingsMask?.contains(Settings.AllowSetPIN2) != false
+            val isDefaultPin1 = state.card.isPin1Default != false
+            val isDefaultPin2 = state.card.isPin2Default != false
 
             val allowedSecurityOptions = EnumSet.noneOf(SecurityOption::class.java)
             if ((isDefaultPin1 && isDefaultPin2) || !prohibitDefaultPin) {
