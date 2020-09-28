@@ -69,15 +69,14 @@ class AmountReducer : SendInternalReducer {
                     sendState.convertExtractCryptoToFiat(action.amountCrypto, true)
                 }
                 state.copy(
-                        viewAmountValue = InputViewValue(amount.stripZeroPlainString(), action.isUserInput),
+                        viewAmountValue = InputViewValue(state.restoreDecimalSeparator(amount.stripZeroPlainString()), action.isUserInput),
                         amountToSendCrypto = action.amountCrypto,
                         cursorAtTheSamePosition = true,
                         error = null
                 )
             }
-            is AmountAction.SetAmountError -> {
-                state.copy(error = action.error)
-            }
+            is AmountAction.SetAmountError -> state.copy(error = action.error)
+            is AmountAction.SetDecimalSeparator -> state.copy(decimalSeparator = action.separator)
         }
         return updateLastState(sendState.copy(amountState = result), result)
     }
