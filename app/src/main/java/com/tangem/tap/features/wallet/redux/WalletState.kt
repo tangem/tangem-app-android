@@ -66,7 +66,14 @@ data class AddressData(
 )
 
 data class Artwork(
-        val artworkId: String? = null,
-        val artwork: Bitmap? = null,
-        val artworkResId: Int? = null
-)
+        val artworkId: String,
+        val artwork: Bitmap? = null
+) {
+    companion object {
+        const val DEFAULT_IMG_URL = "https://app.tangem.com/cards/card_default.png"
+        const val SERGIO_CARD_URL = "https://app.tangem.com/cards/card_tg059.png"
+        const val MARTA_CARD_URL = "https://app.tangem.com/cards/card_tg083.png"
+        const val SERGIO_BATCH = "tg059"
+        const val MARTA_BATCH = "tg083"
+    }
+}
