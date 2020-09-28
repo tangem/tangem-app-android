@@ -1,8 +1,8 @@
 package com.tangem.tap.domain
 
 import androidx.annotation.StringRes
+import com.tangem.TangemError
 import com.tangem.wallet.R
-import java.math.BigDecimal
 
 interface TapErrors
 interface MultiMessageError : TapErrors {
@@ -33,6 +33,14 @@ sealed class TapError(@StringRes val localizedMessage: Int) : Throwable(), TapEr
             override val builder: (List<String>) -> String
     ) : TapError(-1), MultiMessageError
 }
+
+sealed class TapSdkError(override val messageResId: Int?) : Throwable(), TangemError {
+    final override val code: Int = 1
+    override var customMessage: String = code.toString()
+
+    object CardForDifferentApp : TapSdkError(R.string.error_card_for_different_app)
+}
+
 
 fun TapErrors.assembleErrorIds(): MutableList<Int> {
     val idList = mutableListOf<Int>()
