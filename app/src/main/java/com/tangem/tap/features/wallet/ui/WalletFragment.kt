@@ -192,13 +192,9 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     }
 
     private fun setupCardImage(cardImage: Artwork?) {
-        val address = cardImage?.artworkId ?: cardImage?.artworkResId
-        val picassoRequest = when (address) {
-            is String -> Picasso.get().load(address)
-            is Int -> Picasso.get().load(address)
-            else -> null
-        }
-        picassoRequest?.placeholder(R.drawable.card_placeholder)
+        Picasso.get()
+                .load(cardImage?.artworkId)
+                .placeholder(R.drawable.card_placeholder)
                 ?.error(R.drawable.card_placeholder)
                 ?.into(iv_card)
     }
