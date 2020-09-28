@@ -26,7 +26,7 @@ data class BalanceWidgetData(
         val amount: String? = null,
         val fiatAmount: String? = null,
         val token: TokenData? = null,
-        val amountToCreateAccount: Int? = null,
+        val amountToCreateAccount: String? = null,
         val errorMessage: String? = null
 )
 
@@ -100,7 +100,7 @@ class BalanceWidget(
                 fragment.tv_error_descriptions.text =
                         fragment.getString(
                                 R.string.wallet_no_account_description,
-                                data.amountToCreateAccount?.toString(), data.currencySymbol
+                                data.amountToCreateAccount, data.currencySymbol
                         )
             }
             BalanceStatus.UnknownBlockchain -> {
