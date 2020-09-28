@@ -27,10 +27,11 @@ class AmountMiddleware {
         val sendState = appState?.sendState ?: return
         val amountState = sendState.amountState
 
-        val data = if (data == ".") "0.0" else data
+        var input = amountState.toBigDecimalSeparator(data)
+        input = if (input == ".") "0.0" else input
         val inputValue = when {
-            data.isEmpty() || data == "0" -> BigDecimal.ZERO
-            else -> BigDecimal(data)
+            input.isEmpty() || input == "0" -> BigDecimal.ZERO
+            else -> BigDecimal(input)
         }
         if (inputValue.isZero() && amountState.amountToSendCrypto.isZero()) return
 
