@@ -48,15 +48,29 @@ class PreferencesStorage(applicationContext: Application) {
     fun isFirstLaunch(): Boolean {
         val isFirst = !preferences.contains(FIRST_LAUNCH_CHECK_KEY)
         if (isFirst) preferences.edit().putInt(FIRST_LAUNCH_CHECK_KEY, System.currentTimeMillis().toInt()).apply()
-
         return isFirst
     }
+
+    fun saveScannedCardId(cardId: String) {
+        val scannedCardsIds: String = restoreScannedCardIds()
+        if (!scannedCardsIds.contains(cardId)) {
+            preferences.edit().putString(SCANNED_CARDS_IDS_KEY, "$scannedCardsIds$cardId, ").apply()
+        }
+    }
+
+    fun wasCardScannedBefore(cardId: String): Boolean {
+        return restoreScannedCardIds().contains(cardId)
+    }
+
+    private fun restoreScannedCardIds(): String =
+            preferences.getString(SCANNED_CARDS_IDS_KEY, "") ?: ""
 
     companion object {
         private const val PREFERENCES_NAME = "tapPrefs"
         private const val APP_CURRENCY_KEY = "appCurrency"
         private const val FIAT_CURRENCIES_KEY = "fiatCurrencies"
         private const val FIRST_LAUNCH_CHECK_KEY = "firstLaunchCheck"
+        private const val SCANNED_CARDS_IDS_KEY = "scannedCardIds"
     }
 
 }
