@@ -15,10 +15,12 @@ data class WalletState(
         val cardImage: Artwork? = null,
         val wallet: Wallet? = null,
         val pendingTransactions: List<PendingTransaction> = emptyList(),
+        val hashesCountVerified: Boolean? = null,
         val addressData: AddressData? = null,
         val currencyData: BalanceWidgetData = BalanceWidgetData(),
         val payIdData: PayIdData = PayIdData(),
         val walletDialog: WalletDialog? = null,
+        val updatingWallet: Boolean = false,
         val mainButton: WalletMainButton = WalletMainButton.SendButton(false)
 ) : StateType {
     val showDetails: Boolean =
@@ -33,7 +35,10 @@ sealed class WalletDialog {
 
     data class CreatePayIdDialog(val creatingPayIdState: CreatingPayIdState?) : WalletDialog()
     data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog()
+    data class WarningDialog(val type: WarningType) : WalletDialog()
 }
+
+enum class WarningType { CardSignedHashesBefore, DevCard }
 
 
 enum class ProgressState { Loading, Done, Error }
