@@ -11,6 +11,8 @@ import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.commands.Card
 import com.tangem.commands.common.network.Result
 import com.tangem.common.CompletionResult
+import com.tangem.common.extensions.CardType
+import com.tangem.common.extensions.getType
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.redux.AppState
@@ -195,9 +197,9 @@ private fun checkIfWarningNeeded(
         card: Card, signatureCountValidator: SignatureCountValidator? = null
 ): WarningType? {
 
-//    if (card.getType() != CardType.Release) {
-//        return WarningType.DevCard
-//    }
+    if (card.getType() != CardType.Release) {
+        return WarningType.DevCard
+    }
 
     return if (signatureCountValidator == null) {
         if (card.walletSignedHashes ?: 0 > 0) {
