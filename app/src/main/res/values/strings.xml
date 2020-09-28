@@ -67,14 +67,14 @@
     <string name="error_fee_request_failed">Network fee request is failed</string>
     <string name="error_insufficient_balance">Insufficient balance</string>
     <string name="error_blockchain_internal">Blockchain internal error</string>
-    <string name="amount_exceeds_balance">amount_exceeds_balance</string>
-    <string name="fee_exceeds_balance">fee_exceeds_balance</string>
-    <string name="total_exceeds_balance">total_exceeds_balance</string>
-    <string name="invalid_amount_value">invalid_amount_value</string>
-    <string name="invalid_fee_value">invalid_fee_value</string>
-    <string name="dust_amount">dust_amount</string>
-    <string name="dust_change">dust_change</string>
-    <string name="create_account_underfunded">Target account is not created. Send more than base reserve to create</string>
+    <string name="amount_exceeds_balance">Amount Exceeds Balance</string>
+    <string name="fee_exceeds_balance">Fee Exceeds Balance</string>
+    <string name="total_exceeds_balance">Total Exceeds Balance</string>
+    <string name="invalid_amount_value">Invalid Amount</string>
+    <string name="invalid_fee_value">Invalid Fee</string>
+    <string name="dust_amount">Minimum amount is %s</string>
+    <string name="dust_change">Change is too small</string>
+    <string name="create_account_underfunded">Target account is not created. Send more than %1$s %2$s to create</string>
 
     <string name="send_title">Send</string>
     <string name="send_address_or_payid">Address or PayID</string>
