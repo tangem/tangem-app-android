@@ -5,6 +5,11 @@ import com.tangem.TangemError
 import com.tangem.wallet.R
 
 interface TapErrors
+
+interface TapArgError : TapErrors {
+    val args: List<Any>
+}
+
 interface MultiMessageError : TapErrors {
     val errorList: List<TapError>
     val builder: (List<String>) -> String
@@ -24,9 +29,9 @@ sealed class TapError(@StringRes val localizedMessage: Int) : Throwable(), TapEr
     object TotalExceedsBalance : TapError(R.string.total_exceeds_balance)
     object InvalidAmountValue : TapError(R.string.invalid_amount_value)
     object InvalidFeeValue : TapError(R.string.invalid_fee_value)
-    object DustAmount : TapError(R.string.dust_amount)
+    data class DustAmount(override val args: List<Any>) : TapError(R.string.dust_amount), TapArgError
     object DustChange : TapError(R.string.dust_change)
-    object CreateAccountUnderfunded : TapError(R.string.create_account_underfunded)
+    data class CreateAccountUnderfunded(override val args: List<Any>) : TapError(R.string.create_account_underfunded), TapArgError
 
     data class ValidateTransactionErrors(
             override val errorList: List<TapError>,
