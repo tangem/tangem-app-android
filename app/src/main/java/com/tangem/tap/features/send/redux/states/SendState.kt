@@ -120,6 +120,7 @@ data class AmountState(
         val balanceCrypto: BigDecimal = BigDecimal.ZERO,
         val cursorAtTheSamePosition: Boolean = true,
         val maxLengthOfAmount: Int = 2,
+        val decimalSeparator: String = ".",
         val error: TapError? = null
 ) : SendScreenState {
 
@@ -134,6 +135,20 @@ data class AmountState(
         else when (type) {
             MainCurrencyType.FIAT -> MainCurrency(type, store.state.globalState.appCurrency)
             MainCurrencyType.CRYPTO -> MainCurrency(type, amountToExtract?.currencySymbol ?: "NONE")
+        }
+    }
+
+    fun toBigDecimalSeparator(value: String): String {
+        return value.replace(",", ".")
+    }
+
+    fun restoreDecimalSeparator(value: String): String {
+        if (value.contains(decimalSeparator)) return value
+
+        return if (decimalSeparator == ".") {
+            value.replace(",", decimalSeparator)
+        } else {
+            value.replace(".", decimalSeparator)
         }
     }
 }
