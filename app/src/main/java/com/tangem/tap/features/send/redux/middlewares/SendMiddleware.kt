@@ -1,10 +1,9 @@
 package com.tangem.tap.features.send.redux.middlewares
 
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.CreateAccountUnderfunded
-import com.tangem.blockchain.common.TransactionSender
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Signer
 import com.tangem.blockchain.extensions.SimpleResult
+import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
@@ -23,6 +22,7 @@ import kotlinx.coroutines.withContext
 import org.rekotlin.Action
 import org.rekotlin.Middleware
 import timber.log.Timber
+import java.util.*
 
 /**
 * [REDACTED_AUTHOR]
@@ -52,8 +52,7 @@ private fun verifyAndSendTransaction(appState: AppState?, dispatch: (Action) -> 
 
     val verifyResult = walletManager.validateTransaction(amountToSend, feeAmount)
     if (verifyResult.isNotEmpty()) {
-        dispatch(SendAction.SendError(TapError.InsufficientBalance))
-        return
+        dispatch(SendAction.SendError(createValidateTransactionError(verifyResult, walletManager)))
     }
 
     dispatch(SendAction.ChangeSendButtonState(SendButtonState.PROGRESS))
@@ -70,9 +69,12 @@ private fun verifyAndSendTransaction(appState: AppState?, dispatch: (Action) -> 
                 }
                 is SimpleResult.Failure -> {
                     when (result.error) {
-                        is CreateAccountUnderfunded ->
-                            dispatch(SendAction.SendError(TapError.CreateAccountUnderfunded))
-
+                        is CreateAccountUnderfunded -> {
+                            val error = result.error as CreateAccountUnderfunded
+                            val reserve = error.minReserve.value?.stripZeroPlainString() ?: "0"
+                            val symbol = error.minReserve.currencySymbol
+                            dispatch(SendAction.SendError(TapError.CreateAccountUnderfunded(listOf(reserve, symbol))))
+                        }
                         is Throwable -> {
                             val message = (result.error as Throwable).message
                             when {
@@ -95,6 +97,47 @@ private fun verifyAndSendTransaction(appState: AppState?, dispatch: (Action) -> 
         }
     }
 
+}
+
+fun extractErrorsForAmountField(errors: EnumSet<TransactionError>): EnumSet<TransactionError> {
+    val showIntoAmountField = EnumSet.noneOf(TransactionError::class.java)
+    errors.forEach {
+        when (it) {
+            TransactionError.AmountExceedsBalance -> {
+                showIntoAmountField.remove(TransactionError.TotalExceedsBalance)
+                showIntoAmountField.add(it)
+            }
+            TransactionError.FeeExceedsBalance -> {
+                showIntoAmountField.remove(TransactionError.TotalExceedsBalance)
+                showIntoAmountField.add(it)
+            }
+            TransactionError.TotalExceedsBalance -> {
+                val notAcceptable = listOf(TransactionError.FeeExceedsBalance, TransactionError.FeeExceedsBalance)
+                if (!showIntoAmountField.containsAll(notAcceptable)) showIntoAmountField.add(it)
+            }
+            TransactionError.InvalidAmountValue -> showIntoAmountField.add(it)
+            TransactionError.InvalidFeeValue -> showIntoAmountField.add(it)
+        }
+    }
+    return showIntoAmountField
+}
+
+fun createValidateTransactionError(errorList: EnumSet<TransactionError>, walletManager: WalletManager): TapError.ValidateTransactionErrors {
+    val tapErrors = errorList.map {
+        when (it) {
+            TransactionError.AmountExceedsBalance -> TapError.AmountExceedsBalance
+            TransactionError.FeeExceedsBalance -> TapError.FeeExceedsBalance
+            TransactionError.TotalExceedsBalance -> TapError.TotalExceedsBalance
+            TransactionError.InvalidAmountValue -> TapError.InvalidAmountValue
+            TransactionError.InvalidFeeValue -> TapError.InvalidFeeValue
+            TransactionError.DustAmount -> {
+                TapError.DustAmount(listOf(walletManager.dustValue?.stripZeroPlainString() ?: "0"))
+            }
+            TransactionError.DustChange -> TapError.DustChange
+            else -> TapError.UnknownError
+        }
+    }
+    return TapError.ValidateTransactionErrors(tapErrors) { it.joinToString("\r\n") }
 }
 
 

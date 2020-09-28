@@ -1,10 +1,8 @@
 package com.tangem.tap.features.send.redux.middlewares
 
 import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.TransactionError
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import org.rekotlin.Action
@@ -63,20 +61,14 @@ class AmountMiddleware {
         if (transactionErrors.isEmpty()) {
             dispatch(AmountAction.SetAmountError(null))
         } else {
-            val tapErrors = transactionErrors.map {
-                when (it) {
-                    TransactionError.AmountExceedsBalance -> TapError.AmountExceedsBalance
-                    TransactionError.FeeExceedsBalance -> TapError.FeeExceedsBalance
-                    TransactionError.TotalExceedsBalance -> TapError.TotalExceedsBalance
-                    TransactionError.InvalidAmountValue -> TapError.InvalidAmountValue
-                    TransactionError.InvalidFeeValue -> TapError.InvalidFeeValue
-                    TransactionError.DustAmount -> TapError.DustAmount
-                    TransactionError.DustChange -> TapError.DustChange
-                    else -> TapError.UnknownError
-                }
+            val amountErrors = extractErrorsForAmountField(transactionErrors)
+            if (amountErrors.isNotEmpty()) {
+                dispatch(AmountAction.SetAmountError(createValidateTransactionError(amountErrors, walletManager)))
             }
-            val error = TapError.ValidateTransactionErrors(tapErrors) { it.joinToString("\r\n") }
-            dispatch(AmountAction.SetAmountError(error))
+            transactionErrors.removeAll(amountErrors)
+            if (transactionErrors.isNotEmpty()) {
+                dispatch(SendAction.SendError(createValidateTransactionError(transactionErrors, walletManager)))
+            }
         }
         dispatch(ReceiptAction.RefreshReceipt)
         dispatch(SendAction.ChangeSendButtonState(sendState.getButtonState()))
