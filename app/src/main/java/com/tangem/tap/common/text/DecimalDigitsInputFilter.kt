@@ -7,8 +7,12 @@ import java.util.regex.Pattern
 /**
 [REDACTED_AUTHOR]
  */
-class DecimalDigitsInputFilter(digitsBeforeDecimal: Int, digitsAfterDecimal: Int) : InputFilter {
-    private val pattern: Pattern = Pattern.compile("(([1-9]{1}[0-9]{0," + (digitsBeforeDecimal - 1) + "})?||[0]{1})((\\.[0-9]{0," + digitsAfterDecimal + "})?)||(\\.)?")
+class DecimalDigitsInputFilter(
+        digitsBeforeDecimal: Int,
+        digitsAfterDecimal: Int,
+        decimalSeparator: String
+) : InputFilter {
+    private val pattern: Pattern = Pattern.compile("(([1-9]{1}[0-9]{0,${digitsBeforeDecimal -1}})?||[0]{1})((\\$decimalSeparator[0-9]{0,$digitsAfterDecimal})?)||(\\$decimalSeparator)?")
 
     override fun filter(source: CharSequence, sourceStart: Int, sourceEnd: Int, destination: Spanned, destinationStart: Int, destinationEnd: Int): CharSequence? {
         val destString = destination.toString()
