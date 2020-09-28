@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.tap.domain.MultiMessageError
+import com.tangem.tap.domain.TapArgError
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.assembleErrorIds
 import com.tangem.tap.notificationsHandler
@@ -30,15 +31,15 @@ class NotificationsHandler(coordinatorLayout: CoordinatorLayout) {
         }
     }
 
-    fun showNotification(message: Int) {
+    fun showNotification(message: Int, args: List<Any>? = null) {
         baseLayout.get()?.let {
-            showNotification(it.context.getString(message))
+            showNotification(getMessageString(message, args))
         }
     }
 
-    fun showToastNotification(message: Int) {
+    fun showToastNotification(message: Int, args: List<Any>? = null) {
         baseLayout.get()?.let {
-            Toast.makeText(it.context, it.context.getString(message), Toast.LENGTH_LONG).show()
+            Toast.makeText(it.context, getMessageString(message, args), Toast.LENGTH_LONG).show()
         }
     }
 
@@ -47,6 +48,16 @@ class NotificationsHandler(coordinatorLayout: CoordinatorLayout) {
 
         val message = builder(errorList.map { context.getString(it) })
         showNotification(message)
+    }
+
+    private fun getMessageString(message: Int, args: List<Any>?): String {
+        val context = baseLayout.get()?.context ?: return ""
+
+        return if (args.isNullOrEmpty()) {
+            context.getString(message)
+        } else {
+            context.getString(message, *args.toTypedArray())
+        }
     }
 }
 
@@ -62,7 +73,10 @@ val notificationsMiddleware: Middleware<AppState> = { dispatch, state ->
                             val multiError = action.error as MultiMessageError
                             notificationsHandler?.showNotification(multiError.assembleErrorIds(), multiError.builder)
                         }
-                        else -> notificationsHandler?.showNotification(action.error.localizedMessage)
+                        else -> {
+                            val args = (action.error as? TapArgError)?.args ?: listOf()
+                            notificationsHandler?.showNotification(action.error.localizedMessage, args)
+                        }
                     }
                 }
             }
