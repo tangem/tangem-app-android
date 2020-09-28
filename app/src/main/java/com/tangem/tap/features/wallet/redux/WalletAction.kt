@@ -14,15 +14,24 @@ import java.math.BigDecimal
 
 sealed class WalletAction : Action {
 
+    object ResetState : WalletAction()
+
     object LoadData : WalletAction() {
-        data class Failure(val error: TapError): WalletAction()
+        data class Failure(val error: TapError) : WalletAction()
     }
 
     object LoadWallet : WalletAction() {
         data class Success(val wallet: Wallet) : WalletAction()
-        data class NoAccount(val amountToCreateAccount: Int) : WalletAction()
+        data class NoAccount(val amountToCreateAccount: String) : WalletAction()
         data class Failure(val errorMessage: String? = null) : WalletAction()
     }
+
+    object CheckIfWarningNeeded : WalletAction()
+    object CheckHashesCountOnline : WalletAction()
+    object NeedToCheckHashesCountOnline : WalletAction()
+    object ConfirmHashesCount : WalletAction()
+    data class ShowWarning(val warningType: WarningType) : WalletAction()
+    object SaveCardId : WalletAction()
 
     object UpdateWallet : WalletAction() {
         data class Success(val wallet: Wallet) : WalletAction()
@@ -50,6 +59,7 @@ sealed class WalletAction : Action {
         data class ChooseCurrency(val amounts: List<Amount>?) : WalletAction()
         object Cancel : WalletAction()
     }
+
     object CreatePayId : WalletAction() {
         data class CompleteCreatingPayId(val payId: String) : WalletAction()
         data class Success(val payId: String) : WalletAction()
@@ -68,7 +78,7 @@ sealed class WalletAction : Action {
     }
 
     object ShowQrCode : WalletAction()
-    object HideQrCode : WalletAction()
+    object HideDialog : WalletAction()
     data class ExploreAddress(val context: Context) : WalletAction()
     object CreateWallet : WalletAction()
     object EmptyWallet : WalletAction()
