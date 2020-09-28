@@ -2,6 +2,7 @@ package com.tangem.tap.features.wallet.redux
 
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Wallet
+import com.tangem.commands.common.network.TangemService
 import com.tangem.common.extensions.isZero
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.common.extensions.toFiatString
@@ -140,13 +141,15 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             ))
         }
         is WalletAction.LoadArtwork -> {
-// [REDACTED_TODO_COMMENT]
-            var artworkAddress = "https://verify.tangem.com/card/artwork"
-            artworkAddress += "?artworkId=${action.artworkId}"
-            artworkAddress += "&CID=${store.state.globalState.scanNoteResponse?.card?.cardId}"
-            artworkAddress += "&publicKey=${store.state.globalState.scanNoteResponse?.card?.cardPublicKey?.toHexString()}"
-            val artwork = if (action.artworkId != null) {
-                Artwork(artworkId = artworkAddress)
+            val cardId = store.state.globalState.scanNoteResponse?.card?.cardId
+            val cardPublicKey = store.state.globalState.scanNoteResponse?.card?.cardPublicKey?.toHexString()
+            val artworkUrl = if (cardId != null && cardPublicKey != null && action.artworkId != null) {
+                TangemService.getUrlForArtwork(cardId, cardPublicKey, action.artworkId)
+            } else {
+                null
+            }
+            val artwork = if (artworkUrl != null) {
+                Artwork(artworkId = artworkUrl)
             } else {
                 Artwork(artworkResId = R.drawable.card_default)
             }
@@ -221,10 +224,15 @@ private fun onWalletLoaded(wallet: Wallet, walletState: WalletState): WalletStat
             .toPendingTransactions(wallet.address)
 
     val sendButtonEnabled = amount?.isZero() == false && pendingTransactions.isEmpty()
+    val balanceStatus = if (pendingTransactions.isNotEmpty()) {
+        BalanceStatus.TransactionInProgress
+    } else {
+        BalanceStatus.VerifiedOnline
+    }
     return walletState.copy(
             state = ProgressState.Done, wallet = wallet,
             currencyData = BalanceWidgetData(
-                    BalanceStatus.VerifiedOnline, wallet.blockchain.fullName,
+                    balanceStatus, wallet.blockchain.fullName,
                     currencySymbol = wallet.blockchain.currency,
                     formattedAmount,
                     token = tokenData,

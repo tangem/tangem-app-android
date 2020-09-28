@@ -1,10 +1,11 @@
 package com.tangem.tap.features.send.redux.middlewares
 
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.Signer
-import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.send.redux.AddressPayIdActionUi
@@ -62,12 +63,13 @@ private fun verifyAndSendTransaction(appState: AppState?, dispatch: (Action) -> 
         val result = (walletManager as TransactionSender).send(txData, Signer(tangemSdk))
         withContext(Dispatchers.Main) {
             when (result) {
-                is SimpleResult.Success -> {
+                is Result.Success -> {
                     dispatch(SendAction.SendSuccess)
+                    dispatch(GlobalAction.UpdateWalletSignedHashes(result.data.walletSignedHashes))
                     dispatch(WalletAction.UpdateWallet)
                     dispatch(NavigationAction.PopBackTo())
                 }
-                is SimpleResult.Failure -> {
+                is Result.Failure -> {
                     when (result.error) {
                         is CreateAccountUnderfunded -> {
                             val error = result.error as CreateAccountUnderfunded
