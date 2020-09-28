@@ -18,8 +18,8 @@ class QrDialog(context: Context) : Dialog(context) {
     }
 
     fun showQr(qrCode: Bitmap, shareUrl: String, currencyName: CryptoCurrencyName?) {
-        this.setOnDismissListener { store.dispatch(WalletAction.HideQrCode) }
-        this.btn_done?.setOnClickListener { store.dispatch(WalletAction.HideQrCode) }
+        this.setOnDismissListener { store.dispatch(WalletAction.HideDialog) }
+        this.btn_done?.setOnClickListener { store.dispatch(WalletAction.HideDialog) }
 
         this.tv_qr_dialog_address?.text = shareUrl
         this.iv_qrcode?.setImageBitmap(qrCode)
