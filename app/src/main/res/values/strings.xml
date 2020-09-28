@@ -27,6 +27,7 @@
     <string name="wallet_create_payid">Create PayID</string>
     <string name="wallet_verified_balance">Verified Balance</string>
     <string name="wallet_blockchain_is_unreachable">Blockchain is unreachable</string>
+    <string name="wallet_transaction_in_progress">Transaction in progress</string>
     <string name="wallet_unknown_blockchain">Your Tangem card was made to work with a different application. Please see the name and instructions on your card, and install the correct app.</string>
     <string name="wallet_unknown_blockchain_title">Uh oh!</string>
     <string name="wallet_balance_is_loading">Balance is loading…</string>
@@ -106,6 +107,7 @@
     <string name="details_manage_security">Manage security</string>
     <string name="details_erase_wallet">Erase wallet</string>
     <string name="details_save_changes">Save changes</string>
+    <string name="details_continue">Continue</string>
     <string name="details_manage_security_long_tap">Long Tap</string>
     <string name="details_manage_security_passcode">Passcode</string>
     <string name="details_manage_security_access_code">Access Code</string>
