@@ -12,6 +12,7 @@ import kotlinx.android.synthetic.main.layout_token.view.*
 
 enum class BalanceStatus {
     VerifiedOnline,
+    TransactionInProgress,
     Unreachable,
     Loading,
     NoAccount,
@@ -56,14 +57,22 @@ class BalanceWidget(
 
                 showStatus(R.id.tv_status_loading)
             }
-            BalanceStatus.VerifiedOnline -> {
+            BalanceStatus.VerifiedOnline, BalanceStatus.TransactionInProgress -> {
                 fragment.l_balance.show()
                 fragment.l_balance_error.hide()
                 fragment.tv_currency.text = data.currency
                 fragment.tv_amount.text = data.amount
                 fragment.tv_fiat_amount.show()
                 fragment.tv_fiat_amount.text = data.fiatAmount
-                showStatus(R.id.tv_status_verified)
+                val statusView = if (data.status == BalanceStatus.VerifiedOnline) {
+                    R.id.tv_status_verified
+                } else {
+                    fragment.tv_status_error.text =
+                            fragment.getText(R.string.wallet_transaction_in_progress)
+                    R.id.group_error
+                }
+                showStatus(statusView)
+                fragment.tv_status_error_message.hide()
 
                 if (data.token != null) {
                     fragment.l_token.show()
@@ -83,6 +92,8 @@ class BalanceWidget(
                 fragment.tv_currency.text = data.currency
                 fragment.tv_amount.text = ""
                 fragment.tv_status_error_message.text = data.errorMessage
+                fragment.tv_status_error.text =
+                        fragment.getString(R.string.wallet_blockchain_is_unreachable)
 
                 showStatus(R.id.group_error)
                 fragment.tv_status_error_message.show(!data.errorMessage.isNullOrBlank())
