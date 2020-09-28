@@ -23,6 +23,7 @@ import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
 import com.tangem.tap.features.wallet.ui.dialogs.PayIdDialog
 import com.tangem.tap.features.wallet.ui.dialogs.QrDialog
+import com.tangem.tap.features.wallet.ui.dialogs.WarningDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.card_balance.*
@@ -227,6 +228,11 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             is WalletDialog.SelectAmountToSendDialog -> {
                 if (dialog == null) dialog = AmountToSendDialog(requireContext()).apply {
                     this.show(walletDialog.amounts)
+                }
+            }
+            is WalletDialog.WarningDialog -> {
+                if (dialog == null) dialog = WarningDialog(requireContext()).apply {
+                    this.show(walletDialog.type)
                 }
             }
             null -> {
