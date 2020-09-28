@@ -7,22 +7,32 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
 
     if (action !is GlobalAction) return state.globalState
 
-    var newState = state.globalState
+    val globalState = state.globalState
 
-    when (action) {
+    return when (action) {
         is GlobalAction.SaveScanNoteResponse ->
-            newState = newState.copy(scanNoteResponse = action.scanNoteResponse)
+            globalState.copy(scanNoteResponse = action.scanNoteResponse)
         is GlobalAction.SetFiatRate -> {
-            val rates = newState.conversionRates.rates.toMutableMap()
+            val rates = globalState.conversionRates.rates.toMutableMap()
             rates[action.fiatRates.first] = action.fiatRates.second
-            newState = newState.copy(conversionRates = ConversionRates(rates))
+            globalState.copy(conversionRates = ConversionRates(rates))
         }
         is GlobalAction.ChangeAppCurrency -> {
-            newState = newState.copy(appCurrency = action.appCurrency, conversionRates = ConversionRates(mapOf()))
+            globalState.copy(appCurrency = action.appCurrency, conversionRates = ConversionRates(mapOf()))
         }
         is GlobalAction.RestoreAppCurrency.Success -> {
-            newState = newState.copy(appCurrency = action.appCurrency, conversionRates = ConversionRates(mapOf()))
+            globalState.copy(appCurrency = action.appCurrency, conversionRates = ConversionRates(mapOf()))
         }
+        is GlobalAction.UpdateWalletSignedHashes -> {
+            val card = globalState.scanNoteResponse?.card?.copy(
+                    walletSignedHashes = action.walletSignedHashes
+            )
+            if (card != null) {
+                globalState.copy(scanNoteResponse = globalState.scanNoteResponse.copy(card = card))
+            } else {
+                globalState
+            }
+        }
+        else -> globalState
     }
-    return newState
 }
