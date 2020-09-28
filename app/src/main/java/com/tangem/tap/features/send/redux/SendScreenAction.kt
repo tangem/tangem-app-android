@@ -29,7 +29,7 @@ sealed class AddressPayIdActionUi : SendScreenActionUi {
     data class HandleUserInput(val data: String) : AddressPayIdActionUi()
     data class PasteAddressPayId(val data: String) : AddressPayIdActionUi()
     data class CheckClipboard(val data: String?) : AddressPayIdActionUi()
-    object CheckAddressPayId: AddressPayIdActionUi()
+    object CheckAddressPayId : AddressPayIdActionUi()
     data class SetTruncateHandler(val handler: (String) -> String) : AddressPayIdActionUi()
     data class TruncateOrRestore(val truncate: Boolean) : AddressPayIdActionUi()
 }
@@ -68,6 +68,7 @@ sealed class AmountActionUi : SendScreenActionUi {
 sealed class AmountAction : SendScreenAction {
     data class SetAmount(val amountCrypto: BigDecimal, val isUserInput: Boolean) : AmountAction()
     data class SetAmountError(val error: TapError?) : AmountAction()
+    data class SetDecimalSeparator(val separator: String) : AmountAction()
 }
 
 // Fee
