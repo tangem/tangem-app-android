@@ -3,6 +3,7 @@ package com.tangem.tap.features.send.ui
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.text.method.DigitsKeyListener
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
@@ -37,6 +38,7 @@ import kotlinx.android.synthetic.main.layout_send_fee.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
+import java.text.DecimalFormatSymbols
 
 /**
 * [REDACTED_AUTHOR]
@@ -112,6 +114,9 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         store.dispatch(ReceiptAction.RefreshReceipt)
         store.dispatch(SendAction.ChangeSendButtonState(store.state.sendState.getButtonState()))
 
+        val decimalSeparator = DecimalFormatSymbols.getInstance().decimalSeparator.toString()
+        store.dispatch(AmountAction.SetDecimalSeparator(decimalSeparator))
+
         tvAmountCurrency.setOnClickListener {
             store.dispatch(ToggleMainCurrency)
             store.dispatch(ReceiptAction.RefreshReceipt)
@@ -136,6 +141,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             }
         }
 
+        etAmountToSend.keyListener = DigitsKeyListener.getInstance("0123456789$decimalSeparator")
         etAmountToSend.setOnFocusChangeListener { v, hasFocus ->
             snackbarControlledByChangingFocus = true
             if (hasFocus) {
