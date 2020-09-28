@@ -110,7 +110,8 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             fg.tilAmountToSend.enableError(false)
         }
 
-        fg.etAmountToSend.filters = arrayOf(DecimalDigitsInputFilter(12, state.maxLengthOfAmount))
+        val filter = DecimalDigitsInputFilter(12, state.maxLengthOfAmount, state.decimalSeparator)
+        fg.etAmountToSend.filters = arrayOf(filter)
         val amountToSend = state.viewAmountValue
         if (!amountToSend.isFromUserInput) fg.etAmountToSend.update(amountToSend.value)
 
