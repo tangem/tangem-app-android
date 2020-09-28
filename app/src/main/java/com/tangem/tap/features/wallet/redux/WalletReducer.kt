@@ -16,7 +16,6 @@ import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
 import com.tangem.tap.store
-import com.tangem.wallet.R
 import org.rekotlin.Action
 
 class WalletReducer {
@@ -141,19 +140,18 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             ))
         }
         is WalletAction.LoadArtwork -> {
-            val cardId = store.state.globalState.scanNoteResponse?.card?.cardId
-            val cardPublicKey = store.state.globalState.scanNoteResponse?.card?.cardPublicKey?.toHexString()
-            val artworkUrl = if (cardId != null && cardPublicKey != null && action.artworkId != null) {
+            val cardId = action.card.cardId
+            val cardPublicKey = action.card.cardPublicKey?.toHexString()
+            val artworkUrl = if (cardPublicKey != null && action.artworkId != null) {
                 TangemService.getUrlForArtwork(cardId, cardPublicKey, action.artworkId)
+            } else if (action.card.cardData?.batchId == Artwork.SERGIO_BATCH) {
+                Artwork.SERGIO_CARD_URL
+            } else if (action.card.cardData?.batchId == Artwork.MARTA_BATCH) {
+                Artwork.MARTA_CARD_URL
             } else {
-                null
+                Artwork.DEFAULT_IMG_URL
             }
-            val artwork = if (artworkUrl != null) {
-                Artwork(artworkId = artworkUrl)
-            } else {
-                Artwork(artworkResId = R.drawable.card_default)
-            }
-            newState = newState.copy(cardImage = artwork)
+            newState = newState.copy(cardImage = Artwork(artworkId = artworkUrl))
         }
         is WalletAction.ShowQrCode -> {
             newState = newState.copy(
