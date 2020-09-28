@@ -2,7 +2,6 @@ package com.tangem.tap.features.details.ui
 
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.features.details.redux.DetailsAction
@@ -20,9 +19,9 @@ class CurrencySelectionDialog {
             val currenciesToShow = currencies.map { it.toFormattedString() }.toTypedArray()
             var currentSelection = currencies.indexOfFirst { it.symbol == currentAppCurrency }
 
-            dialog = MaterialAlertDialogBuilder(context)
+            dialog = AlertDialog.Builder(context)
                     .setTitle(context.getString(R.string.details_currency))
-                    .setNeutralButton(context.getString(R.string.generic_cancel)) { _, _ ->
+                    .setNegativeButton(context.getString(R.string.generic_cancel)) { _, _ ->
                         store.dispatch(DetailsAction.AppCurrencyAction.Cancel)
                     }
                     .setPositiveButton(context.getString(R.string.generic_done)) { _, _ ->
