@@ -73,7 +73,7 @@ data class Artwork(
         const val DEFAULT_IMG_URL = "https://app.tangem.com/cards/card_default.png"
         const val SERGIO_CARD_URL = "https://app.tangem.com/cards/card_tg059.png"
         const val MARTA_CARD_URL = "https://app.tangem.com/cards/card_tg083.png"
-        const val SERGIO_BATCH = "tg059"
-        const val MARTA_BATCH = "tg083"
+        const val SERGIO_CARD_ID = "BC01"
+        const val MARTA_CARD_ID = "BC02"
     }
 }
