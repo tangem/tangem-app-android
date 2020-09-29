@@ -1,5 +1,6 @@
 package com.tangem.tap.features.send.redux
 
+import com.tangem.Message
 import com.tangem.blockchain.common.Amount
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.ToastNotificationAction
@@ -102,7 +103,7 @@ sealed class ReceiptAction : SendScreenAction {
 }
 
 sealed class SendActionUi : SendScreenActionUi {
-    object SendAmountToRecipient : SendScreenActionUi
+    data class SendAmountToRecipient(val messageForSigner: Message) : SendScreenActionUi
 }
 
 sealed class SendAction : SendScreenAction {
