@@ -8,6 +8,14 @@
     <string name="generic_and">and</string>
     <string name="generic_warning">Warning</string>
 
+    <string name="tap_to_scan">Tap to scan</string>
+    <string name="tap_the_card">Tap the card</string>
+    <string name="tap_to_sign">Tap to sign</string>
+    <string name="tap_to_purge_wallet">Tap to purge wallet</string>
+    <string name="tap_to_create_wallet">Tap to create wallet</string>
+    <string name="tap_to_change_passcode">Tap to change passcode</string>
+    <string name="tap_to_change_access_code">Tap to change access code</string>
+
     <string name="notification_address_copied">Address was successfully copied</string>
     <string name="notification_no_internet">No internet connection</string>
     <string name="notification_no_internet_retry">@string/generic_retry</string>
