@@ -35,8 +35,9 @@ class AmountReducer : SendInternalReducer {
                             sendState.convertExtractCryptoToFiat(state.amountToSendCrypto)
                         }
                         val rescaledBalance = sendState.convertExtractCryptoToFiat(state.balanceCrypto, true)
+                        val viewValue = state.restoreDecimalSeparator(fiatToSend.stripZeroPlainString())
                         state.copy(
-                                viewAmountValue = InputViewValue(fiatToSend.stripZeroPlainString()),
+                                viewAmountValue = InputViewValue(viewValue),
                                 viewBalanceValue = rescaledBalance.stripZeroPlainString(),
                                 mainCurrency = state.createMainCurrency(currency, currencyCanBeSwitched),
                                 maxLengthOfAmount = sendState.getDecimals(currency),
@@ -44,8 +45,9 @@ class AmountReducer : SendInternalReducer {
                         )
                     }
                     MainCurrencyType.CRYPTO -> {
+                        val viewValue = state.restoreDecimalSeparator(state.amountToSendCrypto.stripZeroPlainString())
                         state.copy(
-                                viewAmountValue = InputViewValue(state.amountToSendCrypto.stripZeroPlainString()),
+                                viewAmountValue = InputViewValue(viewValue),
                                 viewBalanceValue = state.balanceCrypto.stripZeroPlainString(),
                                 mainCurrency = state.createMainCurrency(currency, currencyCanBeSwitched),
                                 maxLengthOfAmount = sendState.getDecimals(currency),
@@ -68,8 +70,9 @@ class AmountReducer : SendInternalReducer {
                 } else {
                     sendState.convertExtractCryptoToFiat(action.amountCrypto, true)
                 }
+                val viewValue = state.restoreDecimalSeparator(amount.stripZeroPlainString())
                 state.copy(
-                        viewAmountValue = InputViewValue(state.restoreDecimalSeparator(amount.stripZeroPlainString()), action.isUserInput),
+                        viewAmountValue = InputViewValue(viewValue, action.isUserInput),
                         amountToSendCrypto = action.amountCrypto,
                         cursorAtTheSamePosition = true,
                         error = null
