@@ -1,12 +1,13 @@
 package com.tangem.tap.common.redux
 
+import android.content.Context
 import android.widget.Toast
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.google.android.material.snackbar.Snackbar
+import com.tangem.tap.domain.ArgError
 import com.tangem.tap.domain.MultiMessageError
-import com.tangem.tap.domain.TapArgError
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.assembleErrorIds
+import com.tangem.tap.domain.assembleErrors
 import com.tangem.tap.notificationsHandler
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -33,31 +34,29 @@ class NotificationsHandler(coordinatorLayout: CoordinatorLayout) {
 
     fun showNotification(message: Int, args: List<Any>? = null) {
         baseLayout.get()?.let {
-            showNotification(getMessageString(message, args))
+            showNotification(getMessageString(it.context, message, args))
         }
     }
 
     fun showToastNotification(message: Int, args: List<Any>? = null) {
         baseLayout.get()?.let {
-            Toast.makeText(it.context, getMessageString(message, args), Toast.LENGTH_LONG).show()
+            Toast.makeText(it.context, getMessageString(it.context, message, args), Toast.LENGTH_LONG).show()
         }
     }
 
-    fun showNotification(errorList: List<Int>, builder: (List<String>) -> String) {
+    fun showNotification(errorList: List<Pair<Int, List<Any>?>>, builder: (List<String>) -> String) {
         val context = baseLayout.get()?.context ?: return
 
-        val message = builder(errorList.map { context.getString(it) })
+        val message = builder(errorList.map { getMessageString(context, it.first, it.second) })
         showNotification(message)
     }
+}
 
-    private fun getMessageString(message: Int, args: List<Any>?): String {
-        val context = baseLayout.get()?.context ?: return ""
-
-        return if (args.isNullOrEmpty()) {
-            context.getString(message)
-        } else {
-            context.getString(message, *args.toTypedArray())
-        }
+fun getMessageString(context: Context, message: Int, args: List<Any>?): String {
+    return if (args.isNullOrEmpty()) {
+        context.getString(message)
+    } else {
+        context.getString(message, *args.toTypedArray())
     }
 }
 
@@ -71,10 +70,10 @@ val notificationsMiddleware: Middleware<AppState> = { dispatch, state ->
                     when (action.error) {
                         is MultiMessageError -> {
                             val multiError = action.error as MultiMessageError
-                            notificationsHandler?.showNotification(multiError.assembleErrorIds(), multiError.builder)
+                            notificationsHandler?.showNotification(multiError.assembleErrors(), multiError.builder)
                         }
                         else -> {
-                            val args = (action.error as? TapArgError)?.args ?: listOf()
+                            val args = (action.error as? ArgError)?.args ?: listOf()
                             notificationsHandler?.showNotification(action.error.localizedMessage, args)
                         }
                     }
