@@ -5,6 +5,7 @@ import android.content.pm.ActivityInfo
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
+import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.CardFilter
 import com.tangem.Config
@@ -77,7 +78,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        handleBackgroundScan(intent)
+        Handler(mainLooper).postDelayed( {  handleBackgroundScan(intent) } , 200)
     }
 
     private fun handleBackgroundScan(intent: Intent?) {
