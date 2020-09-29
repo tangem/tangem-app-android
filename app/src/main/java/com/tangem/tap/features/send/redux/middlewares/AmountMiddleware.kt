@@ -80,6 +80,9 @@ class AmountMiddleware {
 
         dispatch(AmountAction.SetAmount(amountState.balanceCrypto, false))
         dispatch(FeeAction.RequestFee)
+        dispatch(FeeAction.ChangeLayoutVisibility(main = true, controls = true, chipGroup = true))
+        dispatch(FeeActionUi.ChangeIncludeFee(true))
+        dispatch(AmountActionUi.CheckAmountToSend)
     }
 
     private fun toggleMainCurrency(appState: AppState?, dispatch: (Action) -> Unit) {
