@@ -54,6 +54,7 @@ private fun verifyAndSendTransaction(appState: AppState?, dispatch: (Action) -> 
     val verifyResult = walletManager.validateTransaction(amountToSend, feeAmount)
     if (verifyResult.isNotEmpty()) {
         dispatch(SendAction.SendError(createValidateTransactionError(verifyResult, walletManager)))
+        return
     }
 
     dispatch(SendAction.ChangeSendButtonState(SendButtonState.PROGRESS))
