@@ -9,6 +9,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.core.view.postDelayed
 import androidx.core.widget.addTextChangedListener
+import com.tangem.Message
 import com.tangem.merchant.common.toggleWidget.ToggleWidget
 import com.tangem.tangem_sdk_new.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
@@ -65,7 +66,9 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         setupFeeLayout()
 
         btnSend.setOnClickListener {
-            store.dispatch(SendActionUi.SendAmountToRecipient)
+            store.dispatch(SendActionUi.SendAmountToRecipient(
+                    Message(getString(R.string.tap_to_sign))
+            ))
         }
     }
 
@@ -205,7 +208,8 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         val sp = requireContext().getSharedPreferences("SendScreen", Context.MODE_PRIVATE)
         val mainCurrency = sp.getString("mainCurrency", TapCurrency.DEFAULT_FIAT_CURRENCY)
         val foundType = MainCurrencyType.values()
-                .firstOrNull { it.name.toLowerCase() == mainCurrency!!.toLowerCase() } ?: MainCurrencyType.FIAT
+                .firstOrNull { it.name.toLowerCase() == mainCurrency!!.toLowerCase() }
+                ?: MainCurrencyType.FIAT
         return foundType
     }
 
