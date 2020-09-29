@@ -6,8 +6,8 @@ import com.tangem.wallet.R
 
 interface TapErrors
 
-interface TapArgError : TapErrors {
-    val args: List<Any>
+interface ArgError{
+    val args: List<Any>?
 }
 
 interface MultiMessageError : TapErrors {
@@ -15,7 +15,11 @@ interface MultiMessageError : TapErrors {
     val builder: (List<String>) -> String
 }
 
-sealed class TapError(@StringRes val localizedMessage: Int) : Throwable(), TapErrors {
+sealed class TapError(
+        @StringRes val localizedMessage: Int,
+        override val args: List<Any>? = null
+) : Throwable(), TapErrors, ArgError {
+
     object UnknownError : TapError(R.string.error_unknown)
     object PayIdAlreadyCreated : TapError(R.string.error_payid_already_created)
     object PayIdCreatingError : TapError(R.string.error_creating_payid)
@@ -29,9 +33,9 @@ sealed class TapError(@StringRes val localizedMessage: Int) : Throwable(), TapEr
     object TotalExceedsBalance : TapError(R.string.total_exceeds_balance)
     object InvalidAmountValue : TapError(R.string.invalid_amount_value)
     object InvalidFeeValue : TapError(R.string.invalid_fee_value)
-    data class DustAmount(override val args: List<Any>) : TapError(R.string.dust_amount), TapArgError
+    data class DustAmount(override val args: List<Any>) : TapError(R.string.dust_amount)
     object DustChange : TapError(R.string.dust_change)
-    data class CreateAccountUnderfunded(override val args: List<Any>) : TapError(R.string.create_account_underfunded), TapArgError
+    data class CreateAccountUnderfunded(override val args: List<Any>) : TapError(R.string.create_account_underfunded)
 
     data class ValidateTransactionErrors(
             override val errorList: List<TapError>,
@@ -47,11 +51,11 @@ sealed class TapSdkError(override val messageResId: Int?) : Throwable(), TangemE
 }
 
 
-fun TapErrors.assembleErrorIds(): MutableList<Int> {
-    val idList = mutableListOf<Int>()
+fun TapErrors.assembleErrors(): MutableList<Pair<Int, List<Any>?>> {
+    val idList = mutableListOf<Pair<Int, List<Any>?>>()
     when (this) {
-        is MultiMessageError -> this.errorList.forEach { idList.addAll(it.assembleErrorIds()) }
-        is TapError -> idList.add(this.localizedMessage)
+        is MultiMessageError -> this.errorList.forEach { idList.addAll(it.assembleErrors()) }
+        is TapError -> idList.add(Pair(this.localizedMessage, this.args))
     }
     return idList
 }
