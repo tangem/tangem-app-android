@@ -80,6 +80,8 @@ class AmountMiddleware {
 
         dispatch(AmountAction.SetAmount(amountState.balanceCrypto, false))
         dispatch(FeeAction.RequestFee)
+        if (!amountState.isCoinAmount()) return
+
         dispatch(FeeAction.ChangeLayoutVisibility(main = true, controls = true, chipGroup = true))
         dispatch(FeeActionUi.ChangeIncludeFee(true))
         dispatch(AmountActionUi.CheckAmountToSend)
