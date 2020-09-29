@@ -144,9 +144,9 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             val cardPublicKey = action.card.cardPublicKey?.toHexString()
             val artworkUrl = if (cardPublicKey != null && action.artworkId != null) {
                 TangemService.getUrlForArtwork(cardId, cardPublicKey, action.artworkId)
-            } else if (action.card.cardData?.batchId == Artwork.SERGIO_BATCH) {
+            } else if (action.card.cardId.startsWith(Artwork.SERGIO_CARD_ID)) {
                 Artwork.SERGIO_CARD_URL
-            } else if (action.card.cardData?.batchId == Artwork.MARTA_BATCH) {
+            } else if (action.card.cardId.startsWith(Artwork.MARTA_CARD_ID)) {
                 Artwork.MARTA_CARD_URL
             } else {
                 Artwork.DEFAULT_IMG_URL
