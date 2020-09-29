@@ -6,7 +6,7 @@ import com.tangem.wallet.R
 
 interface TapErrors
 
-interface ArgError : TapErrors {
+interface ArgError{
     val args: List<Any>?
 }
 
@@ -35,7 +35,7 @@ sealed class TapError(
     object InvalidFeeValue : TapError(R.string.invalid_fee_value)
     data class DustAmount(override val args: List<Any>) : TapError(R.string.dust_amount)
     object DustChange : TapError(R.string.dust_change)
-    data class CreateAccountUnderfunded(override val args: List<Any>) : TapError(R.string.create_account_underfunded), ArgError
+    data class CreateAccountUnderfunded(override val args: List<Any>) : TapError(R.string.create_account_underfunded)
 
     data class ValidateTransactionErrors(
             override val errorList: List<TapError>,
