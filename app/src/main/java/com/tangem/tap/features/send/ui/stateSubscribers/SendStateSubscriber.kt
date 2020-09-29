@@ -8,10 +8,11 @@ import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.enableError
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.update
+import com.tangem.tap.common.redux.getMessageString
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
 import com.tangem.tap.common.toggleWidget.ProgressState
 import com.tangem.tap.domain.MultiMessageError
-import com.tangem.tap.domain.assembleErrorIds
+import com.tangem.tap.domain.assembleErrors
 import com.tangem.tap.features.send.BaseStoreFragment
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
 import com.tangem.tap.features.send.redux.FeeAction
@@ -98,7 +99,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             val message = when (state.error) {
                 is MultiMessageError -> {
                     val multiError = state.error as MultiMessageError
-                    val messageList = multiError.assembleErrorIds().map { context.getString(it) }
+                    val messageList = multiError.assembleErrors().map { getMessageString(context, it.first, it.second) }
                     multiError.builder(messageList)
                 }
                 else -> context.getString(state.error.localizedMessage)
