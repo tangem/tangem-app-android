@@ -35,14 +35,17 @@ val sendMiddleware: Middleware<AppState> = { dispatch, appState ->
                 is AddressPayIdActionUi -> AddressPayIdMiddleware().handle(action, appState(), dispatch)
                 is AmountActionUi -> AmountMiddleware().handle(action, appState(), dispatch)
                 is RequestFee -> RequestFeeMiddleware().handle(appState(), dispatch)
-                is SendActionUi.SendAmountToRecipient -> verifyAndSendTransaction(appState(), dispatch)
+                is SendActionUi.SendAmountToRecipient ->
+                    verifyAndSendTransaction(action, appState(), dispatch)
             }
             nextDispatch(action)
         }
     }
 }
 
-private fun verifyAndSendTransaction(appState: AppState?, dispatch: (Action) -> Unit) {
+private fun verifyAndSendTransaction(
+        action: SendActionUi.SendAmountToRecipient, appState: AppState?, dispatch: (Action) -> Unit
+) {
     val sendState = appState?.sendState ?: return
     val walletManager = appState.globalState.scanNoteResponse?.walletManager ?: return
     val recipientAddress = sendState.addressPayIdState.recipientWalletAddress ?: return
@@ -61,7 +64,8 @@ private fun verifyAndSendTransaction(appState: AppState?, dispatch: (Action) -> 
     val txData = walletManager.createTransaction(amountToSend, feeAmount, recipientAddress)
     scope.launch {
         walletManager.update()
-        val result = (walletManager as TransactionSender).send(txData, Signer(tangemSdk))
+        val signer = Signer(tangemSdk, action.messageForSigner)
+        val result = (walletManager as TransactionSender).send(txData, signer)
         withContext(Dispatchers.Main) {
             when (result) {
                 is Result.Success -> {
