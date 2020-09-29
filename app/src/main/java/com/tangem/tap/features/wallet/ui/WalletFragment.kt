@@ -215,8 +215,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                     CreatingPayIdState.EnterPayId -> {
                         if (dialog == null) dialog = PayIdDialog(requireContext()).apply {
                             this.show()
-                            this.stopProgress()
                         }
+                        (dialog as? PayIdDialog)?.stopProgress()
                     }
                     CreatingPayIdState.Waiting -> (dialog as? PayIdDialog)?.showProgress()
                 }
