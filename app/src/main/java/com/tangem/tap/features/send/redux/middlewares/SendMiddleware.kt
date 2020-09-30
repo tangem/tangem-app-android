@@ -1,5 +1,6 @@
 package com.tangem.tap.features.send.redux.middlewares
 
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.Signer
@@ -81,6 +82,11 @@ private fun verifyAndSendTransaction(
                             val reserve = error.minReserve.value?.stripZeroPlainString() ?: "0"
                             val symbol = error.minReserve.currencySymbol
                             dispatch(SendAction.SendError(TapError.CreateAccountUnderfunded(listOf(reserve, symbol))))
+                        }
+                        is SendException -> {
+                            result.error?.let {
+                                FirebaseCrashlytics.getInstance().recordException(it)
+                            }
                         }
                         is Throwable -> {
                             val message = (result.error as Throwable).message
