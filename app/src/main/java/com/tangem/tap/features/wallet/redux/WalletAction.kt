@@ -34,6 +34,7 @@ sealed class WalletAction : Action {
     object SaveCardId : WalletAction()
 
     object UpdateWallet : WalletAction() {
+        object ScheduleUpdatingWallet : WalletAction()
         data class Success(val wallet: Wallet) : WalletAction()
         data class Failure(val errorMessage: String? = null) : WalletAction()
     }
