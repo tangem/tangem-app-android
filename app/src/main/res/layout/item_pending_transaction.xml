@@ -27,7 +27,7 @@
                 android:id="@+id/iv_pending_transaction"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="12dp"
+                android:layout_marginEnd="8dp"
                 android:src="@drawable/ic_arrow_left" />
 
             <TextView
