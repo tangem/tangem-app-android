@@ -49,8 +49,8 @@ class PendingTransactionsAdapter
                 PendingTransactionType.Outcoming -> R.string.wallet_pending_transaction_outcoming_address
             }
             val image = when (transaction.type) {
-                PendingTransactionType.Incoming -> R.drawable.ic_arrow_down
-                PendingTransactionType.Outcoming -> R.drawable.ic_arrow_right
+                PendingTransactionType.Incoming -> R.drawable.ic_arrow_left
+                PendingTransactionType.Outcoming -> R.drawable.ic_arrow_right_20
             }
             view.tv_pending_transaction.text = view.context.getString(transactionDescriptionRes)
 
