@@ -42,14 +42,18 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         state.lastChangedStates.clear()
         lastChangedStates.forEach {
             when (it) {
+                StateId.SEND_SCREEN -> handleSendScreen(fg, state)
                 StateId.ADDRESS_PAY_ID -> handleAddressPayIdState(fg, state.addressPayIdState)
                 StateId.AMOUNT -> handleAmountState(fg, state.amountState)
                 StateId.FEE -> handleFeeState(fg, state.feeState)
                 StateId.RECEIPT -> handleReceiptState(fg, state.receiptState)
             }
         }
+    }
 
+    private fun handleSendScreen(fg: BaseStoreFragment, state: SendState) {
         val sendFragment = (fg as? SendFragment) ?: return
+
         when (state.sendButtonState) {
             SendButtonState.ENABLED -> {
                 fg.btnSend.isEnabled = true
