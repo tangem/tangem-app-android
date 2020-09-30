@@ -31,7 +31,10 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
 
                 is CompletionResult.Success -> {
-                    val card = this.card ?: result.data
+                    val card = this.card?.copy(
+                            isPin1Default = result.data.isPin1Default,
+                            isPin2Default = result.data.isPin2Default
+                    ) ?: result.data
 
                     val error = getErrorIfExcludedCard(card)
                     if (error != null) {
