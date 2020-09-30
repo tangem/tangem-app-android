@@ -111,7 +111,12 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 )
         )
         is WalletAction.UpdateWallet -> newState = newState.copy(updatingWallet = true)
-        is WalletAction.UpdateWallet.Success -> newState = onWalletLoaded(action.wallet, newState)
+        is WalletAction.UpdateWallet.ScheduleUpdatingWallet ->
+            newState = newState.copy(updatingWallet = true)
+        is WalletAction.UpdateWallet.Success -> {
+            newState = onWalletLoaded(action.wallet, newState)
+            newState = newState.copy(updatingWallet = newState.pendingTransactions.isNotEmpty())
+        }
         is WalletAction.UpdateWallet.Failure -> newState = newState.copy(updatingWallet = false)
         is WalletAction.LoadFiatRate -> {
             newState.copy(currencyData = newState.currencyData.copy(
@@ -237,7 +242,6 @@ private fun onWalletLoaded(wallet: Wallet, walletState: WalletState): WalletStat
                     fiatAmount = fiatAmount
             ),
             pendingTransactions = pendingTransactions,
-            updatingWallet = false,
             mainButton = WalletMainButton.SendButton(sendButtonEnabled)
     )
 }
