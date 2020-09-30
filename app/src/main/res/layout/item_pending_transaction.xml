@@ -9,49 +9,49 @@
         android:id="@+id/card_pending_transaction"
         android:layout_width="match_parent"
         android:layout_height="36dp"
-        android:background="@android:color/white"
         android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
         android:layout_marginTop="2dp"
+        android:layout_marginEnd="16dp"
         android:layout_marginBottom="2dp"
+        android:background="@android:color/white"
         android:elevation="3dp">
 
         <LinearLayout
-            android:gravity="center_vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:gravity="center_vertical"
             android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            >
+            android:paddingEnd="16dp">
 
             <ImageView
                 android:id="@+id/iv_pending_transaction"
-                android:layout_marginEnd="12dp"
-                android:layout_width="11dp"
-                android:layout_height="11dp"
-                android:src="@drawable/ic_arrow_right"
-                />
-            
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_arrow_left" />
+
             <TextView
                 android:id="@+id/tv_pending_transaction"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="Receiving "
-                android:textSize="12sp"/>
+                android:textSize="13sp"
+                tools:text="Receiving " />
 
             <TextView
                 android:id="@+id/tv_pending_transaction_amount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="0.001 "
-                android:textSize="12sp"/>
+                android:textSize="13sp"
+                android:textStyle="bold"
+                tools:text="0.001 " />
 
             <TextView
                 android:id="@+id/tv_pending_transaction_currency"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="BTS"
-                android:textSize="12sp"/>
+                android:textSize="13sp"
+                android:textStyle="bold"
+                tools:text="BTS" />
 
 
             <TextView
@@ -59,10 +59,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ellipsize="middle"
-                android:singleLine="true"
-                android:textSize="12sp"
                 android:paddingStart="2dp"
-                tools:text=" from 0x4313bcd3425235bda1232141"/>
+                android:singleLine="true"
+                android:textSize="13sp"
+                tools:text=" from 0x4313bcd3425235bda1232141" />
 
         </LinearLayout>
 
