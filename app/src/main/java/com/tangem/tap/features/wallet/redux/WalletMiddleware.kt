@@ -168,7 +168,7 @@ private fun setupWalletUpdate(wallet: Wallet) {
     if (!wallet.recentTransactions.toPendingTransactions(wallet.address).isNullOrEmpty()) {
         store.dispatch(WalletAction.UpdateWallet.ScheduleUpdatingWallet)
         scope.launch(Dispatchers.IO) {
-            delay(5000)
+            delay(10000)
             withContext(Dispatchers.Main) {
                 store.dispatch(WalletAction.UpdateWallet)
             }
