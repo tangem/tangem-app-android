@@ -47,7 +47,6 @@ class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         toolbar.setNavigationOnClickListener {
             store.dispatch(NavigationAction.PopBackTo())
         }
@@ -55,15 +54,6 @@ class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
     }
 
     private fun setOnClickListeners() {
-        v_long_tap.setOnClickListener {
-            store.dispatch(DetailsAction.ManageSecurity.SelectOption(SecurityOption.LongTap))
-        }
-        v_passcode.setOnClickListener {
-            store.dispatch(DetailsAction.ManageSecurity.SelectOption(SecurityOption.PassCode))
-        }
-        v_access_code.setOnClickListener {
-            store.dispatch(DetailsAction.ManageSecurity.SelectOption(SecurityOption.AccessCode))
-        }
         btn_save_changes.setOnClickListener {
             store.state.detailsState.securityScreenState?.selectedOption?.let {
                 store.dispatch(DetailsAction.ManageSecurity.ConfirmSelection(it))
@@ -75,7 +65,7 @@ class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
         if (activity == null) return
         selectSecurityOption(state.securityScreenState?.selectedOption)
         for (option in SecurityOption.values()) {
-            enableOptions(
+            setupOption(
                     option,
                     state.securityScreenState?.allowedOptions
                             ?: EnumSet.noneOf(SecurityOption::class.java)
@@ -92,11 +82,11 @@ class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
                 securityOption == SecurityOption.AccessCode && radiobutton_access_code.isEnabled
     }
 
-    private fun enableOptions(option: SecurityOption, allowedOptions: EnumSet<SecurityOption>) {
+    private fun setupOption(option: SecurityOption, allowedOptions: EnumSet<SecurityOption>) {
         when (option) {
-            SecurityOption.LongTap -> enableLongTap(allowedOptions.contains(option))
-            SecurityOption.PassCode -> enablePasscode(allowedOptions.contains(option))
-            SecurityOption.AccessCode -> enableAccessCode(allowedOptions.contains(option))
+            SecurityOption.LongTap -> { enableLongTap(allowedOptions.contains(option)) }
+            SecurityOption.PassCode -> { enablePasscode(allowedOptions.contains(option)) }
+            SecurityOption.AccessCode -> { enableAccessCode(allowedOptions.contains(option)) }
         }
     }
 
@@ -106,6 +96,12 @@ class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
         tv_long_tap_title.alpha = alpha
         radiobutton_long_tap.alpha = alpha
         radiobutton_long_tap.isEnabled = enable
+        v_long_tap.isClickable = enable
+        if (enable) {
+            v_long_tap.setOnClickListener {
+                store.dispatch(DetailsAction.ManageSecurity.SelectOption(SecurityOption.LongTap))
+            }
+        }
     }
 
     private fun enablePasscode(enable: Boolean) {
@@ -114,6 +110,12 @@ class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
         tv_passcode_title.alpha = alpha
         radiobutton_passcode.alpha = alpha
         radiobutton_passcode.isEnabled = enable
+        v_passcode.isClickable = enable
+        if (enable) {
+            v_passcode.setOnClickListener {
+                store.dispatch(DetailsAction.ManageSecurity.SelectOption(SecurityOption.PassCode))
+            }
+        }
     }
 
     private fun enableAccessCode(enable: Boolean) {
@@ -122,5 +124,11 @@ class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
         tv_access_code_title.alpha = alpha
         radiobutton_access_code.alpha = alpha
         radiobutton_access_code.isEnabled = enable
+        v_access_code.isClickable = enable
+        if (enable) {
+            v_access_code.setOnClickListener {
+                store.dispatch(DetailsAction.ManageSecurity.SelectOption(SecurityOption.AccessCode))
+            }
+        }
     }
 }
