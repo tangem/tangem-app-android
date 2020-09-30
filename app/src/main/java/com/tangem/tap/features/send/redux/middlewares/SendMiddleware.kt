@@ -84,7 +84,9 @@ private fun verifyAndSendTransaction(
                             dispatch(SendAction.SendError(TapError.CreateAccountUnderfunded(listOf(reserve, symbol))))
                         }
                         is SendException -> {
-                            FirebaseCrashlytics.getInstance().recordException(result.error!!)
+                            result.error?.let {
+                                FirebaseCrashlytics.getInstance().recordException(it)
+                            }
                         }
                         is Throwable -> {
                             val message = (result.error as Throwable).message
