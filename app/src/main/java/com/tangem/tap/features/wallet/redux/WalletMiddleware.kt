@@ -22,6 +22,7 @@ import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.features.send.redux.PrepareSendScreen
+import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.NetworkStateChanged
 import com.tangem.tap.preferencesStorage
@@ -74,7 +75,7 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
                 is WalletAction.UpdateWallet.Success -> setupWalletUpdate(action.wallet)
                 is WalletAction.LoadWallet.Success -> {
                     store.dispatch(WalletAction.CheckHashesCountOnline)
-                    setupWalletUpdate(action.wallet)
+                    if (!store.state.walletState.updatingWallet) setupWalletUpdate(action.wallet)
                 }
                 is WalletAction.CreatePayId.CompleteCreatingPayId -> {
                     scope.launch {
@@ -113,7 +114,7 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
                 is WalletAction.LoadData -> {
                     scope.launch {
                         store.state.globalState.scanNoteResponse?.let {
-                            store.state.globalState.tapWalletManager.onCardScanned(it)
+                            store.state.globalState.tapWalletManager.loadData(it)
                         }
                     }
                 }
@@ -164,9 +165,10 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
 }
 
 private fun setupWalletUpdate(wallet: Wallet) {
-    if (!wallet.recentTransactions.isNullOrEmpty() && !store.state.walletState.updatingWallet) {
+    if (!wallet.recentTransactions.toPendingTransactions(wallet.address).isNullOrEmpty()) {
+        store.dispatch(WalletAction.UpdateWallet.ScheduleUpdatingWallet)
         scope.launch(Dispatchers.IO) {
-            delay(10000)
+            delay(5000)
             withContext(Dispatchers.Main) {
                 store.dispatch(WalletAction.UpdateWallet)
             }
