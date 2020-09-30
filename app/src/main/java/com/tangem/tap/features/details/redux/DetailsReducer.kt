@@ -134,7 +134,8 @@ private fun handleSecurityAction(
             }
 
             state.copy(securityScreenState = state.securityScreenState?.copy(
-                    allowedOptions = allowedSecurityOptions
+                    allowedOptions = allowedSecurityOptions,
+                    selectedOption = state.securityScreenState.currentOption
             ))
         }
         is DetailsAction.ManageSecurity.SelectOption -> {
