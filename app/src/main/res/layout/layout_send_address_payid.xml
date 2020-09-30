@@ -23,6 +23,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ellipsize="middle"
+            android:inputType="textNoSuggestions"
             android:paddingStart="0dp"
             android:paddingEnd="98dp"
             android:singleLine="true"
