@@ -81,6 +81,12 @@ class TapWalletManager {
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.ResetState)
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
+            loadData(data)
+        }
+    }
+
+    suspend fun loadData(data: ScanNoteResponse) {
+        withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.CheckIfWarningNeeded)
             val artworkId = data.verifyResponse?.artworkInfo?.id
             if (data.walletManager != null) {
