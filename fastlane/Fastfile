@@ -27,7 +27,6 @@ platform :android do
   lane :release do |options|
      gradle(
        task: "clean assemble",
-       flavor: "tangemAccess",
        build_type: "Release",
        properties: {
          "android.injected.signing.store.file" => options[:keystore],
@@ -41,7 +40,6 @@ platform :android do
   lane :build do |options|
      gradle(
        task: "clean assemble",
-       flavor: "tangemAccess",
        build_type: "Debug_beta",
        properties: {
            'versionCode' => options[:versionCode],
@@ -49,7 +47,6 @@ platform :android do
          })
      gradle(
        task: "assemble",
-       flavor: "tangemAccess",
        build_type: "Release",
        properties: {
           'versionCode' => options[:versionCode],
