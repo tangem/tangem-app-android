@@ -1,43 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <color name="colorPrimary">#027aff</color>
-    <color name="colorPrimaryDark">#027AFF</color>
-    <color name="colorAccent">#027AFF</color>
+    <color name="colorPrimary">#0029FF</color>
+    <color name="colorSecondary">#0022D4</color>
+    <color name="accent">#1ACE80</color>
 
-    <color name="bg_window">#FFF0F0F0</color>
-    <color name="primary">#616161</color>
-    <color name="primary_dark">@color/bg_material_dark</color>
+    <color name="tapButtonColor">@color/accent</color>
+    <color name="tapButtonDisabled">#661ACE80</color>
+    <color name="tapButtonColorBlack">@color/darkGray6</color>
+    <color name="tapButtonBlackDisabled">#661C1C1E</color>
 
-    <color name="white">@android:color/white</color>
-    <color name="black">#000000</color>
-    <color name="bg_separator">#FFBABABA</color>
-    <color name="text_normal">#FF505050</color>
-    <color name="msg_send">@color/black</color>
-    <color name="msg_rcv">#4a763d</color>
-    <color name="msg_okay">#F27FF27F</color>
-    <color name="msg_err">#F2FF4444</color>
-    <color name="msg_start">#4a086e</color>
-    <color name="msg_action">#0c15c1</color>
-    <color name="btn_light">#e3e3e3</color>
-    <color name="btn_dark">#c3c3c3</color>
-    <color name="bg_material_dark">#303030</color>
-    <color name="actionbar_text">@color/white</color>
-    <color name="card_state_error">#edcdcc</color>
-    <color name="card_state_empty">#bbbbcc</color>
-    <color name="card_state_loaded">#ddddee</color>
-    <color name="card_state_loaded_with_coins">#bbdcb1</color>
-    <color name="card_state_loaded_with_zero">#bbd9e6</color>
-    <color name="card_state_purged">#bbbbcc</color>
-    <color name="fab">#4f98c0</color>
-    <color name="type_card">#ffffff</color>
-    <color name="type_wallet">#ffffff</color>
-    <color name="black_overlay">#66000000</color>
-    <color name="confirmed">#00A818</color>
-    <color name="not_confirmed">#7c0a02</color>
-    <color name="bg_err">#600600</color>
-    <color name="bg_msg">#bff2af</color>
-    <color name="cardview_shadow_star">#37000000</color>
-    <color name="start2coin_orange">#f9af25</color>
+    <color name="success">#5AC461</color>
+    <color name="error">#C4291C</color>
+    <color name="warning">#FFB71B</color>
+
+    <color name="darkGray1">#8E8E93</color>
+    <color name="darkGray2">#636366</color>
+    <color name="darkGray3">#48484A</color>
+    <color name="darkGray4">#3A3A3C</color>
+    <color name="darkGray5">#2C2C2E</color>
+    <color name="darkGray6">#1C1C1E</color>
+
+    <color name="backgroundGray">#F9F9FA</color>
+    <color name="backgroundLightGray">#F9F9F9</color>
+    <color name="buttonGray">#F4F5F6</color>
+    <color name="textGray">#DE000000</color>
+
+
+    <color name="lightGray1">#F8F8FB</color>
+    <color name="lightGray4">#C7C7CC</color>
+    <color name="lightGray5">#D1D1D6</color>
+    <color name="lightGray6">#F2F2F7</color>
+
+    <color name="separatorGrey1">#1F000000</color>
+    <color name="separatorGrey2">#14212121</color>
+
+    <color name="blue">@color/colorSecondary</color>
+    <color name="blue1">#0029FF</color>
+    <color name="blue2">#1F50FF</color>
+    <color name="blue3">#CBE4FF</color>
 
 </resources>
