@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/fl_address"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:minWidth="300dp">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_balance"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="4dp"
+        android:background="@android:color/white"
+        android:elevation="3dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cl_address"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/tv_address"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:ellipsize="middle"
+                android:paddingStart="16dp"
+                android:paddingTop="16dp"
+                android:paddingEnd="16dp"
+                android:singleLine="true"
+                android:textColor="@color/darkGray1"
+                android:textSize="13sp"
+                app:layout_constraintEnd_toStartOf="@id/btn_copy"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="139mrsJgyWnJ**** **** y9BV" />
+
+            <TextView
+                android:id="@+id/tv_explore"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawablePadding="9dp"
+                android:paddingStart="16dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="25dp"
+                android:text="@string/wallet_explore_address"
+                android:textColor="@color/darkGray6"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_address" />
+
+
+            <FrameLayout
+                android:id="@+id/btn_copy"
+                android:layout_width="@dimen/btn_rounded_size"
+                android:layout_height="@dimen/btn_rounded_size"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/shape_ellipse"
+                android:clickable="true"
+                android:focusable="true"
+                android:elevation="3dp"
+                app:layout_constraintEnd_toStartOf="@id/btn_show_qr"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ImageView
+                    android:id="@+id/iv_copy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:background="?selectableItemBackgroundBorderless"
+                    android:padding="5dp"
+                    app:srcCompat="@drawable/ic_copy" />
+
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/btn_show_qr"
+                android:layout_width="@dimen/btn_rounded_size"
+                android:layout_height="@dimen/btn_rounded_size"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/shape_ellipse"
+                android:clickable="true"
+                android:focusable="true"
+                android:elevation="3dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ImageView
+                    android:id="@+id/iv_qr"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:background="?selectableItemBackgroundBorderless"
+                    android:padding="2dp"
+                    app:srcCompat="@drawable/ic_qr_code_show" />
+
+            </FrameLayout>
+
+            <View
+                android:id="@+id/v_payid_divider"
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:background="@color/lightGray5"
+                app:layout_constraintTop_toBottomOf="@id/tv_explore" />
+
+            <ImageView
+                android:id="@+id/iv_payid_icon"
+                android:layout_width="68dp"
+                android:layout_height="22dp"
+                android:layout_margin="16dp"
+                android:src="@drawable/ic_payid"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/v_payid_divider" />
+
+            <TextView
+                android:id="@+id/tv_create_payid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawablePadding="9dp"
+                android:padding="16dp"
+                android:text="@string/wallet_create_payid"
+                android:textColor="@color/darkGray6"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/v_payid_divider" />
+
+            <TextView
+                android:id="@+id/tv_payid_address"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:ellipsize="middle"
+                android:padding="16dp"
+                android:singleLine="true"
+                android:textColor="@color/darkGray1"
+                android:textSize="13sp"
+                app:layout_constraintHorizontal_bias="1"
+                app:layout_constraintStart_toEndOf="@id/iv_payid_icon"
+                android:textAlignment="textEnd"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/v_payid_divider"
+                tools:text="roman$payid.tangem.com"
+                android:visibility="gone"/>
+
+            <androidx.constraintlayout.widget.Group
+                android:id="@+id/group_payid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:constraint_referenced_ids="v_payid_divider, iv_payid_icon, tv_payid_address, tv_create_payid" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</FrameLayout>
