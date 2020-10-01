@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilAddressOrPayId"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="@string/send_address_or_payid"
+        app:boxBackgroundColor="@color/backgroundLightGray"
+        app:errorIconDrawable="@null"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etAddressOrPayId"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="middle"
+            android:inputType="textNoSuggestions"
+            android:paddingStart="0dp"
+            android:paddingEnd="98dp"
+            android:singleLine="true"
+            android:textSize="16sp"
+            tools:text="139mrsJgyWnJ **** y9BV" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <FrameLayout
+        android:id="@+id/flPaste"
+        android:layout_width="@dimen/btn_rounded_size"
+        android:layout_height="@dimen/btn_rounded_size"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/shape_ellipse"
+        app:layout_constraintBottom_toBottomOf="@+id/flQrCode"
+        app:layout_constraintEnd_toStartOf="@+id/flQrCode"
+        app:layout_constraintTop_toTopOf="@+id/flQrCode">
+
+        <ImageView
+            android:id="@+id/imvPaste"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="?selectableItemBackgroundBorderless"
+            android:padding="6dp"
+            app:srcCompat="@drawable/paste_selector" />
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/flQrCode"
+        android:layout_width="@dimen/btn_rounded_size"
+        android:layout_height="@dimen/btn_rounded_size"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/shape_ellipse"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tilAddressOrPayId">
+
+        <ImageView
+            android:id="@+id/imvQrCode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="?selectableItemBackgroundBorderless"
+            android:padding="5dp"
+            app:srcCompat="@drawable/ic_qr_code_scan" />
+
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
