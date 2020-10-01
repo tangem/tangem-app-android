@@ -10,6 +10,8 @@ android {
     compileSdkVersion 29
     defaultConfig {
         applicationId "com.tangem.wallet"
+        versionCode project.hasProperty('versionCode') ? project.property('versionCode') as int : 1
+        versionName project.hasProperty('versionName') ? project.property('versionName') : "1.0.0.-SNAPSHOT"
         minSdkVersion 21
         targetSdkVersion 29
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -65,7 +67,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.2.1'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.10'
 
-    implementation 'com.tangem:blockchain:1.70.0'
+    implementation 'com.tangem:blockchain:1.72.0'
     implementation 'com.tangem:core:1.63.0'
     implementation 'com.tangem:sdk:1.63.0'
 
