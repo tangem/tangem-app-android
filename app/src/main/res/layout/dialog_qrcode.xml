@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="280dp"
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_gravity="center"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_qr_dialog_header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="Bitcoin wallet"
+        android:paddingTop="20dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:textColor="@color/textGray"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        />
+
+    <ImageView
+        android:id="@+id/iv_qrcode"
+        android:layout_width="206dp"
+        android:layout_height="206dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="12dp" />
+
+    <TextView
+        android:id="@+id/tv_qr_dialog_address"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:textColor="@color/darkGray6"
+        android:paddingStart="24dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="24dp"/>
+
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_done"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_gravity="end"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:text="@string/generic_done"
+        android:textColor="@color/blue"
+        android:textSize="14sp" />
+
+
+</LinearLayout>
