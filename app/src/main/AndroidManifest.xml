@@ -7,7 +7,6 @@
         android:name="android.hardware.nfc"
         android:required="true" />
 
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.USE_BIOMETRICT" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.NFC" />
@@ -20,7 +19,7 @@
     <uses-feature android:name="android.hardware.camera.autofocus" />
 
     <application
-        android:name="com.tangem.App"
+        android:name="com.tangem.tap.TapApplication"
         android:allowBackup="true"
         android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
@@ -30,18 +29,12 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
 
-        <!--<provider-->
-            <!--android:name="com.tangem.data.LogFileProvider"-->
-            <!--android:authorities="@string/log_file_provider_authorities"-->
-            <!--android:enabled="true"-->
-            <!--android:exported="false"-->
-            <!--android:grantUriPermissions="true" />-->
 
         <activity
-            android:name="com.tangem.ui.activity.MainActivity"
+            android:name="com.tangem.tap.MainActivity"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -50,6 +43,7 @@
             <intent-filter>
                 <action android:name="android.nfc.action.NDEF_DISCOVERED" />
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data
                     android:host="www.tangem.com"
                     android:scheme="http" />
@@ -71,9 +65,9 @@
                 <action android:name="android.nfc.action.NDEF_DISCOVERED" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data
-                    android:scheme="vnd.android.nfc"
                     android:host="ext"
-                    android:pathPrefix="/android.com:pkg"/>
+                    android:pathPrefix="/android.com:pkg"
+                    android:scheme="vnd.android.nfc" />
             </intent-filter>
 
             <intent-filter>
@@ -84,6 +78,8 @@
                 android:name="android.nfc.action.TECH_DISCOVERED"
                 android:resource="@xml/nfc_tech_filter" />
         </activity>
+
+        <activity android:name="com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity" />
     </application>
 
 </manifest>
