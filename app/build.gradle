@@ -10,6 +10,8 @@ android {
     compileSdkVersion 29
     defaultConfig {
         applicationId "com.tangem.wallet"
+        versionCode project.hasProperty('versionCode') ? project.property('versionCode') as int : 1
+        versionName project.hasProperty('versionName') ? project.property('versionName') : "1.0.0.-SNAPSHOT"
         minSdkVersion 21
         targetSdkVersion 29
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
