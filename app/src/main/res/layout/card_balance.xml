@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/fl_balance"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:minWidth="300dp">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_balance"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="4dp"
+        android:elevation="3dp">
+
+        <include
+            android:id="@+id/l_balance"
+            layout="@layout/layout_balance"
+            />
+
+        <include
+            android:id="@+id/l_balance_error"
+            layout="@layout/layout_balance_error"
+            android:visibility="gone" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+</FrameLayout>
