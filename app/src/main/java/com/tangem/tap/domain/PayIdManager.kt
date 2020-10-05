@@ -68,6 +68,7 @@ class PayIdManager {
                 Blockchain.Litecoin,
                 Blockchain.Stellar,
                 Blockchain.Cardano,
+                Blockchain.CardanoShelley,
                 Blockchain.Ducatus,
                 Blockchain.BitcoinCash,
                 Blockchain.Binance,
