@@ -22,7 +22,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:navigationIcon="@drawable/ic_baseline_arrow_back_24"
-            app:title="@string/details_toolbar_title" />
+            app:title="@string/details_title" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -48,7 +48,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingBottom="14dp"
-                android:text="@string/details_card_id"
+                android:text="@string/details_row_title_cid"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
 
@@ -71,7 +71,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingBottom="14dp"
-                android:text="@string/details_issuer"
+                android:text="@string/details_row_title_issuer"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
                 app:layout_constraintStart_toStartOf="parent"
@@ -92,7 +92,7 @@
                 android:id="@+id/tv_signed_hashes_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/details_signed_hashes"
+                android:text="@string/details_row_title_signed_hashes"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
                 app:layout_constraintStart_toStartOf="parent"
@@ -114,7 +114,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="40dp"
                 android:paddingBottom="4dp"
-                android:text="@string/details_settings"
+                android:text="@string/details_section_title_settings"
                 android:textAllCaps="true"
                 android:textColor="@color/colorSecondary"
                 android:textSize="13sp"
@@ -146,7 +146,7 @@
                 android:layout_height="wrap_content"
                 android:paddingTop="10dp"
                 android:paddingBottom="10dp"
-                android:text="@string/details_currency"
+                android:text="@string/details_row_title_currency"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
                 app:layout_constraintStart_toStartOf="parent"
@@ -164,7 +164,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="22dp"
                 android:paddingBottom="4dp"
-                android:text="@string/details_card"
+                android:text="@string/details_section_title_card"
                 android:textAllCaps="true"
                 android:textColor="@color/colorSecondary"
                 android:textSize="13sp"
@@ -197,7 +197,7 @@
                 android:layout_height="wrap_content"
                 android:paddingTop="10dp"
                 android:paddingBottom="7dp"
-                android:text="@string/details_manage_security"
+                android:text="@string/details_row_title_manage_security"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
                 app:layout_constraintStart_toStartOf="parent"
@@ -216,7 +216,7 @@
                 app:drawableEndCompat="@drawable/ic_angle_bracket_right"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_security_title"
-                android:text="@string/details_erase_wallet" />
+                android:text="@string/details_row_title_erase_wallet" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
