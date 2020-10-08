@@ -11,7 +11,7 @@
         android:id="@+id/tilAddressOrPayId"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="@string/send_address_or_payid"
+        android:hint="@string/send_destination_hint"
         app:boxBackgroundColor="@color/backgroundLightGray"
         app:errorIconDrawable="@null"
         app:layout_constraintEnd_toEndOf="parent"
