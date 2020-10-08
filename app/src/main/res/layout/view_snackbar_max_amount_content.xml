@@ -11,7 +11,7 @@
         android:id="@+id/tv_message"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/send_set_maximum_amount"
+        android:text="@string/send_max_amount_label"
         android:textColor="#F4F5F6"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
