@@ -58,9 +58,9 @@ class DetailsConfirmFragment : Fragment(R.layout.fragment_details_confirm),
 
         when (state.confirmScreenState) {
             ConfirmScreenState.EraseWallet -> {
-                toolbar.title = getString(R.string.details_erase_wallet)
+                toolbar.title = getString(R.string.details_row_title_erase_wallet)
                 tv_warning_description.text = getString(R.string.details_erase_wallet_warning)
-                btn_confirm.text = getString(R.string.details_erase_wallet)
+                btn_confirm.text = getString(R.string.details_row_title_erase_wallet)
                 btn_confirm.setCompoundDrawablesRelativeWithIntrinsicBounds(
                         null, null, getDrawable(R.drawable.ic_send), null
                 )
@@ -68,9 +68,9 @@ class DetailsConfirmFragment : Fragment(R.layout.fragment_details_confirm),
             }
             ConfirmScreenState.LongTap, ConfirmScreenState.AccessCode,
             ConfirmScreenState.PassCode -> {
-                toolbar.title = getString(R.string.details_manage_security)
-                tv_warning_description.text = getString(R.string.details_manage_security_warning)
-                btn_confirm.text = getString(R.string.details_save_changes)
+                toolbar.title = getString(R.string.details_row_title_manage_security)
+                tv_warning_description.text = getString(R.string.details_security_management_warning)
+                btn_confirm.text = getString(R.string.common_save_changes)
                 btn_confirm.setCompoundDrawablesRelativeWithIntrinsicBounds(
                         null, null, getDrawable(R.drawable.ic_save), null
                 )
