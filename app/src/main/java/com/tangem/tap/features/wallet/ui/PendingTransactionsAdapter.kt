@@ -41,12 +41,12 @@ class PendingTransactionsAdapter
 
         fun bind(transaction: PendingTransaction) {
             val transactionDescriptionRes = when (transaction.type) {
-                PendingTransactionType.Incoming -> R.string.wallet_pending_transaction_incoming
-                PendingTransactionType.Outcoming -> R.string.wallet_pending_transaction_outcoming
+                PendingTransactionType.Incoming -> R.string.wallet_pending_tx_receiving
+                PendingTransactionType.Outcoming -> R.string.wallet_pending_tx_sending
             }
             val transactionAddressRes = when (transaction.type) {
-                PendingTransactionType.Incoming -> R.string.wallet_pending_transaction_incoming_address
-                PendingTransactionType.Outcoming -> R.string.wallet_pending_transaction_outcoming_address
+                PendingTransactionType.Incoming -> R.string.wallet_pending_tx_receiving_address_format
+                PendingTransactionType.Outcoming -> R.string.wallet_pending_tx_sending_address_format
             }
             val image = when (transaction.type) {
                 PendingTransactionType.Incoming -> R.drawable.ic_arrow_left
