@@ -28,7 +28,7 @@ class QrDialog(context: Context) : Dialog(context) {
         } else {
             this.tv_qr_dialog_header.show()
             this.tv_qr_dialog_header.text = context.getString(
-                    R.string.wallet_dialog_qr_code_header, currencyName
+                    R.string.wallet_qr_title_format, currencyName
             )
         }
         super.show()
