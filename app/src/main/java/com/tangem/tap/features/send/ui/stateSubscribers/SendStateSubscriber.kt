@@ -73,11 +73,11 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
     private fun handleAddressPayIdState(fg: BaseStoreFragment, state: AddressPayIdState) {
         fun parseError(context: Context, error: Error?): String? {
             val resId = when (error) {
-                Error.PAY_ID_UNSUPPORTED_BY_BLOCKCHAIN -> R.string.error_payid_unsupported_by_blockchain
-                Error.PAY_ID_NOT_REGISTERED -> R.string.error_payid_not_registere
-                Error.PAY_ID_REQUEST_FAILED -> R.string.error_payid_request_failed
-                Error.ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN -> R.string.error_address_invalid_or_unsupported
-                Error.ADDRESS_SAME_AS_WALLET -> R.string.error_address_same_as_wallet
+                Error.PAY_ID_UNSUPPORTED_BY_BLOCKCHAIN -> R.string.send_error_payid_unsupported_by_blockchain
+                Error.PAY_ID_NOT_REGISTERED -> R.string.send_error_payid_not_registere
+                Error.PAY_ID_REQUEST_FAILED -> R.string.send_error_payid_request_failed
+                Error.ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN -> R.string.send_error_address_invalid_or_unsupported
+                Error.ADDRESS_SAME_AS_WALLET -> R.string.send_error_address_same_as_wallet
                 else -> null
             }
             return if (resId == null) null else context.getString(resId, "", "")
@@ -139,7 +139,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         fg.tvAmountCurrency.update(state.mainCurrency.currencySymbol)
         (fg as? SendFragment)?.saveMainCurrency(state.mainCurrency.type)
 
-        val balanceText = fg.getString(R.string.send_balance,
+        val balanceText = fg.getString(R.string.send_balance_subtitle_format,
                 state.mainCurrency.currencySymbol,
                 state.viewBalanceValue)
         fg.tvBalance.update(balanceText)
@@ -173,7 +173,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         }
 
         if (state.error == FeeAction.Error.REQUEST_FAILED) {
-            fg.showRetrySnackbar(fg.requireContext().getString(R.string.error_fee_request_failed)) {
+            fg.showRetrySnackbar(fg.requireContext().getString(R.string.send_error_fee_request_failed)) {
                 store.dispatch(FeeAction.RequestFee)
             }
         }
@@ -186,7 +186,8 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         val mainLayout = fg.clReceiptContainer as ViewGroup
         val totalLayout = fg.llTotal as ViewGroup
         val totalTokenLayout = fg.flTotalTokenCrypto as ViewGroup
-        fun getString(id: Int): String = mainLayout.context.getString(id)
+        fun getString(id: Int, vararg formatStrings: String): String =
+                mainLayout.context.getString(id, *formatStrings)
 
         val rough = getString(R.string.sign_rough)
         fun roughOrEmpty(value: String): String = if (value == ReceiptReducer.EMPTY) value else "$rough $value"
@@ -201,11 +202,9 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 fg.tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
                 totalLayout.tvTotalValue.update("${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}")
 
-                val willSent = SpannableStringBuilder()
-                        .bold { append(receipt.willSentCrypto) }.append(" ")
-                        .append(receipt.symbols.crypto).append(" ")
-                        .append(getString(R.string.send_total_will_be_sent))
-                totalLayout.tvWillBeSentValue.update(willSent.toString())
+                val willSent = getString(R.string.send_total_subtitle_format,
+                        receipt.willSentCrypto, receipt.symbols.crypto)
+                totalLayout.tvWillBeSentValue.update(willSent)
 
             }
             ReceiptLayoutType.CRYPTO -> {
@@ -235,18 +234,12 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 fg.tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
                 totalLayout.tvTotalValue.update("${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}")
 
-                val willSent = SpannableStringBuilder()
-                        .bold {
-                            append(receipt.symbols.token)
-                            append(" ")
-                            append(receipt.willSentToken)
-                        }.append(" ").append(getString(R.string.generic_and)).append(" ")
-                        .bold {
-                            append(receipt.symbols.crypto).append(" ")
-                            append(receipt.willSentFeeCoin).append(" ")
-                        }
-                        .append(mainLayout.context.getString(R.string.send_total_will_be_sent))
-                totalLayout.tvWillBeSentValue.update(willSent.toString())
+                val willSent = getString(
+                                R.string.send_total_subtitle_asset_format,
+                                receipt.symbols.token ?: "", receipt.willSentToken,
+                                receipt.symbols.crypto, receipt.willSentFeeCoin
+                        )
+                totalLayout.tvWillBeSentValue.update(willSent)
             }
             ReceiptLayoutType.TOKEN_CRYPTO -> {
                 val receipt = state.tokenCrypto ?: return
