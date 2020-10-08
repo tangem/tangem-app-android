@@ -20,11 +20,11 @@ class CurrencySelectionDialog {
             var currentSelection = currencies.indexOfFirst { it.symbol == currentAppCurrency }
 
             dialog = AlertDialog.Builder(context)
-                    .setTitle(context.getString(R.string.details_currency))
-                    .setNegativeButton(context.getString(R.string.generic_cancel)) { _, _ ->
+                    .setTitle(context.getString(R.string.details_row_title_currency))
+                    .setNegativeButton(context.getString(R.string.common_cancel)) { _, _ ->
                         store.dispatch(DetailsAction.AppCurrencyAction.Cancel)
                     }
-                    .setPositiveButton(context.getString(R.string.generic_done)) { _, _ ->
+                    .setPositiveButton(context.getString(R.string.common_done)) { _, _ ->
                         val selectedCurrency = currencies[currentSelection]
                         store.dispatch(DetailsAction.AppCurrencyAction.SelectAppCurrency(selectedCurrency.symbol))
                     }
