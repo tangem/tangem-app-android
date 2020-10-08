@@ -68,7 +68,7 @@ class BalanceWidget(
                     R.id.tv_status_verified
                 } else {
                     fragment.tv_status_error.text =
-                            fragment.getText(R.string.wallet_transaction_in_progress)
+                            fragment.getText(R.string.wallet_balance_tx_in_progress)
                     R.id.group_error
                 }
                 showStatus(statusView)
@@ -93,7 +93,7 @@ class BalanceWidget(
                 fragment.tv_amount.text = ""
                 fragment.tv_status_error_message.text = data.errorMessage
                 fragment.tv_status_error.text =
-                        fragment.getString(R.string.wallet_blockchain_is_unreachable)
+                        fragment.getString(R.string.wallet_balance_blockchain_unreachable)
 
                 showStatus(R.id.group_error)
                 fragment.tv_status_error_message.show(!data.errorMessage.isNullOrBlank())
@@ -101,25 +101,25 @@ class BalanceWidget(
             BalanceStatus.EmptyCard -> {
                 fragment.l_balance.hide()
                 fragment.l_balance_error.show()
-                fragment.tv_error_title.text = fragment.getText(R.string.wallet_empty_card)
-                fragment.tv_error_descriptions.text = fragment.getText(R.string.wallet_empty_card_description)
+                fragment.tv_error_title.text = fragment.getText(R.string.wallet_error_empty_card)
+                fragment.tv_error_descriptions.text = fragment.getText(R.string.wallet_error_empty_card_subtitle)
             }
             BalanceStatus.NoAccount -> {
                 fragment.l_balance.hide()
                 fragment.l_balance_error.show()
-                fragment.tv_error_title.text = fragment.getText(R.string.wallet_no_account)
+                fragment.tv_error_title.text = fragment.getText(R.string.wallet_error_no_account)
                 fragment.tv_error_descriptions.text =
                         fragment.getString(
-                                R.string.wallet_no_account_description,
+                                R.string.wallet_error_no_account_subtitle_format,
                                 data.amountToCreateAccount, data.currencySymbol
                         )
             }
             BalanceStatus.UnknownBlockchain -> {
                 fragment.l_balance.hide()
                 fragment.l_balance_error.show()
-                fragment.tv_error_title.text = fragment.getText(R.string.wallet_unknown_blockchain_title)
+                fragment.tv_error_title.text = fragment.getText(R.string.wallet_error_unsupported_blockchain)
                 fragment.tv_error_descriptions.text =
-                        fragment.getString(R.string.wallet_unknown_blockchain)
+                        fragment.getString(R.string.wallet_error_unsupported_blockchain_subtitle)
             }
         }
     }
