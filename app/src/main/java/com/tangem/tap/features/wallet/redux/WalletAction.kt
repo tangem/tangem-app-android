@@ -74,7 +74,7 @@ sealed class WalletAction : Action {
 
     data class CopyAddress(val context: Context) : WalletAction() {
         object Success : WalletAction(), NotificationAction {
-            override val messageResource = R.string.notification_address_copied
+            override val messageResource = R.string.wallet_notification_address_copied
         }
     }
 
