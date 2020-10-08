@@ -67,7 +67,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
         btnSend.setOnClickListener {
             store.dispatch(SendActionUi.SendAmountToRecipient(
-                    Message(getString(R.string.tap_to_sign))
+                    Message(getString(R.string.initial_message_sign_header))
             ))
         }
     }
