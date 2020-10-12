@@ -3,6 +3,7 @@ package com.tangem.tap.common.redux
 import com.tangem.tap.common.redux.global.globalReducer
 import com.tangem.tap.common.redux.navigation.NavigationReducer
 import com.tangem.tap.features.details.redux.DetailsReducer
+import com.tangem.tap.features.disclaimer.redux.DisclaimerReducer
 import com.tangem.tap.features.home.redux.HomeReducer
 import com.tangem.tap.features.send.redux.reducers.SendScreenReducer
 import com.tangem.tap.features.wallet.redux.WalletReducer
@@ -18,7 +19,8 @@ fun appReducer(action: Action, state: AppState?): AppState {
             homeState = HomeReducer.reduce(action, state),
             walletState = WalletReducer.reduce(action, state),
             sendState = SendScreenReducer.reduce(action, state.sendState),
-            detailsState = DetailsReducer.reduce(action, state)
+            detailsState = DetailsReducer.reduce(action, state),
+            disclaimerState = DisclaimerReducer.reduce(action, state)
     )
 }
 
