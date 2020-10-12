@@ -34,7 +34,7 @@ val homeMiddleware: Middleware<AppState> = { dispatch, state ->
                                 is CompletionResult.Success -> {
                                     store.dispatch(GlobalAction.RestoreAppCurrency)
                                     store.state.globalState.tapWalletManager.onCardScanned(result.data)
-                                    navigateToWallet()
+                                    showDisclaimerOrNavigateToWallet()
                                 }
                             }
                         }
@@ -50,6 +50,15 @@ val homeMiddleware: Middleware<AppState> = { dispatch, state ->
         }
     }
 }
+
+private fun showDisclaimerOrNavigateToWallet() {
+    if (preferencesStorage.wasDisclaimerAccepted()) {
+        navigateToWallet()
+    } else {
+        store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
+    }
+}
+
 
 private fun navigateToWallet() {
     if (store.state.navigationState.backStack.isNotEmpty()) {
