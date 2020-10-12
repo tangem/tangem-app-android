@@ -54,6 +54,4 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
         val inflater = TransitionInflater.from(requireContext())
         exitTransition = inflater.inflateTransition(R.transition.fade)
     }
-
-
 }
