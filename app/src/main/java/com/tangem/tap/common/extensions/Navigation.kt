@@ -7,6 +7,7 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.features.details.ui.DetailsConfirmFragment
 import com.tangem.tap.features.details.ui.DetailsFragment
 import com.tangem.tap.features.details.ui.DetailsSecurityFragment
+import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
 import com.tangem.tap.features.home.HomeFragment
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
@@ -42,5 +43,6 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.Details -> DetailsFragment()
         AppScreen.DetailsConfirm -> DetailsConfirmFragment()
         AppScreen.DetailsSecurity -> DetailsSecurityFragment()
+        AppScreen.Disclaimer -> DisclaimerFragment()
     }
 }
