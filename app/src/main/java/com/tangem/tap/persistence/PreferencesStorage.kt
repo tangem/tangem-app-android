@@ -65,12 +65,22 @@ class PreferencesStorage(applicationContext: Application) {
     private fun restoreScannedCardIds(): String =
             preferences.getString(SCANNED_CARDS_IDS_KEY, "") ?: ""
 
+
+    fun saveDisclaimerAccepted() {
+        preferences.edit().putBoolean(DISCLAIMER_ACCEPTED_KEY, true).apply()
+    }
+
+    fun wasDisclaimerAccepted(): Boolean {
+        return preferences.getBoolean(DISCLAIMER_ACCEPTED_KEY, false)
+    }
+
     companion object {
         private const val PREFERENCES_NAME = "tapPrefs"
         private const val APP_CURRENCY_KEY = "appCurrency"
         private const val FIAT_CURRENCIES_KEY = "fiatCurrencies"
         private const val FIRST_LAUNCH_CHECK_KEY = "firstLaunchCheck"
         private const val SCANNED_CARDS_IDS_KEY = "scannedCardIds"
+        private const val DISCLAIMER_ACCEPTED_KEY = "disclaimerAccepted"
     }
 
 }
