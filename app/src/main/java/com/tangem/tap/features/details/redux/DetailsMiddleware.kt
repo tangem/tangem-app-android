@@ -6,6 +6,7 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
 import com.tangem.tap.preferencesStorage
@@ -29,6 +30,10 @@ class DetailsMiddleware {
                     is DetailsAction.EraseWallet -> eraseWalletMiddleware.handle(action)
                     is DetailsAction.AppCurrencyAction -> appCurrencyMiddleware.handle(action)
                     is DetailsAction.ManageSecurity -> manageSecurityMiddleware.handle(action)
+                    is  DetailsAction.ShowDisclaimer -> {
+                        store.dispatch(DisclaimerAction.ShowAcceptedDisclaimer)
+                        store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
+                    }
                 }
                 next(action)
             }
