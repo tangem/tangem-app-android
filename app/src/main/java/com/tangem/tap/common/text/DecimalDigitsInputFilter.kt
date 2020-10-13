@@ -10,9 +10,9 @@ import java.util.regex.Pattern
 class DecimalDigitsInputFilter(
         digitsBeforeDecimal: Int,
         digitsAfterDecimal: Int,
-        decimalSeparator: String
+        private val decimalSeparator: String
 ) : InputFilter {
-    private val pattern: Pattern = Pattern.compile("(([1-9]{1}[0-9]{0,${digitsBeforeDecimal -1}})?||[0]{1})((\\$decimalSeparator[0-9]{0,$digitsAfterDecimal})?)||(\\$decimalSeparator)?")
+    private val pattern: Pattern = Pattern.compile("(([1-9]{1}[0-9]{0,${digitsBeforeDecimal - 1}})?||[0]{1})((\\$decimalSeparator[0-9]{0,$digitsAfterDecimal})?)||(\\$decimalSeparator)?")
 
     override fun filter(source: CharSequence, sourceStart: Int, sourceEnd: Int, destination: Spanned, destinationStart: Int, destinationEnd: Int): CharSequence? {
         val destString = destination.toString()
@@ -24,7 +24,27 @@ class DecimalDigitsInputFilter(
         val resultSuffix = newDestination.substring(destinationStart, newDestination.length)
         val result = resultPrefix + source.toString() + resultSuffix
 
-        val hasMatches = pattern.matcher(result).matches()
-        return if (hasMatches) null else ""
+        return if (pattern.matcher(result).matches()) {
+            null
+        } else {
+            val replacedWithAppropriateDecimalSeparator = setDecimalSeparator(result, decimalSeparator)
+            if (pattern.matcher(replacedWithAppropriateDecimalSeparator).matches()) {
+                decimalSeparator
+            } else {
+                ""
+            }
+        }
+    }
+
+    companion object {
+        fun setDecimalSeparator(value: String, decimalSeparator: String): String {
+            if (value.contains(decimalSeparator)) return value
+
+            return if (decimalSeparator == ".") {
+                value.replace(",", decimalSeparator)
+            } else {
+                value.replace(".", decimalSeparator)
+            }
+        }
     }
 }
