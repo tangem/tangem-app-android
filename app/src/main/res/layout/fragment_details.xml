@@ -92,6 +92,7 @@
                 android:id="@+id/tv_signed_hashes_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:paddingBottom="7dp"
                 android:text="@string/details_row_title_signed_hashes"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
@@ -109,17 +110,31 @@
                 tools:text="48 hashes" />
 
             <TextView
+                android:id="@+id/tv_disclaimer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="7dp"
+                android:paddingBottom="10dp"
+                android:drawablePadding="15dp"
+                android:textColor="@color/darkGray6"
+                android:textSize="16sp"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_signed_hashes_title"
+                android:text="@string/disclaimer_title" />
+
+            <TextView
                 android:id="@+id/tv_settings_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="40dp"
+                android:layout_marginTop="22dp"
                 android:paddingBottom="4dp"
                 android:text="@string/details_section_title_settings"
                 android:textAllCaps="true"
                 android:textColor="@color/colorSecondary"
                 android:textSize="13sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_signed_hashes_title" />
+                app:layout_constraintTop_toBottomOf="@id/tv_disclaimer" />
 
             <View
                 android:layout_width="match_parent"
@@ -151,12 +166,6 @@
                 android:textSize="16sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_settings_title" />
-
-<!--            <androidx.constraintlayout.widget.Group-->
-<!--                android:id="@+id/group_app_currency"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                app:constraint_referenced_ids="tv_app_currency_title, tv_app_currency" />-->
 
             <TextView
                 android:id="@+id/tv_card_title"
