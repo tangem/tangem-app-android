@@ -49,7 +49,7 @@
         android:insetBottom="0dp"
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
-        android:text="@string/generic_done"
+        android:text="@string/common_done"
         android:textColor="@color/blue"
         android:textSize="14sp" />
 
