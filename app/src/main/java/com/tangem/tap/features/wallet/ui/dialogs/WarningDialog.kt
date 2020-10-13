@@ -11,7 +11,7 @@ class WarningDialog(context: Context) : AlertDialog(context) {
 
     private val dialog: AlertDialog = Builder(context)
             .setTitle(context.getString(R.string.common_warning))
-            .setPositiveButton(context.getString(R.string.general_ok)) { _, _ ->
+            .setPositiveButton(context.getString(R.string.common_ok)) { _, _ ->
                 dismiss()
             }.setOnDismissListener {
                 store.dispatch(WalletAction.SaveCardId)
