@@ -28,7 +28,7 @@ class PayIdDialog(context: Context) : Dialog(context) {
                 store.dispatch(WalletAction.CreatePayId.EmptyField)
             } else {
                 val payid = this.et_payid.text!!.toString() +
-                        this.context.getString(R.string.wallet_pay_id_address)
+                        this.context.getString(R.string.wallet_create_payid_domain)
                 store.dispatch(WalletAction.CreatePayId.CompleteCreatingPayId(payid))
             }
         }
