@@ -144,7 +144,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             }
         }
 
-        etAmountToSend.keyListener = DigitsKeyListener.getInstance("0123456789$decimalSeparator")
+        etAmountToSend.keyListener = DigitsKeyListener.getInstance("0123456789,.")
         etAmountToSend.setOnFocusChangeListener { v, hasFocus ->
             snackbarControlledByChangingFocus = true
             if (hasFocus) {
