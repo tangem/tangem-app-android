@@ -45,7 +45,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         setHasOptionsMenu(true)
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                store.dispatch(NavigationAction.PopBackTo())
+                store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
             }
         })
         val inflater = TransitionInflater.from(requireContext())
@@ -72,7 +72,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         (activity as? AppCompatActivity)?.setSupportActionBar(toolbar)
 
         toolbar.setNavigationOnClickListener {
-            store.dispatch(NavigationAction.PopBackTo())
+            store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
         }
 
         btn_scan.setOnClickListener {
