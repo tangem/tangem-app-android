@@ -45,7 +45,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         setHasOptionsMenu(true)
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                store.dispatch(NavigationAction.PopBackTo())
+                store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
             }
         })
         val inflater = TransitionInflater.from(requireContext())
@@ -72,7 +72,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         (activity as? AppCompatActivity)?.setSupportActionBar(toolbar)
 
         toolbar.setNavigationOnClickListener {
-            store.dispatch(NavigationAction.PopBackTo())
+            store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
         }
 
         btn_scan.setOnClickListener {
@@ -95,7 +95,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         if (!state.showDetails) {
             toolbar.menu.removeItem(R.id.details_menu)
         } else if (toolbar.menu.findItem(R.id.details_menu) == null) {
-            toolbar.menu.add(R.menu.wallet, R.id.details_menu, NONE, R.string.details_toolbar_title)
+            toolbar.menu.add(R.menu.wallet, R.id.details_menu, NONE, R.string.details_title)
         }
 
         srl_wallet.setOnRefreshListener {
@@ -149,9 +149,9 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             if (state.error == ErrorType.NoInternetConnection) {
                 srl_wallet?.isRefreshing = false
                 snackbar = Snackbar.make(
-                        coordinator_wallet, getString(R.string.notification_no_internet),
+                        coordinator_wallet, getString(R.string.wallet_notification_no_internet),
                         Snackbar.LENGTH_INDEFINITE
-                ).setAction(getString(R.string.notification_no_internet_retry))
+                ).setAction(getString(R.string.wallet_notification_no_internet_retry))
                 { store.dispatch(WalletAction.LoadData) }
                         .also { it.show() }
             }

@@ -17,6 +17,8 @@ sealed class DetailsAction : Action {
             val fiatCurrencies: List<FiatCurrencyName>? = null,
     ): DetailsAction()
 
+    object ShowDisclaimer : DetailsAction()
+
 
     sealed class EraseWallet : DetailsAction() {
         object Check : EraseWallet()
