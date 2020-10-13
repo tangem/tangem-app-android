@@ -30,6 +30,7 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
         is DetailsAction.ManageSecurity -> {
             handleSecurityAction(action, detailsState)
         }
+        else -> detailsState
     }
 }
 
