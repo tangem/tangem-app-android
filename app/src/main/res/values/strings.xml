@@ -8,6 +8,7 @@
     <string name="common_retry">Retry</string>
     <string name="common_done">Done</string>
     <string name="common_cancel">Cancel</string>
+    <string name="common_accept">Accept</string>
     <!--iOS-->
     <string name="common_camera_denied_alert_title">Camera access denied</string>
     <string name="common_camera_denied_alert_message">You have not given access to your camera, please adjust your privacy settings</string>
@@ -145,5 +146,56 @@
     <string name="initial_message_change_access_code_body">Tap to change the access code</string>
 
     <string name="payid_service_error_loading">Invalid PayID</string>
+
+    <string name="disclaimer_text">Legal Disclaimer
+    \n
+    \n1. Tangem Tap application (Software)
+    \n
+    \nThe Software is intended for usage only with Tangem hardware wallets (Cards) via NFC interface. The Software DOES NOT:
+    \n
+    \na) Generate, store, transmit, or have access to private (secret) cryptographic keys to blockchain wallets holding digital assets, including crypto-currency.
+    \n
+    \nb) Generate, store, transmit, or have access to secret keys, passwords, passphrases, recovery phrases that can be used to restore or to copy private (secret) keys to blockchain wallets holding digital assets, including crypto-currency.
+    \n
+    \nc) Provide exchange, trading, investment services on behalf of Tangem AG.
+    \n
+    \n2. Risks related to the use of Software
+    \n
+    \nTangem will not be responsible for any losses, damages or claims arising from events falling within the scope of the following five categories:
+    \n
+    \na) Mistakes made by the user of any cryptocurrency-related software or service, e.g., forgotten passwords, payments sent to wrong addresses, and accidental deletion of blockchain wallets on Cards.
+    \n
+    \nb) Problems of Software and/or any blockchain- or cryptocurrency- related software or service, e.g., corrupted files, incorrectly constructed transactions, unsafe cryptographic libraries, malware.
+    \n
+    \nc) Technical failures in the hardware of the user, including Cards, of any cryptocurrency-related software or service, e.g., data loss due to a faulty or damaged storage device.
+    \n
+    \nd) Security problems experienced by the user of any cryptocurrency-related software or service, e.g., unauthorized access to users’ wallets and/or accounts.
+    \n
+    \ne) Actions or inactions of third parties and/or events experienced by third parties, e.g., bankruptcy of service providers, information security attacks on service providers, and fraud conducted by third parties.
+    \n
+    \n3. Trading and Investment risks
+    \n
+    \nThere is considerable exposure to risk in any crypto-currency or other digital asset exchange transaction. Any transaction involving currencies involves risks including, but not limited to, the potential for changing economic conditions that may substantially affect the price or liquidity of a currency. Investments in crypto-currency exchange speculation may also be susceptible to sharp rises and falls as the relevant market values fluctuate. It is for this reason that when speculating in such markets it is advisable to use only risk capital.
+    \n
+    \n4. Electronic Trading Risks
+    \n
+    \nBefore you engage in transactions using an electronic system, you should carefully review the rules and regulations of the exchanges offering the system and/or listing the instruments you intend to trade. Online trading has inherent risk due to system response and access times that may vary due to market conditions, system performance, and other factors. You should understand these and additional risks before trading.
+    \n
+    \n5. Compliance with tax obligations
+    \n
+    \nThe users of the Software are solely responsible to determinate what, if any, taxes apply to their crypto-currency transactions. The owners of, or contributors to, the Software are NOT responsible for determining the taxes that apply to crypto-currency transactions.
+    \n
+    \n6. No warranties
+    \n
+    \nThe Software is provided on an \“as is\” basis without any warranties of any kind regarding the Software and/or any content, data, materials and/or services provided on the Software.
+    \n
+    \n7. Limitation of liability
+    \n
+    \nUnless otherwise required by law, in no event shall the owners of, or contributors to, the Software be liable for any damages of any kind, including, but not limited to, loss of use, loss of profits, or loss of data arising out of or in any way connected with the use of the Software. In no way are the owners of, or contributors to, the Software responsible for the actions, decisions, or other behavior taken or not taken by you in reliance upon the Software.
+    \n
+    \n8. Last amendment
+    \n
+    \nThis disclaimer was amended for the last time on October 1st, 2020.</string>
+    <string name="disclaimer_title">Terms of service</string>>
 
 </resources>
