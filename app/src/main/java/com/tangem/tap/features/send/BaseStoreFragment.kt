@@ -55,7 +55,7 @@ abstract class BaseStoreFragment(layoutId: Int) : Fragment(layoutId) {
 
     fun showRetrySnackbar(message: String, action: () -> Unit) {
         val snackbar = Snackbar.make(mainView, message, Snackbar.LENGTH_INDEFINITE)
-        snackbar.setAction(getString(R.string.generic_retry)) {
+        snackbar.setAction(getString(R.string.common_retry)) {
             snackbar.dismiss()
             action()
         }.show()
