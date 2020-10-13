@@ -20,7 +20,7 @@
         android:id="@+id/tv_error_title"
         app:layout_constraintStart_toEndOf="@id/iv_balance_error"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="@string/wallet_account_not_created"
+        tools:text="@string/wallet_error_no_account"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingStart="16dp"
