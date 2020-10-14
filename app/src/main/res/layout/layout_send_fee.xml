@@ -11,7 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:text="@string/send_fee"
+        android:text="@string/send_network_fee_title"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="@+id/flExpandCollapse"
         app:layout_constraintStart_toStartOf="parent"
@@ -51,21 +51,21 @@
                 style="@style/ChipNetworkFee"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/send_fee_low" />
+                android:text="@string/send_fee_picker_low" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipNormal"
                 style="@style/ChipNetworkFee"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/send_fee_normal" />
+                android:text="@string/send_fee_picker_normal" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipPriority"
                 style="@style/ChipNetworkFee"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/send_fee_priority" />
+                android:text="@string/send_fee_picker_priority" />
 
         </com.google.android.material.chip.ChipGroup>
 
@@ -75,7 +75,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="8dp"
-            android:text="@string/send_fee_include"
+            android:text="@string/send_fee_include_description"
             android:textSize="13sp" />
 
     </LinearLayout>
