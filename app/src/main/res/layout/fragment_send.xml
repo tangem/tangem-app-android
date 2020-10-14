@@ -97,7 +97,7 @@
                     app:layout_constraintStart_toEndOf="@+id/guideline"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    android:layout_marginEnd="30dp"
+                    android:layout_marginEnd="16dp"
                     android:layout_marginStart="8dp">
 
                     <com.google.android.material.button.MaterialButton
@@ -106,7 +106,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
                         android:fontFamily="@font/saira_semi_condensed_regular"
-                        android:text="@string/send_btn_send"
+                        android:text="@string/send_title"
                         app:icon="@drawable/ic_arrow_right" />
 
                     <ProgressBar
