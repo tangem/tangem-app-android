@@ -64,6 +64,8 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             tv_signed_hashes.text = state.cardInfo.signedHashes.toString()
         }
 
+        tv_disclaimer.setOnClickListener { store.dispatch(DetailsAction.ShowDisclaimer) }
+
         tv_erase_wallet.setOnClickListener {
             store.dispatch(DetailsAction.EraseWallet.Check)
             store.dispatch(DetailsAction.EraseWallet.Proceed)
