@@ -28,14 +28,14 @@ sealed class TapError(
     object NoInternetConnection : TapError(R.string.wallet_notification_no_internet)
     object InsufficientBalance : TapError(R.string.send_error_insufficient_balance)
     object BlockchainInternalError : TapError(R.string.send_error_blockchain_internal)
-    object AmountExceedsBalance : TapError(R.string.send_error_amount_exceeds_balance)
-    object FeeExceedsBalance : TapError(R.string.send_error_fee_exceeds_balance)
-    object TotalExceedsBalance : TapError(R.string.send_error_total_exceeds_balance)
-    object InvalidAmountValue : TapError(R.string.send_error_invalid_amount)
+    object AmountExceedsBalance : TapError(R.string.send_validation_amount_exceeds_balance)
+    object FeeExceedsBalance : TapError(R.string.send_validation_invalid_fee)
+    object TotalExceedsBalance : TapError(R.string.send_validation_invalid_total)
+    object InvalidAmountValue : TapError(R.string.send_validation_invalid_amount)
     object InvalidFeeValue : TapError(R.string.send_error_invalid_fee_value)
     data class DustAmount(override val args: List<Any>) : TapError(R.string.send_error_dust_amount_format)
     object DustChange : TapError(R.string.send_error_dust_change)
-    data class CreateAccountUnderfunded(override val args: List<Any>) : TapError(R.string.send_error_no_target_accout)
+    data class CreateAccountUnderfunded(override val args: List<Any>) : TapError(R.string.send_error_no_target_account)
 
     data class ValidateTransactionErrors(
             override val errorList: List<TapError>,
