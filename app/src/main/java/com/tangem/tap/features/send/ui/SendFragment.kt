@@ -67,7 +67,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
         btnSend.setOnClickListener {
             store.dispatch(SendActionUi.SendAmountToRecipient(
-                    Message(getString(R.string.tap_to_sign))
+                    Message(getString(R.string.initial_message_sign_header))
             ))
         }
     }
@@ -144,7 +144,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             }
         }
 
-        etAmountToSend.keyListener = DigitsKeyListener.getInstance("0123456789$decimalSeparator")
+        etAmountToSend.keyListener = DigitsKeyListener.getInstance("0123456789,.")
         etAmountToSend.setOnFocusChangeListener { v, hasFocus ->
             snackbarControlledByChangingFocus = true
             if (hasFocus) {
@@ -255,7 +255,7 @@ class FeeUiHelper {
 
 private fun ToggleWidget.setupSendButtonStateModifiers(context: Context) {
     mainViewModifiers.clear()
-    mainViewModifiers.add(ReplaceTextStateModifier(context.getString(R.string.send_btn_send), ""))
+    mainViewModifiers.add(ReplaceTextStateModifier(context.getString(R.string.send_title), ""))
     mainViewModifiers.add(
             TextViewDrawableStateModifier(
                     context.getDrawableCompat(R.drawable.ic_arrow_right), null, TextViewDrawableStateModifier.RIGHT
