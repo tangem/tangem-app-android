@@ -24,17 +24,17 @@ class TangemSdkManager(val activity: ComponentActivity) {
 
     suspend fun scanNote(): CompletionResult<ScanNoteResponse> {
         return runTaskAsyncReturnOnMain(ScanNoteTask(),
-                initialMessage = Message(activity.getString(R.string.tap_to_scan)))
+                initialMessage = Message(activity.getString(R.string.initial_message_scan_header)))
     }
 
     suspend fun createWallet(cardId: String?): CompletionResult<ScanNoteResponse> {
         return runTaskAsyncReturnOnMain(CreateWalletAndRescanTask(), cardId,
-                initialMessage = Message(activity.getString(R.string.tap_to_create_wallet)))
+                initialMessage = Message(activity.getString(R.string.initial_message_create_wallet_body)))
     }
 
     suspend fun eraseWallet(cardId: String?): CompletionResult<PurgeWalletResponse> {
         return runTaskAsyncReturnOnMain(PurgeWalletCommand(), cardId,
-                initialMessage = Message(activity.getString(R.string.tap_to_purge_wallet)))
+                initialMessage = Message(activity.getString(R.string.initial_message_purge_wallet_body)))
     }
 
     suspend fun setPasscode(cardId: String?): CompletionResult<SetPinResponse> {
@@ -42,7 +42,7 @@ class TangemSdkManager(val activity: ComponentActivity) {
                 pinType = PinType.Pin2,
                 newPin1 = tangemSdk.config.defaultPin1.calculateSha256(),
                 newPin2 = null
-        ), cardId, initialMessage = Message(activity.getString(R.string.tap_to_change_passcode)))
+        ), cardId, initialMessage = Message(activity.getString(R.string.initial_message_change_passcode_body)))
     }
 
     suspend fun setAccessCode(cardId: String?): CompletionResult<SetPinResponse> {
@@ -50,7 +50,7 @@ class TangemSdkManager(val activity: ComponentActivity) {
                 pinType = PinType.Pin1,
                 newPin1 = null,
                 newPin2 = tangemSdk.config.defaultPin2.calculateSha256()
-        ), cardId, initialMessage = Message(activity.getString(R.string.tap_to_change_access_code)))
+        ), cardId, initialMessage = Message(activity.getString(R.string.initial_message_change_access_code_body)))
     }
 
     suspend fun setLongTap(cardId: String?): CompletionResult<SetPinResponse> {
@@ -58,7 +58,7 @@ class TangemSdkManager(val activity: ComponentActivity) {
                 pinType = PinType.Pin1,
                 newPin1 = tangemSdk.config.defaultPin1.calculateSha256(),
                 newPin2 = tangemSdk.config.defaultPin2.calculateSha256()
-        ), cardId, initialMessage = Message(activity.getString(R.string.tap_the_card)))
+        ), cardId, initialMessage = Message(activity.getString(R.string.initial_message_tap_header)))
     }
 
     private suspend fun <T : CommandResponse> runTaskAsync(
