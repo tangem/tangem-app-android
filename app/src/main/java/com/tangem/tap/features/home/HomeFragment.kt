@@ -32,7 +32,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
         if (activity == null) return
         if (state.firstLaunch) {
             tv_home_description.text = getText(R.string.home_welcome)
-            btn_shop.text = getText(R.string.home_button_no_card)
+            btn_shop.text = getText(R.string.common_no)
             btn_yes.text = getText(R.string.home_button_yes)
         } else {
             tv_home_description.text = getText(R.string.home_welcome_back)
