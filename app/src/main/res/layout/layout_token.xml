@@ -10,7 +10,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="2dp"
-        android:text="@string/wallet_tokens"
+        android:text="@string/wallet_balance_tokens_title"
         android:textColor="@color/darkGray1"
         android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
