@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="disclaimer_text">
+
+Avertissement
+ 
+\n\n1.Application Tangem Tap (Logiciel)
+ 
+\n\nLe logiciel est destiné à l\’utilisation exclusivement avec les e-portefeuilles Tangem (Cartes) à l\’aide de l\’interface NFC. Le logiciel NE réalise pas ce qui suit :
+ 
+\n\na.	Génération, stockage, transmission ou octroi d\’accès aux clés privées (confidentiels) de chiffrement des blockchain-portefeuilles, qui contiennent les avoirs numériques, y compris la crypto-monnaie.
+\n\nb.	Génération, stockage, transmission ou octroi d\’accès aux clés confidentielles, aux mots de passe, phrases secrètes, phrases de restitution, qui pourront être utilisées pour la restitution ou pour le clonage des clés privées (confidentiels) de chiffrement des blockchain-portefeuilles, contenant les avoirs numériques, y compris la crypto-monnaie.
+\n\nc.	Prestation des services de bourse, de commerce, d\’investissement du nom de Tangem AG.
+ 
+ 
+\n\n2.	Risques, liés avec l\’utilisation du logiciel
+ 
+\n\nTangem n\’assume aucune responsabilité pour tous les dommages, préjudice ou prétentions, qui peuvent survenir comme résultat des évènements, se rapportant à une de cinq catégories suivantes :
+ 
+ 
+\n\na.	Les erreurs, commises par l\’utilisateur de tout logiciel ou service liés avec la crypto-monnaie, par exemple, les mots de passe oubliés, les paiements envoyés aux adresses incorrectes, et élimination occasionnelle des blockchain-portefeuilles sur les Cartes.
+\n\nb.	Les problèmes du Logiciel et/ou de tout progiciel ou service liés avec blockchain ou avec la crypto-monnaie, par exemple, les fichiers endommagés, les transaction créées d\’une manière incorrecte, les bibliothèques cryptographiques non sécurisées, les logiciels malveillants.
+\n\nc.	Les défaillances techniques du hardware de l\’utilisateur, y compris les Cartes, de tout logiciel ou service liés avec la crypto-monnaie, par exemple, la perte des données à cause des périphériques défectives ou endommagées de stockage.
+\n\nd.	Les problèmes de la sécurité, subis par l\’utilisateur de tout logiciel ou service liés avec la crypto-monnaie, par exemple, l\’accès non autorisé aux portefeuilles et/ou comptes des utilisateurs.
+\n\ne.	Les actions ou l\’inaction des tierces personnes et/ou les évènements subis par les tierces personnes, par exemple, la faillite du prestataire de services, les attaques sur la sécurité informatique des prestataires de services et la fraude commise par des tierces personnes.
+ 
+\n\n3.  Risques commerciales et d\’investissement
+ 
+\n\nToute échange de crypto-monnaie ou d\’autres avoirs numériques implique les risques importants. Toute transaction liée avec la monnaie implique les risques, qui incluent, entre autres, la possibilité de modification des conditions économiques, qui peuvent influencer d\’une manière significative le prix ou la disponibilité de la monnaie. Les investissements dans les spéculations boursières avec les crypto-monnaies peuvent aussi être exposés aux montées et chutes en flèche lors des fluctuations des valeurs marchandes correspondants. C\'est pour cette raison, que lors de la spéculation sur tels marchés, il est conseillé d\’utiliser seulement le capital-risque.
+ 
+
+\n\n4. Risques de commerce électronique
+ 
+\n\nAvant de passer aux transactions en utilisant le système électronique, Vous devez prendre connaissance, d\’une manière bien attentive, des règles et des dispositions stipulées par les bourses qui offrent ce système, et/ou les listes des titres de placement que vous voulez négocier. Le commerce en ligne possède le risque inaliénable lié avec la vitesse de réponse du système et avec le temps d\’accès qui peuvent varier en fonction des conditions de marché, du rendement du système et d\’autres facteurs. Avant de commencer les négoces, vous devez comprendre ces risques aussi que les risques supplémentaires.
+ 
+\n\n5. Respect des obligations fiscales
+ 
+\n\nLes utilisateurs du Logiciel assument toute la responsabilité pour définir, quels impôts sont appliqués à leurs transactions avec la crypto-monnaie, au cas où il y a de tels impôts. Les propriétaires et les participants à l\’élaboration du Logiciel n\’assument pas la responsabilité pour la définition des impôts qui sont appliqués aux transactions avec la crypto-monnaie.
+ 
+\n\n6. Absence de garanties
+ 
+\n\nLe logiciel est concédé sous les conditions « tel quel », sans aucune garantie à l\’égard du Logiciel et/ou de tout le contenu, données, matériaux et/ou services, présentes dans ce Logiciel.
+ 
+\n\n7. Restriction de la responsabilité
+ 
+\n\nSauf disposition contraire prévue par la législation, les propriétaires et les participants à l\’élaboration du Logiciel n\’assument pas la responsabilité pour aucun dommage, y compris l\’indisponibilité, la perte de profit ou la perte des données, qui surviennent comme résultat de l\’utilisation ou bien qui sont liés d\’une certaine manière avec l\’utilisation du Logiciel. Les propriétaires et les participants à l\’élaboration du Logiciel n\’assument pas la responsabilité pour les actions, les résolutions ou pour une autre conduite que vous manifestez ou pas par l\’intermédiaire du Logiciel.
+ 
+ 
+\n\n8. Dernière modification
+ 
+\n\nCette avertissement a été modifié, pour la dernière fois, le 1 octobre 2020.
+
+    </string>
+</resources>

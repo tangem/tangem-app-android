@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+        <string name="disclaimer_text">
+RECHTLICHER HAFTUNGSAUSSCHLUSS
+\n\n1.Tangem Tap App (Software)
+ 
+\n\nDie Software ist nur für die Verwendung mit Tangem hardware Wallets (Karten) über NFC-Schnittstelle geeignet. Die Software:
+ 
+\n\na.	generieret, speichert, überträgt KEINE privaten (geheimen) kryptografischen Schlüssel für Blockchain- Wallets mit digitalen Assets, einschließlich Kryptowährung, und hat KEINEN Zugriff darauf.
+\n\nb.	generieret, speichert, überträgt KEINE geheimen Schlüssel, Passwörter, Passphrasen, Wiederherstellungssätze, die verwendet werden können, um private (geheime) Schlüssel in Blockchain- Wallets, die digitale Assets enthalten, wiederherzustellen oder zu kopieren, einschließlich Kryptowährung, und hat KEINEN Zugriff darauf.
+\n\nc.	erbringt KEINE Wechsel-, Handels- und Investitionsdienstleistungen im Auftrag der Tangem AG.
+ 
+ 
+\n\n2.	Risiken im Zusammenhang mit der Verwendung von Software
+ 
+\n\nTangem haftet nicht für Verluste, Schäden oder Ansprüche aus den Ereignissen, die in den Geltungsbereich von folgenden fünf Kategorien fallen:
+ 
+\n\na.	Fehler, die der Benutzer einer kryptowährungsbezogenen Software oder eines kryptowährungsbezogenen Services macht, z.B. vergessene Passwörter, an falsche Adressen gesendete Zahlungen und zufälliges Löschen von Blockchain-Wallets auf Karten.
+\n\nb.	Probleme mit Software und/oder blockchain- oder kryptowährungsbezogener Software oder Services, z.B. beschädigte Dateien, falsch konstruierte Transaktionen, unsichere kryptografische Bibliotheken, Schadsoftware.
+\n\nc.	Technische Ausfälle in der Hardware des Benutzers, einschließlich Karten, jeglicher kryptowährungsbezogener Software oder Services, z.B. Datenverlust infolge eines fehlerhaften oder beschädigten Speichers.
+\n\nd.	Sicherheitsprobleme, die der Benutzer einer kryptowährungsbezogenen Software oder eines kryptowährungsbezogenen Services hat, z.B. unbefugter Zugriff auf Benutzer-Wallets und/oder -Konten.
+\n\ne.	Handlungen oder Untätigkeit Dritter und/oder Vorkommnisse bei den Dritten, z.B. Insolvenz von Dienstleistungserbringern, Informationssicherheitsattacken bei den Dienstleistungserbringern und Betrug durch Dritte.
+ 
+
+\n\n3.  Tradings- und Investitionsrisiken
+ 
+\n\nBei jeder Kryptowährung oder einer anderen digitalen Assetwechsel-Transaktion besteht ein hohes Risiko. Jede Transaktion mit Währungen birgt Risiken, einschließlich, aber nicht beschränkt auf das Potenzial für sich ändernde wirtschaftliche Bedingungen, die den Preis oder die Liquidität einer Währung erheblich beeinflussen können. Investitionen in Kryptowährungsspekulationen können auch anfällig für starke Anstiege und Rückgänge sein, wenn die relevanten Marktwerte schwanken. Aus diesem Grund ist es bei Spekulationen auf solchen Märkten ratsam, nur das Risikokapital zu verwenden.
+ 
+
+\n\n4. Risiken im Zusammenhang mit elektronischem Trading
+ 
+\n\nBevor Sie Transaktionen über ein elektronisches System tätigen, sollten Sie die Regeln und Vorschriften der Börsen, die das System anbieten, und/oder die Instrumente, mit denen Sie handeln möchten, sorgfältig überprüfen. Der Online-Handel birgt ein dazugehörendes Risiko aufgrund der Systemreaktion und der Zugriffszeiten, die aufgrund der Marktbedingungen, der Systemleistung und anderer Faktoren variieren können. Sie sollten diese und andere Risiken vor dem Tradingsbeginn berücksichtigen.
+ 
+
+\n\n5. Einhaltung der Steuerpflichten
+ 
+\n\nDie Benutzer der Software müssen allein bestimmen, welche Steuern, wenn überhaupt, für Ihre Kryptowährungstransaktionen gelten. Die Eigentümer oder die Mitwirkenden an der Software sind für die Ermittlung der Steuern, die für Kryptowährungstransaktionen gelten, NICHT verantwortlich.
+ 
+
+\n\n6. Garantieausschluss
+
+\n\nDie Software wird „wie gesehen“ bereitgestellt, ohne jegliche Gewährleistung in Bezug auf die Software und/oder Inhalte, Daten, Materialien und/oder Services, die zur Software gehören.
+ 
+
+\n\n7. Haftungsbeschränkung
+ 
+\n\nSofern gesetzlich nichts anderes vorgesehen ist, haften die Eigentümer oder die Mitwirkenden an der Software in keinem Fall für Schäden jeglicher Art, einschließlich, aber nicht beschränkt auf Nutzungsausfall, entgangenen Gewinn oder Datenverlust, die aus der Verwendung der Software oder in Zusammenhang mit der jeglichen Verwendung der Software entstehen. Auf keine Weise sind die Eigentümer oder die Mitwirkenden an der Software für die von Ihnen im Vertrauen auf die Software vorgenommenen oder unterlassenen Handlungen, Entscheidungen oder sonstigen Verhaltensweisen verantwortlich.
+ 
+ 
+\n\n8. Letzte Änderung
+ 
+\n\nDieser Haftungsausschuss wurde am 1. Oktober 2020 zum letzten Mal geändert.
+
+    </string>
+</resources>
