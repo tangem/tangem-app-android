@@ -74,9 +74,9 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         fun parseError(context: Context, error: Error?): String? {
             val resId = when (error) {
                 Error.PAY_ID_UNSUPPORTED_BY_BLOCKCHAIN -> R.string.send_error_payid_unsupported_by_blockchain
-                Error.PAY_ID_NOT_REGISTERED -> R.string.send_error_payid_not_registere
+                Error.PAY_ID_NOT_REGISTERED -> R.string.send_error_payid_not_registered
                 Error.PAY_ID_REQUEST_FAILED -> R.string.send_error_payid_request_failed
-                Error.ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN -> R.string.send_error_address_invalid_or_unsupported
+                Error.ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN -> R.string.send_validation_invalid_address
                 Error.ADDRESS_SAME_AS_WALLET -> R.string.send_error_address_same_as_wallet
                 else -> null
             }
