@@ -24,7 +24,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="start"
-                android:text="@string/send_total"
+                android:text="@string/send_total_label"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
@@ -45,8 +45,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
+            android:gravity="end"
             android:layout_marginTop="4dp"
-            android:text="@string/send_total_will_be_sent"
+            tools:text="@string/send_total_subtitle_format"
             android:textColor="@color/darkGray1" />
 
     </LinearLayout>
@@ -62,7 +63,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="start"
-            android:text="@string/send_total"
+            android:text="@string/send_total_label"
             android:textColor="@color/darkGray1"
             android:textSize="14sp"
             android:textStyle="bold" />
