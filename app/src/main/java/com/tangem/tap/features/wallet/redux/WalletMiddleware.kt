@@ -233,6 +233,8 @@ private fun checkHashesCountOnline() {
                 is SimpleResult.Failure ->
                     if (result.error is BlockchainSdkError.SignatureCountNotMatched) {
                         store.dispatch(WalletAction.ShowWarning(WarningType.CardSignedHashesBefore))
+                    } else if (card.walletSignedHashes ?: 0 > 0) {
+                        store.dispatch(WalletAction.ShowWarning(WarningType.CardSignedHashesBefore))
                     }
             }
         }
