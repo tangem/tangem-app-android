@@ -30,12 +30,12 @@
     <string name="wallet_balance_loading"> Solde est en cours de téléchargement …</string>
     <string name="wallet_balance_blockchain_unreachable">Blockchain est inaccessible </string>
     <string name="wallet_error_no_account">Compte n’est pas créé </string>
-    <string name="wallet_error_no_account_subtitle_format"> Téléchargez% @ +% @ pour créer un compte </string>
+    <string name="wallet_error_no_account_subtitle_format"> Téléchargez %s +%s pour créer un compte </string>
     <string name="wallet_error_empty_card">Carte vide </string>
     <string name="wallet_error_empty_card_subtitle">Créez un portefeuille pour commencer à utiliser votre carte Tangem </string>
     <string name="wallet_error_unsupported_blockchain">Cette carte n\'est pas prise en charge </string>
     <string name="wallet_error_unsupported_blockchain_subtitle">Votre carte Tangem a été créée pour fonctionner avec une autre application. Regardez le nom et les instructions sur votre carte et installez l\'application pertinente </string>
-    <string name="wallet_balance_tx_in_progress">Transaction en cours&#8230;</string>
+    <string name="wallet_balance_tx_in_progress">Transaction en cours…</string>
     <string name="wallet_pending_tx_sending">Envoi\u0020</string>
     <string name="wallet_pending_tx_sending_address_format">jusqu’à %s </string>
     <string name="wallet_pending_tx_receiving">Réception \u0020</string>
