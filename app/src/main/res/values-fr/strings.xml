@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="common_no">Non </string>
+    <string name="common_save_changes">Sauvegarder les modifications </string>
+    <string name="common_warning"> Alerte </string>
+    <string name="common_retry"> Réessayer </string>
+    <string name="common_done"> Exécuté </string>
+    <string name="common_cancel"> Annuler </string>
+    <string name="common_accept">J\'accepte</string>
+
+    <string name="common_camera_denied_alert_title">L’accès à la caméra est refusé </string>
+    <string name="common_camera_denied_alert_message">Vous n\'avez pas octroyé l’accès à votre caméra, veuillez modifier vos paramètres de confidentialité </string>
+    <string name="common_camera_alert_button_settings">Paramètres </string>
+    <string name="home_welcome">Bienvenue à Tangem. Avez-vous une de nos cartes</string>
+    <string name="home_welcome_back"> Encore une fois, bienvenue dans Tangem Tap. \nScannez votre carte pour commencer.</string>
+    <string name="home_button_yes">Oui! Scannez-la. </string>
+    <string name="home_button_shop">Magasin </string>
+    <string name="home_ready_title">Préparez-vous à appuyer votre carte au dos de votre téléphone.</string>
+    <string name="home_button_tapin">Appuyez </string>
+    <string name="home_button_scan">Scannez la carte </string>
+    <string name="wallet_button_scan">Scanner </string>
+    <string name="wallet_button_send">Envoyer </string>
+    <string name="wallet_button_create_wallet">Créer un portefeuille </string>
+    <string name="wallet_title">Tangem Tap</string>
+    <string name="wallet_choice_wallet_option_title">Choisir une variante de portefeuille </string>
+    <string name="wallet_balance_token_title"> Jeton d\'authentification </string>
+    <string name="wallet_balance_tokens_title">Jetons d\'authentification </string>
+    <string name="wallet_balance_verified">Solde confirmé </string>
+    <string name="wallet_balance_loading"> Solde est en cours de téléchargement …</string>
+    <string name="wallet_balance_blockchain_unreachable">Blockchain est inaccessible </string>
+    <string name="wallet_error_no_account">Compte n’est pas créé </string>
+    <string name="wallet_error_no_account_subtitle_format"> Téléchargez %s +%s pour créer un compte </string>
+    <string name="wallet_error_empty_card">Carte vide </string>
+    <string name="wallet_error_empty_card_subtitle">Créez un portefeuille pour commencer à utiliser votre carte Tangem </string>
+    <string name="wallet_error_unsupported_blockchain">Cette carte n\'est pas prise en charge </string>
+    <string name="wallet_error_unsupported_blockchain_subtitle">Votre carte Tangem a été créée pour fonctionner avec une autre application. Regardez le nom et les instructions sur votre carte et installez l\'application pertinente </string>
+    <string name="wallet_balance_tx_in_progress">Transaction en cours…</string>
+    <string name="wallet_pending_tx_sending">Envoi\u0020</string>
+    <string name="wallet_pending_tx_sending_address_format">jusqu’à %s </string>
+    <string name="wallet_pending_tx_receiving">Réception \u0020</string>
+    <string name="wallet_pending_tx_receiving_address_format">de %s </string>
+    <string name="wallet_address_button_explore">Explorer l\'adresse </string>
+    <string name="wallet_address_button_create_payid">Créer PayID</string>
+    <string name="wallet_qr_title_format">Portefeuille %s</string>
+    <string name="wallet_create_payid">Créer PayID</string>
+    <string name="wallet_create_payid_card_format">Carte: %s</string>
+    <string name="wallet_create_payid_hint">Dénomination PayID</string>
+    <string name="wallet_create_payid_domain">$payid.tangem.com</string>
+    <string name="wallet_create_payid_button_title">Créer </string>
+    <string name="wallet_create_payid_info">Votre PayID est une information qui vous est propre, comme un numéro de téléphone, une adresse du courrier électronique ou un ABN.</string>
+    <string name="wallet_create_payid_success_message">PayID a été créé avec succès et copié dans le presse-papiers </string>
+    <string name="wallet_create_payid_error_message">Mauvaise réponse lors de la création de PayID </string>
+    <string name="wallet_create_payid_error_already_created">Ce PayID existe déjà. Essayez une autre variante.</string>
+    <string name="send_destination_hint">Adresse ou PayID</string>
+    <string name="send_title">Envoyer </string>
+    <string name="send_network_fee_title">Commissions du réseau </string>
+    <string name="send_amount_label">Somme </string>
+    <string name="send_fee_label">Commissions </string>
+    <string name="send_total_label">Total </string>
+    <string name="send_max_amount_label">Somme maximale </string>
+    <string name="send_validation_invalid_address">Adresse incorrecte </string>
+    <string name="send_validation_invalid_amount">Somme incorrecte </string>
+    <string name="send_validation_amount_exceeds_balance">Le montant dépasse le solde </string>
+    <string name="send_validation_invalid_total">Le total dépasse le solde </string>
+    <string name="send_validation_invalid_fee">Les commissions dépassent le solde </string>
+    <string name="send_fee_picker_low">Bas </string>
+    <string name="send_fee_picker_normal">Normal </string>
+    <string name="send_fee_picker_priority">Priorité </string>
+    <string name="send_fee_include_description">Inclure les commissions </string>
+    <string name="send_total_subtitle_format">Sera envoyé %s %s</string>
+    <string name="send_total_subtitle_fiat_format">≈ %s (incl. les commissions : %s)</string>
+    <string name="send_total_subtitle_asset_format">Sera envoyé %s %s et %s %s</string>
+    <string name="send_balance_subtitle_format">Solde : %s %s</string>
+    <string name="send_transaction_success">La transaction a été signée avec succès et envoyée au nœud de blockchain. Le solde du portefeuille sera mis à jour après un certain temps </string>
+    <string name="details_title">Référénces </string>
+    <string name="details_row_title_cid">ID de la carte </string>
+    <string name="details_row_title_issuer">Emetteur </string>
+    <string name="details_row_title_signed_hashes">Signé </string>
+    <string name="details_row_subtitle_signed_hashes_format">%s hashes </string>
+    <string name="details_row_title_currency">Monnaie de l’application </string>
+    <string name="details_section_title_settings">Paramètres </string>
+    <string name="details_section_title_card">Carte </string>
+    <string name="details_row_title_validate">Valider la carte </string>
+    <string name="details_row_title_manage_security">Gestion de la sécurité </string>
+    <string name="details_row_title_erase_wallet">Annuler le portefeuille </string>
+    <string name="details_erase_wallet_warning">Cette action est irréversible. Si, après avoir annulé le portefeuille, quelqu\'un lui envoie des fonds, vous ne pourrez pas les retirer.</string>
+    <string name="details_security_management_warning">Si vous oubliez le code, vous perdrez la possibilité d\'utiliser la carte. Si vous perdez le code, il sera impossible de le restaurer ou modifier. </string>
+    <string name="details_manage_security_title">Gestion de la sécurité </string>
+    <string name="details_manage_security_long_tap">Tenez la carte fermement</string>
+    <string name="details_manage_security_long_tap_description">Ce mécanisme protège contre les attaques sans contact sur la carte. Il y a un délai entre la réception et l\'exécution de la commande. Après la première transaction signée, ce téléphone sera associé à la carte et les transactions seront signées immédiatement.</string>
+    <string name="details_manage_security_passcode">Mot de passe </string>
+    <string name="details_manage_security_passcode_description">Avant d\'exécuter une commande qui modifie l\'état de la carte, vous devrez entrer un mot de passe.</string>
+    <string name="details_manage_security_access_code">Code d’accès </string>
+    <string name="details_manage_security_access_code_description">Vous devrez entrer le mot de passe correct avant de scanner la carte </string>
+    <string name="alert_old_device_this_card">Vous pouvez rencontrer des problèmes NFC avec certains iPhone 7/7 + lors de l’extraction </string>
+    <string name="alert_card_signed_transactions">Attention: cette carte a déjà été rechargée et a signé des transactions avant. Envisagez la possibilité de retirer tous les fonds immédiatement si vous avez reçu cette carte d\'une source non fiable.</string>
+    <string name="alert_unsupported_card">Cette carte n\'est pas conçue pour fonctionner avec Tangem Tap </string>
+    <string name="alert_developer_card">La carte que vous avez scannée est une carte de développement. Ne l\'acceptez pas comme paiement </string>
+    <string name="alert_old_card">Les cartes Tangem émises avant septembre 2019 ne peuvent actuellement pas être extraites à l\'aide de l\'iPhone. Nous travaillons activement avec Apple pour rendre cela possible dans les futures versions d\'iOS. </string>
+    <string name="initial_message_sign_header">Touchez pour signer </string>
+    <string name="initial_message_sign_body">Appuyez votre carte au téléphone comme indiqué ci-dessus </string>
+    <string name="initial_message_purge_wallet_body">Touchez, pour annuler un portefeuille  </string>
+    <string name="initial_message_create_wallet_body">Touchez, pour créer un portefeuille </string>
+    <string name="initial_message_change_access_code_body">Touchez, pour modifier le code d’accès </string>
+    <string name="initial_message_change_passcode_body">Touchez, pour modifier le mot de passe </string>
+    <string name="payid_service_error_loading">PayID incorrect </string>
+
+    <string name="disclaimer_text">
+
+Avertissement
+ 
+\n\n1.Application Tangem Tap (Logiciel)
+ 
+\n\nLe logiciel est destiné à l\’utilisation exclusivement avec les e-portefeuilles Tangem (Cartes) à l\’aide de l\’interface NFC. Le logiciel NE réalise pas ce qui suit :
+ 
+\n\na.	Génération, stockage, transmission ou octroi d\’accès aux clés privées (confidentiels) de chiffrement des blockchain-portefeuilles, qui contiennent les avoirs numériques, y compris la crypto-monnaie.
+\n\nb.	Génération, stockage, transmission ou octroi d\’accès aux clés confidentielles, aux mots de passe, phrases secrètes, phrases de restitution, qui pourront être utilisées pour la restitution ou pour le clonage des clés privées (confidentiels) de chiffrement des blockchain-portefeuilles, contenant les avoirs numériques, y compris la crypto-monnaie.
+\n\nc.	Prestation des services de bourse, de commerce, d\’investissement du nom de Tangem AG.
+ 
+ 
+\n\n2.	Risques, liés avec l\’utilisation du logiciel
+ 
+\n\nTangem n\’assume aucune responsabilité pour tous les dommages, préjudice ou prétentions, qui peuvent survenir comme résultat des évènements, se rapportant à une de cinq catégories suivantes :
+ 
+ 
+\n\na.	Les erreurs, commises par l\’utilisateur de tout logiciel ou service liés avec la crypto-monnaie, par exemple, les mots de passe oubliés, les paiements envoyés aux adresses incorrectes, et élimination occasionnelle des blockchain-portefeuilles sur les Cartes.
+\n\nb.	Les problèmes du Logiciel et/ou de tout progiciel ou service liés avec blockchain ou avec la crypto-monnaie, par exemple, les fichiers endommagés, les transaction créées d\’une manière incorrecte, les bibliothèques cryptographiques non sécurisées, les logiciels malveillants.
+\n\nc.	Les défaillances techniques du hardware de l\’utilisateur, y compris les Cartes, de tout logiciel ou service liés avec la crypto-monnaie, par exemple, la perte des données à cause des périphériques défectives ou endommagées de stockage.
+\n\nd.	Les problèmes de la sécurité, subis par l\’utilisateur de tout logiciel ou service liés avec la crypto-monnaie, par exemple, l\’accès non autorisé aux portefeuilles et/ou comptes des utilisateurs.
+\n\ne.	Les actions ou l\’inaction des tierces personnes et/ou les évènements subis par les tierces personnes, par exemple, la faillite du prestataire de services, les attaques sur la sécurité informatique des prestataires de services et la fraude commise par des tierces personnes.
+ 
+\n\n3.  Risques commerciales et d\’investissement
+ 
+\n\nToute échange de crypto-monnaie ou d\’autres avoirs numériques implique les risques importants. Toute transaction liée avec la monnaie implique les risques, qui incluent, entre autres, la possibilité de modification des conditions économiques, qui peuvent influencer d\’une manière significative le prix ou la disponibilité de la monnaie. Les investissements dans les spéculations boursières avec les crypto-monnaies peuvent aussi être exposés aux montées et chutes en flèche lors des fluctuations des valeurs marchandes correspondants. C\'est pour cette raison, que lors de la spéculation sur tels marchés, il est conseillé d\’utiliser seulement le capital-risque.
+ 
+
+\n\n4. Risques de commerce électronique
+ 
+\n\nAvant de passer aux transactions en utilisant le système électronique, Vous devez prendre connaissance, d\’une manière bien attentive, des règles et des dispositions stipulées par les bourses qui offrent ce système, et/ou les listes des titres de placement que vous voulez négocier. Le commerce en ligne possède le risque inaliénable lié avec la vitesse de réponse du système et avec le temps d\’accès qui peuvent varier en fonction des conditions de marché, du rendement du système et d\’autres facteurs. Avant de commencer les négoces, vous devez comprendre ces risques aussi que les risques supplémentaires.
+ 
+\n\n5. Respect des obligations fiscales
+ 
+\n\nLes utilisateurs du Logiciel assument toute la responsabilité pour définir, quels impôts sont appliqués à leurs transactions avec la crypto-monnaie, au cas où il y a de tels impôts. Les propriétaires et les participants à l\’élaboration du Logiciel n\’assument pas la responsabilité pour la définition des impôts qui sont appliqués aux transactions avec la crypto-monnaie.
+ 
+\n\n6. Absence de garanties
+ 
+\n\nLe logiciel est concédé sous les conditions « tel quel », sans aucune garantie à l\’égard du Logiciel et/ou de tout le contenu, données, matériaux et/ou services, présentes dans ce Logiciel.
+ 
+\n\n7. Restriction de la responsabilité
+ 
+\n\nSauf disposition contraire prévue par la législation, les propriétaires et les participants à l\’élaboration du Logiciel n\’assument pas la responsabilité pour aucun dommage, y compris l\’indisponibilité, la perte de profit ou la perte des données, qui surviennent comme résultat de l\’utilisation ou bien qui sont liés d\’une certaine manière avec l\’utilisation du Logiciel. Les propriétaires et les participants à l\’élaboration du Logiciel n\’assument pas la responsabilité pour les actions, les résolutions ou pour une autre conduite que vous manifestez ou pas par l\’intermédiaire du Logiciel.
+ 
+ 
+\n\n8. Dernière modification
+ 
+\n\nCette avertissement a été modifié, pour la dernière fois, le 1 octobre 2020.
+
+    </string>
+    <string name="disclaimer_title"> Conditions d\'utilisation</string>
+
+    <string name="wallet_notification_no_internet">Pas de connexion internet</string>
+    <string name="initial_message_scan_header">Touchez pour scanner</string>
+    <string name="initial_message_tap_header">Touchez pour scanner</string>
+    <string name="send_error_no_target_account">Le compte cible n\'a pas été créé. Le montant à envoyer doit être de %1$s %2$s + commissions ou plus</string>
+    <string name="send_error_fee_request_failed">Échec de réception des commissions</string>
+
+</resources>
