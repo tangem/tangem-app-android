@@ -20,22 +20,22 @@ sealed class TapError(
         override val args: List<Any>? = null
 ) : Throwable(), TapErrors, ArgError {
 
-    object UnknownError : TapError(R.string.error_unknown)
-    object PayIdAlreadyCreated : TapError(R.string.error_payid_already_created)
-    object PayIdCreatingError : TapError(R.string.error_creating_payid)
+    object UnknownError : TapError(R.string.send_error_unknown)
+    object PayIdAlreadyCreated : TapError(R.string.wallet_create_payid_error_already_created)
+    object PayIdCreatingError : TapError(R.string.wallet_create_payid_error_message)
     object PayIdEmptyField : TapError(R.string.wallet_create_payid_empty)
-    object UnknownBlockchain : TapError(R.string.wallet_unknown_blockchain)
-    object NoInternetConnection : TapError(R.string.notification_no_internet)
-    object InsufficientBalance : TapError(R.string.error_insufficient_balance)
-    object BlockchainInternalError : TapError(R.string.error_blockchain_internal)
-    object AmountExceedsBalance : TapError(R.string.amount_exceeds_balance)
-    object FeeExceedsBalance : TapError(R.string.fee_exceeds_balance)
-    object TotalExceedsBalance : TapError(R.string.total_exceeds_balance)
-    object InvalidAmountValue : TapError(R.string.invalid_amount_value)
-    object InvalidFeeValue : TapError(R.string.invalid_fee_value)
-    data class DustAmount(override val args: List<Any>) : TapError(R.string.dust_amount)
-    object DustChange : TapError(R.string.dust_change)
-    data class CreateAccountUnderfunded(override val args: List<Any>) : TapError(R.string.create_account_underfunded)
+    object UnknownBlockchain : TapError(R.string.wallet_error_unsupported_blockchain_subtitle)
+    object NoInternetConnection : TapError(R.string.wallet_notification_no_internet)
+    object InsufficientBalance : TapError(R.string.send_error_insufficient_balance)
+    object BlockchainInternalError : TapError(R.string.send_error_blockchain_internal)
+    object AmountExceedsBalance : TapError(R.string.send_validation_amount_exceeds_balance)
+    object FeeExceedsBalance : TapError(R.string.send_validation_invalid_fee)
+    object TotalExceedsBalance : TapError(R.string.send_validation_invalid_total)
+    object InvalidAmountValue : TapError(R.string.send_validation_invalid_amount)
+    object InvalidFeeValue : TapError(R.string.send_error_invalid_fee_value)
+    data class DustAmount(override val args: List<Any>) : TapError(R.string.send_error_dust_amount_format)
+    object DustChange : TapError(R.string.send_error_dust_change)
+    data class CreateAccountUnderfunded(override val args: List<Any>) : TapError(R.string.send_error_no_target_account)
 
     data class ValidateTransactionErrors(
             override val errorList: List<TapError>,
@@ -47,7 +47,7 @@ sealed class TapSdkError(override val messageResId: Int?) : Throwable(), TangemE
     final override val code: Int = 1
     override var customMessage: String = code.toString()
 
-    object CardForDifferentApp : TapSdkError(R.string.error_card_for_different_app)
+    object CardForDifferentApp : TapSdkError(R.string.alert_unsupported_card)
 }
 
 
