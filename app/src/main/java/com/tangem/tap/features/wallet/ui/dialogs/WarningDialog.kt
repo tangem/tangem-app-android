@@ -10,8 +10,8 @@ import com.tangem.wallet.R
 class WarningDialog(context: Context) : AlertDialog(context) {
 
     private val dialog: AlertDialog = Builder(context)
-            .setTitle(context.getString(R.string.generic_warning))
-            .setPositiveButton(context.getString(R.string.general_ok)) { _, _ ->
+            .setTitle(context.getString(R.string.common_warning))
+            .setPositiveButton(context.getString(R.string.common_ok)) { _, _ ->
                 dismiss()
             }.setOnDismissListener {
                 store.dispatch(WalletAction.SaveCardId)
@@ -21,8 +21,8 @@ class WarningDialog(context: Context) : AlertDialog(context) {
 
     fun show(warningType: WarningType) {
         val messageRes = when (warningType) {
-            WarningType.CardSignedHashesBefore -> R.string.warning_card_signed_transactions
-            WarningType.DevCard -> R.string.wallet_warning_dev_card
+            WarningType.CardSignedHashesBefore -> R.string.alert_card_signed_transactions
+            WarningType.DevCard -> R.string.alert_developer_card
         }
         dialog.setMessage(dialog.context.getString(messageRes))
         dialog.show()
