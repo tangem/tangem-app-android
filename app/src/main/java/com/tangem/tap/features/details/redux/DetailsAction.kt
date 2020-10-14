@@ -17,12 +17,14 @@ sealed class DetailsAction : Action {
             val fiatCurrencies: List<FiatCurrencyName>? = null,
     ): DetailsAction()
 
+    object ShowDisclaimer : DetailsAction()
+
 
     sealed class EraseWallet : DetailsAction() {
         object Check : EraseWallet()
         object Proceed : EraseWallet() {
             object NotAllowedByCard: EraseWallet(), NotificationAction {
-                override val messageResource = R.string.details_notification_erase_wallet_not_allowed
+                override val messageResource = R.string.error_purge_prohibited
             }
             object NotEmpty: EraseWallet(), NotificationAction {
                 override val messageResource = R.string.details_notification_erase_wallet_not_possible

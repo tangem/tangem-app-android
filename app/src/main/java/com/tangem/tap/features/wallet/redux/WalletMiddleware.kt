@@ -3,10 +3,7 @@ package com.tangem.tap.features.wallet.redux
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.ContextCompat
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.SignatureCountValidator
-import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.commands.Card
 import com.tangem.commands.common.network.Result
@@ -218,22 +215,27 @@ private fun checkIfWarningNeeded(
 
 private fun checkHashesCountOnline() {
     if (store.state.walletState.hashesCountVerified != false) return
-
     if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) return
 
     val card = store.state.globalState.scanNoteResponse?.card
+    if (card == null || preferencesStorage.wasCardScannedBefore(card.cardId)) return
+
     val validator = store.state.globalState.scanNoteResponse?.walletManager
             as? SignatureCountValidator
-
     scope.launch {
-        val result = validator?.validateSignatureCount(card?.walletSignedHashes
-                ?: 0)
+        val result = validator?.validateSignatureCount(card.walletSignedHashes ?: 0)
         withContext(Dispatchers.Main) {
             when (result) {
-                SimpleResult.Success -> store.dispatch(WalletAction.ConfirmHashesCount)
-                is SimpleResult.Failure -> store.dispatch(
-                        WalletAction.ShowWarning(WarningType.CardSignedHashesBefore)
-                )
+                SimpleResult.Success -> {
+                    store.dispatch(WalletAction.ConfirmHashesCount)
+                    store.dispatch(WalletAction.SaveCardId)
+                }
+                is SimpleResult.Failure ->
+                    if (result.error is BlockchainSdkError.SignatureCountNotMatched) {
+                        store.dispatch(WalletAction.ShowWarning(WarningType.CardSignedHashesBefore))
+                    } else if (card.walletSignedHashes ?: 0 > 0) {
+                        store.dispatch(WalletAction.ShowWarning(WarningType.CardSignedHashesBefore))
+                    }
             }
         }
     }
