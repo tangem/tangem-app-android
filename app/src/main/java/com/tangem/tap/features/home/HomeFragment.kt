@@ -31,8 +31,8 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
     override fun newState(state: HomeState) {
         if (activity == null) return
         if (state.firstLaunch) {
-            tv_home_description.text = getText(R.string.home_do_you_have_card)
-            btn_shop.text = getText(R.string.home_button_no_card)
+            tv_home_description.text = getText(R.string.home_welcome)
+            btn_shop.text = getText(R.string.common_no)
             btn_yes.text = getText(R.string.home_button_yes)
         } else {
             tv_home_description.text = getText(R.string.home_welcome_back)
@@ -54,6 +54,4 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
         val inflater = TransitionInflater.from(requireContext())
         exitTransition = inflater.inflateTransition(R.transition.fade)
     }
-
-
 }

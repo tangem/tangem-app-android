@@ -12,7 +12,7 @@
         android:id="@+id/tvReceiptAmount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/send_total_amount"
+        android:text="@string/send_amount_label"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -33,7 +33,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="@string/send_total_fee"
+        android:text="@string/send_fee_label"
         android:textColor="@color/darkGray1"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
