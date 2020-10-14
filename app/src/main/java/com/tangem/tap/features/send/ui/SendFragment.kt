@@ -255,7 +255,7 @@ class FeeUiHelper {
 
 private fun ToggleWidget.setupSendButtonStateModifiers(context: Context) {
     mainViewModifiers.clear()
-    mainViewModifiers.add(ReplaceTextStateModifier(context.getString(R.string.send_btn_send), ""))
+    mainViewModifiers.add(ReplaceTextStateModifier(context.getString(R.string.send_title), ""))
     mainViewModifiers.add(
             TextViewDrawableStateModifier(
                     context.getDrawableCompat(R.drawable.ic_arrow_right), null, TextViewDrawableStateModifier.RIGHT

@@ -151,7 +151,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                 snackbar = Snackbar.make(
                         coordinator_wallet, getString(R.string.wallet_notification_no_internet),
                         Snackbar.LENGTH_INDEFINITE
-                ).setAction(getString(R.string.wallet_notification_no_internet_retry))
+                ).setAction(getString(R.string.common_retry))
                 { store.dispatch(WalletAction.LoadData) }
                         .also { it.show() }
             }
