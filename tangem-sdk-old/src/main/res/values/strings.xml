@@ -1,9 +1,0 @@
-<resources>
-
-    <string name="app_name" translatable="false">tangemcard</string>
-    <string name="general_ok">OK</string>
-    <string name="dialog_quit">Quit</string>
-    <string name="dialog_nfc_enable_title">Enable NFC?</string>
-    <string name="dialog_nfc_enable_text">This app is useless when NFC is disabled. Reader mode depends on it. Hit OK to go to Settings, where you can enable NFC.</string>
-
-</resources>
