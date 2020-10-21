@@ -89,7 +89,8 @@ private fun verifyAndSendTransaction(
                             }
                         }
                         is Throwable -> {
-                            val message = (result.error as Throwable).message
+                            val throwable = result.error as Throwable
+                            val message = throwable.message
                             when {
                                 message == null -> {
                                     dispatch(SendAction.SendError(TapError.UnknownError))
@@ -98,8 +99,9 @@ private fun verifyAndSendTransaction(
                                     // user was cancelled the operation by closing the Sdk bottom sheet
                                 }
                                 else -> {
-                                    Timber.e(result.error)
-                                    dispatch(SendAction.SendError(TapError.BlockchainInternalError))
+                                    Timber.e(throwable)
+                                    FirebaseCrashlytics.getInstance().recordException(throwable)
+                                    dispatch(SendAction.SendError(TapError.CustomError(message)))
                                 }
                             }
                         }
