@@ -176,6 +176,9 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.LoadPayId.NotCreated -> newState = newState.copy(
                 payIdData = PayIdData(PayIdState.NotCreated, null)
         )
+        is WalletAction.DisablePayId -> newState = newState.copy(
+                payIdData = PayIdData(PayIdState.Disabled, null)
+        )
         is WalletAction.CreatePayId, is WalletAction.CreatePayId.Failure ->
             newState = newState.copy(
                     walletDialog = WalletDialog.CreatePayIdDialog(CreatingPayIdState.EnterPayId)
