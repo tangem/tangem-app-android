@@ -9,6 +9,7 @@
     <string name="common_done">Done</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_accept">Accept</string>
+    <string name="common_custom_string" translatable="false">%s</string>
 
     <string name="common_camera_denied_alert_title">Camera access denied</string>
     <string name="common_camera_denied_alert_message">You have not given access to your camera, please adjust your privacy settings</string>
