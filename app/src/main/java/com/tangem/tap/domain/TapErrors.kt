@@ -6,7 +6,7 @@ import com.tangem.wallet.R
 
 interface TapErrors
 
-interface ArgError{
+interface ArgError {
     val args: List<Any>?
 }
 
@@ -21,6 +21,7 @@ sealed class TapError(
 ) : Throwable(), TapErrors, ArgError {
 
     object UnknownError : TapError(R.string.send_error_unknown)
+    data class CustomError(val customMessage: String) : TapError(R.string.common_custom_string, listOf(customMessage))
     object PayIdAlreadyCreated : TapError(R.string.wallet_create_payid_error_already_created)
     object PayIdCreatingError : TapError(R.string.wallet_create_payid_error_message)
     object PayIdEmptyField : TapError(R.string.wallet_create_payid_empty)
