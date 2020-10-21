@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name"> tangemcard </string>
-    <string name="general_ok"> OK </string>
-    <string name="dialog_quit"> Quitter </string>
-    <string name="dialog_nfc_enable_title"> Activer NFC? </string>
-    <string name="dialog_nfc_enable_text"> Cette application est inutile lorsque NFC est désactivé. Le mode lecteur en dépend. Appuyez sur OK pour accéder aux paramètres, où vous pouvez activer NFC. </string>
-</resources>
