@@ -31,6 +31,9 @@ android {
             minifyEnabled false
             applicationIdSuffix ".dev"
             signingConfig signingConfigs.debug
+            firebaseCrashlytics {
+                mappingFileUploadEnabled false
+            }
         }
         debug_beta {
             initWith debug
