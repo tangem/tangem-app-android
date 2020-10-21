@@ -1,1 +1,0 @@
-include ':tangem-core', ':tangem-sdk', ':tangem-demo'
