@@ -12,7 +12,6 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.extensions.amountToCreateAccount
 import com.tangem.tap.domain.extensions.isNoAccountError
 import com.tangem.tap.domain.tasks.ScanNoteResponse
-import com.tangem.tap.features.wallet.redux.PayIdState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
@@ -25,6 +24,7 @@ import java.math.BigDecimal
 class TapWalletManager {
     private val payIdManager = PayIdManager()
     private val coinMarketCapService = CoinMarketCapService()
+    private var tapWorkarounds: TapWorkarounds? = null
 
     suspend fun loadWalletData() {
         val walletManager = store.state.globalState.scanNoteResponse?.walletManager
@@ -78,6 +78,7 @@ class TapWalletManager {
     }
 
     suspend fun onCardScanned(data: ScanNoteResponse) {
+        tapWorkarounds = TapWorkarounds(data.card)
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.ResetState)
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
@@ -142,7 +143,6 @@ class TapWalletManager {
     private suspend fun loadPayIdIfNeeded(): Result<String?>? {
         val scanNoteResponse = store.state.globalState.scanNoteResponse
         if (!TapConfig.usePayId ||
-                store.state.walletState.payIdData.payIdState == PayIdState.Disabled ||
                 scanNoteResponse?.walletManager?.wallet?.blockchain?.isPayIdSupported() == false) {
             return null
         }
@@ -160,7 +160,11 @@ class TapWalletManager {
                 is Result.Success -> {
                     val payId = result.data
                     if (payId == null) {
-                        store.dispatch(WalletAction.LoadPayId.NotCreated)
+                        if (tapWorkarounds?.isPayIdCreationEnabled() == false) {
+                            store.dispatch(WalletAction.DisablePayId)
+                        } else {
+                            store.dispatch(WalletAction.LoadPayId.NotCreated)
+                        }
                     } else {
                         store.dispatch(WalletAction.LoadPayId.Success(payId))
                     }
