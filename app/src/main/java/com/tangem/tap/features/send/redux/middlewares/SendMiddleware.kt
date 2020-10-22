@@ -9,11 +9,9 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.features.send.redux.AddressPayIdActionUi
-import com.tangem.tap.features.send.redux.AmountActionUi
+import com.tangem.tap.domain.extensions.minimalAmount
+import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
-import com.tangem.tap.features.send.redux.SendAction
-import com.tangem.tap.features.send.redux.SendActionUi
 import com.tangem.tap.features.send.redux.states.SendButtonState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
@@ -55,12 +53,35 @@ private fun verifyAndSendTransaction(
 
     val amountToSend = Amount(typedAmount, sendState.getTotalAmountToSend())
 
-    val verifyResult = walletManager.validateTransaction(amountToSend, feeAmount)
-    if (verifyResult.isNotEmpty()) {
-        dispatch(SendAction.SendError(createValidateTransactionError(verifyResult, walletManager)))
-        return
+    val transactionErrors = walletManager.validateTransaction(amountToSend, feeAmount)
+    val hadTezosError = transactionErrors.remove(TransactionError.TezosSendAll)
+    when {
+        hadTezosError -> {
+            val reduceAmount = walletManager.wallet.blockchain.minimalAmount()
+            dispatch(SendAction.Dialog.ShowTezosWarningDialog(reduceCallback = {
+                dispatch(AmountAction.SetAmount(typedAmount.value!!.minus(reduceAmount), false))
+                dispatch(AmountActionUi.CheckAmountToSend)
+            }, sendAllCallback = {
+                sendTransaction(action, walletManager, amountToSend, feeAmount, recipientAddress, dispatch)
+            }, reduceAmount))
+        }
+        transactionErrors.isNotEmpty() -> {
+            dispatch(SendAction.SendError(createValidateTransactionError(transactionErrors, walletManager)))
+        }
+        else -> {
+            sendTransaction(action, walletManager, amountToSend, feeAmount, recipientAddress, dispatch)
+        }
     }
+}
 
+private fun sendTransaction(
+        action: SendActionUi.SendAmountToRecipient,
+        walletManager: WalletManager,
+        amountToSend: Amount,
+        feeAmount: Amount,
+        recipientAddress: String,
+        dispatch: (Action) -> Unit
+) {
     dispatch(SendAction.ChangeSendButtonState(SendButtonState.PROGRESS))
     val txData = walletManager.createTransaction(amountToSend, feeAmount, recipientAddress)
     scope.launch {
@@ -111,7 +132,6 @@ private fun verifyAndSendTransaction(
             dispatch(SendAction.ChangeSendButtonState(SendButtonState.ENABLED))
         }
     }
-
 }
 
 fun extractErrorsForAmountField(errors: EnumSet<TransactionError>): EnumSet<TransactionError> {
