@@ -1,6 +1,7 @@
 package com.tangem.tap.features.send.redux.middlewares
 
 import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.TransactionError
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.send.redux.*
@@ -59,6 +60,7 @@ class AmountMiddleware {
 
         val amountToSend = Amount(typedAmount, sendState.getTotalAmountToSend(inputCrypto))
         val transactionErrors = walletManager.validateTransaction(amountToSend, sendState.feeState.currentFee)
+        transactionErrors.remove(TransactionError.TezosSendAll)
         if (transactionErrors.isEmpty()) {
             dispatch(AmountAction.SetAmountError(null))
         } else {
