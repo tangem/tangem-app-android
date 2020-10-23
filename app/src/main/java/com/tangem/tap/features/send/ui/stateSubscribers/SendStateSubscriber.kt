@@ -1,5 +1,6 @@
 package com.tangem.tap.features.send.ui.stateSubscribers
 
+import android.app.Dialog
 import android.content.Context
 import android.text.SpannableStringBuilder
 import android.view.ViewGroup
@@ -16,10 +17,12 @@ import com.tangem.tap.domain.assembleErrors
 import com.tangem.tap.features.send.BaseStoreFragment
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
 import com.tangem.tap.features.send.redux.FeeAction
+import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.send.redux.reducers.ReceiptReducer
 import com.tangem.tap.features.send.redux.states.*
 import com.tangem.tap.features.send.ui.FeeUiHelper
 import com.tangem.tap.features.send.ui.SendFragment
+import com.tangem.tap.features.send.ui.dialogs.TezosWarningDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.btn_expand_collapse.*
@@ -37,6 +40,8 @@ import kotlinx.android.synthetic.main.layout_send_receipt.*
  */
 class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber<SendState>(fragment) {
 
+    private var dialog: Dialog? = null
+
     override fun updateWithNewState(fg: BaseStoreFragment, state: SendState) {
         val lastChangedStates = state.lastChangedStates.toList()
         state.lastChangedStates.clear()
@@ -53,6 +58,19 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
     private fun handleSendScreen(fg: BaseStoreFragment, state: SendState) {
         val sendFragment = (fg as? SendFragment) ?: return
+
+        when (state.dialog) {
+            is SendAction.Dialog.ShowTezosWarningDialog -> {
+                if (dialog == null) {
+                    dialog = TezosWarningDialog.create(fg.requireContext(), state.dialog)
+                    dialog?.show()
+                }
+            }
+            else -> {
+                dialog?.dismiss()
+                dialog = null
+            }
+        }
 
         when (state.sendButtonState) {
             SendButtonState.ENABLED -> {
@@ -235,10 +253,10 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 totalLayout.tvTotalValue.update("${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}")
 
                 val willSent = getString(
-                                R.string.send_total_subtitle_asset_format,
-                                receipt.symbols.token ?: "", receipt.willSentToken,
-                                receipt.symbols.crypto, receipt.willSentFeeCoin
-                        )
+                        R.string.send_total_subtitle_asset_format,
+                        receipt.symbols.token ?: "", receipt.willSentToken,
+                        receipt.symbols.crypto, receipt.willSentFeeCoin
+                )
                 totalLayout.tvWillBeSentValue.update(willSent)
             }
             ReceiptLayoutType.TOKEN_CRYPTO -> {
