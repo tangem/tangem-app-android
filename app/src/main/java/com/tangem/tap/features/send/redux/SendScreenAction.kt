@@ -2,6 +2,7 @@ package com.tangem.tap.features.send.redux
 
 import com.tangem.Message
 import com.tangem.blockchain.common.Amount
+import com.tangem.tangem_sdk_new.ui.animation.VoidCallback
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.ToastNotificationAction
 import com.tangem.tap.domain.TapError
@@ -114,4 +115,13 @@ sealed class SendAction : SendScreenAction {
     }
 
     data class SendError(override val error: TapError) : SendAction(), ErrorAction
+
+    sealed class Dialog : SendAction() {
+        data class ShowTezosWarningDialog(
+                val reduceCallback: VoidCallback,
+                val sendAllCallback: VoidCallback,
+                val reduceAmount: BigDecimal,
+        ) : Dialog()
+        object Hide : Dialog()
+    }
 }

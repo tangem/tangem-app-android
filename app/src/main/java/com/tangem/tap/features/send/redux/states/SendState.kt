@@ -8,6 +8,7 @@ import com.tangem.tap.common.CurrencyConverter
 import com.tangem.tap.common.entities.TapCurrency
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.store
 import org.rekotlin.StateType
 import java.math.BigDecimal
@@ -35,7 +36,8 @@ data class SendState(
         val amountState: AmountState = AmountState(),
         val feeState: FeeState = FeeState(),
         val receiptState: ReceiptState = ReceiptState(),
-        val sendButtonState: SendButtonState = SendButtonState.DISABLED
+        val sendButtonState: SendButtonState = SendButtonState.DISABLED,
+        val dialog: SendAction.Dialog? = null
 ) : SendScreenState {
 
     override val stateId: StateId = StateId.SEND_SCREEN
