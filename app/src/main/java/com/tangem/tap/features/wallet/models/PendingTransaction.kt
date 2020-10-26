@@ -11,20 +11,20 @@ data class PendingTransaction(
         val type: PendingTransactionType
 )
 
-enum class PendingTransactionType { Incoming, Outgoing, Unknown }
+enum class PendingTransactionType { Incoming, Outgoing }
 
 fun TransactionData.toPendingTransaction(walletAddress: String): PendingTransaction? {
     if (this.status == TransactionStatus.Confirmed) return null
 
     val type: PendingTransactionType = when {
-//        this.sourceAddress == walletAddress -> {
-//            PendingTransactionType.Outgoing
-//        }
-//        this.destinationAddress == walletAddress -> {
-//            PendingTransactionType.Incoming
-//        }
+        this.sourceAddress == walletAddress -> {
+            PendingTransactionType.Outgoing
+        }
+        this.destinationAddress == walletAddress -> {
+            PendingTransactionType.Incoming
+        }
         else -> {
-            PendingTransactionType.Unknown
+            return null
         }
     }
     val address = if (this.sourceAddress == walletAddress) {
