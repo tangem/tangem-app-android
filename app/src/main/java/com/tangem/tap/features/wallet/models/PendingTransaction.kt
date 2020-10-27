@@ -11,7 +11,7 @@ data class PendingTransaction(
         val type: PendingTransactionType
 )
 
-enum class PendingTransactionType { Incoming, Outgoing }
+enum class PendingTransactionType { Incoming, Outgoing, Unknown }
 
 fun TransactionData.toPendingTransaction(walletAddress: String): PendingTransaction? {
     if (this.status == TransactionStatus.Confirmed) return null
@@ -24,7 +24,7 @@ fun TransactionData.toPendingTransaction(walletAddress: String): PendingTransact
             PendingTransactionType.Incoming
         }
         else -> {
-            return null
+            PendingTransactionType.Unknown
         }
     }
     val address = if (this.sourceAddress == walletAddress) {
@@ -41,6 +41,10 @@ fun TransactionData.toPendingTransaction(walletAddress: String): PendingTransact
     )
 }
 
-fun List<TransactionData>.toPendingTransactions(walletAddress: String): List<PendingTransaction>{
+fun List<TransactionData>.toPendingTransactions(walletAddress: String): List<PendingTransaction> {
     return this.mapNotNull { it.toPendingTransaction(walletAddress) }
+}
+
+fun List<PendingTransaction>.removeUnknownTransactions(): List<PendingTransaction> {
+    return this.filter { it.type != PendingTransactionType.Unknown }
 }
