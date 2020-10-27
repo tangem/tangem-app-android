@@ -1,6 +1,6 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+    <style name="BaseAppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorSecondary">@color/colorSecondary</item>
@@ -9,6 +9,8 @@
         <item name="android:statusBarColor">@color/backgroundLightGray</item>
         <item name="android:windowDrawsSystemBarBackgrounds">false</item>
     </style>
+
+    <style name="AppTheme" parent="BaseAppTheme" />
 
     <!-- Toolbar -->
     <style name="DarkToolbarStyle" parent="Theme.AppCompat">
