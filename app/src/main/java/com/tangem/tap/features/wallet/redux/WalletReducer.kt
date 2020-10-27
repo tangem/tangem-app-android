@@ -11,6 +11,7 @@ import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.features.wallet.models.removeUnknownTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
@@ -244,7 +245,7 @@ private fun onWalletLoaded(wallet: Wallet, walletState: WalletState): WalletStat
                     token = tokenData,
                     fiatAmount = fiatAmount
             ),
-            pendingTransactions = pendingTransactions,
+            pendingTransactions = pendingTransactions.removeUnknownTransactions(),
             mainButton = WalletMainButton.SendButton(sendButtonEnabled)
     )
 }
