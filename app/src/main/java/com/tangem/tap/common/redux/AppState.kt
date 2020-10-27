@@ -8,8 +8,8 @@ import com.tangem.tap.features.details.redux.DetailsMiddleware
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.disclaimer.redux.DisclaimerMiddleware
 import com.tangem.tap.features.disclaimer.redux.DisclaimerState
+import com.tangem.tap.features.home.redux.HomeMiddleware
 import com.tangem.tap.features.home.redux.HomeState
-import com.tangem.tap.features.home.redux.homeMiddleware
 import com.tangem.tap.features.send.redux.middlewares.sendMiddleware
 import com.tangem.tap.features.send.redux.states.SendState
 import com.tangem.tap.features.wallet.redux.WalletState
@@ -31,7 +31,7 @@ data class AppState(
         fun getMiddleware(): List<Middleware<AppState>> {
             return listOf(
                     logMiddleware, navigationMiddleware, notificationsMiddleware, globalMiddleware,
-                    homeMiddleware, walletMiddleware, sendMiddleware,
+                    HomeMiddleware().homeMiddleware, walletMiddleware, sendMiddleware,
                     DetailsMiddleware().detailsMiddleware,
                     DisclaimerMiddleware().disclaimerMiddleware
             )
