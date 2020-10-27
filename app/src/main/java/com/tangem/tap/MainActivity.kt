@@ -5,7 +5,6 @@ import android.content.pm.ActivityInfo
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
-import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.CardFilter
 import com.tangem.Config
@@ -78,7 +77,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        Handler(mainLooper).postDelayed( {  handleBackgroundScan(intent) } , 200)
+        handleBackgroundScan(intent)
     }
 
     private fun handleBackgroundScan(intent: Intent?) {
@@ -88,6 +87,7 @@ class MainActivity : AppCompatActivity() {
             val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
             if (tag != null) {
                 intent.action = null
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.Home, false))
                 store.dispatch(HomeAction.ReadCard)
             }
         }
