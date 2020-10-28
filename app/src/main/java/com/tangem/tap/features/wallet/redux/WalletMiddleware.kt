@@ -11,6 +11,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.CardType
 import com.tangem.common.extensions.getType
 import com.tangem.common.extensions.toHexString
+import com.tangem.tap.*
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -22,10 +23,6 @@ import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.NetworkStateChanged
-import com.tangem.tap.preferencesStorage
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -100,10 +97,11 @@ val walletMiddleware: Middleware<AppState> = { dispatch, state ->
                 }
                 is WalletAction.Scan -> {
                     scope.launch {
-                        val result = tangemSdkManager.scanNote()
+                        val result = tangemSdkManager.scanNote(analytics)
                         when (result) {
                             is CompletionResult.Success -> {
-                                store.state.globalState.tapWalletManager.onCardScanned(result.data)
+                                store.state.globalState.tapWalletManager
+                                        .onCardScanned(result.data, true)
                             }
                         }
                     }
