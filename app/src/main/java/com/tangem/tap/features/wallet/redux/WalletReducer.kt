@@ -11,6 +11,7 @@ import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.features.wallet.models.removeUnknownTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
@@ -176,6 +177,9 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.LoadPayId.NotCreated -> newState = newState.copy(
                 payIdData = PayIdData(PayIdState.NotCreated, null)
         )
+        is WalletAction.DisablePayId -> newState = newState.copy(
+                payIdData = PayIdData(PayIdState.Disabled, null)
+        )
         is WalletAction.CreatePayId, is WalletAction.CreatePayId.Failure ->
             newState = newState.copy(
                     walletDialog = WalletDialog.CreatePayIdDialog(CreatingPayIdState.EnterPayId)
@@ -241,7 +245,7 @@ private fun onWalletLoaded(wallet: Wallet, walletState: WalletState): WalletStat
                     token = tokenData,
                     fiatAmount = fiatAmount
             ),
-            pendingTransactions = pendingTransactions,
+            pendingTransactions = pendingTransactions.removeUnknownTransactions(),
             mainButton = WalletMainButton.SendButton(sendButtonEnabled)
     )
 }
