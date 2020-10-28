@@ -114,4 +114,13 @@ sealed class SendAction : SendScreenAction {
     }
 
     data class SendError(override val error: TapError) : SendAction(), ErrorAction
+
+    sealed class Dialog : SendAction() {
+        data class ShowTezosWarningDialog(
+                val reduceCallback: () -> Unit,
+                val sendAllCallback: () -> Unit,
+                val reduceAmount: BigDecimal,
+        ) : Dialog()
+        object Hide : Dialog()
+    }
 }
