@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.tangem.tap.common.extensions.getDrawableCompat
+import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.wallet.R
@@ -35,11 +36,15 @@ class PendingTransactionsAdapter
         ) = oldItem == newItem
     }
 
-
     class TransactionsViewHolder(val view: View) :
             RecyclerView.ViewHolder(view) {
 
         fun bind(transaction: PendingTransaction) {
+
+            if (transaction.type == PendingTransactionType.Unknown) {
+                view.hide()
+            }
+
             val transactionDescriptionRes = when (transaction.type) {
                 PendingTransactionType.Incoming -> R.string.wallet_pending_tx_receiving
                 PendingTransactionType.Outgoing -> R.string.wallet_pending_tx_sending
