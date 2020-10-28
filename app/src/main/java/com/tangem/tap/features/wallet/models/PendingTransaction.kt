@@ -17,12 +17,12 @@ fun TransactionData.toPendingTransaction(walletAddress: String): PendingTransact
     if (this.status == TransactionStatus.Confirmed) return null
 
     val type: PendingTransactionType = when {
-//        this.sourceAddress == walletAddress -> {
-//            PendingTransactionType.Outgoing
-//        }
-//        this.destinationAddress == walletAddress -> {
-//            PendingTransactionType.Incoming
-//        }
+        this.sourceAddress == walletAddress -> {
+            PendingTransactionType.Outgoing
+        }
+        this.destinationAddress == walletAddress -> {
+            PendingTransactionType.Incoming
+        }
         else -> {
             PendingTransactionType.Unknown
         }
@@ -41,6 +41,10 @@ fun TransactionData.toPendingTransaction(walletAddress: String): PendingTransact
     )
 }
 
-fun List<TransactionData>.toPendingTransactions(walletAddress: String): List<PendingTransaction>{
+fun List<TransactionData>.toPendingTransactions(walletAddress: String): List<PendingTransaction> {
     return this.mapNotNull { it.toPendingTransaction(walletAddress) }
+}
+
+fun List<PendingTransaction>.removeUnknownTransactions(): List<PendingTransaction> {
+    return this.filter { it.type != PendingTransactionType.Unknown }
 }
