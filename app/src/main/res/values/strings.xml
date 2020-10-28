@@ -50,7 +50,7 @@
 
     <string name="wallet_address_button_explore">Explore address</string>
     <string name="wallet_address_button_create_payid">Create PayID</string>
-    <string name="wallet_qr_title_format">$s wallet</string>
+    <string name="wallet_qr_title_format">%s wallet</string>
 
     <string name="wallet_create_payid">Create PayID</string>
     <string name="wallet_create_payid_card_format">Card: %s</string>
