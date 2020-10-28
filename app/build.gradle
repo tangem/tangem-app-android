@@ -94,6 +94,7 @@ dependencies {
 
     // Firebase
     implementation 'com.google.firebase:firebase-crashlytics:17.2.2'
+    implementation 'com.google.firebase:firebase-analytics:17.6.0'
 
     testImplementation 'junit:junit:4.13'
     testImplementation "com.google.truth:truth:1.0.1"
