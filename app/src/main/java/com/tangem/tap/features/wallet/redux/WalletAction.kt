@@ -50,6 +50,8 @@ sealed class WalletAction : Action {
         object Failure : WalletAction()
     }
 
+    object DisablePayId: WalletAction()
+
     data class LoadArtwork(val card: Card, val artworkId: String?) : WalletAction() {
         data class Success(val artwork: Artwork) : WalletAction()
         object Failure : WalletAction()
