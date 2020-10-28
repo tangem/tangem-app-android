@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.tangem.tap.common.extensions.getDrawableCompat
+import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.wallet.R
@@ -35,22 +36,29 @@ class PendingTransactionsAdapter
         ) = oldItem == newItem
     }
 
-
     class TransactionsViewHolder(val view: View) :
             RecyclerView.ViewHolder(view) {
 
         fun bind(transaction: PendingTransaction) {
+
+            if (transaction.type == PendingTransactionType.Unknown) {
+                view.hide()
+            }
+
             val transactionDescriptionRes = when (transaction.type) {
                 PendingTransactionType.Incoming -> R.string.wallet_pending_tx_receiving
-                PendingTransactionType.Outcoming -> R.string.wallet_pending_tx_sending
+                PendingTransactionType.Outgoing -> R.string.wallet_pending_tx_sending
+                PendingTransactionType.Unknown -> return
             }
             val transactionAddressRes = when (transaction.type) {
                 PendingTransactionType.Incoming -> R.string.wallet_pending_tx_receiving_address_format
-                PendingTransactionType.Outcoming -> R.string.wallet_pending_tx_sending_address_format
+                PendingTransactionType.Outgoing -> R.string.wallet_pending_tx_sending_address_format
+                PendingTransactionType.Unknown -> return
             }
             val image = when (transaction.type) {
                 PendingTransactionType.Incoming -> R.drawable.ic_arrow_left
-                PendingTransactionType.Outcoming -> R.drawable.ic_arrow_right_20
+                PendingTransactionType.Outgoing -> R.drawable.ic_arrow_right_20
+                PendingTransactionType.Unknown -> return
             }
             view.tv_pending_transaction.text = view.context.getString(transactionDescriptionRes)
 
