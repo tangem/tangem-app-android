@@ -73,6 +73,7 @@ class PayIdManager {
                 Blockchain.BitcoinCash,
                 Blockchain.Binance,
                 Blockchain.RSK,
+                Blockchain.Tezos
         )
 
         fun isPayId(value: String?): Boolean = value?.contains(payIdRegExp) ?: false
