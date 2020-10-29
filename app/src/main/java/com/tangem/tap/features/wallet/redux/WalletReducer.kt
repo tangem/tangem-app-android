@@ -52,7 +52,10 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                             addressData = addressData,
                             currencyData = BalanceWidgetData(
                                     status = BalanceStatus.Unreachable,
-                                    currency = wallet?.blockchain?.fullName),
+                                    currency = wallet?.blockchain?.fullName,
+                                    token = wallet?.token?.symbol?.let {
+                                        TokenData("", tokenSymbol = it)
+                                    }),
                             mainButton = WalletMainButton.SendButton(false)
                     )
                 }
@@ -83,7 +86,10 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     cardImage = cardImage,
                     currencyData = BalanceWidgetData(
                             BalanceStatus.Loading,
-                            wallet?.blockchain?.fullName
+                            wallet?.blockchain?.fullName,
+                            token = wallet?.token?.symbol?.let {
+                                TokenData("", tokenSymbol = it)
+                            }
                     ),
                     addressData = addressData,
                     mainButton = WalletMainButton.SendButton(false)
