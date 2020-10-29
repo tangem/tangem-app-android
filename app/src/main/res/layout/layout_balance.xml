@@ -103,10 +103,10 @@
         app:autoSizeMinTextSize="12sp"
         app:autoSizeStepGranularity="1sp"
         app:autoSizeTextType="uniform"
+        app:layout_constraintBottom_toBottomOf="@id/tv_currency"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_weight="1"
         app:layout_constraintStart_toEndOf="@id/tv_currency"
-        app:layout_constraintBottom_toBottomOf="@id/tv_currency"
         tools:text="0.43 BTC" />
 
     <TextView
@@ -130,22 +130,64 @@
         android:paddingTop="4dp"
         android:paddingEnd="16dp"
         android:textSize="14sp"
+        android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_amount"
-        tools:text="USD 3 588"
-        android:visibility="invisible"/>
+        tools:text="USD 3 588" />
 
 
-    <include
-        android:id="@+id/l_token"
-        layout="@layout/layout_token"
+    <View
+        android:id="@+id/v_divider"
         android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="16dp"
+        android:background="@color/lightGray5"
+        app:layout_constraintTop_toBottomOf="@id/tv_placeholder" />
+
+    <TextView
+        android:id="@+id/tv_base_currency"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="35dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:textColor="@color/darkGray6"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/v_divider"
+        tools:text="Ethereum" />
+
+    <TextView
+        android:id="@+id/tv_base_amount"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
+        android:ellipsize="end"
+        android:gravity="end"
+        android:maxLines="1"
+        android:textAlignment="textEnd"
+        android:textColor="@color/darkGray6"
+        android:textSize="14sp"
         android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@+id/tv_currency" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1"
+        app:layout_constraintStart_toEndOf="@id/tv_base_currency"
+        app:layout_constraintTop_toBottomOf="@id/v_divider"
+        tools:text="0.00434143 ETH"
+        />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/group_base_currency"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:constraint_referenced_ids="v_divider, tv_base_currency, tv_base_amount" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
