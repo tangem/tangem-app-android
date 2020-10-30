@@ -4,14 +4,11 @@ import android.content.Intent
 import android.net.Uri
 import androidx.core.content.ContextCompat.startActivity
 import com.tangem.common.CompletionResult
+import com.tangem.tap.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.preferencesStorage
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -29,7 +26,7 @@ class HomeMiddleware {
                     }
                     is HomeAction.ReadCard -> {
                         scope.launch {
-                            val result = tangemSdkManager.scanNote()
+                            val result = tangemSdkManager.scanNote(analytics)
                             withContext(Dispatchers.Main) {
                                 when (result) {
                                     is CompletionResult.Success -> {
