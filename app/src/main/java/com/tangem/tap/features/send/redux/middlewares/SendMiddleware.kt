@@ -4,6 +4,9 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.Signer
+import com.tangem.commands.Card
+import com.tangem.tap.analytics
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -47,6 +50,7 @@ private fun verifyAndSendTransaction(
 ) {
     val sendState = appState?.sendState ?: return
     val walletManager = appState.globalState.scanNoteResponse?.walletManager ?: return
+    val card = appState.globalState.scanNoteResponse.card
     val recipientAddress = sendState.addressPayIdState.recipientWalletAddress ?: return
     val typedAmount = sendState.amountState.amountToExtract ?: return
     val feeAmount = sendState.feeState.currentFee ?: return
@@ -62,14 +66,14 @@ private fun verifyAndSendTransaction(
                 dispatch(AmountAction.SetAmount(typedAmount.value!!.minus(reduceAmount), false))
                 dispatch(AmountActionUi.CheckAmountToSend)
             }, sendAllCallback = {
-                sendTransaction(action, walletManager, amountToSend, feeAmount, recipientAddress, dispatch)
+                sendTransaction(action, walletManager, amountToSend, feeAmount, recipientAddress, card, dispatch)
             }, reduceAmount))
         }
         transactionErrors.isNotEmpty() -> {
             dispatch(SendAction.SendError(createValidateTransactionError(transactionErrors, walletManager)))
         }
         else -> {
-            sendTransaction(action, walletManager, amountToSend, feeAmount, recipientAddress, dispatch)
+            sendTransaction(action, walletManager, amountToSend, feeAmount, recipientAddress, card, dispatch)
         }
     }
 }
@@ -80,6 +84,7 @@ private fun sendTransaction(
         amountToSend: Amount,
         feeAmount: Amount,
         recipientAddress: String,
+        card: Card,
         dispatch: (Action) -> Unit
 ) {
     dispatch(SendAction.ChangeSendButtonState(SendButtonState.PROGRESS))
@@ -91,6 +96,7 @@ private fun sendTransaction(
         withContext(Dispatchers.Main) {
             when (result) {
                 is Result.Success -> {
+                    analytics.triggerEvent(AnalyticsEvent.TRANSACTION_IS_SENT, card)
                     dispatch(SendAction.SendSuccess)
                     dispatch(GlobalAction.UpdateWalletSignedHashes(result.data.walletSignedHashes))
                     dispatch(WalletAction.UpdateWallet)
