@@ -7,6 +7,8 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.CardType
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.tangem_sdk_new.extensions.init
+import com.tangem.tap.common.analytics.AnalyticsEvent
+import com.tangem.tap.common.analytics.AnalyticsHandler
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.domain.tasks.ScanNoteTask
@@ -22,7 +24,8 @@ class TangemSdkManager(val activity: ComponentActivity) {
             activity, Config(cardFilter = CardFilter(EnumSet.allOf(CardType::class.java)))
     )
 
-    suspend fun scanNote(): CompletionResult<ScanNoteResponse> {
+    suspend fun scanNote(analyticsHandler: AnalyticsHandler): CompletionResult<ScanNoteResponse> {
+        analyticsHandler.triggerEvent(AnalyticsEvent.READY_TO_SCAN, null)
         return runTaskAsyncReturnOnMain(ScanNoteTask(),
                 initialMessage = Message(activity.getString(R.string.initial_message_scan_header)))
     }
