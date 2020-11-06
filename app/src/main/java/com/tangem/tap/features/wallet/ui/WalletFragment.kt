@@ -170,12 +170,18 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
         btn_confirm.text = getString(buttonTitle)
         btn_confirm.isEnabled = state.mainButton.enabled
+        btn_top_up.isEnabled = state.topUpState.allowed
 
         btn_confirm.setOnClickListener {
             when (state.mainButton) {
                 is WalletMainButton.SendButton -> store.dispatch(WalletAction.Send())
                 is WalletMainButton.CreateWalletButton -> store.dispatch(WalletAction.CreateWallet)
             }
+        }
+        btn_top_up.setOnClickListener {
+            store.dispatch(
+                    WalletAction.TopUpAction.TopUp(requireContext(), R.color.backgroundLightGray)
+            )
         }
     }
 
