@@ -3,5 +3,6 @@
     <string name="xtz_withdrawal_message_warning" translatable="false">To avoid paying an increased commission the next time you top up your wallet, reduce the amount by %s XTZ</string>
     <string name="xtz_withdrawal_message_reduce" translatable="false">Reduce by %s XTZ</string>
     <string name="xtz_withdrawal_message_ignore" translatable="false">No, send all</string>
+    <string name="wallet_button_topup" translatable="false">Top up</string>
 
 </resources>
