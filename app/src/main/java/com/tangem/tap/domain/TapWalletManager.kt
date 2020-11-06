@@ -6,6 +6,8 @@ import com.tangem.commands.CardStatus
 import com.tangem.commands.common.network.Result
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.TapConfig
+import com.tangem.tap.analytics
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -77,7 +79,10 @@ class TapWalletManager {
         handleFiatRatesResult(results)
     }
 
-    suspend fun onCardScanned(data: ScanNoteResponse) {
+    suspend fun onCardScanned(data: ScanNoteResponse, addAnalyticsEvent: Boolean = false) {
+        if (addAnalyticsEvent) {
+            analytics.triggerEvent(AnalyticsEvent.CARD_IS_SCANNED, data.card)
+        }
         tapWorkarounds = TapWorkarounds(data.card)
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.ResetState)
