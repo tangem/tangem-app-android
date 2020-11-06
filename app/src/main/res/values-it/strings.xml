@@ -161,7 +161,7 @@ Questa nota legale è stata modificata l\'ultima volta 01.10.2020.
     <string name="send_error_fee_request_failed">Impossibile ottenere la commissione</string>
     <string name="common_accept">Accetta</string>
     <string name="send_validation_amount_exceeds_balance">Amount Exceeds Balance</string>
-    <string name="disclaimer_title">Terms of service</string>
+    <string name="disclaimer_title">Termini del servizio</string>
     <string name="wallet_notification_no_internet">Nessuna connessione a Internet</string>
 
     <string name="send_error_unknown">Errore sconosciuto</string>
