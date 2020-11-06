@@ -35,7 +35,7 @@ sealed class WalletAction : Action {
 
     object UpdateWallet : WalletAction() {
         object ScheduleUpdatingWallet : WalletAction()
-        data class Success(val wallet: Wallet) : WalletAction()
+        data class Success(val wallet: Wallet, val topUpAllowed: Boolean) : WalletAction()
         data class Failure(val errorMessage: String? = null) : WalletAction()
     }
 
@@ -85,4 +85,10 @@ sealed class WalletAction : Action {
     data class ExploreAddress(val context: Context) : WalletAction()
     object CreateWallet : WalletAction()
     object EmptyWallet : WalletAction()
+
+    sealed class TopUpAction : WalletAction() {
+        data class TopUp(val context: Context, val toolbarColor: Int?) : TopUpAction()
+        data class Start(val url: String, val redirectUrl: String) : TopUpAction()
+        data class Finish(val topUpCompleted: Boolean) : TopUpAction()
+    }
 }
