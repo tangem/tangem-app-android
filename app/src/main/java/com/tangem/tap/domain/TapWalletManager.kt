@@ -56,7 +56,10 @@ class TapWalletManager {
         }
         withContext(Dispatchers.Main) {
             when (result) {
-                is Result.Success -> store.dispatch(WalletAction.UpdateWallet.Success(result.data))
+                is Result.Success ->
+                    store.dispatch(WalletAction.UpdateWallet.Success(
+                            result.data, tapWorkarounds?.isStart2Coin != true
+                    ))
                 is Result.Failure ->
                     store.dispatch(WalletAction.UpdateWallet.Failure(result.error?.localizedMessage))
             }
