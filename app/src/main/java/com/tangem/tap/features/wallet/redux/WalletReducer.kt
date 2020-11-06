@@ -88,6 +88,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     currencyData = BalanceWidgetData(
                             BalanceStatus.Loading,
                             wallet?.blockchain?.fullName,
+                            currencySymbol = wallet?.blockchain?.currency,
                             token = wallet?.token?.symbol?.let {
                                 TokenData("", tokenSymbol = it)
                             }
@@ -210,11 +211,25 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             newState = newState.copy(hashesCountVerified = false)
         is WalletAction.ConfirmHashesCount ->
             newState = newState.copy(hashesCountVerified = true)
+        is WalletAction.TopUpAction -> {
+            newState = newState.copy(topUpState = handleTopUpActions(action, newState.topUpState))
+        }
     }
     return newState
 }
 
-private fun onWalletLoaded(wallet: Wallet, walletState: WalletState): WalletState {
+private fun handleTopUpActions(action: WalletAction.TopUpAction, state: TopUpState): TopUpState {
+    return when (action) {
+        is WalletAction.TopUpAction.TopUp -> state
+        is WalletAction.TopUpAction.Start ->
+            state.copy(url = action.url, redirectUrl = action.redirectUrl)
+        is WalletAction.TopUpAction.Finish -> state.copy(url = null)
+    }
+}
+
+private fun onWalletLoaded(
+        wallet: Wallet, walletState: WalletState, topUpAllowed: Boolean? = null
+): WalletState {
     val fiatCurrencySymbol = store.state.globalState.appCurrency
     val token = wallet.amounts[AmountType.Token]
     val tokenData = if (token != null) {
@@ -242,6 +257,7 @@ private fun onWalletLoaded(wallet: Wallet, walletState: WalletState): WalletStat
     } else {
         BalanceStatus.VerifiedOnline
     }
+    val topUpState = topUpAllowed?.let { TopUpState(topUpAllowed) } ?: walletState.topUpState
     return walletState.copy(
             state = ProgressState.Done, wallet = wallet,
             currencyData = BalanceWidgetData(
@@ -252,6 +268,7 @@ private fun onWalletLoaded(wallet: Wallet, walletState: WalletState): WalletStat
                     fiatAmount = fiatAmount
             ),
             pendingTransactions = pendingTransactions.removeUnknownTransactions(),
-            mainButton = WalletMainButton.SendButton(sendButtonEnabled)
+            mainButton = WalletMainButton.SendButton(sendButtonEnabled),
+            topUpState = topUpState
     )
 }
