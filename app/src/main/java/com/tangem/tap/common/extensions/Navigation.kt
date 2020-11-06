@@ -11,6 +11,7 @@ import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
 import com.tangem.tap.features.home.HomeFragment
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
+import com.tangem.tap.features.wallet.ui.topup.TopUpFragment
 import com.tangem.wallet.R
 
 fun FragmentActivity.openFragment(screen: AppScreen, addToBackStack: Boolean = true) {
@@ -39,6 +40,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
     return when (screen) {
         AppScreen.Home -> HomeFragment()
         AppScreen.Wallet -> WalletFragment()
+        AppScreen.TopUp -> TopUpFragment()
         AppScreen.Send -> SendFragment()
         AppScreen.Details -> DetailsFragment()
         AppScreen.DetailsConfirm -> DetailsConfirmFragment()
