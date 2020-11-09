@@ -70,17 +70,9 @@ dependencies {
     implementation 'com.google.android.material:material:1.2.1'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.10'
 
-    implementation 'com.tangem:blockchain:1.98.0'
-    implementation('com.tangem:core') {
-        version {
-            strictly '1.73.0'
-        }
-    }
-    implementation('com.tangem:sdk:') {
-        version {
-            strictly '1.73.0'
-        }
-    }
+    implementation 'com.tangem:blockchain:1.105.0'
+    implementation 'com.tangem:core:1.79.0'
+    implementation 'com.tangem:sdk:1.79.0'
 
     //lifecycle
     implementation "androidx.lifecycle:lifecycle-runtime:2.2.0"
