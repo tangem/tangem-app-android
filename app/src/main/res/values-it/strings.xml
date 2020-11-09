@@ -46,7 +46,7 @@
     <string name="wallet_create_payid_hint">Nome PayID</string>
     <string name="wallet_create_payid_domain">$payid.tangem.com</string>
     <string name="wallet_create_payid_button_title">Crea</string>
-    <string name="wallet_create_payid_info">Ваш PayID – informazioni per te uniche, come il tuo numero di telefono, indirizzo email o ABN.</string>
+    <string name="wallet_create_payid_info">Il tuo PayID – informazioni per te uniche, come il tuo numero di telefono, indirizzo email o ABN.</string>
     <string name="wallet_create_payid_success_message">PayID creato con successo e copiato negli appunti</string>
     <string name="wallet_create_payid_error_message">Errore di risposta durante la creazione del PayID</string>
     <string name="wallet_create_payid_error_already_created">Questo PayID esiste già. Scegline un altro.</string>
