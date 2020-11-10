@@ -5,8 +5,8 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.Signer
 import com.tangem.commands.Card
-import com.tangem.tap.analytics
 import com.tangem.tap.common.analytics.AnalyticsEvent
+import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -96,7 +96,7 @@ private fun sendTransaction(
         withContext(Dispatchers.Main) {
             when (result) {
                 is Result.Success -> {
-                    analytics.triggerEvent(AnalyticsEvent.TRANSACTION_IS_SENT, card)
+                    FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.TRANSACTION_IS_SENT, card)
                     dispatch(SendAction.SendSuccess)
                     dispatch(GlobalAction.UpdateWalletSignedHashes(result.data.walletSignedHashes))
                     dispatch(WalletAction.UpdateWallet)

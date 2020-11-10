@@ -1,8 +1,6 @@
 package com.tangem.tap
 
 import android.app.Application
-import com.tangem.tap.common.analytics.AnalyticsHandler
-import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.images.PicassoHelper
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
@@ -18,7 +16,6 @@ val store = Store(
         state = AppState()
 )
 lateinit var preferencesStorage: PreferencesStorage
-lateinit var analytics: AnalyticsHandler
 
 class TapApplication : Application() {
     override fun onCreate() {
@@ -29,6 +26,5 @@ class TapApplication : Application() {
         NetworkConnectivity.createInstance(store, this)
         preferencesStorage = PreferencesStorage(this)
         PicassoHelper.initPicassoWithCaching(this)
-        analytics = FirebaseAnalyticsHandler(this)
     }
 }
