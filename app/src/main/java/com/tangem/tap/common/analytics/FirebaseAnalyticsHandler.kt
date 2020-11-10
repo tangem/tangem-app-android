@@ -9,7 +9,7 @@ import com.tangem.commands.Card
 object FirebaseAnalyticsHandler: AnalyticsHandler {
     override fun triggerEvent(event: AnalyticsEvent, card: Card?) {
         Firebase.analytics
-                .logEvent(AnalyticsEvent.CARD_IS_SCANNED.event, setCardData(card))
+                .logEvent(event.event, setCardData(card))
     }
 
     private fun setCardData(card: Card?): Bundle {
