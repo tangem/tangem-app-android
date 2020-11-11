@@ -9,4 +9,4 @@ data class NavigationState(
     val activity: WeakReference<FragmentActivity>? = null
 ) : StateType
 
-enum class AppScreen { Home, Wallet, Send, Details, DetailsConfirm, DetailsSecurity, Disclaimer }
+enum class AppScreen { Home, Wallet, TopUp, Send, Details, DetailsConfirm, DetailsSecurity, Disclaimer }
