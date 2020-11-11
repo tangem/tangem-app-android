@@ -70,14 +70,8 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
 
         }
         is WalletAction.LoadWallet -> {
-            val wallet = state.globalState.scanNoteResponse?.walletManager?.wallet
-            val addressData = if (wallet == null) {
-                null
-            } else {
-                AddressData(wallet.address, wallet.shareUrl, wallet.exploreUrl)
-            }
-            val currentArtworkId = state.globalState.scanNoteResponse?.verifyResponse?.artworkInfo?.id
-            val cardImage = if (newState.cardImage?.artworkId == currentArtworkId) {
+            val wallet = action.wallet
+            val cardImage = if (newState.cardImage?.artworkId == action.artworkId) {
                 newState.cardImage
             } else {
                 null
@@ -87,15 +81,15 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     cardImage = cardImage,
                     currencyData = BalanceWidgetData(
                             BalanceStatus.Loading,
-                            wallet?.blockchain?.fullName,
-                            currencySymbol = wallet?.blockchain?.currency,
-                            token = wallet?.token?.symbol?.let {
+                            wallet.blockchain.fullName,
+                            currencySymbol = wallet.blockchain.currency,
+                            token = wallet.token?.symbol?.let {
                                 TokenData("", tokenSymbol = it)
                             }
                     ),
-                    addressData = addressData,
-                    mainButton = WalletMainButton.SendButton(false)
-
+                    addressData = AddressData(wallet.address, wallet.shareUrl, wallet.exploreUrl),
+                    mainButton = WalletMainButton.SendButton(false),
+                    topUpState = TopUpState(allowed = action.allowTopUp)
             )
         }
         is WalletAction.LoadWallet.Success -> newState = onWalletLoaded(action.wallet, newState)
@@ -257,7 +251,6 @@ private fun onWalletLoaded(
     } else {
         BalanceStatus.VerifiedOnline
     }
-    val topUpState = topUpAllowed?.let { TopUpState(topUpAllowed) } ?: walletState.topUpState
     return walletState.copy(
             state = ProgressState.Done, wallet = wallet,
             currencyData = BalanceWidgetData(
@@ -268,7 +261,6 @@ private fun onWalletLoaded(
                     fiatAmount = fiatAmount
             ),
             pendingTransactions = pendingTransactions.removeUnknownTransactions(),
-            mainButton = WalletMainButton.SendButton(sendButtonEnabled),
-            topUpState = topUpState
+            mainButton = WalletMainButton.SendButton(sendButtonEnabled)
     )
 }
