@@ -20,7 +20,9 @@ sealed class WalletAction : Action {
         data class Failure(val error: TapError) : WalletAction()
     }
 
-    object LoadWallet : WalletAction() {
+    data class LoadWallet(
+            val wallet: Wallet, val artworkId: String?, val allowTopUp: Boolean
+    ) : WalletAction() {
         data class Success(val wallet: Wallet) : WalletAction()
         data class NoAccount(val amountToCreateAccount: String) : WalletAction()
         data class Failure(val errorMessage: String? = null) : WalletAction()
@@ -35,7 +37,7 @@ sealed class WalletAction : Action {
 
     object UpdateWallet : WalletAction() {
         object ScheduleUpdatingWallet : WalletAction()
-        data class Success(val wallet: Wallet, val topUpAllowed: Boolean) : WalletAction()
+        data class Success(val wallet: Wallet) : WalletAction()
         data class Failure(val errorMessage: String? = null) : WalletAction()
     }
 
@@ -50,7 +52,7 @@ sealed class WalletAction : Action {
         object Failure : WalletAction()
     }
 
-    object DisablePayId: WalletAction()
+    object DisablePayId : WalletAction()
 
     data class LoadArtwork(val card: Card, val artworkId: String?) : WalletAction() {
         data class Success(val artwork: Artwork) : WalletAction()
