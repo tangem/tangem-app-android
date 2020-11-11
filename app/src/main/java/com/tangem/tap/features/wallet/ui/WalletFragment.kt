@@ -29,6 +29,8 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.card_balance.*
 import kotlinx.android.synthetic.main.fragment_wallet.*
 import kotlinx.android.synthetic.main.layout_address.*
+import kotlinx.android.synthetic.main.layout_wallet_long_buttons.*
+import kotlinx.android.synthetic.main.layout_wallet_short_buttons.*
 import org.rekotlin.StoreSubscriber
 
 
@@ -38,7 +40,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     private var snackbar: Snackbar? = null
 
     private lateinit var viewAdapter: PendingTransactionsAdapter
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,10 +74,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
         toolbar.setNavigationOnClickListener {
             store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
-        }
-
-        btn_scan.setOnClickListener {
-            store.dispatch(WalletAction.Scan)
         }
         setupTransactionsRecyclerView()
     }
@@ -161,6 +158,29 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     }
 
     private fun setupButtons(state: WalletState) {
+        if (state.topUpState.allowed) {
+            l_buttons_long.hide()
+            l_buttons_short.show()
+        } else {
+            l_buttons_long.show()
+            l_buttons_short.hide()
+        }
+
+        val btnConfirm = if (state.topUpState.allowed) {
+            btn_confirm_short
+        } else {
+            btn_confirm_long
+        }
+        val btnScan = if (state.topUpState.allowed) {
+            btn_scan_short
+        } else {
+            btn_scan_long
+        }
+
+        btnScan.setOnClickListener {
+            store.dispatch(WalletAction.Scan)
+        }
+
         btn_copy.setOnClickListener { store.dispatch(WalletAction.CopyAddress(requireContext())) }
         btn_show_qr.setOnClickListener { store.dispatch(WalletAction.ShowQrCode) }
 
@@ -168,11 +188,10 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             is WalletMainButton.SendButton -> R.string.wallet_button_send
             is WalletMainButton.CreateWalletButton -> R.string.wallet_button_create_wallet
         }
-        btn_confirm.text = getString(buttonTitle)
-        btn_confirm.isEnabled = state.mainButton.enabled
-        btn_top_up.isEnabled = state.topUpState.allowed
+        btnConfirm.text = getString(buttonTitle)
+        btnConfirm.isEnabled = state.mainButton.enabled
 
-        btn_confirm.setOnClickListener {
+        btnConfirm.setOnClickListener {
             when (state.mainButton) {
                 is WalletMainButton.SendButton -> store.dispatch(WalletAction.Send())
                 is WalletMainButton.CreateWalletButton -> store.dispatch(WalletAction.CreateWallet)
