@@ -57,9 +57,7 @@ class TapWalletManager {
         withContext(Dispatchers.Main) {
             when (result) {
                 is Result.Success ->
-                    store.dispatch(WalletAction.UpdateWallet.Success(
-                            result.data, tapWorkarounds?.isStart2Coin != true
-                    ))
+                    store.dispatch(WalletAction.UpdateWallet.Success(result.data))
                 is Result.Failure ->
                     store.dispatch(WalletAction.UpdateWallet.Failure(result.error?.localizedMessage))
             }
@@ -103,7 +101,10 @@ class TapWalletManager {
                     store.dispatch(WalletAction.LoadData.Failure(TapError.NoInternetConnection))
                     return@withContext
                 }
-                store.dispatch(WalletAction.LoadWallet)
+                store.dispatch(WalletAction.LoadWallet(
+                        data.walletManager.wallet, data.verifyResponse?.artworkInfo?.id,
+                        tapWorkarounds?.isStart2Coin != true && TapConfig.useTopUp
+                ))
                 store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
                 store.dispatch(WalletAction.LoadFiatRate)
                 store.dispatch(WalletAction.LoadPayId)
