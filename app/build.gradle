@@ -74,6 +74,9 @@ dependencies {
     implementation 'com.tangem:core:1.79.0'
     implementation 'com.tangem:sdk:1.79.0'
 
+    // WebView
+    implementation "androidx.browser:browser:1.2.0"
+
     //lifecycle
     implementation "androidx.lifecycle:lifecycle-runtime:2.2.0"
     implementation "androidx.lifecycle:lifecycle-common-java8:2.2.0"
