@@ -1,15 +1,15 @@
 package com.tangem.tap.common.analytics
 
-import android.content.Context
 import android.os.Bundle
 import androidx.core.os.bundleOf
-import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
 import com.tangem.commands.Card
 
-class FirebaseAnalyticsHandler(private val context: Context): AnalyticsHandler {
+object FirebaseAnalyticsHandler: AnalyticsHandler {
     override fun triggerEvent(event: AnalyticsEvent, card: Card?) {
-        FirebaseAnalytics.getInstance(context)
-                .logEvent(AnalyticsEvent.CARD_IS_SCANNED.event, setCardData(card))
+        Firebase.analytics
+                .logEvent(event.event, setCardData(card))
     }
 
     private fun setCardData(card: Card?): Bundle {
@@ -26,4 +26,4 @@ class FirebaseAnalyticsHandler(private val context: Context): AnalyticsHandler {
         BATCH_ID("batch_id"),
         FIRMWARE("firmware"),
     }
-}
+} 
