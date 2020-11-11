@@ -36,7 +36,8 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.EmptyWallet -> newState = newState.copy(
                 state = ProgressState.Done,
                 currencyData = BalanceWidgetData(BalanceStatus.EmptyCard),
-                mainButton = WalletMainButton.CreateWalletButton(true)
+                mainButton = WalletMainButton.CreateWalletButton(true),
+                topUpState = TopUpState(false)
         )
         is WalletAction.LoadData.Failure -> {
             when (action.error) {
@@ -57,13 +58,15 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                                     token = wallet?.token?.symbol?.let {
                                         TokenData("", tokenSymbol = it)
                                     }),
-                            mainButton = WalletMainButton.SendButton(false)
+                            mainButton = WalletMainButton.SendButton(false),
+                            topUpState = TopUpState(false)
                     )
                 }
                 is TapError.UnknownBlockchain -> {
                     newState = newState.copy(
                             state = ProgressState.Done,
-                            currencyData = BalanceWidgetData(BalanceStatus.UnknownBlockchain)
+                            currencyData = BalanceWidgetData(BalanceStatus.UnknownBlockchain),
+                            topUpState = TopUpState(false)
                     )
                 }
             }
@@ -110,7 +113,8 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 currencyData = newState.currencyData.copy(
                         status = BalanceStatus.Unreachable,
                         errorMessage = action.errorMessage
-                )
+                ),
+                topUpState = TopUpState(false)
         )
         is WalletAction.UpdateWallet -> newState = newState.copy(updatingWallet = true)
         is WalletAction.UpdateWallet.ScheduleUpdatingWallet ->
