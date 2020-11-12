@@ -160,9 +160,29 @@ Avertissement
     <string name="disclaimer_title"> Conditions d\'utilisation</string>
 
     <string name="wallet_notification_no_internet">Pas de connexion internet</string>
-    <string name="initial_message_scan_header">Touchez pour scanner</string>
-    <string name="initial_message_tap_header">Touchez pour scanner</string>
     <string name="send_error_no_target_account">Le compte cible n\'a pas été créé. Le montant à envoyer doit être de %1$s %2$s + commissions ou plus</string>
     <string name="send_error_fee_request_failed">Échec de réception des commissions</string>
+
+    <string name="send_error_unknown">Erreur inconnue</string>
+    <string name="send_error_payid_verification_failed">La vérification de PayID a échoué</string>
+    <string name="send_error_payid_unsupported_by_blockchain">PayID non pris en charge par la blockchain</string>
+    <string name="send_error_payid_not_registered">PayID non enregistré</string>
+    <string name="send_error_payid_request_failed">La demande de PayID a échoué</string>
+    <string name="send_error_address_same_as_wallet">L’adresse est la même que celle de votre portefeuille</string>
+    <string name="send_error_insufficient_balance">Solde insuffisant</string>
+    <string name="send_error_blockchain_internal">Erreur interne de la blockchain</string>
+    <string name="send_error_invalid_fee_value">Commission non valide</string>
+    <string name="send_error_dust_amount_format">Le montant minimal est de %ы</string>
+    <string name="send_error_dust_change">Le reste est trop petit</string>
+    <string name="wallet_notification_address_copied">L’adresse a été copiée avec succès</string>
+    <string name="wallet_create_payid_empty">Saisissez d’abord le PayID requis</string>
+    <string name="initial_message_scan_header">Posez pour scanner</string>
+    <string name="initial_message_tap_header">Posez la carte</string>
+    <string name="details_notification_erase_wallet_not_possible">Votre solde sur ce portefeuille n\'est pas nul, ou vous avez des transactions non confirmées. Impossible de supprimer la fonction du portefeuille</string>
+    <string name="details_notification_security_option_already_active">Cette option est déjà active</string>
+
+    <string name="xtz_withdrawal_message_warning">Pour ne pas payer une commission élevée la prochaine fois que vous rechargez votre portefeuille, veuillez réduire le montant de %s XTZ</string>
+    <string name="xtz_withdrawal_message_reduce">Réduire de% s XTZ</string>
+    <string name="xtz_withdrawal_message_ignore">Non, envoyer toute la somme</string>
 
 </resources>
