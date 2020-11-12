@@ -21,7 +21,8 @@ data class WalletState(
         val payIdData: PayIdData = PayIdData(),
         val walletDialog: WalletDialog? = null,
         val updatingWallet: Boolean = false,
-        val mainButton: WalletMainButton = WalletMainButton.SendButton(false)
+        val mainButton: WalletMainButton = WalletMainButton.SendButton(false),
+        val topUpState: TopUpState = TopUpState()
 ) : StateType {
     val showDetails: Boolean =
             currencyData.status != com.tangem.tap.features.wallet.ui.BalanceStatus.EmptyCard &&
@@ -77,3 +78,9 @@ data class Artwork(
         const val MARTA_CARD_ID = "BC02"
     }
 }
+
+data class TopUpState(
+        val allowed: Boolean = true,
+        val url: String? = null,
+        val redirectUrl: String? = null
+)
