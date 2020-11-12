@@ -36,7 +36,8 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.EmptyWallet -> newState = newState.copy(
                 state = ProgressState.Done,
                 currencyData = BalanceWidgetData(BalanceStatus.EmptyCard),
-                mainButton = WalletMainButton.CreateWalletButton(true)
+                mainButton = WalletMainButton.CreateWalletButton(true),
+                topUpState = TopUpState(false)
         )
         is WalletAction.LoadData.Failure -> {
             when (action.error) {
@@ -53,28 +54,27 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                             addressData = addressData,
                             currencyData = BalanceWidgetData(
                                     status = BalanceStatus.Unreachable,
-                                    currency = wallet?.blockchain?.fullName),
-                            mainButton = WalletMainButton.SendButton(false)
+                                    currency = wallet?.blockchain?.fullName,
+                                    token = wallet?.token?.symbol?.let {
+                                        TokenData("", tokenSymbol = it)
+                                    }),
+                            mainButton = WalletMainButton.SendButton(false),
+                            topUpState = TopUpState(false)
                     )
                 }
                 is TapError.UnknownBlockchain -> {
                     newState = newState.copy(
                             state = ProgressState.Done,
-                            currencyData = BalanceWidgetData(BalanceStatus.UnknownBlockchain)
+                            currencyData = BalanceWidgetData(BalanceStatus.UnknownBlockchain),
+                            topUpState = TopUpState(false)
                     )
                 }
             }
 
         }
         is WalletAction.LoadWallet -> {
-            val wallet = state.globalState.scanNoteResponse?.walletManager?.wallet
-            val addressData = if (wallet == null) {
-                null
-            } else {
-                AddressData(wallet.address, wallet.shareUrl, wallet.exploreUrl)
-            }
-            val currentArtworkId = state.globalState.scanNoteResponse?.verifyResponse?.artworkInfo?.id
-            val cardImage = if (newState.cardImage?.artworkId == currentArtworkId) {
+            val wallet = action.wallet
+            val cardImage = if (newState.cardImage?.artworkId == action.artworkId) {
                 newState.cardImage
             } else {
                 null
@@ -84,11 +84,15 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     cardImage = cardImage,
                     currencyData = BalanceWidgetData(
                             BalanceStatus.Loading,
-                            wallet?.blockchain?.fullName
+                            wallet.blockchain.fullName,
+                            currencySymbol = wallet.blockchain.currency,
+                            token = wallet.token?.symbol?.let {
+                                TokenData("", tokenSymbol = it)
+                            }
                     ),
-                    addressData = addressData,
-                    mainButton = WalletMainButton.SendButton(false)
-
+                    addressData = AddressData(wallet.address, wallet.shareUrl, wallet.exploreUrl),
+                    mainButton = WalletMainButton.SendButton(false),
+                    topUpState = TopUpState(allowed = action.allowTopUp)
             )
         }
         is WalletAction.LoadWallet.Success -> newState = onWalletLoaded(action.wallet, newState)
@@ -109,7 +113,8 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 currencyData = newState.currencyData.copy(
                         status = BalanceStatus.Unreachable,
                         errorMessage = action.errorMessage
-                )
+                ),
+                topUpState = TopUpState(false)
         )
         is WalletAction.UpdateWallet -> newState = newState.copy(updatingWallet = true)
         is WalletAction.UpdateWallet.ScheduleUpdatingWallet ->
@@ -204,11 +209,25 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             newState = newState.copy(hashesCountVerified = false)
         is WalletAction.ConfirmHashesCount ->
             newState = newState.copy(hashesCountVerified = true)
+        is WalletAction.TopUpAction -> {
+            newState = newState.copy(topUpState = handleTopUpActions(action, newState.topUpState))
+        }
     }
     return newState
 }
 
-private fun onWalletLoaded(wallet: Wallet, walletState: WalletState): WalletState {
+private fun handleTopUpActions(action: WalletAction.TopUpAction, state: TopUpState): TopUpState {
+    return when (action) {
+        is WalletAction.TopUpAction.TopUp -> state
+        is WalletAction.TopUpAction.Start ->
+            state.copy(url = action.url, redirectUrl = action.redirectUrl)
+        is WalletAction.TopUpAction.Finish -> state.copy(url = null)
+    }
+}
+
+private fun onWalletLoaded(
+        wallet: Wallet, walletState: WalletState, topUpAllowed: Boolean? = null
+): WalletState {
     val fiatCurrencySymbol = store.state.globalState.appCurrency
     val token = wallet.amounts[AmountType.Token]
     val tokenData = if (token != null) {
