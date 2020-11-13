@@ -8,7 +8,7 @@ class TapWorkarounds(val card: Card) {
     val isStart2Coin: Boolean =
             card.cardData?.issuerName?.toLowerCase(Locale.US) == START_2_COIN_ISSUER
 
-    fun isPayIdCreationEnabled(): Boolean {
+    fun isPayIdEnabled(): Boolean {
         if (isStart2Coin) return false
         return true
     }
