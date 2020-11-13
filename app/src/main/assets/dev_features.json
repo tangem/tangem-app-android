@@ -1,0 +1,20 @@
+{
+  "features": [
+    {
+      "name": "payIdCreationEnabled",
+      "value": false
+    },
+    {
+      "name": "usePayId",
+      "value": false
+    },
+    {
+      "name": "showWelcomeMessageAtStart",
+      "value": false
+    },
+    {
+      "name": "useTopUp",
+      "value": false
+    }
+  ]
+}
