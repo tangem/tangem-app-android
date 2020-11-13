@@ -1,6 +1,8 @@
 package com.tangem.tap.domain.config
 
 import android.content.Context
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.squareup.moshi.JsonAdapter
 import com.tangem.wallet.BuildConfig
 import timber.log.Timber
@@ -64,5 +66,35 @@ class LocalLoader(
 
     private fun readAssetAsString(fileName: String): String {
         return context.assets.open("$fileName.json").bufferedReader().readText()
+    }
+}
+
+class RemoteLoader(
+        private val nameResolver: NameResolver,
+        private val adapter: JsonAdapter<ConfigModel>
+) : ConfigLoader {
+
+    override suspend fun loadConfig(onComplete: (Config) -> Unit) {
+        val emptyConfig = Config.empty()
+        val remoteConfig = Firebase.remoteConfig
+        remoteConfig.fetchAndActivate().addOnCompleteListener {
+            if (it.isSuccessful) {
+                val config = remoteConfig.getValue(nameResolver.getFeaturesName())
+                val jsonConfig = config.asString()
+                if (jsonConfig.isEmpty()) {
+                    onComplete(emptyConfig)
+                    return@addOnCompleteListener
+                }
+                val configModel = adapter.fromJson(jsonConfig)
+                val features = configModel?.toFeatures(ConfigType.Remote) ?: mutableMapOf()
+                val configValues = configModel?.toConfigValues() ?: mutableMapOf()
+                onComplete(Config(features, configValues))
+            } else {
+                onComplete(emptyConfig)
+            }
+        }.addOnFailureListener {
+            Timber.e(it)
+            onComplete(emptyConfig)
+        }
     }
 }
