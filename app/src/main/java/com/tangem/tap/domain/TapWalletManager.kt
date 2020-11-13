@@ -168,12 +168,12 @@ class TapWalletManager {
             when (result) {
                 is Result.Success -> {
                     val payId = result.data
+                    if (tapWorkarounds?.isPayIdEnabled() == false) {
+                        store.dispatch(WalletAction.DisablePayId)
+                        return@withContext
+                    }
                     if (payId == null) {
-                        if (tapWorkarounds?.isPayIdCreationEnabled() == false) {
-                            store.dispatch(WalletAction.DisablePayId)
-                        } else {
-                            store.dispatch(WalletAction.LoadPayId.NotCreated)
-                        }
+                        store.dispatch(WalletAction.LoadPayId.NotCreated)
                     } else {
                         store.dispatch(WalletAction.LoadPayId.Success(payId))
                     }
