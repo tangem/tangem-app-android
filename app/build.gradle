@@ -70,17 +70,12 @@ dependencies {
     implementation 'com.google.android.material:material:1.2.1'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.10'
 
-    implementation 'com.tangem:blockchain:1.98.0'
-    implementation('com.tangem:core') {
-        version {
-            strictly '1.73.0'
-        }
-    }
-    implementation('com.tangem:sdk:') {
-        version {
-            strictly '1.73.0'
-        }
-    }
+    implementation 'com.tangem:blockchain:1.108.0'
+    implementation 'com.tangem:core:1.80.0'
+    implementation 'com.tangem:sdk:1.80.0'
+
+    // WebView
+    implementation "androidx.browser:browser:1.2.0"
 
     //lifecycle
     implementation "androidx.lifecycle:lifecycle-runtime:2.2.0"
@@ -101,7 +96,9 @@ dependencies {
     implementation 'com.squareup.picasso:picasso:2.71828'
 
     // Firebase
-    implementation 'com.google.firebase:firebase-crashlytics:17.2.2'
+    implementation platform('com.google.firebase:firebase-bom:26.0.0')
+    implementation 'com.google.firebase:firebase-crashlytics'
+    implementation 'com.google.firebase:firebase-analytics-ktx'
 
     testImplementation 'junit:junit:4.13'
     testImplementation "com.google.truth:truth:1.0.1"
