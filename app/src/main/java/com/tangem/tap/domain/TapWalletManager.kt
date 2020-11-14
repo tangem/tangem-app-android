@@ -6,6 +6,8 @@ import com.tangem.commands.CardStatus
 import com.tangem.commands.common.network.Result
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.TapConfig
+import com.tangem.tap.common.analytics.AnalyticsEvent
+import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -54,7 +56,8 @@ class TapWalletManager {
         }
         withContext(Dispatchers.Main) {
             when (result) {
-                is Result.Success -> store.dispatch(WalletAction.UpdateWallet.Success(result.data))
+                is Result.Success ->
+                    store.dispatch(WalletAction.UpdateWallet.Success(result.data))
                 is Result.Failure ->
                     store.dispatch(WalletAction.UpdateWallet.Failure(result.error?.localizedMessage))
             }
@@ -77,7 +80,10 @@ class TapWalletManager {
         handleFiatRatesResult(results)
     }
 
-    suspend fun onCardScanned(data: ScanNoteResponse) {
+    suspend fun onCardScanned(data: ScanNoteResponse, addAnalyticsEvent: Boolean = false) {
+        if (addAnalyticsEvent) {
+            FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.CARD_IS_SCANNED, data.card)
+        }
         tapWorkarounds = TapWorkarounds(data.card)
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.ResetState)
@@ -95,7 +101,10 @@ class TapWalletManager {
                     store.dispatch(WalletAction.LoadData.Failure(TapError.NoInternetConnection))
                     return@withContext
                 }
-                store.dispatch(WalletAction.LoadWallet)
+                store.dispatch(WalletAction.LoadWallet(
+                        data.walletManager.wallet, data.verifyResponse?.artworkInfo?.id,
+                        tapWorkarounds?.isStart2Coin != true && TapConfig.useTopUp
+                ))
                 store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
                 store.dispatch(WalletAction.LoadFiatRate)
                 store.dispatch(WalletAction.LoadPayId)
@@ -159,12 +168,12 @@ class TapWalletManager {
             when (result) {
                 is Result.Success -> {
                     val payId = result.data
+                    if (tapWorkarounds?.isPayIdEnabled() == false) {
+                        store.dispatch(WalletAction.DisablePayId)
+                        return@withContext
+                    }
                     if (payId == null) {
-                        if (tapWorkarounds?.isPayIdCreationEnabled() == false) {
-                            store.dispatch(WalletAction.DisablePayId)
-                        } else {
-                            store.dispatch(WalletAction.LoadPayId.NotCreated)
-                        }
+                        store.dispatch(WalletAction.LoadPayId.NotCreated)
                     } else {
                         store.dispatch(WalletAction.LoadPayId.Success(payId))
                     }
