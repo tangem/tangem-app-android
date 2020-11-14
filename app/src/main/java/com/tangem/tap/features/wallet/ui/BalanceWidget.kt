@@ -8,7 +8,6 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.card_balance.*
 import kotlinx.android.synthetic.main.layout_balance.*
 import kotlinx.android.synthetic.main.layout_balance_error.*
-import kotlinx.android.synthetic.main.layout_token.view.*
 
 enum class BalanceStatus {
     VerifiedOnline,
@@ -50,20 +49,21 @@ class BalanceWidget(
                 fragment.l_balance.show()
                 fragment.l_balance_error.hide()
                 fragment.tv_fiat_amount.hide()
-                fragment.l_token.hide()
 
                 fragment.tv_currency.text = data.currency
                 fragment.tv_amount.text = ""
 
                 showStatus(R.id.tv_status_loading)
+
+                if (data.token != null) {
+                    showBalanceWithToken(data, false)
+                } else {
+                    showBalanceWithoutToken(data, false)
+                }
             }
             BalanceStatus.VerifiedOnline, BalanceStatus.TransactionInProgress -> {
                 fragment.l_balance.show()
                 fragment.l_balance_error.hide()
-                fragment.tv_currency.text = data.currency
-                fragment.tv_amount.text = data.amount
-                fragment.tv_fiat_amount.show()
-                fragment.tv_fiat_amount.text = data.fiatAmount
                 val statusView = if (data.status == BalanceStatus.VerifiedOnline) {
                     R.id.tv_status_verified
                 } else {
@@ -75,22 +75,21 @@ class BalanceWidget(
                 fragment.tv_status_error_message.hide()
 
                 if (data.token != null) {
-                    fragment.l_token.show()
-                    fragment.l_token.tv_token_symbol.text = data.token.tokenSymbol
-                    fragment.l_token.tv_token_amount.text = data.token.amount
-                    fragment.l_token.tv_token_fiat_amount.text = data.token.fiatAmount
+                    showBalanceWithToken(data, true)
                 } else {
-                    fragment.l_token.hide()
+                    showBalanceWithoutToken(data, true)
                 }
             }
             BalanceStatus.Unreachable -> {
                 fragment.l_balance.show()
                 fragment.l_balance_error.hide()
-                fragment.l_token.hide()
                 fragment.tv_fiat_amount.hide()
+                fragment.group_base_currency.hide()
 
-                fragment.tv_currency.text = data.currency
+                val currency = if (data.token != null) data.token.tokenSymbol else data.currency
+                fragment.tv_currency.text = currency
                 fragment.tv_amount.text = ""
+
                 fragment.tv_status_error_message.text = data.errorMessage
                 fragment.tv_status_error.text =
                         fragment.getString(R.string.wallet_balance_blockchain_unreachable)
@@ -128,5 +127,27 @@ class BalanceWidget(
         fragment.group_error.show(viewRes == R.id.group_error)
         fragment.tv_status_loading.show(viewRes == R.id.tv_status_loading)
         fragment.tv_status_verified.show(viewRes == R.id.tv_status_verified)
+    }
+
+    private fun showBalanceWithToken(data: BalanceWidgetData, showAmount: Boolean) {
+        fragment.group_base_currency.show()
+        fragment.tv_currency.text = data.token?.tokenSymbol
+        fragment.tv_base_currency.text = data.currency
+        fragment.tv_amount.text = if (showAmount) data.token?.amount else ""
+        fragment.tv_base_amount.text = if (showAmount) data.amount else ""
+        if (showAmount) {
+            fragment.tv_fiat_amount.show()
+            fragment.tv_fiat_amount.text = data.token?.fiatAmount
+        }
+    }
+
+    private fun showBalanceWithoutToken(data: BalanceWidgetData, showAmount: Boolean) {
+        fragment.group_base_currency.hide()
+        fragment.tv_currency.text = data.currency
+        fragment.tv_amount.text = if (showAmount) data.amount else ""
+        if (showAmount) {
+            fragment.tv_fiat_amount.show()
+            fragment.tv_fiat_amount.text = data.fiatAmount
+        }
     }
 }
