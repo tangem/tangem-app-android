@@ -3,12 +3,18 @@ package com.tangem.tap.network.coinmarketcap
 import com.tangem.commands.common.network.Result
 import com.tangem.commands.common.network.performRequest
 import com.tangem.tap.common.redux.global.FiatCurrencyName
+import com.tangem.tap.domain.config.ConfigurationValue
+import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
-class CoinMarketCapService {
-    private val api: CoinMarketCapApi by lazy { CoinMarketCapApi.create() }
+class CoinMarketCapService() {
+    private val api: CoinMarketCapApi by lazy { CoinMarketCapApi.create(getApiKey()) }
+
+    private fun getApiKey(): String {
+        return store.state.globalState.configManager?.getConfigValue(ConfigurationValue.coinMarketCapKey)?.value!!
+    }
 
     suspend fun getRate(
             currency: String, fiatCurrency: FiatCurrencyName? = null
