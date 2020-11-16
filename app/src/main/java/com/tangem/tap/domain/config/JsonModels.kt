@@ -16,7 +16,7 @@ class FeatureModel(
 
 class ConfigValueModel(
         override val name: String,
-        override val value: String?
+        override val value: String
 ) : BaseConfigModel<String>
 
 class ConfigModel(val features: List<FeatureModel>?, val configValues: List<ConfigValueModel>?)
