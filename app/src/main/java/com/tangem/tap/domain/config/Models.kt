@@ -13,7 +13,9 @@ interface Feature {
     fun hasCondition(): Boolean
 
     companion object {
-        val payIdIsEnabled = "payIdIsEnabled"
+        const val usePayId = "usePayId"
+        const val payIdIsEnabled = "payIdIsEnabled"
+        const val useTopUp = "useTopUp"
     }
 }
 
@@ -42,4 +44,10 @@ class AppFeature(
     }
 }
 
-data class ConfigurationValue(val name: String, val value: String?)
+data class ConfigurationValue(val name: String, val value: String) {
+    companion object {
+        const val coinMarketCapKey = "coinMarketCapKey"
+        const val moonPayApiKey = "moonPayApiKey"
+        const val moonPayApiSecretKey = "moonPayApiSecretKey"
+    }
+}
