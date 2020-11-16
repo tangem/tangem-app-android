@@ -1,7 +1,6 @@
 package com.tangem.tap.domain
 
 import android.net.Uri
-import com.tangem.tap.TapConfig
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import org.spongycastle.util.encoders.Base64
 import javax.crypto.Mac
@@ -19,12 +18,12 @@ class TopUpHelper {
         private const val REDIRECT_URL_PATH = "&redirectUrl="
         private const val SIGNATURE_PATH = "&signature="
 
-        fun getUrl(cryptoCurrencyName: CryptoCurrencyName, walletAddress: String): String {
-            val originalQuery = API_KEY_PATH + TapConfig.moonPayApiKey.urlEncode() +
+        fun getUrl(cryptoCurrencyName: CryptoCurrencyName, walletAddress: String, apiKey: String, secretKey: String): String {
+            val originalQuery = API_KEY_PATH + apiKey.urlEncode() +
                     CURRENCY_PATH + cryptoCurrencyName.urlEncode() +
                     WALLET_ADDRESS_PATH + walletAddress.urlEncode() +
                     REDIRECT_URL_PATH + REDIRECT_URL.urlEncode()
-            val signature = createSignature(originalQuery, TapConfig.moonPayApiSecretKey)
+            val signature = createSignature(originalQuery, secretKey)
 
             return BASE_URL + originalQuery + SIGNATURE_PATH + signature.urlEncode()
         }
