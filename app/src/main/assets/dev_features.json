@@ -1,12 +1,12 @@
 {
   "features": [
     {
-      "name": "payIdCreationEnabled",
-      "value": false
+      "name": "payIdIsEnabled",
+      "value": true
     },
     {
       "name": "usePayId",
-      "value": false
+      "value": true
     },
     {
       "name": "showWelcomeMessageAtStart",
