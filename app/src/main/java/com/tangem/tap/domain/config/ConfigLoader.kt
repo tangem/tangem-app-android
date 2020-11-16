@@ -11,7 +11,7 @@ import timber.log.Timber
 [REDACTED_AUTHOR]
  */
 interface ConfigLoader {
-    suspend fun loadConfig(onComplete: (Config) -> Unit)
+    fun loadConfig(onComplete: (Config) -> Unit)
 }
 
 
@@ -47,7 +47,7 @@ class LocalLoader(
         private val adapter: JsonAdapter<ConfigModel>
 ) : ConfigLoader {
 
-    override suspend fun loadConfig(onComplete: (Config) -> Unit) {
+    override fun loadConfig(onComplete: (Config) -> Unit) {
         val config = try {
             val jsonFeatures = readAssetAsString(nameResolver.getFeaturesName())
             var configModel = adapter.fromJson(jsonFeatures)
@@ -74,7 +74,7 @@ class RemoteLoader(
         private val adapter: JsonAdapter<ConfigModel>
 ) : ConfigLoader {
 
-    override suspend fun loadConfig(onComplete: (Config) -> Unit) {
+    override fun loadConfig(onComplete: (Config) -> Unit) {
         val emptyConfig = Config.empty()
         val remoteConfig = Firebase.remoteConfig
         remoteConfig.fetchAndActivate().addOnCompleteListener {
