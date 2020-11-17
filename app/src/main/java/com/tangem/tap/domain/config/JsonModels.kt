@@ -11,7 +11,7 @@ interface BaseConfigModel<V> {
 
 class FeatureModel(
         override val name: String,
-        override val value: Boolean?
+        override val value: Boolean
 ) : BaseConfigModel<Boolean>
 
 class ConfigValueModel(
