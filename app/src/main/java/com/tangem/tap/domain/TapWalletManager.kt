@@ -170,7 +170,7 @@ class TapWalletManager {
                 is Result.Success -> {
                     val config = store.state.globalState.configManager?.config?: return@withContext
                     val payId = result.data
-                    if (!config.isPayIdEnabled) {
+                    if (!config.payIdIsEnabled) {
                         store.dispatch(WalletAction.DisablePayId)
                         return@withContext
                     }
