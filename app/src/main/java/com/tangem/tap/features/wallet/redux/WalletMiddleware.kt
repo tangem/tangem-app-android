@@ -19,7 +19,6 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.TopUpHelper
-import com.tangem.tap.domain.config.ConfigurationValue
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.wallet.models.toPendingTransactions
@@ -254,14 +253,12 @@ private class TopUpMiddleware {
     fun handle(action: WalletAction.TopUpAction) {
         when (action) {
             is WalletAction.TopUpAction.TopUp -> {
-                val configManager = store.state.globalState.configManager ?: return
-                val apiKey = configManager.getConfigValue(ConfigurationValue.moonPayApiKey)?.value ?: ""
-                val secretKey = configManager.getConfigValue(ConfigurationValue.moonPayApiSecretKey)?.value ?: ""
+                val config = store.state.globalState.configManager?.config ?: return
                 val url = TopUpHelper.getUrl(
                         store.state.walletState.currencyData.currencySymbol!!,
                         store.state.walletState.addressData!!.address,
-                        apiKey,
-                        secretKey
+                        config.moonPayApiKey,
+                        config.moonPayApiSecretKey
                 )
                 Timber.d(url)
                 store.dispatch(WalletAction.TopUpAction.Start(url, TopUpHelper.REDIRECT_URL))
