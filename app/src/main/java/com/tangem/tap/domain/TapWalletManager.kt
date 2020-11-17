@@ -168,14 +168,14 @@ class TapWalletManager {
         withContext(Dispatchers.Main) {
             when (result) {
                 is Result.Success -> {
+                    val config = store.state.globalState.configManager?.config?: return@withContext
                     val payId = result.data
+                    if (!config.isPayIdEnabled) {
+                        store.dispatch(WalletAction.DisablePayId)
+                        return@withContext
+                    }
                     if (payId == null) {
-                        val config = store.state.globalState.configManager?.config?: return@withContext
-                        if (!config.payIdIsEnabled) {
-                            store.dispatch(WalletAction.DisablePayId)
-                        } else {
-                            store.dispatch(WalletAction.LoadPayId.NotCreated)
-                        }
+                        store.dispatch(WalletAction.LoadPayId.NotCreated)
                     } else {
                         store.dispatch(WalletAction.LoadPayId.Success(payId))
                     }
