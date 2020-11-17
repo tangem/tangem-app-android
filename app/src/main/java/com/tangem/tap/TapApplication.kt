@@ -8,7 +8,10 @@ import com.tangem.tap.common.images.PicassoHelper
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.domain.config.*
+import com.tangem.tap.domain.config.ConfigManager
+import com.tangem.tap.domain.config.ConfigNameResolver
+import com.tangem.tap.domain.config.LocalLoader
+import com.tangem.tap.domain.config.RemoteLoader
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.createMoshi
 import com.tangem.tap.persistence.PreferencesStorage
@@ -47,11 +50,11 @@ class TapApplication : Application() {
 
 
     private fun loadConfigs() {
-        val moshiAdapter = createMoshi().adapter(ConfigModel::class.java)
+        val moshi = createMoshi()
         val nameResolver = ConfigNameResolver.get()
 
-        val localLoader = LocalLoader(this, nameResolver, moshiAdapter)
-        val remoteLoader = RemoteLoader(nameResolver, moshiAdapter)
+        val localLoader = LocalLoader(this, nameResolver, moshi)
+        val remoteLoader = RemoteLoader(nameResolver, moshi)
         val configManager = ConfigManager(localLoader, remoteLoader)
         configManager.load { store.dispatch(GlobalAction.SetConfigManager(configManager)) }
     }
