@@ -8,10 +8,6 @@
     "value": true
   },
   {
-    "name": "showWelcomeMessageAtStart",
-    "value": false
-  },
-  {
     "name": "useTopUp",
     "value": false
   }
