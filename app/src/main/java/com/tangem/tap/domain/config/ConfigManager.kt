@@ -13,7 +13,7 @@ data class ConfigState(
         val moonPayApiSecretKey: String = "sk_test_V8w4M19LbDjjYOt170s0tGuvXAgyEb1C",
         val payIdIsEnabled: Boolean = true,
         val usePayId: Boolean = true,
-        val useTopUp: Boolean = true,
+        val useTopUp: Boolean = false,
         val isStart2Coin: Boolean = false
 )
 
