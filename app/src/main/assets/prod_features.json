@@ -1,0 +1,14 @@
+[
+  {
+    "name": "payIdIsEnabled",
+    "value": true
+  },
+  {
+    "name": "usePayId",
+    "value": true
+  },
+  {
+    "name": "useTopUp",
+    "value": false
+  }
+]
