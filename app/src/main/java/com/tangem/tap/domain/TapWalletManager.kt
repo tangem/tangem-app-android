@@ -1,5 +1,6 @@
 package com.tangem.tap.domain
 
+import TapWorkarounds
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.commands.CardStatus
@@ -10,6 +11,7 @@ import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.domain.config.ConfigManager
 import com.tangem.tap.domain.extensions.amountToCreateAccount
 import com.tangem.tap.domain.extensions.isNoAccountError
 import com.tangem.tap.domain.tasks.ScanNoteResponse
@@ -25,6 +27,7 @@ import java.math.BigDecimal
 class TapWalletManager {
     private val payIdManager = PayIdManager()
     private val coinMarketCapService = CoinMarketCapService()
+    private var tapWorkarounds: TapWorkarounds? = null
 
     suspend fun loadWalletData() {
         val walletManager = store.state.globalState.scanNoteResponse?.walletManager
@@ -82,7 +85,12 @@ class TapWalletManager {
         if (addAnalyticsEvent) {
             FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.CARD_IS_SCANNED, data.card)
         }
-        store.state.globalState.configManager?.onCardScanned(data.card)
+        tapWorkarounds = TapWorkarounds(data.card)
+        if (tapWorkarounds!!.isStart2Coin) {
+            store.state.globalState.configManager?.turnOf(ConfigManager.isPayIdCreationEnabled)
+        } else {
+            store.state.globalState.configManager?.resetToDefault(ConfigManager.isPayIdCreationEnabled)
+        }
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.ResetState)
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
@@ -99,11 +107,11 @@ class TapWalletManager {
                     store.dispatch(WalletAction.LoadData.Failure(TapError.NoInternetConnection))
                     return@withContext
                 }
-                val config = store.state.globalState.configManager?.config?: return@withContext
+                val config = store.state.globalState.configManager?.config ?: return@withContext
 
                 store.dispatch(WalletAction.LoadWallet(
                         data.walletManager.wallet, data.verifyResponse?.artworkInfo?.id,
-                        !config.isStart2Coin && config.useTopUp
+                        tapWorkarounds?.isStart2Coin == false && config.isTopUpEnabled
                 ))
                 store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
                 store.dispatch(WalletAction.LoadFiatRate)
@@ -150,10 +158,9 @@ class TapWalletManager {
 
 
     private suspend fun loadPayIdIfNeeded(): Result<String?>? {
-        val config = store.state.globalState.configManager?.config
         val scanNoteResponse = store.state.globalState.scanNoteResponse
-        if (config?.usePayId == false ||
-                scanNoteResponse?.walletManager?.wallet?.blockchain?.isPayIdSupported() == false) {
+        if (store.state.globalState.configManager?.config?.isPayIdCreationEnabled == false
+                || scanNoteResponse?.walletManager?.wallet?.blockchain?.isPayIdSupported() == false) {
             return null
         }
         val cardId = scanNoteResponse?.card?.cardId
@@ -168,12 +175,12 @@ class TapWalletManager {
         withContext(Dispatchers.Main) {
             when (result) {
                 is Result.Success -> {
-                    val config = store.state.globalState.configManager?.config?: return@withContext
-                    val payId = result.data
-                    if (!config.payIdIsEnabled) {
+                    val config = store.state.globalState.configManager?.config
+                    if (config?.isPayIdCreationEnabled == false) {
                         store.dispatch(WalletAction.DisablePayId)
                         return@withContext
                     }
+                    val payId = result.data
                     if (payId == null) {
                         store.dispatch(WalletAction.LoadPayId.NotCreated)
                     } else {
