@@ -4,6 +4,8 @@ import android.content.Context
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 import com.tangem.wallet.BuildConfig
 import timber.log.Timber
 
@@ -11,7 +13,7 @@ import timber.log.Timber
 * [REDACTED_AUTHOR]
  */
 interface ConfigLoader {
-    fun loadConfig(onComplete: (Config) -> Unit)
+    fun loadConfig(onComplete: (ConfigModel) -> Unit)
 }
 
 
@@ -41,25 +43,29 @@ class ConfigNameResolver {
     }
 }
 
+class KeyValueModel<T>(val name: String, value: T?)
+
 class LocalLoader(
         private val context: Context,
         private val nameResolver: NameResolver,
-        private val adapter: JsonAdapter<ConfigModel>
+        private val moshi: Moshi
 ) : ConfigLoader {
 
-    override fun loadConfig(onComplete: (Config) -> Unit) {
+    override fun loadConfig(onComplete: (ConfigModel) -> Unit) {
         val config = try {
-            val jsonFeatures = readAssetAsString(nameResolver.getFeaturesName())
-            var configModel = adapter.fromJson(jsonFeatures)
-            val features = configModel?.toFeatures(ConfigType.Local) ?: mutableMapOf()
+            val featureType = Types.newParameterizedType(List::class.java, FeatureModel::class.java)
+            val featureAdapter: JsonAdapter<List<FeatureModel>> = moshi.adapter(featureType)
+            val valuesType = Types.newParameterizedType(List::class.java, ConfigValueModel::class.java)
+            val valuesAdapter: JsonAdapter<List<ConfigValueModel>> = moshi.adapter(valuesType)
 
+            val jsonFeatures = readAssetAsString(nameResolver.getFeaturesName())
             val jsonConfigValues = readAssetAsString(nameResolver.getConfigValuesName())
-            configModel = adapter.fromJson(jsonConfigValues)
-            val configValues = configModel?.toConfigValues() ?: mutableMapOf()
-            Config(features, configValues)
+
+            ConfigModel(featureAdapter.fromJson(jsonFeatures) ?: listOf(),
+                    valuesAdapter.fromJson(jsonConfigValues) ?: listOf())
         } catch (ex: Exception) {
             Timber.e(ex)
-            Config.empty()
+            ConfigModel.empty()
         }
         onComplete(config)
     }
@@ -71,11 +77,11 @@ class LocalLoader(
 
 class RemoteLoader(
         private val nameResolver: NameResolver,
-        private val adapter: JsonAdapter<ConfigModel>
+        private val moshi: Moshi
 ) : ConfigLoader {
 
-    override fun loadConfig(onComplete: (Config) -> Unit) {
-        val emptyConfig = Config.empty()
+    override fun loadConfig(onComplete: (ConfigModel) -> Unit) {
+        val emptyConfig = ConfigModel.empty()
         val remoteConfig = Firebase.remoteConfig
         remoteConfig.fetchAndActivate().addOnCompleteListener {
             if (it.isSuccessful) {
@@ -85,10 +91,9 @@ class RemoteLoader(
                     onComplete(emptyConfig)
                     return@addOnCompleteListener
                 }
-                val configModel = adapter.fromJson(jsonConfig)
-                val features = configModel?.toFeatures(ConfigType.Remote) ?: mutableMapOf()
-                val configValues = configModel?.toConfigValues() ?: mutableMapOf()
-                onComplete(Config(features, configValues))
+                val featureType = Types.newParameterizedType(List::class.java, FeatureModel::class.java)
+                val featureAdapter: JsonAdapter<List<FeatureModel>> = moshi.adapter(featureType)
+                onComplete(ConfigModel(featureAdapter.fromJson(jsonConfig) ?: listOf(), listOf()))
             } else {
                 onComplete(emptyConfig)
             }
