@@ -1,68 +1,90 @@
 package com.tangem.tap.domain.config
 
-import com.tangem.commands.Card
 import com.tangem.tangem_sdk_new.ui.animation.VoidCallback
-import java.util.*
 
 /**
 [REDACTED_AUTHOR]
  */
-data class ConfigState(
+data class Config(
         val coinMarketCapKey: String = "f6622117-c043-47a0-8975-9d673ce484de",
         val moonPayApiKey: String = "pk_test_kc90oYTANy7UQdBavDKGfL4K9l6VEPE",
         val moonPayApiSecretKey: String = "sk_test_V8w4M19LbDjjYOt170s0tGuvXAgyEb1C",
-        val payIdIsEnabled: Boolean = true,
-        val usePayId: Boolean = true,
-        val useTopUp: Boolean = false,
-        val isStart2Coin: Boolean = false
+        val isPayIdCreationEnabled: Boolean = true,
+        val isTopUpEnabled: Boolean = false,
 )
 
 class ConfigManager(
         private val localLoader: ConfigLoader,
         private val remoteLoader: ConfigLoader
 ) {
-    private val usePayId = "usePayId"
-    private val payIdIsEnabled = "payIdIsEnabled"
-    private val useTopUp = "useTopUp"
-    private val isStart2Coin = "isStart2Coin"
-    private val coinMarketCapKey = "coinMarketCapKey"
-    private val moonPayApiKey = "moonPayApiKey"
-    private val moonPayApiSecretKey = "moonPayApiSecretKey"
 
-    var config: ConfigState = ConfigState()
+    var config: Config = Config()
         private set
 
+    private var defaultConfig = Config()
+
     fun load(onComplete: VoidCallback? = null) {
-        localLoader.loadConfig {config ->
-            config.features?.forEach { updateFeature(it.name, it.value) }
-            config.configValues?.forEach { updateKeys(it.name, it.value) }
+        localLoader.loadConfig { config ->
+            config.features?.forEach { setupFeature(it.name, it.value) }
+            config.configValues?.forEach { setupKey(it.name, it.value) }
         }
-        remoteLoader.loadConfig {
-            it.features?.forEach { feature -> updateFeature(feature.name, feature.value) }
+        remoteLoader.loadConfig { config ->
+            config.features?.forEach { setupFeature(it.name, it.value) }
             onComplete?.invoke()
         }
     }
 
-    fun onCardScanned(card: Card) {
-        updateFeature(isStart2Coin, card.cardData?.issuerName?.toLowerCase(Locale.US) == "start2coin")
+    fun turnOf(name: String) {
+        when (name) {
+            isPayIdCreationEnabled -> config = config.copy(isPayIdCreationEnabled = false)
+            isTopUpEnabled -> config = config.copy(isTopUpEnabled = false)
+        }
     }
 
-    private fun updateFeature(name: String, value: Boolean?) {
+    fun resetToDefault(name: String) {
+        when (name) {
+            isPayIdCreationEnabled -> config = config.copy(isPayIdCreationEnabled = defaultConfig.isPayIdCreationEnabled)
+            isTopUpEnabled -> config = config.copy(isTopUpEnabled = defaultConfig.isTopUpEnabled)
+        }
+    }
+
+    private fun setupFeature(name: String, value: Boolean) {
         val newValue = value ?: return
 
         when (name) {
-            usePayId -> config = config.copy(usePayId = newValue)
-            payIdIsEnabled -> config = config.copy(payIdIsEnabled = newValue)
-            useTopUp -> config = config.copy(useTopUp = newValue)
-            isStart2Coin -> config = config.copy(isStart2Coin = newValue)
+            isPayIdCreationEnabled -> {
+                config = config.copy(isPayIdCreationEnabled = newValue)
+                defaultConfig = defaultConfig.copy(isPayIdCreationEnabled = newValue)
+            }
+            isTopUpEnabled -> {
+                config = config.copy(isTopUpEnabled = newValue)
+                defaultConfig = defaultConfig.copy(isTopUpEnabled = newValue)
+            }
         }
     }
 
-    private fun updateKeys(name: String, value: String) {
+    private fun setupKey(name: String, value: String) {
         when (name) {
-            coinMarketCapKey -> config = config.copy(coinMarketCapKey = value)
-            moonPayApiKey -> config = config.copy(moonPayApiKey = value)
-            moonPayApiSecretKey -> config = config.copy(moonPayApiSecretKey = value)
+            coinMarketCapKey -> {
+                config = config.copy(coinMarketCapKey = value)
+                defaultConfig = defaultConfig.copy(coinMarketCapKey = value)
+            }
+            moonPayApiKey -> {
+                config = config.copy(moonPayApiKey = value)
+                defaultConfig = defaultConfig.copy(moonPayApiKey = value)
+            }
+            moonPayApiSecretKey -> {
+                config = config.copy(moonPayApiSecretKey = value)
+                defaultConfig = defaultConfig.copy(moonPayApiSecretKey = value)
+            }
         }
+    }
+
+    companion object {
+        const val isPayIdCreationEnabled = "isPayIdCreationEnabled"
+        const val isTopUpEnabled = "useTopUp"
+        const val coinMarketCapKey = "coinMarketCapKey"
+        const val moonPayApiKey = "moonPayApiKey"
+        const val moonPayApiSecretKey = "moonPayApiSecretKey"
     }
 }
