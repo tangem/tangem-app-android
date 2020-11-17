@@ -5,7 +5,6 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.commands.CardStatus
 import com.tangem.commands.common.network.Result
 import com.tangem.common.extensions.toHexString
-import com.tangem.tap.TapConfig
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
@@ -26,7 +25,6 @@ import java.math.BigDecimal
 class TapWalletManager {
     private val payIdManager = PayIdManager()
     private val coinMarketCapService = CoinMarketCapService()
-    private var tapWorkarounds: TapWorkarounds? = null
 
     suspend fun loadWalletData() {
         val walletManager = store.state.globalState.scanNoteResponse?.walletManager
@@ -84,7 +82,7 @@ class TapWalletManager {
         if (addAnalyticsEvent) {
             FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.CARD_IS_SCANNED, data.card)
         }
-        tapWorkarounds = TapWorkarounds(data.card)
+        store.state.globalState.configManager?.onCardScanned(data.card)
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.ResetState)
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
@@ -101,9 +99,11 @@ class TapWalletManager {
                     store.dispatch(WalletAction.LoadData.Failure(TapError.NoInternetConnection))
                     return@withContext
                 }
+                val config = store.state.globalState.configManager?.config?: return@withContext
+
                 store.dispatch(WalletAction.LoadWallet(
                         data.walletManager.wallet, data.verifyResponse?.artworkInfo?.id,
-                        tapWorkarounds?.isStart2Coin != true && TapConfig.useTopUp
+                        !config.isStart2Coin && config.useTopUp
                 ))
                 store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
                 store.dispatch(WalletAction.LoadFiatRate)
@@ -150,8 +150,9 @@ class TapWalletManager {
 
 
     private suspend fun loadPayIdIfNeeded(): Result<String?>? {
+        val config = store.state.globalState.configManager?.config
         val scanNoteResponse = store.state.globalState.scanNoteResponse
-        if (!TapConfig.usePayId ||
+        if (config?.usePayId == false ||
                 scanNoteResponse?.walletManager?.wallet?.blockchain?.isPayIdSupported() == false) {
             return null
         }
@@ -169,7 +170,8 @@ class TapWalletManager {
                 is Result.Success -> {
                     val payId = result.data
                     if (payId == null) {
-                        if (tapWorkarounds?.isPayIdCreationEnabled() == false) {
+                        val config = store.state.globalState.configManager?.config?: return@withContext
+                        if (!config.payIdIsEnabled) {
                             store.dispatch(WalletAction.DisablePayId)
                         } else {
                             store.dispatch(WalletAction.LoadPayId.NotCreated)
