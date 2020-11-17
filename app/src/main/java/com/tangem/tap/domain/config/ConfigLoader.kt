@@ -1,6 +1,7 @@
 package com.tangem.tap.domain.config
 
 import android.content.Context
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.squareup.moshi.JsonAdapter
@@ -14,40 +15,16 @@ import timber.log.Timber
  */
 interface ConfigLoader {
     fun loadConfig(onComplete: (ConfigModel) -> Unit)
-}
 
-
-interface NameResolver {
-    fun getFeaturesName(): String
-    fun getConfigValuesName(): String
-}
-
-class ConfigNameResolver {
     companion object {
-        fun get(): NameResolver = if (BuildConfig.DEBUG) dev() else prod()
-
-        private fun dev(): NameResolver {
-            return object : NameResolver {
-                override fun getFeaturesName(): String = "dev_features"
-                override fun getConfigValuesName(): String = "dev_config_values"
-            }
-        }
-
-        private fun prod(): NameResolver {
-            return object : NameResolver {
-                override fun getFeaturesName(): String = "prod_features"
-                override fun getConfigValuesName(): String = "prod_config_values"
-
-            }
-        }
+        const val featuresName = "features_${BuildConfig.CONFIG_ENVIRONMENT}"
+        const val configValuesName = "config_${BuildConfig.CONFIG_ENVIRONMENT}"
     }
 }
 
-class KeyValueModel<T>(val name: String, value: T?)
 
 class LocalLoader(
         private val context: Context,
-        private val nameResolver: NameResolver,
         private val moshi: Moshi
 ) : ConfigLoader {
 
@@ -58,8 +35,8 @@ class LocalLoader(
             val valuesType = Types.newParameterizedType(List::class.java, ConfigValueModel::class.java)
             val valuesAdapter: JsonAdapter<List<ConfigValueModel>> = moshi.adapter(valuesType)
 
-            val jsonFeatures = readAssetAsString(nameResolver.getFeaturesName())
-            val jsonConfigValues = readAssetAsString(nameResolver.getConfigValuesName())
+            val jsonFeatures = readAssetAsString(ConfigLoader.featuresName)
+            val jsonConfigValues = readAssetAsString(ConfigLoader.configValuesName)
 
             ConfigModel(featureAdapter.fromJson(jsonFeatures) ?: listOf(),
                     valuesAdapter.fromJson(jsonConfigValues) ?: listOf())
@@ -76,7 +53,6 @@ class LocalLoader(
 }
 
 class RemoteLoader(
-        private val nameResolver: NameResolver,
         private val moshi: Moshi
 ) : ConfigLoader {
 
@@ -85,7 +61,7 @@ class RemoteLoader(
         val remoteConfig = Firebase.remoteConfig
         remoteConfig.fetchAndActivate().addOnCompleteListener {
             if (it.isSuccessful) {
-                val config = remoteConfig.getValue(nameResolver.getFeaturesName())
+                val config = remoteConfig.getValue(ConfigLoader.featuresName)
                 val jsonConfig = config.asString()
                 if (jsonConfig.isEmpty()) {
                     onComplete(emptyConfig)
@@ -98,7 +74,7 @@ class RemoteLoader(
                 onComplete(emptyConfig)
             }
         }.addOnFailureListener {
-            Timber.e(it)
+            FirebaseCrashlytics.getInstance().recordException(it)
             onComplete(emptyConfig)
         }
     }
