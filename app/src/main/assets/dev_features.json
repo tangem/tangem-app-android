@@ -1,20 +1,18 @@
-{
-  "features": [
-    {
-      "name": "payIdIsEnabled",
-      "value": true
-    },
-    {
-      "name": "usePayId",
-      "value": true
-    },
-    {
-      "name": "showWelcomeMessageAtStart",
-      "value": false
-    },
-    {
-      "name": "useTopUp",
-      "value": false
-    }
-  ]
-}
+[
+  {
+    "name": "payIdIsEnabled",
+    "value": true
+  },
+  {
+    "name": "usePayId",
+    "value": true
+  },
+  {
+    "name": "showWelcomeMessageAtStart",
+    "value": false
+  },
+  {
+    "name": "useTopUp",
+    "value": false
+  }
+]
