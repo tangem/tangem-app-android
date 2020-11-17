@@ -19,18 +19,8 @@ class ConfigValueModel(
         override val value: String
 ) : BaseConfigModel<String>
 
-class ConfigModel(val features: List<FeatureModel>?, val configValues: List<ConfigValueModel>?)
-
-fun ConfigModel.toFeatures(type: ConfigType): MutableMap<String, Feature> {
-    return features?.map { AppFeature(type, it, ConditionsFactory.create(it.name)) }
-            ?.associateBy { it.name }
-            ?.toMutableMap()
-            ?: mutableMapOf()
+class ConfigModel(val features: List<FeatureModel>?, val configValues: List<ConfigValueModel>?) {
+    companion object {
+        fun empty(): ConfigModel = ConfigModel(listOf(), listOf())
+    }
 }
-
-fun ConfigModel.toConfigValues(): MutableMap<String, ConfigurationValue> {
-    return configValues?.map { ConfigurationValue(it.name, it.value) }
-            ?.associateBy { it.name }
-            ?.toMutableMap() ?: mutableMapOf()
-}
-
