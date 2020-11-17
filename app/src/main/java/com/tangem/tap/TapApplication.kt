@@ -9,7 +9,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.config.ConfigManager
-import com.tangem.tap.domain.config.ConfigNameResolver
 import com.tangem.tap.domain.config.LocalLoader
 import com.tangem.tap.domain.config.RemoteLoader
 import com.tangem.tap.network.NetworkConnectivity
@@ -51,10 +50,8 @@ class TapApplication : Application() {
 
     private fun loadConfigs() {
         val moshi = createMoshi()
-        val nameResolver = ConfigNameResolver.get()
-
-        val localLoader = LocalLoader(this, nameResolver, moshi)
-        val remoteLoader = RemoteLoader(nameResolver, moshi)
+        val localLoader = LocalLoader(this, moshi)
+        val remoteLoader = RemoteLoader(moshi)
         val configManager = ConfigManager(localLoader, remoteLoader)
         configManager.load { store.dispatch(GlobalAction.SetConfigManager(configManager)) }
     }
