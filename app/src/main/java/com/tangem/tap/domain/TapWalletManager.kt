@@ -86,9 +86,9 @@ class TapWalletManager {
         }
         tapWorkarounds = TapWorkarounds(data.card)
         if (tapWorkarounds!!.isStart2Coin) {
-            store.state.globalState.configManager?.turnOf(ConfigManager.isPayIdCreationEnabled)
+            store.state.globalState.configManager?.turnOf(ConfigManager.isWalletPayIdEnabled)
         } else {
-            store.state.globalState.configManager?.resetToDefault(ConfigManager.isPayIdCreationEnabled)
+            store.state.globalState.configManager?.resetToDefault(ConfigManager.isWalletPayIdEnabled)
         }
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.ResetState)
@@ -158,7 +158,7 @@ class TapWalletManager {
 
     private suspend fun loadPayIdIfNeeded(): Result<String?>? {
         val scanNoteResponse = store.state.globalState.scanNoteResponse
-        if (store.state.globalState.configManager?.config?.isPayIdCreationEnabled == false
+        if (store.state.globalState.configManager?.config?.isWalletPayIdEnabled == false
                 || scanNoteResponse?.walletManager?.wallet?.blockchain?.isPayIdSupported() == false) {
             return null
         }
@@ -175,7 +175,7 @@ class TapWalletManager {
             when (result) {
                 is Result.Success -> {
                     val config = store.state.globalState.configManager?.config
-                    if (config?.isPayIdCreationEnabled == false) {
+                    if (config?.isWalletPayIdEnabled == false) {
                         store.dispatch(WalletAction.DisablePayId)
                         return@withContext
                     }
