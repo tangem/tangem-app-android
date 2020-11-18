@@ -1,6 +1,6 @@
 [
   {
-    "name": "isPayIdCreationEnabled",
+    "name": "isWalletPayIdEnabled",
     "value": false
   },
   {
