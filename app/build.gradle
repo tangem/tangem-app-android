@@ -3,6 +3,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'com.google.firebase.crashlytics'
+apply plugin: 'com.google.gms.google-services'
 
 android {
     compileSdkVersion 29
@@ -39,7 +40,6 @@ android {
             initWith debug
             versionNameSuffix "-beta"
             applicationIdSuffix ".debug"
-            buildConfigField 'String', 'CONFIG_ENVIRONMENT', '\"dev\"'
         }
     }
     kotlinOptions {
@@ -107,11 +107,4 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
-}
-
-apply plugin: 'com.google.gms.google-services'
-
-android.applicationVariants.all { variant ->
-    def googleTask = tasks.findByName("process${variant.name.capitalize()}GoogleServices")
-    googleTask.enabled = "release".equals(variant.name)
 }
