@@ -34,7 +34,7 @@ class ConfigManager(
         }
     }
 
-    fun turnOf(name: String) {
+    fun turnOff(name: String) {
         when (name) {
             isWalletPayIdEnabled -> config = config.copy(isWalletPayIdEnabled = false)
             isTopUpEnabled -> config = config.copy(isTopUpEnabled = false)
