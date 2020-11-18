@@ -25,7 +25,7 @@ class HomeMiddleware {
                 when (action) {
                     is HomeAction.CheckIfFirstLaunch -> {
                         store.dispatch(
-                                HomeAction.CheckIfFirstLaunch.Result(preferencesStorage.isFirstLaunch())
+                                HomeAction.CheckIfFirstLaunch.Result(preferencesStorage.getCountOfLaunches() == 1)
                         )
                     }
                     is HomeAction.ReadCard -> {
