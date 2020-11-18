@@ -9,7 +9,7 @@ data class Config(
         val coinMarketCapKey: String = "f6622117-c043-47a0-8975-9d673ce484de",
         val moonPayApiKey: String = "pk_test_kc90oYTANy7UQdBavDKGfL4K9l6VEPE",
         val moonPayApiSecretKey: String = "sk_test_V8w4M19LbDjjYOt170s0tGuvXAgyEb1C",
-        val isPayIdCreationEnabled: Boolean = true,
+        val isWalletPayIdEnabled: Boolean = true,
         val isTopUpEnabled: Boolean = false,
 )
 
@@ -36,14 +36,14 @@ class ConfigManager(
 
     fun turnOf(name: String) {
         when (name) {
-            isPayIdCreationEnabled -> config = config.copy(isPayIdCreationEnabled = false)
+            isWalletPayIdEnabled -> config = config.copy(isWalletPayIdEnabled = false)
             isTopUpEnabled -> config = config.copy(isTopUpEnabled = false)
         }
     }
 
     fun resetToDefault(name: String) {
         when (name) {
-            isPayIdCreationEnabled -> config = config.copy(isPayIdCreationEnabled = defaultConfig.isPayIdCreationEnabled)
+            isWalletPayIdEnabled -> config = config.copy(isWalletPayIdEnabled = defaultConfig.isWalletPayIdEnabled)
             isTopUpEnabled -> config = config.copy(isTopUpEnabled = defaultConfig.isTopUpEnabled)
         }
     }
@@ -52,9 +52,9 @@ class ConfigManager(
         val newValue = value ?: return
 
         when (name) {
-            isPayIdCreationEnabled -> {
-                config = config.copy(isPayIdCreationEnabled = newValue)
-                defaultConfig = defaultConfig.copy(isPayIdCreationEnabled = newValue)
+            isWalletPayIdEnabled -> {
+                config = config.copy(isWalletPayIdEnabled = newValue)
+                defaultConfig = defaultConfig.copy(isWalletPayIdEnabled = newValue)
             }
             isTopUpEnabled -> {
                 config = config.copy(isTopUpEnabled = newValue)
@@ -81,7 +81,7 @@ class ConfigManager(
     }
 
     companion object {
-        const val isPayIdCreationEnabled = "isPayIdCreationEnabled"
+        const val isWalletPayIdEnabled = "isWalletPayIdEnabled"
         const val isTopUpEnabled = "useTopUp"
         const val coinMarketCapKey = "coinMarketCapKey"
         const val moonPayApiKey = "moonPayApiKey"
