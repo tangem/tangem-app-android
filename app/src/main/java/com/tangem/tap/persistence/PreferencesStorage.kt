@@ -50,12 +50,6 @@ class PreferencesStorage(applicationContext: Application) {
         return preferences.edit().putString(FIAT_CURRENCIES_KEY, json).apply()
     }
 
-    fun isFirstLaunch(): Boolean {
-        val isFirst = !preferences.contains(FIRST_LAUNCH_CHECK_KEY)
-        if (isFirst) preferences.edit().putInt(FIRST_LAUNCH_CHECK_KEY, System.currentTimeMillis().toInt()).apply()
-        return isFirst
-    }
-
     fun getCountOfLaunches(): Int = preferences.getInt(APP_LAUNCH_COUNT_KEY, 1)
 
     fun saveScannedCardId(cardId: String) {
