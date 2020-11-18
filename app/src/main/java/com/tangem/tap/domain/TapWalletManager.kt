@@ -86,9 +86,11 @@ class TapWalletManager {
         }
         tapWorkarounds = TapWorkarounds(data.card)
         if (tapWorkarounds!!.isStart2Coin) {
-            store.state.globalState.configManager?.turnOf(ConfigManager.isWalletPayIdEnabled)
+            store.state.globalState.configManager?.turnOff(ConfigManager.isWalletPayIdEnabled)
+            store.state.globalState.configManager?.turnOff(ConfigManager.isTopUpEnabled)
         } else {
             store.state.globalState.configManager?.resetToDefault(ConfigManager.isWalletPayIdEnabled)
+            store.state.globalState.configManager?.resetToDefault(ConfigManager.isTopUpEnabled)
         }
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.ResetState)
@@ -109,9 +111,7 @@ class TapWalletManager {
                 val config = store.state.globalState.configManager?.config ?: return@withContext
 
                 store.dispatch(WalletAction.LoadWallet(
-                        data.walletManager.wallet, data.verifyResponse?.artworkInfo?.id,
-                        tapWorkarounds?.isStart2Coin == false && config.isTopUpEnabled
-                ))
+                        data.walletManager.wallet, data.verifyResponse?.artworkInfo?.id, config.isTopUpEnabled))
                 store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
                 store.dispatch(WalletAction.LoadFiatRate)
                 store.dispatch(WalletAction.LoadPayId)
