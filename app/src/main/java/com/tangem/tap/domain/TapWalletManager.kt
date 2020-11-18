@@ -1,6 +1,5 @@
 package com.tangem.tap.domain
 
-import TapWorkarounds
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.commands.CardStatus
