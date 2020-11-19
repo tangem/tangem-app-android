@@ -50,7 +50,8 @@
     <string name="wallet_create_payid_success_message">PayID creato con successo e copiato negli appunti</string>
     <string name="wallet_create_payid_error_message">Errore di risposta durante la creazione del PayID</string>
     <string name="wallet_create_payid_error_already_created">Questo PayID esiste già. Scegline un altro.</string>
-    <string name="send_destination_hint">Indirizzo o PayID</string>
+    <string name="send_destination_hint_address_payid">Indirizzo o PayID</string>
+    <string name="send_destination_hint_address">Indirizzo</string>
     <string name="send_title">Invia</string>
     <string name="send_network_fee_title">Rete libera</string>
     <string name="send_amount_label">Importo</string>
