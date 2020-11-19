@@ -52,7 +52,8 @@
     <string name="wallet_create_payid_success_message">PayID a été créé avec succès et copié dans le presse-papiers </string>
     <string name="wallet_create_payid_error_message">Mauvaise réponse lors de la création de PayID </string>
     <string name="wallet_create_payid_error_already_created">Ce PayID existe déjà. Essayez une autre variante.</string>
-    <string name="send_destination_hint">Adresse ou PayID</string>
+    <string name="send_destination_hint_address_payid">Adresse ou PayID</string>
+    <string name="send_destination_hint_address">Adresse</string>
     <string name="send_title">Envoyer </string>
     <string name="send_network_fee_title">Commissions du réseau </string>
     <string name="send_amount_label">Somme </string>
