@@ -26,7 +26,6 @@ import java.math.BigDecimal
 class TapWalletManager {
     private val payIdManager = PayIdManager()
     private val coinMarketCapService = CoinMarketCapService()
-    private var tapWorkarounds: TapWorkarounds? = null
 
     suspend fun loadWalletData() {
         val walletManager = store.state.globalState.scanNoteResponse?.walletManager
@@ -84,7 +83,7 @@ class TapWalletManager {
         if (addAnalyticsEvent) {
             FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.CARD_IS_SCANNED, data.card)
         }
-        tapWorkarounds = TapWorkarounds(data.card)
+        TapWorkarounds.updateCard(data.card)
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.ResetState)
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
@@ -103,7 +102,7 @@ class TapWalletManager {
                 }
                 store.dispatch(WalletAction.LoadWallet(
                         data.walletManager.wallet, data.verifyResponse?.artworkInfo?.id,
-                        tapWorkarounds?.isStart2Coin != true && TapConfig.useTopUp
+                        TapWorkarounds.isStart2Coin != true && TapConfig.useTopUp
                 ))
                 store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
                 store.dispatch(WalletAction.LoadFiatRate)
@@ -168,7 +167,7 @@ class TapWalletManager {
             when (result) {
                 is Result.Success -> {
                     val payId = result.data
-                    if (tapWorkarounds?.isPayIdEnabled() == false) {
+                    if (TapWorkarounds.isPayIdEnabled() == false) {
                         store.dispatch(WalletAction.DisablePayId)
                         return@withContext
                     }
