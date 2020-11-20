@@ -51,7 +51,8 @@
     <string name="wallet_create_payid_success_message">Ihre PayID wurde erfolgreich erstellt und zum Clipboard kopiert</string>
     <string name="wallet_create_payid_error_message">Fehlerantwort beim Erstellen der ZahlungsID</string>
     <string name="wallet_create_payid_error_already_created">Diese PayID existiert bereits. Versuchen Sie mit einer anderen erneut.</string>
-    <string name="send_destination_hint">Adresse oder PayID</string>
+    <string name="send_destination_hint_address_payid">Adresse oder PayID</string>
+    <string name="send_destination_hint_address">Adresse</string>
     <string name="send_title">Absenden</string>
     <string name="send_network_fee_title">Netzgebühr</string>
     <string name="send_amount_label">Betrag</string>
