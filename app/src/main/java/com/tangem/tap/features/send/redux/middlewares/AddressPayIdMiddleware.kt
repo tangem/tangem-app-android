@@ -105,7 +105,7 @@ internal class AddressPayIdMiddleware {
     }
 
     private fun verifyAddress(address: String, wallet: Wallet, isUserInput: Boolean, dispatch: (Action) -> Unit) {
-        val supposedAddress = extractAddressFromShareUri(address)
+        val supposedAddress = extractAddressFromShareUri(address).removeNonAddressData()
 
         val failReason = isValidBlockchainAddressAndNotTheSameAsWallet(wallet, supposedAddress)
         if (failReason == null) {
@@ -133,6 +133,8 @@ internal class AddressPayIdMiddleware {
         val prefixes = sharePrefix.filter { shareUri.contains(it) }
         return if (prefixes.isEmpty()) shareUri else shareUri.replace(prefixes[0], "")
     }
+
+    private fun String.removeNonAddressData(): String = this.substringBefore("?")
 
     private fun verifyClipboard(input: String?, appState: AppState?, dispatch: DispatchFunction) {
         val addressPayId = input ?: return
