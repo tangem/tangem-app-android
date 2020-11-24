@@ -12,6 +12,7 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.TapWorkarounds
 import com.tangem.tap.domain.extensions.minimalAmount
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
@@ -91,11 +92,16 @@ private fun sendTransaction(
     val txData = walletManager.createTransaction(amountToSend, feeAmount, recipientAddress)
     scope.launch {
         walletManager.update()
+        val isLinkedTerminal = tangemSdk.config.linkedTerminal
+        if (TapWorkarounds.isStart2Coin) {
+            tangemSdk.config.linkedTerminal = false
+        }
         val signer = Signer(tangemSdk, action.messageForSigner)
         val result = (walletManager as TransactionSender).send(txData, signer)
         withContext(Dispatchers.Main) {
             when (result) {
                 is Result.Success -> {
+                    tangemSdk.config.linkedTerminal = isLinkedTerminal
                     FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.TRANSACTION_IS_SENT, card)
                     dispatch(SendAction.SendSuccess)
                     dispatch(GlobalAction.UpdateWalletSignedHashes(result.data.walletSignedHashes))
