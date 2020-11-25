@@ -10,20 +10,20 @@ import javax.crypto.spec.SecretKeySpec
 class TopUpHelper {
 
     companion object {
-        const val REDIRECT_URL = "https://success.tangem.com"
+//        const val REDIRECT_URL = "https://success.tangem.com"
 
-        private const val BASE_URL = "https://buy-staging.moonpay.io"
+        private const val BASE_URL = "https://buy.moonpay.io"
         private const val API_KEY_PATH = "?apiKey="
         private const val CURRENCY_PATH = "&currencyCode="
         private const val WALLET_ADDRESS_PATH = "&walletAddress="
-        private const val REDIRECT_URL_PATH = "&redirectUrl="
+//        private const val REDIRECT_URL_PATH = "&redirectUrl="
         private const val SIGNATURE_PATH = "&signature="
 
         fun getUrl(cryptoCurrencyName: CryptoCurrencyName, walletAddress: String): String {
             val originalQuery = API_KEY_PATH + TapConfig.moonPayApiKey.urlEncode() +
                     CURRENCY_PATH + cryptoCurrencyName.urlEncode() +
-                    WALLET_ADDRESS_PATH + walletAddress.urlEncode() +
-                    REDIRECT_URL_PATH + REDIRECT_URL.urlEncode()
+                    WALLET_ADDRESS_PATH + walletAddress.urlEncode()
+//                    REDIRECT_URL_PATH + REDIRECT_URL.urlEncode()
             val signature = createSignature(originalQuery, TapConfig.moonPayApiSecretKey)
 
             return BASE_URL + originalQuery + SIGNATURE_PATH + signature.urlEncode()
