@@ -61,6 +61,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                 oldState.walletState == newState.walletState
             }.select { it.walletState }
         }
+        store.dispatch(WalletAction.UpdateWallet)
     }
 
     override fun onStop() {
