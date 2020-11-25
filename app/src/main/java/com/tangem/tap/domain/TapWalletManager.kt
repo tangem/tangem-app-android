@@ -14,6 +14,7 @@ import com.tangem.tap.domain.config.ConfigManager
 import com.tangem.tap.domain.extensions.amountToCreateAccount
 import com.tangem.tap.domain.extensions.isNoAccountError
 import com.tangem.tap.domain.tasks.ScanNoteResponse
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
@@ -26,7 +27,6 @@ import java.math.BigDecimal
 class TapWalletManager {
     private val payIdManager = PayIdManager()
     private val coinMarketCapService = CoinMarketCapService()
-    private var tapWorkarounds: TapWorkarounds? = null
 
     suspend fun loadWalletData() {
         val walletManager = store.state.globalState.scanNoteResponse?.walletManager
@@ -84,17 +84,19 @@ class TapWalletManager {
         if (addAnalyticsEvent) {
             FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.CARD_IS_SCANNED, data.card)
         }
-        tapWorkarounds = TapWorkarounds(data.card)
-        if (tapWorkarounds!!.isStart2Coin) {
-            store.state.globalState.configManager?.turnOff(ConfigManager.isWalletPayIdEnabled)
-            store.state.globalState.configManager?.turnOff(ConfigManager.isTopUpEnabled)
+        TapWorkarounds.updateCard(data.card)
+        val configManager = store.state.globalState.configManager
+        if (TapWorkarounds.isStart2Coin) {
+            configManager?.turnOff(ConfigManager.isWalletPayIdEnabled)
+            configManager?.turnOff(ConfigManager.isTopUpEnabled)
         } else {
-            store.state.globalState.configManager?.resetToDefault(ConfigManager.isWalletPayIdEnabled)
-            store.state.globalState.configManager?.resetToDefault(ConfigManager.isTopUpEnabled)
+            configManager?.resetToDefault(ConfigManager.isWalletPayIdEnabled)
+            configManager?.resetToDefault(ConfigManager.isTopUpEnabled)
         }
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.ResetState)
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
+            store.dispatch(AddressPayIdActionUi.ChangePayIdState(configManager?.config?.isWalletPayIdEnabled ?: false))
             loadData(data)
         }
     }
