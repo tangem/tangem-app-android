@@ -89,8 +89,6 @@ sealed class WalletAction : Action {
     object EmptyWallet : WalletAction()
 
     sealed class TopUpAction : WalletAction() {
-        data class TopUp(val context: Context, val toolbarColor: Int?) : TopUpAction()
-        data class Start(val url: String, val redirectUrl: String) : TopUpAction()
-        data class Finish(val topUpCompleted: Boolean) : TopUpAction()
+        data class TopUp(val context: Context, val toolbarColor: Int) : TopUpAction()
     }
 }
