@@ -16,7 +16,6 @@ import com.tangem.tap.domain.extensions.minimalAmount
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
 import com.tangem.tap.features.send.redux.states.SendButtonState
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
 import com.tangem.tap.tangemSdk
 import kotlinx.coroutines.Dispatchers
@@ -99,7 +98,6 @@ private fun sendTransaction(
                     FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.TRANSACTION_IS_SENT, card)
                     dispatch(SendAction.SendSuccess)
                     dispatch(GlobalAction.UpdateWalletSignedHashes(result.data.walletSignedHashes))
-                    dispatch(WalletAction.UpdateWallet)
                     dispatch(NavigationAction.PopBackTo())
                 }
                 is Result.Failure -> {
