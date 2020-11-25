@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.commands.common.network.Result
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.PayIdManager
+import com.tangem.tap.domain.TapWorkarounds
 import com.tangem.tap.domain.isPayIdSupported
 import com.tangem.tap.features.send.redux.AddressPayIdActionUi
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction
@@ -48,7 +49,7 @@ internal class AddressPayIdMiddleware {
 
     private fun setAddressAndCheck(data: String, isUserInput: Boolean, dispatch: (Action) -> Unit) {
         val potentialPayId = data.toLowerCase()
-        if (PayIdManager.isPayId(potentialPayId)) {
+        if (PayIdManager.isPayId(potentialPayId) && TapWorkarounds.isPayIdEnabled()) {
             dispatch(SetPayIdWalletAddress(potentialPayId, "", isUserInput))
         } else {
             dispatch(SetWalletAddress(data, isUserInput))
@@ -62,7 +63,7 @@ internal class AddressPayIdMiddleware {
         val addressPayId = sendState.addressPayIdState.normalFieldValue ?: return
         val isUserInput = sendState.addressPayIdState.viewFieldValue.isFromUserInput
 
-        if (PayIdManager.isPayId(addressPayId)) {
+        if (PayIdManager.isPayId(addressPayId) && TapWorkarounds.isPayIdEnabled()) {
             verifyPayId(addressPayId, wallet, isUserInput, dispatch)
         } else {
             verifyAddress(addressPayId, wallet, isUserInput, dispatch)
@@ -104,7 +105,7 @@ internal class AddressPayIdMiddleware {
     }
 
     private fun verifyAddress(address: String, wallet: Wallet, isUserInput: Boolean, dispatch: (Action) -> Unit) {
-        val supposedAddress = extractAddressFromShareUri(address)
+        val supposedAddress = extractAddressFromShareUri(address).removeNonAddressData()
 
         val failReason = isValidBlockchainAddressAndNotTheSameAsWallet(wallet, supposedAddress)
         if (failReason == null) {
@@ -133,6 +134,8 @@ internal class AddressPayIdMiddleware {
         return if (prefixes.isEmpty()) shareUri else shareUri.replace(prefixes[0], "")
     }
 
+    private fun String.removeNonAddressData(): String = this.substringBefore("?")
+
     private fun verifyClipboard(input: String?, appState: AppState?, dispatch: DispatchFunction) {
         val addressPayId = input ?: return
         val wallet = appState?.sendState?.walletManager?.wallet ?: return
@@ -149,7 +152,7 @@ internal class AddressPayIdMiddleware {
             }
         }
 
-        if (PayIdManager.isPayId(addressPayId)) {
+        if (PayIdManager.isPayId(addressPayId) && TapWorkarounds.isPayIdEnabled()) {
             verifyPayId(addressPayId, wallet, false, internalDispatcher)
         } else {
             verifyAddress(addressPayId, wallet, false, internalDispatcher)
