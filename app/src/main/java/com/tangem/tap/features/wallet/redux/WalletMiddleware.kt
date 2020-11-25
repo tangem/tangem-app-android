@@ -2,6 +2,7 @@ package com.tangem.tap.features.wallet.redux
 
 import android.content.Intent
 import android.net.Uri
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.SimpleResult
@@ -34,7 +35,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.Action
 import org.rekotlin.Middleware
-import timber.log.Timber
 
 class WalletMiddleware {
     private val topUpMiddleware = TopUpMiddleware()
@@ -73,7 +73,9 @@ class WalletMiddleware {
                         }
                     }
                     is WalletAction.UpdateWallet -> {
-                        scope.launch { store.state.globalState.tapWalletManager.updateWallet() }
+                        if (store.state.walletState.state == ProgressState.Done) {
+                            scope.launch { store.state.globalState.tapWalletManager.updateWallet() }
+                        }
                     }
                     is WalletAction.UpdateWallet.Success -> setupWalletUpdate(action.wallet)
                     is WalletAction.LoadWallet.Success -> {
@@ -257,16 +259,10 @@ private class TopUpMiddleware {
                         store.state.walletState.currencyData.currencySymbol!!,
                         store.state.walletState.addressData!!.address
                 )
-                Timber.d(url)
-                store.dispatch(WalletAction.TopUpAction.Start(url, TopUpHelper.REDIRECT_URL))
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.TopUp))
-            }
-            is WalletAction.TopUpAction.Start -> {
-
-            }
-            is WalletAction.TopUpAction.Finish -> {
-                if (action.topUpCompleted) store.dispatch(WalletAction.UpdateWallet)
-                store.dispatch(NavigationAction.PopBackTo())
+                val customTabsIntent = CustomTabsIntent.Builder()
+                        .setToolbarColor(action.toolbarColor)
+                        .build()
+                customTabsIntent.launchUrl(action.context, Uri.parse(url));
             }
         }
     }
