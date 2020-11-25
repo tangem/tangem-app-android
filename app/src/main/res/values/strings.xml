@@ -62,7 +62,8 @@
     <string name="wallet_create_payid_error_message">Error response while creating PayID</string>
     <string name="wallet_create_payid_error_already_created">This PayID already exists. Try a different one.</string>
 
-    <string name="send_destination_hint">Address or PayID</string>
+    <string name="send_destination_hint_address_payid">Address or PayID</string>
+    <string name="send_destination_hint_address">Address</string>
     <string name="send_title">Send</string>
     <string name="send_network_fee_title">Network fee</string>
     <string name="send_amount_label">Amount</string>
