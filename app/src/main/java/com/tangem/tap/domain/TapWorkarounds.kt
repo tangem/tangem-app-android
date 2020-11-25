@@ -3,12 +3,19 @@ package com.tangem.tap.domain
 import com.tangem.commands.Card
 import java.util.*
 
-class TapWorkarounds(val card: Card) {
+object TapWorkarounds {
 
-    val isStart2Coin: Boolean =
-            card.cardData?.issuerName?.toLowerCase(Locale.US) == START_2_COIN_ISSUER
+    var isStart2Coin: Boolean = false
+        private set
 
-    companion object {
-        const val START_2_COIN_ISSUER = "start2coin"
+    fun updateCard(card: Card) {
+        isStart2Coin = card.cardData?.issuerName?.toLowerCase(Locale.US) == START_2_COIN_ISSUER
     }
+
+    fun isPayIdEnabled(): Boolean {
+        if (isStart2Coin) return false
+        return true
+    }
+
+    const val START_2_COIN_ISSUER = "start2coin"
 }
