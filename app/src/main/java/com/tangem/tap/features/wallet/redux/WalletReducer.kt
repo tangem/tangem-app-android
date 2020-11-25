@@ -116,7 +116,11 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 ),
                 topUpState = TopUpState(false)
         )
-        is WalletAction.UpdateWallet -> newState = newState.copy(updatingWallet = true)
+        is WalletAction.UpdateWallet -> {
+            if (store.state.walletState.state == ProgressState.Done) {
+                newState = newState.copy(updatingWallet = true)
+            }
+        }
         is WalletAction.UpdateWallet.ScheduleUpdatingWallet ->
             newState = newState.copy(updatingWallet = true)
         is WalletAction.UpdateWallet.Success -> {
@@ -219,9 +223,6 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
 private fun handleTopUpActions(action: WalletAction.TopUpAction, state: TopUpState): TopUpState {
     return when (action) {
         is WalletAction.TopUpAction.TopUp -> state
-        is WalletAction.TopUpAction.Start ->
-            state.copy(url = action.url, redirectUrl = action.redirectUrl)
-        is WalletAction.TopUpAction.Finish -> state.copy(url = null)
     }
 }
 
