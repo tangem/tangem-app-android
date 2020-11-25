@@ -12,7 +12,7 @@ class TopUpHelper {
     companion object {
 //        const val REDIRECT_URL = "https://success.tangem.com"
 
-        private const val BASE_URL = "https://buy-staging.moonpay.io"
+        private const val BASE_URL = "https://buy.moonpay.io"
         private const val API_KEY_PATH = "?apiKey="
         private const val CURRENCY_PATH = "&currencyCode="
         private const val WALLET_ADDRESS_PATH = "&walletAddress="
