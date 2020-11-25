@@ -3,6 +3,7 @@ package com.tangem.tap.features.details.redux
 import com.tangem.commands.Card
 import com.tangem.commands.Settings
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.domain.TapWorkarounds
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import org.rekotlin.Action
 import java.util.*
@@ -112,6 +113,12 @@ private fun handleSecurityAction(
 ): DetailsState {
     return when (action) {
         is DetailsAction.ManageSecurity.OpenSecurity -> {
+            if (TapWorkarounds.isStart2Coin) {
+                return state.copy(securityScreenState = state.securityScreenState?.copy(
+                        allowedOptions = EnumSet.of(SecurityOption.LongTap),
+                        selectedOption = state.securityScreenState.currentOption
+                ))
+            }
             if (state.card?.isPin2Default == null) {
                 return state.copy(securityScreenState = state.securityScreenState?.copy(
                         allowedOptions = EnumSet.noneOf(SecurityOption::class.java)
