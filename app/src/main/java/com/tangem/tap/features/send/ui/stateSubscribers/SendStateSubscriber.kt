@@ -5,14 +5,12 @@ import android.content.Context
 import android.text.SpannableStringBuilder
 import android.view.ViewGroup
 import androidx.core.text.bold
-import com.tangem.tap.common.extensions.beginDelayedTransition
-import com.tangem.tap.common.extensions.enableError
-import com.tangem.tap.common.extensions.show
-import com.tangem.tap.common.extensions.update
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.getMessageString
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
 import com.tangem.tap.common.toggleWidget.ProgressState
 import com.tangem.tap.domain.MultiMessageError
+import com.tangem.tap.domain.TapWorkarounds
 import com.tangem.tap.domain.assembleErrors
 import com.tangem.tap.features.send.BaseStoreFragment
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
@@ -106,6 +104,12 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         val til = fg.tilAddressOrPayId
         val parsedError = parseError(til.context, state.error)
 
+        val hintResId = if (TapWorkarounds.isPayIdEnabled()) {
+            R.string.send_destination_hint_address_payid
+        }else {
+            R.string.send_destination_hint_address
+        }
+        til.hint = til.getString(hintResId)
         til.parent?.parent?.beginDelayedTransition()
         til.error = parsedError
         til.isErrorEnabled = parsedError != null
