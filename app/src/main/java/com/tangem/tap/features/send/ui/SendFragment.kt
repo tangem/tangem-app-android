@@ -9,6 +9,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.core.view.postDelayed
 import androidx.core.widget.addTextChangedListener
+import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
 import com.tangem.merchant.common.toggleWidget.ToggleWidget
 import com.tangem.tangem_sdk_new.extensions.hideSoftKeyboard
@@ -48,6 +49,8 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     lateinit var sendBtn: ToggleWidget
 
+    private lateinit var etAmountToSend: TextInputEditText
+
     private fun initSendButtonStates() {
         sendBtn = ToggleWidget(flSendButtonContainer, btnSend, progress, ProgressState.None())
         sendBtn.setupSendButtonStateModifiers(requireContext())
@@ -59,6 +62,8 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        etAmountToSend = view.findViewById(R.id.etAmountToSend)
 
         initSendButtonStates()
         setupAddressOrPayIdLayout()
