@@ -44,7 +44,7 @@ class TapWalletManager {
     suspend fun updateWallet() {
         val walletManager = store.state.globalState.scanNoteResponse?.walletManager
         if (walletManager == null) {
-            store.dispatch(WalletAction.UpdateWallet.Failure())
+            withContext(Dispatchers.Main) { store.dispatch(WalletAction.UpdateWallet.Failure()) }
             return
         }
         val result = try {
