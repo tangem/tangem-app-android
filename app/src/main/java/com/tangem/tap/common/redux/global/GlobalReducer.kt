@@ -33,6 +33,9 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
                 globalState
             }
         }
+        is GlobalAction.SetConfigManager -> {
+            globalState.copy(configManager = action.configManager)
+        }
         else -> globalState
     }
 }
