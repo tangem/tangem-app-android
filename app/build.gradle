@@ -3,7 +3,6 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'com.google.firebase.crashlytics'
-//apply plugin: 'com.google.firebase.firebase-perf'
 apply plugin: 'com.google.gms.google-services'
 
 android {
@@ -25,6 +24,7 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.debug
+            buildConfigField 'String', 'CONFIG_ENVIRONMENT', '\"prod\"'
         }
         debug {
             debuggable true
@@ -34,6 +34,7 @@ android {
             firebaseCrashlytics {
                 mappingFileUploadEnabled false
             }
+            buildConfigField 'String', 'CONFIG_ENVIRONMENT', '\"dev\"'
         }
         debug_beta {
             initWith debug
@@ -98,6 +99,7 @@ dependencies {
     // Firebase
     implementation platform('com.google.firebase:firebase-bom:26.0.0')
     implementation 'com.google.firebase:firebase-crashlytics'
+    implementation 'com.google.firebase:firebase-config-ktx'
     implementation 'com.google.firebase:firebase-analytics-ktx'
 
     testImplementation 'junit:junit:4.13'
