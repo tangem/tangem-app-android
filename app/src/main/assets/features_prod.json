@@ -1,0 +1,10 @@
+[
+  {
+    "name": "isWalletPayIdEnabled",
+    "value": false
+  },
+  {
+    "name": "isTopUpEnabled",
+    "value": false
+  }
+]
