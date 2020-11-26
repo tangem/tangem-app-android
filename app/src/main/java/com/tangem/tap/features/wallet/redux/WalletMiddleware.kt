@@ -185,7 +185,7 @@ class WalletMiddleware {
 
     private fun prepareSendAction(amount: Amount?): Action {
         return if (amount != null) {
-            if (amount.type == AmountType.Token) {
+            if (amount.type is AmountType.Token) {
                 PrepareSendScreen(store.state.walletState.wallet?.amounts?.get(AmountType.Coin), amount)
             } else {
                 PrepareSendScreen(amount)
