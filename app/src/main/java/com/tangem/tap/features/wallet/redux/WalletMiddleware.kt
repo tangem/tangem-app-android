@@ -255,9 +255,12 @@ private class TopUpMiddleware {
     fun handle(action: WalletAction.TopUpAction) {
         when (action) {
             is WalletAction.TopUpAction.TopUp -> {
+                val config = store.state.globalState.configManager?.config ?: return
                 val url = TopUpHelper.getUrl(
                         store.state.walletState.currencyData.currencySymbol!!,
-                        store.state.walletState.addressData!!.address
+                        store.state.walletState.addressData!!.address,
+                        config.moonPayApiKey,
+                        config.moonPayApiSecretKey
                 )
                 val customTabsIntent = CustomTabsIntent.Builder()
                         .setToolbarColor(action.toolbarColor)
