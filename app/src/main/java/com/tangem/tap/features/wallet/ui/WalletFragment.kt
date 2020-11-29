@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import com.squareup.picasso.Picasso
+import com.tangem.blockchain.blockchains.bitcoin.BitcoinAddressType
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -29,6 +31,7 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.card_balance.*
 import kotlinx.android.synthetic.main.fragment_wallet.*
 import kotlinx.android.synthetic.main.layout_address.*
+import kotlinx.android.synthetic.main.layout_send_fee.*
 import kotlinx.android.synthetic.main.layout_wallet_long_buttons.*
 import kotlinx.android.synthetic.main.layout_wallet_short_buttons.*
 import org.rekotlin.StoreSubscriber
@@ -206,9 +209,25 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     }
 
     private fun setupAddressCard(state: WalletState) {
-        if (state.addressData != null) {
+        if (state.walletAddresses != null) {
             l_address?.show()
-            tv_address.text = state.addressData.address
+            if (state.showSegwitAddress) {
+                chip_group_segwit.show()
+                val checkedId = SegwitUiHelper.typeToId(state.walletAddresses.selectedAddress.type)
+                if (checkedId != View.NO_ID) chip_group_segwit.check(checkedId)
+
+                chip_group_segwit.setOnCheckedChangeListener { group, checkedId ->
+                    if (checkedId == -1) return@setOnCheckedChangeListener
+
+                    SegwitUiHelper.idToType(checkedId)?.let {
+                        store.dispatch(WalletAction.ChangeSelectedAddress(it))
+                    }
+                }
+            } else {
+                chip_group_segwit.setOnCheckedChangeListener(null)
+                chip_group_segwit.hide()
+            }
+            tv_address.text = state.walletAddresses.selectedAddress.address
             tv_explore?.setOnClickListener {
                 store.dispatch(WalletAction.ExploreAddress(requireContext()))
             }
@@ -285,4 +304,24 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         if (store.state.walletState.showDetails) inflater.inflate(R.menu.wallet, menu)
     }
 
+}
+
+class SegwitUiHelper {
+    companion object {
+        fun typeToId(type: AddressType): Int {
+            return when (type) {
+                is BitcoinAddressType.Legacy -> R.id.chip_legacy
+                is BitcoinAddressType.Segwit -> R.id.chip_default
+                else -> View.NO_ID
+            }
+        }
+
+        fun idToType(id: Int): AddressType? {
+            return when (id) {
+                R.id.chip_default -> BitcoinAddressType.Segwit
+                R.id.chip_legacy -> BitcoinAddressType.Legacy
+                else -> null
+            }
+        }
+    }
 }
