@@ -2,6 +2,7 @@ package com.tangem.tap.features.wallet.redux
 
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.address.DefaultAddressType
 import com.tangem.commands.common.network.TangemService
 import com.tangem.common.extensions.isZero
 import com.tangem.common.extensions.toHexString
@@ -44,15 +45,10 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             when (action.error) {
                 is TapError.NoInternetConnection -> {
                     val wallet = state.globalState.scanNoteResponse?.walletManager?.wallet
-                    val addressData = if (wallet == null) {
-                        null
-                    } else {
-                        AddressData(wallet.address, wallet.getShareUri(wallet.address), wallet.getExploreUrl())
-                    }
                     newState = newState.copy(
                             state = ProgressState.Error,
                             error = ErrorType.NoInternetConnection,
-                            addressData = addressData,
+                            walletAddresses = createAddressList(wallet, newState.walletAddresses),
                             currencyData = BalanceWidgetData(
                                     status = BalanceStatus.Unreachable,
                                     currency = wallet?.blockchain?.fullName,
@@ -91,7 +87,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                                 TokenData("", tokenSymbol = it)
                             }
                     ),
-                    addressData = AddressData(wallet.address, wallet.getShareUri(wallet.address), wallet.getExploreUrl()),
+                    walletAddresses = createAddressList(wallet, newState.walletAddresses),
                     mainButton = WalletMainButton.SendButton(false),
                     topUpState = TopUpState(allowed = action.allowTopUp)
             )
@@ -172,8 +168,8 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.ShowQrCode -> {
             newState = newState.copy(
                     walletDialog = WalletDialog.QrDialog(
-                            newState.addressData?.shareUrl?.toQrCode(),
-                            newState.addressData?.shareUrl,
+                            newState.walletAddresses?.selectedAddress?.shareUrl?.toQrCode(),
+                            newState.walletAddresses?.selectedAddress?.shareUrl,
                             newState.currencyData.currency
                     )
             )
@@ -217,8 +213,37 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.TopUpAction -> {
             newState = newState.copy(topUpState = handleTopUpActions(action, newState.topUpState))
         }
+        is WalletAction.ChangeSelectedAddress -> {
+            val walletAddresses = newState.walletAddresses ?: return newState
+            val address = walletAddresses.list.firstOrNull { it.type == action.type } ?: return newState
+
+            newState = newState.copy(walletAddresses = WalletAddresses(address, walletAddresses.list))
+        }
     }
     return newState
+}
+
+fun createAddressList(wallet: Wallet?, walletAddresses: WalletAddresses? = null): WalletAddresses? {
+    if (wallet == null) return null
+
+    val listOfAddressData = mutableListOf<AddressData>()
+    // put a defaultAddress at the first place
+    wallet.addresses.forEach {
+        val addressData = AddressData(it.value, it.type, wallet.getShareUri(it.value), wallet.getExploreUrl(it.value))
+        if (it.type == DefaultAddressType) {
+            listOfAddressData.add(0, addressData)
+        } else {
+            listOfAddressData.add(addressData)
+        }
+    }
+
+    // restore a selected wallet address
+    var indexOfSelectedWallet = 0
+    walletAddresses?.let {
+        val index = listOfAddressData.indexOfFirst { it.address == walletAddresses.selectedAddress.address }
+        if (index != -1) indexOfSelectedWallet = index
+    }
+    return WalletAddresses(listOfAddressData[indexOfSelectedWallet], listOfAddressData)
 }
 
 private fun handleTopUpActions(action: WalletAction.TopUpAction, state: TopUpState): TopUpState {
