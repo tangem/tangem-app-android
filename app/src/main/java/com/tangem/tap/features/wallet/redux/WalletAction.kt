@@ -3,6 +3,7 @@ package com.tangem.tap.features.wallet.redux
 import android.content.Context
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.commands.Card
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
@@ -91,4 +92,6 @@ sealed class WalletAction : Action {
     sealed class TopUpAction : WalletAction() {
         data class TopUp(val context: Context, val toolbarColor: Int) : TopUpAction()
     }
+
+    data class ChangeSelectedAddress(val type: AddressType): WalletAction()
 }
