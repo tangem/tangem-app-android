@@ -3,6 +3,7 @@ package com.tangem.tap.features.send.ui.stateSubscribers
 import android.app.Dialog
 import android.content.Context
 import android.text.SpannableStringBuilder
+import android.view.View
 import android.view.ViewGroup
 import androidx.core.text.bold
 import com.tangem.tap.common.extensions.*
@@ -200,7 +201,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         }
 
         val chipId = FeeUiHelper.feeToId(state.selectedFeeType)
-        if (fg.chipGroup.checkedChipId != chipId && chipId != 0) fg.chipGroup.check(chipId)
+        if (fg.chipGroup.checkedChipId != chipId && chipId != View.NO_ID) fg.chipGroup.check(chipId)
     }
 
     private fun handleReceiptState(fg: BaseStoreFragment, state: ReceiptState) {
