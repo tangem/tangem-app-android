@@ -2,7 +2,9 @@ package com.tangem.tap.features.wallet.redux
 
 import android.graphics.Bitmap
 import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.features.wallet.models.PendingTransaction
@@ -16,7 +18,7 @@ data class WalletState(
         val wallet: Wallet? = null,
         val pendingTransactions: List<PendingTransaction> = emptyList(),
         val hashesCountVerified: Boolean? = null,
-        val addressData: AddressData? = null,
+        val walletAddresses: WalletAddresses? = null,
         val currencyData: BalanceWidgetData = BalanceWidgetData(),
         val payIdData: PayIdData = PayIdData(),
         val walletDialog: WalletDialog? = null,
@@ -27,6 +29,12 @@ data class WalletState(
     val showDetails: Boolean =
             currencyData.status != com.tangem.tap.features.wallet.ui.BalanceStatus.EmptyCard &&
                     currencyData.status != com.tangem.tap.features.wallet.ui.BalanceStatus.UnknownBlockchain
+
+    val showSegwitAddress: Boolean
+        get() {
+            val listOfAddresses = walletAddresses?.list ?: return false
+            return wallet?.blockchain == Blockchain.Bitcoin && listOfAddresses.size > 1
+        }
 }
 
 sealed class WalletDialog {
@@ -60,8 +68,14 @@ sealed class WalletMainButton(enabled: Boolean) : Button(enabled) {
     class CreateWalletButton(enabled: Boolean) : WalletMainButton(enabled)
 }
 
+data class WalletAddresses(
+        val selectedAddress: AddressData,
+        val list: List<AddressData>
+)
+
 data class AddressData(
         val address: String,
+        val type: AddressType,
         val shareUrl: String,
         val exploreUrl: String
 )
