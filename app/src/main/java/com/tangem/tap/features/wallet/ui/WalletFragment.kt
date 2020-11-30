@@ -2,11 +2,8 @@ package com.tangem.tap.features.wallet.ui
 
 import android.app.Dialog
 import android.os.Bundle
-import android.view.Menu
+import android.view.*
 import android.view.Menu.NONE
-import android.view.MenuInflater
-import android.view.MenuItem
-import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -16,6 +13,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.squareup.picasso.Picasso
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinAddressType
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -211,7 +209,11 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     private fun setupAddressCard(state: WalletState) {
         if (state.walletAddresses != null) {
             l_address?.show()
+            val tvAddressPaddingTop = tv_address.resources.getDimension(R.dimen.dimen16).toInt()
             if (state.showSegwitAddress) {
+                (l_address as? ViewGroup)?.beginDelayedTransition()
+                tv_address.setPadding(tv_address.paddingStart, tvAddressPaddingTop / 2,
+                        tv_address.paddingEnd, tv_address.paddingBottom)
                 chip_group_segwit.show()
                 val checkedId = SegwitUiHelper.typeToId(state.walletAddresses.selectedAddress.type)
                 if (checkedId != View.NO_ID) chip_group_segwit.check(checkedId)
@@ -224,7 +226,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                     }
                 }
             } else {
-                chip_group_segwit.setOnCheckedChangeListener(null)
+                tv_address.setPadding(tv_address.paddingStart, tvAddressPaddingTop,
+                        tv_address.paddingEnd, tv_address.paddingBottom)
                 chip_group_segwit.hide()
             }
             tv_address.text = state.walletAddresses.selectedAddress.address
