@@ -1,3 +1,6 @@
 <resources>
     <string name="wallet_button_topup" translatable="false">Top Up</string>
+    <string name="wallet_address_chip_default" translatable="false">Default</string>
+    <string name="wallet_address_chip_compatibility" translatable="false">Compatibility</string>
+    <string name="wallet_address_chip_legacy" translatable="false">Legacy</string>
 </resources>
