@@ -49,7 +49,7 @@
     <string name="wallet_create_payid_button_title">Erstellen</string>
     <string name="wallet_create_payid_info">PayString sind Ihre einzigartigen Identifikationsdaten wie Telefonnummer, E-Mail-Adresse oder ABN.</string>
     <string name="wallet_create_payid_success_message">Ihre PayString wurde erfolgreich erstellt und zum Clipboard kopiert</string>
-    <string name="wallet_create_payid_error_message">Fehlerantwort beim Erstellen der ZahlungsID</string>
+    <string name="wallet_create_payid_error_message">Fehlerantwort beim Erstellen der PayString</string>
     <string name="wallet_create_payid_error_already_created">Diese PayString existiert bereits. Versuchen Sie mit einer anderen erneut.</string>
     <string name="send_destination_hint_address_payid">Adresse oder PayString</string>
     <string name="send_destination_hint_address">Adresse</string>
