@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Wallet
 import com.tangem.tap.common.extensions.scaleToFiat
 import com.tangem.tap.common.extensions.stripZeroPlainString
+import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.features.send.redux.ReceiptAction.RefreshReceipt
 import com.tangem.tap.features.send.redux.SendScreenAction
 import com.tangem.tap.features.send.redux.states.*
@@ -179,7 +180,7 @@ class ReceiptReducer : SendInternalReducer {
         return ReceiptSymbols(
                 fiat = store.state.globalState.appCurrency,
                 crypto = wallet.blockchain.currency,
-                token = wallet.amounts[AmountType.Token]?.currencySymbol
+                token = wallet.getFirstToken()?.symbol
         )
     }
 
@@ -187,12 +188,12 @@ class ReceiptReducer : SendInternalReducer {
         return when (mainCurrencyType) {
             MainCurrencyType.FIAT -> when (amountType) {
                 AmountType.Coin -> ReceiptLayoutType.FIAT
-                AmountType.Token -> ReceiptLayoutType.TOKEN_FIAT
+                is AmountType.Token -> ReceiptLayoutType.TOKEN_FIAT
                 AmountType.Reserve -> ReceiptLayoutType.UNKNOWN
             }
             MainCurrencyType.CRYPTO -> when (amountType) {
                 AmountType.Coin -> ReceiptLayoutType.CRYPTO
-                AmountType.Token -> ReceiptLayoutType.TOKEN_CRYPTO
+                is AmountType.Token -> ReceiptLayoutType.TOKEN_CRYPTO
                 AmountType.Reserve -> ReceiptLayoutType.UNKNOWN
             }
         }
