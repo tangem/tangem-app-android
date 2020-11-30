@@ -11,6 +11,7 @@ import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.ui.BalanceStatus
@@ -43,19 +44,14 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             when (action.error) {
                 is TapError.NoInternetConnection -> {
                     val wallet = state.globalState.scanNoteResponse?.walletManager?.wallet
-                    val addressData = if (wallet == null) {
-                        null
-                    } else {
-                        AddressData(wallet.address, wallet.shareUrl, wallet.exploreUrl)
-                    }
                     newState = newState.copy(
                             state = ProgressState.Error,
                             error = ErrorType.NoInternetConnection,
-                            addressData = addressData,
+                            walletAddresses = createAddressList(wallet, newState.walletAddresses),
                             currencyData = BalanceWidgetData(
                                     status = BalanceStatus.Unreachable,
                                     currency = wallet?.blockchain?.fullName,
-                                    token = wallet?.token?.symbol?.let {
+                                    token = wallet?.getFirstToken()?.symbol?.let {
                                         TokenData("", tokenSymbol = it)
                                     }),
                             mainButton = WalletMainButton.SendButton(false),
@@ -86,11 +82,11 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                             BalanceStatus.Loading,
                             wallet.blockchain.fullName,
                             currencySymbol = wallet.blockchain.currency,
-                            token = wallet.token?.symbol?.let {
+                            token = wallet.getFirstToken()?.symbol?.let {
                                 TokenData("", tokenSymbol = it)
                             }
                     ),
-                    addressData = AddressData(wallet.address, wallet.shareUrl, wallet.exploreUrl),
+                    walletAddresses = createAddressList(wallet, newState.walletAddresses),
                     mainButton = WalletMainButton.SendButton(false),
                     topUpState = TopUpState(allowed = action.allowTopUp)
             )
@@ -143,9 +139,9 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             } else {
                 newState.currencyData.fiatAmount
             }
-            val tokenFiatAmount = if (currency == newState.wallet?.token?.symbol) {
-                newState.wallet?.amounts?.get(AmountType.Token)?.value
-                        ?.toFiatString(rate, state.globalState.appCurrency)
+            val token = newState.wallet?.getFirstToken()
+            val tokenFiatAmount = if (currency == token?.symbol) {
+                newState.wallet?.getTokenAmount(token)?.value?.toFiatString(rate, state.globalState.appCurrency)
             } else {
                 newState.currencyData.token?.fiatAmount
             }
@@ -171,8 +167,8 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.ShowQrCode -> {
             newState = newState.copy(
                     walletDialog = WalletDialog.QrDialog(
-                            newState.addressData?.shareUrl?.toQrCode(),
-                            newState.addressData?.shareUrl,
+                            newState.walletAddresses?.selectedAddress?.shareUrl?.toQrCode(),
+                            newState.walletAddresses?.selectedAddress?.shareUrl,
                             newState.currencyData.currency
                     )
             )
@@ -216,8 +212,37 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.TopUpAction -> {
             newState = newState.copy(topUpState = handleTopUpActions(action, newState.topUpState))
         }
+        is WalletAction.ChangeSelectedAddress -> {
+            val walletAddresses = newState.walletAddresses ?: return newState
+            val address = walletAddresses.list.firstOrNull { it.type == action.type } ?: return newState
+
+            newState = newState.copy(walletAddresses = WalletAddresses(address, walletAddresses.list))
+        }
     }
     return newState
+}
+
+fun createAddressList(wallet: Wallet?, walletAddresses: WalletAddresses? = null): WalletAddresses? {
+    if (wallet == null) return null
+
+    val listOfAddressData = mutableListOf<AddressData>()
+    // put a defaultAddress at the first place
+    wallet.addresses.forEach {
+        val addressData = AddressData(it.value, it.type, wallet.getShareUri(it.value), wallet.getExploreUrl(it.value))
+        if (it.type == wallet.blockchain.defaultAddressType()) {
+            listOfAddressData.add(0, addressData)
+        } else {
+            listOfAddressData.add(addressData)
+        }
+    }
+
+    // restore a selected wallet address
+    var indexOfSelectedWallet = 0
+    walletAddresses?.let {
+        val index = listOfAddressData.indexOfFirst { it.address == walletAddresses.selectedAddress.address }
+        if (index != -1) indexOfSelectedWallet = index
+    }
+    return WalletAddresses(listOfAddressData[indexOfSelectedWallet], listOfAddressData)
 }
 
 private fun handleTopUpActions(action: WalletAction.TopUpAction, state: TopUpState): TopUpState {
@@ -230,13 +255,17 @@ private fun onWalletLoaded(
         wallet: Wallet, walletState: WalletState, topUpAllowed: Boolean? = null
 ): WalletState {
     val fiatCurrencySymbol = store.state.globalState.appCurrency
-    val token = wallet.amounts[AmountType.Token]
+    val token = wallet.getFirstToken()
     val tokenData = if (token != null) {
-        val tokenFiatRate = store.state.globalState.conversionRates.getRate(token.currencySymbol)
-        val tokenFiatAmount = tokenFiatRate?.let { token.value?.toFiatString(it, fiatCurrencySymbol) }
-        TokenData(
-                token.value?.toFormattedString(token.decimals) ?: "",
-                token.currencySymbol, tokenFiatAmount)
+        val tokenAmount = wallet.getTokenAmount(token)
+        if (tokenAmount != null) {
+            val tokenFiatRate = store.state.globalState.conversionRates.getRate(tokenAmount.currencySymbol)
+            val tokenFiatAmount = tokenFiatRate?.let { tokenAmount.value?.toFiatString(it, fiatCurrencySymbol) }
+            TokenData(tokenAmount.value?.toFormattedString(tokenAmount.decimals) ?: "",
+                    tokenAmount.currencySymbol, tokenFiatAmount)
+        } else {
+            null
+        }
     } else {
         null
     }
