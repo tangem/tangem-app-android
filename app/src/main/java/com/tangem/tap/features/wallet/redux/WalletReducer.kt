@@ -2,7 +2,6 @@ package com.tangem.tap.features.wallet.redux
 
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Wallet
-import com.tangem.blockchain.common.address.DefaultAddressType
 import com.tangem.commands.common.network.TangemService
 import com.tangem.common.extensions.isZero
 import com.tangem.common.extensions.toHexString
@@ -230,7 +229,7 @@ fun createAddressList(wallet: Wallet?, walletAddresses: WalletAddresses? = null)
     // put a defaultAddress at the first place
     wallet.addresses.forEach {
         val addressData = AddressData(it.value, it.type, wallet.getShareUri(it.value), wallet.getExploreUrl(it.value))
-        if (it.type == DefaultAddressType) {
+        if (it.type == wallet.blockchain.defaultAddressType()) {
             listOfAddressData.add(0, addressData)
         } else {
             listOfAddressData.add(addressData)
