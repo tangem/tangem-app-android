@@ -3,7 +3,6 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'com.google.firebase.crashlytics'
-//apply plugin: 'com.google.firebase.firebase-perf'
 apply plugin: 'com.google.gms.google-services'
 
 android {
@@ -25,6 +24,7 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.debug
+            buildConfigField 'String', 'CONFIG_ENVIRONMENT', '\"prod\"'
         }
         debug {
             debuggable true
@@ -34,6 +34,7 @@ android {
             firebaseCrashlytics {
                 mappingFileUploadEnabled false
             }
+            buildConfigField 'String', 'CONFIG_ENVIRONMENT', '\"dev\"'
         }
         debug_beta {
             initWith debug
@@ -70,9 +71,9 @@ dependencies {
     implementation 'com.google.android.material:material:1.2.1'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.10'
 
-    implementation 'com.tangem:blockchain:1.108.0'
-    implementation 'com.tangem:core:1.80.0'
-    implementation 'com.tangem:sdk:1.80.0'
+    implementation 'com.tangem:blockchain:1.117.0'
+    implementation 'com.tangem:core:1.83.0'
+    implementation 'com.tangem:sdk:1.83.0'
 
     // WebView
     implementation "androidx.browser:browser:1.2.0"
@@ -98,6 +99,7 @@ dependencies {
     // Firebase
     implementation platform('com.google.firebase:firebase-bom:26.0.0')
     implementation 'com.google.firebase:firebase-crashlytics'
+    implementation 'com.google.firebase:firebase-config-ktx'
     implementation 'com.google.firebase:firebase-analytics-ktx'
 
     testImplementation 'junit:junit:4.13'
