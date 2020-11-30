@@ -1,5 +1,6 @@
 package com.tangem.tap.domain
 
+import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.commands.CardStatus
@@ -66,17 +67,13 @@ class TapWalletManager {
     }
 
     suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName) {
-        val wallet = store.state.globalState.scanNoteResponse?.walletManager?.wallet
-        val blockchainCurrency = wallet?.blockchain?.currency
-        val tokenCurrency = wallet?.token?.symbol
+        val wallet = store.state.globalState.scanNoteResponse?.walletManager?.wallet ?: return
 
-        val blockchainRate = blockchainCurrency?.let { coinMarketCapService.getRate(it, fiatCurrency) }
-        val tokenRate = tokenCurrency?.let { coinMarketCapService.getRate(it, fiatCurrency) }
+        val currencyList = wallet.getTokens().map { it.symbol }.toMutableList()
+        currencyList.add(wallet.blockchain.currency)
 
         val results = mutableListOf<Pair<CryptoCurrencyName, Result<BigDecimal>?>>()
-        if (blockchainCurrency != null) results.add(blockchainCurrency to blockchainRate)
-        if (tokenCurrency != null) results.add(tokenCurrency to tokenRate)
-
+        currencyList.forEach { results.add(it to coinMarketCapService.getRate(it, fiatCurrency)) }
         handleFiatRatesResult(results)
     }
 
@@ -145,7 +142,8 @@ class TapWalletManager {
                     val error = result.error
                     val blockchain = walletManager.wallet.blockchain
                     if (error != null && blockchain.isNoAccountError(error)) {
-                        val amountToCreateAccount = blockchain.amountToCreateAccount(walletManager.wallet.token)
+                        val token = walletManager.wallet.getFirstToken()
+                        val amountToCreateAccount = blockchain.amountToCreateAccount(token)
                         if (amountToCreateAccount != null) {
                             store.dispatch(WalletAction.LoadWallet.NoAccount(amountToCreateAccount.toString()))
                             return@withContext
@@ -209,4 +207,8 @@ class TapWalletManager {
             }
         }
     }
+}
+
+fun Wallet.getFirstToken(): Token? {
+    return getTokens().toList().getOrNull(0)
 }
