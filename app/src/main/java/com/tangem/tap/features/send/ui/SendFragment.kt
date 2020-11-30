@@ -240,7 +240,7 @@ class FeeUiHelper {
     companion object {
         fun feeToId(fee: FeeType): Int {
             return when (fee) {
-                FeeType.SINGLE -> 0
+                FeeType.SINGLE -> View.NO_ID
                 FeeType.LOW -> R.id.chipLow
                 FeeType.NORMAL -> R.id.chipNormal
                 FeeType.PRIORITY -> R.id.chipPriority
