@@ -40,18 +40,18 @@
     <string name="wallet_pending_tx_receiving">Erhalten\u0020</string>
     <string name="wallet_pending_tx_receiving_address_format">von %s </string>
     <string name="wallet_address_button_explore">Adresse erkunden</string>
-    <string name="wallet_address_button_create_payid">PayID erstellen</string>
+    <string name="wallet_address_button_create_payid">PayString erstellen</string>
     <string name="wallet_qr_title_format">%s Wallet</string>
-    <string name="wallet_create_payid">PayID erstellen</string>
+    <string name="wallet_create_payid">PayString erstellen</string>
     <string name="wallet_create_payid_card_format">Karte: %s</string>
-    <string name="wallet_create_payid_hint">PayID Name</string>
+    <string name="wallet_create_payid_hint">PayString Name</string>
     <string name="wallet_create_payid_domain">$payid.tangem.com</string>
     <string name="wallet_create_payid_button_title">Erstellen</string>
-    <string name="wallet_create_payid_info">PayID sind Ihre einzigartigen Identifikationsdaten wie Telefonnummer, E-Mail-Adresse oder ABN.</string>
-    <string name="wallet_create_payid_success_message">Ihre PayID wurde erfolgreich erstellt und zum Clipboard kopiert</string>
+    <string name="wallet_create_payid_info">PayString sind Ihre einzigartigen Identifikationsdaten wie Telefonnummer, E-Mail-Adresse oder ABN.</string>
+    <string name="wallet_create_payid_success_message">Ihre PayString wurde erfolgreich erstellt und zum Clipboard kopiert</string>
     <string name="wallet_create_payid_error_message">Fehlerantwort beim Erstellen der ZahlungsID</string>
-    <string name="wallet_create_payid_error_already_created">Diese PayID existiert bereits. Versuchen Sie mit einer anderen erneut.</string>
-    <string name="send_destination_hint_address_payid">Adresse oder PayID</string>
+    <string name="wallet_create_payid_error_already_created">Diese PayString existiert bereits. Versuchen Sie mit einer anderen erneut.</string>
+    <string name="send_destination_hint_address_payid">Adresse oder PayString</string>
     <string name="send_destination_hint_address">Adresse</string>
     <string name="send_title">Absenden</string>
     <string name="send_network_fee_title">Netzgebühr</string>
@@ -105,7 +105,7 @@
     <string name="initial_message_create_wallet_body">Tippen Sie um ein Wallet zu erstellen</string>
     <string name="initial_message_change_access_code_body">Tippen Sie um den Zugangscode zu ändern</string>
     <string name="initial_message_change_passcode_body">Tippen Sie um den Passcode zu ändern</string>
-    <string name="payid_service_error_loading">Ungültige ZahlungsID</string>
+    <string name="payid_service_error_loading">Ungültige PayString</string>
 
 
     <string name="disclaimer_text">
@@ -167,10 +167,10 @@ RECHTLICHER HAFTUNGSAUSSCHLUSS
     <string name="send_error_fee_request_failed">Erhalt der Gebühr fehlgeschlagen</string>
 
     <string name="send_error_unknown">Unbekannter Fehler</string>
-    <string name="send_error_payid_verification_failed">Verifikation der PayID ist fehlgeschlagen</string>
-    <string name="send_error_payid_unsupported_by_blockchain">PayID wird von der Blockchain nicht unterstützt</string>
-    <string name="send_error_payid_not_registered">PayID ist nicht registriert</string>
-    <string name="send_error_payid_request_failed">PayID-Anfrage ist fehlgeschlagen</string>
+    <string name="send_error_payid_verification_failed">Verifikation der PayString ist fehlgeschlagen</string>
+    <string name="send_error_payid_unsupported_by_blockchain">PayString wird von der Blockchain nicht unterstützt</string>
+    <string name="send_error_payid_not_registered">PayString ist nicht registriert</string>
+    <string name="send_error_payid_request_failed">PayString-Anfrage ist fehlgeschlagen</string>
 
     <string name="send_error_address_same_as_wallet">Die Adresse stimmt mit der Adresse Ihrer Brieftasche überein</string>
     <string name="send_error_insufficient_balance">Nicht genug Geld</string>
@@ -182,7 +182,7 @@ RECHTLICHER HAFTUNGSAUSSCHLUSS
     <string name="wallet_notification_address_copied">Die Adresse wurde erfolgreich kopiert</string>
 
 
-    <string name="wallet_create_payid_empty">Zuerst geben Sie die gewünschte PayID ein</string>
+    <string name="wallet_create_payid_empty">Zuerst geben Sie die gewünschte PayString ein</string>
 
     <string name="initial_message_scan_header">Legen Sie die Karte zum Scannen an</string>
     <string name="initial_message_tap_header">Legen Sie die Karte an</string>
