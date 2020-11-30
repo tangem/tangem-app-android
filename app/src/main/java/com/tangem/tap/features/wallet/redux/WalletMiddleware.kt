@@ -133,13 +133,13 @@ class WalletMiddleware {
                         }
                     }
                     is WalletAction.CopyAddress -> {
-                        store.state.walletState.addressData?.address?.let {
+                        store.state.walletState.walletAddresses?.selectedAddress?.address?.let {
                             action.context.copyToClipboard(it)
                             store.dispatch(WalletAction.CopyAddress.Success)
                         }
                     }
                     is WalletAction.ExploreAddress -> {
-                        val uri = Uri.parse(store.state.walletState.addressData?.exploreUrl)
+                        val uri = Uri.parse(store.state.walletState.walletAddresses?.selectedAddress?.exploreUrl)
                         val intent = Intent(Intent.ACTION_VIEW, uri)
                         ContextCompat.startActivity(action.context, intent, null)
                     }
@@ -185,7 +185,7 @@ class WalletMiddleware {
 
     private fun prepareSendAction(amount: Amount?): Action {
         return if (amount != null) {
-            if (amount.type == AmountType.Token) {
+            if (amount.type is AmountType.Token) {
                 PrepareSendScreen(store.state.walletState.wallet?.amounts?.get(AmountType.Coin), amount)
             } else {
                 PrepareSendScreen(amount)
@@ -255,9 +255,12 @@ private class TopUpMiddleware {
     fun handle(action: WalletAction.TopUpAction) {
         when (action) {
             is WalletAction.TopUpAction.TopUp -> {
+                val config = store.state.globalState.configManager?.config ?: return
                 val url = TopUpHelper.getUrl(
                         store.state.walletState.currencyData.currencySymbol!!,
-                        store.state.walletState.addressData!!.address
+                        store.state.walletState.walletAddresses!!.selectedAddress.address,
+                        config.moonPayApiKey,
+                        config.moonPayApiSecretKey
                 )
                 val customTabsIntent = CustomTabsIntent.Builder()
                         .setToolbarColor(action.toolbarColor)
