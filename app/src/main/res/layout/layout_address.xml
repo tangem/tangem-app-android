@@ -117,8 +117,8 @@
 
             <ImageView
                 android:id="@+id/iv_payid_icon"
-                android:layout_width="68dp"
-                android:layout_height="22dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_margin="16dp"
                 android:src="@drawable/ic_payid"
                 app:layout_constraintStart_toStartOf="parent"
