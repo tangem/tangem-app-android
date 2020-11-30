@@ -23,21 +23,52 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_segwit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:visibility="visible"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:selectionRequired="true"
+                app:singleLine="true"
+                app:singleSelection="true"
+                tools:visibility="visible">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_default"
+                    style="@style/TapChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/wallet_address_chip_default" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_legacy"
+                    style="@style/TapChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/wallet_address_chip_legacy" />
+
+            </com.google.android.material.chip.ChipGroup>
+
             <TextView
                 android:id="@+id/tv_address"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:ellipsize="middle"
-                android:paddingStart="16dp"
-                android:paddingTop="16dp"
-                android:paddingEnd="16dp"
+                android:paddingStart="@dimen/dimen16"
+                android:paddingTop="@dimen/dimen16"
+                android:paddingEnd="@dimen/dimen16"
                 android:singleLine="true"
                 android:textColor="@color/darkGray1"
                 android:textSize="13sp"
                 app:layout_constraintEnd_toStartOf="@id/btn_copy"
-                app:layout_constraintHorizontal_bias="0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/chip_group_segwit"
                 tools:text="139mrsJgyWnJ**** **** y9BV" />
 
             <TextView
@@ -66,10 +97,10 @@
                 android:layout_marginEnd="16dp"
                 android:background="@drawable/shape_ellipse"
                 android:clickable="true"
-                android:focusable="true"
                 android:elevation="3dp"
+                android:focusable="true"
                 app:layout_constraintEnd_toStartOf="@id/btn_show_qr"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintTop_toBottomOf="@id/chip_group_segwit">
 
                 <ImageView
                     android:id="@+id/iv_copy"
@@ -90,10 +121,10 @@
                 android:layout_marginEnd="16dp"
                 android:background="@drawable/shape_ellipse"
                 android:clickable="true"
-                android:focusable="true"
                 android:elevation="3dp"
+                android:focusable="true"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintTop_toBottomOf="@id/chip_group_segwit">
 
                 <ImageView
                     android:id="@+id/iv_qr"
@@ -145,15 +176,15 @@
                 android:ellipsize="middle"
                 android:padding="16dp"
                 android:singleLine="true"
+                android:textAlignment="textEnd"
                 android:textColor="@color/darkGray1"
                 android:textSize="13sp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="1"
                 app:layout_constraintStart_toEndOf="@id/iv_payid_icon"
-                android:textAlignment="textEnd"
-                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/v_payid_divider"
-                tools:text="roman$payid.tangem.com"
-                android:visibility="gone"/>
+                tools:text="roman$payid.tangem.com" />
 
             <androidx.constraintlayout.widget.Group
                 android:id="@+id/group_payid"
