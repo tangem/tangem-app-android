@@ -82,7 +82,7 @@ class ConfigManager(
 
     companion object {
         const val isWalletPayIdEnabled = "isWalletPayIdEnabled"
-        const val isTopUpEnabled = "useTopUp"
+        const val isTopUpEnabled = "isTopUpEnabled"
         const val coinMarketCapKey = "coinMarketCapKey"
         const val moonPayApiKey = "moonPayApiKey"
         const val moonPayApiSecretKey = "moonPayApiSecretKey"
