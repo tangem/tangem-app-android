@@ -6,5 +6,9 @@
   {
     "name": "isTopUpEnabled",
     "value": false
+  },
+  {
+    "name": "isCreatingTwinCardsAllowed",
+    "value": true
   }
 ]
