@@ -6,10 +6,10 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.SimpleResult
-import com.tangem.commands.Card
+import com.tangem.commands.common.card.Card
+import com.tangem.commands.common.card.CardType
 import com.tangem.commands.common.network.Result
 import com.tangem.common.CompletionResult
-import com.tangem.common.extensions.CardType
 import com.tangem.common.extensions.getType
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
@@ -20,7 +20,10 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.TopUpHelper
+import com.tangem.tap.domain.TwinsHelper
 import com.tangem.tap.domain.extensions.toSendableAmounts
+import com.tangem.tap.features.details.redux.DetailsAction
+import com.tangem.tap.features.details.redux.twins.CreateTwinWallet
 import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.network.NetworkConnectivity
@@ -60,15 +63,25 @@ class WalletMiddleware {
                         }
                     }
                     is WalletAction.CreateWallet -> {
-                        scope.launch {
-                            val result = tangemSdkManager.createWallet(
-                                    store.state.globalState.scanNoteResponse?.card?.cardId
-                            )
-                            when (result) {
-                                is CompletionResult.Success -> {
-                                    store.state.globalState.tapWalletManager.onCardScanned(result.data)
-                                }
+                        if (store.state.walletState.twinCardsState != null) {
+                            store.dispatch(DetailsAction.CreateTwinWalletAction.Proceed(
+                                    store.state.globalState.scanNoteResponse?.card?.cardId?.let {
+                                        TwinsHelper.getTwinCardNumber(it)
+                                    },
+                                    CreateTwinWallet.CreateWallet
+                            ))
+                        } else {
+                            scope.launch {
+                                val result = tangemSdkManager.createWallet(
+                                        store.state.globalState.scanNoteResponse?.card?.cardId
+                                )
+                                when (result) {
+                                    is CompletionResult.Success -> {
+                                        store.state.globalState.tapWalletManager
+                                                .onCardScanned(result.data)
+                                    }
 
+                                }
                             }
                         }
                     }
@@ -163,6 +176,13 @@ class WalletMiddleware {
                     is WalletAction.SaveCardId -> {
                         val cardId = store.state.globalState.scanNoteResponse?.card?.cardId
                         cardId?.let { preferencesStorage.saveScannedCardId(it) }
+                    }
+                    is WalletAction.TwinsAction.SetTwinCard -> {
+                        val showOnboarding = !preferencesStorage.wasTwinsOnboardingShown()
+                        if (showOnboarding) store.dispatch(WalletAction.TwinsAction.ShowOnboarding)
+                    }
+                    is WalletAction.TwinsAction.SetOnboardingShown -> {
+                        preferencesStorage.saveTwinsOnboardingShown()
                     }
                 }
                 next(action)
