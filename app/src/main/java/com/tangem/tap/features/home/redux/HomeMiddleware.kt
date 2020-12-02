@@ -54,11 +54,18 @@ class HomeMiddleware {
     }
 
     private fun showDisclaimerOrNavigateToWallet() {
-        if (preferencesStorage.wasDisclaimerAccepted()) {
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
-        } else {
+        if (!preferencesStorage.wasDisclaimerAccepted()) {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
+            return
         }
+        if (store.state.walletState.twinCardsState != null) {
+            val showOnboarding = !preferencesStorage.wasTwinsOnboardingShown()
+            if (showOnboarding) {
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.TwinsOnboarding))
+                return
+            }
+        }
+        store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
     }
 
     companion object {
