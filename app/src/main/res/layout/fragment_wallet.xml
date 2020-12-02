@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/coordinator_wallet"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -61,6 +62,40 @@
                     android:src="@drawable/card_placeholder"
                     app:layout_constraintTop_toTopOf="parent" />
 
+                <ImageView
+                    android:id="@+id/iv_twin_card"
+                    android:layout_width="100dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/shape_chip"
+                    android:elevation="3dp"
+                    android:layout_marginStart="25dp"
+                    app:layout_constraintStart_toStartOf="@id/iv_card"
+                    app:layout_constraintTop_toBottomOf="@id/iv_card"
+                    app:layout_constraintBottom_toBottomOf="@id/iv_card"/>
+
+                <TextView
+                    android:id="@+id/tv_twin_card_number"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    app:layout_constraintStart_toStartOf="@id/iv_twin_card"
+                    app:layout_constraintEnd_toEndOf="@id/iv_twin_card"
+                    app:layout_constraintTop_toTopOf="@id/iv_twin_card"
+                    app:layout_constraintBottom_toBottomOf="@id/iv_twin_card"
+                    tools:text="Card 2 of 2"
+                    android:elevation="3dp"
+                    android:gravity="center"
+                    android:textColor="@color/buttonGray"
+                    android:textStyle="bold"
+                    android:textSize="14sp"/>
+
+
+                <androidx.constraintlayout.widget.Barrier
+                    android:id="@+id/barrier"
+                    app:barrierDirection="bottom"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:constraint_referenced_ids="iv_card,iv_twin_card"/>
+
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rv_pending_transaction"
                     android:layout_width="match_parent"
@@ -68,7 +103,7 @@
                     android:layout_marginTop="12dp"
                     android:nestedScrollingEnabled="false"
                     android:overScrollMode="never"
-                    app:layout_constraintTop_toBottomOf="@id/iv_card" />
+                    app:layout_constraintTop_toBottomOf="@id/barrier" />
 
                 <include
                     android:id="@+id/l_card_balance"
