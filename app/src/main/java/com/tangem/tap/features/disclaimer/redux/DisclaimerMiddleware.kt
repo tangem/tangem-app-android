@@ -14,7 +14,16 @@ class DisclaimerMiddleware {
                 when (action) {
                     is DisclaimerAction.AcceptDisclaimer -> {
                         preferencesStorage.saveDisclaimerAccepted()
-                        store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
+                        if (store.state.walletState.twinCardsState != null) {
+                            val showOnboarding = !preferencesStorage.wasTwinsOnboardingShown()
+                            if (showOnboarding) {
+                                store.dispatch(NavigationAction.NavigateTo(AppScreen.TwinsOnboarding))
+                            } else {
+                                store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
+                            }
+                        } else {
+                            store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
+                        }
                     }
                 }
                 next(action)
