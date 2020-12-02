@@ -1,9 +1,13 @@
 package com.tangem.tap.features.details.redux
 
+import com.tangem.Message
 import com.tangem.blockchain.common.Wallet
-import com.tangem.commands.Card
+import com.tangem.commands.common.card.Card
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.common.redux.global.FiatCurrencyName
+import com.tangem.tap.domain.TwinCardNumber
+import com.tangem.tap.domain.tasks.ScanNoteResponse
+import com.tangem.tap.features.details.redux.twins.CreateTwinWallet
 import com.tangem.tap.network.coinmarketcap.FiatCurrency
 import com.tangem.wallet.R
 import org.rekotlin.Action
@@ -12,10 +16,12 @@ sealed class DetailsAction : Action {
 
     data class PrepareScreen(
             val card: Card,
+            val scanNoteResponse: ScanNoteResponse,
             val wallet: Wallet?,
+            val isCreatingTwinWalletAllowed: Boolean?,
             val fiatCurrencyName: FiatCurrencyName,
             val fiatCurrencies: List<FiatCurrencyName>? = null,
-    ): DetailsAction()
+    ) : DetailsAction()
 
     object ShowDisclaimer : DetailsAction()
 
@@ -23,24 +29,54 @@ sealed class DetailsAction : Action {
     sealed class EraseWallet : DetailsAction() {
         object Check : EraseWallet()
         object Proceed : EraseWallet() {
-            object NotAllowedByCard: EraseWallet(), NotificationAction {
+            object NotAllowedByCard : EraseWallet(), NotificationAction {
                 override val messageResource = R.string.error_purge_prohibited
             }
-            object NotEmpty: EraseWallet(), NotificationAction {
+
+            object NotEmpty : EraseWallet(), NotificationAction {
                 override val messageResource = R.string.details_notification_erase_wallet_not_possible
             }
         }
+
         object Confirm : EraseWallet()
         object Cancel : EraseWallet()
         object Failure : EraseWallet()
         object Success : EraseWallet()
     }
 
+    sealed class CreateTwinWalletAction : DetailsAction() {
+        object ShowWarning : CreateTwinWalletAction()
+        object ShowAlert : CreateTwinWalletAction()
+        object HideAlert : CreateTwinWalletAction()
+        data class Proceed(
+                val twinCardNumber: TwinCardNumber?, val createTwinWallet: CreateTwinWallet
+        ) : CreateTwinWalletAction()
+
+        object Cancel : CreateTwinWalletAction() {
+            object Confirm : CreateTwinWalletAction()
+        }
+
+        data class LaunchFirstStep(val message: Message) : CreateTwinWalletAction() {
+            object Success : CreateTwinWalletAction()
+            object Failure : CreateTwinWalletAction()
+        }
+
+        data class LaunchSecondStep(val message: Message) : CreateTwinWalletAction() {
+            object Success : CreateTwinWalletAction()
+            object Failure : CreateTwinWalletAction()
+        }
+
+        data class LaunchThirdStep(val message: Message) : CreateTwinWalletAction() {
+            data class Success(val scanNoteResponse: ScanNoteResponse) : CreateTwinWalletAction()
+            object Failure : CreateTwinWalletAction()
+        }
+    }
+
     sealed class AppCurrencyAction : DetailsAction() {
         data class SetCurrencies(val currencies: List<FiatCurrency>) : AppCurrencyAction()
         object ChooseAppCurrency : AppCurrencyAction()
-        object Cancel: AppCurrencyAction()
-        data class SelectAppCurrency(val fiatCurrencyName: FiatCurrencyName): AppCurrencyAction()
+        object Cancel : AppCurrencyAction()
+        data class SelectAppCurrency(val fiatCurrencyName: FiatCurrencyName) : AppCurrencyAction()
     }
 
     sealed class ManageSecurity : DetailsAction() {
@@ -50,8 +86,9 @@ sealed class DetailsAction : Action {
             object Success : ManageSecurity()
             object Failure : ManageSecurity()
         }
+
         data class ConfirmSelection(val option: SecurityOption) : ManageSecurity() {
-            object AlreadySet: ManageSecurity(), NotificationAction {
+            object AlreadySet : ManageSecurity(), NotificationAction {
                 override val messageResource = R.string.details_notification_security_option_already_active
             }
         }
