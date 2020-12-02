@@ -3,8 +3,8 @@ package com.tangem.tap.domain
 import androidx.activity.ComponentActivity
 import com.tangem.*
 import com.tangem.commands.*
+import com.tangem.commands.common.card.CardType
 import com.tangem.common.CompletionResult
-import com.tangem.common.extensions.CardType
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tap.common.analytics.AnalyticsEvent
@@ -64,7 +64,7 @@ class TangemSdkManager(val activity: ComponentActivity) {
         ), cardId, initialMessage = Message(activity.getString(R.string.initial_message_tap_header)))
     }
 
-    private suspend fun <T : CommandResponse> runTaskAsync(
+    suspend fun <T : CommandResponse> runTaskAsync(
             runnable: CardSessionRunnable<T>, cardId: String? = null, initialMessage: Message? = null
     ): CompletionResult<T> =
             withContext(Dispatchers.IO) {
