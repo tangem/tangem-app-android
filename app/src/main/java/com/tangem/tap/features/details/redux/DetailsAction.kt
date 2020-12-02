@@ -18,6 +18,7 @@ sealed class DetailsAction : Action {
             val card: Card,
             val scanNoteResponse: ScanNoteResponse,
             val wallet: Wallet?,
+            val isCreatingTwinWalletAllowed: Boolean?,
             val fiatCurrencyName: FiatCurrencyName,
             val fiatCurrencies: List<FiatCurrencyName>? = null,
     ) : DetailsAction()
