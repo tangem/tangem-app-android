@@ -94,11 +94,14 @@ sealed class WalletAction : Action {
         data class TopUp(val context: Context, val toolbarColor: Int) : TopUpAction()
     }
 
-    data class ChangeSelectedAddress(val type: AddressType): WalletAction()
+    data class ChangeSelectedAddress(val type: AddressType) : WalletAction()
 
     sealed class TwinsAction : WalletAction() {
         object ShowOnboarding : TwinsAction()
         object SetOnboardingShown : TwinsAction()
-        data class SetTwinCard(val secondCardId: String, val number: TwinCardNumber) : TwinsAction()
+        data class SetTwinCard(
+                val secondCardId: String, val number: TwinCardNumber,
+                val isCreatingTwinCardsAllowed: Boolean
+        ) : TwinsAction()
     }
 }
