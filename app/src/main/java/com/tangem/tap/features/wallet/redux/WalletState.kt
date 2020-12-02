@@ -105,5 +105,6 @@ data class TopUpState(
 data class TwinCardsState(
        val secondCardId: String?,
        val cardNumber: TwinCardNumber?,
-       val showTwinOnboarding: Boolean
+       val showTwinOnboarding: Boolean,
+       val isCreatingTwinCardsAllowed: Boolean
 )
