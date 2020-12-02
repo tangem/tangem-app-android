@@ -1,6 +1,6 @@
 package com.tangem.tap.domain
 
-import com.tangem.commands.Card
+import com.tangem.commands.common.card.Card
 import java.util.*
 
 object TapWorkarounds {
