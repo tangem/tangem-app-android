@@ -11,6 +11,7 @@ data class Config(
         val moonPayApiSecretKey: String = "sk_test_V8w4M19LbDjjYOt170s0tGuvXAgyEb1C",
         val isWalletPayIdEnabled: Boolean = true,
         val isTopUpEnabled: Boolean = false,
+        val isCreatingTwinCardsAllowed: Boolean = false
 )
 
 class ConfigManager(
@@ -38,6 +39,7 @@ class ConfigManager(
         when (name) {
             isWalletPayIdEnabled -> config = config.copy(isWalletPayIdEnabled = false)
             isTopUpEnabled -> config = config.copy(isTopUpEnabled = false)
+            isCreatingTwinCardsAllowed -> config = config.copy(isCreatingTwinCardsAllowed = false)
         }
     }
 
@@ -45,6 +47,8 @@ class ConfigManager(
         when (name) {
             isWalletPayIdEnabled -> config = config.copy(isWalletPayIdEnabled = defaultConfig.isWalletPayIdEnabled)
             isTopUpEnabled -> config = config.copy(isTopUpEnabled = defaultConfig.isTopUpEnabled)
+            isCreatingTwinCardsAllowed -> config =
+                    config.copy(isCreatingTwinCardsAllowed = defaultConfig.isCreatingTwinCardsAllowed)
         }
     }
 
@@ -59,6 +63,10 @@ class ConfigManager(
             isTopUpEnabled -> {
                 config = config.copy(isTopUpEnabled = newValue)
                 defaultConfig = defaultConfig.copy(isTopUpEnabled = newValue)
+            }
+            isCreatingTwinCardsAllowed -> {
+                config = config.copy(isCreatingTwinCardsAllowed = newValue)
+                defaultConfig = defaultConfig.copy(isCreatingTwinCardsAllowed = newValue)
             }
         }
     }
@@ -82,6 +90,7 @@ class ConfigManager(
 
     companion object {
         const val isWalletPayIdEnabled = "isWalletPayIdEnabled"
+        const val isCreatingTwinCardsAllowed = "isCreatingTwinCardsAllowed"
         const val isTopUpEnabled = "isTopUpEnabled"
         const val coinMarketCapKey = "coinMarketCapKey"
         const val moonPayApiKey = "moonPayApiKey"
