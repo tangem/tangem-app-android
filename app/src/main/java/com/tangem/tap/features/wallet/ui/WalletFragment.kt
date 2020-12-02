@@ -101,7 +101,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             }
             tv_twin_card_number.text = getString(R.string.wallet_twins_chip_format, number)
         }
-        if (state.twinCardsState?.cardNumber == null){
+        if (state.twinCardsState?.cardNumber == null) {
             tv_twin_card_number.hide()
             iv_twin_card.hide()
         }
@@ -308,6 +308,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                     store.dispatch(DetailsAction.PrepareScreen(
                             scanNoteResponse.card, scanNoteResponse,
                             store.state.walletState.wallet,
+                            store.state.globalState.configManager?.config?.isCreatingTwinCardsAllowed,
                             store.state.globalState.appCurrency
                     ))
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.Details))
