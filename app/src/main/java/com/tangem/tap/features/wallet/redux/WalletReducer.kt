@@ -34,12 +34,17 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
 
     when (action) {
         is WalletAction.ResetState -> newState = WalletState()
-        is WalletAction.EmptyWallet -> newState = newState.copy(
-                state = ProgressState.Done,
-                currencyData = BalanceWidgetData(BalanceStatus.EmptyCard),
-                mainButton = WalletMainButton.CreateWalletButton(true),
-                topUpState = TopUpState(false)
-        )
+        is WalletAction.EmptyWallet -> {
+            val creatingWalletAllowed = !(newState.twinCardsState != null &&
+                    newState.twinCardsState?.isCreatingTwinCardsAllowed != true)
+
+            newState = newState.copy(
+                    state = ProgressState.Done,
+                    currencyData = BalanceWidgetData(BalanceStatus.EmptyCard),
+                    mainButton = WalletMainButton.CreateWalletButton(creatingWalletAllowed),
+                    topUpState = TopUpState(false)
+            )
+        }
         is WalletAction.LoadData.Failure -> {
             when (action.error) {
                 is TapError.NoInternetConnection -> {
@@ -224,13 +229,18 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     twinCardsState = TwinCardsState(
                             secondCardId = action.secondCardId,
                             cardNumber = action.number,
-                            newState.twinCardsState?.showTwinOnboarding ?: false)
+                            showTwinOnboarding = newState.twinCardsState?.showTwinOnboarding
+                                    ?: false,
+                            isCreatingTwinCardsAllowed = action.isCreatingTwinCardsAllowed
+                    )
             )
         }
         is WalletAction.TwinsAction.ShowOnboarding -> {
             newState = newState.copy(
                     twinCardsState = newState.twinCardsState?.copy(showTwinOnboarding = true)
-                            ?: TwinCardsState(null, null, true)
+                            ?: TwinCardsState(null, null,
+                                    showTwinOnboarding = true,
+                                    isCreatingTwinCardsAllowed = false)
             )
         }
         is WalletAction.TwinsAction.SetOnboardingShown -> {
