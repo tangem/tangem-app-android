@@ -74,6 +74,14 @@ class PreferencesStorage(applicationContext: Application) {
         return preferences.getBoolean(DISCLAIMER_ACCEPTED_KEY, false)
     }
 
+    fun saveTwinsOnboardingShown() {
+        preferences.edit().putBoolean(TWINS_ONBOARDING_SHOWN_KEY, true).apply()
+    }
+
+    fun wasTwinsOnboardingShown(): Boolean {
+        return preferences.getBoolean(TWINS_ONBOARDING_SHOWN_KEY, false)
+    }
+
     private fun incrementLaunchCounter() {
         var count = preferences.getInt(APP_LAUNCH_COUNT_KEY, 0)
         preferences.edit { putInt(APP_LAUNCH_COUNT_KEY, ++count) }
@@ -83,9 +91,9 @@ class PreferencesStorage(applicationContext: Application) {
         private const val PREFERENCES_NAME = "tapPrefs"
         private const val APP_CURRENCY_KEY = "appCurrency"
         private const val FIAT_CURRENCIES_KEY = "fiatCurrencies"
-        private const val FIRST_LAUNCH_CHECK_KEY = "firstLaunchCheck"
         private const val SCANNED_CARDS_IDS_KEY = "scannedCardIds"
         private const val DISCLAIMER_ACCEPTED_KEY = "disclaimerAccepted"
+        private const val TWINS_ONBOARDING_SHOWN_KEY = "twinsOnboardingShown"
         private const val APP_LAUNCH_COUNT_KEY = "launchCount"
     }
 
