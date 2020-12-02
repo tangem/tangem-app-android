@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.core.os.bundleOf
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.ktx.Firebase
-import com.tangem.commands.Card
+import com.tangem.commands.common.card.Card
 
 object FirebaseAnalyticsHandler: AnalyticsHandler {
     override fun triggerEvent(event: AnalyticsEvent, card: Card?) {
@@ -17,7 +17,7 @@ object FirebaseAnalyticsHandler: AnalyticsHandler {
         return bundleOf(
                 AnalyticsParam.BLOCKCHAIN.param to card.cardData?.blockchainName,
                 AnalyticsParam.BATCH_ID.param to card.cardData?.batchId,
-                AnalyticsParam.FIRMWARE.param to card.firmwareVersion
+                AnalyticsParam.FIRMWARE.param to card.firmwareVersion.version
         )
     }
 
