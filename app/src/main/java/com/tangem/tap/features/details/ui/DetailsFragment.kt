@@ -5,6 +5,8 @@ import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
+import com.tangem.tap.common.extensions.hide
+import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
@@ -66,10 +68,25 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
 
         tv_disclaimer.setOnClickListener { store.dispatch(DetailsAction.ShowDisclaimer) }
 
-        tv_erase_wallet.setOnClickListener {
-            store.dispatch(DetailsAction.EraseWallet.Check)
-            store.dispatch(DetailsAction.EraseWallet.Proceed)
+        if (state.createTwinWalletState != null) {
+            if (state.createTwinWalletState.allowRecreatingWallet == true) {
+                tv_erase_wallet.show()
+                tv_erase_wallet.text = getText(R.string.details_row_title_twins_recreate)
+                tv_erase_wallet.setOnClickListener {
+                    store.dispatch(DetailsAction.CreateTwinWalletAction.ShowWarning)
+                }
+            } else {
+                tv_erase_wallet.hide()
+            }
+        } else {
+            tv_erase_wallet.show()
+            tv_erase_wallet.text = getText(R.string.details_row_title_erase_wallet)
+            tv_erase_wallet.setOnClickListener {
+                store.dispatch(DetailsAction.EraseWallet.Check)
+                store.dispatch(DetailsAction.EraseWallet.Proceed)
+            }
         }
+
 
         tv_app_currency.text = state.appCurrencyState.fiatCurrencyName
 
