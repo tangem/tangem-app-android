@@ -10,7 +10,7 @@ import com.tangem.CardFilter
 import com.tangem.Config
 import com.tangem.Log
 import com.tangem.TangemSdk
-import com.tangem.common.extensions.CardType
+import com.tangem.commands.common.card.CardType
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.common.redux.navigation.AppScreen
