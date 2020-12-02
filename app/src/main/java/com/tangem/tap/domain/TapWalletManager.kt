@@ -3,7 +3,8 @@ package com.tangem.tap.domain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.commands.CardStatus
+import com.tangem.commands.common.card.CardStatus
+import com.tangem.commands.common.card.masks.Product
 import com.tangem.commands.common.network.Result
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.common.analytics.AnalyticsEvent
@@ -93,7 +94,18 @@ class TapWalletManager {
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.ResetState)
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
-            store.dispatch(AddressPayIdActionUi.ChangePayIdState(configManager?.config?.isWalletPayIdEnabled ?: false))
+            store.dispatch(AddressPayIdActionUi.ChangePayIdState(configManager?.config?.isWalletPayIdEnabled
+                    ?: false))
+            if (data.card.cardData?.productMask?.contains(Product.TwinCard) == true) {
+                val secondCardId = TwinsHelper.getTwinsCardId(data.card.cardId)
+                val cardNumber = TwinsHelper.getTwinCardNumber(data.card.cardId)
+                if (secondCardId != null && cardNumber != null) {
+                    store.dispatch(WalletAction.TwinsAction.SetTwinCard(
+                            secondCardId, cardNumber,
+                            configManager?.config?.isCreatingTwinCardsAllowed ?: false
+                    ))
+                }
+            }
             loadData(data)
         }
     }
@@ -114,7 +126,8 @@ class TapWalletManager {
                 store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
                 store.dispatch(WalletAction.LoadFiatRate)
                 store.dispatch(WalletAction.LoadPayId)
-            } else if (data.card.status == CardStatus.Empty) {
+            } else if (data.card.status == CardStatus.Empty ||
+                    data.card.cardData?.productMask?.contains(Product.TwinCard) == true) {
                 store.dispatch(WalletAction.EmptyWallet)
                 store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
             } else {
