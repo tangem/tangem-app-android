@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
+import com.tangem.tap.domain.TwinCardNumber
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import org.rekotlin.StateType
@@ -24,7 +25,8 @@ data class WalletState(
         val walletDialog: WalletDialog? = null,
         val updatingWallet: Boolean = false,
         val mainButton: WalletMainButton = WalletMainButton.SendButton(false),
-        val topUpState: TopUpState = TopUpState()
+        val topUpState: TopUpState = TopUpState(),
+        val twinCardsState: TwinCardsState? = null,
 ) : StateType {
     val showDetails: Boolean =
             currencyData.status != com.tangem.tap.features.wallet.ui.BalanceStatus.EmptyCard &&
@@ -45,6 +47,7 @@ sealed class WalletDialog {
     data class CreatePayIdDialog(val creatingPayIdState: CreatingPayIdState?) : WalletDialog()
     data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog()
     data class WarningDialog(val type: WarningType) : WalletDialog()
+    data class TwinsOnboardingFragment(val secondCardId: String): WalletDialog()
 }
 
 enum class WarningType { CardSignedHashesBefore, DevCard }
@@ -97,4 +100,10 @@ data class TopUpState(
         val allowed: Boolean = true,
         val url: String? = null,
         val redirectUrl: String? = null
+)
+
+data class TwinCardsState(
+       val secondCardId: String?,
+       val cardNumber: TwinCardNumber?,
+       val showTwinOnboarding: Boolean
 )
