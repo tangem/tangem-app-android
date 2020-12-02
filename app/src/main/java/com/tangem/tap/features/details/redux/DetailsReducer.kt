@@ -1,10 +1,15 @@
 package com.tangem.tap.features.details.redux
 
-import com.tangem.commands.Card
-import com.tangem.commands.Settings
+
+import com.tangem.commands.common.card.Card
+import com.tangem.commands.common.card.masks.Product
+import com.tangem.commands.common.card.masks.Settings
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapWorkarounds
+import com.tangem.tap.domain.TwinsHelper
 import com.tangem.tap.domain.extensions.toSendableAmounts
+import com.tangem.tap.features.details.redux.twins.CreateTwinWalletReducer
+import com.tangem.tap.features.details.redux.twins.CreateTwinWalletState
 import org.rekotlin.Action
 import java.util.*
 
@@ -31,6 +36,9 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
         is DetailsAction.ManageSecurity -> {
             handleSecurityAction(action, detailsState)
         }
+        is DetailsAction.CreateTwinWalletAction -> {
+            CreateTwinWalletReducer.handle(action, detailsState)
+        }
         else -> detailsState
     }
 }
@@ -47,13 +55,25 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: Deta
             SecurityOption.LongTap
         }
     }
+    val twinsState = if (action.card.cardData?.productMask?.contains(Product.TwinCard) == true) {
+        CreateTwinWalletState(
+                scanResponse = action.scanNoteResponse,
+                twinCardNumber = TwinsHelper.getTwinCardNumber(action.card.cardId),
+                createTwinWallet = null,
+                showAlert = false,
+                allowRecreatingWallet = action.isCreatingTwinWalletAllowed
+        )
+    } else {
+        null
+    }
     return DetailsState(
             card = action.card, wallet = action.wallet,
             cardInfo = action.card.toCardInfo(),
             appCurrencyState = AppCurrencyState(
                     action.fiatCurrencyName
             ),
-            securityScreenState = SecurityScreenState(currentOption = securityOption)
+            securityScreenState = SecurityScreenState(currentOption = securityOption),
+            createTwinWalletState = twinsState
     )
 }
 
@@ -168,6 +188,7 @@ private fun handleSecurityAction(
         else -> state
     }
 }
+
 
 private fun Card.toCardInfo(): CardInfo? {
     val cardId = this.cardId.chunked(4).joinToString(separator = " ")
