@@ -10,7 +10,6 @@ import com.tangem.tap.domain.TwinsHelper
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.features.details.redux.twins.CreateTwinWalletReducer
 import com.tangem.tap.features.details.redux.twins.CreateTwinWalletState
-import com.tangem.wallet.BuildConfig
 import org.rekotlin.Action
 import java.util.*
 
@@ -62,7 +61,7 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: Deta
                 twinCardNumber = TwinsHelper.getTwinCardNumber(action.card.cardId),
                 createTwinWallet = null,
                 showAlert = false,
-                allowRecreatingWallet = BuildConfig.DEBUG
+                allowRecreatingWallet = action.isCreatingTwinWalletAllowed
         )
     } else {
         null
