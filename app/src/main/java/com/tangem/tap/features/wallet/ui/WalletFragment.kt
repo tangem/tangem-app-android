@@ -18,6 +18,7 @@ import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.TwinCardNumber
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
@@ -90,6 +91,20 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     override fun newState(state: WalletState) {
         if (activity == null) return
+
+        state.twinCardsState?.cardNumber?.let { cardNumber ->
+            tv_twin_card_number.show()
+            iv_twin_card.show()
+            val number = when (cardNumber) {
+                TwinCardNumber.First -> "1"
+                TwinCardNumber.Second -> "2"
+            }
+            tv_twin_card_number.text = getString(R.string.wallet_twins_chip_format, number)
+        }
+        if (state.twinCardsState?.cardNumber == null){
+            tv_twin_card_number.hide()
+            iv_twin_card.hide()
+        }
 
         if (!state.showDetails) {
             toolbar.menu.removeItem(R.id.details_menu)
@@ -289,9 +304,10 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.details_menu -> {
-                store.state.globalState.scanNoteResponse?.card?.let { card ->
+                store.state.globalState.scanNoteResponse?.let { scanNoteResponse ->
                     store.dispatch(DetailsAction.PrepareScreen(
-                            card, store.state.walletState.wallet,
+                            scanNoteResponse.card, scanNoteResponse,
+                            store.state.walletState.wallet,
                             store.state.globalState.appCurrency
                     ))
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.Details))
