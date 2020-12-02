@@ -100,7 +100,10 @@ class TapWalletManager {
                 val secondCardId = TwinsHelper.getTwinsCardId(data.card.cardId)
                 val cardNumber = TwinsHelper.getTwinCardNumber(data.card.cardId)
                 if (secondCardId != null && cardNumber != null) {
-                    store.dispatch(WalletAction.TwinsAction.SetTwinCard(secondCardId, cardNumber))
+                    store.dispatch(WalletAction.TwinsAction.SetTwinCard(
+                            secondCardId, cardNumber,
+                            configManager?.config?.isCreatingTwinCardsAllowed ?: false
+                    ))
                 }
             }
             loadData(data)
