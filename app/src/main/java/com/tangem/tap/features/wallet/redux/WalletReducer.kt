@@ -214,9 +214,29 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         }
         is WalletAction.ChangeSelectedAddress -> {
             val walletAddresses = newState.walletAddresses ?: return newState
-            val address = walletAddresses.list.firstOrNull { it.type == action.type } ?: return newState
+            val address = walletAddresses.list.firstOrNull { it.type == action.type }
+                    ?: return newState
 
             newState = newState.copy(walletAddresses = WalletAddresses(address, walletAddresses.list))
+        }
+        is WalletAction.TwinsAction.SetTwinCard -> {
+            newState = newState.copy(
+                    twinCardsState = TwinCardsState(
+                            secondCardId = action.secondCardId,
+                            cardNumber = action.number,
+                            newState.twinCardsState?.showTwinOnboarding ?: false)
+            )
+        }
+        is WalletAction.TwinsAction.ShowOnboarding -> {
+            newState = newState.copy(
+                    twinCardsState = newState.twinCardsState?.copy(showTwinOnboarding = true)
+                            ?: TwinCardsState(null, null, true)
+            )
+        }
+        is WalletAction.TwinsAction.SetOnboardingShown -> {
+            newState = newState.copy(
+                    twinCardsState = newState.twinCardsState?.copy(showTwinOnboarding = false)
+            )
         }
     }
     return newState
