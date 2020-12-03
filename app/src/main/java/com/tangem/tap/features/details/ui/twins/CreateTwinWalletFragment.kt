@@ -8,12 +8,14 @@ import androidx.core.content.ContextCompat.getColor
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.squareup.picasso.Picasso
 import com.tangem.Message
 import com.tangem.tap.domain.TwinCardNumber
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.details.redux.twins.CreateTwinWallet
 import com.tangem.tap.features.details.redux.twins.CreateTwinWalletStep
+import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_details_twin_cards.*
@@ -56,6 +58,18 @@ class CreateTwinWalletFragment : Fragment(R.layout.fragment_details_twin_cards),
         toolbar.setNavigationOnClickListener {
             store.dispatch(DetailsAction.CreateTwinWalletAction.Cancel)
         }
+
+        Picasso.get()
+                .load(Artwork.TWIN_CARD_1)
+                .placeholder(R.drawable.card_placeholder)
+                ?.error(R.drawable.card_placeholder)
+                ?.into(iv_card_1)
+
+        Picasso.get()
+                .load(Artwork.TWIN_CARD_2)
+                .placeholder(R.drawable.card_placeholder)
+                ?.error(R.drawable.card_placeholder)
+                ?.into(iv_card_2)
     }
 
 
