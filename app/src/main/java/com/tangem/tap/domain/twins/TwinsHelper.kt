@@ -1,4 +1,4 @@
-package com.tangem.tap.domain
+package com.tangem.tap.domain.twins
 
 import com.tangem.tap.common.extensions.isEven
 
