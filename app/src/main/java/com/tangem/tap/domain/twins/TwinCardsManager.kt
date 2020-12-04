@@ -12,7 +12,6 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.common.tlv.TlvEncoder
 import com.tangem.common.tlv.TlvTag
 import com.tangem.common.tlv.serialize
-import com.tangem.tap.domain.TwinsHelper
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.tangemSdkManager
 
