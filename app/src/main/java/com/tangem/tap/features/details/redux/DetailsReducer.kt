@@ -6,8 +6,8 @@ import com.tangem.commands.common.card.masks.Product
 import com.tangem.commands.common.card.masks.Settings
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapWorkarounds
-import com.tangem.tap.domain.TwinsHelper
 import com.tangem.tap.domain.extensions.toSendableAmounts
+import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.features.details.redux.twins.CreateTwinWalletReducer
 import com.tangem.tap.features.details.redux.twins.CreateTwinWalletState
 import org.rekotlin.Action
