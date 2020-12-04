@@ -1,7 +1,7 @@
 package com.tangem.tap.features.details.redux.twins
 
-import com.tangem.tap.domain.TwinCardNumber
 import com.tangem.tap.domain.tasks.ScanNoteResponse
+import com.tangem.tap.domain.twins.TwinCardNumber
 
 data class CreateTwinWalletState(
         val scanResponse: ScanNoteResponse?,
