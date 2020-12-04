@@ -20,7 +20,7 @@ import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvDecoder
 import com.tangem.common.tlv.TlvTag
 import com.tangem.tap.domain.TapSdkError
-import com.tangem.tap.domain.TwinsHelper
+import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tasks.ScanTask
 
 data class ScanNoteResponse(
