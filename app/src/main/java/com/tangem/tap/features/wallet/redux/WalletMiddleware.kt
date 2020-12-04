@@ -20,8 +20,8 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.TopUpHelper
-import com.tangem.tap.domain.TwinsHelper
 import com.tangem.tap.domain.extensions.toSendableAmounts
+import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.twins.CreateTwinWallet
 import com.tangem.tap.features.send.redux.PrepareSendScreen
