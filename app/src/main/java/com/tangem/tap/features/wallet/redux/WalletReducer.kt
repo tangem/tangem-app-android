@@ -11,8 +11,8 @@ import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.TwinCardNumber
 import com.tangem.tap.domain.getFirstToken
+import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.ui.BalanceStatus
