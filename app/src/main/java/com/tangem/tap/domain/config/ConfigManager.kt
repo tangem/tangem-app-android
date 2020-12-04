@@ -28,11 +28,12 @@ class ConfigManager(
         localLoader.loadConfig { config ->
             config.features?.forEach { setupFeature(it.name, it.value) }
             config.configValues?.forEach { setupKey(it.name, it.value) }
-        }
-        remoteLoader.loadConfig { config ->
-            config.features?.forEach { setupFeature(it.name, it.value) }
             onComplete?.invoke()
         }
+//        remoteLoader.loadConfig { config ->
+//            config.features?.forEach { setupFeature(it.name, it.value) }
+//            onComplete?.invoke()
+//        }
     }
 
     fun turnOff(name: String) {
