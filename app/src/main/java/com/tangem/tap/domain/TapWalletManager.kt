@@ -16,6 +16,7 @@ import com.tangem.tap.domain.config.ConfigManager
 import com.tangem.tap.domain.extensions.amountToCreateAccount
 import com.tangem.tap.domain.extensions.isNoAccountError
 import com.tangem.tap.domain.tasks.ScanNoteResponse
+import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.features.send.redux.AddressPayIdActionUi
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
