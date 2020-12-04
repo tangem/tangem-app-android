@@ -18,7 +18,7 @@ import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.TwinCardNumber
+import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog

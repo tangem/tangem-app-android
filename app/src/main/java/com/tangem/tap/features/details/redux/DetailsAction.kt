@@ -5,8 +5,8 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.commands.common.card.Card
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.common.redux.global.FiatCurrencyName
-import com.tangem.tap.domain.TwinCardNumber
 import com.tangem.tap.domain.tasks.ScanNoteResponse
+import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.details.redux.twins.CreateTwinWallet
 import com.tangem.tap.network.coinmarketcap.FiatCurrency
 import com.tangem.wallet.R
