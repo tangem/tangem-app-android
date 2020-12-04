@@ -110,7 +110,7 @@ class CreateTwinWalletFragment : Fragment(R.layout.fragment_details_twin_cards),
 
                 tv_step_number.text =
                         getString(R.string.details_twins_recreate_step_format, "2")
-                v_step_1.setBackgroundColor(defaultColor)
+                v_step_1.setBackgroundColor(selectedColor)
                 v_step_2.setBackgroundColor(selectedColor)
                 v_step_3.setBackgroundColor(defaultColor)
                 btn_tap.setOnClickListener {
@@ -128,8 +128,8 @@ class CreateTwinWalletFragment : Fragment(R.layout.fragment_details_twin_cards),
 
                 tv_step_number.text =
                         getString(R.string.details_twins_recreate_step_format, "3")
-                v_step_1.setBackgroundColor(defaultColor)
-                v_step_2.setBackgroundColor(defaultColor)
+                v_step_1.setBackgroundColor(selectedColor)
+                v_step_2.setBackgroundColor(selectedColor)
                 v_step_3.setBackgroundColor(selectedColor)
                 btn_tap.setOnClickListener {
                     store.dispatch(DetailsAction.CreateTwinWalletAction.LaunchThirdStep(
