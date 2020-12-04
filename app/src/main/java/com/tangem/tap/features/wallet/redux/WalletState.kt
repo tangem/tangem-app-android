@@ -7,7 +7,7 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
-import com.tangem.tap.domain.TwinCardNumber
+import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import org.rekotlin.StateType
@@ -105,8 +105,8 @@ data class TopUpState(
 )
 
 data class TwinCardsState(
-       val secondCardId: String?,
-       val cardNumber: TwinCardNumber?,
-       val showTwinOnboarding: Boolean,
-       val isCreatingTwinCardsAllowed: Boolean
+        val secondCardId: String?,
+        val cardNumber: TwinCardNumber?,
+        val showTwinOnboarding: Boolean,
+        val isCreatingTwinCardsAllowed: Boolean
 )
