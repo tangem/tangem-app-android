@@ -10,7 +10,7 @@ import androidx.transition.TransitionInflater
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.squareup.picasso.Picasso
 import com.tangem.Message
-import com.tangem.tap.domain.TwinCardNumber
+import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.details.redux.twins.CreateTwinWallet
