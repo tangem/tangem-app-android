@@ -89,7 +89,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
             card: Card, session: CardSession,
             callback: (result: CompletionResult<ScanNoteResponse>) -> Unit
     ) {
-        ReadFileDataCommand(readPrivateFiles = true).run(session) { filesResult ->
+        ReadFileDataCommand().run(session) { filesResult ->
             when (filesResult) {
                 is CompletionResult.Success -> {
                     val decoder = Tlv.deserialize(filesResult.data.fileData)?.let { TlvDecoder(it) }
