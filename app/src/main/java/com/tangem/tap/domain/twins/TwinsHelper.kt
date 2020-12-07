@@ -42,7 +42,7 @@ class TwinsHelper {
 }
 
 private fun String.calculateLuhn(): Int {
-    return 10 - this.reversed()
+    val checksum = this.reversed()
             .mapIndexed { index, c ->
                 val digit = if (c in '0'..'9') c - '0' else c - 'A'
                 if (!index.isEven()) {
@@ -51,8 +51,9 @@ private fun String.calculateLuhn(): Int {
                     val newDigit = digit * 2
                     if (newDigit >= 10) newDigit - 9 else newDigit
                 }
-            }
-            .sum() % 10
+            }.sum()
+            .rem(10)
+    return (10 - checksum) % 10
 }
 
 enum class TwinCardNumber(val number: Int) {
