@@ -104,7 +104,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         val til = fg.tilAddressOrPayId
         val parsedError = parseError(til.context, state.error)
 
-        val hintResId = if (state.walletPayIdEnabled) {
+        val hintResId = if (state.sendingToPayIdEnabled) {
             R.string.send_destination_hint_address_payid
         }else {
             R.string.send_destination_hint_address
