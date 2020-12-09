@@ -147,16 +147,21 @@ class CreateTwinWalletFragment : Fragment(R.layout.fragment_details_twin_cards),
         tv_twin_title.text = getString(R.string.details_twins_recreate_title_format, cardNumber)
 
         if (state.createTwinWalletState?.showAlert == true) {
-            dialog = MaterialAlertDialogBuilder(requireContext())
-                    .setMessage(R.string.details_twins_recreate_alert)
-                    .setPositiveButton(R.string.common_ok) { _, _ ->
-                        store.dispatch(DetailsAction.CreateTwinWalletAction.Cancel.Confirm)
-                    }
-                    .setNegativeButton(R.string.common_cancel) { _, _ ->
-                        store.dispatch(DetailsAction.CreateTwinWalletAction.HideAlert)
-                    }
-                    .create()
-            dialog?.show()
+            if (dialog == null) {
+                dialog = MaterialAlertDialogBuilder(requireContext())
+                        .setMessage(R.string.details_twins_recreate_alert)
+                        .setPositiveButton(R.string.common_ok) { _, _ ->
+                            store.dispatch(DetailsAction.CreateTwinWalletAction.Cancel.Confirm)
+                        }
+                        .setNegativeButton(R.string.common_cancel) { _, _ ->
+                            dialog?.cancel()
+                        }
+                        .setOnCancelListener {
+                            store.dispatch(DetailsAction.CreateTwinWalletAction.HideAlert)
+                        }
+                        .create()
+                dialog?.show()
+            }
         } else {
             dialog?.cancel()
             dialog = null
