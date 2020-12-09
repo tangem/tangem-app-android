@@ -160,6 +160,6 @@ internal class AddressPayIdMiddleware {
     }
 
     private fun isPayIdEnabled(): Boolean {
-        return store.state.globalState.configManager?.config?.isWalletPayIdEnabled ?: false
+        return store.state.globalState.configManager?.config?.isSendingToPayIdEnabled ?: false
     }
 }
