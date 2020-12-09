@@ -116,8 +116,9 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
     }
 
     private fun getErrorIfExcludedCard(card: Card): TangemError? {
-        val productMask = card.cardData?.productMask ?: return TangemSdkError.CardError()
-        if (!productMask.contains(Product.Note) && !productMask.contains(Product.TwinCard)) {
+        val productMask = card.cardData?.productMask
+        if (productMask != null &&  // product mask is on cards v2.30 and later
+                !productMask.contains(Product.Note) && !productMask.contains(Product.TwinCard)) {
             return TapSdkError.CardForDifferentApp
         }
         if (excludedBatches.contains(card.cardData?.batchId)) {
