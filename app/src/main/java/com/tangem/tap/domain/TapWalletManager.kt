@@ -92,8 +92,11 @@ class TapWalletManager {
         } else if (data.walletManager?.wallet?.blockchain == Blockchain.Bitcoin
                 || data.card.cardData?.blockchainName == Blockchain.Bitcoin.id){
             configManager?.turnOff(ConfigManager.isWalletPayIdEnabled)
+            configManager?.resetToDefault(ConfigManager.isSendingToPayIdEnabled)
+            configManager?.resetToDefault(ConfigManager.isTopUpEnabled)
         } else {
             configManager?.resetToDefault(ConfigManager.isWalletPayIdEnabled)
+            configManager?.resetToDefault(ConfigManager.isSendingToPayIdEnabled)
             configManager?.resetToDefault(ConfigManager.isTopUpEnabled)
         }
         withContext(Dispatchers.Main) {
