@@ -99,8 +99,6 @@ class TapWalletManager {
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.ResetState)
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
-            store.dispatch(AddressPayIdActionUi.ChangePayIdState(configManager?.config?.isWalletPayIdEnabled
-                    ?: false))
             if (data.card.cardData?.productMask?.contains(Product.TwinCard) == true) {
                 val secondCardId = TwinsHelper.getTwinsCardId(data.card.cardId)
                 val cardNumber = TwinsHelper.getTwinCardNumber(data.card.cardId)
