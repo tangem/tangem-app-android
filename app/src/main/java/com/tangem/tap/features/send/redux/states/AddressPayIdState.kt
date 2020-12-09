@@ -9,7 +9,7 @@ data class AddressPayIdState(
         val recipientWalletAddress: String? = null,
         val error: AddressPayIdVerifyAction.Error? = null,
         val truncateHandler: ((String) -> String)? = null,
-        val walletPayIdEnabled: Boolean = false,
+        val sendingToPayIdEnabled: Boolean = false,
         val pasteIsEnabled: Boolean = false
 ) : SendScreenState {
 
