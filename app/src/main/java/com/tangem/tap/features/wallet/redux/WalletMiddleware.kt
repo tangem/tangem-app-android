@@ -126,6 +126,12 @@ class WalletMiddleware {
                                 is CompletionResult.Success -> {
                                     store.state.globalState.tapWalletManager
                                             .onCardScanned(result.data, true)
+                                    if (store.state.walletState.twinCardsState != null) {
+                                        val showOnboarding = !preferencesStorage.wasTwinsOnboardingShown()
+                                        if (showOnboarding) {
+                                            store.dispatch(NavigationAction.NavigateTo(AppScreen.TwinsOnboarding))
+                                        }
+                                    }
                                 }
                             }
                         }
