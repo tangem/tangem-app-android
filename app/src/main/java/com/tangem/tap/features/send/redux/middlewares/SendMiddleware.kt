@@ -39,6 +39,7 @@ val sendMiddleware: Middleware<AppState> = { dispatch, appState ->
                 is RequestFee -> RequestFeeMiddleware().handle(appState(), dispatch)
                 is SendActionUi.SendAmountToRecipient ->
                     verifyAndSendTransaction(action, appState(), dispatch)
+                is PrepareSendScreen -> setIfSendingToPayIdEnabled(appState(), dispatch)
             }
             nextDispatch(action)
         }
@@ -183,5 +184,11 @@ fun createValidateTransactionError(errorList: EnumSet<TransactionError>, walletM
         }
     }
     return TapError.ValidateTransactionErrors(tapErrors) { it.joinToString("\r\n") }
+}
+
+private fun setIfSendingToPayIdEnabled(appState: AppState?, dispatch: (Action) -> Unit) {
+    val isSendingToPayIdEnabled =
+            appState?.globalState?.configManager?.config?.isSendingToPayIdEnabled ?: false
+    dispatch(AddressPayIdActionUi.ChangePayIdState(isSendingToPayIdEnabled))
 }
 
