@@ -30,7 +30,7 @@ class AddressPayIdReducer : SendInternalReducer {
             is AddressPayIdActionUi.PasteAddressPayId -> return sendState
             is AddressPayIdActionUi.CheckClipboard -> return sendState
             is AddressPayIdActionUi.CheckAddressPayId -> return sendState
-            is AddressPayIdActionUi.ChangePayIdState -> state.copy(walletPayIdEnabled = action.walletPayIdEnabled)
+            is AddressPayIdActionUi.ChangePayIdState -> state.copy(sendingToPayIdEnabled = action.sendingToPayIdEnabled)
         }
         return updateLastState(sendState.copy(addressPayIdState = result), result)
     }
