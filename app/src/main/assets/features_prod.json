@@ -4,6 +4,10 @@
     "value": true
   },
   {
+    "name": "isSendingToPayIdEnabled",
+    "value": true
+  },
+  {
     "name": "isTopUpEnabled",
     "value": true
   },
