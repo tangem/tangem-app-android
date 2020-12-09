@@ -153,7 +153,8 @@
                 android:layout_margin="16dp"
                 android:src="@drawable/ic_payid"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/v_payid_divider" />
+                app:layout_constraintTop_toBottomOf="@id/v_payid_divider"
+                app:layout_constraintBottom_toBottomOf="parent"/>
 
             <TextView
                 android:id="@+id/tv_create_payid"
@@ -173,9 +174,7 @@
                 android:id="@+id/tv_payid_address"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:ellipsize="middle"
                 android:padding="16dp"
-                android:singleLine="true"
                 android:textAlignment="textEnd"
                 android:textColor="@color/darkGray1"
                 android:textSize="13sp"
@@ -184,7 +183,7 @@
                 app:layout_constraintHorizontal_bias="1"
                 app:layout_constraintStart_toEndOf="@id/iv_payid_icon"
                 app:layout_constraintTop_toBottomOf="@id/v_payid_divider"
-                tools:text="roman$payid.tangem.com" />
+                tools:text="romafdffdfdfn$payid.tangem.com" />
 
             <androidx.constraintlayout.widget.Group
                 android:id="@+id/group_payid"
