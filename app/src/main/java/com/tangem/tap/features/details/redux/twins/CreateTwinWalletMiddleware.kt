@@ -34,7 +34,7 @@ class CreateTwinWalletMiddleware {
             }
             is DetailsAction.CreateTwinWalletAction.Cancel.Confirm -> {
                 twinsManager = null
-                store.dispatch(NavigationAction.PopBackTo())
+                store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
             }
             is DetailsAction.CreateTwinWalletAction.LaunchFirstStep -> {
                 store.state.globalState.scanNoteResponse?.let {
