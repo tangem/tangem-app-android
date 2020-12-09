@@ -1,5 +1,6 @@
 package com.tangem.tap.domain
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
@@ -17,7 +18,6 @@ import com.tangem.tap.domain.extensions.amountToCreateAccount
 import com.tangem.tap.domain.extensions.isNoAccountError
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.domain.twins.TwinsHelper
-import com.tangem.tap.features.send.redux.AddressPayIdActionUi
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
@@ -87,7 +87,11 @@ class TapWalletManager {
         val configManager = store.state.globalState.configManager
         if (TapWorkarounds.isStart2Coin) {
             configManager?.turnOff(ConfigManager.isWalletPayIdEnabled)
+            configManager?.turnOff(ConfigManager.isSendingToPayIdEnabled)
             configManager?.turnOff(ConfigManager.isTopUpEnabled)
+        } else if (data.walletManager?.wallet?.blockchain == Blockchain.Bitcoin
+                || data.card.cardData?.blockchainName == Blockchain.Bitcoin.id){
+            configManager?.turnOff(ConfigManager.isWalletPayIdEnabled)
         } else {
             configManager?.resetToDefault(ConfigManager.isWalletPayIdEnabled)
             configManager?.resetToDefault(ConfigManager.isTopUpEnabled)
