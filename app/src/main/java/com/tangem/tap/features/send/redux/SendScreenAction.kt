@@ -33,7 +33,7 @@ sealed class AddressPayIdActionUi : SendScreenActionUi {
     object CheckAddressPayId : AddressPayIdActionUi()
     data class SetTruncateHandler(val handler: (String) -> String) : AddressPayIdActionUi()
     data class TruncateOrRestore(val truncate: Boolean) : AddressPayIdActionUi()
-    data class ChangePayIdState(val walletPayIdEnabled: Boolean): AddressPayIdActionUi()
+    data class ChangePayIdState(val sendingToPayIdEnabled: Boolean): AddressPayIdActionUi()
 }
 
 sealed class AddressPayIdVerifyAction : SendScreenAction {
