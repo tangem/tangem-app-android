@@ -117,7 +117,7 @@ internal class AddressPayIdMiddleware {
 
     private fun isValidBlockchainAddressAndNotTheSameAsWallet(wallet: Wallet, address: String): Error? {
         return if (wallet.blockchain.validateAddress(address)) {
-            if (wallet.address != address) {
+            if (wallet.addresses.all { it.value != address } ) {
                 null
             } else {
                 Error.ADDRESS_SAME_AS_WALLET
