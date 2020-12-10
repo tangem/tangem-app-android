@@ -30,6 +30,7 @@ class CreateTwinWalletReducer {
                             createTwinWallet = action.createTwinWallet,
                             showAlert = false,
                             step = CreateTwinWalletStep.FirstStep,
+                            allowRecreatingWallet = state.createTwinWalletState?.allowRecreatingWallet
                     ))
                 }
                 DetailsAction.CreateTwinWalletAction.Cancel -> state
