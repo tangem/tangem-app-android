@@ -88,6 +88,7 @@ class MainActivity : AppCompatActivity() {
             if (tag != null) {
                 intent.action = null
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
+                store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
                 store.dispatch(HomeAction.ReadCard)
             }
         }
