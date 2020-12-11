@@ -18,11 +18,7 @@ import com.tangem.wallet.R
 
 fun FragmentActivity.openFragment(screen: AppScreen, addToBackStack: Boolean = true) {
     val transaction = this.supportFragmentManager.beginTransaction()
-            if (screen == AppScreen.Home) {
-                transaction.replace(R.id.fragment_container, fragmentFactory(screen), screen.name)
-            } else {
-                transaction.add(R.id.fragment_container, fragmentFactory(screen), screen.name)
-            }
+    transaction.replace(R.id.fragment_container, fragmentFactory(screen), screen.name)
     if (addToBackStack && screen != AppScreen.Home) transaction.addToBackStack(null)
     transaction.commitAllowingStateLoss()
 }
