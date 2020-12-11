@@ -169,6 +169,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
     private fun handleFeeState(fg: BaseStoreFragment, state: FeeState) {
         var delayedTransitionScheduled = false
+        fg.chipGroup.fitChipsByGroupWidth()
         fg.view?.findViewById<ViewGroup>(R.id.clNetworkFee)?.let {
             it.show(state.mainLayoutIsVisible) {
                 (it.parent as? ViewGroup)?.beginDelayedTransition()
