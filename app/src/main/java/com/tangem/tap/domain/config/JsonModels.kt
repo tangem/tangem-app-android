@@ -4,23 +4,20 @@ package com.tangem.tap.domain.config
 [REDACTED_AUTHOR]
  */
 
-interface BaseConfigModel<V> {
-    val name: String
-    val value: V?
-}
-
 class FeatureModel(
-        override val name: String,
-        override val value: Boolean
-) : BaseConfigModel<Boolean>
+        val isWalletPayIdEnabled: Boolean,
+        val isTopUpEnabled: Boolean,
+        val isCreatingTwinCardsAllowed: Boolean,
+)
 
 class ConfigValueModel(
-        override val name: String,
-        override val value: String
-) : BaseConfigModel<String>
+        val coinMarketCapKey: String,
+        val moonPayApiKey: String,
+        val moonPayApiSecretKey: String,
+)
 
-class ConfigModel(val features: List<FeatureModel>?, val configValues: List<ConfigValueModel>?) {
+class ConfigModel(val features: FeatureModel?, val configValues: ConfigValueModel?) {
     companion object {
-        fun empty(): ConfigModel = ConfigModel(listOf(), listOf())
+        fun empty(): ConfigModel = ConfigModel(null, null)
     }
 }
