@@ -282,9 +282,10 @@ private class TopUpMiddleware {
         when (action) {
             is WalletAction.TopUpAction.TopUp -> {
                 val config = store.state.globalState.configManager?.config ?: return
+                val defaultAddress = store.state.walletState.walletAddresses!!.list[0].address
                 val url = TopUpHelper.getUrl(
                         store.state.walletState.currencyData.currencySymbol!!,
-                        store.state.walletState.walletAddresses!!.selectedAddress.address,
+                        defaultAddress,
                         config.moonPayApiKey,
                         config.moonPayApiSecretKey
                 )
