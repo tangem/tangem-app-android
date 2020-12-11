@@ -6,7 +6,6 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
 import com.tangem.wallet.BuildConfig
 import timber.log.Timber
 
@@ -30,16 +29,13 @@ class LocalLoader(
 
     override fun loadConfig(onComplete: (ConfigModel) -> Unit) {
         val config = try {
-            val featureType = Types.newParameterizedType(List::class.java, FeatureModel::class.java)
-            val featureAdapter: JsonAdapter<List<FeatureModel>> = moshi.adapter(featureType)
-            val valuesType = Types.newParameterizedType(List::class.java, ConfigValueModel::class.java)
-            val valuesAdapter: JsonAdapter<List<ConfigValueModel>> = moshi.adapter(valuesType)
+            val featureAdapter: JsonAdapter<FeatureModel> = moshi.adapter(FeatureModel::class.java)
+            val valuesAdapter: JsonAdapter<ConfigValueModel> = moshi.adapter(ConfigValueModel::class.java)
 
             val jsonFeatures = readAssetAsString(ConfigLoader.featuresName)
             val jsonConfigValues = readAssetAsString(ConfigLoader.configValuesName)
 
-            ConfigModel(featureAdapter.fromJson(jsonFeatures) ?: listOf(),
-                    valuesAdapter.fromJson(jsonConfigValues) ?: listOf())
+            ConfigModel(featureAdapter.fromJson(jsonFeatures), valuesAdapter.fromJson(jsonConfigValues))
         } catch (ex: Exception) {
             Timber.e(ex)
             ConfigModel.empty()
@@ -67,9 +63,8 @@ class RemoteLoader(
                     onComplete(emptyConfig)
                     return@addOnCompleteListener
                 }
-                val featureType = Types.newParameterizedType(List::class.java, FeatureModel::class.java)
-                val featureAdapter: JsonAdapter<List<FeatureModel>> = moshi.adapter(featureType)
-                onComplete(ConfigModel(featureAdapter.fromJson(jsonConfig) ?: listOf(), listOf()))
+                val featureAdapter: JsonAdapter<FeatureModel> = moshi.adapter(FeatureModel::class.java)
+                onComplete(ConfigModel(featureAdapter.fromJson(jsonConfig), null))
             } else {
                 onComplete(emptyConfig)
             }
