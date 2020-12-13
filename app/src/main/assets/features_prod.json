@@ -1,14 +1,5 @@
-[
-  {
-    "name": "isWalletPayIdEnabled",
-    "value": false
-  },
-  {
-    "name": "isTopUpEnabled",
-    "value": false
-  },
-  {
-    "name": "isCreatingTwinCardsAllowed",
-    "value": true
-  }
-]
+{
+  "isWalletPayIdEnabled": false,
+  "isTopUpEnabled": false,
+  "isCreatingTwinCardsAllowed": true
+}
