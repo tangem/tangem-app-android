@@ -13,9 +13,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.squareup.picasso.Picasso
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinAddressType
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.tap.common.extensions.beginDelayedTransition
-import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TwinCardNumber
@@ -230,6 +228,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                 tv_address.setPadding(tv_address.paddingStart, tvAddressPaddingTop / 2,
                         tv_address.paddingEnd, tv_address.paddingBottom)
                 chip_group_segwit.show()
+                chip_group_segwit.fitChipsByGroupWidth()
+
                 val checkedId = SegwitUiHelper.typeToId(state.walletAddresses.selectedAddress.type)
                 if (checkedId != View.NO_ID) chip_group_segwit.check(checkedId)
 
