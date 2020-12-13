@@ -26,11 +26,11 @@ class ConfigManager(
 
     fun load(onComplete: VoidCallback? = null) {
         localLoader.loadConfig { config ->
-            config.features?.forEach { setupFeature(it.name, it.value) }
-            config.configValues?.forEach { setupKey(it.name, it.value) }
+            setupFeature(config.features)
+            setupKey(config.configValues)
         }
         remoteLoader.loadConfig { config ->
-            config.features?.forEach { setupFeature(it.name, it.value) }
+            setupFeature(config.features)
             onComplete?.invoke()
         }
     }
@@ -52,40 +52,33 @@ class ConfigManager(
         }
     }
 
-    private fun setupFeature(name: String, value: Boolean) {
-        val newValue = value ?: return
+    private fun setupFeature(featureModel: FeatureModel?) {
+        val model = featureModel ?: return
 
-        when (name) {
-            isWalletPayIdEnabled -> {
-                config = config.copy(isWalletPayIdEnabled = newValue)
-                defaultConfig = defaultConfig.copy(isWalletPayIdEnabled = newValue)
-            }
-            isTopUpEnabled -> {
-                config = config.copy(isTopUpEnabled = newValue)
-                defaultConfig = defaultConfig.copy(isTopUpEnabled = newValue)
-            }
-            isCreatingTwinCardsAllowed -> {
-                config = config.copy(isCreatingTwinCardsAllowed = newValue)
-                defaultConfig = defaultConfig.copy(isCreatingTwinCardsAllowed = newValue)
-            }
-        }
+        config = config.copy(
+                isWalletPayIdEnabled = model.isWalletPayIdEnabled,
+                isTopUpEnabled = model.isTopUpEnabled,
+                isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed
+        )
+        defaultConfig = defaultConfig.copy(
+                isWalletPayIdEnabled = model.isWalletPayIdEnabled,
+                isTopUpEnabled = model.isTopUpEnabled,
+                isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed
+        )
     }
 
-    private fun setupKey(name: String, value: String) {
-        when (name) {
-            coinMarketCapKey -> {
-                config = config.copy(coinMarketCapKey = value)
-                defaultConfig = defaultConfig.copy(coinMarketCapKey = value)
-            }
-            moonPayApiKey -> {
-                config = config.copy(moonPayApiKey = value)
-                defaultConfig = defaultConfig.copy(moonPayApiKey = value)
-            }
-            moonPayApiSecretKey -> {
-                config = config.copy(moonPayApiSecretKey = value)
-                defaultConfig = defaultConfig.copy(moonPayApiSecretKey = value)
-            }
-        }
+    private fun setupKey(configValues: ConfigValueModel?) {
+        val values = configValues ?: return
+        config = config.copy(
+                coinMarketCapKey = values.coinMarketCapKey,
+                moonPayApiKey = values.moonPayApiKey,
+                moonPayApiSecretKey = values.moonPayApiSecretKey
+        )
+        defaultConfig = defaultConfig.copy(
+                coinMarketCapKey = values.coinMarketCapKey,
+                moonPayApiKey = values.moonPayApiKey,
+                moonPayApiSecretKey = values.moonPayApiSecretKey
+        )
     }
 
     companion object {
