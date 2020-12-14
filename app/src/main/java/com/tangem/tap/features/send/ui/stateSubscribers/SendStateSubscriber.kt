@@ -113,7 +113,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         til.parent?.parent?.beginDelayedTransition()
         til.error = parsedError
         til.isErrorEnabled = parsedError != null
-        til.helperText = state.recipientWalletAddress
+        til.helperText = state.destinationWalletAddress
         til.isHelperTextEnabled = state.isPayIdState() && parsedError == null
 
         if (!state.viewFieldValue.isFromUserInput) et.update(state.viewFieldValue.value)
