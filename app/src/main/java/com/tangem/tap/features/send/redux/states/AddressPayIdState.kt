@@ -6,7 +6,7 @@ data class AddressPayIdState(
         val viewFieldValue: InputViewValue = InputViewValue(""),
         val normalFieldValue: String? = null,
         val truncatedFieldValue: String? = null,
-        val recipientWalletAddress: String? = null,
+        val destinationWalletAddress: String? = null,
         val error: AddressPayIdVerifyAction.Error? = null,
         val truncateHandler: ((String) -> String)? = null,
         val walletPayIdEnabled: Boolean = false,
@@ -17,7 +17,7 @@ data class AddressPayIdState(
 
     fun truncate(value: String): String = truncateHandler?.invoke(value) ?: value
 
-    fun isReady(): Boolean = error == null && recipientWalletAddress?.isNotEmpty() ?: false
+    fun isReady(): Boolean = error == null && destinationWalletAddress?.isNotEmpty() ?: false
 
-    fun isPayIdState(): Boolean = recipientWalletAddress != null && recipientWalletAddress != normalFieldValue
+    fun isPayIdState(): Boolean = destinationWalletAddress != null && destinationWalletAddress != normalFieldValue
 }
