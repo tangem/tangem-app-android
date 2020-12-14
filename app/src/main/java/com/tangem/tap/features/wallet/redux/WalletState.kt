@@ -35,7 +35,8 @@ data class WalletState(
     val showSegwitAddress: Boolean
         get() {
             val listOfAddresses = walletAddresses?.list ?: return false
-            return wallet?.blockchain == Blockchain.Bitcoin && listOfAddresses.size > 1
+            return (wallet?.blockchain == Blockchain.Bitcoin || wallet?.blockchain == Blockchain.BitcoinTestnet)
+                    && listOfAddresses.size > 1
         }
 }
 
