@@ -51,7 +51,7 @@ private fun verifyAndSendTransaction(
     val sendState = appState?.sendState ?: return
     val walletManager = appState.globalState.scanNoteResponse?.walletManager ?: return
     val card = appState.globalState.scanNoteResponse.card
-    val recipientAddress = sendState.addressPayIdState.recipientWalletAddress ?: return
+    val destinationAddress = sendState.addressPayIdState.destinationWalletAddress ?: return
     val typedAmount = sendState.amountState.amountToExtract ?: return
     val feeAmount = sendState.feeState.currentFee ?: return
 
@@ -66,14 +66,14 @@ private fun verifyAndSendTransaction(
                 dispatch(AmountAction.SetAmount(typedAmount.value!!.minus(reduceAmount), false))
                 dispatch(AmountActionUi.CheckAmountToSend)
             }, sendAllCallback = {
-                sendTransaction(action, walletManager, amountToSend, feeAmount, recipientAddress, card, dispatch)
+                sendTransaction(action, walletManager, amountToSend, feeAmount, destinationAddress, card, dispatch)
             }, reduceAmount))
         }
         transactionErrors.isNotEmpty() -> {
             dispatch(SendAction.SendError(createValidateTransactionError(transactionErrors, walletManager)))
         }
         else -> {
-            sendTransaction(action, walletManager, amountToSend, feeAmount, recipientAddress, card, dispatch)
+            sendTransaction(action, walletManager, amountToSend, feeAmount, destinationAddress, card, dispatch)
         }
     }
 }
@@ -83,12 +83,12 @@ private fun sendTransaction(
         walletManager: WalletManager,
         amountToSend: Amount,
         feeAmount: Amount,
-        recipientAddress: String,
+        destinationAddress: String,
         card: Card,
         dispatch: (Action) -> Unit
 ) {
     dispatch(SendAction.ChangeSendButtonState(SendButtonState.PROGRESS))
-    val txData = walletManager.createTransaction(amountToSend, feeAmount, recipientAddress)
+    val txData = walletManager.createTransaction(amountToSend, feeAmount, destinationAddress)
     scope.launch {
         walletManager.update()
         val isLinkedTerminal = tangemSdk.config.linkedTerminal
