@@ -22,7 +22,7 @@ interface IdStateHolder {
 }
 
 enum class StateId {
-    SEND_SCREEN, ADDRESS_PAY_ID, ADDRESS_EXTRAS, AMOUNT, FEE, RECEIPT
+    SEND_SCREEN, ADDRESS_PAY_ID, TRANSACTION_EXTRAS, AMOUNT, FEE, RECEIPT
 }
 
 interface SendScreenState : StateType, IdStateHolder
