@@ -27,7 +27,7 @@ data class TransactionExtrasState(
         val xlmMemo: XlmMemoState? = null,
         val xrpDestinationTag: XrpDestinationTagState? = null
 ) : IdStateHolder {
-    override val stateId: StateId = StateId.ADDRESS_EXTRAS
+    override val stateId: StateId = StateId.TRANSACTION_EXTRAS
 }
 
 enum class XlmMemoType {
