@@ -23,9 +23,9 @@ data class VerifyPayIdResponse(
         val addresses: List<PayIdAddress> = mutableListOf(),
         val payId: String? = null,
 ) {
-    fun getAddress(): String? {
+    fun getAddressDetails(): PayIdAddressDetails? {
         return if (addresses.isEmpty()) null
-        else addresses[0].addressDetails.address
+        else addresses[0].addressDetails
     }
 }
 
