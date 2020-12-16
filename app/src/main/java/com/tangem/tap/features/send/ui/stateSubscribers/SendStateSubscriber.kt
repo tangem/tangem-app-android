@@ -49,7 +49,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             when (it) {
                 StateId.SEND_SCREEN -> handleSendScreen(fg, state)
                 StateId.ADDRESS_PAY_ID -> handleAddressPayIdState(fg, state.addressPayIdState)
-                StateId.ADDRESS_EXTRAS -> handleTransactionExtrasState(fg, state.transactionExtrasState)
+                StateId.TRANSACTION_EXTRAS -> handleTransactionExtrasState(fg, state.transactionExtrasState)
                 StateId.AMOUNT -> handleAmountState(fg, state.amountState)
                 StateId.FEE -> handleFeeState(fg, state.feeState)
                 StateId.RECEIPT -> handleReceiptState(fg, state.receiptState)
