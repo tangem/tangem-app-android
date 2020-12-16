@@ -27,4 +27,7 @@ this wallet.
     <string name="common_start" translatable="false">Start</string>
     <string name="common_back" translatable="false">Back</string>
 
+    <string name="send_extras_hint_memo" translatable="false">Memo</string>
+    <string name="send_extras_hint_destination_tag" translatable="false">Destination tag</string>
+
 </resources>
