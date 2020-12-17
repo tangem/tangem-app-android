@@ -67,6 +67,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
         initSendButtonStates()
         setupAddressOrPayIdLayout()
+        setupTransactionExtrasLayout()
         setupAmountLayout()
         setupFeeLayout()
 
@@ -104,6 +105,32 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
                     ScanQrCodeActivity.SCAN_QR_REQUEST_CODE
             )
         }
+    }
+
+    private fun setupTransactionExtrasLayout() {
+        etMemo.inputtedTextAsFlow()
+                .debounce(400)
+                .filter {
+                    val info = store.state.sendState.transactionExtrasState
+                    info.xlmMemo?.viewFieldValue?.value != it
+                }
+                .onEach { store.dispatch(TransactionExtrasAction.XlmMemo.HandleUserInput(it)) }
+                .launchIn(mainScope)
+
+//        groupMemo.setOnCheckedChangeListener { group, checkedId ->
+//            if (checkedId == -1) return@setOnCheckedChangeListener
+//
+//            store.dispatch(TransactionExtrasAction.XlmMemo.ChangeSelectedMemo(MemoUiHelper.toType(checkedId)))
+//        }
+
+        etDestinationTag.inputtedTextAsFlow()
+                .debounce(400)
+                .filter {
+                    val info = store.state.sendState.transactionExtrasState
+                    info.xrpDestinationTag?.viewFieldValue?.value != it
+                }
+                .onEach { store.dispatch(TransactionExtrasAction.XrpDestinationTag.HandleUserInput(it)) }
+                .launchIn(mainScope)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -191,7 +218,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         chipGroup.setOnCheckedChangeListener { group, checkedId ->
             if (checkedId == -1) return@setOnCheckedChangeListener
 
-            store.dispatch(ChangeSelectedFee(FeeUiHelper.idToFee(checkedId)))
+            store.dispatch(ChangeSelectedFee(FeeUiHelper.toType(checkedId)))
             store.dispatch(CheckAmountToSend)
         }
         swIncludeFee.setOnCheckedChangeListener { btn, isChecked ->
@@ -238,7 +265,7 @@ fun EditText.inputtedTextAsFlow(): Flow<String> = callbackFlow {
 
 class FeeUiHelper {
     companion object {
-        fun feeToId(fee: FeeType): Int {
+        fun toId(fee: FeeType): Int {
             return when (fee) {
                 FeeType.SINGLE -> View.NO_ID
                 FeeType.LOW -> R.id.chipLow
@@ -247,7 +274,7 @@ class FeeUiHelper {
             }
         }
 
-        fun idToFee(id: Int): FeeType {
+        fun toType(id: Int): FeeType {
             return when (id) {
                 R.id.chipLow -> FeeType.LOW
                 R.id.chipNormal -> FeeType.NORMAL
@@ -257,6 +284,26 @@ class FeeUiHelper {
         }
     }
 }
+
+
+//class MemoUiHelper {
+//    companion object {
+//        fun toId(memo: MemoType): Int {
+//            return when (memo) {
+//                MemoType.TEXT -> R.id.chipMemoText
+//                MemoType.ID -> R.id.chipMemoId
+//            }
+//        }
+//
+//        fun toType(id: Int): MemoType {
+//            return when (id) {
+//                R.id.chipMemoText -> MemoType.TEXT
+//                R.id.chipMemoId -> MemoType.ID
+//                else -> MemoType.TEXT
+//            }
+//        }
+//    }
+//}
 
 private fun ToggleWidget.setupSendButtonStateModifiers(context: Context) {
     mainViewModifiers.clear()
