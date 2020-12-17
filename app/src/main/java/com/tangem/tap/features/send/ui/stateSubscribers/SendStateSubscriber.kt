@@ -2,6 +2,7 @@ package com.tangem.tap.features.send.ui.stateSubscribers
 
 import android.app.Dialog
 import android.content.Context
+import android.text.InputType
 import android.text.SpannableStringBuilder
 import android.view.View
 import android.view.ViewGroup
@@ -43,14 +44,35 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
     override fun updateWithNewState(fg: BaseStoreFragment, state: SendState) {
         val lastChangedStates = state.lastChangedStates.toList()
         state.lastChangedStates.clear()
+        fg.main_send_container.beginDelayedTransition()
         lastChangedStates.forEach {
             when (it) {
                 StateId.SEND_SCREEN -> handleSendScreen(fg, state)
                 StateId.ADDRESS_PAY_ID -> handleAddressPayIdState(fg, state.addressPayIdState)
+                StateId.TRANSACTION_EXTRAS -> handleTransactionExtrasState(fg, state.transactionExtrasState)
                 StateId.AMOUNT -> handleAmountState(fg, state.amountState)
                 StateId.FEE -> handleFeeState(fg, state.feeState)
                 StateId.RECEIPT -> handleReceiptState(fg, state.receiptState)
             }
+        }
+    }
+
+    private fun handleTransactionExtrasState(fg: BaseStoreFragment, infoState: TransactionExtrasState) {
+        fun showView(view: View, info: Any?) {
+            view.show(info != null)
+        }
+        showView(fg.xlmMemoContainer, infoState.xlmMemo)
+        showView(fg.xrpDestinationTagContainer, infoState.xrpDestinationTag)
+
+        infoState.xlmMemo?.let {
+            fg.etMemo.inputType = when (it.selectedMemoType) {
+                XlmMemoType.TEXT -> InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+                XlmMemoType.ID -> InputType.TYPE_CLASS_NUMBER
+            }
+            if (!it.viewFieldValue.isFromUserInput) fg.etMemo.setText(it.viewFieldValue.value)
+        }
+        infoState.xrpDestinationTag?.let {
+            if (!it.viewFieldValue.isFromUserInput) fg.etDestinationTag.setText(it.viewFieldValue.value)
         }
     }
 
@@ -106,14 +128,13 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
         val hintResId = if (state.walletPayIdEnabled) {
             R.string.send_destination_hint_address_payid
-        }else {
+        } else {
             R.string.send_destination_hint_address
         }
         til.hint = til.getString(hintResId)
-        til.parent?.parent?.beginDelayedTransition()
         til.error = parsedError
         til.isErrorEnabled = parsedError != null
-        til.helperText = state.recipientWalletAddress
+        til.helperText = state.destinationWalletAddress
         til.isHelperTextEnabled = state.isPayIdState() && parsedError == null
 
         if (!state.viewFieldValue.isFromUserInput) et.update(state.viewFieldValue.value)
@@ -130,10 +151,8 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 }
                 else -> context.getString(state.error.localizedMessage)
             }
-            fg.amountContainer.parent?.beginDelayedTransition()
             fg.tilAmountToSend.enableError(true, message)
         } else {
-            if (fg.tilAmountToSend.isErrorEnabled) fg.amountContainer.parent?.beginDelayedTransition()
             fg.tilAmountToSend.enableError(false)
         }
 
@@ -168,27 +187,12 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
     }
 
     private fun handleFeeState(fg: BaseStoreFragment, state: FeeState) {
-        var delayedTransitionScheduled = false
         fg.chipGroup.fitChipsByGroupWidth()
-        fg.view?.findViewById<ViewGroup>(R.id.clNetworkFee)?.let {
-            it.show(state.mainLayoutIsVisible) {
-                (it.parent as? ViewGroup)?.beginDelayedTransition()
-                delayedTransitionScheduled = true
-            }
-        }
+        fg.view?.findViewById<ViewGroup>(R.id.clNetworkFee)?.show(state.mainLayoutIsVisible)
 
         fg.imvExpandCollapse.rotation = if (state.controlsLayoutIsVisible) 0f else 180f
-        fg.llFeeControlsContainer.show(state.controlsLayoutIsVisible) {
-            if (!delayedTransitionScheduled) {
-                fg.llFeeControlsContainer.parent?.parent?.beginDelayedTransition()
-            }
-        }
-
-        fg.chipGroup.show(state.feeChipGroupIsVisible) {
-            if (!delayedTransitionScheduled) {
-                fg.llFeeControlsContainer.parent?.parent?.beginDelayedTransition()
-            }
-        }
+        fg.llFeeControlsContainer.show(state.controlsLayoutIsVisible)
+        fg.chipGroup.show(state.feeChipGroupIsVisible)
 
         fg.swIncludeFee.isEnabled = state.includeFeeSwitcherIsEnabled
         if (fg.swIncludeFee.isChecked != state.feeIsIncluded) {
@@ -201,7 +205,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             }
         }
 
-        val chipId = FeeUiHelper.feeToId(state.selectedFeeType)
+        val chipId = FeeUiHelper.toId(state.selectedFeeType)
         if (fg.chipGroup.checkedChipId != chipId && chipId != View.NO_ID) fg.chipGroup.check(chipId)
     }
 
