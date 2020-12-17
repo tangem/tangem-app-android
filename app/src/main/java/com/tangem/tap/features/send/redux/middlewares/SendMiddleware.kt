@@ -1,6 +1,8 @@
 package com.tangem.tap.features.send.redux.middlewares
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
+import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.Signer
@@ -17,6 +19,7 @@ import com.tangem.tap.domain.extensions.minimalAmount
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
 import com.tangem.tap.features.send.redux.states.SendButtonState
+import com.tangem.tap.features.send.redux.states.TransactionExtrasState
 import com.tangem.tap.scope
 import com.tangem.tap.tangemSdk
 import kotlinx.coroutines.Dispatchers
@@ -51,7 +54,7 @@ private fun verifyAndSendTransaction(
     val sendState = appState?.sendState ?: return
     val walletManager = appState.globalState.scanNoteResponse?.walletManager ?: return
     val card = appState.globalState.scanNoteResponse.card
-    val recipientAddress = sendState.addressPayIdState.recipientWalletAddress ?: return
+    val destinationAddress = sendState.addressPayIdState.destinationWalletAddress ?: return
     val typedAmount = sendState.amountState.amountToExtract ?: return
     val feeAmount = sendState.feeState.currentFee ?: return
 
@@ -66,14 +69,16 @@ private fun verifyAndSendTransaction(
                 dispatch(AmountAction.SetAmount(typedAmount.value!!.minus(reduceAmount), false))
                 dispatch(AmountActionUi.CheckAmountToSend)
             }, sendAllCallback = {
-                sendTransaction(action, walletManager, amountToSend, feeAmount, recipientAddress, card, dispatch)
+                sendTransaction(action, walletManager, amountToSend, feeAmount, destinationAddress,
+                        sendState.transactionExtrasState, card, dispatch)
             }, reduceAmount))
         }
         transactionErrors.isNotEmpty() -> {
             dispatch(SendAction.SendError(createValidateTransactionError(transactionErrors, walletManager)))
         }
         else -> {
-            sendTransaction(action, walletManager, amountToSend, feeAmount, recipientAddress, card, dispatch)
+            sendTransaction(action, walletManager, amountToSend, feeAmount, destinationAddress,
+                    sendState.transactionExtrasState, card, dispatch)
         }
     }
 }
@@ -83,12 +88,17 @@ private fun sendTransaction(
         walletManager: WalletManager,
         amountToSend: Amount,
         feeAmount: Amount,
-        recipientAddress: String,
+        destinationAddress: String,
+        transactionExtras: TransactionExtrasState,
         card: Card,
         dispatch: (Action) -> Unit
 ) {
     dispatch(SendAction.ChangeSendButtonState(SendButtonState.PROGRESS))
-    val txData = walletManager.createTransaction(amountToSend, feeAmount, recipientAddress)
+    var txData = walletManager.createTransaction(amountToSend, feeAmount, destinationAddress)
+
+    transactionExtras.xlmMemo?.memo?.let { txData = txData.copy(extras = StellarTransactionExtras(it)) }
+    transactionExtras.xrpDestinationTag?.tag?.let { txData = txData.copy(extras = XrpTransactionBuilder.XrpTransactionExtras(it)) }
+
     scope.launch {
         walletManager.update()
         val isLinkedTerminal = tangemSdk.config.linkedTerminal
