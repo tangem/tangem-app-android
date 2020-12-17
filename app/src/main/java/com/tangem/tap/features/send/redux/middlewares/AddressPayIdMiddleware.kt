@@ -13,6 +13,7 @@ import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.PayIdVerification.SetPayIdError
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.PayIdVerification.SetPayIdWalletAddress
 import com.tangem.tap.features.send.redux.FeeAction
+import com.tangem.tap.features.send.redux.TransactionExtrasAction
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
@@ -82,22 +83,26 @@ internal class AddressPayIdMiddleware {
             withContext(Dispatchers.Main) {
                 when (result) {
                     is Result.Success -> {
-                        val address = result.data.getAddress()
-                        if (address == null) {
+                        val addressDetails = result.data.getAddressDetails()
+                        if (addressDetails == null) {
                             dispatch(SetPayIdError(Error.PAY_ID_NOT_REGISTERED))
                             return@withContext
                         }
 
+                        val address = addressDetails.address
                         val failReason = isValidBlockchainAddressAndNotTheSameAsWallet(wallet, address)
                         if (failReason == null) {
                             dispatch(SetPayIdWalletAddress(payId, address, isUserInput))
+                            dispatch(TransactionExtrasAction.Prepare(wallet.blockchain, address, addressDetails.tag))
                             dispatch(FeeAction.RequestFee)
                         } else {
                             dispatch(SetAddressError(failReason))
+                            dispatch(TransactionExtrasAction.Release)
                         }
                     }
                     is Result.Failure -> {
                         dispatch(SetPayIdError(Error.PAY_ID_REQUEST_FAILED))
+                        dispatch(TransactionExtrasAction.Release)
                     }
                 }
             }
@@ -110,8 +115,10 @@ internal class AddressPayIdMiddleware {
         val failReason = isValidBlockchainAddressAndNotTheSameAsWallet(wallet, supposedAddress)
         if (failReason == null) {
             dispatch(SetWalletAddress(supposedAddress, isUserInput))
+            dispatch(TransactionExtrasAction.Prepare(wallet.blockchain, address, null))
         } else {
             dispatch(SetAddressError(failReason))
+            dispatch(TransactionExtrasAction.Release)
         }
     }
 
