@@ -1,11 +1,11 @@
 package com.tangem.tap.domain.config
 
 import android.content.Context
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
+import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.wallet.BuildConfig
 import timber.log.Timber
 
@@ -69,7 +69,7 @@ class RemoteLoader(
                 onComplete(emptyConfig)
             }
         }.addOnFailureListener {
-            FirebaseCrashlytics.getInstance().recordException(it)
+            FirebaseAnalyticsHandler.logException("remote_config_error", it)
             onComplete(emptyConfig)
         }
     }
