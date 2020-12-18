@@ -25,7 +25,7 @@
 
     <string name="wallet_button_scan">Scan</string>
     <string name="wallet_button_send">Send</string>
-    <string name="wallet_button_create_wallet">Create wallet</string>
+    <string name="wallet_button_create_wallet">Create twin wallet</string>
     <string name="wallet_title">Tangem Tap</string>
     <string name="wallet_choice_wallet_option_title">Choice wallet option</string>
 
@@ -37,8 +37,8 @@
 
     <string name="wallet_error_no_account">Account is not created</string>
     <string name="wallet_error_no_account_subtitle_format">Load %1$s+ %2$s to create account</string>
-    <string name="wallet_error_empty_card">Empty card</string>
-    <string name="wallet_error_empty_card_subtitle">Create wallet to start using Tangem card</string>
+    <string name="wallet_error_empty_card">Create twin wallet</string>
+    <string name="wallet_error_empty_card_subtitle"> Generate wallet keys on both cards to start using your Twins</string>
     <string name="wallet_error_unsupported_blockchain">This card is not supported</string>
     <string name="wallet_error_unsupported_blockchain_subtitle">Your Tangem card was made to work with a different application. Please see the name and instructions on your card, and install the correct app</string>
 
