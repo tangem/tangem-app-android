@@ -14,11 +14,11 @@ this wallet.
     <string name="wallet_twins_chip_format" translatable="false">Card %s of 2</string>
 
     <string name="details_row_title_twins_recreate" translatable="false">Re-create twin wallet</string>
-    <string name="details_twins_recreate_warning" translatable="false">This action is irreversible. If, after deleting the old wallet, someone sends funds to it, then you will not be able to withdraw them.</string>
+    <string name="details_twins_recreate_warning" translatable="false">This action is irreversible. You will not have access to the old wallet.\nThe wallet re-creation procedure consists of three steps. You must complete it to the end, otherwise you will have to start from the beginning.</string>
     <string name="details_twins_recreate_toolbar" translatable="false">Re-create wallet</string>
     <string name="details_twins_recreate_step_format" translatable="false">Step %s</string>
     <string name="details_twins_recreate_title_format" translatable="false">Tap the #%s twin card</string>
-    <string name="details_twins_recreate_subtitle" translatable="false">If the process of re-creating the wallet gets interrupted in any way, you’ll have to start over.</string>
+    <string name="details_twins_recreate_subtitle" translatable="false">The wallet creation procedure consists of three steps. You must complete it to the end, otherwise  you will have to start from the beginning.</string>
     <string name="details_twins_recreate_button_format" translatable="false">Tap the card #%s</string>
     <string name="details_twins_recreate_alert" translatable="false">You have already started the process of recreating twin wallet. If you interrupt it, you won\'t be able to use your twin cards until you start it again and complete recreating the wallet.</string>
 
