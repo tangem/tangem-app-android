@@ -65,7 +65,11 @@ sealed class DetailsAction : Action {
             object Failure : CreateTwinWalletAction()
         }
 
-        data class LaunchSecondStep(val message: Message) : CreateTwinWalletAction() {
+        data class LaunchSecondStep(
+                val initialMessage: Message,
+                val preparingMessage: Message,
+                val creatingWalletMessage: Message,
+        ) : CreateTwinWalletAction() {
             object Success : CreateTwinWalletAction()
             object Failure : CreateTwinWalletAction()
         }
