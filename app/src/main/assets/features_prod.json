@@ -13,6 +13,6 @@
   },
   {
     "name": "isCreatingTwinCardsAllowed",
-    "value": false
+    "value": true
   }
 ]
