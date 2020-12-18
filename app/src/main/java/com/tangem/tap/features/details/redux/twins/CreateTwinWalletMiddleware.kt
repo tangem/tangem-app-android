@@ -17,7 +17,7 @@ class CreateTwinWalletMiddleware {
     var twinsManager: TwinCardsManager? = null
     fun handle(action: DetailsAction.CreateTwinWalletAction) {
         when (action) {
-            DetailsAction.CreateTwinWalletAction.ShowWarning -> {
+            is DetailsAction.CreateTwinWalletAction.ShowWarning -> {
                 val wallet = store.state.detailsState.wallet
                 val notEmpty = wallet?.recentTransactions?.isNullOrEmpty() != true ||
                         wallet.amounts.toSendableAmounts().isNotEmpty()
