@@ -125,6 +125,7 @@ class WalletMiddleware {
                             val result = tangemSdkManager.scanNote(FirebaseAnalyticsHandler)
                             when (result) {
                                 is CompletionResult.Success -> {
+                                    tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data.card)
                                     store.state.globalState.tapWalletManager
                                             .onCardScanned(result.data, true)
                                     if (store.state.walletState.twinCardsState != null) {
