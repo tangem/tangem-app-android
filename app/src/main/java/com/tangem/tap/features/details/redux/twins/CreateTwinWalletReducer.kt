@@ -9,8 +9,15 @@ class CreateTwinWalletReducer {
                 action: DetailsAction.CreateTwinWalletAction, state: DetailsState
         ): DetailsState {
             return when (action) {
-                DetailsAction.CreateTwinWalletAction.ShowWarning -> {
-                    state
+                is DetailsAction.CreateTwinWalletAction.ShowWarning -> {
+                    state.copy(createTwinWalletState = CreateTwinWalletState(
+                            scanResponse = null,
+                            twinCardNumber = action.twinCardNumber
+                                    ?: state.createTwinWalletState?.twinCardNumber,
+                            createTwinWallet = action.createTwinWallet,
+                            showAlert = false,
+                            allowRecreatingWallet = state.createTwinWalletState?.allowRecreatingWallet
+                    ))
                 }
                 DetailsAction.CreateTwinWalletAction.NotEmpty -> state
                 DetailsAction.CreateTwinWalletAction.ShowAlert -> {
@@ -24,15 +31,7 @@ class CreateTwinWalletReducer {
                     ))
                 }
                 is DetailsAction.CreateTwinWalletAction.Proceed -> {
-                    state.copy(createTwinWalletState = CreateTwinWalletState(
-                            scanResponse = null,
-                            twinCardNumber = action.twinCardNumber
-                                    ?: state.createTwinWalletState?.twinCardNumber,
-                            createTwinWallet = action.createTwinWallet,
-                            showAlert = false,
-                            step = CreateTwinWalletStep.FirstStep,
-                            allowRecreatingWallet = state.createTwinWalletState?.allowRecreatingWallet
-                    ))
+                    state
                 }
                 DetailsAction.CreateTwinWalletAction.Cancel -> state
                 DetailsAction.CreateTwinWalletAction.Cancel.Confirm -> state
