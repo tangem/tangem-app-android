@@ -8,6 +8,8 @@ import androidx.transition.TransitionInflater
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.twins.getTwinCardIdForUser
+import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.details.redux.SecurityOption
@@ -61,10 +63,19 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
 
 
         if (state.cardInfo != null) {
-            tv_card_id.text = state.cardInfo.cardId
+            val cardId = if (state.card?.isTwinCard() == true) {
+                state.card.getTwinCardIdForUser()
+            } else {
+                state.cardInfo.cardId
+            }
+            tv_card_id.text = cardId
             tv_issuer.text = state.cardInfo.issuer
             tv_signed_hashes.text = state.cardInfo.signedHashes.toString()
         }
+
+        tv_signed_hashes.show(state.card?.isTwinCard() != true)
+        tv_signed_hashes_title.show(state.card?.isTwinCard() != true)
+
 
         tv_disclaimer.setOnClickListener { store.dispatch(DetailsAction.ShowDisclaimer) }
 
