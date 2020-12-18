@@ -115,9 +115,9 @@ class CreateTwinWalletFragment : Fragment(R.layout.fragment_details_twin_cards),
                 v_step_3.setBackgroundColor(defaultColor)
                 btn_tap.setOnClickListener {
                     store.dispatch(DetailsAction.CreateTwinWalletAction.LaunchSecondStep(
-                            Message(getString(
-                                    R.string.details_twins_recreate_title_format, twinCardNumberString)
-                            )
+                            Message(getString(R.string.details_twins_recreate_title_format, twinCardNumberString)),
+                            Message(getString(R.string.details_twins_recreate_title_preparing)),
+                            Message(getString(R.string.details_twins_recreate_title_creating_wallet)),
                     ))
                 }
                 btn_tap.text = getString(R.string.details_twins_recreate_button_format, "2")
