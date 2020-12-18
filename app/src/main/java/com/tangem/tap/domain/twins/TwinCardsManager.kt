@@ -34,9 +34,14 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse) {
     }
 
 
-    suspend fun createSecondWallet(message: Message): SimpleResult {
+    suspend fun createSecondWallet(
+            initialMessage: Message,
+            preparingMessage: Message,
+            creatingWalletMessage: Message
+    ): SimpleResult {
         val response = tangemSdkManager.runTaskAsync(
-                CreateSecondTwinWalletTask(currentCardPublicKey!!), secondCardId, message
+                CreateSecondTwinWalletTask(currentCardPublicKey!!, preparingMessage, creatingWalletMessage),
+                secondCardId, initialMessage
         )
         when (response) {
             is CompletionResult.Success -> {
