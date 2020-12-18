@@ -65,7 +65,7 @@ class WalletMiddleware {
                     }
                     is WalletAction.CreateWallet -> {
                         if (store.state.walletState.twinCardsState != null) {
-                            store.dispatch(DetailsAction.CreateTwinWalletAction.Proceed(
+                            store.dispatch(DetailsAction.CreateTwinWalletAction.ShowWarning(
                                     store.state.globalState.scanNoteResponse?.card?.cardId?.let {
                                         TwinsHelper.getTwinCardNumber(it)
                                     },
