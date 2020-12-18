@@ -22,6 +22,7 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.TopUpHelper
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.twins.TwinsHelper
+import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.twins.CreateTwinWallet
 import com.tangem.tap.features.send.redux.PrepareSendScreen
@@ -234,6 +235,7 @@ class WalletMiddleware {
         if (card.getType() != CardType.Release) {
             return WarningType.DevCard
         }
+        if (card.isTwinCard()) return null
 
         return if (signatureCountValidator == null) {
             if (card.walletSignedHashes ?: 0 > 0) {
@@ -254,6 +256,8 @@ class WalletMiddleware {
 
         val card = store.state.globalState.scanNoteResponse?.card
         if (card == null || preferencesStorage.wasCardScannedBefore(card.cardId)) return
+
+        if (card.isTwinCard()) return
 
         val validator = store.state.globalState.scanNoteResponse?.walletManager
                 as? SignatureCountValidator
