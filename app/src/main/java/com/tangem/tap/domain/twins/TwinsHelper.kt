@@ -38,6 +38,14 @@ class TwinsHelper {
             return cardIdWithoutChecksum + checkSum
         }
 
+        fun getTwinCardIdForUser(cardId: String): String {
+            if (cardId.length < 16) return cardId
+
+            val twinCardId = cardId.substring(11..14)
+            val twinCardNumber = getTwinCardNumber(cardId)?.number ?: 1
+            return "$twinCardId #$twinCardNumber"
+        }
+
         private val firstCardSeries = listOf("CB61", "CB64")
         private val secondCardSeries = listOf("CB62", "CB65")
     }
@@ -72,7 +80,5 @@ fun Card.isTwinCard(): Boolean {
 }
 
 fun Card.getTwinCardIdForUser(): String {
-    val twinCardId = this.cardId.substring(11..14)
-    val twinCardNumber = TwinsHelper.getTwinCardNumber(this.cardId)?.number ?: 1
-    return  "$twinCardId #$twinCardNumber"
+    return TwinsHelper.getTwinCardIdForUser(this.cardId)
 }
