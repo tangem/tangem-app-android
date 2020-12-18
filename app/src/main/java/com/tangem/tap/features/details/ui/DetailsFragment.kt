@@ -13,6 +13,7 @@ import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.details.redux.SecurityOption
+import com.tangem.tap.features.details.redux.twins.CreateTwinWallet
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_details.*
@@ -84,7 +85,9 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
                 tv_erase_wallet.show()
                 tv_erase_wallet.text = getText(R.string.details_row_title_twins_recreate)
                 tv_erase_wallet.setOnClickListener {
-                    store.dispatch(DetailsAction.CreateTwinWalletAction.ShowWarning)
+                    store.dispatch(DetailsAction.CreateTwinWalletAction.ShowWarning(
+                            null, CreateTwinWallet.RecreateWallet
+                    ))
                 }
             } else {
                 tv_erase_wallet.hide()
