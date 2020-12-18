@@ -7,7 +7,6 @@ import com.tangem.commands.PurgeWalletCommand
 import com.tangem.commands.common.card.CardStatus
 import com.tangem.common.CompletionResult
 import com.tangem.tasks.CreateWalletTask
-import com.tangem.tasks.file.DeleteFilesTask
 
 class CreateFirstTwinWalletTask : CardSessionRunnable<CreateWalletResponse> {
     override val requiresPin2 = false
@@ -18,24 +17,13 @@ class CreateFirstTwinWalletTask : CardSessionRunnable<CreateWalletResponse> {
                 when (response) {
                     is CompletionResult.Success -> {
                         session.environment.card = session.environment.card?.copy(status = CardStatus.Empty)
-                        finishTask(session, callback)
+                        CreateWalletTask().run(session) { callback(it) }
                     }
                     is CompletionResult.Failure -> callback(CompletionResult.Failure(response.error))
                 }
             }
         } else {
-            finishTask(session, callback)
-        }
-    }
-
-    private fun finishTask(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
-        DeleteFilesTask().run(session) { deleteResponse ->
-            when (deleteResponse) {
-                is CompletionResult.Success ->
-                    CreateWalletTask().run(session) { callback(it) }
-                is CompletionResult.Failure ->
-                    callback(CompletionResult.Failure(deleteResponse.error))
-            }
+            CreateWalletTask().run(session) { callback(it) }
         }
     }
 }
