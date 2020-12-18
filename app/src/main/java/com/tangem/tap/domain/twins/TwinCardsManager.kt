@@ -1,17 +1,14 @@
 package com.tangem.tap.domain.twins
 
+import com.tangem.KeyPair
 import com.tangem.Message
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
-import com.tangem.commands.file.FileData
-import com.tangem.commands.file.WriteFileDataCommand
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
-import com.tangem.common.tlv.TlvEncoder
-import com.tangem.common.tlv.TlvTag
-import com.tangem.common.tlv.serialize
+import com.tangem.crypto.CryptoUtils
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.tangemSdkManager
 
@@ -54,7 +51,7 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse) {
 
     suspend fun complete(message: Message): Result<ScanNoteResponse> {
         val response = tangemSdkManager.runTaskAsync(
-                WriteFileDataCommand(createFileWithPublicKey(secondCardPublicKey!!)),
+                WriteProtectedIssuerDataTask(secondCardPublicKey!!.hexToBytes(), issuerKeys),
                 currentCardId, message
         )
         return when (response) {
@@ -72,11 +69,19 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse) {
     }
 
     companion object {
-        fun createFileWithPublicKey(publicKey: String): FileData {
-            val nameTlv = TlvEncoder().encode(TlvTag.FileName, "TwinPublicKey")
-            val pubKey = TlvEncoder().encode(TlvTag.FileData, publicKey.hexToBytes())
-            val tlvs = listOf(nameTlv, pubKey).serialize()
-            return FileData.DataProtectedByPasscode(tlvs)
+        val issuerKeys = KeyPair(
+                privateKey = "F9F4C50636C9E6FC65F92655BD5C21C85A5F6A34DCD0F1E75FCEA1980FE242F5".hexToBytes(),
+                publicKey = ("048196AA4B410AC44A3B9CCE18E7BE226AEA070ACC83A9CF67540F" +
+                        "AC49AF25129F6A538A28AD6341358E3C4F9963064F" +
+                        "7E365372A651D374E5C23CDD37FD099BF2").hexToBytes()
+        )
+
+        fun verifyTwinPublicKey(issuerData: ByteArray, cardWalletPublicKey: ByteArray?): Boolean {
+            if (issuerData.size < 65) return false
+            val publicKey = issuerData.sliceArray(0 until 65)
+            val signedKey = issuerData.sliceArray(65 until issuerData.size)
+            return (cardWalletPublicKey != null &&
+                    CryptoUtils.verify(cardWalletPublicKey, publicKey, signedKey))
         }
     }
 }
