@@ -2,7 +2,6 @@ package com.tangem.tap.domain.twins
 
 import com.tangem.KeyPair
 import com.tangem.Message
-import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.CompletionResult
@@ -51,19 +50,11 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse) {
 
     suspend fun complete(message: Message): Result<ScanNoteResponse> {
         val response = tangemSdkManager.runTaskAsync(
-                WriteProtectedIssuerDataTask(secondCardPublicKey!!.hexToBytes(), issuerKeys),
+                FinalizeTwinTask(secondCardPublicKey!!.hexToBytes(), issuerKeys),
                 currentCardId, message
         )
         return when (response) {
-            is CompletionResult.Success -> {
-                val walletManager = WalletManagerFactory.makeMultisigWalletManager(
-                        scanNoteResponse.card, secondCardPublicKey!!.hexToBytes()
-                )
-                return Result.Success(scanNoteResponse.copy(
-                        walletManager = walletManager,
-                        secondTwinPublicKey = secondCardPublicKey
-                ))
-            }
+            is CompletionResult.Success -> Result.Success(response.data)
             is CompletionResult.Failure -> Result.failure(response.error)
         }
     }
