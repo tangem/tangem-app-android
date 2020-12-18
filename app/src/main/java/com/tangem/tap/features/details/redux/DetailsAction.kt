@@ -46,6 +46,9 @@ sealed class DetailsAction : Action {
 
     sealed class CreateTwinWalletAction : DetailsAction() {
         object ShowWarning : CreateTwinWalletAction()
+        object NotEmpty : CreateTwinWalletAction(), NotificationAction {
+            override val messageResource = R.string.details_notification_erase_wallet_not_possible
+        }
         object ShowAlert : CreateTwinWalletAction()
         object HideAlert : CreateTwinWalletAction()
         data class Proceed(
