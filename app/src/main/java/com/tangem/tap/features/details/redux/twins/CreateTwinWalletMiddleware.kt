@@ -4,6 +4,7 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.scope
@@ -16,8 +17,16 @@ class CreateTwinWalletMiddleware {
     var twinsManager: TwinCardsManager? = null
     fun handle(action: DetailsAction.CreateTwinWalletAction) {
         when (action) {
-            DetailsAction.CreateTwinWalletAction.ShowWarning ->
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.CreateTwinWalletWarning))
+            DetailsAction.CreateTwinWalletAction.ShowWarning -> {
+                val wallet = store.state.detailsState.wallet
+                val notEmpty = wallet?.recentTransactions?.isNullOrEmpty() != true ||
+                        wallet.amounts.toSendableAmounts().isNotEmpty()
+                if (notEmpty) {
+                    store.dispatch(DetailsAction.CreateTwinWalletAction.NotEmpty)
+                } else {
+                    store.dispatch(NavigationAction.NavigateTo(AppScreen.CreateTwinWalletWarning))
+                }
+            }
             is DetailsAction.CreateTwinWalletAction.Proceed ->
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.CreateTwinWallet))
             is DetailsAction.CreateTwinWalletAction.Cancel -> {
