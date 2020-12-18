@@ -31,12 +31,17 @@ class TwinWalletWarningFragment : Fragment(R.layout.fragment_details_twin_cards_
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val createTwinWallet = store.state.detailsState.createTwinWalletState?.createTwinWallet
+        if (createTwinWallet == CreateTwinWallet.CreateWallet) {
+            tv_twin_cards_description.text = getText(R.string.details_twins_recreate_subtitle)
+        } else if (createTwinWallet == CreateTwinWallet.RecreateWallet) {
+            tv_twin_cards_description.text = getText(R.string.details_twins_recreate_warning)
+        }
+
         btn_cancel.setOnClickListener { store.dispatch(NavigationAction.PopBackTo()) }
         btn_start.setOnClickListener {
             store.dispatch(
-                    DetailsAction.CreateTwinWalletAction.Proceed(
-                            null, createTwinWallet = CreateTwinWallet.RecreateWallet
-                    ))
+                    DetailsAction.CreateTwinWalletAction.Proceed)
         }
         Picasso.get()
                 .load(Artwork.TWIN_CARD_1)
