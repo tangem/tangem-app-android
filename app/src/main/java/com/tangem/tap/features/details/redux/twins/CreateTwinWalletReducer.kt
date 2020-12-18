@@ -12,6 +12,7 @@ class CreateTwinWalletReducer {
                 DetailsAction.CreateTwinWalletAction.ShowWarning -> {
                     state
                 }
+                DetailsAction.CreateTwinWalletAction.NotEmpty -> state
                 DetailsAction.CreateTwinWalletAction.ShowAlert -> {
                     state.copy(createTwinWalletState = state.createTwinWalletState?.copy(
                             showAlert = true
