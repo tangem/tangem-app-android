@@ -2,7 +2,6 @@ package com.tangem.tap.features.details.redux.twins
 
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
-import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.twins.TwinCardsManager
@@ -93,8 +92,11 @@ class CreateTwinWalletMiddleware {
                 }
             }
             is DetailsAction.CreateTwinWalletAction.LaunchThirdStep.Success -> {
-                store.dispatch(GlobalAction.SaveScanNoteResponse(action.scanNoteResponse))
+                scope.launch {
+                    store.state.globalState.tapWalletManager.onCardScanned(action.scanNoteResponse)
+                }
                 store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
             }
             DetailsAction.CreateTwinWalletAction.LaunchThirdStep.Failure -> {
 
