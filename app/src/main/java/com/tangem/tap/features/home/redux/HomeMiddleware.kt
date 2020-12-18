@@ -34,6 +34,7 @@ class HomeMiddleware {
                             withContext(Dispatchers.Main) {
                                 when (result) {
                                     is CompletionResult.Success -> {
+                                        tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data.card)
                                         store.dispatch(GlobalAction.RestoreAppCurrency)
                                         store.state.globalState.tapWalletManager.onCardScanned(result.data)
                                         showDisclaimerOrNavigateToWallet()
