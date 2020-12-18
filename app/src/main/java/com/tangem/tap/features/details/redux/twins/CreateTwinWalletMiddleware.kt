@@ -71,7 +71,8 @@ class CreateTwinWalletMiddleware {
             }
             is DetailsAction.CreateTwinWalletAction.LaunchSecondStep ->
                 scope.launch {
-                    val result = twinsManager?.createSecondWallet(action.message)
+                    val result = twinsManager?.createSecondWallet(action.initialMessage,
+                            action.preparingMessage, action.creatingWalletMessage)
                     withContext(Dispatchers.Main) {
                         when (result) {
                             SimpleResult.Success ->
