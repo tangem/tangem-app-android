@@ -45,15 +45,16 @@ sealed class DetailsAction : Action {
     }
 
     sealed class CreateTwinWalletAction : DetailsAction() {
-        object ShowWarning : CreateTwinWalletAction()
+        data class ShowWarning(
+                val twinCardNumber: TwinCardNumber?,
+                val createTwinWallet: CreateTwinWallet = CreateTwinWallet.RecreateWallet
+        ) : CreateTwinWalletAction()
         object NotEmpty : CreateTwinWalletAction(), NotificationAction {
             override val messageResource = R.string.details_notification_erase_wallet_not_possible
         }
         object ShowAlert : CreateTwinWalletAction()
         object HideAlert : CreateTwinWalletAction()
-        data class Proceed(
-                val twinCardNumber: TwinCardNumber?, val createTwinWallet: CreateTwinWallet
-        ) : CreateTwinWalletAction()
+        object Proceed: CreateTwinWalletAction()
 
         object Cancel : CreateTwinWalletAction() {
             object Confirm : CreateTwinWalletAction()
