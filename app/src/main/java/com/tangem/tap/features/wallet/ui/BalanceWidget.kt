@@ -40,6 +40,7 @@ data class TokenData(
 class BalanceWidget(
         val fragment: Fragment,
         val data: BalanceWidgetData,
+        val isTwinCard: Boolean,
 ) {
 
     fun setup() {
@@ -100,8 +101,13 @@ class BalanceWidget(
             BalanceStatus.EmptyCard -> {
                 fragment.l_balance.hide()
                 fragment.l_balance_error.show()
-                fragment.tv_error_title.text = fragment.getText(R.string.wallet_error_empty_card)
-                fragment.tv_error_descriptions.text = fragment.getText(R.string.wallet_error_empty_card_subtitle)
+                if (isTwinCard) {
+                    fragment.tv_error_title.text = fragment.getText(R.string.wallet_error_empty_twin_card)
+                    fragment.tv_error_descriptions.text = fragment.getText(R.string.wallet_error_empty_twin_card_subtitle)
+                } else {
+                    fragment.tv_error_title.text = fragment.getText(R.string.wallet_error_empty_card)
+                    fragment.tv_error_descriptions.text = fragment.getText(R.string.wallet_error_empty_card_subtitle)
+                }
             }
             BalanceStatus.NoAccount -> {
                 fragment.l_balance.hide()
