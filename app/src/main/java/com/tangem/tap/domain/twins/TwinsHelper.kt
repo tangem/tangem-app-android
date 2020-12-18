@@ -1,5 +1,7 @@
 package com.tangem.tap.domain.twins
 
+import com.tangem.commands.common.card.Card
+import com.tangem.commands.common.card.masks.Product
 import com.tangem.tap.common.extensions.isEven
 
 class TwinsHelper {
@@ -63,4 +65,14 @@ enum class TwinCardNumber(val number: Int) {
         First -> Second
         Second -> First
     }
+}
+
+fun Card.isTwinCard(): Boolean {
+    return this.cardData?.productMask?.contains(Product.TwinCard) == true
+}
+
+fun Card.getTwinCardIdForUser(): String {
+    val twinCardId = this.cardId.substring(11..14)
+    val twinCardNumber = TwinsHelper.getTwinCardNumber(this.cardId)?.number ?: 1
+    return  "$twinCardId #$twinCardNumber"
 }
