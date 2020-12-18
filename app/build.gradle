@@ -72,8 +72,8 @@ dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.1'
 
     implementation 'com.tangem:blockchain:1.123.0'
-    implementation 'com.tangem:core:1.89.0'
-    implementation 'com.tangem:sdk:1.89.0'
+    implementation 'com.tangem:core:1.90.0'
+    implementation 'com.tangem:sdk:1.90.0'
 
     // WebView
     implementation "androidx.browser:browser:1.2.0"
