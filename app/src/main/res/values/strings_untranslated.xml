@@ -4,6 +4,10 @@
     <string name="wallet_address_chip_compatibility" translatable="false">Compatibility</string>
     <string name="wallet_address_chip_legacy" translatable="false">Legacy</string>
 
+    <string name="wallet_button_create_twin_wallet" translatable="false">Create twin wallet</string>
+    <string name="wallet_error_empty_twin_card" translatable="false">Create twin wallet</string>
+    <string name="wallet_error_empty_twin_card_subtitle" translatable="false"> Generate wallet keys on both cards to start using your Twins</string>
+
     <string name="twins_onboarding_title" translatable="false">Tangem Twin</string>
     <string name="twins_onboarding_subtitle" translatable="false">One wallet. Two cards.</string>
     <string name="twins_onboarding_description_format" translatable="false">This one that you are holding in your hands
