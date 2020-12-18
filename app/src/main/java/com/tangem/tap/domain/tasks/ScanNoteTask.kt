@@ -17,6 +17,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.twins.TwinCardsManager
+import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tasks.ScanTask
 
 data class ScanNoteResponse(
@@ -46,7 +47,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
                         return@run
                     }
 
-                    if (card.cardData?.productMask?.contains(Product.TwinCard) == true) {
+                    if (card.isTwinCard()) {
                         dealWithTwinCard(card, session, callback)
                         return@run
                     }
