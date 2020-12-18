@@ -19,8 +19,11 @@ class CreateTwinWalletMiddleware {
         when (action) {
             is DetailsAction.CreateTwinWalletAction.ShowWarning -> {
                 val wallet = store.state.detailsState.wallet
-                val notEmpty = wallet?.recentTransactions?.isNullOrEmpty() != true ||
-                        wallet.amounts.toSendableAmounts().isNotEmpty()
+                if (wallet == null) {
+                    store.dispatch(NavigationAction.NavigateTo(AppScreen.CreateTwinWalletWarning))
+                    return
+                }
+                val notEmpty = wallet.recentTransactions.isNotEmpty() || wallet.amounts.toSendableAmounts().isNotEmpty()
                 if (notEmpty) {
                     store.dispatch(DetailsAction.CreateTwinWalletAction.NotEmpty)
                 } else {
