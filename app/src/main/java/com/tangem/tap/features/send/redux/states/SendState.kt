@@ -78,14 +78,14 @@ data class SendState(
 
     fun convertFiatToExtractCrypto(fiatValue: BigDecimal): BigDecimal = when (amountState.typeOfAmount) {
         AmountType.Coin -> convertFiatToCoin(fiatValue)
-        AmountType.Token -> convertFiatToToken(fiatValue)
+        is AmountType.Token -> convertFiatToToken(fiatValue)
         AmountType.Reserve -> fiatValue
     }
 
     fun convertExtractCryptoToFiat(cryptoValue: BigDecimal, scaleWithPrecision: Boolean = false): BigDecimal {
         return when (amountState.typeOfAmount) {
             AmountType.Coin -> convertCoinToFiat(cryptoValue, scaleWithPrecision)
-            AmountType.Token -> convertTokenToFiat(cryptoValue, scaleWithPrecision)
+            is AmountType.Token -> convertTokenToFiat(cryptoValue, scaleWithPrecision)
             AmountType.Reserve -> cryptoValue
         }
     }
@@ -103,7 +103,7 @@ data class SendState(
     fun mainCurrencyCanBeSwitched(): Boolean {
         return when (amountState.typeOfAmount) {
             AmountType.Coin -> coinIsConvertible()
-            AmountType.Token -> tokenIsConvertible()
+            is AmountType.Token -> tokenIsConvertible()
             AmountType.Reserve -> false
         }
     }
