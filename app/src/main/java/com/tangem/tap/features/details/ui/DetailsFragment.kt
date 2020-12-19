@@ -5,10 +5,15 @@ import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
+import com.tangem.tap.common.extensions.hide
+import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.twins.getTwinCardIdForUser
+import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.details.redux.SecurityOption
+import com.tangem.tap.features.details.redux.twins.CreateTwinWallet
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_details.*
@@ -59,17 +64,43 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
 
 
         if (state.cardInfo != null) {
-            tv_card_id.text = state.cardInfo.cardId
+            val cardId = if (state.card?.isTwinCard() == true) {
+                state.card.getTwinCardIdForUser()
+            } else {
+                state.cardInfo.cardId
+            }
+            tv_card_id.text = cardId
             tv_issuer.text = state.cardInfo.issuer
             tv_signed_hashes.text = state.cardInfo.signedHashes.toString()
         }
 
+        tv_signed_hashes.show(state.card?.isTwinCard() != true)
+        tv_signed_hashes_title.show(state.card?.isTwinCard() != true)
+
+
         tv_disclaimer.setOnClickListener { store.dispatch(DetailsAction.ShowDisclaimer) }
 
-        tv_erase_wallet.setOnClickListener {
-            store.dispatch(DetailsAction.EraseWallet.Check)
-            store.dispatch(DetailsAction.EraseWallet.Proceed)
+        if (state.createTwinWalletState != null) {
+            if (state.createTwinWalletState.allowRecreatingWallet == true) {
+                tv_erase_wallet.show()
+                tv_erase_wallet.text = getText(R.string.details_row_title_twins_recreate)
+                tv_erase_wallet.setOnClickListener {
+                    store.dispatch(DetailsAction.CreateTwinWalletAction.ShowWarning(
+                            null, CreateTwinWallet.RecreateWallet
+                    ))
+                }
+            } else {
+                tv_erase_wallet.hide()
+            }
+        } else {
+            tv_erase_wallet.show()
+            tv_erase_wallet.text = getText(R.string.details_row_title_erase_wallet)
+            tv_erase_wallet.setOnClickListener {
+                store.dispatch(DetailsAction.EraseWallet.Check)
+                store.dispatch(DetailsAction.EraseWallet.Proceed)
+            }
         }
+
 
         tv_app_currency.text = state.appCurrencyState.fiatCurrencyName
 
