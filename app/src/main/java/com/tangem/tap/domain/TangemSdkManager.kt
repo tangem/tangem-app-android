@@ -3,8 +3,9 @@ package com.tangem.tap.domain
 import androidx.activity.ComponentActivity
 import com.tangem.*
 import com.tangem.commands.*
+import com.tangem.commands.common.card.Card
+import com.tangem.commands.common.card.CardType
 import com.tangem.common.CompletionResult
-import com.tangem.common.extensions.CardType
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tap.common.analytics.AnalyticsEvent
@@ -12,6 +13,7 @@ import com.tangem.tap.common.analytics.AnalyticsHandler
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.domain.tasks.ScanNoteTask
+import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -64,8 +66,8 @@ class TangemSdkManager(val activity: ComponentActivity) {
         ), cardId, initialMessage = Message(activity.getString(R.string.initial_message_tap_header)))
     }
 
-    private suspend fun <T : CommandResponse> runTaskAsync(
-            runnable: CardSessionRunnable<T>, cardId: String? = null, initialMessage: Message? = null
+    suspend fun <T : CommandResponse> runTaskAsync(
+            runnable: CardSessionRunnable<T>, cardId: String? = null, initialMessage: Message? = null,
     ): CompletionResult<T> =
             withContext(Dispatchers.IO) {
                 suspendCoroutine { continuation ->
@@ -76,9 +78,13 @@ class TangemSdkManager(val activity: ComponentActivity) {
             }
 
     private suspend fun <T : CommandResponse> runTaskAsyncReturnOnMain(
-            runnable: CardSessionRunnable<T>, cardId: String? = null, initialMessage: Message? = null
+            runnable: CardSessionRunnable<T>, cardId: String? = null, initialMessage: Message? = null,
     ): CompletionResult<T> {
         val result = runTaskAsync(runnable, cardId, initialMessage)
         return withContext(Dispatchers.Main) { result }
+    }
+
+    fun changeDisplayedCardIdNumbersCount(card: Card) {
+        tangemSdk.config.cardIdDisplayedNumbersCount = if (card.isTwinCard()) 4 else null
     }
 }
