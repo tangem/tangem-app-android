@@ -4,7 +4,6 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.commands.common.network.Result
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.PayIdManager
-import com.tangem.tap.domain.TapWorkarounds
 import com.tangem.tap.domain.isPayIdSupported
 import com.tangem.tap.features.send.redux.AddressPayIdActionUi
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction
@@ -15,6 +14,7 @@ import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.PayIdVerifica
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.PayIdVerification.SetPayIdWalletAddress
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.scope
+import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -49,7 +49,7 @@ internal class AddressPayIdMiddleware {
 
     private fun setAddressAndCheck(data: String, isUserInput: Boolean, dispatch: (Action) -> Unit) {
         val potentialPayId = data.toLowerCase()
-        if (PayIdManager.isPayId(potentialPayId) && TapWorkarounds.isPayIdEnabled()) {
+        if (PayIdManager.isPayId(potentialPayId) && isPayIdEnabled()) {
             dispatch(SetPayIdWalletAddress(potentialPayId, "", isUserInput))
         } else {
             dispatch(SetWalletAddress(data, isUserInput))
@@ -63,7 +63,7 @@ internal class AddressPayIdMiddleware {
         val addressPayId = sendState.addressPayIdState.normalFieldValue ?: return
         val isUserInput = sendState.addressPayIdState.viewFieldValue.isFromUserInput
 
-        if (PayIdManager.isPayId(addressPayId) && TapWorkarounds.isPayIdEnabled()) {
+        if (PayIdManager.isPayId(addressPayId) && isPayIdEnabled()) {
             verifyPayId(addressPayId, wallet, isUserInput, dispatch)
         } else {
             verifyAddress(addressPayId, wallet, isUserInput, dispatch)
@@ -117,7 +117,7 @@ internal class AddressPayIdMiddleware {
 
     private fun isValidBlockchainAddressAndNotTheSameAsWallet(wallet: Wallet, address: String): Error? {
         return if (wallet.blockchain.validateAddress(address)) {
-            if (wallet.address != address) {
+            if (wallet.addresses.all { it.value != address } ) {
                 null
             } else {
                 Error.ADDRESS_SAME_AS_WALLET
@@ -152,10 +152,14 @@ internal class AddressPayIdMiddleware {
             }
         }
 
-        if (PayIdManager.isPayId(addressPayId) && TapWorkarounds.isPayIdEnabled()) {
+        if (PayIdManager.isPayId(addressPayId) && isPayIdEnabled()) {
             verifyPayId(addressPayId, wallet, false, internalDispatcher)
         } else {
             verifyAddress(addressPayId, wallet, false, internalDispatcher)
         }
+    }
+
+    private fun isPayIdEnabled(): Boolean {
+        return store.state.globalState.configManager?.config?.isSendingToPayIdEnabled ?: false
     }
 }
