@@ -33,5 +33,6 @@
     <dimen name="btn_rounded_size">44dp</dimen>
 
     <dimen name="text_size_amount_to_send">32sp</dimen>
+    <dimen name="dimen16">16dp</dimen>
 
 </resources>

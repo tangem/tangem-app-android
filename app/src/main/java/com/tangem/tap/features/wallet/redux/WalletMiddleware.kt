@@ -6,10 +6,10 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.SimpleResult
-import com.tangem.commands.Card
+import com.tangem.commands.common.card.Card
+import com.tangem.commands.common.card.CardType
 import com.tangem.commands.common.network.Result
 import com.tangem.common.CompletionResult
-import com.tangem.common.extensions.CardType
 import com.tangem.common.extensions.getType
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
@@ -21,6 +21,10 @@ import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.TopUpHelper
 import com.tangem.tap.domain.extensions.toSendableAmounts
+import com.tangem.tap.domain.twins.TwinsHelper
+import com.tangem.tap.domain.twins.isTwinCard
+import com.tangem.tap.features.details.redux.DetailsAction
+import com.tangem.tap.features.details.redux.twins.CreateTwinWallet
 import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.network.NetworkConnectivity
@@ -60,15 +64,25 @@ class WalletMiddleware {
                         }
                     }
                     is WalletAction.CreateWallet -> {
-                        scope.launch {
-                            val result = tangemSdkManager.createWallet(
-                                    store.state.globalState.scanNoteResponse?.card?.cardId
-                            )
-                            when (result) {
-                                is CompletionResult.Success -> {
-                                    store.state.globalState.tapWalletManager.onCardScanned(result.data)
-                                }
+                        if (store.state.walletState.twinCardsState != null) {
+                            store.dispatch(DetailsAction.CreateTwinWalletAction.ShowWarning(
+                                    store.state.globalState.scanNoteResponse?.card?.cardId?.let {
+                                        TwinsHelper.getTwinCardNumber(it)
+                                    },
+                                    CreateTwinWallet.CreateWallet
+                            ))
+                        } else {
+                            scope.launch {
+                                val result = tangemSdkManager.createWallet(
+                                        store.state.globalState.scanNoteResponse?.card?.cardId
+                                )
+                                when (result) {
+                                    is CompletionResult.Success -> {
+                                        store.state.globalState.tapWalletManager
+                                                .onCardScanned(result.data)
+                                    }
 
+                                }
                             }
                         }
                     }
@@ -111,8 +125,15 @@ class WalletMiddleware {
                             val result = tangemSdkManager.scanNote(FirebaseAnalyticsHandler)
                             when (result) {
                                 is CompletionResult.Success -> {
+                                    tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data.card)
                                     store.state.globalState.tapWalletManager
                                             .onCardScanned(result.data, true)
+                                    if (store.state.walletState.twinCardsState != null) {
+                                        val showOnboarding = !preferencesStorage.wasTwinsOnboardingShown()
+                                        if (showOnboarding) {
+                                            store.dispatch(NavigationAction.NavigateTo(AppScreen.TwinsOnboarding))
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -133,13 +154,13 @@ class WalletMiddleware {
                         }
                     }
                     is WalletAction.CopyAddress -> {
-                        store.state.walletState.addressData?.address?.let {
+                        store.state.walletState.walletAddresses?.selectedAddress?.address?.let {
                             action.context.copyToClipboard(it)
                             store.dispatch(WalletAction.CopyAddress.Success)
                         }
                     }
                     is WalletAction.ExploreAddress -> {
-                        val uri = Uri.parse(store.state.walletState.addressData?.exploreUrl)
+                        val uri = Uri.parse(store.state.walletState.walletAddresses?.selectedAddress?.exploreUrl)
                         val intent = Intent(Intent.ACTION_VIEW, uri)
                         ContextCompat.startActivity(action.context, intent, null)
                     }
@@ -164,6 +185,13 @@ class WalletMiddleware {
                         val cardId = store.state.globalState.scanNoteResponse?.card?.cardId
                         cardId?.let { preferencesStorage.saveScannedCardId(it) }
                     }
+                    is WalletAction.TwinsAction.SetTwinCard -> {
+                        val showOnboarding = !preferencesStorage.wasTwinsOnboardingShown()
+                        if (showOnboarding) store.dispatch(WalletAction.TwinsAction.ShowOnboarding)
+                    }
+                    is WalletAction.TwinsAction.SetOnboardingShown -> {
+                        preferencesStorage.saveTwinsOnboardingShown()
+                    }
                 }
                 next(action)
             }
@@ -185,7 +213,7 @@ class WalletMiddleware {
 
     private fun prepareSendAction(amount: Amount?): Action {
         return if (amount != null) {
-            if (amount.type == AmountType.Token) {
+            if (amount.type is AmountType.Token) {
                 PrepareSendScreen(store.state.walletState.wallet?.amounts?.get(AmountType.Coin), amount)
             } else {
                 PrepareSendScreen(amount)
@@ -208,6 +236,7 @@ class WalletMiddleware {
         if (card.getType() != CardType.Release) {
             return WarningType.DevCard
         }
+        if (card.isTwinCard()) return null
 
         return if (signatureCountValidator == null) {
             if (card.walletSignedHashes ?: 0 > 0) {
@@ -228,6 +257,8 @@ class WalletMiddleware {
 
         val card = store.state.globalState.scanNoteResponse?.card
         if (card == null || preferencesStorage.wasCardScannedBefore(card.cardId)) return
+
+        if (card.isTwinCard()) return
 
         val validator = store.state.globalState.scanNoteResponse?.walletManager
                 as? SignatureCountValidator
@@ -255,9 +286,13 @@ private class TopUpMiddleware {
     fun handle(action: WalletAction.TopUpAction) {
         when (action) {
             is WalletAction.TopUpAction.TopUp -> {
+                val config = store.state.globalState.configManager?.config ?: return
+                val defaultAddress = store.state.walletState.walletAddresses!!.list[0].address
                 val url = TopUpHelper.getUrl(
                         store.state.walletState.currencyData.currencySymbol!!,
-                        store.state.walletState.addressData!!.address
+                        defaultAddress,
+                        config.moonPayApiKey,
+                        config.moonPayApiSecretKey
                 )
                 val customTabsIntent = CustomTabsIntent.Builder()
                         .setToolbarColor(action.toolbarColor)
