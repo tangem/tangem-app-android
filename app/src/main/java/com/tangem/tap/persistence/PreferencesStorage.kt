@@ -3,6 +3,7 @@ package com.tangem.tap.persistence
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
@@ -16,6 +17,10 @@ class PreferencesStorage(applicationContext: Application) {
 
     private val preferences: SharedPreferences by lazy {
         applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+    }
+
+    init {
+        incrementLaunchCounter()
     }
 
     private val fiatCurrenciesAdapter: JsonAdapter<List<FiatCurrency>> by lazy {
@@ -45,11 +50,7 @@ class PreferencesStorage(applicationContext: Application) {
         return preferences.edit().putString(FIAT_CURRENCIES_KEY, json).apply()
     }
 
-    fun isFirstLaunch(): Boolean {
-        val isFirst = !preferences.contains(FIRST_LAUNCH_CHECK_KEY)
-        if (isFirst) preferences.edit().putInt(FIRST_LAUNCH_CHECK_KEY, System.currentTimeMillis().toInt()).apply()
-        return isFirst
-    }
+    fun getCountOfLaunches(): Int = preferences.getInt(APP_LAUNCH_COUNT_KEY, 1)
 
     fun saveScannedCardId(cardId: String) {
         val scannedCardsIds: String = restoreScannedCardIds()
@@ -65,7 +66,6 @@ class PreferencesStorage(applicationContext: Application) {
     private fun restoreScannedCardIds(): String =
             preferences.getString(SCANNED_CARDS_IDS_KEY, "") ?: ""
 
-
     fun saveDisclaimerAccepted() {
         preferences.edit().putBoolean(DISCLAIMER_ACCEPTED_KEY, true).apply()
     }
@@ -74,13 +74,27 @@ class PreferencesStorage(applicationContext: Application) {
         return preferences.getBoolean(DISCLAIMER_ACCEPTED_KEY, false)
     }
 
+    fun saveTwinsOnboardingShown() {
+        preferences.edit().putBoolean(TWINS_ONBOARDING_SHOWN_KEY, true).apply()
+    }
+
+    fun wasTwinsOnboardingShown(): Boolean {
+        return preferences.getBoolean(TWINS_ONBOARDING_SHOWN_KEY, false)
+    }
+
+    private fun incrementLaunchCounter() {
+        var count = preferences.getInt(APP_LAUNCH_COUNT_KEY, 0)
+        preferences.edit { putInt(APP_LAUNCH_COUNT_KEY, ++count) }
+    }
+
     companion object {
         private const val PREFERENCES_NAME = "tapPrefs"
         private const val APP_CURRENCY_KEY = "appCurrency"
         private const val FIAT_CURRENCIES_KEY = "fiatCurrencies"
-        private const val FIRST_LAUNCH_CHECK_KEY = "firstLaunchCheck"
         private const val SCANNED_CARDS_IDS_KEY = "scannedCardIds"
         private const val DISCLAIMER_ACCEPTED_KEY = "disclaimerAccepted"
+        private const val TWINS_ONBOARDING_SHOWN_KEY = "twinsOnboardingShown"
+        private const val APP_LAUNCH_COUNT_KEY = "launchCount"
     }
 
 }
