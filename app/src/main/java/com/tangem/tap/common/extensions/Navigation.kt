@@ -7,21 +7,20 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.features.details.ui.DetailsConfirmFragment
 import com.tangem.tap.features.details.ui.DetailsFragment
 import com.tangem.tap.features.details.ui.DetailsSecurityFragment
+import com.tangem.tap.features.details.ui.twins.CreateTwinWalletFragment
+import com.tangem.tap.features.details.ui.twins.TwinWalletWarningFragment
 import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
 import com.tangem.tap.features.home.HomeFragment
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
+import com.tangem.tap.features.wallet.ui.dialogs.TwinsOnboardingFragment
 import com.tangem.wallet.R
 
 fun FragmentActivity.openFragment(screen: AppScreen, addToBackStack: Boolean = true) {
     val transaction = this.supportFragmentManager.beginTransaction()
-            .replace(
-                    R.id.fragment_container,
-                    fragmentFactory(screen),
-                    screen.name
-            )
+    transaction.replace(R.id.fragment_container, fragmentFactory(screen), screen.name)
     if (addToBackStack && screen != AppScreen.Home) transaction.addToBackStack(null)
-    transaction.commit();
+    transaction.commitAllowingStateLoss()
 }
 
 fun FragmentActivity.popBackTo(screen: AppScreen?, inclusive: Boolean = false) {
@@ -44,5 +43,8 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.DetailsConfirm -> DetailsConfirmFragment()
         AppScreen.DetailsSecurity -> DetailsSecurityFragment()
         AppScreen.Disclaimer -> DisclaimerFragment()
+        AppScreen.CreateTwinWalletWarning -> TwinWalletWarningFragment()
+        AppScreen.CreateTwinWallet -> CreateTwinWalletFragment()
+        AppScreen.TwinsOnboarding -> TwinsOnboardingFragment()
     }
 }
