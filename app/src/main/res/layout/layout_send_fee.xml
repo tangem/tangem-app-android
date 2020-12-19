@@ -48,21 +48,21 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipLow"
-                style="@style/ChipNetworkFee"
+                style="@style/TapChip"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/send_fee_picker_low" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipNormal"
-                style="@style/ChipNetworkFee"
+                style="@style/TapChip"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/send_fee_picker_normal" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipPriority"
-                style="@style/ChipNetworkFee"
+                style="@style/TapChip"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/send_fee_picker_priority" />

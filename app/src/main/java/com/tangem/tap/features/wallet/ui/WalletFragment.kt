@@ -2,11 +2,8 @@ package com.tangem.tap.features.wallet.ui
 
 import android.app.Dialog
 import android.os.Bundle
-import android.view.Menu
+import android.view.*
 import android.view.Menu.NONE
-import android.view.MenuInflater
-import android.view.MenuItem
-import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -14,10 +11,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import com.squareup.picasso.Picasso
+import com.tangem.blockchain.blockchains.bitcoin.BitcoinAddressType
+import com.tangem.blockchain.common.address.AddressType
+import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
@@ -29,6 +30,7 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.card_balance.*
 import kotlinx.android.synthetic.main.fragment_wallet.*
 import kotlinx.android.synthetic.main.layout_address.*
+import kotlinx.android.synthetic.main.layout_send_fee.*
 import kotlinx.android.synthetic.main.layout_wallet_long_buttons.*
 import kotlinx.android.synthetic.main.layout_wallet_short_buttons.*
 import org.rekotlin.StoreSubscriber
@@ -90,6 +92,20 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun newState(state: WalletState) {
         if (activity == null) return
 
+        state.twinCardsState?.cardNumber?.let { cardNumber ->
+            tv_twin_card_number.show()
+            iv_twin_card.show()
+            val number = when (cardNumber) {
+                TwinCardNumber.First -> "1"
+                TwinCardNumber.Second -> "2"
+            }
+            tv_twin_card_number.text = getString(R.string.wallet_twins_chip_format, number)
+        }
+        if (state.twinCardsState?.cardNumber == null) {
+            tv_twin_card_number.hide()
+            iv_twin_card.hide()
+        }
+
         if (!state.showDetails) {
             toolbar.menu.removeItem(R.id.details_menu)
         } else if (toolbar.menu.findItem(R.id.details_menu) == null) {
@@ -116,7 +132,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         handleDialogs(state.walletDialog)
 
         l_balance.show()
-        BalanceWidget(this, state.currencyData).setup()
+        BalanceWidget(this, state.currencyData, state.twinCardsState != null).setup()
 
         if (state.state == ProgressState.Done) {
             srl_wallet.isRefreshing = false
@@ -187,7 +203,13 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
         val buttonTitle = when (state.mainButton) {
             is WalletMainButton.SendButton -> R.string.wallet_button_send
-            is WalletMainButton.CreateWalletButton -> R.string.wallet_button_create_wallet
+            is WalletMainButton.CreateWalletButton -> {
+                if (state.twinCardsState == null) {
+                    R.string.wallet_button_create_wallet
+                } else {
+                    R.string.wallet_button_create_twin_wallet
+                }
+            }
         }
         btnConfirm.text = getString(buttonTitle)
         btnConfirm.isEnabled = state.mainButton.enabled
@@ -206,9 +228,30 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     }
 
     private fun setupAddressCard(state: WalletState) {
-        if (state.addressData != null) {
+        if (state.walletAddresses != null) {
             l_address?.show()
-            tv_address.text = state.addressData.address
+            val tvAddressPaddingTop = tv_address.resources.getDimension(R.dimen.dimen16).toInt()
+            if (state.showSegwitAddress) {
+                (l_address as? ViewGroup)?.beginDelayedTransition()
+                tv_address.setPadding(tv_address.paddingStart, tvAddressPaddingTop / 2,
+                        tv_address.paddingEnd, tv_address.paddingBottom)
+                chip_group_segwit.show()
+                val checkedId = SegwitUiHelper.typeToId(state.walletAddresses.selectedAddress.type)
+                if (checkedId != View.NO_ID) chip_group_segwit.check(checkedId)
+
+                chip_group_segwit.setOnCheckedChangeListener { group, checkedId ->
+                    if (checkedId == -1) return@setOnCheckedChangeListener
+
+                    SegwitUiHelper.idToType(checkedId)?.let {
+                        store.dispatch(WalletAction.ChangeSelectedAddress(it))
+                    }
+                }
+            } else {
+                tv_address.setPadding(tv_address.paddingStart, tvAddressPaddingTop,
+                        tv_address.paddingEnd, tv_address.paddingBottom)
+                chip_group_segwit.hide()
+            }
+            tv_address.text = state.walletAddresses.selectedAddress.address
             tv_explore?.setOnClickListener {
                 store.dispatch(WalletAction.ExploreAddress(requireContext()))
             }
@@ -267,9 +310,11 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.details_menu -> {
-                store.state.globalState.scanNoteResponse?.card?.let { card ->
+                store.state.globalState.scanNoteResponse?.let { scanNoteResponse ->
                     store.dispatch(DetailsAction.PrepareScreen(
-                            card, store.state.walletState.wallet,
+                            scanNoteResponse.card, scanNoteResponse,
+                            store.state.walletState.wallet,
+                            store.state.globalState.configManager?.config?.isCreatingTwinCardsAllowed,
                             store.state.globalState.appCurrency
                     ))
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.Details))
@@ -285,4 +330,24 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         if (store.state.walletState.showDetails) inflater.inflate(R.menu.wallet, menu)
     }
 
+}
+
+class SegwitUiHelper {
+    companion object {
+        fun typeToId(type: AddressType): Int {
+            return when (type) {
+                is BitcoinAddressType.Legacy -> R.id.chip_legacy
+                is BitcoinAddressType.Segwit -> R.id.chip_default
+                else -> View.NO_ID
+            }
+        }
+
+        fun idToType(id: Int): AddressType? {
+            return when (id) {
+                R.id.chip_default -> BitcoinAddressType.Segwit
+                R.id.chip_legacy -> BitcoinAddressType.Legacy
+                else -> null
+            }
+        }
+    }
 }
