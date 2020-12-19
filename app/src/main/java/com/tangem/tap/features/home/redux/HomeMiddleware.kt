@@ -25,7 +25,7 @@ class HomeMiddleware {
                 when (action) {
                     is HomeAction.CheckIfFirstLaunch -> {
                         store.dispatch(
-                                HomeAction.CheckIfFirstLaunch.Result(preferencesStorage.isFirstLaunch())
+                                HomeAction.CheckIfFirstLaunch.Result(preferencesStorage.getCountOfLaunches() == 1)
                         )
                     }
                     is HomeAction.ReadCard -> {
@@ -34,6 +34,7 @@ class HomeMiddleware {
                             withContext(Dispatchers.Main) {
                                 when (result) {
                                     is CompletionResult.Success -> {
+                                        tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data.card)
                                         store.dispatch(GlobalAction.RestoreAppCurrency)
                                         store.state.globalState.tapWalletManager.onCardScanned(result.data)
                                         showDisclaimerOrNavigateToWallet()
@@ -54,11 +55,18 @@ class HomeMiddleware {
     }
 
     private fun showDisclaimerOrNavigateToWallet() {
-        if (preferencesStorage.wasDisclaimerAccepted()) {
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
-        } else {
+        if (!preferencesStorage.wasDisclaimerAccepted()) {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
+            return
         }
+        if (store.state.walletState.twinCardsState != null) {
+            val showOnboarding = !preferencesStorage.wasTwinsOnboardingShown()
+            if (showOnboarding) {
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.TwinsOnboarding))
+                return
+            }
+        }
+        store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
     }
 
     companion object {

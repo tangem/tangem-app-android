@@ -4,7 +4,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.Signer
-import com.tangem.commands.Card
+import com.tangem.commands.common.card.Card
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.stripZeroPlainString
@@ -39,6 +39,7 @@ val sendMiddleware: Middleware<AppState> = { dispatch, appState ->
                 is RequestFee -> RequestFeeMiddleware().handle(appState(), dispatch)
                 is SendActionUi.SendAmountToRecipient ->
                     verifyAndSendTransaction(action, appState(), dispatch)
+                is PrepareSendScreen -> setIfSendingToPayIdEnabled(appState(), dispatch)
             }
             nextDispatch(action)
         }
@@ -183,6 +184,12 @@ fun createValidateTransactionError(errorList: EnumSet<TransactionError>, walletM
         }
     }
     return TapError.ValidateTransactionErrors(tapErrors) { it.joinToString("\r\n") }
+}
+
+private fun setIfSendingToPayIdEnabled(appState: AppState?, dispatch: (Action) -> Unit) {
+    val isSendingToPayIdEnabled =
+            appState?.globalState?.configManager?.config?.isSendingToPayIdEnabled ?: false
+    dispatch(AddressPayIdActionUi.ChangePayIdState(isSendingToPayIdEnabled))
 }
 
 
