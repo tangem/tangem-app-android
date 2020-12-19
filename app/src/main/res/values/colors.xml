@@ -26,6 +26,8 @@
     <color name="buttonGray">#F4F5F6</color>
     <color name="textGray">#DE000000</color>
 
+    <color name="twins_dark">#14181D</color>
+
 
     <color name="lightGray1">#F8F8FB</color>
     <color name="lightGray4">#C7C7CC</color>
@@ -39,5 +41,7 @@
     <color name="blue1">#0029FF</color>
     <color name="blue2">#1F50FF</color>
     <color name="blue3">#CBE4FF</color>
+    <color name="blue_pale">#E0E6FA</color>
+
 
 </resources>
