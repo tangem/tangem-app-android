@@ -10,7 +10,7 @@ import com.tangem.CardFilter
 import com.tangem.Config
 import com.tangem.Log
 import com.tangem.TangemSdk
-import com.tangem.common.extensions.CardType
+import com.tangem.commands.common.card.CardType
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -87,7 +87,8 @@ class MainActivity : AppCompatActivity() {
             val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
             if (tag != null) {
                 intent.action = null
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.Home, false))
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
+                store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
                 store.dispatch(HomeAction.ReadCard)
             }
         }
