@@ -1,10 +1,10 @@
 package com.tangem.tap.domain
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.commands.common.card.CardStatus
-import com.tangem.commands.common.card.masks.Product
 import com.tangem.commands.common.network.Result
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.common.analytics.AnalyticsEvent
@@ -16,7 +16,8 @@ import com.tangem.tap.domain.config.ConfigManager
 import com.tangem.tap.domain.extensions.amountToCreateAccount
 import com.tangem.tap.domain.extensions.isNoAccountError
 import com.tangem.tap.domain.tasks.ScanNoteResponse
-import com.tangem.tap.features.send.redux.AddressPayIdActionUi
+import com.tangem.tap.domain.twins.TwinsHelper
+import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
@@ -86,23 +87,27 @@ class TapWalletManager {
         val configManager = store.state.globalState.configManager
         if (TapWorkarounds.isStart2Coin) {
             configManager?.turnOff(ConfigManager.isWalletPayIdEnabled)
+            configManager?.turnOff(ConfigManager.isSendingToPayIdEnabled)
             configManager?.turnOff(ConfigManager.isTopUpEnabled)
+        } else if (data.walletManager?.wallet?.blockchain == Blockchain.Bitcoin
+                || data.card.cardData?.blockchainName == Blockchain.Bitcoin.id){
+            configManager?.turnOff(ConfigManager.isWalletPayIdEnabled)
+            configManager?.resetToDefault(ConfigManager.isSendingToPayIdEnabled)
+            configManager?.resetToDefault(ConfigManager.isTopUpEnabled)
         } else {
             configManager?.resetToDefault(ConfigManager.isWalletPayIdEnabled)
+            configManager?.resetToDefault(ConfigManager.isSendingToPayIdEnabled)
             configManager?.resetToDefault(ConfigManager.isTopUpEnabled)
         }
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.ResetState)
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
-            store.dispatch(AddressPayIdActionUi.ChangePayIdState(configManager?.config?.isWalletPayIdEnabled
-                    ?: false))
-            if (data.card.cardData?.productMask?.contains(Product.TwinCard) == true) {
+            if (data.card.isTwinCard()) {
                 val secondCardId = TwinsHelper.getTwinsCardId(data.card.cardId)
                 val cardNumber = TwinsHelper.getTwinCardNumber(data.card.cardId)
                 if (secondCardId != null && cardNumber != null) {
                     store.dispatch(WalletAction.TwinsAction.SetTwinCard(
-                            secondCardId, cardNumber,
-                            configManager?.config?.isCreatingTwinCardsAllowed ?: false
+                            secondCardId, cardNumber, isCreatingTwinCardsAllowed = true
                     ))
                 }
             }
@@ -126,8 +131,7 @@ class TapWalletManager {
                 store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
                 store.dispatch(WalletAction.LoadFiatRate)
                 store.dispatch(WalletAction.LoadPayId)
-            } else if (data.card.status == CardStatus.Empty ||
-                    data.card.cardData?.productMask?.contains(Product.TwinCard) == true) {
+            } else if (data.card.status == CardStatus.Empty || data.card.isTwinCard()) {
                 store.dispatch(WalletAction.EmptyWallet)
                 store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
             } else {
