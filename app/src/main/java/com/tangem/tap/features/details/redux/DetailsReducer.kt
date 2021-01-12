@@ -2,12 +2,12 @@ package com.tangem.tap.features.details.redux
 
 
 import com.tangem.commands.common.card.Card
-import com.tangem.commands.common.card.masks.Product
 import com.tangem.commands.common.card.masks.Settings
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapWorkarounds
-import com.tangem.tap.domain.TwinsHelper
 import com.tangem.tap.domain.extensions.toSendableAmounts
+import com.tangem.tap.domain.twins.TwinsHelper
+import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.features.details.redux.twins.CreateTwinWalletReducer
 import com.tangem.tap.features.details.redux.twins.CreateTwinWalletState
 import org.rekotlin.Action
@@ -55,7 +55,7 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: Deta
             SecurityOption.LongTap
         }
     }
-    val twinsState = if (action.card.cardData?.productMask?.contains(Product.TwinCard) == true) {
+    val twinsState = if (action.card.isTwinCard()) {
         CreateTwinWalletState(
                 scanResponse = action.scanNoteResponse,
                 twinCardNumber = TwinsHelper.getTwinCardNumber(action.card.cardId),
