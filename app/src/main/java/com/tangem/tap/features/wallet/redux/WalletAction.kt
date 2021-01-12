@@ -9,7 +9,7 @@ import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.TwinCardNumber
+import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.wallet.R
 import org.rekotlin.Action
 import java.math.BigDecimal
