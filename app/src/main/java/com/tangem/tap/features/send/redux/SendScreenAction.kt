@@ -23,7 +23,7 @@ object ReleaseSendState : Action
 
 data class PrepareSendScreen(
         val coinAmount: Amount?,
-        val tokenAmount: Amount? = null
+        val tokenAmount: Amount? = null,
 ) : SendScreenAction
 
 // Address or PayId
@@ -34,7 +34,7 @@ sealed class AddressPayIdActionUi : SendScreenActionUi {
     object CheckAddressPayId : AddressPayIdActionUi()
     data class SetTruncateHandler(val handler: (String) -> String) : AddressPayIdActionUi()
     data class TruncateOrRestore(val truncate: Boolean) : AddressPayIdActionUi()
-    data class ChangePayIdState(val walletPayIdEnabled: Boolean) : AddressPayIdActionUi()
+    data class ChangePayIdState(val sendingToPayIdEnabled: Boolean) : AddressPayIdActionUi()
 }
 
 
@@ -48,7 +48,7 @@ sealed class TransactionExtrasAction : SendScreenActionUi {
     object Release : TransactionExtrasAction()
 
     sealed class XlmMemo : TransactionExtrasAction() {
-//        data class ChangeSelectedMemo(val memoType: XlmMemoType) : XlmMemo()
+  //        data class ChangeSelectedMemo(val memoType: XlmMemoType) : XlmMemo()
         data class HandleUserInput(val data: String) : XlmMemo()
     }
 
