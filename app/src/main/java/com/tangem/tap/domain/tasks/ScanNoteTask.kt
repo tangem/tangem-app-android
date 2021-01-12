@@ -7,20 +7,17 @@ import com.tangem.TangemSdkError
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.commands.CommandResponse
+import com.tangem.commands.ReadIssuerDataCommand
 import com.tangem.commands.common.card.Card
 import com.tangem.commands.common.card.CardStatus
 import com.tangem.commands.common.card.masks.Product
-import com.tangem.commands.file.ReadFileDataCommand
 import com.tangem.commands.verifycard.VerifyCardCommand
 import com.tangem.commands.verifycard.VerifyCardResponse
 import com.tangem.common.CompletionResult
-import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
-import com.tangem.common.tlv.Tlv
-import com.tangem.common.tlv.TlvDecoder
-import com.tangem.common.tlv.TlvTag
 import com.tangem.tap.domain.TapSdkError
-import com.tangem.tap.domain.TwinsHelper
+import com.tangem.tap.domain.twins.TwinCardsManager
+import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tasks.ScanTask
 
 data class ScanNoteResponse(
@@ -50,7 +47,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
                         return@run
                     }
 
-                    if (card.cardData?.productMask?.contains(Product.TwinCard) == true) {
+                    if (card.isTwinCard()) {
                         dealWithTwinCard(card, session, callback)
                         return@run
                     }
@@ -75,7 +72,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
             when (verifyResult) {
                 is CompletionResult.Success -> {
                     callback(CompletionResult.Success(ScanNoteResponse(
-                            walletManager, card, verifyResult.data
+                            walletManager, card, verifyResult.data, publicKey
                     )))
                 }
                 is CompletionResult.Failure -> {
@@ -89,20 +86,21 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
             card: Card, session: CardSession,
             callback: (result: CompletionResult<ScanNoteResponse>) -> Unit
     ) {
-        ReadFileDataCommand(readPrivateFiles = true).run(session) { filesResult ->
-            when (filesResult) {
+        ReadIssuerDataCommand().run(session) { readDataResult ->
+            when (readDataResult) {
                 is CompletionResult.Success -> {
-                    val decoder = Tlv.deserialize(filesResult.data.fileData)?.let { TlvDecoder(it) }
-                    val name = decoder?.decodeOptional<String>(TlvTag.FileName)
-                    if (name != null && name == TwinsHelper.TWIN_FILE_NAME) {
-                        val publicKey = decoder.decodeOptional<ByteArray>(TlvTag.FileData)?.toHexString()
+                    val verified = TwinCardsManager.verifyTwinPublicKey(
+                            readDataResult.data.issuerData, card.walletPublicKey
+                    )
+                    if (verified) {
+                        val twinPublicKey = readDataResult.data.issuerData.sliceArray(0 until 65)
                         val walletManager = try {
-                            WalletManagerFactory.makeMultisigWalletManager(card, publicKey!!.hexToBytes())
+                            WalletManagerFactory.makeMultisigWalletManager(card, twinPublicKey)
                         } catch (exception: Exception) {
                             callback(CompletionResult.Success(ScanNoteResponse(null, card)))
                             return@run
                         }
-                        verifyCard(walletManager, card, publicKey, session, callback)
+                        verifyCard(walletManager, card, twinPublicKey.toHexString(), session, callback)
                         return@run
                     } else {
                         callback(CompletionResult.Success(ScanNoteResponse(null, card)))
@@ -111,13 +109,13 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
                 is CompletionResult.Failure ->
                     callback(CompletionResult.Success(ScanNoteResponse(null, card)))
             }
-
         }
     }
 
     private fun getErrorIfExcludedCard(card: Card): TangemError? {
-        val productMask = card.cardData?.productMask ?: return TangemSdkError.CardError()
-        if (!productMask.contains(Product.Note) && !productMask.contains(Product.TwinCard)) {
+        val productMask = card.cardData?.productMask
+        if (productMask != null &&  // product mask is on cards v2.30 and later
+                !productMask.contains(Product.Note) && !productMask.contains(Product.TwinCard)) {
             return TapSdkError.CardForDifferentApp
         }
         if (excludedBatches.contains(card.cardData?.batchId)) {
