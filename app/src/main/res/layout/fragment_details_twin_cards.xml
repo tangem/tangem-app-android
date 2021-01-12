@@ -38,12 +38,12 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:gravity="center"
+            android:gravity="start"
             android:text="@string/details_twins_recreate_step_format"
             android:textColor="@color/colorSecondary"
             android:textSize="20sp"
+            android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="@+id/v_step_1"
-            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="@id/v_step_1"
             app:layout_constraintTop_toTopOf="parent" />
 
