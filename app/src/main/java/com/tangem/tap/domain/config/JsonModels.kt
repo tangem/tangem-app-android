@@ -7,6 +7,7 @@ package com.tangem.tap.domain.config
 class FeatureModel(
         val isWalletPayIdEnabled: Boolean,
         val isTopUpEnabled: Boolean,
+        val isSendingToPayIdEnabled: Boolean,
         val isCreatingTwinCardsAllowed: Boolean,
 )
 
