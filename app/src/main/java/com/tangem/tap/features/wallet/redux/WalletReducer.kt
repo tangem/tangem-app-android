@@ -12,6 +12,7 @@ import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.getFirstToken
+import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.ui.BalanceStatus
@@ -164,6 +165,12 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 Artwork.SERGIO_CARD_URL
             } else if (action.card.cardId.startsWith(Artwork.MARTA_CARD_ID)) {
                 Artwork.MARTA_CARD_URL
+            } else if (newState.twinCardsState?.cardNumber != null) {
+                when (newState.twinCardsState?.cardNumber) {
+                    TwinCardNumber.First -> Artwork.TWIN_CARD_1
+                    TwinCardNumber.Second -> Artwork.TWIN_CARD_2
+                    null -> Artwork.DEFAULT_IMG_URL
+                }
             } else {
                 Artwork.DEFAULT_IMG_URL
             }
