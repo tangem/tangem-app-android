@@ -5,8 +5,8 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.commands.common.card.Card
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.common.redux.global.FiatCurrencyName
-import com.tangem.tap.domain.TwinCardNumber
 import com.tangem.tap.domain.tasks.ScanNoteResponse
+import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.details.redux.twins.CreateTwinWallet
 import com.tangem.tap.network.coinmarketcap.FiatCurrency
 import com.tangem.wallet.R
@@ -45,12 +45,16 @@ sealed class DetailsAction : Action {
     }
 
     sealed class CreateTwinWalletAction : DetailsAction() {
-        object ShowWarning : CreateTwinWalletAction()
+        data class ShowWarning(
+                val twinCardNumber: TwinCardNumber?,
+                val createTwinWallet: CreateTwinWallet = CreateTwinWallet.RecreateWallet
+        ) : CreateTwinWalletAction()
+        object NotEmpty : CreateTwinWalletAction(), NotificationAction {
+            override val messageResource = R.string.details_notification_erase_wallet_not_possible
+        }
         object ShowAlert : CreateTwinWalletAction()
         object HideAlert : CreateTwinWalletAction()
-        data class Proceed(
-                val twinCardNumber: TwinCardNumber?, val createTwinWallet: CreateTwinWallet
-        ) : CreateTwinWalletAction()
+        object Proceed: CreateTwinWalletAction()
 
         object Cancel : CreateTwinWalletAction() {
             object Confirm : CreateTwinWalletAction()
@@ -61,7 +65,11 @@ sealed class DetailsAction : Action {
             object Failure : CreateTwinWalletAction()
         }
 
-        data class LaunchSecondStep(val message: Message) : CreateTwinWalletAction() {
+        data class LaunchSecondStep(
+                val initialMessage: Message,
+                val preparingMessage: Message,
+                val creatingWalletMessage: Message,
+        ) : CreateTwinWalletAction() {
             object Success : CreateTwinWalletAction()
             object Failure : CreateTwinWalletAction()
         }
