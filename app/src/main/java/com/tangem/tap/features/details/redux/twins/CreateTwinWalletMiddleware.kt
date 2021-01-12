@@ -2,9 +2,9 @@ package com.tangem.tap.features.details.redux.twins
 
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
-import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.scope
@@ -17,8 +17,19 @@ class CreateTwinWalletMiddleware {
     var twinsManager: TwinCardsManager? = null
     fun handle(action: DetailsAction.CreateTwinWalletAction) {
         when (action) {
-            DetailsAction.CreateTwinWalletAction.ShowWarning ->
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.CreateTwinWalletWarning))
+            is DetailsAction.CreateTwinWalletAction.ShowWarning -> {
+                val wallet = store.state.detailsState.wallet
+                if (wallet == null) {
+                    store.dispatch(NavigationAction.NavigateTo(AppScreen.CreateTwinWalletWarning))
+                    return
+                }
+                val notEmpty = wallet.recentTransactions.isNotEmpty() || wallet.amounts.toSendableAmounts().isNotEmpty()
+                if (notEmpty) {
+                    store.dispatch(DetailsAction.CreateTwinWalletAction.NotEmpty)
+                } else {
+                    store.dispatch(NavigationAction.NavigateTo(AppScreen.CreateTwinWalletWarning))
+                }
+            }
             is DetailsAction.CreateTwinWalletAction.Proceed ->
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.CreateTwinWallet))
             is DetailsAction.CreateTwinWalletAction.Cancel -> {
@@ -34,7 +45,7 @@ class CreateTwinWalletMiddleware {
             }
             is DetailsAction.CreateTwinWalletAction.Cancel.Confirm -> {
                 twinsManager = null
-                store.dispatch(NavigationAction.PopBackTo())
+                store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
             }
             is DetailsAction.CreateTwinWalletAction.LaunchFirstStep -> {
                 store.state.globalState.scanNoteResponse?.let {
@@ -60,7 +71,8 @@ class CreateTwinWalletMiddleware {
             }
             is DetailsAction.CreateTwinWalletAction.LaunchSecondStep ->
                 scope.launch {
-                    val result = twinsManager?.createSecondWallet(action.message)
+                    val result = twinsManager?.createSecondWallet(action.initialMessage,
+                            action.preparingMessage, action.creatingWalletMessage)
                     withContext(Dispatchers.Main) {
                         when (result) {
                             SimpleResult.Success ->
@@ -93,8 +105,11 @@ class CreateTwinWalletMiddleware {
                 }
             }
             is DetailsAction.CreateTwinWalletAction.LaunchThirdStep.Success -> {
-                store.dispatch(GlobalAction.SaveScanNoteResponse(action.scanNoteResponse))
+                scope.launch {
+                    store.state.globalState.tapWalletManager.onCardScanned(action.scanNoteResponse)
+                }
                 store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
             }
             DetailsAction.CreateTwinWalletAction.LaunchThirdStep.Failure -> {
 
