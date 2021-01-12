@@ -30,10 +30,10 @@ class ConfigManager(
             setupFeature(config.features)
             setupKey(config.configValues)
         }
-//        remoteLoader.loadConfig { config ->
-//            setupFeature(config.features)
-//            onComplete?.invoke()
-//        }
+        remoteLoader.loadConfig { config ->
+            setupFeature(config.features)
+            onComplete?.invoke()
+        }
     }
 
     fun turnOff(name: String) {
