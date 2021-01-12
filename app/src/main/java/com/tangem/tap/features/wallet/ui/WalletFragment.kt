@@ -16,7 +16,7 @@ import com.tangem.blockchain.common.address.AddressType
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.TwinCardNumber
+import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
@@ -130,7 +130,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         handleDialogs(state.walletDialog)
 
         l_balance.show()
-        BalanceWidget(this, state.currencyData).setup()
+        BalanceWidget(this, state.currencyData, state.twinCardsState != null).setup()
 
         if (state.state == ProgressState.Done) {
             srl_wallet.isRefreshing = false
@@ -201,7 +201,13 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
         val buttonTitle = when (state.mainButton) {
             is WalletMainButton.SendButton -> R.string.wallet_button_send
-            is WalletMainButton.CreateWalletButton -> R.string.wallet_button_create_wallet
+            is WalletMainButton.CreateWalletButton -> {
+                if (state.twinCardsState == null) {
+                    R.string.wallet_button_create_wallet
+                } else {
+                    R.string.wallet_button_create_twin_wallet
+                }
+            }
         }
         btnConfirm.text = getString(buttonTitle)
         btnConfirm.isEnabled = state.mainButton.enabled
