@@ -7,7 +7,7 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
-import com.tangem.tap.domain.TwinCardNumber
+import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import org.rekotlin.StateType
@@ -94,6 +94,8 @@ data class Artwork(
         const val MARTA_CARD_URL = "https://app.tangem.com/cards/card_tg083.png"
         const val SERGIO_CARD_ID = "BC01"
         const val MARTA_CARD_ID = "BC02"
+        const val TWIN_CARD_1 = "https://app.tangem.com/cards/card_tg085.png"
+        const val TWIN_CARD_2 = "https://app.tangem.com/cards/card_tg086.png"
     }
 }
 
@@ -104,8 +106,8 @@ data class TopUpState(
 )
 
 data class TwinCardsState(
-       val secondCardId: String?,
-       val cardNumber: TwinCardNumber?,
-       val showTwinOnboarding: Boolean,
-       val isCreatingTwinCardsAllowed: Boolean
+        val secondCardId: String?,
+        val cardNumber: TwinCardNumber?,
+        val showTwinOnboarding: Boolean,
+        val isCreatingTwinCardsAllowed: Boolean
 )
