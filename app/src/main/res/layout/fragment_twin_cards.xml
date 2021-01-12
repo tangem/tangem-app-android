@@ -12,6 +12,14 @@
         android:layout_height="match_parent"
         android:layout_marginBottom="33dp">
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/l_twin_cards"
+            android:alpha="0.22"
+            android:background="@color/darkGray6"/>
+
         <include
             android:id="@+id/l_twin_cards"
             layout="@layout/layout_twin_cards"
@@ -21,7 +29,6 @@
             android:layout_marginBottom="24dp"
             android:gravity="top"
             app:layout_constraintBottom_toTopOf="@id/tv_twin_title"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0" />
 
         <TextView
@@ -61,7 +68,7 @@
             android:textSize="16sp"
             app:layout_constraintBottom_toTopOf="@id/btn_continue"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"/>
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline"
