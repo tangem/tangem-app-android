@@ -3,6 +3,7 @@ package com.tangem.tap.domain.config
 import android.content.Context
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
+import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
@@ -18,13 +19,25 @@ interface ConfigLoader {
     companion object {
         const val featuresName = "features_${BuildConfig.CONFIG_ENVIRONMENT}"
         const val configValuesName = "config_${BuildConfig.CONFIG_ENVIRONMENT}"
+
+        fun init() {
+            if (BuildConfig.CONFIG_ENVIRONMENT == "prod") {
+                Firebase.remoteConfig.setConfigSettingsAsync(remoteConfigSettings {
+                    this.minimumFetchIntervalInSeconds = 1200
+                })
+            } else {
+                Firebase.remoteConfig.setConfigSettingsAsync(remoteConfigSettings {
+                    this.minimumFetchIntervalInSeconds = 60
+                })
+            }
+        }
     }
 }
 
 
 class LocalLoader(
         private val context: Context,
-        private val moshi: Moshi
+        private val moshi: Moshi,
 ) : ConfigLoader {
 
     override fun loadConfig(onComplete: (ConfigModel) -> Unit) {
@@ -49,7 +62,7 @@ class LocalLoader(
 }
 
 class RemoteLoader(
-        private val moshi: Moshi
+        private val moshi: Moshi,
 ) : ConfigLoader {
 
     override fun loadConfig(onComplete: (ConfigModel) -> Unit) {
