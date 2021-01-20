@@ -22,7 +22,7 @@ interface IdStateHolder {
 }
 
 enum class StateId {
-    SEND_SCREEN, ADDRESS_PAY_ID, AMOUNT, FEE, RECEIPT
+    SEND_SCREEN, ADDRESS_PAY_ID, TRANSACTION_EXTRAS, AMOUNT, FEE, RECEIPT
 }
 
 interface SendScreenState : StateType, IdStateHolder
@@ -33,6 +33,7 @@ data class SendState(
         val tokenConverter: CurrencyConverter? = null,
         val lastChangedStates: LinkedHashSet<StateId> = linkedSetOf(),
         val addressPayIdState: AddressPayIdState = AddressPayIdState(),
+        val transactionExtrasState: TransactionExtrasState = TransactionExtrasState(),
         val amountState: AmountState = AmountState(),
         val feeState: FeeState = FeeState(),
         val receiptState: ReceiptState = ReceiptState(),
