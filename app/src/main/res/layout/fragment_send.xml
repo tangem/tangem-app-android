@@ -33,6 +33,7 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
+            android:id="@+id/main_send_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
