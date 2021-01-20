@@ -2,6 +2,7 @@ package com.tangem.tap.features.send.redux
 
 import com.tangem.Message
 import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.ToastNotificationAction
 import com.tangem.tap.domain.TapError
@@ -22,7 +23,7 @@ object ReleaseSendState : Action
 
 data class PrepareSendScreen(
         val coinAmount: Amount?,
-        val tokenAmount: Amount? = null
+        val tokenAmount: Amount? = null,
 ) : SendScreenAction
 
 // Address or PayId
@@ -33,7 +34,27 @@ sealed class AddressPayIdActionUi : SendScreenActionUi {
     object CheckAddressPayId : AddressPayIdActionUi()
     data class SetTruncateHandler(val handler: (String) -> String) : AddressPayIdActionUi()
     data class TruncateOrRestore(val truncate: Boolean) : AddressPayIdActionUi()
-    data class ChangePayIdState(val sendingToPayIdEnabled: Boolean): AddressPayIdActionUi()
+    data class ChangePayIdState(val sendingToPayIdEnabled: Boolean) : AddressPayIdActionUi()
+}
+
+
+sealed class TransactionExtrasAction : SendScreenActionUi {
+    data class Prepare(
+            val blockchain: Blockchain,
+            val walletAddress: String,
+            val xrpTag: String?,
+    ) : TransactionExtrasAction()
+
+    object Release : TransactionExtrasAction()
+
+    sealed class XlmMemo : TransactionExtrasAction() {
+  //        data class ChangeSelectedMemo(val memoType: XlmMemoType) : XlmMemo()
+        data class HandleUserInput(val data: String) : XlmMemo()
+    }
+
+    sealed class XrpDestinationTag : TransactionExtrasAction() {
+        data class HandleUserInput(val data: String) : XrpDestinationTag()
+    }
 }
 
 sealed class AddressPayIdVerifyAction : SendScreenAction {
@@ -122,6 +143,7 @@ sealed class SendAction : SendScreenAction {
                 val sendAllCallback: () -> Unit,
                 val reduceAmount: BigDecimal,
         ) : Dialog()
+
         object Hide : Dialog()
     }
 }
