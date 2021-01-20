@@ -42,7 +42,7 @@ class AddressPayIdReducer : SendInternalReducer {
                         viewFieldValue = InputViewValue(action.payId, action.isUserInput),
                         normalFieldValue = action.payId,
                         truncatedFieldValue = state.truncate(action.payId),
-                        recipientWalletAddress = action.payIdWalletAddress,
+                        destinationWalletAddress = action.payIdWalletAddress,
                         error = null
                 )
             }
@@ -51,13 +51,13 @@ class AddressPayIdReducer : SendInternalReducer {
                         viewFieldValue = InputViewValue(action.address, action.isUserInput),
                         normalFieldValue = action.address,
                         truncatedFieldValue = state.truncate(action.address),
-                        recipientWalletAddress = action.address,
+                        destinationWalletAddress = action.address,
                         error = null
                 )
             }
             is AddressPayIdVerifyAction.ChangePasteBtnEnableState -> state.copy(pasteIsEnabled = action.isEnabled)
-            is AddressVerification.SetAddressError -> state.copy(error = action.error, recipientWalletAddress = null)
-            is PayIdVerification.SetPayIdError -> state.copy(error = action.error, recipientWalletAddress = null)
+            is AddressVerification.SetAddressError -> state.copy(error = action.error, destinationWalletAddress = null)
+            is PayIdVerification.SetPayIdError -> state.copy(error = action.error, destinationWalletAddress = null)
         }
         return updateLastState(sendState.copy(addressPayIdState = result), result)
     }
