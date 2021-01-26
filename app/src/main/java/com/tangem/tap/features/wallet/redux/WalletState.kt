@@ -32,11 +32,13 @@ data class WalletState(
             currencyData.status != com.tangem.tap.features.wallet.ui.BalanceStatus.EmptyCard &&
                     currencyData.status != com.tangem.tap.features.wallet.ui.BalanceStatus.UnknownBlockchain
 
-    val showSegwitAddress: Boolean
+    val showMultipleAddress: Boolean
         get() {
             val listOfAddresses = walletAddresses?.list ?: return false
-            return (wallet?.blockchain == Blockchain.Bitcoin || wallet?.blockchain == Blockchain.BitcoinTestnet)
-                    && listOfAddresses.size > 1
+            return (wallet?.blockchain == Blockchain.Bitcoin ||
+                    wallet?.blockchain == Blockchain.BitcoinTestnet ||
+                    wallet?.blockchain == Blockchain.CardanoShelley) &&
+                    listOfAddresses.size > 1
         }
 }
 
