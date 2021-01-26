@@ -12,6 +12,8 @@ import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import com.squareup.picasso.Picasso
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinAddressType
+import com.tangem.blockchain.blockchains.cardano.CardanoAddressType
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -229,27 +231,27 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         if (state.walletAddresses != null) {
             l_address?.show()
             val tvAddressPaddingTop = tv_address.resources.getDimension(R.dimen.dimen16).toInt()
-            if (state.showSegwitAddress) {
+            if (state.showMultipleAddress) {
                 (l_address as? ViewGroup)?.beginDelayedTransition()
                 tv_address.setPadding(tv_address.paddingStart, tvAddressPaddingTop / 2,
                         tv_address.paddingEnd, tv_address.paddingBottom)
-                chip_group_segwit.show()
-                chip_group_segwit.fitChipsByGroupWidth()
+                chip_group_address_type.show()
+                chip_group_address_type.fitChipsByGroupWidth()
 
-                val checkedId = SegwitUiHelper.typeToId(state.walletAddresses.selectedAddress.type)
-                if (checkedId != View.NO_ID) chip_group_segwit.check(checkedId)
+                val checkedId = MultipleAddressUiHelper.typeToId(state.walletAddresses.selectedAddress.type)
+                if (checkedId != View.NO_ID) chip_group_address_type.check(checkedId)
 
-                chip_group_segwit.setOnCheckedChangeListener { group, checkedId ->
+                chip_group_address_type.setOnCheckedChangeListener { group, checkedId ->
                     if (checkedId == -1) return@setOnCheckedChangeListener
 
-                    SegwitUiHelper.idToType(checkedId)?.let {
+                    MultipleAddressUiHelper.idToType(checkedId, state.wallet?.blockchain)?.let {
                         store.dispatch(WalletAction.ChangeSelectedAddress(it))
                     }
                 }
             } else {
                 tv_address.setPadding(tv_address.paddingStart, tvAddressPaddingTop,
                         tv_address.paddingEnd, tv_address.paddingBottom)
-                chip_group_segwit.hide()
+                chip_group_address_type.hide()
             }
             tv_address.text = state.walletAddresses.selectedAddress.address
             tv_explore?.setOnClickListener {
@@ -332,20 +334,34 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
 }
 
-class SegwitUiHelper {
+class MultipleAddressUiHelper {
     companion object {
         fun typeToId(type: AddressType): Int {
             return when (type) {
                 is BitcoinAddressType.Legacy -> R.id.chip_legacy
                 is BitcoinAddressType.Segwit -> R.id.chip_default
+                is CardanoAddressType.Byron -> R.id.chip_legacy
+                is CardanoAddressType.Shelley -> R.id.chip_default
                 else -> View.NO_ID
             }
         }
 
-        fun idToType(id: Int): AddressType? {
+        fun idToType(id: Int, blockchain: Blockchain?): AddressType? {
             return when (id) {
-                R.id.chip_default -> BitcoinAddressType.Segwit
-                R.id.chip_legacy -> BitcoinAddressType.Legacy
+                R.id.chip_default -> {
+                    when (blockchain) {
+                        Blockchain.Bitcoin -> BitcoinAddressType.Segwit
+                        Blockchain.CardanoShelley -> CardanoAddressType.Shelley
+                        else -> null
+                    }
+                }
+                R.id.chip_legacy -> {
+                    when (blockchain) {
+                        Blockchain.Bitcoin -> BitcoinAddressType.Legacy
+                        Blockchain.CardanoShelley -> CardanoAddressType.Byron
+                        else -> null
+                    }
+                }
                 else -> null
             }
         }
