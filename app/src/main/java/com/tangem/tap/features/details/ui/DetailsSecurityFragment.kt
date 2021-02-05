@@ -5,6 +5,7 @@ import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
+import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
@@ -91,6 +92,7 @@ class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
     }
 
     private fun enableLongTap(enable: Boolean) {
+        group_long_tap.show(enable)
         val alpha = if (enable) 1f else 0.5f
         tv_long_tap_description.alpha = alpha
         tv_long_tap_title.alpha = alpha
@@ -105,6 +107,7 @@ class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
     }
 
     private fun enablePasscode(enable: Boolean) {
+        group_passcode.show(enable)
         val alpha = if (enable) 1f else 0.5f
         tv_passcode_description.alpha = alpha
         tv_passcode_title.alpha = alpha
@@ -119,6 +122,7 @@ class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
     }
 
     private fun enableAccessCode(enable: Boolean) {
+        group_access_code.show(enable)
         val alpha = if (enable) 1f else 0.5f
         tv_access_code_description.alpha = alpha
         tv_access_code_title.alpha = alpha
