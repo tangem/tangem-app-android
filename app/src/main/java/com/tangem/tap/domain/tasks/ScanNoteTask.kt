@@ -76,7 +76,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
                     )))
                 }
                 is CompletionResult.Failure -> {
-                    callback(CompletionResult.Failure(TangemSdkError.VerificationFailed()))
+                    callback(CompletionResult.Failure(TangemSdkError.CardVerificationFailed()))
                 }
             }
         }
