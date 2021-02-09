@@ -36,17 +36,17 @@ fun String.toQrCode(): Bitmap {
     return bmp
 }
 
-fun BigDecimal.toFormattedString(decimals: Int): String {
-    val symbols = DecimalFormatSymbols(Locale.US)
-    symbols.decimalSeparator = '.'
+fun BigDecimal.toFormattedString(
+        decimals: Int, roundingMode: RoundingMode = RoundingMode.DOWN, locale: Locale = Locale.US
+): String {
+    val symbols = DecimalFormatSymbols(locale)
     val df = DecimalFormat()
     df.decimalFormatSymbols = symbols
     df.maximumFractionDigits = decimals
     df.minimumFractionDigits = 0
     df.isGroupingUsed = false
-    val bd = BigDecimal(unscaledValue(), scale())
-    bd.setScale(decimals, RoundingMode.DOWN)
-    return df.format(bd)
+    df.roundingMode = roundingMode
+    return df.format(this)
 }
 
 fun BigDecimal.toFormattedCurrencyString(decimals: Int, currency: String): String {
