@@ -2,6 +2,7 @@ package com.tangem.tap.features.send.redux.states
 
 import com.tangem.blockchain.blockchains.stellar.StellarMemo
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction
+import java.math.BigInteger
 
 data class AddressPayIdState(
         val viewFieldValue: InputViewValue = InputViewValue(""),
@@ -39,25 +40,31 @@ data class XlmMemoState(
         val selectedMemoType: XlmMemoType = XlmMemoType.ID,
         val text: StellarMemo.Text? = null,
         val id: StellarMemo.Id? = null,
+        val error: TransactionExtraError? = null,
 ) {
     val memo: StellarMemo?
         get() = when (selectedMemoType) {
             XlmMemoType.TEXT -> text
             XlmMemoType.ID -> id
         }
+
+    companion object {
+        val MAX_NUMBER: BigInteger = BigInteger("FFFFFFFFFFFFFFFF", 16)
+    }
 }
 
 // tag must contains only digits
 data class XrpDestinationTagState(
         val viewFieldValue: InputViewValue = InputViewValue(""),
         val tag: Long? = null,
-        val error: XrpDestinationTagError? = null
+        val error: TransactionExtraError? = null
 ) {
     companion object {
         const val MAX_NUMBER: Long = 4294967295
     }
 }
 
-enum class XrpDestinationTagError {
-    INVALID_TAG
+enum class TransactionExtraError {
+    INVALID_DESTINATION_TAG,
+    INVALID_XLM_MEMO
 }

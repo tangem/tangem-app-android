@@ -70,10 +70,17 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 XlmMemoType.ID -> InputType.TYPE_CLASS_NUMBER
             }
             if (!it.viewFieldValue.isFromUserInput) fg.etMemo.setText(it.viewFieldValue.value)
+            if (it.error != null) {
+                if (it.error == TransactionExtraError.INVALID_XLM_MEMO) {
+                    fg.tilMemo.error = fg.getText(R.string.send_error_invalid_memo_id)
+                }
+            } else {
+                fg.tilMemo.error = null
+            }
         }
         infoState.xrpDestinationTag?.let {
             if (infoState.xrpDestinationTag.error != null) {
-                if (infoState.xrpDestinationTag.error == XrpDestinationTagError.INVALID_TAG) {
+                if (infoState.xrpDestinationTag.error == TransactionExtraError.INVALID_DESTINATION_TAG) {
                     fg.tilDestinationTag.error = fg.getText(R.string.send_error_invalid_destination_tag)
                 }
             } else {
