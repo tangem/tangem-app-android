@@ -72,7 +72,16 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             if (!it.viewFieldValue.isFromUserInput) fg.etMemo.setText(it.viewFieldValue.value)
         }
         infoState.xrpDestinationTag?.let {
-            if (!it.viewFieldValue.isFromUserInput) fg.etDestinationTag.setText(it.viewFieldValue.value)
+            if (infoState.xrpDestinationTag.error != null) {
+                if (infoState.xrpDestinationTag.error == XrpDestinationTagError.INVALID_TAG) {
+                    fg.tilDestinationTag.error = fg.getText(R.string.send_error_invalid_destination_tag)
+                }
+            } else {
+                fg.tilDestinationTag.error = null
+            }
+            if (!it.viewFieldValue.isFromUserInput) {
+                fg.etDestinationTag.setText(it.viewFieldValue.value)
+            }
         }
     }
 
