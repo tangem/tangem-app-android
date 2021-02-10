@@ -36,6 +36,7 @@ this wallet.
     <string name="send_extras_hint_memo" translatable="false">Memo</string>
     <string name="send_extras_hint_destination_tag" translatable="false">Destination tag</string>
     <string name="send_error_invalid_destination_tag" translatable="false">Invalid destination tag. It won\'t be added to the transaction</string>
+    <string name="send_error_invalid_memo_id" translatable="false">Invalid Memo ID. It won\'t be added to the transaction</string>
 
 
 </resources>
