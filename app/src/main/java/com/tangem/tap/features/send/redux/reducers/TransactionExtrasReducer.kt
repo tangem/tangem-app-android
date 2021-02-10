@@ -24,8 +24,9 @@ class TransactionExtrasReducer : SendInternalReducer {
         val emptyResult = TransactionExtrasState()
         val result = when (action.blockchain) {
             Blockchain.XRP -> {
+                val address = action.walletAddress.substringAfter(":")
                 // 'r' - without tag, 'x' - with tag
-                if (action.walletAddress.startsWith("r", true)) {
+                if (address.startsWith("r", true)) {
                     val tag = action.xrpTag?.toLongOrNull()
                     if (tag == null) {
                         TransactionExtrasState(xrpDestinationTag = XrpDestinationTagState())
