@@ -68,7 +68,8 @@ class TransactionExtrasReducer : SendInternalReducer {
 //            }
             is XlmMemo.HandleUserInput -> {
                 val inputViewValue = InputViewValue(action.data, true)
-                var memo = infoState.xlmMemo?.copy(viewFieldValue = inputViewValue) ?: XlmMemoState(inputViewValue)
+                var memo = infoState.xlmMemo?.copy(viewFieldValue = inputViewValue)
+                        ?: XlmMemoState(inputViewValue)
                 memo = clearMemo(memo)
                 memo = when (infoState.xlmMemo?.selectedMemoType) {
                     XlmMemoType.TEXT -> memo.copy(text = StellarMemo.Text(action.data))
@@ -93,7 +94,12 @@ class TransactionExtrasReducer : SendInternalReducer {
             is XrpDestinationTag.HandleUserInput -> {
                 val tag = action.data.toLongOrNull()
                 if (tag != null) {
-                    val tagState = XrpDestinationTagState(InputViewValue(action.data, true), tag)
+                    val input = InputViewValue(action.data, true)
+                    val tagState = if (tag <= XrpDestinationTagState.MAX_NUMBER){
+                        XrpDestinationTagState(input, tag)
+                    } else {
+                        XrpDestinationTagState(input, error = XrpDestinationTagError.INVALID_TAG)
+                    }
                     infoState.copy(xrpDestinationTag = tagState)
                 } else {
                     infoState
