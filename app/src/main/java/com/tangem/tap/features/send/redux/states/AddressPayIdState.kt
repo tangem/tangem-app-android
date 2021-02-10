@@ -50,5 +50,14 @@ data class XlmMemoState(
 // tag must contains only digits
 data class XrpDestinationTagState(
         val viewFieldValue: InputViewValue = InputViewValue(""),
-        val tag: Long? = null
-)
+        val tag: Long? = null,
+        val error: XrpDestinationTagError? = null
+) {
+    companion object {
+        const val MAX_NUMBER: Long = 4294967295
+    }
+}
+
+enum class XrpDestinationTagError {
+    INVALID_TAG
+}
