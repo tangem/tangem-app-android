@@ -54,7 +54,7 @@ class TransactionExtrasReducer : SendInternalReducer {
             sendState: SendState,
             infoState: TransactionExtrasState,
     ): SendState {
-        fun clearMemo(memo: XlmMemoState): XlmMemoState = memo.copy(text = null, id = null)
+        fun clearMemo(memo: XlmMemoState): XlmMemoState = memo.copy(text = null, id = null, error = null)
 
         val result = when (action) {
 //            is XlmMemo.ChangeSelectedMemo -> {
@@ -74,8 +74,16 @@ class TransactionExtrasReducer : SendInternalReducer {
                 memo = when (infoState.xlmMemo?.selectedMemoType) {
                     XlmMemoType.TEXT -> memo.copy(text = StellarMemo.Text(action.data))
                     XlmMemoType.ID -> {
-                        val id = action.data.toIntOrNull()?.toBigInteger()
-                        if (id != null) memo.copy(id = StellarMemo.Id(id)) else memo
+                        val id = action.data.toBigIntegerOrNull()
+                        if (id != null) {
+                            if (id > XlmMemoState.MAX_NUMBER) {
+                                memo.copy(error = TransactionExtraError.INVALID_XLM_MEMO)
+                            } else {
+                                memo.copy(id = StellarMemo.Id(id))
+                            }
+                        } else {
+                            memo
+                        }
                     }
                     null -> memo
                 }
@@ -98,7 +106,7 @@ class TransactionExtrasReducer : SendInternalReducer {
                     val tagState = if (tag <= XrpDestinationTagState.MAX_NUMBER){
                         XrpDestinationTagState(input, tag)
                     } else {
-                        XrpDestinationTagState(input, error = XrpDestinationTagError.INVALID_TAG)
+                        XrpDestinationTagState(input, error = TransactionExtraError.INVALID_DESTINATION_TAG)
                     }
                     infoState.copy(xrpDestinationTag = tagState)
                 } else {
