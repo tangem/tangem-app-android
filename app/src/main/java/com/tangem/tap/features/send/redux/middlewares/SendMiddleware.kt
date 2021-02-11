@@ -140,6 +140,11 @@ private fun sendTransaction(
                                 message.contains("50002") -> {
                                     // user was cancelled the operation by closing the Sdk bottom sheet
                                 }
+                                // make it easier latter by handling an appropriate enumError or, like on iOS,
+                                // accept a string identifier of the error message
+                                message.contains("Target account is not created. To create account send 1+ XLM.")-> {
+                                    dispatch(SendAction.SendError(TapError.XmlError.AssetAccountNotCreated))
+                                }
                                 else -> {
                                     Timber.e(throwable)
                                     FirebaseCrashlytics.getInstance().recordException(throwable)
