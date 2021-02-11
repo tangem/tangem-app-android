@@ -60,14 +60,13 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="middle"
                 android:paddingStart="@dimen/dimen16"
-                android:paddingTop="@dimen/dimen16"
                 android:paddingEnd="@dimen/dimen16"
                 android:singleLine="true"
                 android:textColor="@color/darkGray1"
                 android:textSize="13sp"
                 app:layout_constraintEnd_toStartOf="@id/btn_copy"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/chip_group_address_type"
+                app:layout_constraintTop_toTopOf="@id/btn_copy"
                 tools:text="139mrsJgyWnJ**** **** y9BV" />
 
             <TextView
@@ -78,14 +77,13 @@
                 android:paddingStart="16dp"
                 android:paddingTop="4dp"
                 android:paddingEnd="16dp"
-                android:paddingBottom="25dp"
                 android:text="@string/wallet_address_button_explore"
                 android:textColor="@color/darkGray6"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 app:drawableEndCompat="@drawable/ic_angle_bracket_right"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_address" />
+                app:layout_constraintBottom_toBottomOf="@id/btn_copy"
+                app:layout_constraintStart_toStartOf="parent" />
 
 
             <FrameLayout
@@ -94,10 +92,12 @@
                 android:layout_height="@dimen/btn_rounded_size"
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="16dp"
+                android:layout_marginBottom="25dp"
                 android:background="@drawable/shape_ellipse"
                 android:clickable="true"
                 android:elevation="3dp"
                 android:focusable="true"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/btn_show_qr"
                 app:layout_constraintTop_toBottomOf="@id/chip_group_address_type">
 
@@ -151,9 +151,9 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="16dp"
                 android:src="@drawable/ic_payid"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/v_payid_divider"
-                app:layout_constraintBottom_toBottomOf="parent"/>
+                app:layout_constraintTop_toBottomOf="@id/v_payid_divider" />
 
             <TextView
                 android:id="@+id/tv_create_payid"
