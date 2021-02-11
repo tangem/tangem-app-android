@@ -73,6 +73,7 @@
     <string name="send_total_subtitle_asset_format">%s %s und %s %s werden gesendet</string>
     <string name="send_balance_subtitle_format">Bilanz: %s %s</string>
     <string name="send_transaction_success">Die Transaktion wurde erfolgreich signiert und an den Blockchain-Knoten gesendet. Die Walletbilanz wird aktualisiert</string>
+    <string name="send_error_no_account_xlm">Um ein Konto zu erstellen, senden Sie 1+ XLM an diese Adresse</string>
     <string name="details_title">Details</string>
     <string name="details_row_title_cid">KartenID</string>
     <string name="details_row_title_issuer">Emittent</string>
