@@ -230,11 +230,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     private fun setupAddressCard(state: WalletState) {
         if (state.walletAddresses != null) {
             l_address?.show()
-            val tvAddressPaddingTop = tv_address.resources.getDimension(R.dimen.dimen16).toInt()
             if (state.showMultipleAddress) {
                 (l_address as? ViewGroup)?.beginDelayedTransition()
-                tv_address.setPadding(tv_address.paddingStart, tvAddressPaddingTop / 2,
-                        tv_address.paddingEnd, tv_address.paddingBottom)
                 chip_group_address_type.show()
                 chip_group_address_type.fitChipsByGroupWidth()
 
@@ -249,8 +246,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                     }
                 }
             } else {
-                tv_address.setPadding(tv_address.paddingStart, tvAddressPaddingTop,
-                        tv_address.paddingEnd, tv_address.paddingBottom)
                 chip_group_address_type.hide()
             }
             tv_address.text = state.walletAddresses.selectedAddress.address
