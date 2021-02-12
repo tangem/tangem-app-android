@@ -24,8 +24,9 @@ class TransactionExtrasReducer : SendInternalReducer {
         val emptyResult = TransactionExtrasState()
         val result = when (action.blockchain) {
             Blockchain.XRP -> {
+                val address = action.walletAddress.substringAfter(":")
                 // 'r' - without tag, 'x' - with tag
-                if (action.walletAddress.startsWith("r", true)) {
+                if (address.startsWith("r", true)) {
                     val tag = action.xrpTag?.toLongOrNull()
                     if (tag == null) {
                         TransactionExtrasState(xrpDestinationTag = XrpDestinationTagState())
@@ -54,7 +55,7 @@ class TransactionExtrasReducer : SendInternalReducer {
             sendState: SendState,
             infoState: TransactionExtrasState,
     ): SendState {
-        fun clearMemo(memo: XlmMemoState): XlmMemoState = memo.copy(text = null, id = null)
+        fun clearMemo(memo: XlmMemoState): XlmMemoState = memo.copy(text = null, id = null, error = null)
 
         val result = when (action) {
 //            is XlmMemo.ChangeSelectedMemo -> {
@@ -68,13 +69,22 @@ class TransactionExtrasReducer : SendInternalReducer {
 //            }
             is XlmMemo.HandleUserInput -> {
                 val inputViewValue = InputViewValue(action.data, true)
-                var memo = infoState.xlmMemo?.copy(viewFieldValue = inputViewValue) ?: XlmMemoState(inputViewValue)
+                var memo = infoState.xlmMemo?.copy(viewFieldValue = inputViewValue)
+                        ?: XlmMemoState(inputViewValue)
                 memo = clearMemo(memo)
                 memo = when (infoState.xlmMemo?.selectedMemoType) {
                     XlmMemoType.TEXT -> memo.copy(text = StellarMemo.Text(action.data))
                     XlmMemoType.ID -> {
-                        val id = action.data.toIntOrNull()?.toBigInteger()
-                        if (id != null) memo.copy(id = StellarMemo.Id(id)) else memo
+                        val id = action.data.toBigIntegerOrNull()
+                        if (id != null) {
+                            if (id > XlmMemoState.MAX_NUMBER) {
+                                memo.copy(error = TransactionExtraError.INVALID_XLM_MEMO)
+                            } else {
+                                memo.copy(id = StellarMemo.Id(id))
+                            }
+                        } else {
+                            memo
+                        }
                     }
                     null -> memo
                 }
@@ -93,7 +103,12 @@ class TransactionExtrasReducer : SendInternalReducer {
             is XrpDestinationTag.HandleUserInput -> {
                 val tag = action.data.toLongOrNull()
                 if (tag != null) {
-                    val tagState = XrpDestinationTagState(InputViewValue(action.data, true), tag)
+                    val input = InputViewValue(action.data, true)
+                    val tagState = if (tag <= XrpDestinationTagState.MAX_NUMBER){
+                        XrpDestinationTagState(input, tag)
+                    } else {
+                        XrpDestinationTagState(input, error = TransactionExtraError.INVALID_DESTINATION_TAG)
+                    }
                     infoState.copy(xrpDestinationTag = tagState)
                 } else {
                     infoState
