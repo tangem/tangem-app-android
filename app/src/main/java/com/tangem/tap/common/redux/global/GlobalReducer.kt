@@ -1,6 +1,7 @@
 package com.tangem.tap.common.redux.global
 
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.features.details.redux.SecurityOption
 import org.rekotlin.Action
 
 fun globalReducer(action: Action, state: AppState): GlobalState {
@@ -35,6 +36,24 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         }
         is GlobalAction.SetConfigManager -> {
             globalState.copy(configManager = action.configManager)
+        }
+        is GlobalAction.UpdateSecurityOptions -> {
+            val card = when (action.securityOption) {
+                SecurityOption.LongTap -> globalState.scanNoteResponse?.card?.copy(
+                        isPin1Default = true, isPin2Default = true
+                )
+                SecurityOption.PassCode -> globalState.scanNoteResponse?.card?.copy(
+                        isPin1Default = true, isPin2Default = false
+                )
+                SecurityOption.AccessCode -> globalState.scanNoteResponse?.card?.copy(
+                        isPin1Default = false, isPin2Default = true
+                )
+            }
+            if (card != null) {
+                globalState.copy(scanNoteResponse = globalState.scanNoteResponse?.copy(card = card))
+            } else {
+                globalState
+            }
         }
         else -> globalState
     }
