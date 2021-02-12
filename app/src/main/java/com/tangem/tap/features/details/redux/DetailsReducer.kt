@@ -144,23 +144,8 @@ private fun handleSecurityAction(
                         allowedOptions = EnumSet.noneOf(SecurityOption::class.java)
                 ))
             }
-            val prohibitDefaultPin = state.card.settingsMask?.contains(Settings.ProhibitDefaultPIN1) == true
-            val allowSetPin1 = state.card.settingsMask?.contains(Settings.AllowSetPIN1) != false
-            val allowSetPin2 = state.card.settingsMask?.contains(Settings.AllowSetPIN2) != false
-            val isDefaultPin1 = state.card.isPin1Default != false
-            val isDefaultPin2 = state.card.isPin2Default != false
 
-            val allowedSecurityOptions = EnumSet.noneOf(SecurityOption::class.java)
-            if ((isDefaultPin1 && isDefaultPin2) || !prohibitDefaultPin) {
-                allowedSecurityOptions.add(SecurityOption.LongTap)
-            }
-            if (allowSetPin1 && (isDefaultPin2 || !prohibitDefaultPin)) {
-                allowedSecurityOptions.add(SecurityOption.AccessCode)
-            }
-            if (allowSetPin2 && (isDefaultPin1 || !prohibitDefaultPin)) {
-                allowedSecurityOptions.add(SecurityOption.PassCode)
-            }
-
+            val allowedSecurityOptions = prepareAllowedSecurityOptions(state.card)
             state.copy(securityScreenState = state.securityScreenState?.copy(
                     allowedOptions = allowedSecurityOptions,
                     selectedOption = state.securityScreenState.currentOption
@@ -180,13 +165,35 @@ private fun handleSecurityAction(
             state.copy(confirmScreenState = confirmScreenState)
         }
         is DetailsAction.ManageSecurity.SaveChanges.Success -> {
-            state.copy(securityScreenState = state.securityScreenState?.copy(
-                    currentOption = state.securityScreenState.selectedOption
-            ))
+            // Setting options to show only LongTap from now on
+            state.copy(
+                    card = state.card?.copy(isPin1Default = true, isPin2Default = true),
+                    securityScreenState = state.securityScreenState?.copy(
+                            currentOption = state.securityScreenState.selectedOption,
+                            allowedOptions = EnumSet.of(SecurityOption.LongTap)
+                    ))
         }
 
         else -> state
     }
+}
+
+private fun prepareAllowedSecurityOptions(card: Card): EnumSet<SecurityOption> {
+    val prohibitDefaultPin = card.settingsMask?.contains(Settings.ProhibitDefaultPIN1) == true
+    val isDefaultPin1 = card.isPin1Default != false
+    val isDefaultPin2 = card.isPin2Default != false
+
+    val allowedSecurityOptions = EnumSet.noneOf(SecurityOption::class.java)
+    if ((isDefaultPin1 && isDefaultPin2) || !prohibitDefaultPin) {
+        allowedSecurityOptions.add(SecurityOption.LongTap)
+    }
+    if (!isDefaultPin1) {
+        allowedSecurityOptions.add(SecurityOption.AccessCode)
+    }
+    if (!isDefaultPin2) {
+        allowedSecurityOptions.add(SecurityOption.PassCode)
+    }
+    return allowedSecurityOptions
 }
 
 
