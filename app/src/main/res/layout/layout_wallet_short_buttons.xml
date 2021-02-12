@@ -18,7 +18,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/btn_top_up"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintVertical_bias="1" />
+        app:layout_constraintVertical_bias="1"
+        android:layout_marginBottom="33dp"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_top_up"
@@ -34,7 +35,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/btn_confirm_short"
         app:layout_constraintStart_toEndOf="@+id/btn_scan_short"
-        app:layout_constraintVertical_bias="1" />
+        app:layout_constraintVertical_bias="1"
+        android:layout_marginBottom="33dp"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_confirm_short"
@@ -50,6 +52,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/btn_top_up"
-        app:layout_constraintVertical_bias="1" />
+        app:layout_constraintVertical_bias="1"
+        android:layout_marginBottom="33dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
