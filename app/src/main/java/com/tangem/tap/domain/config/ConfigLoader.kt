@@ -22,7 +22,7 @@ interface ConfigLoader {
 }
 
 
-class LocalLoader(
+class FeaturesLocalLoader(
         private val context: Context,
         private val moshi: Moshi
 ) : ConfigLoader {
@@ -48,7 +48,7 @@ class LocalLoader(
     }
 }
 
-class RemoteLoader(
+class FeaturesRemoteLoader(
         private val moshi: Moshi
 ) : ConfigLoader {
 
