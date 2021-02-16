@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.ToastNotificationAction
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.redux.states.SendButtonState
@@ -146,4 +147,5 @@ sealed class SendAction : SendScreenAction {
 
         object Hide : Dialog()
     }
+    data class SetWarnings(val warningList: List<WarningMessage>) : SendAction()
 }
