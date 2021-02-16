@@ -8,9 +8,11 @@ import com.tangem.tap.common.images.PicassoHelper
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.domain.config.ConfigManager
-import com.tangem.tap.domain.config.FeaturesLocalLoader
-import com.tangem.tap.domain.config.FeaturesRemoteLoader
+import com.tangem.tap.domain.configurable.config.ConfigManager
+import com.tangem.tap.domain.configurable.config.FeaturesLocalLoader
+import com.tangem.tap.domain.configurable.config.FeaturesRemoteLoader
+import com.tangem.tap.domain.configurable.warningMessage.RemoteWarningLoader
+import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.createMoshi
 import com.tangem.tap.persistence.PreferencesStorage
@@ -54,5 +56,7 @@ class TapApplication : Application() {
         val remoteLoader = FeaturesRemoteLoader(moshi)
         val configManager = ConfigManager(localLoader, remoteLoader)
         configManager.load { store.dispatch(GlobalAction.SetConfigManager(configManager)) }
+        val warningsManager = WarningMessagesManager(RemoteWarningLoader(moshi))
+        warningsManager.load { store.dispatch(GlobalAction.SetWarningManager(warningsManager)) }
     }
 }
