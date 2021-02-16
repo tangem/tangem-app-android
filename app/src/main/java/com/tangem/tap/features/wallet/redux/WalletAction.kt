@@ -9,6 +9,7 @@ import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.wallet.R
 import org.rekotlin.Action
@@ -34,7 +35,7 @@ sealed class WalletAction : Action {
     object CheckHashesCountOnline : WalletAction()
     object NeedToCheckHashesCountOnline : WalletAction()
     object ConfirmHashesCount : WalletAction()
-    data class ShowWarning(val warningType: WarningType) : WalletAction()
+    data class SetWarnings(val warningList: List<WarningMessage>) : WalletAction()
     object SaveCardId : WalletAction()
 
     object UpdateWallet : WalletAction() {
