@@ -96,7 +96,8 @@
     <string name="details_manage_security_access_code">Code d’accès </string>
     <string name="details_manage_security_access_code_description">Vous devrez entrer le mot de passe correct avant de scanner la carte </string>
     <string name="alert_old_device_this_card">Vous pouvez rencontrer des problèmes NFC avec certains iPhone 7/7 + lors de l’extraction </string>
-    <string name="alert_card_signed_transactions">Attention: cette carte a déjà été rechargée et a signé des transactions avant. Envisagez la possibilité de retirer tous les fonds immédiatement si vous avez reçu cette carte d\'une source non fiable.</string>
+    <string name="alert_card_signed_transactions">Cette carte a déjà été rechargée et a signé des transactions avant. Envisagez la possibilité de retirer tous les fonds immédiatement si vous avez reçu cette carte d\'une source non fiable.</string>
+    <string name="alert_title">Attention</string>
     <string name="alert_unsupported_card">Cette carte n\'est pas conçue pour fonctionner avec Tangem Tap </string>
     <string name="alert_developer_card">La carte que vous avez scannée est une carte de développement. Ne l\'acceptez pas comme paiement </string>
     <string name="alert_old_card">Les cartes Tangem émises avant septembre 2019 ne peuvent actuellement pas être extraites à l\'aide de l\'iPhone. Nous travaillons activement avec Apple pour rendre cela possible dans les futures versions d\'iOS. </string>
