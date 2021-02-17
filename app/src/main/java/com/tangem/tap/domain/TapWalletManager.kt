@@ -12,7 +12,7 @@ import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.domain.config.ConfigManager
+import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.extensions.amountToCreateAccount
 import com.tangem.tap.domain.extensions.isNoAccountError
 import com.tangem.tap.domain.tasks.ScanNoteResponse
@@ -84,6 +84,8 @@ class TapWalletManager {
             FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.CARD_IS_SCANNED, data.card)
         }
         TapWorkarounds.updateCard(data.card)
+
+        store.state.globalState.warningManager?.setBlockchain(data.walletManager?.wallet?.blockchain)
         val configManager = store.state.globalState.configManager
         if (TapWorkarounds.isStart2Coin) {
             configManager?.turnOff(ConfigManager.isWalletPayIdEnabled)
