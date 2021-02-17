@@ -1,4 +1,4 @@
-package com.tangem.tap.domain.config
+package com.tangem.tap.domain.configurable.config
 
 /**
 [REDACTED_AUTHOR]
