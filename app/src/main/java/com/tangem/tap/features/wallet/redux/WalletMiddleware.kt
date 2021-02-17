@@ -20,6 +20,8 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.TopUpHelper
+import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
+import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.domain.twins.isTwinCard
@@ -172,13 +174,17 @@ class WalletMiddleware {
                         }
                     }
                     is WalletAction.CheckIfWarningNeeded -> {
-                        val card = store.state.globalState.scanNoteResponse?.card
-                        val validator = store.state.globalState.scanNoteResponse?.walletManager
-                                as? SignatureCountValidator
-                        if (card != null && !preferencesStorage.wasCardScannedBefore(card.cardId)) {
-                            val result = checkIfWarningNeeded(card, validator)
-                            if (result != null) store.dispatch(WalletAction.ShowWarning(result))
+                        val globalState = store.state.globalState
+                        val validator = globalState.scanNoteResponse?.walletManager as? SignatureCountValidator
+                        globalState.scanNoteResponse?.card?.let { card ->
+                            store.state.globalState.warningManager?.removeWarnings(WarningMessage.Origin.Local)
+                            if (card.getType() != CardType.Release) addWarningMessage(WarningMessagesManager.devCardWarning())
+                            if (!preferencesStorage.wasCardScannedBefore(card.cardId)) {
+                                checkIfWarningNeeded(card, validator)?.let { addWarningMessage(it) }
+                            }
+                            updateWarningMessages()
                         }
+
                     }
                     is WalletAction.CheckHashesCountOnline -> checkHashesCountOnline()
                     is WalletAction.SaveCardId -> {
@@ -230,17 +236,13 @@ class WalletMiddleware {
     }
 
     private fun checkIfWarningNeeded(
-            card: Card, signatureCountValidator: SignatureCountValidator? = null
-    ): WarningType? {
-
-        if (card.getType() != CardType.Release) {
-            return WarningType.DevCard
-        }
+            card: Card, signatureCountValidator: SignatureCountValidator? = null,
+    ): WarningMessage? {
         if (card.isTwinCard()) return null
 
         return if (signatureCountValidator == null) {
             if (card.walletSignedHashes ?: 0 > 0) {
-                WarningType.CardSignedHashesBefore
+                WarningMessagesManager.alreadySignedHashesWarning()
             } else {
                 store.dispatch(WalletAction.SaveCardId)
                 null
@@ -272,13 +274,23 @@ class WalletMiddleware {
                     }
                     is SimpleResult.Failure ->
                         if (result.error is BlockchainSdkError.SignatureCountNotMatched) {
-                            store.dispatch(WalletAction.ShowWarning(WarningType.CardSignedHashesBefore))
+                            addWarningMessage(WarningMessagesManager.alreadySignedHashesWarning(), true)
                         } else if (card.walletSignedHashes ?: 0 > 0) {
-                            store.dispatch(WalletAction.ShowWarning(WarningType.CardSignedHashesBefore))
+                            addWarningMessage(WarningMessagesManager.alreadySignedHashesWarning(), true)
                         }
                 }
             }
         }
+    }
+
+    private fun addWarningMessage(warning: WarningMessage, autoUpdate: Boolean = false) {
+        store.state.globalState.warningManager?.addWarning(warning)
+        if (autoUpdate) updateWarningMessages()
+    }
+
+    private fun updateWarningMessages() {
+        val warningManager = store.state.globalState.warningManager ?: return
+        store.dispatch(WalletAction.SetWarnings(warningManager.getWarnings(WarningMessage.Location.MainScreen)))
     }
 }
 
