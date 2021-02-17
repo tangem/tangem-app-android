@@ -8,6 +8,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import com.squareup.picasso.Picasso
@@ -15,6 +16,7 @@ import com.tangem.blockchain.blockchains.bitcoin.BitcoinAddressType
 import com.tangem.blockchain.blockchains.cardano.CardanoAddressType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -24,7 +26,6 @@ import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
 import com.tangem.tap.features.wallet.ui.dialogs.PayIdDialog
 import com.tangem.tap.features.wallet.ui.dialogs.QrDialog
-import com.tangem.tap.features.wallet.ui.dialogs.WarningDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.card_balance.*
@@ -41,7 +42,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     private var dialog: Dialog? = null
     private var snackbar: Snackbar? = null
 
-    private lateinit var viewAdapter: PendingTransactionsAdapter
+    private lateinit var pendingTransactionAdapter: PendingTransactionsAdapter
+    private lateinit var warningsAdapter: WarningMessagesAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,14 +80,22 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         toolbar.setNavigationOnClickListener {
             store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
         }
+        setupWarningsRecyclerView()
         setupTransactionsRecyclerView()
     }
 
+    private fun setupWarningsRecyclerView() {
+        warningsAdapter = WarningMessagesAdapter()
+        val layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
+        rv_warning_messages.layoutManager = layoutManager
+        rv_warning_messages.addItemDecoration(SpacesItemDecoration(rv_warning_messages.dpToPx(16f).toInt()))
+        rv_warning_messages.adapter = warningsAdapter
+    }
 
     private fun setupTransactionsRecyclerView() {
-        viewAdapter = PendingTransactionsAdapter()
+        pendingTransactionAdapter = PendingTransactionsAdapter()
         rv_pending_transaction.layoutManager = LinearLayoutManager(context)
-        rv_pending_transaction.adapter = viewAdapter
+        rv_pending_transaction.adapter = pendingTransactionAdapter
     }
 
 
@@ -122,12 +132,11 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         setupAddressCard(state)
         setupCardImage(state.cardImage)
 
-        viewAdapter.submitList(state.pendingTransactions)
-        if (state.pendingTransactions.isEmpty()) {
-            rv_pending_transaction.hide()
-        } else {
-            rv_pending_transaction.show()
-        }
+        warningsAdapter.submitList(state.mainWarningsList)
+        rv_warning_messages.show(state.mainWarningsList.isNotEmpty())
+
+        pendingTransactionAdapter.submitList(state.pendingTransactions)
+        rv_pending_transaction.show(state.pendingTransactions.isNotEmpty())
 
         handleDialogs(state.walletDialog)
 
@@ -290,11 +299,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             is WalletDialog.SelectAmountToSendDialog -> {
                 if (dialog == null) dialog = AmountToSendDialog(requireContext()).apply {
                     this.show(walletDialog.amounts)
-                }
-            }
-            is WalletDialog.WarningDialog -> {
-                if (dialog == null) dialog = WarningDialog(requireContext()).apply {
-                    this.show(walletDialog.type)
                 }
             }
             null -> {
