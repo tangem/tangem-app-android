@@ -1,4 +1,4 @@
-package com.tangem.tap.domain.config
+package com.tangem.tap.domain.configurable.config
 
 import android.content.Context
 import com.google.firebase.ktx.Firebase
@@ -6,34 +6,24 @@ import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
-import com.tangem.wallet.BuildConfig
+import com.tangem.tap.domain.configurable.Loader
 import timber.log.Timber
 
 /**
 [REDACTED_AUTHOR]
  */
-interface ConfigLoader {
-    fun loadConfig(onComplete: (ConfigModel) -> Unit)
-
-    companion object {
-        const val featuresName = "features_${BuildConfig.CONFIG_ENVIRONMENT}"
-        const val configValuesName = "config_${BuildConfig.CONFIG_ENVIRONMENT}"
-    }
-}
-
-
-class LocalLoader(
+class FeaturesLocalLoader(
         private val context: Context,
-        private val moshi: Moshi
-) : ConfigLoader {
+        private val moshi: Moshi,
+) : Loader<ConfigModel> {
 
-    override fun loadConfig(onComplete: (ConfigModel) -> Unit) {
+    override fun load(onComplete: (ConfigModel) -> Unit) {
         val config = try {
             val featureAdapter: JsonAdapter<FeatureModel> = moshi.adapter(FeatureModel::class.java)
             val valuesAdapter: JsonAdapter<ConfigValueModel> = moshi.adapter(ConfigValueModel::class.java)
 
-            val jsonFeatures = readAssetAsString(ConfigLoader.featuresName)
-            val jsonConfigValues = readAssetAsString(ConfigLoader.configValuesName)
+            val jsonFeatures = readAssetAsString(Loader.featuresName)
+            val jsonConfigValues = readAssetAsString(Loader.configValuesName)
 
             ConfigModel(featureAdapter.fromJson(jsonFeatures), valuesAdapter.fromJson(jsonConfigValues))
         } catch (ex: Exception) {
@@ -48,16 +38,16 @@ class LocalLoader(
     }
 }
 
-class RemoteLoader(
-        private val moshi: Moshi
-) : ConfigLoader {
+class FeaturesRemoteLoader(
+        private val moshi: Moshi,
+) : Loader<ConfigModel> {
 
-    override fun loadConfig(onComplete: (ConfigModel) -> Unit) {
+    override fun load(onComplete: (ConfigModel) -> Unit) {
         val emptyConfig = ConfigModel.empty()
         val remoteConfig = Firebase.remoteConfig
         remoteConfig.fetchAndActivate().addOnCompleteListener {
             if (it.isSuccessful) {
-                val config = remoteConfig.getValue(ConfigLoader.featuresName)
+                val config = remoteConfig.getValue(Loader.featuresName)
                 val jsonConfig = config.asString()
                 if (jsonConfig.isEmpty()) {
                     onComplete(emptyConfig)
@@ -69,7 +59,7 @@ class RemoteLoader(
                 onComplete(emptyConfig)
             }
         }.addOnFailureListener {
-            FirebaseAnalyticsHandler.logException("remote_config_error", it)
+            FirebaseAnalyticsHandler.logException("remote_config_error.features", it)
             onComplete(emptyConfig)
         }
     }
