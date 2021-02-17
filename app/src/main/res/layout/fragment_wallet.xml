@@ -65,35 +65,47 @@
                     android:id="@+id/iv_twin_card"
                     android:layout_width="100dp"
                     android:layout_height="30dp"
-                    android:src="@drawable/shape_chip"
-                    android:elevation="3dp"
                     android:layout_marginStart="25dp"
+                    android:elevation="3dp"
+                    android:src="@drawable/shape_chip"
+                    app:layout_constraintBottom_toBottomOf="@id/iv_card"
                     app:layout_constraintStart_toStartOf="@id/iv_card"
-                    app:layout_constraintTop_toBottomOf="@id/iv_card"
-                    app:layout_constraintBottom_toBottomOf="@id/iv_card"/>
+                    app:layout_constraintTop_toBottomOf="@id/iv_card" />
 
                 <TextView
                     android:id="@+id/tv_twin_card_number"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    app:layout_constraintStart_toStartOf="@id/iv_twin_card"
-                    app:layout_constraintEnd_toEndOf="@id/iv_twin_card"
-                    app:layout_constraintTop_toTopOf="@id/iv_twin_card"
-                    app:layout_constraintBottom_toBottomOf="@id/iv_twin_card"
-                    tools:text="Card 2 of 2"
                     android:elevation="3dp"
                     android:gravity="center"
                     android:textColor="@color/buttonGray"
+                    android:textSize="14sp"
                     android:textStyle="bold"
-                    android:textSize="14sp"/>
+                    app:layout_constraintBottom_toBottomOf="@id/iv_twin_card"
+                    app:layout_constraintEnd_toEndOf="@id/iv_twin_card"
+                    app:layout_constraintStart_toStartOf="@id/iv_twin_card"
+                    app:layout_constraintTop_toTopOf="@id/iv_twin_card"
+                    tools:text="Card 2 of 2" />
 
 
                 <androidx.constraintlayout.widget.Barrier
                     android:id="@+id/barrier"
-                    app:barrierDirection="bottom"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    app:constraint_referenced_ids="iv_card,iv_twin_card"/>
+                    app:barrierDirection="bottom"
+                    app:constraint_referenced_ids="iv_card,iv_twin_card" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_warning_messages"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:minHeight="0dp"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/barrier" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rv_pending_transaction"
@@ -102,7 +114,9 @@
                     android:layout_marginTop="12dp"
                     android:nestedScrollingEnabled="false"
                     android:overScrollMode="never"
-                    app:layout_constraintTop_toBottomOf="@id/barrier" />
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/rv_warning_messages" />
 
                 <include
                     android:id="@+id/l_card_balance"
@@ -124,15 +138,15 @@
                     layout="@layout/layout_wallet_long_buttons"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    android:visibility="gone"/>
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="parent" />
 
                 <include
                     android:id="@+id/l_buttons_short"
                     layout="@layout/layout_wallet_short_buttons"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:layout_constraintBottom_toBottomOf="parent"/>
+                    app:layout_constraintBottom_toBottomOf="parent" />
 
 
             </androidx.constraintlayout.widget.ConstraintLayout>
