@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
+import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
@@ -27,6 +28,7 @@ data class WalletState(
         val mainButton: WalletMainButton = WalletMainButton.SendButton(false),
         val topUpState: TopUpState = TopUpState(),
         val twinCardsState: TwinCardsState? = null,
+        val mainWarningsList: List<WarningMessage> = mutableListOf()
 ) : StateType {
     val showDetails: Boolean =
             currencyData.status != com.tangem.tap.features.wallet.ui.BalanceStatus.EmptyCard &&
@@ -49,12 +51,8 @@ sealed class WalletDialog {
 
     data class CreatePayIdDialog(val creatingPayIdState: CreatingPayIdState?) : WalletDialog()
     data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog()
-    data class WarningDialog(val type: WarningType) : WalletDialog()
     data class TwinsOnboardingFragment(val secondCardId: String): WalletDialog()
 }
-
-enum class WarningType { CardSignedHashesBefore, DevCard }
-
 
 enum class ProgressState { Loading, Done, Error }
 
