@@ -215,8 +215,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             )
         }
         is WalletAction.Send.Cancel -> newState = newState.copy(walletDialog = null)
-        is WalletAction.ShowWarning ->
-            newState = newState.copy(walletDialog = WalletDialog.WarningDialog(action.warningType))
+        is WalletAction.SetWarnings -> newState = newState.copy(mainWarningsList = action.warningList)
         is WalletAction.NeedToCheckHashesCountOnline ->
             newState = newState.copy(hashesCountVerified = false)
         is WalletAction.ConfirmHashesCount ->
