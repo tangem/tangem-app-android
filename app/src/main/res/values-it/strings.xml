@@ -93,7 +93,8 @@
     <string name="details_manage_security_access_code">Codice di accesso</string>
     <string name="details_manage_security_access_code_description">Prima di scansionare la carta sarà necessario inserire il codice di accesso corretto</string>
     <string name="alert_old_device_this_card">Potresti riscontrare problemi con l\'NFC su alcuni iPhone 7/7 + durante la rimozione</string>
-    <string name="alert_card_signed_transactions">Attenzione: questa carta è già stata ricaricata e ha firmato transazioni in passato. Valuta la possibilità di prelevare immediatamente tutti i fondi se hai ricevuto questa carta da una fonte inaffidabile.</string>
+    <string name="alert_card_signed_transactions">Questa carta è già stata ricaricata e ha firmato transazioni in passato. Valuta la possibilità di prelevare immediatamente tutti i fondi se hai ricevuto questa carta da una fonte inaffidabile.</string>
+    <string name="alert_title">Attenzione</string>
     <string name="alert_unsupported_card">Questa carta non è progettata per funzionare con Tangem Tap</string>
     <string name="alert_developer_card">La carta che hai scansionato è una carta di sviluppo. Non utilizzarla come strumento di pagamento</string>
     <string name="alert_old_card">Le schede emesse prima di settembre 2019 non possono attualmente essere utilizzate con un iPhone. Stiamo lavorando a stretto contatto con Apple per renderle disponibili nelle future versioni di iOS. </string>
