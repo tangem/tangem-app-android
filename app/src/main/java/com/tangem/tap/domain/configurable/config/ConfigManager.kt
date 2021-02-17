@@ -1,6 +1,7 @@
-package com.tangem.tap.domain.config
+package com.tangem.tap.domain.configurable.config
 
 import com.tangem.tangem_sdk_new.ui.animation.VoidCallback
+import com.tangem.tap.domain.configurable.Loader
 
 /**
 [REDACTED_AUTHOR]
@@ -16,8 +17,8 @@ data class Config(
 )
 
 class ConfigManager(
-        private val localLoader: ConfigLoader,
-        private val remoteLoader: ConfigLoader
+        private val localLoader: Loader<ConfigModel>,
+        private val remoteLoader: Loader<ConfigModel>
 ) {
 
     var config: Config = Config()
@@ -26,11 +27,11 @@ class ConfigManager(
     private var defaultConfig = Config()
 
     fun load(onComplete: VoidCallback? = null) {
-        localLoader.loadConfig { config ->
+        localLoader.load { config ->
             setupFeature(config.features)
             setupKey(config.configValues)
         }
-        remoteLoader.loadConfig { config ->
+        remoteLoader.load { config ->
             setupFeature(config.features)
             onComplete?.invoke()
         }
