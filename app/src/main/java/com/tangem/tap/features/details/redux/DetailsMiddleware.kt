@@ -140,6 +140,9 @@ class DetailsMiddleware {
                         withContext(Dispatchers.Main) {
                             when (result) {
                                 is CompletionResult.Success -> {
+                                    selectedOption?.let {
+                                        store.dispatch(GlobalAction.UpdateSecurityOptions(it))
+                                    }
                                     if (selectedOption != SecurityOption.LongTap) {
                                         store.dispatch(NavigationAction.PopBackTo())
                                     }
