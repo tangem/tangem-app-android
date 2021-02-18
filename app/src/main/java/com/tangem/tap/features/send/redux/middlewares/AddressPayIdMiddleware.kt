@@ -13,6 +13,7 @@ import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.PayIdVerification.SetPayIdError
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.PayIdVerification.SetPayIdWalletAddress
 import com.tangem.tap.features.send.redux.FeeAction
+import com.tangem.tap.features.send.redux.TransactionExtrasAction
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
@@ -82,22 +83,26 @@ internal class AddressPayIdMiddleware {
             withContext(Dispatchers.Main) {
                 when (result) {
                     is Result.Success -> {
-                        val address = result.data.getAddress()
-                        if (address == null) {
+                        val addressDetails = result.data.getAddressDetails()
+                        if (addressDetails == null) {
                             dispatch(SetPayIdError(Error.PAY_ID_NOT_REGISTERED))
                             return@withContext
                         }
 
+                        val address = addressDetails.address
                         val failReason = isValidBlockchainAddressAndNotTheSameAsWallet(wallet, address)
                         if (failReason == null) {
                             dispatch(SetPayIdWalletAddress(payId, address, isUserInput))
+                            dispatch(TransactionExtrasAction.Prepare(wallet.blockchain, address, addressDetails.tag))
                             dispatch(FeeAction.RequestFee)
                         } else {
                             dispatch(SetAddressError(failReason))
+                            dispatch(TransactionExtrasAction.Release)
                         }
                     }
                     is Result.Failure -> {
                         dispatch(SetPayIdError(Error.PAY_ID_REQUEST_FAILED))
+                        dispatch(TransactionExtrasAction.Release)
                     }
                 }
             }
@@ -105,13 +110,32 @@ internal class AddressPayIdMiddleware {
     }
 
     private fun verifyAddress(address: String, wallet: Wallet, isUserInput: Boolean, dispatch: (Action) -> Unit) {
-        val supposedAddress = extractAddressFromShareUri(address).removeNonAddressData()
+        val addressSchemeSplit = address.split(":")
+        val noSchemeAddress = when (addressSchemeSplit.size) {
+            1 -> address // no scheme
+            2 -> { // scheme
+                if (wallet.blockchain.validateShareScheme(addressSchemeSplit[0])) {
+                    addressSchemeSplit[1]
+                } else {
+                    dispatch(SetAddressError(Error.ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN))
+                    return
+                }
+            }
+            else -> { // invalid URI
+                dispatch(SetAddressError(Error.ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN))
+                return
+            }
+        }
+
+        val supposedAddress = noSchemeAddress.removeShareUriQuery() //TODO: parse query?
 
         val failReason = isValidBlockchainAddressAndNotTheSameAsWallet(wallet, supposedAddress)
         if (failReason == null) {
             dispatch(SetWalletAddress(supposedAddress, isUserInput))
+            dispatch(TransactionExtrasAction.Prepare(wallet.blockchain, address, null))
         } else {
             dispatch(SetAddressError(failReason))
+            dispatch(TransactionExtrasAction.Release)
         }
     }
 
@@ -133,7 +157,7 @@ internal class AddressPayIdMiddleware {
         return if (prefixes.isEmpty()) shareUri else shareUri.replace(prefixes[0], "")
     }
 
-    private fun String.removeNonAddressData(): String = this.substringBefore("?")
+    private fun String.removeShareUriQuery(): String = this.substringBefore("?")
 
     private fun verifyClipboard(input: String?, appState: AppState?, dispatch: DispatchFunction) {
         val addressPayId = input ?: return
