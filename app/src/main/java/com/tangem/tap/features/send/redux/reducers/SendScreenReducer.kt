@@ -25,6 +25,7 @@ class SendScreenReducer {
             val reducer: SendInternalReducer = when (action) {
                 is PrepareSendScreen -> PrepareSendScreenStatesReducer()
                 is AddressPayIdActionUi, is AddressPayIdVerifyAction -> AddressPayIdReducer()
+                is TransactionExtrasAction -> TransactionExtrasReducer()
                 is AmountActionUi, is AmountAction -> AmountReducer()
                 is FeeActionUi, is FeeAction -> FeeReducer()
                 is ReceiptAction -> ReceiptReducer()
