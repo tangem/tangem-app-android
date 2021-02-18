@@ -1,13 +1,11 @@
 package com.tangem.tap
 
 import android.app.Application
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.remoteconfig.ktx.remoteConfig
-import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.tangem.tap.common.images.PicassoHelper
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.domain.config.ConfigLoader
 import com.tangem.tap.domain.config.ConfigManager
 import com.tangem.tap.domain.config.LocalLoader
 import com.tangem.tap.domain.config.RemoteLoader
@@ -29,17 +27,9 @@ class TapApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        if (BuildConfig.DEBUG) {
-            Timber.plant(Timber.DebugTree())
-            Firebase.remoteConfig.setConfigSettingsAsync(remoteConfigSettings {
-                this.minimumFetchIntervalInSeconds = 60
-            })
-        } else {
-            Firebase.remoteConfig.setConfigSettingsAsync(remoteConfigSettings {
-                this.minimumFetchIntervalInSeconds = 3600
-            })
-        }
+        if (BuildConfig.DEBUG) Timber.plant(Timber.DebugTree())
 
+        ConfigLoader.init()
         NetworkConnectivity.createInstance(store, this)
         preferencesStorage = PreferencesStorage(this)
         PicassoHelper.initPicassoWithCaching(this)
