@@ -5,6 +5,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.text.Spannable
@@ -37,6 +38,14 @@ fun Fragment.getColor(@ColorRes colorRes: Int): Int {
 
 fun View.getString(@StringRes id: Int): String {
     return context.getString(id)
+}
+
+fun View.getResourceName(): String {
+    return try {
+        resources.getResourceEntryName(id)
+    } catch (ex: Resources.NotFoundException) {
+        "Not found"
+    }
 }
 
 fun View.show(show: Boolean, invokeBeforeStateChanged: (() -> Unit)? = null) {
