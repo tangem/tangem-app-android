@@ -74,6 +74,7 @@
     <string name="send_total_subtitle_asset_format">Sera envoyé %s %s et %s %s</string>
     <string name="send_balance_subtitle_format">Solde : %s %s</string>
     <string name="send_transaction_success">La transaction a été signée avec succès et envoyée au nœud de blockchain. Le solde du portefeuille sera mis à jour après un certain temps </string>
+    <string name="send_error_no_account_xlm">Pour créer un compte, envoyez 1+ XLM à cette adresse</string>
     <string name="details_title">Référénces </string>
     <string name="details_row_title_cid">ID de la carte </string>
     <string name="details_row_title_issuer">Emetteur </string>
