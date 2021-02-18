@@ -38,6 +38,10 @@ sealed class TapError(
     object DustChange : TapError(R.string.send_error_dust_change)
     data class CreateAccountUnderfunded(override val args: List<Any>) : TapError(R.string.send_error_no_target_account)
 
+    sealed class XmlError  {
+        object AssetAccountNotCreated: TapError(R.string.send_error_no_account_xlm)
+    }
+
     data class ValidateTransactionErrors(
             override val errorList: List<TapError>,
             override val builder: (List<String>) -> String
