@@ -12,6 +12,7 @@ import retrofit2.Converter
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.math.BigDecimal
+import java.util.concurrent.TimeUnit
 
 fun createRetrofitInstance(
         baseUrl: String,
@@ -19,6 +20,7 @@ fun createRetrofitInstance(
 ): Retrofit {
     val okHttpBuilder = OkHttpClient.Builder()
     interceptors.forEach { okHttpBuilder.addInterceptor(it) }
+    addTimeOuts(okHttpBuilder)
 
     if (BuildConfig.DEBUG) okHttpBuilder.addInterceptor(createHttpLoggingInterceptor())
     return Retrofit.Builder()
@@ -26,6 +28,13 @@ fun createRetrofitInstance(
             .addConverterFactory(createMoshiConverterFactory())
             .client(okHttpBuilder.build())
             .build()
+}
+
+private fun addTimeOuts(okHttpBuilder: OkHttpClient.Builder) {
+    okHttpBuilder.callTimeout(1, TimeUnit.SECONDS)
+    okHttpBuilder.connectTimeout(20, TimeUnit.SECONDS)
+    okHttpBuilder.readTimeout(20, TimeUnit.SECONDS)
+    okHttpBuilder.writeTimeout(20, TimeUnit.SECONDS)
 }
 
 fun createMoshiConverterFactory(): Converter.Factory = MoshiConverterFactory.create(createMoshi())
