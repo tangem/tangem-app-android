@@ -6,10 +6,18 @@ import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.ktx.Firebase
 import com.tangem.commands.common.card.Card
 
-object FirebaseAnalyticsHandler: AnalyticsHandler {
+object FirebaseAnalyticsHandler : AnalyticsHandler {
     override fun triggerEvent(event: AnalyticsEvent, card: Card?) {
         Firebase.analytics
                 .logEvent(event.event, setCardData(card))
+    }
+
+    fun logException(name: String, throwable: Throwable) {
+        Firebase.analytics.logEvent(name, bundleOf(
+                "message" to (throwable.message ?: "none"),
+                "cause_message" to (throwable.cause?.message ?: "none"),
+                "stack_trace" to throwable.stackTraceToString()
+        ))
     }
 
     private fun setCardData(card: Card?): Bundle {
