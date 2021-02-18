@@ -129,6 +129,9 @@ internal class AddressPayIdMiddleware {
 
         val failReason = isValidBlockchainAddressAndNotTheSameAsWallet(wallet, supposedAddress)
         if (failReason == null) {
+            noSchemeAddress.getQueryParameter("amount")?.let {
+                if (it.isDigitsOnly()) dispatch(AmountAction.SetAmount(it.toBigDecimal(), false))
+            }
             dispatch(SetWalletAddress(supposedAddress, isUserInput))
             dispatch(TransactionExtrasAction.Prepare(wallet.blockchain, address, null))
         } else {
@@ -149,14 +152,10 @@ internal class AddressPayIdMiddleware {
         }
     }
 
-    //TODO: move to the blockchainSDK
-    private fun extractAddressFromShareUri(shareUri: String): String {
-        val sharePrefix = listOf("bitcoin:", "ethereum:", "xrpl:", "litecoin:", "bnb:")
-        val prefixes = sharePrefix.filter { shareUri.contains(it) }
-        return if (prefixes.isEmpty()) shareUri else shareUri.replace(prefixes[0], "")
-    }
-
     private fun String.removeShareUriQuery(): String = this.substringBefore("?")
+    private fun String.getQueryParameter(name: String): String? {
+        return this.substringAfter("?").splitToMap("&", "=")[name]
+    }
 
     private fun verifyClipboard(input: String?, appState: AppState?, dispatch: DispatchFunction) {
         val addressPayId = input ?: return
@@ -184,4 +183,11 @@ internal class AddressPayIdMiddleware {
     private fun isPayIdEnabled(): Boolean {
         return store.state.globalState.configManager?.config?.isSendingToPayIdEnabled ?: false
     }
+}
+
+fun String.splitToMap(firstDelimiter: String, secondDelimiter: String): Map<String, String> {
+    return this.split(firstDelimiter)
+            .map { it.split(secondDelimiter) }
+            .map { it.first() to it.last().toString() }
+            .toMap()
 }
