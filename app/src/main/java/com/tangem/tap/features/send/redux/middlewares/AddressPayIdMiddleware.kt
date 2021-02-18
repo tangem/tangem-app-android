@@ -1,19 +1,17 @@
 package com.tangem.tap.features.send.redux.middlewares
 
+import androidx.core.text.isDigitsOnly
 import com.tangem.blockchain.common.Wallet
 import com.tangem.commands.common.network.Result
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.isPayIdSupported
-import com.tangem.tap.features.send.redux.AddressPayIdActionUi
-import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction
+import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.AddressVerification.SetAddressError
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.AddressVerification.SetWalletAddress
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.PayIdVerification.SetPayIdError
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.PayIdVerification.SetPayIdWalletAddress
-import com.tangem.tap.features.send.redux.FeeAction
-import com.tangem.tap.features.send.redux.TransactionExtrasAction
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
@@ -50,7 +48,7 @@ internal class AddressPayIdMiddleware {
 
     private fun setAddressAndCheck(data: String, isUserInput: Boolean, dispatch: (Action) -> Unit) {
         val potentialPayId = data.toLowerCase()
-        if (PayIdManager.isPayId(potentialPayId) && isPayIdEnabled()) {
+        if (isPayIdEnabled() && PayIdManager.isPayId(potentialPayId)) {
             dispatch(SetPayIdWalletAddress(potentialPayId, "", isUserInput))
         } else {
             dispatch(SetWalletAddress(data, isUserInput))
@@ -64,7 +62,7 @@ internal class AddressPayIdMiddleware {
         val addressPayId = sendState.addressPayIdState.normalFieldValue ?: return
         val isUserInput = sendState.addressPayIdState.viewFieldValue.isFromUserInput
 
-        if (PayIdManager.isPayId(addressPayId) && isPayIdEnabled()) {
+        if (isPayIdEnabled() && PayIdManager.isPayId(addressPayId)) {
             verifyPayId(addressPayId, wallet, isUserInput, dispatch)
         } else {
             verifyAddress(addressPayId, wallet, isUserInput, dispatch)
