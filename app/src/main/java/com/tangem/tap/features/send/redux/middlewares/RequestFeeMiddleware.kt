@@ -33,15 +33,13 @@ class RequestFeeMiddleware {
             dispatch(SendAction.ChangeSendButtonState(sendState.getButtonState()))
             return
         }
-
         val typedAmount = sendState.amountState.amountToExtract ?: return
-        val recipientAddress = sendState.addressPayIdState.recipientWalletAddress!!
-        val cryptoSendToRecipient = sendState.amountState.amountToSendCrypto
 
-        val recipientAmount = Amount(typedAmount, cryptoSendToRecipient)
+        val destinationAddress = sendState.addressPayIdState.destinationWalletAddress!!
+        val destinationAmount = Amount(typedAmount, sendState.amountState.amountToSendCrypto)
         val txSender = walletManager as TransactionSender
         scope.launch {
-            val feeResult = txSender.getFee(recipientAmount, recipientAddress)
+            val feeResult = txSender.getFee(destinationAmount, destinationAddress)
             withContext(Dispatchers.Main) {
                 when (feeResult) {
                     is Result.Success -> {
