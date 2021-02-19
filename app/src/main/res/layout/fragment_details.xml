@@ -139,7 +139,7 @@
                 app:drawableEndCompat="@drawable/ic_angle_bracket_right"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_disclaimer"
-                android:text="@string/terms_of_use" />
+                android:text="@string/details_terms_of_use" />
 
             <TextView
                 android:id="@+id/tv_settings_title"
