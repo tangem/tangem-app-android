@@ -18,7 +18,8 @@ data class DetailsState(
         val eraseWalletState: EraseWalletState? = null,
         val confirmScreenState: ConfirmScreenState? = null,
         val securityScreenState: SecurityScreenState? = null,
-        val createTwinWalletState: CreateTwinWalletState? = null
+        val createTwinWalletState: CreateTwinWalletState? = null,
+        val cardTermsOfUseUrl: String? = null
 ) : StateType
 
 data class CardInfo(
