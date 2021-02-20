@@ -22,7 +22,6 @@ import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
 import com.tangem.tap.common.snackBar.MaxAmountSnackbar
 import com.tangem.tap.common.text.truncateMiddleWith
 import com.tangem.tap.common.toggleWidget.*
-import com.tangem.tap.domain.termsOfUse.TermsOfUse
 import com.tangem.tap.features.send.BaseStoreFragment
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.AddressPayIdActionUi.*
@@ -71,8 +70,6 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         setupTransactionExtrasLayout()
         setupAmountLayout()
         setupFeeLayout()
-
-        val locale = TermsOfUse().locale
 
         btnSend.setOnClickListener {
             store.dispatch(SendActionUi.SendAmountToRecipient(
