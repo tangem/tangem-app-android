@@ -74,7 +74,7 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: Deta
             ),
             securityScreenState = SecurityScreenState(currentOption = securityOption),
             createTwinWalletState = twinsState,
-            cardTermsOfUseUrl = action.termsOfUse.getUrl(action.card.cardId)
+            cardTermsOfUseUrl = action.cardTou.getUrl(action.card)
     )
 }
 
