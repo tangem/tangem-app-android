@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
+import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.store
@@ -30,6 +31,9 @@ abstract class BaseStoreFragment(layoutId: Int) : Fragment(layoutId) {
                 store.dispatch(NavigationAction.PopBackTo())
             }
         })
+        val inflater = TransitionInflater.from(requireContext())
+        enterTransition = inflater.inflateTransition(R.transition.slide_right)
+        exitTransition = inflater.inflateTransition(R.transition.fade)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
