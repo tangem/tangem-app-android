@@ -27,6 +27,7 @@ this wallet.
     <string name="details_twins_recreate_subtitle" translatable="false">The wallet creation procedure consists of three steps. You must complete it to the end, otherwise you will have to start from the beginning.</string>
     <string name="details_twins_recreate_button_format" translatable="false">Tap the card #%s</string>
     <string name="details_twins_recreate_alert" translatable="false">You have already started the process of recreating twin wallet. If you interrupt it, you won\'t be able to use your twin cards until you start it again and complete recreating the wallet.</string>
+    <string name="details_row_title_card_tou" translatable="false">Card terms of use</string>
 
     <string name="notification_twins_recreate_success" translatable="false">The twin address was successfully created</string>
 

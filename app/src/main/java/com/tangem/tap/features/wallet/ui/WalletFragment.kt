@@ -18,6 +18,7 @@ import com.tangem.blockchain.common.address.AddressType
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.termsOfUse.CardTou
 import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.wallet.redux.*
@@ -312,6 +313,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                             scanNoteResponse.card, scanNoteResponse,
                             store.state.walletState.wallet,
                             store.state.globalState.configManager?.config?.isCreatingTwinCardsAllowed,
+                            CardTou(),
                             store.state.globalState.appCurrency
                     ))
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.Details))
