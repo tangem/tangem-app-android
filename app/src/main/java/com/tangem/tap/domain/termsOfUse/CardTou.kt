@@ -30,9 +30,9 @@ class CardTou {
             languageCode == "it" && regionCode == "ch" -> "Start2Coin-it-ch-tangem.pdf"
             languageCode == "fr" && regionCode == "fr" -> "Start2Coin-fr-fr-atangem.pdf"
             languageCode == "de" && regionCode == "at" -> "Start2Coin-de-at-tangem.pdf"
-            languageCode.isEmpty() && regionCode == "fr" -> "Start2Coin-fr-fr-atangem.pdf"
-            languageCode.isEmpty() && regionCode == "ch" -> "Start2Coin-en-ch-tangem.pdf"
-            languageCode.isEmpty() && regionCode == "at" -> "Start2Coin-de-at-tangem.pdf"
+            regionCode == "fr" -> "Start2Coin-fr-fr-atangem.pdf"
+            regionCode == "ch" -> "Start2Coin-en-ch-tangem.pdf"
+            regionCode == "at" -> "Start2Coin-de-at-tangem.pdf"
             else -> "Start2Coin-fr-fr-atangem.pdf"
         }
     }
