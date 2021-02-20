@@ -139,9 +139,14 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         val scannedCode = data?.getStringExtra(ScanQrCodeActivity.SCAN_RESULT) ?: ""
         if (scannedCode.isEmpty()) return
 
-        store.dispatch(PasteAddressPayId(scannedCode))
-        store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
-        store.dispatch(FeeAction.RequestFee)
+        // Delayed launch is needed in order for the UI to be drawn and to process the sent events.
+        // If do not use the delay, then etAmount error field is not displayed when
+        // inserting an incorrect amount by shareUri
+        imvQrCode.postDelayed({
+            store.dispatch(PasteAddressPayId(scannedCode))
+            store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
+            store.dispatch(FeeAction.RequestFee)
+        }, 200)
     }
 
     private fun setupAmountLayout() {
