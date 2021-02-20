@@ -127,6 +127,21 @@
                 android:text="@string/disclaimer_title" />
 
             <TextView
+                android:id="@+id/tv_card_tou"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="7dp"
+                android:paddingBottom="10dp"
+                android:drawablePadding="15dp"
+                android:textColor="@color/darkGray6"
+                android:textSize="16sp"
+                android:visibility="gone"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_disclaimer"
+                android:text="@string/details_row_title_card_tou" />
+
+            <TextView
                 android:id="@+id/tv_settings_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -137,7 +152,7 @@
                 android:textColor="@color/colorSecondary"
                 android:textSize="13sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_disclaimer" />
+                app:layout_constraintTop_toBottomOf="@id/tv_card_tou" />
 
             <View
                 android:layout_width="match_parent"
