@@ -40,6 +40,7 @@ android {
             initWith debug
             versionNameSuffix "-beta"
             applicationIdSuffix ".debug"
+            buildConfigField 'String', 'CONFIG_ENVIRONMENT', '\"prod\"'
         }
     }
     kotlinOptions {
