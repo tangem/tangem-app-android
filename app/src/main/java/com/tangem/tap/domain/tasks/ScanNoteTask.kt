@@ -128,6 +128,11 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
     }
 
     companion object {
-        private val excludedBatches = listOf("0027", "0030", "0031")
+        private val excludedBatches = listOf(
+                "0027",
+                "0030",
+                "0031", //tags
+                "0079", //TOTHEMOON
+        )
     }
 }
