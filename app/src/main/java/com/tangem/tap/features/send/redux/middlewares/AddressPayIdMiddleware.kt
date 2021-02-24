@@ -1,5 +1,6 @@
 package com.tangem.tap.features.send.redux.middlewares
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Wallet
 import com.tangem.commands.common.network.Result
 import com.tangem.tap.common.redux.AppState
@@ -107,7 +108,11 @@ internal class AddressPayIdMiddleware {
     }
 
     private fun verifyAddress(address: String, wallet: Wallet, isUserInput: Boolean, dispatch: (Action) -> Unit) {
-        val addressSchemeSplit = address.split(":")
+        val addressSchemeSplit = if (wallet.blockchain == Blockchain.BitcoinCash) {
+            listOf(address)
+        } else {
+            address.split(":")
+        }
         val noSchemeAddress = when (addressSchemeSplit.size) {
             1 -> address // no scheme
             2 -> { // scheme
@@ -141,7 +146,7 @@ internal class AddressPayIdMiddleware {
 
     private fun isValidBlockchainAddressAndNotTheSameAsWallet(wallet: Wallet, address: String): Error? {
         return if (wallet.blockchain.validateAddress(address)) {
-            if (wallet.addresses.all { it.value != address } ) {
+            if (wallet.addresses.all { it.value != address }) {
                 null
             } else {
                 Error.ADDRESS_SAME_AS_WALLET
