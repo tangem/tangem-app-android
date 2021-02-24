@@ -37,10 +37,10 @@ class CardTou {
         }
     }
 
-    private fun regionCode(cardId: String): String? = when (cardId.substring(2..3)) {
-        "0" -> "fr"
-        "1" -> "ch"
-        "2" -> "at"
+    private fun regionCode(cardId: String): String? = when (cardId[1]) {
+        '0' -> "fr"
+        '1' -> "ch"
+        '2' -> "at"
         else -> null
     }
 }
