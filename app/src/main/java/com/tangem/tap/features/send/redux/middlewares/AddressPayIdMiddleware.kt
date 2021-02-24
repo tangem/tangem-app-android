@@ -1,6 +1,5 @@
 package com.tangem.tap.features.send.redux.middlewares
 
-import androidx.core.text.isDigitsOnly
 import com.tangem.blockchain.common.Wallet
 import com.tangem.commands.common.network.Result
 import com.tangem.tap.common.redux.AppState
@@ -129,8 +128,8 @@ internal class AddressPayIdMiddleware {
 
         val failReason = isValidBlockchainAddressAndNotTheSameAsWallet(wallet, supposedAddress)
         if (failReason == null) {
-            noSchemeAddress.getQueryParameter("amount")?.let {
-                if (it.isDigitsOnly()) dispatch(AmountAction.SetAmount(it.toBigDecimal(), false))
+            noSchemeAddress.getQueryParameter("amount")?.toBigDecimalOrNull()?.let {
+                dispatch(AmountAction.SetAmount(it, false))
             }
             dispatch(SetWalletAddress(supposedAddress, isUserInput))
             dispatch(TransactionExtrasAction.Prepare(wallet.blockchain, address, null))
