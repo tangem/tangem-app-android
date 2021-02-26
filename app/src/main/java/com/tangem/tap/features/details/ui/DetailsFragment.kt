@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.activity.OnBackPressedCallback
@@ -79,6 +80,13 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
 
 
         tv_disclaimer.setOnClickListener { store.dispatch(DetailsAction.ShowDisclaimer) }
+
+        tv_card_tou.show(state.cardTermsOfUseUrl != null)
+        tv_card_tou.setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.data = state.cardTermsOfUseUrl
+            startActivity(intent)
+        }
 
         if (state.createTwinWalletState != null) {
             if (state.createTwinWalletState.allowRecreatingWallet == true) {
