@@ -73,7 +73,8 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: Deta
                     action.fiatCurrencyName
             ),
             securityScreenState = SecurityScreenState(currentOption = securityOption),
-            createTwinWalletState = twinsState
+            createTwinWalletState = twinsState,
+            cardTermsOfUseUrl = action.cardTou.getUrl(action.card)
     )
 }
 
