@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
+import com.tangem.TangemSdkError
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.commands.common.card.Card
@@ -136,6 +137,19 @@ class WalletMiddleware {
                                             store.dispatch(NavigationAction.NavigateTo(AppScreen.TwinsOnboarding))
                                         }
                                     }
+                                    store.dispatch(WalletAction.ScanCardFinished())
+                                }
+                                is CompletionResult.Failure -> {
+                                    if (result.error !is TangemSdkError.UserCancelled) {
+                                        // Weird things... If you run the code below without coroutines,
+                                        // then rescanning will be impossible
+                                        scope.launch(Dispatchers.Main) {
+                                            store.dispatch(WalletAction.ScanCardFinished(result.error))
+                                            if (store.state.walletState.scanCardFailsCounter >= 2) {
+                                                store.dispatch(WalletAction.ShowDialog.ScanFails)
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -173,7 +187,7 @@ class WalletMiddleware {
                             store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
                         }
                     }
-                    is WalletAction.CheckIfWarningNeeded -> {
+                    is WalletAction.Warnings.CheckIfNeeded -> {
                         val globalState = store.state.globalState
                         val validator = globalState.scanNoteResponse?.walletManager as? SignatureCountValidator
                         globalState.scanNoteResponse?.card?.let { card ->
@@ -184,7 +198,8 @@ class WalletMiddleware {
                             }
                             updateWarningMessages()
                         }
-
+                        val readyToShow = preferencesStorage.appRatingLaunchObserver.isReadyToShow()
+                        if (readyToShow) addWarningMessage(WarningMessagesManager.appRatingWarning(), true)
                     }
                     is WalletAction.CheckHashesCountOnline -> checkHashesCountOnline()
                     is WalletAction.SaveCardId -> {
@@ -197,6 +212,12 @@ class WalletMiddleware {
                     }
                     is WalletAction.TwinsAction.SetOnboardingShown -> {
                         preferencesStorage.saveTwinsOnboardingShown()
+                    }
+                    is WalletAction.Warnings.AppRating.RemindLater -> {
+                        preferencesStorage.appRatingLaunchObserver.applyDelayedShowing()
+                    }
+                    is WalletAction.Warnings.AppRating.SetNeverToShow -> {
+                        preferencesStorage.appRatingLaunchObserver.setNeverToShow()
                     }
                 }
                 next(action)
@@ -290,7 +311,8 @@ class WalletMiddleware {
 
     private fun updateWarningMessages() {
         val warningManager = store.state.globalState.warningManager ?: return
-        store.dispatch(WalletAction.SetWarnings(warningManager.getWarnings(WarningMessage.Location.MainScreen)))
+        store.dispatch(WalletAction.Warnings.SetWarnings(
+                warningManager.getWarnings(WarningMessage.Location.MainScreen)))
     }
 }
 

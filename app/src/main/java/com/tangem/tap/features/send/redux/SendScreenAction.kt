@@ -139,12 +139,12 @@ sealed class SendAction : SendScreenAction {
     data class SendError(override val error: TapError) : SendAction(), ErrorAction
 
     sealed class Dialog : SendAction() {
-        data class ShowTezosWarningDialog(
+        data class TezosWarningDialog(
                 val reduceCallback: () -> Unit,
                 val sendAllCallback: () -> Unit,
                 val reduceAmount: BigDecimal,
         ) : Dialog()
-
+        data class SendTransactionFails(val errorMessage: String): Dialog()
         object Hide : Dialog()
     }
     data class SetWarnings(val warningList: List<WarningMessage>) : SendAction()
