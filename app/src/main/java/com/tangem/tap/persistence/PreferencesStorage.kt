@@ -15,12 +15,13 @@ import com.tangem.tap.network.coinmarketcap.FiatCurrency
 
 class PreferencesStorage(applicationContext: Application) {
 
-    private val preferences: SharedPreferences by lazy {
-        applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
-    }
+    private val preferences: SharedPreferences = applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+
+    val appRatingLaunchObserver: AppRatingLaunchObserver
 
     init {
         incrementLaunchCounter()
+        appRatingLaunchObserver = AppRatingLaunchObserver(preferences, getCountOfLaunches())
     }
 
     private val fiatCurrenciesAdapter: JsonAdapter<List<FiatCurrency>> by lazy {
@@ -97,4 +98,37 @@ class PreferencesStorage(applicationContext: Application) {
         private const val APP_LAUNCH_COUNT_KEY = "launchCount"
     }
 
+}
+
+class AppRatingLaunchObserver(
+        private val preferences: SharedPreferences,
+        private val launchCounts: Int,
+) {
+    private val K_SHOW_RATING_DIALOG = "show_rating_dialog_after_app_launch_count"
+
+    private val deferShowing = 20
+    private val firstShowing = 3
+
+    fun isReadyToShow(): Boolean {
+        if (launchCounts == firstShowing) return true
+
+        val nextShowingAt = getCounterOfNextShowing()
+        return launchCounts >= nextShowingAt
+    }
+
+    fun applyDelayedShowing() {
+        if (getCounterOfNextShowing() < launchCounts) updateNextShowing(launchCounts + deferShowing)
+    }
+
+    fun setNeverToShow() {
+        updateNextShowing(999999999)
+    }
+
+    private fun updateNextShowing(at: Int) {
+        preferences.edit().putInt(K_SHOW_RATING_DIALOG, at).apply()
+    }
+
+    private fun getCounterOfNextShowing(): Int {
+        return preferences.getInt(K_SHOW_RATING_DIALOG, firstShowing)
+    }
 }
