@@ -38,5 +38,23 @@ this wallet.
     <string name="send_error_invalid_destination_tag" translatable="false">Invalid destination tag. It won\'t be added to the transaction</string>
     <string name="send_error_invalid_memo_id" translatable="false">Invalid Memo ID. It won\'t be added to the transaction</string>
 
-
+    <string name="details_section_title_app" translatable="false">App</string>
+    <string name="details_row_title_send_feedback" translatable="false">Send feedback</string>
+    <string name="alert_app_feedback_sent_title" translatable="false">Sent successfully</string>
+    <string name="alert_app_feedback_sent_message" translatable="false">Thank you for your feedback</string>
+    <string name="alert_negative_app_rate_sent_title" translatable="false">Your suggestions were sent</string>
+    <string name="alert_negative_app_rate_sent_message" translatable="false">Thank your for your feedback. We will response as soon as possible</string>
+    <string name="alert_failed_to_send_email_title" translatable="false">Failed to send email</string>
+    <string name="alert_failed_to_send_email_message" translatable="false">Reason: %@</string>
+    <string name="alert_failed_to_send_transaction_title" translatable="false">Can’t send a transaction</string>
+    <string name="alert_failed_to_send_transaction_message" translatable="false">Reason: %s. Do you want to send feedback?</string>
+    <string name="alert_troubleshooting_scan_card_title" translatable="false">Are you having difficulty scanning your card?</string>
+    <string name="alert_troubleshooting_scan_card_message" translatable="false">Please try to tap the card exactly as shown in the animation or request support.</string>
+    <string name="alert_button_try_again" translatable="false">Try again</string>
+    <string name="alert_button_request_support" translatable="false">Request support</string>
+    <string name="alert_button_send_feedback" translatable="false">Send feedback</string>
+    <string name="warning_button_really_cool" translatable="false">Really cool!</string>
+    <string name="warning_button_can_be_better" translatable="false">Can be better</string>
+    <string name="warning_rate_app_title" translatable="false">One question</string>
+    <string name="warning_rate_app_message" translatable="false">How do you like Tangem?</string>
 </resources>
