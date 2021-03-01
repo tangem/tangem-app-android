@@ -40,7 +40,9 @@ data class WarningMessage(
         Permanent,     // нельзя скрыть
 
         @Json(name = "temporary")
-        Temporary      // можно скрыть (кнопка ОК)
+        Temporary,      // можно скрыть (кнопка ОК)
+
+        AppRating
     }
 
     enum class Location {
