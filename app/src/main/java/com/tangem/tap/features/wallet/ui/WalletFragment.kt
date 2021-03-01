@@ -26,6 +26,7 @@ import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
 import com.tangem.tap.features.wallet.ui.dialogs.PayIdDialog
 import com.tangem.tap.features.wallet.ui.dialogs.QrDialog
+import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.card_balance.*
@@ -208,7 +209,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
 
         btn_copy.setOnClickListener { store.dispatch(WalletAction.CopyAddress(requireContext())) }
-        btn_show_qr.setOnClickListener { store.dispatch(WalletAction.ShowQrCode) }
+        btn_show_qr.setOnClickListener { store.dispatch(WalletAction.ShowDialog.QrCode) }
 
         val buttonTitle = when (state.mainButton) {
             is WalletMainButton.SendButton -> R.string.wallet_button_send
@@ -299,6 +300,11 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             is WalletDialog.SelectAmountToSendDialog -> {
                 if (dialog == null) dialog = AmountToSendDialog(requireContext()).apply {
                     this.show(walletDialog.amounts)
+                }
+            }
+            is WalletDialog.ScanFailsDialog -> {
+                if (dialog == null) dialog = ScanFailsDialog.create(requireContext()).apply {
+                    this.show()
                 }
             }
             null -> {
