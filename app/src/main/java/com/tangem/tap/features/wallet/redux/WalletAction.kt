@@ -1,6 +1,7 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.content.Context
+import com.tangem.TangemError
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.address.AddressType
@@ -24,19 +25,27 @@ sealed class WalletAction : Action {
     }
 
     data class LoadWallet(
-            val wallet: Wallet, val artworkId: String?, val allowTopUp: Boolean
+            val wallet: Wallet, val artworkId: String?, val allowTopUp: Boolean,
     ) : WalletAction() {
         data class Success(val wallet: Wallet) : WalletAction()
         data class NoAccount(val amountToCreateAccount: String) : WalletAction()
         data class Failure(val errorMessage: String? = null) : WalletAction()
     }
 
-    object CheckIfWarningNeeded : WalletAction()
     object CheckHashesCountOnline : WalletAction()
     object NeedToCheckHashesCountOnline : WalletAction()
     object ConfirmHashesCount : WalletAction()
-    data class SetWarnings(val warningList: List<WarningMessage>) : WalletAction()
     object SaveCardId : WalletAction()
+
+    object Warnings : WalletAction() {
+        object CheckIfNeeded : WalletAction()
+        data class SetWarnings(val warningList: List<WarningMessage>) : WalletAction()
+
+        object AppRating : WalletAction() {
+            object SetNeverToShow : WalletAction()
+            object RemindLater : WalletAction()
+        }
+    }
 
     object UpdateWallet : WalletAction() {
         object ScheduleUpdatingWallet : WalletAction()
@@ -63,6 +72,8 @@ sealed class WalletAction : Action {
     }
 
     object Scan : WalletAction()
+    class ScanCardFinished(val scanError: TangemError? = null) : WalletAction()
+
     data class Send(val amount: Amount? = null) : WalletAction() {
         data class ChooseCurrency(val amounts: List<Amount>?) : WalletAction()
         object Cancel : WalletAction()
@@ -85,8 +96,12 @@ sealed class WalletAction : Action {
         }
     }
 
-    object ShowQrCode : WalletAction()
+    object ShowDialog : WalletAction() {
+        object QrCode : WalletAction()
+        object ScanFails : WalletAction()
+    }
     object HideDialog : WalletAction()
+
     data class ExploreAddress(val context: Context) : WalletAction()
     object CreateWallet : WalletAction()
     object EmptyWallet : WalletAction()
@@ -102,7 +117,7 @@ sealed class WalletAction : Action {
         object SetOnboardingShown : TwinsAction()
         data class SetTwinCard(
                 val secondCardId: String, val number: TwinCardNumber,
-                val isCreatingTwinCardsAllowed: Boolean
+                val isCreatingTwinCardsAllowed: Boolean,
         ) : TwinsAction()
     }
 }
