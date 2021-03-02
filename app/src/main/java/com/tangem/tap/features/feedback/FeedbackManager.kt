@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.os.Environment
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.tangem.LogMessage
@@ -28,8 +27,6 @@ class FeedbackManager(
         private val email: String = "azhilenkov@tangem.com",
 ) {
 
-    private val attachmentFileName = "feedbackEmailAttachment"
-
     fun send(emailData: EmailData) {
         val fileLog = if (emailData is ScanFailsEmail) createLogFile() else null
         sendTo(email, emailData.subject, emailData.joinTogether(infoHolder), fileLog)
@@ -43,8 +40,7 @@ class FeedbackManager(
             putExtra(Intent.EXTRA_SUBJECT, subject)
             putExtra(Intent.EXTRA_TEXT, message)
             fileLog?.let {
-                val authority = context.packageName + ".provider"
-                val uri = FileProvider.getUriForFile(context, authority, it)
+                val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", it)
                 putExtra(Intent.EXTRA_STREAM, uri)
             }
         }
@@ -60,7 +56,7 @@ class FeedbackManager(
 
     private fun createLogFile(): File? {
         return try {
-            val file = File(Environment.getExternalStorageDirectory(), attachmentFileName)
+            val file = File(context.filesDir, "logs.txt")
             file.delete()
             file.createNewFile()
 
