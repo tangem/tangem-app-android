@@ -13,6 +13,7 @@ import com.tangem.commands.common.network.Result
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.getType
 import com.tangem.common.extensions.toHexString
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.redux.AppState
@@ -199,7 +200,10 @@ class WalletMiddleware {
                             updateWarningMessages()
                         }
                         val readyToShow = preferencesStorage.appRatingLaunchObserver.isReadyToShow()
-                        if (readyToShow) addWarningMessage(WarningMessagesManager.appRatingWarning(), true)
+                        if (readyToShow) {
+                            FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.APP_RATING_DISPLAYED)
+                            addWarningMessage(WarningMessagesManager.appRatingWarning(), true)
+                        }
                     }
                     is WalletAction.CheckHashesCountOnline -> checkHashesCountOnline()
                     is WalletAction.SaveCardId -> {
