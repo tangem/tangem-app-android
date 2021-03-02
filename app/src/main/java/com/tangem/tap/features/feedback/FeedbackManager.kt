@@ -24,7 +24,7 @@ class FeedbackManager(
         val infoHolder: AdditionalEmailInfo,
         private val context: Context,
         private val logCollector: TangemLogCollector,
-        private val email: String = "azhilenkov@tangem.com",
+        private val email: String = "support@tangem.com",
 ) {
 
     fun send(emailData: EmailData) {
