@@ -9,6 +9,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import com.google.android.play.core.review.ReviewManagerFactory
+import com.tangem.tap.common.analytics.AnalyticsEvent
+import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
@@ -78,15 +80,18 @@ class WarningMessageVH(val view: View) : RecyclerView.ViewHolder(view) {
                 view.group_controls_temporary.hide()
                 view.group_controls_rating.show()
                 view.btn_close.setOnClickListener {
+                    FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.APP_RATING_DISMISS)
                     store.dispatch(GlobalAction.HideWarningMessage(warning))
                     store.dispatch(WalletAction.Warnings.AppRating.RemindLater)
                 }
                 view.btn_can_be_better.setOnClickListener {
+                    FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.APP_RATING_NEGATIVE)
                     store.dispatch(GlobalAction.HideWarningMessage(warning))
                     store.dispatch(GlobalAction.SendFeedback(RateCanBeBetterEmail()))
                 }
                 store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
                 view.btn_really_cool.setOnClickListener {
+                    FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.APP_RATING_POSITIVE)
                     val context = view.context
                     val reviewManager = ReviewManagerFactory.create(context)
                     val flow = reviewManager.requestReviewFlow()
