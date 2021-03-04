@@ -72,7 +72,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.2.1'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.1'
 
-    implementation 'com.tangem:blockchain:1.141.0'
+    implementation 'com.tangem:blockchain:1.143.0'
     implementation 'com.tangem:core:1.101.0'
     implementation 'com.tangem:sdk:1.101.0'
 
