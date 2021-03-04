@@ -15,6 +15,9 @@ class ConfigValueModel(
         val coinMarketCapKey: String,
         val moonPayApiKey: String,
         val moonPayApiSecretKey: String,
+        val blockchairApiKey: String?,
+        val blockcypherTokens: Set<String>?,
+        val infuraProjectId: String?,
 )
 
 class ConfigModel(val features: FeatureModel?, val configValues: ConfigValueModel?) {
