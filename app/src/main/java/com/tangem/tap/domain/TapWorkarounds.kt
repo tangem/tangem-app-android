@@ -1,6 +1,7 @@
 package com.tangem.tap.domain
 
 import com.tangem.commands.common.card.Card
+import com.tangem.commands.common.card.masks.Product
 import java.util.*
 
 object TapWorkarounds {
@@ -12,5 +13,26 @@ object TapWorkarounds {
         isStart2Coin = card.cardData?.issuerName?.toLowerCase(Locale.US) == START_2_COIN_ISSUER
     }
 
-    const val START_2_COIN_ISSUER = "start2coin"
+    fun Card.isExcluded(): Boolean {
+        val cardData = this.cardData ?: return false
+        val productMask = cardData.productMask
+        val excludedBatch = excludedBatches.contains(cardData.batchId)
+        val excludedIssuerName = excludedIssuers.contains(cardData.issuerName?.capitalize(Locale.US))
+        val excludedProductMask = (productMask != null && // product mask is on cards v2.30 and later
+                !productMask.contains(Product.Note) && !productMask.contains(Product.TwinCard))
+        return excludedBatch || excludedIssuerName || excludedProductMask
+
+    }
+
+    private const val START_2_COIN_ISSUER = "start2coin"
+
+    private val excludedBatches = listOf(
+                "0027",
+                "0030",
+                "0031",
+        ) // Tangem tags
+
+    private val excludedIssuers = listOf(
+            "TTM BANK"
+    )
 }
