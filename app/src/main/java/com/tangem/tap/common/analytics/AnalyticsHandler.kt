@@ -4,5 +4,5 @@ import com.tangem.commands.common.card.Card
 
 
 interface AnalyticsHandler {
-    fun triggerEvent(event: AnalyticsEvent, card: Card?)
+    fun triggerEvent(event: AnalyticsEvent, card: Card? = null)
 }
