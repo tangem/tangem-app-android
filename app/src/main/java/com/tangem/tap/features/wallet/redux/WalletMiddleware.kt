@@ -16,6 +16,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.copyToClipboard
+import com.tangem.tap.common.extensions.isGreaterThan
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -43,6 +44,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.Action
 import org.rekotlin.Middleware
+import java.math.BigDecimal
 
 class WalletMiddleware {
     private val topUpMiddleware = TopUpMiddleware()
@@ -99,6 +101,7 @@ class WalletMiddleware {
                     is WalletAction.LoadWallet.Success -> {
                         store.dispatch(WalletAction.CheckHashesCountOnline)
                         if (!store.state.walletState.updatingWallet) setupWalletUpdate(action.wallet)
+                        tryToShowAppRatingWarning(action.wallet)
                     }
                     is WalletAction.CreatePayId.CompleteCreatingPayId -> {
                         scope.launch {
@@ -199,11 +202,6 @@ class WalletMiddleware {
                             }
                             updateWarningMessages()
                         }
-                        val readyToShow = preferencesStorage.appRatingLaunchObserver.isReadyToShow()
-                        if (readyToShow) {
-                            FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.APP_RATING_DISPLAYED)
-                            addWarningMessage(WarningMessagesManager.appRatingWarning(), true)
-                        }
                     }
                     is WalletAction.CheckHashesCountOnline -> checkHashesCountOnline()
                     is WalletAction.SaveCardId -> {
@@ -226,6 +224,19 @@ class WalletMiddleware {
                 }
                 next(action)
             }
+        }
+    }
+
+    private fun tryToShowAppRatingWarning(wallet: Wallet) {
+        val nonZeroWalletsCount = wallet.amounts.filter {
+            it.value.value?.isGreaterThan(BigDecimal.ZERO) ?: false
+        }.size
+        if (nonZeroWalletsCount > 0) {
+            preferencesStorage.appRatingLaunchObserver.foundWalletWithFunds()
+        }
+        if (preferencesStorage.appRatingLaunchObserver.isReadyToShow()) {
+            FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.APP_RATING_DISPLAYED)
+            addWarningMessage(WarningMessagesManager.appRatingWarning(), true)
         }
     }
 
