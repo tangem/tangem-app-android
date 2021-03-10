@@ -42,7 +42,8 @@ private class SendReducer : SendInternalReducer {
     override fun handle(action: SendScreenAction, sendState: SendState): SendState {
         val result = when (action) {
             is SendAction.ChangeSendButtonState -> sendState.copy(sendButtonState = action.state)
-            is SendAction.Dialog.ShowTezosWarningDialog -> sendState.copy(dialog = action)
+            is SendAction.Dialog.TezosWarningDialog -> sendState.copy(dialog = action)
+            is SendAction.Dialog.SendTransactionFails -> sendState.copy(dialog = action)
             is SendAction.Dialog.Hide -> sendState.copy(dialog = null)
             is SendAction.SetWarnings -> sendState.copy(sendWarningsList = action.warningList)
             else -> return sendState
