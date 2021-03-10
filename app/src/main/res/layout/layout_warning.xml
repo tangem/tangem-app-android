@@ -20,13 +20,24 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginEnd="8dp"
             android:text="Test title"
             android:textColor="@android:color/white"
             android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/btn_close"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/btn_close"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="12dp"
+            android:tint="@android:color/white"
+            app:layout_constraintBottom_toBottomOf="@+id/tv_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/tv_title"
+            app:srcCompat="@drawable/ic_close" />
 
         <TextView
             android:id="@+id/tv_message"
@@ -54,8 +65,45 @@
             android:text="@string/how_to_got_it_button"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
+            android:visibility="visible"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tv_message" />
+
+        <Button
+            android:id="@+id/btn_can_be_better"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/warning_button_can_be_better"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            app:layout_constraintEnd_toStartOf="@+id/btn_really_cool"
+            app:layout_constraintTop_toBottomOf="@+id/tv_message" />
+
+        <Button
+            android:id="@+id/btn_really_cool"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/warning_button_really_cool"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tv_message" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/group_controls_temporary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:constraint_referenced_ids="btn_got_it" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/group_controls_rating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="visible"
+            app:constraint_referenced_ids="btn_close, btn_can_be_better, btn_really_cool" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
