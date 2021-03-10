@@ -11,7 +11,7 @@
     <string name="common_camera_denied_alert_message">Non hai fornito l\'accesso alla tua videocamera, modifica le tue impostazioni sulla privacy</string>
     <string name="common_camera_alert_button_settings">Impostazioni</string>
     <string name="home_welcome">Benvenuti in Tangem. Hai una delle nostre schede?</string>>
-    <string name="home_welcome_back">Benevenuti di nuovo su Tangem Tap. Scansiona la tua carta per iniziare.</string>
+    <string name="home_welcome_back">Benevenuti di nuovo su Tangem. Scansiona la tua carta per iniziare.</string>
     <string name="home_button_yes">Si! Scansiona carta.</string>
     <string name="home_button_shop">Shop</string>
     <string name="home_ready_title">Preparati ad avvicinare la tua carta sul retro del telefono.</string>
@@ -20,7 +20,7 @@
     <string name="wallet_button_scan">Scansiona</string>
     <string name="wallet_button_send">Invia</string>
     <string name="wallet_button_create_wallet">Crea portafoglio</string>
-    <string name="wallet_title">Tangem Tap</string>
+    <string name="wallet_title">Tangem</string>
     <string name="wallet_choice_wallet_option_title">Scegli l\'opzione del portafoglio</string>
     <string name="wallet_balance_token_title">Token</string>
     <string name="wallet_balance_tokens_title">Token</string>
@@ -95,7 +95,7 @@
     <string name="alert_old_device_this_card">Potresti riscontrare problemi con l\'NFC su alcuni iPhone 7/7 + durante la rimozione</string>
     <string name="alert_card_signed_transactions">Questa carta è già stata ricaricata e ha firmato transazioni in passato. Valuta la possibilità di prelevare immediatamente tutti i fondi se hai ricevuto questa carta da una fonte inaffidabile.</string>
     <string name="alert_title">Attenzione</string>
-    <string name="alert_unsupported_card">Questa carta non è progettata per funzionare con Tangem Tap</string>
+    <string name="alert_unsupported_card">Questa carta non è progettata per funzionare con Tangem</string>
     <string name="alert_developer_card">La carta che hai scansionato è una carta di sviluppo. Non utilizzarla come strumento di pagamento</string>
     <string name="alert_old_card">Le schede emesse prima di settembre 2019 non possono attualmente essere utilizzate con un iPhone. Stiamo lavorando a stretto contatto con Apple per renderle disponibili nelle future versioni di iOS. </string>
     <string name="initial_message_sign_header">Avvicina per firmare</string>
@@ -110,7 +110,7 @@
 
         NOTA LEGALE\n
 \n
-App Tangem Tap (software)\n
+App Tangem (software)\n
 \n
 1. Il software può essere utilizzato solo con i portafogli hardware Tangem (schede) tramite l\'interfaccia NFC. Il software NON esegue le seguenti operazioni:\n
 \n
