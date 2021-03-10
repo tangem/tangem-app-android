@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
+import com.tangem.TangemSdkError
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.commands.common.card.Card
@@ -12,8 +13,10 @@ import com.tangem.commands.common.network.Result
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.getType
 import com.tangem.common.extensions.toHexString
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.copyToClipboard
+import com.tangem.tap.common.extensions.isGreaterThan
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -41,6 +44,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.Action
 import org.rekotlin.Middleware
+import java.math.BigDecimal
 
 class WalletMiddleware {
     private val topUpMiddleware = TopUpMiddleware()
@@ -97,6 +101,7 @@ class WalletMiddleware {
                     is WalletAction.LoadWallet.Success -> {
                         store.dispatch(WalletAction.CheckHashesCountOnline)
                         if (!store.state.walletState.updatingWallet) setupWalletUpdate(action.wallet)
+                        tryToShowAppRatingWarning(action.wallet)
                     }
                     is WalletAction.CreatePayId.CompleteCreatingPayId -> {
                         scope.launch {
@@ -136,6 +141,19 @@ class WalletMiddleware {
                                             store.dispatch(NavigationAction.NavigateTo(AppScreen.TwinsOnboarding))
                                         }
                                     }
+                                    store.dispatch(WalletAction.ScanCardFinished())
+                                }
+                                is CompletionResult.Failure -> {
+                                    if (result.error !is TangemSdkError.UserCancelled) {
+                                        // Weird things... If you run the code below without coroutines,
+                                        // then rescanning will be impossible
+                                        scope.launch(Dispatchers.Main) {
+                                            store.dispatch(WalletAction.ScanCardFinished(result.error))
+                                            if (store.state.walletState.scanCardFailsCounter >= 2) {
+                                                store.dispatch(WalletAction.ShowDialog.ScanFails)
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -173,7 +191,7 @@ class WalletMiddleware {
                             store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
                         }
                     }
-                    is WalletAction.CheckIfWarningNeeded -> {
+                    is WalletAction.Warnings.CheckIfNeeded -> {
                         val globalState = store.state.globalState
                         val validator = globalState.scanNoteResponse?.walletManager as? SignatureCountValidator
                         globalState.scanNoteResponse?.card?.let { card ->
@@ -184,7 +202,6 @@ class WalletMiddleware {
                             }
                             updateWarningMessages()
                         }
-
                     }
                     is WalletAction.CheckHashesCountOnline -> checkHashesCountOnline()
                     is WalletAction.SaveCardId -> {
@@ -198,9 +215,28 @@ class WalletMiddleware {
                     is WalletAction.TwinsAction.SetOnboardingShown -> {
                         preferencesStorage.saveTwinsOnboardingShown()
                     }
+                    is WalletAction.Warnings.AppRating.RemindLater -> {
+                        preferencesStorage.appRatingLaunchObserver.applyDelayedShowing()
+                    }
+                    is WalletAction.Warnings.AppRating.SetNeverToShow -> {
+                        preferencesStorage.appRatingLaunchObserver.setNeverToShow()
+                    }
                 }
                 next(action)
             }
+        }
+    }
+
+    private fun tryToShowAppRatingWarning(wallet: Wallet) {
+        val nonZeroWalletsCount = wallet.amounts.filter {
+            it.value.value?.isGreaterThan(BigDecimal.ZERO) ?: false
+        }.size
+        if (nonZeroWalletsCount > 0) {
+            preferencesStorage.appRatingLaunchObserver.foundWalletWithFunds()
+        }
+        if (preferencesStorage.appRatingLaunchObserver.isReadyToShow()) {
+            FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.APP_RATING_DISPLAYED)
+            addWarningMessage(WarningMessagesManager.appRatingWarning(), true)
         }
     }
 
@@ -290,7 +326,8 @@ class WalletMiddleware {
 
     private fun updateWarningMessages() {
         val warningManager = store.state.globalState.warningManager ?: return
-        store.dispatch(WalletAction.SetWarnings(warningManager.getWarnings(WarningMessage.Location.MainScreen)))
+        store.dispatch(WalletAction.Warnings.SetWarnings(
+                warningManager.getWarnings(WarningMessage.Location.MainScreen)))
     }
 }
 
