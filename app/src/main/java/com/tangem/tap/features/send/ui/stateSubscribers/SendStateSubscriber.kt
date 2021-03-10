@@ -21,6 +21,7 @@ import com.tangem.tap.features.send.redux.reducers.ReceiptReducer
 import com.tangem.tap.features.send.redux.states.*
 import com.tangem.tap.features.send.ui.FeeUiHelper
 import com.tangem.tap.features.send.ui.SendFragment
+import com.tangem.tap.features.send.ui.dialogs.SendTransactionFailsDialog
 import com.tangem.tap.features.send.ui.dialogs.TezosWarningDialog
 import com.tangem.tap.features.wallet.ui.WarningMessagesAdapter
 import com.tangem.tap.store
@@ -97,9 +98,15 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         val sendFragment = (fg as? SendFragment) ?: return
 
         when (state.dialog) {
-            is SendAction.Dialog.ShowTezosWarningDialog -> {
+            is SendAction.Dialog.TezosWarningDialog -> {
                 if (dialog == null) {
                     dialog = TezosWarningDialog.create(fg.requireContext(), state.dialog)
+                    dialog?.show()
+                }
+            }
+            is SendAction.Dialog.SendTransactionFails -> {
+                if (dialog == null) {
+                    dialog = SendTransactionFailsDialog.create(fg.requireContext(), state.dialog)
                     dialog?.show()
                 }
             }
