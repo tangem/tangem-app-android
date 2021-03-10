@@ -51,7 +51,8 @@ class WarningMessagesManager(
         val foundWarning = findWarning(warning)
         return when {
             foundWarning == null -> false
-            foundWarning.type == WarningMessage.Type.Temporary -> {
+            foundWarning.type == WarningMessage.Type.Temporary
+                    || foundWarning.type == WarningMessage.Type.AppRating -> {
                 if (foundWarning.isHidden) {
                     false
                 } else {
@@ -101,7 +102,19 @@ class WarningMessagesManager(
                 WarningMessage.Origin.Local
         )
 
-        fun isAlreadySignedHashesWarning(warning: WarningMessage):Boolean {
+        fun appRatingWarning(): WarningMessage = WarningMessage(
+                "",
+                "",
+                WarningMessage.Type.AppRating,
+                WarningMessage.Priority.Info,
+                listOf(WarningMessage.Location.MainScreen),
+                null,
+                R.string.warning_rate_app_title,
+                R.string.warning_rate_app_message,
+                WarningMessage.Origin.Local
+        )
+
+        fun isAlreadySignedHashesWarning(warning: WarningMessage): Boolean {
             return warning.messageResId == R.string.alert_card_signed_transactions
         }
     }
