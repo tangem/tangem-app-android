@@ -176,7 +176,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             }
             newState = newState.copy(cardImage = Artwork(artworkId = artworkUrl))
         }
-        is WalletAction.ShowQrCode -> {
+        is WalletAction.ShowDialog.QrCode -> {
             newState = newState.copy(
                     walletDialog = WalletDialog.QrDialog(
                             newState.walletAddresses?.selectedAddress?.shareUrl?.toQrCode(),
@@ -184,6 +184,9 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                             newState.currencyData.currency
                     )
             )
+        }
+        is WalletAction.ShowDialog.ScanFails -> {
+            newState = newState.copy(walletDialog = WalletDialog.ScanFailsDialog)
         }
         is WalletAction.HideDialog -> {
             newState = newState.copy(walletDialog = null)
@@ -215,7 +218,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             )
         }
         is WalletAction.Send.Cancel -> newState = newState.copy(walletDialog = null)
-        is WalletAction.SetWarnings -> newState = newState.copy(mainWarningsList = action.warningList)
+        is WalletAction.Warnings.SetWarnings -> newState = newState.copy(mainWarningsList = action.warningList)
         is WalletAction.NeedToCheckHashesCountOnline ->
             newState = newState.copy(hashesCountVerified = false)
         is WalletAction.ConfirmHashesCount ->
@@ -254,6 +257,13 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     twinCardsState = newState.twinCardsState?.copy(showTwinOnboarding = false)
             )
         }
+        is WalletAction.ScanCardFinished -> {
+            newState = if (action.scanError == null) {
+                newState.copy(scanCardFailsCounter = 0)
+            } else {
+                newState.copy(scanCardFailsCounter = newState.scanCardFailsCounter + 1)
+            }
+        }
     }
     return newState
 }
@@ -288,7 +298,7 @@ private fun handleTopUpActions(action: WalletAction.TopUpAction, state: TopUpSta
 }
 
 private fun onWalletLoaded(
-        wallet: Wallet, walletState: WalletState, topUpAllowed: Boolean? = null
+        wallet: Wallet, walletState: WalletState, topUpAllowed: Boolean? = null,
 ): WalletState {
     val fiatCurrencySymbol = store.state.globalState.appCurrency
     val token = wallet.getFirstToken()
