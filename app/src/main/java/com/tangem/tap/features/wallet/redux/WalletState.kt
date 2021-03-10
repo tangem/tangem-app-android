@@ -28,7 +28,8 @@ data class WalletState(
         val mainButton: WalletMainButton = WalletMainButton.SendButton(false),
         val topUpState: TopUpState = TopUpState(),
         val twinCardsState: TwinCardsState? = null,
-        val mainWarningsList: List<WarningMessage> = mutableListOf()
+        val mainWarningsList: List<WarningMessage> = mutableListOf(),
+        val scanCardFailsCounter: Int = 0,
 ) : StateType {
     val showDetails: Boolean =
             currencyData.status != com.tangem.tap.features.wallet.ui.BalanceStatus.EmptyCard &&
@@ -52,6 +53,7 @@ sealed class WalletDialog {
     data class CreatePayIdDialog(val creatingPayIdState: CreatingPayIdState?) : WalletDialog()
     data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog()
     data class TwinsOnboardingFragment(val secondCardId: String): WalletDialog()
+    object ScanFailsDialog: WalletDialog()
 }
 
 enum class ProgressState { Loading, Done, Error }
