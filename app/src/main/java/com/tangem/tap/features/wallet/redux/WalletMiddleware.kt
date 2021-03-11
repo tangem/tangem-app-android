@@ -336,7 +336,10 @@ private class TopUpMiddleware {
         when (action) {
             is WalletAction.TopUpAction.TopUp -> {
                 val config = store.state.globalState.configManager?.config ?: return
-                val defaultAddress = store.state.walletState.walletAddresses!!.list[0].address
+                val addresses = store.state.walletState.walletAddresses ?: return
+                if (addresses.list.isEmpty()) return
+
+                val defaultAddress = addresses.list[0].address
                 val url = TopUpHelper.getUrl(
                         store.state.walletState.currencyData.currencySymbol!!,
                         defaultAddress,
