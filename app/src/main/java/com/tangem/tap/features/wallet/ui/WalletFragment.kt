@@ -357,14 +357,14 @@ class MultipleAddressUiHelper {
             return when (id) {
                 R.id.chip_default -> {
                     when (blockchain) {
-                        Blockchain.Bitcoin -> BitcoinAddressType.Segwit
+                        Blockchain.Bitcoin, Blockchain.BitcoinTestnet -> BitcoinAddressType.Segwit
                         Blockchain.CardanoShelley -> CardanoAddressType.Shelley
                         else -> null
                     }
                 }
                 R.id.chip_legacy -> {
                     when (blockchain) {
-                        Blockchain.Bitcoin -> BitcoinAddressType.Legacy
+                        Blockchain.Bitcoin, Blockchain.BitcoinTestnet -> BitcoinAddressType.Legacy
                         Blockchain.CardanoShelley -> CardanoAddressType.Byron
                         else -> null
                     }
